@@ -30,7 +30,9 @@ import com.android.internal.util.Preconditions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -148,5 +150,72 @@ public final class TopicsDao {
         }
 
         return new ArrayList<>();
+    }
+
+    /**
+     * Record the App and SDK into the Usage History table.
+     */
+    public void recordUsageHistory(long epochId, @NonNull String app, @NonNull String sdk) {
+        Objects.requireNonNull(app);
+        Objects.requireNonNull(sdk);
+        Preconditions.checkStringNotEmpty(app);
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(TopicsTables.UsageHistoryContract.APP, app);
+        values.put(TopicsTables.UsageHistoryContract.SDK, sdk);
+        values.put(TopicsTables.UsageHistoryContract.EPOCH_ID, epochId);
+
+        try {
+            db.insert(TopicsTables.UsageHistoryContract.TABLE, null, values);
+        } catch (SQLException e) {
+            LogUtil.e("Failed to record App usage history." + e.getMessage());
+        }
+    }
+
+    // Return all apps and their SDKs that called Topics API in the epoch.
+    // Return Map<App, List<SDK>>.
+    @VisibleForTesting
+    @NonNull
+    Map<String, List<String>> produceAppSdksUsageMap(long epochId) {
+        Map<String, List<String>> appSdksUsageMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return appSdksUsageMap;
+        }
+
+        String[] projection = {
+                TopicsTables.UsageHistoryContract.APP,
+                TopicsTables.UsageHistoryContract.SDK,
+        };
+
+        String selection = TopicsTables.UsageHistoryContract.EPOCH_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(epochId) };
+
+        try (
+                Cursor cursor =
+                        db.query(/* distinct = */true,
+                                TopicsTables.UsageHistoryContract.TABLE, projection,
+                                selection,
+                                selectionArgs, null, null,
+                                null, null)
+                ) {
+            while (cursor.moveToNext()) {
+                String app = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.UsageHistoryContract.APP));
+                String sdk = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.UsageHistoryContract.SDK));
+                if (!appSdksUsageMap.containsKey(app)) {
+                    appSdksUsageMap.put(app, new ArrayList<>());
+                }
+                appSdksUsageMap.get(app).add(sdk);
+            }
+        }
+
+        return appSdksUsageMap;
     }
 }
