@@ -95,6 +95,7 @@ public final class TopicsTables {
                     + CallerCanLearnTopicsContract.TOPIC + " TEXT NOT NULL"
                     + ")";
 
+    // TODO(b/223446202): Make this table to configurable numbers of top topics.
     // Top Topics Table.
     // There are top 5 topics and 1 random topic.
     // In case there is not enough usage to generate top 5 topics, random ones will be generated.
