@@ -15,10 +15,10 @@
  */
 package com.android.adservices.service.topics;
 
-import android.adservices.GetTopicsRequest;
-import android.adservices.GetTopicsResponse;
-import android.adservices.IGetTopicsCallback;
-import android.adservices.ITopicsService;
+import android.adservices.topics.GetTopicsRequest;
+import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.IGetTopicsCallback;
+import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
