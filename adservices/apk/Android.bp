@@ -36,4 +36,6 @@ android_app {
     static_libs: [
         "adservices-service-core",
     ],
+    jni_libs: ["libtensorflowlite_jni"],
+    use_embedded_native_libs: true,
 }
