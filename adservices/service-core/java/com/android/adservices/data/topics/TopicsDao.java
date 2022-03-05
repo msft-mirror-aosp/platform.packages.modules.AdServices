@@ -50,10 +50,10 @@ public final class TopicsDao {
 
     /** Returns an instance of the TopicsDAO given a context. */
     @NonNull
-    public static TopicsDao getInstance(@NonNull Context ctx) {
+    public static TopicsDao getInstance(@NonNull Context context) {
         synchronized (TopicsDao.class) {
             if (sSingleton == null) {
-                sSingleton = new TopicsDao(DbHelper.getInstance(ctx));
+                sSingleton = new TopicsDao(DbHelper.getInstance(context));
             }
             return sSingleton;
         }
@@ -62,10 +62,10 @@ public final class TopicsDao {
     /** Returns an instance of the TopicsDao given a context. This is used for testing only. */
     @VisibleForTesting
     @NonNull
-    static TopicsDao getInstanceForTest(@NonNull Context ctx) {
+    public static TopicsDao getInstanceForTest(@NonNull Context context) {
         synchronized (TopicsDao.class) {
             if (sSingleton == null) {
-                sSingleton = new TopicsDao(DbHelper.getInstanceForTest(ctx));
+                sSingleton = new TopicsDao(DbHelper.getInstanceForTest(context));
             }
             return sSingleton;
         }
@@ -104,7 +104,7 @@ public final class TopicsDao {
     // which was selected randomly. We can refer this 6th topic as the random-topic.
     @VisibleForTesting
     @NonNull
-    List<String> getTopTopics(long epochId) {
+    List<String> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return new ArrayList<>();
@@ -181,7 +181,7 @@ public final class TopicsDao {
     // Return Map<App, List<SDK>>.
     @VisibleForTesting
     @NonNull
-    Map<String, List<String>> produceAppSdksUsageMap(long epochId) {
+    Map<String, List<String>> retrieveAppSdksUsageMap(long epochId) {
         Map<String, List<String>> appSdksUsageMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
