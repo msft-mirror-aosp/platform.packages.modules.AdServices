@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package android.adservices.topics;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;

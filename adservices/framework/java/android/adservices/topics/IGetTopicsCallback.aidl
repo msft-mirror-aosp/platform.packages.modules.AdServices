@@ -14,9 +14,9 @@
   * limitations under the License.
   */
 
-package android.adservices;
+package android.adservices.topics;
 
-import android.adservices.GetTopicsResponse;
+import android.adservices.topics.GetTopicsResponse;
 
 /**
   * Callback from a get Topics request.

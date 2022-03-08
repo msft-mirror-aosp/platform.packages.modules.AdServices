@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package android.adservices;
+package android.adservices.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -25,7 +25,7 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.GetTopicsRequest} */
+/** Unit tests for {@link android.adservices.topics.GetTopicsRequest} */
 @SmallTest
 public final class GetTopicsRequestTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
