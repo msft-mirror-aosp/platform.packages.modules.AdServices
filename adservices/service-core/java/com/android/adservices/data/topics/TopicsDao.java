@@ -103,11 +103,16 @@ public final class TopicsDao {
 
     }
 
-    // Return the Top Topics. This will return a list of 5 top topics and the 6th topic
-    // which was selected randomly. We can refer this 6th topic as the random-topic.
+    /**
+     * Return the Top Topics. This will retrieve a list of 5 top topics and the 6th random topic
+     * from DB.
+     *
+     * @param epochId the epochId to retrieve the top topics.
+     * @return List of Top Topics.
+     */
     @VisibleForTesting
     @NonNull
-    List<String> retrieveTopTopics(long epochId) {
+    public List<String> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return new ArrayList<>();
@@ -180,11 +185,13 @@ public final class TopicsDao {
         }
     }
 
-    // Return all apps and their SDKs that called Topics API in the epoch.
-    // Return Map<App, List<SDK>>.
-    @VisibleForTesting
+    /**
+     * Return all apps and their SDKs that called Topics API in the epoch.
+     * @param epochId the epoch to retrieve the app and sdk usage for.
+     * @return Return Map<App, List<SDK>>.
+     */
     @NonNull
-    Map<String, List<String>> retrieveAppSdksUsageMap(long epochId) {
+    public Map<String, List<String>> retrieveAppSdksUsageMap(long epochId) {
         Map<String, List<String>> appSdksUsageMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -222,12 +229,15 @@ public final class TopicsDao {
         return appSdksUsageMap;
     }
 
-    // Input callerCanLearnMap = Map<Topic, Set<Caller>>
-    // This is a Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that
-    // topic. This is similar to the table Can Learn Topic in the explainer.
-    // This helper function will persist this callerCanLearnMap to DB.
-    @VisibleForTesting
-    void persistCallerCanLearnTopics(
+    /**
+     * Persist the Callers can learn topic map to DB.
+     *
+     * @param epochId the epoch Id.
+     * @param callerCanLearnMap callerCanLearnMap = Map<Topic, Set<Caller>>
+     *        This is a Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn
+     *        about that topic. This is similar to the table Can Learn Topic in the explainer.
+     */
+    public void persistCallerCanLearnTopics(
             long epochId, @NonNull Map<String, Set<String>> callerCanLearnMap) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -253,15 +263,20 @@ public final class TopicsDao {
         }
     }
 
-    // Retrieve the CallersCanLearnTopicsMap
-    // Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that topic.
-    // This is similar to the table Can Learn Topic in the explainer.
-    // Map<Topic, Set<Caller>>  where Caller = App or Sdk.
-    // Look back numberOfLookBackEpochs. The current explainer uses 3 past epochs.
-    // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+    /**
+     * Retrieve the CallersCanLearnTopicsMap
+     * This is a Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that
+     * topic. This is similar to the table Can Learn Topic in the explainer.
+     * We will look back numberOfLookBackEpochs epochs. The current explainer uses 3 past epochs.
+     * Basically we select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+     *
+     * @param epochId the epochId
+     * @param numberOfLookBackEpochs Look back numberOfLookBackEpochs.
+     * @return  a Map<Topic, Set<Caller>>  where Caller = App or Sdk.
+     */
     @VisibleForTesting
     @NonNull
-    Map<String, Set<String>> retrieveCallerCanLearnTopicsMap(
+    public Map<String, Set<String>> retrieveCallerCanLearnTopicsMap(
             long epochId, int numberOfLookBackEpochs) {
         Preconditions.checkArgumentPositive(
                 numberOfLookBackEpochs, "numberOfLookBackEpochs must be positive!");
