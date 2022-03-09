@@ -16,8 +16,9 @@
 
 package android.adservices;
 
-import static android.adservices.TopicsManager.TOPICS_SERVICE;
+import static android.adservices.topics.TopicsManager.TOPICS_SERVICE;
 
+import android.adservices.topics.TopicsManager;
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
 import android.content.Context;

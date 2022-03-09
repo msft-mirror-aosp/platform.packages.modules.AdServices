@@ -14,10 +14,10 @@
   * limitations under the License.
   */
 
-package android.adservices;
+package android.adservices.topics;
 
-import android.adservices.IGetTopicsCallback;
-import android.adservices.GetTopicsRequest;
+import android.adservices.topics.GetTopicsRequest;
+import android.adservices.topics.IGetTopicsCallback;
 
 /**
   * Topics Service.
