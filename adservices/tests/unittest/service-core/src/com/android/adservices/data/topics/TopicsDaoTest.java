@@ -25,12 +25,16 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
 
+import com.android.adservices.data.DbTestUtil;
+
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Unit tests for {@link com.android.adservices.data.topics.TopicsDao} */
 @MediumTest
@@ -170,5 +174,70 @@ public final class TopicsDaoTest {
                 () -> {
                     mTopicsDao.recordUsageHistory(/* epochId = */ 1L, /* app = */ "",  "sdk");
                 });
+    }
+
+    @Test
+    public void testPersistCallerCanLearnTopics() {
+        DbTestUtil.deleteTable(TopicsTables.CallerCanLearnTopicsContract.TABLE);
+
+        Map<String, List<String>> appSdksUsageMap = new HashMap<>();
+
+        // app1 called Topics API directly. In addition, 2 of its sdk1 an sdk2 called the Topics
+        // API.
+        appSdksUsageMap.put("app1", Arrays.asList("", "sdk1", "sdk2"));
+
+        appSdksUsageMap.put("app2", Arrays.asList("sdk1", "sdk3", "sdk4"));
+        appSdksUsageMap.put("app3", Arrays.asList("sdk1", "sdk5"));
+
+        // app4 has no SDKs, it called Topics API directly.
+        appSdksUsageMap.put("app4", Arrays.asList(""));
+
+        appSdksUsageMap.put("app5", Arrays.asList("sdk1", "sdk5"));
+
+        Map<String, List<String>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", Arrays.asList("topic1", "topic2"));
+        appClassificationTopicsMap.put("app2", Arrays.asList("topic2", "topic3"));
+        appClassificationTopicsMap.put("app3", Arrays.asList("topic4", "topic5"));
+        appClassificationTopicsMap.put("app4", Arrays.asList("topic5", "topic6"));
+
+        // app5 has not classification topics.
+        appClassificationTopicsMap.put("app5", Arrays.asList());
+
+        Map<String, Set<String>> callerCanLearnMap = new HashMap<>();
+        // topic1 is a classification topic for app1, so all SDKs in apps1 can learn this topic.
+        // In addition, the app1 called the Topics API directly so it can learn topic1 as well.
+        callerCanLearnMap.put("topic1",
+                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+
+        // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
+        // this topic.
+        callerCanLearnMap.put("topic2",
+                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
+
+        // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
+        callerCanLearnMap.put("topic3",
+                new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
+
+        // topic4 is a classification topic for app3, so all SDKs in apps3 can learn this topic.
+        callerCanLearnMap.put("topic4",
+                new HashSet<>(Arrays.asList("sdk1", "sdk5")));
+
+        // topic5 is a classification topic for app3 and app4, so any SDKs in apps3 or app4 can
+        // learn this topic.
+        // app4 called Topics API directly, so it can learn this topic.
+        callerCanLearnMap.put("topic5",
+                new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
+
+        // app4 called the Topics API directly so it can learn this topic.
+        callerCanLearnMap.put("topic6",
+                new HashSet<>(Arrays.asList("app4")));
+
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId = */ 3L, callerCanLearnMap);
+
+        Map<String, Set<String>> callerCanLearnMapFromDb =
+                mTopicsDao.retrieveCallerCanLearnTopicsMap(/* epochId = */ 5L,
+                        /* howManyEpochs = */ 3);
+
+        assertThat(callerCanLearnMap).isEqualTo(callerCanLearnMapFromDb);
     }
 }
