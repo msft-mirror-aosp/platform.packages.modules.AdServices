@@ -49,6 +49,10 @@ java_library {
     static_libs: [
         // TODO(b/208705888): Renable tflite.
         // "tensorflowlite_java",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.annotation_annotation",
+        "guava",
+        "modules-utils-preconditions",
     ],
     apex_available: ["com.android.adservices"],
 }
