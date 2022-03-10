@@ -20,8 +20,8 @@ genrule {
     name: "statslog-adservices-java-gen",
     tools: ["stats-log-api-gen"],
     cmd: "$(location stats-log-api-gen) --java $(out) --module adservices" +
-         " --javaPackage com.android.adservices --javaClass AdServicesStatsLog",
-    out: ["com/android/adservices/AdServicesStatsLog.java"],
+         " --javaPackage com.android.adservices.service.stats --javaClass AdServicesStatsLog",
+    out: ["com/android/adservices/service/stats/AdServicesStatsLog.java"],
 }
 
 filegroup {
