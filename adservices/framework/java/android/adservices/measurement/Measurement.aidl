@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package android.adservices.measurement;
 
 /**
   * Measurement service.
