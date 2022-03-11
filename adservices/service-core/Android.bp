@@ -16,6 +16,14 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+genrule {
+    name: "statslog-adservices-java-gen",
+    tools: ["stats-log-api-gen"],
+    cmd: "$(location stats-log-api-gen) --java $(out) --module adservices" +
+         " --javaPackage com.android.adservices --javaClass AdServicesStatsLog",
+    out: ["com/android/adservices/AdServicesStatsLog.java"],
+}
+
 filegroup {
     name: "adservices-service-core-sources",
     srcs: [
@@ -30,16 +38,21 @@ java_library {
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     srcs: [
-        ":adservices-service-core-sources",
+        ":adservices-service-core-sources", ":statslog-adservices-java-gen",
     ],
     libs: [
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
+        "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
     ],
     static_libs: [
         // TODO(b/208705888): Renable tflite.
         // "tensorflowlite_java",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.annotation_annotation",
+        "guava",
+        "modules-utils-preconditions",
     ],
     apex_available: ["com.android.adservices"],
 }
