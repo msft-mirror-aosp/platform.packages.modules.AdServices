@@ -16,7 +16,6 @@
 
 package com.android.adservices.data;
 
-
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;

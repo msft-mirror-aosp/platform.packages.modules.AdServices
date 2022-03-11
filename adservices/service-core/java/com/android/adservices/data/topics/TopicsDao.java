@@ -31,9 +31,11 @@ import com.android.internal.util.Preconditions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Data Access Object for the Topics API.
@@ -217,5 +219,93 @@ public final class TopicsDao {
         }
 
         return appSdksUsageMap;
+    }
+
+    // Input callerCanLearnMap = Map<Topic, Set<Caller>>
+    // This is a Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that
+    // topic. This is similar to the table Can Learn Topic in the explainer.
+    // This helper function will persist this callerCanLearnMap to DB.
+    @VisibleForTesting
+    void persistCallerCanLearnTopics(long epochId,
+            @NonNull Map<String, Set<String>> callerCanLearnMap) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        for (Map.Entry<String, Set<String>> entry : callerCanLearnMap.entrySet()) {
+            String topic = entry.getKey();
+            Set<String> callers = entry.getValue();
+
+            for (String caller : callers) {
+                ContentValues values = new ContentValues();
+                values.put(TopicsTables.CallerCanLearnTopicsContract.CALLER, caller);
+                values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, topic);
+                values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, epochId);
+
+                try {
+                    db.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values);
+                } catch (SQLException e) {
+                    LogUtil.e(e, "Failed to record can learn topic.");
+                }
+            }
+        }
+    }
+
+    // Retrieve the CallersCanLearnTopicsMap
+    // Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that topic.
+    // This is similar to the table Can Learn Topic in the explainer.
+    // Map<Topic, Set<Caller>>  where Caller = App or Sdk.
+    // Look back numberOfLookBackEpochs. The current explainer uses 3 past epochs.
+    // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+    @VisibleForTesting
+    @NonNull
+    Map<String, Set<String>> retrieveCallerCanLearnTopicsMap(long epochId,
+            int numberOfLookBackEpochs) {
+        Preconditions.checkArgumentPositive(numberOfLookBackEpochs,
+                "numberOfLookBackEpochs must be positive!");
+
+        Map<String, Set<String>> callerCanLearnMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return callerCanLearnMap;
+        }
+
+        String[] projection = {
+                TopicsTables.CallerCanLearnTopicsContract.CALLER,
+                TopicsTables.CallerCanLearnTopicsContract.TOPIC,
+        };
+
+        // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+        String selection = " ? <= " + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID
+                + " AND " + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID + " <= ?";
+        String[] selectionArgs = { String.valueOf(epochId - numberOfLookBackEpochs + 1),
+                String.valueOf(epochId) };
+
+        try (
+                Cursor cursor = db.query(/* distinct = */true,
+                        TopicsTables.CallerCanLearnTopicsContract.TABLE, projection,
+                        selection,
+                        selectionArgs, null, null,
+                        null, null)
+                ) {
+            if (cursor == null) {
+                return callerCanLearnMap;
+            }
+
+            while (cursor.moveToNext()) {
+                String caller = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.CallerCanLearnTopicsContract.CALLER));
+                String topic = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
+
+                if (!callerCanLearnMap.containsKey(topic)) {
+                    callerCanLearnMap.put(topic, new HashSet<>());
+                }
+                callerCanLearnMap.get(topic).add(caller);
+            }
+        }
+
+        return callerCanLearnMap;
     }
 }
