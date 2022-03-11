@@ -30,7 +30,9 @@ filegroup {
         "java/**/*.java",
     ],
     path: "java",
-    visibility: ["//visibility:private"],
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+    ],
 }
 
 java_library {
