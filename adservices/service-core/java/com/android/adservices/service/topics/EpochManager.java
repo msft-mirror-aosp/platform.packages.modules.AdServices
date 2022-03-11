@@ -17,9 +17,13 @@
 package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
+import android.content.Context;
 import android.text.TextUtils;
+import android.util.Pair;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -48,18 +52,24 @@ class EpochManager {
 
     private static EpochManager sSingleton;
 
+    private final TopicsDao mTopicsDao;
+    private final DbHelper mDbHelper;
     private final Random mRandom;
 
-    private EpochManager(@NonNull Random random) {
+    private EpochManager(@NonNull TopicsDao topicsDao, @NonNull DbHelper dbHelper,
+            @NonNull Random random) {
+        mTopicsDao = topicsDao;
+        mDbHelper = dbHelper;
         mRandom = random;
     }
 
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
-    public static EpochManager getInstance() {
+    public static EpochManager getInstance(@NonNull Context context) {
         synchronized (EpochManager.class) {
             if (sSingleton == null) {
-                sSingleton = new EpochManager(new Random());
+                sSingleton = new EpochManager(TopicsDao.getInstance(context),
+                        DbHelper.getInstance(context), new Random());
             }
             return sSingleton;
         }
@@ -70,8 +80,10 @@ class EpochManager {
      * return different instances of EpochManager used for test
      */
     @NonNull
-    public static EpochManager getInstanceForTest(@NonNull Random random) {
-        return new EpochManager(random);
+    public static EpochManager getInstanceForTest(@NonNull Context context,
+            @NonNull Random random) {
+        return new EpochManager(TopicsDao.getInstanceForTest(context),
+                DbHelper.getInstanceForTest(context), random);
     }
 
     // Return a Map from Topic to set of App or Sdk that can learn about that topic.
@@ -119,6 +131,48 @@ class EpochManager {
         }
 
         return callersCanLearnMap;
+    }
+
+    // Inputs:
+    // callersCanLearnMap = Map<Topic, Set<Caller>> map from topic to set of callers that can learn
+    // about the topic. Caller = App or Sdk.
+    // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
+    // in the current Epoch.
+    // topTopics = List<Topic> list of top 5 topics and 1 random topic.
+    //
+    // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+    @VisibleForTesting
+    @NonNull
+    Map<Pair<String, String>, String> computeReturnedAppSdkTopics(
+            @NonNull Map<String, Set<String>> callersCanLearnMap,
+            @NonNull Map<String, List<String>> appSdksUsageMap,
+            @NonNull List<String> topTopics) {
+        Map<Pair<String, String>, String> returnedAppSdkTopics = new HashMap<>();
+
+        for (Map.Entry<String, List<String>> app : appSdksUsageMap.entrySet()) {
+            String returnedTopic = selectRandomTopic(topTopics);
+            Set<String> callersCanLearnThisTopic = callersCanLearnMap.get(returnedTopic);
+            if (callersCanLearnThisTopic == null) {
+                continue;
+            }
+
+            // Check if the app can learn this topic.
+            if (callersCanLearnThisTopic.contains(app.getKey())) {
+                // The app calls Topics API directly. In this case, we set the sdk == empty string.
+                returnedAppSdkTopics.put(
+                        Pair.create(app.getKey(), /* empty Sdk */ ""), returnedTopic);
+            }
+
+            // Then check all SDKs of the app.
+            for (String sdk : app.getValue()) {
+                if (callersCanLearnThisTopic.contains(sdk)) {
+                    returnedAppSdkTopics.put(
+                            Pair.create(app.getKey(), sdk), returnedTopic);
+                }
+            }
+        }
+
+        return returnedAppSdkTopics;
     }
 
     // Return a random topics from the Top Topics.
