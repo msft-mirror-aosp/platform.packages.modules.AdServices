@@ -22,6 +22,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -320,5 +321,105 @@ public final class TopicsDao {
         }
 
         return callerCanLearnMap;
+    }
+
+    // Persist the Apps, Sdks returned topics to DB.
+    // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+    @VisibleForTesting
+    void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
+            @NonNull Map<Pair<String, String>, String> returnedAppSdkTopics) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        for (Map.Entry<Pair<String, String>, String> app : returnedAppSdkTopics.entrySet()) {
+            // Entry: Key = <Pair<App, Sdk>, Value = Topic.
+            ContentValues values = new ContentValues();
+            values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, epochId);
+            values.put(TopicsTables.ReturnedTopicContract.APP, app.getKey().first);
+            values.put(TopicsTables.ReturnedTopicContract.SDK, app.getKey().second);
+            values.put(TopicsTables.ReturnedTopicContract.TOPIC, app.getValue());
+            values.put(TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION, taxonomyVersion);
+            values.put(TopicsTables.ReturnedTopicContract.MODEL_VERSION, modelVersion);
+
+            try {
+                db.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values);
+            } catch (SQLException e) {
+                LogUtil.e(e, "Failed to record returned topic.");
+            }
+        }
+    }
+
+    /**
+     * Retrieve from the Topics ReturnedTopics Table and populate into the map.
+     * Will return topics for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
+     * @param epochId the current epochId
+     * @param numberOfLookBackEpochs How many epoch to look back. The current explainer uses 3
+     *                              epochs
+     * @return Map<EpochId, Map<Pair<App, Sdk>, Topic>
+     */
+    @NonNull
+    public Map<Long, Map<Pair<String, String>, Topic>> retrieveReturnedTopics(long epochId,
+            int numberOfLookBackEpochs) {
+        Map<Long, Map<Pair<String, String>, Topic>> topicsMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return topicsMap;
+        }
+
+        String[] projection = {
+                TopicsTables.ReturnedTopicContract.EPOCH_ID,
+                TopicsTables.ReturnedTopicContract.APP,
+                TopicsTables.ReturnedTopicContract.SDK,
+                TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
+                TopicsTables.ReturnedTopicContract.MODEL_VERSION,
+                TopicsTables.ReturnedTopicContract.TOPIC,
+        };
+
+        // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+        String selection = " ? <= " + TopicsTables.ReturnedTopicContract.EPOCH_ID
+                + " AND " + TopicsTables.ReturnedTopicContract.EPOCH_ID + " <= ?";
+        String[] selectionArgs = { String.valueOf(epochId - numberOfLookBackEpochs + 1),
+                String.valueOf(epochId) };
+
+        try (Cursor cursor = db.query(
+                TopicsTables.ReturnedTopicContract.TABLE,   // The table to query
+                projection,             // The array of columns to return (pass null to get all)
+                selection,              // The columns for the WHERE clause
+                selectionArgs,          // The values for the WHERE clause
+                null,           // don't group the rows
+                null,            // don't filter by row groups
+                null            // The sort order
+        )) {
+            if (cursor == null) {
+                return topicsMap;
+            }
+
+            while (cursor.moveToNext()) {
+                long cursorEpochId = cursor.getLong(cursor.getColumnIndexOrThrow(
+                        TopicsTables.ReturnedTopicContract.EPOCH_ID));
+                String app = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.ReturnedTopicContract.APP));
+                String sdk = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.ReturnedTopicContract.SDK));
+                long taxonomyVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
+                        TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
+                long modelVersion = cursor.getInt(cursor.getColumnIndexOrThrow(
+                        TopicsTables.ReturnedTopicContract.MODEL_VERSION));
+                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.ReturnedTopicContract.TOPIC));
+
+                // Building Map<EpochId, Map<Pair<AppId, AdTechId>, Topic>
+                if (!topicsMap.containsKey(cursorEpochId)) {
+                    topicsMap.put(cursorEpochId, new HashMap<>());
+                }
+
+                Topic topic = new Topic(topicString, taxonomyVersion, modelVersion);
+                topicsMap.get(epochId).put(Pair.create(app, sdk), topic);
+            }
+        }
+
+        return topicsMap;
     }
 }
