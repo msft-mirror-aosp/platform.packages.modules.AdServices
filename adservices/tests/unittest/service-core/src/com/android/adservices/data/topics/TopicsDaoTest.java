@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
@@ -247,5 +248,46 @@ public final class TopicsDaoTest {
                         /* howManyEpochs = */ 3);
 
         assertThat(callerCanLearnMap).isEqualTo(callerCanLearnMapFromDb);
+    }
+
+    @Test
+    public void testPersistAndRetrieveReturnedAppTopics() {
+        // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+        Map<Pair<String, String>, String> returnedAppSdkTopics = new HashMap<>();
+        returnedAppSdkTopics.put(Pair.create("app1", ""), "topic1");
+        returnedAppSdkTopics.put(Pair.create("app1", "sdk1"), "topic1");
+        returnedAppSdkTopics.put(Pair.create("app1", "sdk2"), "topic1");
+
+        returnedAppSdkTopics.put(Pair.create("app2", "sdk1"), "topic2");
+        returnedAppSdkTopics.put(Pair.create("app2", "sdk3"), "topic2");
+        returnedAppSdkTopics.put(Pair.create("app2", "sdk4"), "topic2");
+
+        returnedAppSdkTopics.put(Pair.create("app3", "sdk1"), "topic3");
+
+        returnedAppSdkTopics.put(Pair.create("app5", "sdk1"), "topic5");
+        returnedAppSdkTopics.put(Pair.create("app5", "sdk5"), "topic5");
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 1L, /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L, returnedAppSdkTopics);
+
+        Map<Pair<String, String>, Topic> expectedReturnedAppSdkTopics = new HashMap<>();
+        for (Map.Entry<Pair<String, String>, String>  entry
+                : returnedAppSdkTopics.entrySet()) {
+            expectedReturnedAppSdkTopics.put(entry.getKey(),
+                    new Topic(entry.getValue(), /* taxonomyVersion = */ 1L,
+                            /* modelVersion = */ 1L));
+        }
+
+        // Map<EpochId, Map<Pair<App, Sdk>, Topic>
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb =
+                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 1L,
+                        /* numberOfLookBackEpochs = */ 1);
+
+        // There is 1 epoch.
+        assertThat(returnedTopicsFromDb).hasSize(1);
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsFromDb = returnedTopicsFromDb.get(1L);
+
+        // And the returedAppSdkTopics match.
+        assertThat(returnedAppSdkTopicsFromDb).isEqualTo(expectedReturnedAppSdkTopics);
     }
 }
