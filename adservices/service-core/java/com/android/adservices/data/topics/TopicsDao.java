@@ -226,8 +226,8 @@ public final class TopicsDao {
     // topic. This is similar to the table Can Learn Topic in the explainer.
     // This helper function will persist this callerCanLearnMap to DB.
     @VisibleForTesting
-    void persistCallerCanLearnTopics(long epochId,
-            @NonNull Map<String, Set<String>> callerCanLearnMap) {
+    void persistCallerCanLearnTopics(
+            long epochId, @NonNull Map<String, Set<String>> callerCanLearnMap) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
@@ -260,10 +260,10 @@ public final class TopicsDao {
     // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
     @VisibleForTesting
     @NonNull
-    Map<String, Set<String>> retrieveCallerCanLearnTopicsMap(long epochId,
-            int numberOfLookBackEpochs) {
-        Preconditions.checkArgumentPositive(numberOfLookBackEpochs,
-                "numberOfLookBackEpochs must be positive!");
+    Map<String, Set<String>> retrieveCallerCanLearnTopicsMap(
+            long epochId, int numberOfLookBackEpochs) {
+        Preconditions.checkArgumentPositive(
+                numberOfLookBackEpochs, "numberOfLookBackEpochs must be positive!");
 
         Map<String, Set<String>> callerCanLearnMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
@@ -272,32 +272,45 @@ public final class TopicsDao {
         }
 
         String[] projection = {
-                TopicsTables.CallerCanLearnTopicsContract.CALLER,
-                TopicsTables.CallerCanLearnTopicsContract.TOPIC,
+            TopicsTables.CallerCanLearnTopicsContract.CALLER,
+            TopicsTables.CallerCanLearnTopicsContract.TOPIC,
         };
 
         // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
-        String selection = " ? <= " + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID
-                + " AND " + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID + " <= ?";
-        String[] selectionArgs = { String.valueOf(epochId - numberOfLookBackEpochs + 1),
-                String.valueOf(epochId) };
+        String selection =
+                " ? <= "
+                        + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID
+                        + " AND "
+                        + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID
+                        + " <= ?";
+        String[] selectionArgs = {
+            String.valueOf(epochId - numberOfLookBackEpochs + 1), String.valueOf(epochId)
+        };
 
-        try (
-                Cursor cursor = db.query(/* distinct = */true,
-                        TopicsTables.CallerCanLearnTopicsContract.TABLE, projection,
+        try (Cursor cursor =
+                db.query(
+                        /* distinct = */ true,
+                        TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                        projection,
                         selection,
-                        selectionArgs, null, null,
-                        null, null)
-                ) {
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             if (cursor == null) {
                 return callerCanLearnMap;
             }
 
             while (cursor.moveToNext()) {
-                String caller = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.CallerCanLearnTopicsContract.CALLER));
-                String topic = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
+                String caller =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.CallerCanLearnTopicsContract.CALLER));
+                String topic =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
 
                 if (!callerCanLearnMap.containsKey(topic)) {
                     callerCanLearnMap.put(topic, new HashSet<>());
