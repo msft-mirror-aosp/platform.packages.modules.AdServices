@@ -355,8 +355,7 @@ public final class TopicsDao {
      * Retrieve from the Topics ReturnedTopics Table and populate into the map.
      * Will return topics for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
      * @param epochId the current epochId
-     * @param numberOfLookBackEpochs How many epoch to look back. The current explainer uses 3
-     *                              epochs
+     * @param numberOfLookBackEpochs How many epoch to look back. The curent explainer uses 3 epochs
      * @return Map<EpochId, Map<Pair<App, Sdk>, Topic>
      */
     @NonNull
