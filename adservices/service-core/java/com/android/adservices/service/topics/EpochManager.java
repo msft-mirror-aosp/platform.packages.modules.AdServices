@@ -17,37 +17,61 @@
 package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 
-/**
- * A class to manage Epoch computation.
- */
+/** A class to manage Epoch computation. */
 class EpochManager {
+
+    // TODO(b/223915674): make this configurable.
+    // The Top Topics will have 6 topics.
+    // The first 5 topics are the Top Topics derived by ML, and the 6th is a random topic from
+    // taxonomy.
+    // The index starts from 0.
+    private static final int RANDOM_TOPIC_INDEX = 5;
+
+    // TODO(b/223916172): make this configurable.
+    // The number of top Topics not including the random one.
+    private static final int NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE = 5;
 
     private static EpochManager sSingleton;
 
-    private EpochManager() {}
+    private final Random mRandom;
+
+    private EpochManager(@NonNull Random random) {
+        mRandom = random;
+    }
 
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
-    public static EpochManager getInstance(@NonNull Context context) {
+    public static EpochManager getInstance() {
         synchronized (EpochManager.class) {
             if (sSingleton == null) {
-                sSingleton = new EpochManager();
+                sSingleton = new EpochManager(new Random());
             }
             return sSingleton;
         }
+    }
+
+    /**
+     * Returns an instance of the EpochManager given a context. Not using Singleton so that we can
+     * return different instances of EpochManager used for test
+     */
+    @NonNull
+    public static EpochManager getInstanceForTest(@NonNull Random random) {
+        return new EpochManager(random);
     }
 
     // Return a Map from Topic to set of App or Sdk that can learn about that topic.
@@ -97,4 +121,20 @@ class EpochManager {
         return callersCanLearnMap;
     }
 
+    // Return a random topics from the Top Topics.
+    // The Top Topics include the Top 5 Topics and one random topic from the Taxonomy.
+    @VisibleForTesting
+    String selectRandomTopic(List<String> topTopics) {
+        Preconditions.checkArgument(topTopics.size() == 6);
+        int random = mRandom.nextInt(100);
+
+        // For 5%, get the random topic.
+        if (random < AdServicesConfig.getTopicsPercentageForRandomTopic()) {
+            // The random topic is the last one on the list.
+            return topTopics.get(RANDOM_TOPIC_INDEX);
+        }
+
+        // For 95%, pick randomly one out of 5 top topics.
+        return topTopics.get(random % NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE);
+    }
 }

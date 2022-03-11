@@ -161,6 +161,7 @@ public final class TopicsTables {
         String SDK = "sdk";
     }
 
+
     // Create Statement for the Usage History table
     private static final String CREATE_TABLE_USAGE_HISTORY =
             "CREATE TABLE "

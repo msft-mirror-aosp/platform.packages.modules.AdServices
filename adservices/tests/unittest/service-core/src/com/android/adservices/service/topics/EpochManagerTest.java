@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.MockRandom;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -63,34 +65,32 @@ public final class EpochManagerTest {
         Map<String, Set<String>> expectedCallerCanLearnMap = new HashMap<>();
         // topic1 is a classification topic for app1, so all SDKs in apps1 can learn this topic.
         // In addition, the app1 called the Topics API directly so it can learn topic1 as well.
-        expectedCallerCanLearnMap.put("topic1",
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        expectedCallerCanLearnMap.put(
+                "topic1", new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
 
         // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
         // this topic.
-        expectedCallerCanLearnMap.put("topic2",
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
+        expectedCallerCanLearnMap.put(
+                "topic2", new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
 
         // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
-        expectedCallerCanLearnMap.put("topic3",
-                new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
+        expectedCallerCanLearnMap.put(
+                "topic3", new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
 
         // topic4 is a classification topic for app3, so all SDKs in apps3 can learn this topic.
-        expectedCallerCanLearnMap.put("topic4",
-                new HashSet<>(Arrays.asList("sdk1", "sdk5")));
+        expectedCallerCanLearnMap.put("topic4", new HashSet<>(Arrays.asList("sdk1", "sdk5")));
 
         // topic5 is a classification topic for app3 and app4, so any SDKs in apps3 or app4 can
         // learn this topic.
         // app4 called Topics API directly, so it can learn this topic.
-        expectedCallerCanLearnMap.put("topic5",
-                new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
+        expectedCallerCanLearnMap.put(
+                "topic5", new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
 
         // app4 called the Topics API directly so it can learn this topic.
-        expectedCallerCanLearnMap.put("topic6",
-                new HashSet<>(Arrays.asList("app4")));
+        expectedCallerCanLearnMap.put("topic6", new HashSet<>(Arrays.asList("app4")));
 
-        Map<String, Set<String>> canLearnMap = EpochManager.computeCallersCanLearnMap(
-                appSdksUsageMap, appClassificationTopicsMap);
+        Map<String, Set<String>> canLearnMap =
+                EpochManager.computeCallersCanLearnMap(appSdksUsageMap, appClassificationTopicsMap);
 
         assertThat(canLearnMap).isEqualTo(expectedCallerCanLearnMap);
     }
@@ -100,15 +100,66 @@ public final class EpochManagerTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    EpochManager.computeCallersCanLearnMap(/* appSdksUsageMap = */ null,
+                    EpochManager.computeCallersCanLearnMap(
+                            /* appSdksUsageMap = */ null,
                             /* appClassificationTopicsMap = */ new HashMap<>());
                 });
 
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    EpochManager.computeCallersCanLearnMap(/* appSdksUsageMap = */ new HashMap<>(),
+                    EpochManager.computeCallersCanLearnMap(
+                            /* appSdksUsageMap = */ new HashMap<>(),
                             /* appClassificationTopicsMap = */ null);
+                });
+    }
+
+    @Test
+    public void testSelectRandomTopic() {
+        // Create a new epochManager that we can control the random generator.
+        EpochManager epochManager =
+                EpochManager.getInstanceForTest(new MockRandom(new long[] {1, 5, 6, 7, 8, 9}));
+        List<String> topTopics =
+                Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5", "random_topic");
+
+        // random = 1
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo("random_topic");
+
+        // random = 5
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo("topic1");
+
+        // random = 6
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo("topic2");
+
+        // random = 7
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo("topic3");
+
+        // random = 8
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo("topic4");
+
+        // random = 9
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo("topic5");
+    }
+
+    @Test
+    public void testSelectRandomTopic_invalidSize_throw() {
+        // Create a new epochManager that we can control the random generator.
+        EpochManager epochManager =
+                EpochManager.getInstanceForTest(new MockRandom(new long[] {1, 5, 6, 7, 8, 9}));
+        List<String> topTopics =
+                Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5", "random_topic");
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    epochManager.selectRandomTopic(
+                            Arrays.asList("topic1", "topic2", "random_topic"));
+                });
+
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    epochManager.selectRandomTopic(/* topTopics = */ null);
                 });
     }
 }
