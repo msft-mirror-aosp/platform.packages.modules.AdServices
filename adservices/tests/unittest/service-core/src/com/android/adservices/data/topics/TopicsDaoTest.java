@@ -46,7 +46,7 @@ public final class TopicsDaoTest {
 
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
-        List<String> topicsFromDb = mTopicsDao.getTopTopics(/* epochId = */ 1L);
+        List<String> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 1L);
 
         // Make sure that what we write to db is equal to what we read from db.
         assertThat(topicsFromDb).isEqualTo(topTopics);
@@ -60,7 +60,7 @@ public final class TopicsDaoTest {
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
         // Try to fetch TopTopics for a different epoch. It should find anything.
-        List<String> topicsFromDb = mTopicsDao.getTopTopics(/* epochId = */ 2L);
+        List<String> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 2L);
 
         assertThat(topicsFromDb).isEmpty();
     }
@@ -109,7 +109,7 @@ public final class TopicsDaoTest {
 
         // Now read back the usages from DB.
         Map<String, List<String>> appSdksUsageMapFromDb =
-                mTopicsDao.produceAppSdksUsageMap(/* epochId = */ 1L);
+                mTopicsDao.retrieveAppSdksUsageMap(/* epochId = */ 1L);
 
         // Make sure that what we write to db is equal to what we read from db.
         assertThat(appSdksUsageMapFromDb).isEqualTo(expectedAppSdksUsageMap);
@@ -134,12 +134,12 @@ public final class TopicsDaoTest {
         Map<String, List<String>> expectedAppSdksUsageMap = new HashMap<>();
         expectedAppSdksUsageMap.put("app1", Arrays.asList("", "sdk1", "sdk2"));
         expectedAppSdksUsageMap.put("app2", Arrays.asList("sdk1", "sdk3"));
-        expectedAppSdksUsageMap.put("app2", Arrays.asList(""));
+        expectedAppSdksUsageMap.put("app3", Arrays.asList(""));
 
         // Now read back the usages from DB.
         // Note that we record for epochId = 1L but read from DB for epochId = 2L.
         Map<String, List<String>> appSdksUsageMapFromDb =
-                mTopicsDao.produceAppSdksUsageMap(/* epochId = */ 2L);
+                mTopicsDao.retrieveAppSdksUsageMap(/* epochId = */ 2L);
 
         // The map from DB is empty since we read epochId = 2L.
         assertThat(appSdksUsageMapFromDb).isEmpty();
