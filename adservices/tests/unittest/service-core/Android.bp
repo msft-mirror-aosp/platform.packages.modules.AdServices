@@ -17,22 +17,25 @@ package {
 }
 
 android_test {
-    name: "AdServicesCoreUnitTests",
+    name: "AdServicesServiceCoreUnitTests",
     srcs: [
         "src/**/*.java",
     ],
+    sdk_version: "current", // We use hidden APIs in this test
     static_libs: [
-        "androidx.test.runner",
-        "androidx.test.core",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "adservices-service-core",
         "truth-prebuilt",
         "ub-uiautomator",
-        "adservices-service-core",
+        "framework-adservices.impl",
     ],
     libs: [
         "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        ],
+    test_suites: [
+        "general-tests",
     ],
-    target_sdk_version: "current",
-    test_suites: ["general-tests"],
 }

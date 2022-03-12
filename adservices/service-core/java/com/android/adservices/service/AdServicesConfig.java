@@ -62,4 +62,20 @@ public class AdServicesConfig {
     public static long getTopicsEpochJobFlexMs() {
         return TOPICS_EPOCH_JOB_FLEX_MS;
     }
+
+    /** The percentage that we will return a random topic from the Taxonomy. Default value is 5%. */
+    public static int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
+
+    /** Returns the percentage that we will return a random topic from the Taxonomy. */
+    public static int getTopicsPercentageForRandomTopic() {
+        return TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+    }
+
+    /** How many epochs to look back when deciding if a caller has observed a topic before. */
+    public static int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
+
+    /** Returns the percentage that we will return a random topic from the Taxonomy. */
+    public static int getTopicsNumberOfLookBackEpochs() {
+        return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
+    }
 }
