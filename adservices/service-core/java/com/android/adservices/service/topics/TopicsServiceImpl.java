@@ -16,7 +16,6 @@
 package com.android.adservices.service.topics;
 
 import android.adservices.topics.GetTopicsRequest;
-import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
@@ -24,8 +23,9 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.AdServicesExecutors;
 
-import java.util.Arrays;
+import java.util.concurrent.Executor;
 
 /**
  * Implementation of {@link ITopicsService}.
@@ -34,24 +34,25 @@ import java.util.Arrays;
  */
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private final Context mContext;
+    private final TopicsWorker mTopicsWorker;
+    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
-    public TopicsServiceImpl(Context context) {
+    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker) {
         mContext = context;
+        mTopicsWorker = topicsWorker;
     }
 
     @Override
-    public void getTopics(@NonNull GetTopicsRequest topicsParams,
+    public void getTopics(@NonNull GetTopicsRequest getTopicsRequest,
             @NonNull IGetTopicsCallback callback) {
-        // TODO: Implement!
-        try {
-            callback.onResult(
-                    new GetTopicsResponse.Builder()
-                            .setTaxonomyVersions(Arrays.asList(1L, 2L))
-                            .setModelVersions(Arrays.asList(3L, 4L))
-                            .setTopics(Arrays.asList("topic1", "topic2"))
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-        }
+        sBackgroundExecutor.execute(() -> {
+            try {
+                // TODO(b/223396937): use real app and sdk instead of hard coded.
+                callback.onResult(mTopicsWorker.getTopics(/* app = */ "app",
+                        /* sdk = */ "sdk"));
+            } catch (RemoteException e) {
+                LogUtil.e("Unable to send result to the callback", e);
+            }
+        });
     }
 }
