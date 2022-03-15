@@ -45,12 +45,13 @@ import java.util.List;
 public class TopicsWorkerTest {
     private TopicsWorker mTopicsWorker;
 
+    @Mock private EpochManager mMockEpochManager;
     @Mock private CacheManager mMockCacheManager;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockCacheManager);
+        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager, mMockCacheManager);
     }
 
     @Test
@@ -170,5 +171,11 @@ public class TopicsWorkerTest {
         verify(mMockCacheManager, only()).getTopics(/* epochId*/ eq(1L),
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk_not_in_cache"));
+    }
+
+    @Test
+    public void testRecordUsage() {
+        mTopicsWorker.recordUsage("app", "sdk");
+        verify(mMockEpochManager, only()).recordUsageHistory(eq("app"), eq("sdk"));
     }
 }
