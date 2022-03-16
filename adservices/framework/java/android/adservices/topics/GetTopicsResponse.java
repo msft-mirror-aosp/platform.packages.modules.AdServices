@@ -27,6 +27,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represent the result from the getTopics API.
@@ -177,6 +178,29 @@ public final class GetTopicsResponse implements Parcelable {
     @NonNull
     public List<String> getTopics() {
         return mTopics;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (!(o instanceof GetTopicsResponse)) {
+            return false;
+        }
+
+        GetTopicsResponse that = (GetTopicsResponse) o;
+
+        return mResultCode == that.mResultCode
+                && Objects.equals(mErrorMessage, that.mErrorMessage)
+                && mTaxonomyVersions.equals(that.mTaxonomyVersions)
+                && mModelVersions.equals(that.mModelVersions) && mTopics.equals(that.mTopics);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mResultCode, mErrorMessage, mTaxonomyVersions, mModelVersions, mTopics);
     }
 
     // Read the list of long from parcel.

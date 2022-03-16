@@ -29,7 +29,7 @@ public class AdServicesVersion {
     /**
      * The API version of this AdServices API.
      */
-    public static int API_VERSION;
+    public static final int API_VERSION;
 
     static {
         API_VERSION = 1;
