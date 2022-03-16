@@ -16,9 +16,14 @@
 
 package android.adservices;
 
+import static android.adservices.topics.TopicsManager.TOPICS_SERVICE;
+
+import android.adservices.topics.TopicsManager;
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
 import android.content.Context;
+
+import com.android.adservices.LogUtil;
 
 /**
  * Class holding initialization code for the AdServices module.
@@ -39,6 +44,9 @@ public class AdServicesFrameworkInitializer {
      *     {@link SystemServiceRegistry}
      */
     public static void registerServiceWrappers() {
-        // TODO(b/3812580): register the TopicsManager to the SystemServiceRegistry.
+        LogUtil.d("Registering AdServices's TopicsManager.");
+        SystemServiceRegistry.registerContextAwareService(
+                TOPICS_SERVICE, TopicsManager.class,
+                (c) -> new TopicsManager(c));
     }
 }
