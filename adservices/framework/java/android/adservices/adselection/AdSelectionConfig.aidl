@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
-
-import android.annotation.Nullable;
+package android.adservices.adselection;
 
 /**
- * Exception thrown by AdServices.
+ * This defines the AdSelectionConfig class, a configuration created by SDKs which contains
+ * information used in both the {@code runAdSelection} and {@code reportImpression} APIs.
+ * TODO(b/211030283): properly link runAdSelection javadoc
+ * TODO(b/212300065): properly link reportImpression javadoc
  *
- * Hiding for future implementation and review for public exposure.
  * @hide
  */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
-
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
-}
+parcelable AdSelectionConfig;
