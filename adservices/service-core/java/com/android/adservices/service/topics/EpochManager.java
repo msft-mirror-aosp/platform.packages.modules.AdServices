@@ -18,6 +18,7 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 import android.util.Pair;
 
@@ -25,6 +26,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -62,12 +64,15 @@ public class EpochManager {
     private final TopicsDao mTopicsDao;
     private final DbHelper mDbHelper;
     private final Random mRandom;
+    private final Classifier mClassifier;
 
-    private EpochManager(@NonNull TopicsDao topicsDao, @NonNull DbHelper dbHelper,
-            @NonNull Random random) {
+    @VisibleForTesting
+    EpochManager(@NonNull TopicsDao topicsDao, @NonNull DbHelper dbHelper,
+            @NonNull Random random, @NonNull Classifier classifier) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
+        mClassifier = classifier;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -76,7 +81,8 @@ public class EpochManager {
         synchronized (EpochManager.class) {
             if (sSingleton == null) {
                 sSingleton = new EpochManager(TopicsDao.getInstance(context),
-                        DbHelper.getInstance(context), new Random());
+                        DbHelper.getInstance(context), new Random(),
+                        Classifier.getInstance());
             }
             return sSingleton;
         }
@@ -88,9 +94,86 @@ public class EpochManager {
      */
     @NonNull
     public static EpochManager getInstanceForTest(@NonNull Context context,
-            @NonNull Random random) {
+            @NonNull Random random, @NonNull Classifier classifier) {
         return new EpochManager(TopicsDao.getInstanceForTest(context),
-                DbHelper.getInstanceForTest(context), random);
+                DbHelper.getInstanceForTest(context), random, classifier);
+    }
+
+    /**
+     * Offline Epoch Processing.
+     * For more details, see go/rb-topics-epoch-computation
+     */
+    public void processEpoch() {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        // This cross db and java boundaries multiple times so we need to have a db transaction.
+        db.beginTransaction();
+        long epochId = getCurrentEpochId();
+        try {
+            // Step 1: Compute the UsageMap from the UsageHistory table.
+            // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
+            // in the current Epoch.
+            Map<String, List<String>> appSdksUsageMap = mTopicsDao.retrieveAppSdksUsageMap(epochId);
+
+            // Step 2: Compute the Map from App to its classification topics.
+            // Only produce for apps that called the Topics API in the current Epoch.
+            // appClassificationTopicsMap = Map<App, List<Topics>>
+            Map<String, List<String>> appClassificationTopicsMap =
+                    computeAppClassificationTopics(appSdksUsageMap);
+
+            // Step 3: Compute the Callers can learn map for this epoch.
+            // This is similar to the Callers Can Learn table in the explainer.
+            Map<String, Set<String>> callersCanLearnThisEpochMap =
+                    computeCallersCanLearnMap(appSdksUsageMap, appClassificationTopicsMap);
+            // And then save this CallersCanLearnMap to DB.
+            mTopicsDao.persistCallerCanLearnTopics(epochId, callersCanLearnThisEpochMap);
+
+            // Step 4: For each topic, retrieve the callers (App or SDK) that can learn about that
+            // topic. We look at last 3 epochs.
+            // Return callersCanLearnMap = Map<Topic, Set<Caller>>  where Caller = App or Sdk.
+            Map<String, Set<String>> callersCanLearnMap =
+                    mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId,
+                            AdServicesConfig.getTopicsNumberOfLookBackEpochs());
+
+            // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
+            // the 6th topic which is selected randomly. We can refer this 6th topic as the
+            // random-topic.
+            List<String> topTopics = computeTopTopics();
+
+            // Step 6: Assign topics to apps and SDK from the global top topics.
+            // Currently hard-code the taxonomyVersion and the modelVersion.
+            // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+            Map<Pair<String, String>, String> returnedAppSdkTopics =
+                    computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap, topTopics);
+
+            // And persist the map to DB so that we can reuse later.
+            mTopicsDao.persistReturnedAppTopicsMap(epochId, /* taxonomyVersion = */ 1L,
+                    /* modelVersion = */ 1L, returnedAppSdkTopics);
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    // Query the Classifier to get the top Topics for this epoch.
+    @NonNull
+    private List<String> computeTopTopics() {
+        return mClassifier.getTopTopics(
+                AdServicesConfig.getTopicsNumberOfTopTopics(),
+                AdServicesConfig.getTopicsNumberOfRandomTopics());
+    }
+
+    // Compute the Map from App to its classification topics.
+    // Only produce for apps that called the Topics API in the current Epoch.
+    // input:
+    // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
+    // Return appClassificationTopicsMap = Map<App, List<Topic>>
+    @VisibleForTesting
+    Map<String, List<String>> computeAppClassificationTopics(
+            Map<String, List<String>> appSdksUsageMap) {
+        return mClassifier.classify(appSdksUsageMap.keySet());
     }
 
     /**
