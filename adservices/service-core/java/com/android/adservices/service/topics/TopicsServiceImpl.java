@@ -50,6 +50,9 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 // TODO(b/223396937): use real app and sdk instead of hard coded.
                 callback.onResult(mTopicsWorker.getTopics(/* app = */ "app",
                         /* sdk = */ "sdk"));
+
+                // TODO(b/223396937): use real app and sdk instead of hard coded.
+                mTopicsWorker.recordUsage("app", "sdk");
             } catch (RemoteException e) {
                 LogUtil.e("Unable to send result to the callback", e);
             }

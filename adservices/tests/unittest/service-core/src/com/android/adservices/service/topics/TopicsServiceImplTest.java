@@ -21,6 +21,9 @@ import static android.adservices.topics.GetTopicsResponse.RESULT_OK;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.topics.GetTopicsRequest;
@@ -104,6 +107,9 @@ public class TopicsServiceImplTest {
 
         mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResponse);
+
+        // TODO(b/223396937): use real app and sdk instead of hard coded.
+        verify(mMockTopicsWorker, times(1)).recordUsage(eq("app"), eq("sdk"));
     }
 
     @Test
@@ -148,5 +154,8 @@ public class TopicsServiceImplTest {
 
         mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResponse);
+
+        // TODO(b/223396937): use real app and sdk instead of hard coded.
+        verify(mMockTopicsWorker, times(1)).recordUsage(eq("app"), eq("sdk"));
     }
 }

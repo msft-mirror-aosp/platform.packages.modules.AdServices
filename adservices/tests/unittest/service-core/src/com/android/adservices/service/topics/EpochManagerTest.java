@@ -26,7 +26,11 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.data.topics.TopicsTables;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -35,6 +39,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 /** Unit tests for {@link com.android.adservices.topics.EpochManager} */
@@ -43,6 +48,11 @@ public final class EpochManagerTest {
     private static final String TAG = "EpochManagerTest";
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
+
+    @Before
+    public void setup() {
+        DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
+    }
 
     @Test
     public void testComputeCallersCanLearnMap() {
@@ -256,5 +266,38 @@ public final class EpochManagerTest {
         expectedReturnedTopics.put(Pair.create("app2", "sdk1"), "topic1");
 
         assertThat(returnedAppSdkTopics).isEqualTo(expectedReturnedTopics);
+    }
+
+    @Test
+    public void testRecordUsage() {
+        EpochManager epochManager = EpochManager.getInstanceForTest(mContext,
+                new Random());
+        TopicsDao mTopicsDao = TopicsDao.getInstanceForTest(mContext);
+
+        // Record some usages.
+        // App1 called the Topics API directly and its SDKs also call Topics API.
+        // Empty SDK implies the app calls the Topics API directly.
+        epochManager.recordUsageHistory("app1", /* sdk = */ "");
+        epochManager.recordUsageHistory("app1", "sdk1");
+        epochManager.recordUsageHistory("app1", "sdk2");
+
+        // App2 only did not call Topics API directly. Only SDKs of the app2 called the Topics API.
+        epochManager.recordUsageHistory("app2", "sdk1");
+        epochManager.recordUsageHistory("app2", "sdk3");
+
+        // App3 called the Topics API directly and has not other SDKs.
+        epochManager.recordUsageHistory("app3", /* sdk = */ "");
+
+        Map<String, List<String>> expectedAppSdksUsageMap = new HashMap<>();
+        expectedAppSdksUsageMap.put("app1", Arrays.asList("", "sdk1", "sdk2"));
+        expectedAppSdksUsageMap.put("app2", Arrays.asList("sdk1", "sdk3"));
+        expectedAppSdksUsageMap.put("app3", Arrays.asList(""));
+
+        // Now read back the usages from DB.
+        Map<String, List<String>> appSdksUsageMapFromDb =
+                mTopicsDao.retrieveAppSdksUsageMap(epochManager.getCurrentEpochId());
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(appSdksUsageMapFromDb).isEqualTo(expectedAppSdksUsageMap);
     }
 }
