@@ -41,7 +41,7 @@ import java.util.Set;
 /**
  * Data Access Object for the Topics API.
  */
-public final class TopicsDao {
+public class TopicsDao {
     private static TopicsDao sSingleton;
 
     @SuppressWarnings("unused")
@@ -340,8 +340,16 @@ public final class TopicsDao {
 
     // Persist the Apps, Sdks returned topics to DB.
     // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
-    @VisibleForTesting
-    void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
+
+    /**
+     * Persist the Apps, Sdks returned topics to DB.
+     *
+     * @param epochId the epoch Id
+     * @param taxonomyVersion The Taxonomy Version
+     * @param modelVersion The Model Version
+     * returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+     */
+    public void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
             @NonNull Map<Pair<String, String>, String> returnedAppSdkTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
