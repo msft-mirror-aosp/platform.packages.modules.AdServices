@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package android.adservices.customaudience;
 
 /**
-  * Remarketing service.
-  * {@hide}
-  */
-interface Remarketing {
-  // TODO: Define Remarketing API.
-}
+ * Represents the information necessary for a custom audience to participate in ad selection.
+ *
+ * A custom audience is an abstract grouping of users with similar interests, as determined by an
+ * advertiser.  This class is a collection of on-device data that is necessary to serve
+ * advertisements targeting a single custom audience.
+ *
+ * @hide
+ */
+parcelable CustomAudience;
