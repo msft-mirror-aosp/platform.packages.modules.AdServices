@@ -16,6 +16,8 @@
 
 package android.adservices.topics;
 
+import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+
 import android.annotation.NonNull;
 import android.content.AttributionSource;
 import android.os.Parcel;
@@ -27,14 +29,18 @@ import android.os.Parcelable;
  * @hide
  */
 public class GetTopicsRequest implements Parcelable {
-    AttributionSource mAttributionSource;
+    private final AttributionSource mAttributionSource;
+    private final String mSdkName;
 
-    private GetTopicsRequest(AttributionSource attributionSource) {
+    private GetTopicsRequest(@NonNull AttributionSource attributionSource,
+            @NonNull String sdkName) {
         mAttributionSource = attributionSource;
+        mSdkName = sdkName;
     }
 
     private GetTopicsRequest(@NonNull Parcel in) {
         mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
+        mSdkName = in.readString();
     }
 
     public static final @NonNull Creator<GetTopicsRequest> CREATOR =
@@ -58,9 +64,11 @@ public class GetTopicsRequest implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
         mAttributionSource.writeToParcel(out, flags);
+        out.writeString(mSdkName);
     }
 
-    /** Get the AttributionSource.
+    /**
+     * Get the AttributionSource.
      * The AttributionSource is used to obtain the calling chain
      */
     @NonNull
@@ -68,9 +76,18 @@ public class GetTopicsRequest implements Parcelable {
         return mAttributionSource;
     }
 
+    /**
+     * Get the Sdk Name.
+     */
+    @NonNull
+    public String getSdkName() {
+        return mSdkName;
+    }
+
     /** Builder for {@link GetTopicsRequest} objects. */
     public static final class Builder {
         private AttributionSource mAttributionSource;
+        private String mSdkName;
 
         public Builder() {}
 
@@ -80,13 +97,32 @@ public class GetTopicsRequest implements Parcelable {
             return this;
         }
 
+        /**
+         * Set the Sdk Name.
+         * When the app calls the Topics API directly without using a SDK, don't set this field.
+         */
+        public @NonNull Builder setSdkName(@NonNull String sdkName) {
+            mSdkName = sdkName;
+            return this;
+        }
+
         /** Builds a {@link GetTopicsRequest} instance. */
         public @NonNull GetTopicsRequest build() {
             if (mAttributionSource == null) {
                 throw new IllegalArgumentException("AttributionSource unset");
             }
 
-            return new GetTopicsRequest(mAttributionSource);
+            if (mAttributionSource.getPackageName() == null) {
+                throw new IllegalArgumentException("PackageName is not set in AttributionSource");
+            }
+
+            if (mSdkName == null) {
+                // When Sdk name is not set, we assume the App calls the Topics API directly.
+                // We set the Sdk name to empty to mark this.
+                mSdkName = EMPTY_SDK;
+            }
+
+            return new GetTopicsRequest(mAttributionSource, mSdkName);
         }
     }
 }

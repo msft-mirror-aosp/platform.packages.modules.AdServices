@@ -29,35 +29,74 @@ import org.junit.Test;
 @SmallTest
 public final class GetTopicsRequestTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
+    private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
     private static final int SOME_UID = 11;
 
     @Test
-    public void testNonNullAttributionSource() {
+    public void test_nonNull() {
         AttributionSource source =
                 new AttributionSource.Builder(SOME_UID)
                         .setPackageName(SOME_PACKAGE_NAME)
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setAttributionSource(source).build();
+                new GetTopicsRequest.Builder().setAttributionSource(source)
+                        .setSdkName(SOME_SDK_NAME)
+                        .build();
 
         AttributionSource source2 = request.getAttributionSource();
         assertThat(source2).isNotNull();
         assertThat(source2.getUid()).isEqualTo(SOME_UID);
         assertThat(source2.getPackageName()).isEqualTo(SOME_PACKAGE_NAME);
         assertThat(source2.getAttributionTag()).isEqualTo(SOME_ATTRIBUTION_TAG);
+
+        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+
     }
 
     @Test
-    public void testNullAttributionSource() {
+    public void test_nullProperties() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
                     GetTopicsRequest unusedRequest =
                             new GetTopicsRequest.Builder()
                                     // Not setting AttributionSource making it null.
+                                    .setSdkName(SOME_SDK_NAME)
                                     .build();
                 });
+
+        // Null PackageName.
+        AttributionSource source =
+                new AttributionSource.Builder(SOME_UID)
+                        .setPackageName(null)
+                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
+                        .build();
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetTopicsRequest unusedRequest =
+                            new GetTopicsRequest.Builder()
+                                    .setAttributionSource(source)
+                                    .setSdkName(SOME_SDK_NAME)
+                                    .build();
+                });
+    }
+
+    @Test
+    public void test_notSettingSdk_getEmptyString() {
+        AttributionSource source =
+                new AttributionSource.Builder(SOME_UID)
+                        .setPackageName(SOME_PACKAGE_NAME)
+                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
+                        .build();
+
+        GetTopicsRequest request =
+                new GetTopicsRequest.Builder()
+                        .setAttributionSource(source)
+                        // Not setting SdkName will get empty string.
+                        .build();
+        assertThat(request.getSdkName()).isEmpty();
     }
 }
