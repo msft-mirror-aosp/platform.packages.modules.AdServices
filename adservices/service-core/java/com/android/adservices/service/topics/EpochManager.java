@@ -37,7 +37,14 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-class EpochManager {
+public class EpochManager {
+
+    // We use this origin to compute epoch timestamp.
+    // In other words, the first epoch started at
+    // Saturday, January 1, 2022 12:00:00 AM
+    // TODO(b/221463765): get the timestamp when first access to the origin.
+    // Save in SharedPreferences or slqlite db.
+    private static final long ORIGIN_EPOCH_TIMESTAMP = 1640995200;
 
     // TODO(b/223915674): make this configurable.
     // The Top Topics will have 6 topics.
@@ -84,6 +91,19 @@ class EpochManager {
             @NonNull Random random) {
         return new EpochManager(TopicsDao.getInstanceForTest(context),
                 DbHelper.getInstanceForTest(context), random);
+    }
+
+    /**
+     * Record the call from App and Sdk to usage history.
+     * This UsageHistory will be used to determine if a caller (app or sdk) has observed a topic
+     * before.
+     *
+     * @param app the app
+     * @param sdk the sdk of the app. In case the app calls the Topics API directly, the sdk
+     *            == empty string.
+     */
+    public void recordUsageHistory(String app, String sdk) {
+        mTopicsDao.recordUsageHistory(getCurrentEpochId(), app, sdk);
     }
 
     // Return a Map from Topic to set of App or Sdk that can learn about that topic.
@@ -190,5 +210,17 @@ class EpochManager {
 
         // For 95%, pick randomly one out of 5 top topics.
         return topTopics.get(random % NUM_TOP_TOPICS_NOT_INCLUDING_RANDOM_ONE);
+    }
+
+    // Return the current epochId.
+    // Each Epoch will have an Id. The first epoch has Id = 0.
+    // For Alpha 1, we assume a fixed origin epoch starting from
+    // Saturday, January 1, 2022 12:00:00 AM.
+    // Later, we will use per device starting origin.
+    @VisibleForTesting
+    long getCurrentEpochId() {
+        // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
+        return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
+                /  AdServicesConfig.getTopicsEpochJobPeriodMs());
     }
 }

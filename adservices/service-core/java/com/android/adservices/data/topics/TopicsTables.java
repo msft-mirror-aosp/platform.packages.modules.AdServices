@@ -17,6 +17,8 @@
 package com.android.adservices.data.topics;
 
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -152,9 +154,12 @@ public final class TopicsTables {
                     + ReturnedTopicContract.TOPIC + " TEXT NOT NULL"
                     + ")";
 
-    // Table to store the app/sdk usage history.
-    // Whenever an app or sdk calls the Topics API, one entry will be generated with the timestamp.
-    interface UsageHistoryContract {
+    /**
+     * Table to store the app/sdk usage history.
+     * Whenever an app or sdk calls the Topics API, one entry will be generated with the timestamp.
+     */
+    @VisibleForTesting
+    public interface UsageHistoryContract {
         String TABLE = TOPICS_TABLE_PREFIX + "usage_history";
         String EPOCH_ID = "timestamp";
         String APP = "app";
