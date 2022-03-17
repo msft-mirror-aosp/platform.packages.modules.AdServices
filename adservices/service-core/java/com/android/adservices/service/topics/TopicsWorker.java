@@ -21,6 +21,7 @@ import static android.adservices.topics.GetTopicsResponse.RESULT_OK;
 import android.adservices.topics.GetTopicsResponse;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
+import android.content.Context;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.AdServicesConfig;
@@ -52,9 +53,11 @@ public class TopicsWorker {
     // This lock allows concurrent Read API and exclusive Write API.
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
+    private final EpochManager mEpochManager;
     private final CacheManager mCacheManager;
 
-    private TopicsWorker(CacheManager cacheManager) {
+    private TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager) {
+        mEpochManager = epochManager;
         mCacheManager = cacheManager;
     }
 
@@ -65,11 +68,12 @@ public class TopicsWorker {
      * existing instance will be returned.
      */
     @NonNull
-    public static TopicsWorker getInstance() {
+    public static TopicsWorker getInstance(Context context) {
         if (sTopicsWorker == null) {
             synchronized (TopicsWorker.class) {
                 if (sTopicsWorker == null) {
-                    sTopicsWorker = new TopicsWorker(CacheManager.getInstance());
+                    sTopicsWorker = new TopicsWorker(EpochManager.getInstance(context),
+                            CacheManager.getInstance());
                 }
             }
         }
@@ -82,8 +86,9 @@ public class TopicsWorker {
      */
     @VisibleForTesting
     @NonNull
-    static TopicsWorker getInstanceForTest(CacheManager cacheManager) {
-        return new TopicsWorker(cacheManager);
+    static TopicsWorker getInstanceForTest(@NonNull EpochManager epochManager,
+            @NonNull CacheManager cacheManager) {
+        return new TopicsWorker(epochManager, cacheManager);
     }
 
     /**
@@ -117,6 +122,25 @@ public class TopicsWorker {
                     .setModelVersions(modelVersions)
                     .setTopics(topicStrings)
                     .build();
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Record the call from App and Sdk to usage history.
+     * This UsageHistory will be used to determine if a caller (app or sdk) has observed a topic
+     * before.
+     *
+     * @param app the app
+     * @param sdk the sdk of the app. In case the app calls the Topics API directly, the sdk
+     *            == empty string.
+     */
+    @NonNull
+    public void recordUsage(@NonNull String app, @NonNull String sdk) {
+        mReadWriteLock.readLock().lock();
+        try {
+            mEpochManager.recordUsageHistory(app, sdk);
         } finally {
             mReadWriteLock.readLock().unlock();
         }
