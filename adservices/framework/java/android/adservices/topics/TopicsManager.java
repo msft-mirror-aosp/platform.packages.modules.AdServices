@@ -37,6 +37,9 @@ import java.util.concurrent.Executor;
 public class TopicsManager {
     public static final String TOPICS_SERVICE = "topics_service";
 
+    // Whent an app calls the Topics API directly, it sets the SDK name to empty string.
+    static final String EMPTY_SDK = "";
+
     private final Context mContext;
     private final ServiceBinder<ITopicsService> mServiceBinder;
 
@@ -66,8 +69,10 @@ public class TopicsManager {
     /** Return the topics. */
     @NonNull
     public void getTopics(
+            @NonNull String sdkName,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<GetTopicsResponse, AdServicesException> callback) {
+        Objects.requireNonNull(sdkName);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
         final ITopicsService service = getService();
@@ -76,6 +81,7 @@ public class TopicsManager {
             service.getTopics(
                     new GetTopicsRequest.Builder()
                         .setAttributionSource(mContext.getAttributionSource())
+                        .setSdkName(sdkName)
                         .build(),
                     new IGetTopicsCallback.Stub() {
                         @Override
