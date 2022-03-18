@@ -22,6 +22,8 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
+import java.util.Objects;
+
 /**
  * Represent input params to the reportImpression API.
  *
@@ -49,11 +51,15 @@ public final class ReportImpressionRequest implements Parcelable {
 
     public ReportImpressionRequest(
             int adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+
         this.mAdSelectionId = adSelectionId;
         this.mAdSelectionConfig = adSelectionConfig;
     }
 
     private ReportImpressionRequest(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         this.mAdSelectionId = in.readInt();
         this.mAdSelectionConfig = AdSelectionConfig.CREATOR.createFromParcel(in);
     }
@@ -65,6 +71,8 @@ public final class ReportImpressionRequest implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
         dest.writeInt(mAdSelectionId);
         mAdSelectionConfig.writeToParcel(dest, flags);
     }
@@ -97,7 +105,7 @@ public final class ReportImpressionRequest implements Parcelable {
 
         /** Set the mAdSelectionId. */
         @NonNull
-        public ReportImpressionRequest.Builder setAdSelectionId(@NonNull int adSelectionId) {
+        public ReportImpressionRequest.Builder setAdSelectionId(int adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }
@@ -106,6 +114,8 @@ public final class ReportImpressionRequest implements Parcelable {
         @NonNull
         public ReportImpressionRequest.Builder setAdSelectionConfig(
                 @NonNull AdSelectionConfig adSelectionConfig) {
+            Objects.requireNonNull(adSelectionConfig);
+
             this.mAdSelectionConfig = adSelectionConfig;
             return this;
         }
@@ -113,7 +123,7 @@ public final class ReportImpressionRequest implements Parcelable {
         /** Builds a {@link ReportImpressionRequest} instance. */
         @NonNull
         public ReportImpressionRequest build() {
-            Preconditions.checkArgument(mAdSelectionConfig != null, "AdSelectionConfig not set");
+            Objects.requireNonNull(mAdSelectionConfig);
 
             Preconditions.checkArgument(mAdSelectionId != UNSET, "AdSelectionId not set");
 
