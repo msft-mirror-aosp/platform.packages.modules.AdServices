@@ -20,6 +20,8 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.EpochJobService;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -36,7 +38,8 @@ public class TopicsService extends Service {
     public void onCreate() {
         super.onCreate();
         if (mTopicsService == null) {
-            mTopicsService = new TopicsServiceImpl(this, TopicsWorker.getInstance(this));
+            mTopicsService = new TopicsServiceImpl(this, TopicsWorker.getInstance(this),
+                    AdServicesLoggerImpl.getInstance(), Clock.SYSTEM_CLOCK);
             mTopicsService.init();
         }
 

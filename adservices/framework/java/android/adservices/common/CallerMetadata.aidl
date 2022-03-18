@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.stats;
+package android.adservices.common;
 
 /**
- * Interface for Adservices logger.
+ * This interface defines the caller's metadata.
+ * A CallerMetadata is a Parcelable object that contain metadata about the IPC call. It could
+ * contain timestamps for latency computation for example.
+ *
+ * {@hide}
  */
-public interface AdServicesLogger {
-    /**
-     * log method for MeasurementReportsStats.
-     */
-    void logMeasurementReports(MeasurementReportsStats measurementReportsStats);
-
-    /**
-     * log ApiCallStats which has stats about the API call such as the status.
-     */
-    void logApiCallStats(ApiCallStats apiCallStats);
-}
+parcelable CallerMetadata;
