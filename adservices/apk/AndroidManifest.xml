@@ -23,8 +23,7 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <application
         android:label="Android AdServices"
-        android:forceQueryable="true"
-        android:directBootAware="true">
+        android:forceQueryable="true">
         <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name="com.android.adservices.topics.TopicsService"
             android:exported="true"
