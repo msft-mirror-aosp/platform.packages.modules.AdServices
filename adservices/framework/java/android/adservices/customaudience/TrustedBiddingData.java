@@ -39,7 +39,8 @@ public final class TrustedBiddingData implements Parcelable {
     @NonNull
     public static final Creator<TrustedBiddingData> CREATOR = new Creator<TrustedBiddingData>() {
         @Override
-        public TrustedBiddingData createFromParcel(Parcel in) {
+        public TrustedBiddingData createFromParcel(@NonNull Parcel in) {
+            Objects.requireNonNull(in);
             return new TrustedBiddingData(in);
         }
 
@@ -51,17 +52,21 @@ public final class TrustedBiddingData implements Parcelable {
 
     private TrustedBiddingData(@NonNull Uri trustedBiddingUrl,
             @NonNull List<String> trustedBiddingKeys) {
+        Objects.requireNonNull(trustedBiddingUrl);
+        Objects.requireNonNull(trustedBiddingKeys);
         mTrustedBiddingUrl = trustedBiddingUrl;
         mTrustedBiddingKeys = trustedBiddingKeys;
     }
 
     private TrustedBiddingData(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
         mTrustedBiddingUrl = Uri.CREATOR.createFromParcel(in);
         mTrustedBiddingKeys = in.createStringArrayList();
     }
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
         mTrustedBiddingUrl.writeToParcel(dest, flags);
         dest.writeStringList(mTrustedBiddingKeys);
     }
@@ -110,7 +115,9 @@ public final class TrustedBiddingData implements Parcelable {
 
     /** Builder for {@link TrustedBiddingData} objects. */
     public static final class Builder {
+        @NonNull
         private Uri mTrustedBiddingUrl;
+        @NonNull
         private List<String> mTrustedBiddingKeys;
 
         public Builder() { }
@@ -121,6 +128,7 @@ public final class TrustedBiddingData implements Parcelable {
          */
         @NonNull
         public Builder setTrustedBiddingUrl(@NonNull Uri trustedBiddingUrl) {
+            Objects.requireNonNull(trustedBiddingUrl);
             mTrustedBiddingUrl = trustedBiddingUrl;
             return this;
         }
@@ -132,6 +140,7 @@ public final class TrustedBiddingData implements Parcelable {
          */
         @NonNull
         public Builder setTrustedBiddingKeys(@NonNull List<String> trustedBiddingKeys) {
+            Objects.requireNonNull(trustedBiddingKeys);
             mTrustedBiddingKeys = trustedBiddingKeys;
             return this;
         }
@@ -144,7 +153,7 @@ public final class TrustedBiddingData implements Parcelable {
         @NonNull
         public TrustedBiddingData build() {
             Objects.requireNonNull(mTrustedBiddingUrl);
-            // Note that the list of keys is allowed to be empty, just not null
+            // Note that the list of keys is allowed to be empty, but not null
             Objects.requireNonNull(mTrustedBiddingKeys);
 
             return new TrustedBiddingData(mTrustedBiddingUrl, mTrustedBiddingKeys);

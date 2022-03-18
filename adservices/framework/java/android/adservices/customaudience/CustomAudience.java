@@ -69,7 +69,9 @@ public final class CustomAudience implements Parcelable {
     @NonNull
     public static final Creator<CustomAudience> CREATOR = new Creator<CustomAudience>() {
         @Override
-        public CustomAudience createFromParcel(Parcel in) {
+        public CustomAudience createFromParcel(@NonNull Parcel in) {
+            Objects.requireNonNull(in);
+
             return new CustomAudience(in);
         }
 
@@ -84,6 +86,17 @@ public final class CustomAudience implements Parcelable {
             @NonNull Uri dailyUpdateUrl, @NonNull String userBiddingSignals,
             @NonNull TrustedBiddingData trustedBiddingData, @NonNull Uri biddingLogicUrl,
             @NonNull List<AdData> ads) {
+        Objects.requireNonNull(owner);
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(activationTime);
+        Objects.requireNonNull(expirationTime);
+        Objects.requireNonNull(dailyUpdateUrl);
+        Objects.requireNonNull(userBiddingSignals);
+        Objects.requireNonNull(trustedBiddingData);
+        Objects.requireNonNull(biddingLogicUrl);
+        Objects.requireNonNull(ads);
+
         mOwner = owner;
         mBuyer = buyer;
         mName = name;
@@ -97,6 +110,8 @@ public final class CustomAudience implements Parcelable {
     }
 
     private CustomAudience(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         mOwner = in.readString();
         mBuyer = in.readString();
         mName = in.readString();
@@ -111,6 +126,8 @@ public final class CustomAudience implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
         dest.writeString(mOwner);
         dest.writeString(mBuyer);
         dest.writeString(mName);
@@ -308,15 +325,25 @@ public final class CustomAudience implements Parcelable {
 
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
+        @NonNull
         private String mOwner;
+        @NonNull
         private String mBuyer;
+        @NonNull
         private String mName;
+        @NonNull
         private Instant mActivationTime;
+        @NonNull
         private Instant mExpirationTime;
+        @NonNull
         private Uri mDailyUpdateUrl;
+        @NonNull
         private String mUserBiddingSignals;
+        @NonNull
         private TrustedBiddingData mTrustedBiddingData;
+        @NonNull
         private Uri mBiddingLogicUrl;
+        @NonNull
         private List<AdData> mAds;
 
         public Builder() { }
@@ -326,6 +353,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setOwner(@NonNull String owner) {
+            Objects.requireNonNull(owner);
             mOwner = owner;
             return this;
         }
@@ -337,6 +365,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setBuyer(@NonNull String buyer) {
+            Objects.requireNonNull(buyer);
             mBuyer = buyer;
             return this;
         }
@@ -348,6 +377,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setName(@NonNull String name) {
+            Objects.requireNonNull(name);
             mName = name;
             return this;
         }
@@ -363,6 +393,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setActivationTime(@NonNull Instant activationTime) {
+            Objects.requireNonNull(activationTime);
             activationTime = activationTime.truncatedTo(ChronoUnit.SECONDS);
             Preconditions.checkArgument(
                     activationTime.isBefore(Instant.now().truncatedTo(ChronoUnit.SECONDS)
@@ -383,6 +414,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setExpirationTime(@NonNull Instant expirationTime) {
+            Objects.requireNonNull(expirationTime);
             expirationTime = expirationTime.truncatedTo(ChronoUnit.SECONDS);
             Preconditions.checkArgument(expirationTime.isAfter(Instant.now())
                             && expirationTime.isBefore(Instant.now().truncatedTo(ChronoUnit.SECONDS)
@@ -399,6 +431,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setDailyUpdateUrl(@NonNull Uri dailyUpdateUrl) {
+            Objects.requireNonNull(dailyUpdateUrl);
             mDailyUpdateUrl = dailyUpdateUrl;
             return this;
         }
@@ -410,6 +443,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setUserBiddingSignals(@NonNull String userBiddingSignals) {
+            Objects.requireNonNull(userBiddingSignals);
             mUserBiddingSignals = userBiddingSignals;
             return this;
         }
@@ -422,6 +456,7 @@ public final class CustomAudience implements Parcelable {
         @NonNull
         public CustomAudience.Builder setTrustedBiddingData(
                 @NonNull TrustedBiddingData trustedBiddingData) {
+            Objects.requireNonNull(trustedBiddingData);
             mTrustedBiddingData = trustedBiddingData;
             return this;
         }
@@ -431,6 +466,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
+            Objects.requireNonNull(biddingLogicUrl);
             mBiddingLogicUrl = biddingLogicUrl;
             return this;
         }
@@ -442,6 +478,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience.Builder setAds(@NonNull List<AdData> ads) {
+            Objects.requireNonNull(ads);
             mAds = ads;
             return this;
         }
