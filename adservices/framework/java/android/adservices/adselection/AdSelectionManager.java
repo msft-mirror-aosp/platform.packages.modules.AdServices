@@ -21,6 +21,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.os.RemoteException;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -68,6 +69,47 @@ public class AdSelectionManager {
             throw new IllegalStateException("Unable to find the service");
         }
         return service;
+    }
+
+    /** This method runs an asynchronous call to get the result of an on-device Ad selection.
+     * The input {@code adSelectionConfig} is provided by the Ads SDK.
+     * The receiver either returns an {@link AdSelectionOutcome} for a successful run, or an
+     * {@link AdServicesException} indicates the error.
+     */
+    public void runAdSelection(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.runAdSelection(
+                    adSelectionConfig,
+                    new AdSelectionCallback.Stub() {
+                        @Override
+                        public void onResult(AdSelectionResponse resultParcel) {
+                            executor.execute(
+                                    () -> {
+                                        if (resultParcel.getResultCode()
+                                                == AdSelectionResponse.RESULT_OK) {
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome(
+                                                            resultParcel.getAdData(),
+                                                            resultParcel.getAdSelectionId()));
+                                        } else {
+                                            receiver.onError(new AdServicesException(
+                                                    resultParcel.getErrorMessage()));
+                                        }
+                                    });
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("Failure of AdSelection service.", e);
+            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+        }
     }
 
     /** Report the given impression. */
