@@ -42,6 +42,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     @Override
+    public void runAdSelection(
+            @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
+        // TODO(b/221876756): Implement
+        try {
+            callback.onResult(
+                    new AdSelectionResponse.Builder()
+                            .setResultCode(AdSelectionResponse.RESULT_INTERNAL_ERROR)
+                            .setErrorMessage("Not implemented.")
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    @Override
     public void reportImpression(
             @NonNull ReportImpressionRequest requestParams,
             @NonNull ReportImpressionCallback callback) {
