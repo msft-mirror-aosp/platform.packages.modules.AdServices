@@ -56,5 +56,6 @@ java_library {
         "guava",
         "modules-utils-preconditions",
     ],
+    jarjar_rules: "jarjar-rules.txt",
     apex_available: ["com.android.adservices"],
 }
