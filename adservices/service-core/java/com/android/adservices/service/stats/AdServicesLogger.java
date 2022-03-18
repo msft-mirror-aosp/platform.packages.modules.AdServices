@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
-
-import android.annotation.Nullable;
+package com.android.adservices.service.stats;
 
 /**
- * Exception thrown by AdServices.
- *
- * Hiding for future implementation and review for public exposure.
- * @hide
+ * Interface for AdServices logger.
  */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
+public interface AdServicesLogger {
+    /**
+     * log method for measurement reporting.
+     */
+    void logMeasurementReports(MeasurementReportsStats measurementReportsStats);
 
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
+    /**
+     * log method for PPAPI call.
+     */
+    void logApiCallStats(ApiCallStats apiCallStats);
 }

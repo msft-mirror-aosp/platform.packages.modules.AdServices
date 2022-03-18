@@ -71,6 +71,34 @@ public class AdServicesConfig {
         return TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
     }
 
+    /**
+     * The number of top Topics for each epoch.
+     *
+     * With the current explainer, for each epoch, Topics API will select 5 top Topics and 1 random
+     * topic.
+     * This param here is to make the number of selected top topics configurable.
+     */
+    public static int TOPICS_NUMBER_OF_TOP_TOPICS = 5;
+
+    /** Returns the number of top topics. */
+    public static int getTopicsNumberOfTopTopics() {
+        return TOPICS_NUMBER_OF_TOP_TOPICS;
+    }
+
+    /**
+     * The number of random Topics for each epoch.
+     *
+     * With the current explainer, for each epoch, Topics API will select 5 top Topics and 1 random
+     * topic.
+     * This param here is to make the number of random topics configurable.
+     */
+    public static int TOPICS_NUMBER_OF_RANDOM_TOPICS = 1;
+
+    /** Returns the number of top topics. */
+    public static int getTopicsNumberOfRandomTopics() {
+        return TOPICS_NUMBER_OF_RANDOM_TOPICS;
+    }
+
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     public static int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 

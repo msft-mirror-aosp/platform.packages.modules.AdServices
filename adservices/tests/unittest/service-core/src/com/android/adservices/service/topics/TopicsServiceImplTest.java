@@ -21,6 +21,9 @@ import static android.adservices.topics.GetTopicsResponse.RESULT_OK;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.topics.GetTopicsRequest;
@@ -49,6 +52,7 @@ public class TopicsServiceImplTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
     private static final int SOME_UID = 11;
+    private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -72,7 +76,10 @@ public class TopicsServiceImplTest {
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setAttributionSource(source).build();
+                new GetTopicsRequest.Builder()
+                        .setAttributionSource(source)
+                        .setSdkName(SOME_SDK_NAME)
+                        .build();
 
         GetTopicsResponse getTopicsResponse = new GetTopicsResponse.Builder()
                 .setTaxonomyVersions(Arrays.asList(1L, 2L))
@@ -104,6 +111,9 @@ public class TopicsServiceImplTest {
 
         mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResponse);
+
+        verify(mMockTopicsWorker, times(1))
+                .recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
     }
 
     @Test
@@ -114,7 +124,10 @@ public class TopicsServiceImplTest {
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setAttributionSource(source).build();
+                new GetTopicsRequest.Builder()
+                        .setAttributionSource(source)
+                        .setSdkName(SOME_SDK_NAME)
+                        .build();
 
         // No topics (empty list) were returned.
         GetTopicsResponse getTopicsResponse = new GetTopicsResponse.Builder()
@@ -148,5 +161,8 @@ public class TopicsServiceImplTest {
 
         mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResponse);
+
+        verify(mMockTopicsWorker, times(1))
+                .recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
     }
 }

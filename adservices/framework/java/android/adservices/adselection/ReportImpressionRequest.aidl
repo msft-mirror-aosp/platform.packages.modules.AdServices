@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package android.adservices.adselection;
 
 /**
-  * Remarketing service.
-  * {@hide}
-  */
-interface Remarketing {
-  // TODO: Define Remarketing API.
-}
+ * This interface defines the input to the reportImpression API.
+ * A ReportImpressionRequest is a Parcelable object that contains an adSelectionId and an AdSelectionConfig.
+ *
+ * {@hide}
+ */
+parcelable ReportImpressionRequest;

@@ -16,8 +16,12 @@
 
 package android.adservices;
 
+import static android.adservices.adselection.AdSelectionManager.AD_SELECTION_SERVICE;
+import static android.adservices.customaudience.CustomAudienceManagementServiceManager.CUSTOM_AUDIENCE_MANAGEMENT_SERVICE;
 import static android.adservices.topics.TopicsManager.TOPICS_SERVICE;
 
+import android.adservices.adselection.AdSelectionManager;
+import android.adservices.customaudience.CustomAudienceManagementServiceManager;
 import android.adservices.topics.TopicsManager;
 import android.annotation.SystemApi;
 import android.app.SystemServiceRegistry;
@@ -48,5 +52,15 @@ public class AdServicesFrameworkInitializer {
         SystemServiceRegistry.registerContextAwareService(
                 TOPICS_SERVICE, TopicsManager.class,
                 (c) -> new TopicsManager(c));
+
+        LogUtil.d("Registering AdServices's CustomAudienceManagementManager.");
+        SystemServiceRegistry.registerContextAwareService(
+                CUSTOM_AUDIENCE_MANAGEMENT_SERVICE, CustomAudienceManagementServiceManager.class,
+                (c) -> new CustomAudienceManagementServiceManager(c));
+
+        LogUtil.d("Registering AdServices's AdSelectionManager.");
+        SystemServiceRegistry.registerContextAwareService(
+                AD_SELECTION_SERVICE, AdSelectionManager.class,
+                (c) -> new AdSelectionManager(c));
     }
 }

@@ -47,9 +47,12 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull IGetTopicsCallback callback) {
         sBackgroundExecutor.execute(() -> {
             try {
-                // TODO(b/223396937): use real app and sdk instead of hard coded.
-                callback.onResult(mTopicsWorker.getTopics(/* app = */ "app",
-                        /* sdk = */ "sdk"));
+                callback.onResult(mTopicsWorker.getTopics(
+                        getTopicsRequest.getAttributionSource().getPackageName(),
+                        getTopicsRequest.getSdkName()));
+
+                mTopicsWorker.recordUsage(getTopicsRequest.getAttributionSource().getPackageName(),
+                        getTopicsRequest.getSdkName());
             } catch (RemoteException e) {
                 LogUtil.e("Unable to send result to the callback", e);
             }

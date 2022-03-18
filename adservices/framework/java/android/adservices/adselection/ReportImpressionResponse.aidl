@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
-
-import android.annotation.Nullable;
+package android.adservices.adselection;
 
 /**
- * Exception thrown by AdServices.
+ * This interface defines the response of the reportImpression API.
+ * A ReportImpressionResponse is a Parcelable object that contains a status code and a nullable error message.
  *
- * Hiding for future implementation and review for public exposure.
- * @hide
+ * {@hide}
  */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
-
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
-}
+parcelable ReportImpressionResponse;

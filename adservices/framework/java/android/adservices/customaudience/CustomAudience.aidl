@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
-
-import android.annotation.Nullable;
+package android.adservices.customaudience;
 
 /**
- * Exception thrown by AdServices.
+ * Represents the information necessary for a custom audience to participate in ad selection.
  *
- * Hiding for future implementation and review for public exposure.
+ * A custom audience is an abstract grouping of users with similar interests, as determined by an
+ * advertiser.  This class is a collection of on-device data that is necessary to serve
+ * advertisements targeting a single custom audience.
+ *
  * @hide
  */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
-
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
-}
+parcelable CustomAudience;

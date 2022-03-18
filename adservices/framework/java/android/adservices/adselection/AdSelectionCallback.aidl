@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
+package android.adservices.adselection;
 
-import android.annotation.Nullable;
+import android.adservices.adselection.AdSelectionResponse;
 
 /**
- * Exception thrown by AdServices.
- *
- * Hiding for future implementation and review for public exposure.
- * @hide
- */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
+  * Defines a callback for an {@link AdSelectionResponse}, which invokes a method accepting the
+  * {@link AdSelectionResponse} as an argument. It is an input parameter of the
+  * {@code AdSelectionService#runAdSelection(AdSelectionConfig, AdSelectionCallback)} to be used to
+  * return an {@link AdSelectionResponse} if the asynchronous call is successful.
+  *
+  * {@hide}
+  */
+oneway interface AdSelectionCallback{
 
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
+  void onResult(in AdSelectionResponse responseParcel);
 }

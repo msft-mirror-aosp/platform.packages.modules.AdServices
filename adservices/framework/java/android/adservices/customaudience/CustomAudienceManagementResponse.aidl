@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
-
-import android.annotation.Nullable;
+package android.adservices.customaudience;
 
 /**
- * Exception thrown by AdServices.
+ * Custom audience management response object for communicating status codes and error messages when
+ * interfacing with the Custom Audience management API.
  *
- * Hiding for future implementation and review for public exposure.
  * @hide
  */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
-
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
-}
+parcelable CustomAudienceManagementResponse;

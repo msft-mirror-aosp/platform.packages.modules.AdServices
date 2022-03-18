@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
+package android.adservices.customaudience;
 
-import android.annotation.Nullable;
+import android.adservices.customaudience.CustomAudienceManagementResponse;
 
 /**
- * Exception thrown by AdServices.
- *
- * Hiding for future implementation and review for public exposure.
- * @hide
- */
-public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Exception e) {
-        super(message, e);
-    }
-
-    public AdServicesException(@Nullable String message) {
-        super(message);
-    }
+  * Callback from custom audience management joinCustomAudience() or leaveCustomAudience().
+  *
+  * @hide
+  */
+oneway interface ICustomAudienceCallback {
+    /**
+     * Sends back a status code and error message indicating success or failure.
+     */
+    void onResult(in CustomAudienceManagementResponse responseParcel);
 }
