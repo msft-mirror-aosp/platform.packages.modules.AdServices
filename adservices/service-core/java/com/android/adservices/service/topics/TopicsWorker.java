@@ -73,7 +73,7 @@ public class TopicsWorker {
             synchronized (TopicsWorker.class) {
                 if (sTopicsWorker == null) {
                     sTopicsWorker = new TopicsWorker(EpochManager.getInstance(context),
-                            CacheManager.getInstance());
+                            CacheManager.getInstance(context));
                 }
             }
         }
@@ -101,9 +101,7 @@ public class TopicsWorker {
     public GetTopicsResponse getTopics(@NonNull String app, @NonNull String sdk) {
         mReadWriteLock.readLock().lock();
         try {
-            // TODO: fix this hard coded epochId.
-            long epochId = 1L;
-            List<Topic> topics = mCacheManager.getTopics(epochId,
+            List<Topic> topics = mCacheManager.getTopics(
                     AdServicesConfig.getTopicsNumberOfLookBackEpochs(), app, sdk);
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
@@ -143,6 +141,22 @@ public class TopicsWorker {
             mEpochManager.recordUsageHistory(app, sdk);
         } finally {
             mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Load the Topics Cache from DB.
+     */
+    @NonNull
+    public void loadCache() {
+        // This loadCache happens when the TopicsService is created. The Cache is empty at that
+        // time. Since the load happens async, clients can call getTopics API during the cache load.
+        // Here we use Write lock to block Read during that loading time.
+        mReadWriteLock.writeLock().lock();
+        try {
+            mCacheManager.loadCache();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 }

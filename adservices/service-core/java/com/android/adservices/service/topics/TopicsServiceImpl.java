@@ -58,4 +58,20 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             }
         });
     }
+
+    /**
+     * Init the Topics Service.
+     */
+    public void init() {
+        sBackgroundExecutor.execute(() -> {
+            // This is to prevent cold-start latency on getTopics API.
+            // Load cache when the service is created.
+            // The recommended pattern is:
+            // 1) In app startup, wake up the TopicsService.
+            // 2) The TopicsService will load the Topics Cache from DB into memory.
+            // 3) Later, when the app calls Topics API, the returned Topics will be served from
+            // Cache in memory.
+            mTopicsWorker.loadCache();
+        });
+    }
 }
