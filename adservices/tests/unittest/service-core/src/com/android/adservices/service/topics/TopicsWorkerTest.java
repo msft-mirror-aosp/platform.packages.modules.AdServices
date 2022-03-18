@@ -64,7 +64,7 @@ public class TopicsWorkerTest {
         topics.add(new Topic("topic3", /* taxonomyVersion = */ 3L,
                 /* modelVersion = */ 6L));
 
-        when(mMockCacheManager.getTopics(eq(1L),
+        when(mMockCacheManager.getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
@@ -80,7 +80,7 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
 
-        verify(mMockCacheManager, only()).getTopics(eq(1L),
+        verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk"));
     }
@@ -88,7 +88,7 @@ public class TopicsWorkerTest {
     @Test
     public void testGetTopics_emptyCache() {
         // Empty cache.
-        when(mMockCacheManager.getTopics(/* epochId*/ eq(1L),
+        when(mMockCacheManager.getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(new ArrayList<>());
@@ -104,7 +104,7 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
 
-        verify(mMockCacheManager, only()).getTopics(/* epochId*/ eq(1L),
+        verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk"));
     }
@@ -119,7 +119,7 @@ public class TopicsWorkerTest {
         topics.add(new Topic("topic3", /* taxonomyVersion = */ 3L,
                 /* modelVersion = */ 6L));
 
-        when(mMockCacheManager.getTopics(/* epochId*/ eq(1L),
+        when(mMockCacheManager.getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
@@ -136,7 +136,7 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
 
-        verify(mMockCacheManager, only()).getTopics(/* epochId*/ eq(1L),
+        verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app_not_in_cache"), eq("sdk"));
     }
@@ -151,7 +151,7 @@ public class TopicsWorkerTest {
         topics.add(new Topic("topic3", /* taxonomyVersion = */ 3L,
                 /* modelVersion = */ 6L));
 
-        when(mMockCacheManager.getTopics(/* epochId*/ eq(1L),
+        when(mMockCacheManager.getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
@@ -168,7 +168,7 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
 
-        verify(mMockCacheManager, only()).getTopics(/* epochId*/ eq(1L),
+        verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk_not_in_cache"));
     }
@@ -177,5 +177,11 @@ public class TopicsWorkerTest {
     public void testRecordUsage() {
         mTopicsWorker.recordUsage("app", "sdk");
         verify(mMockEpochManager, only()).recordUsageHistory(eq("app"), eq("sdk"));
+    }
+
+    @Test
+    public void testLoadCache() {
+        mTopicsWorker.loadCache();
+        verify(mMockCacheManager, only()).loadCache();
     }
 }
