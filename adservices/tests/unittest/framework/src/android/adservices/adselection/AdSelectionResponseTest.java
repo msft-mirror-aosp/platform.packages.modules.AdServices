@@ -49,8 +49,8 @@ public class AdSelectionResponseTest {
     @Test
     public void testAdSelectionResponseNoAdDataSuccessfulResponse() {
         int adSelectionId = 5;
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
+        NullPointerException thrown = assertThrows(
+                NullPointerException.class,
                 () ->  new AdSelectionResponse.Builder()
                             // Leave AdsData null.
                             .setAdSelectionId(adSelectionId)
@@ -92,16 +92,16 @@ public class AdSelectionResponseTest {
 
     @Test
     public void testAdSelectionResponseNullErrorMessageUnsuccessfulResponse() {
-        IllegalArgumentException thrownInternalError = assertThrows(
-                IllegalArgumentException.class,
+        NullPointerException thrownInternalError = assertThrows(
+                NullPointerException.class,
                 () -> new AdSelectionResponse.Builder()
                             .setResultCode(AdSelectionResponse.RESULT_INTERNAL_ERROR)
                             .build());
         assertThat(thrownInternalError).hasMessageThat()
                 .contains("The ErrorMessage is required for non successful responses.");
 
-        IllegalArgumentException thrownInvalidArgument = assertThrows(
-                IllegalArgumentException.class,
+        NullPointerException thrownInvalidArgument = assertThrows(
+                NullPointerException.class,
                 () -> new AdSelectionResponse.Builder()
                             .setResultCode(AdSelectionResponse.RESULT_INVALID_ARGUMENT)
                             .build());
