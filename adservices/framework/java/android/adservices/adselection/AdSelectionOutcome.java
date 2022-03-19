@@ -33,6 +33,8 @@ public final class AdSelectionOutcome{
     @NonNull private final AdData mAdData;
 
     public AdSelectionOutcome(@NonNull AdData adData, int adSelectionId) {
+        Objects.requireNonNull(adData);
+
         mAdSelectionId = adSelectionId;
         mAdData = adData;
     }

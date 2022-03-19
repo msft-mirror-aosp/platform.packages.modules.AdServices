@@ -27,6 +27,7 @@ import com.android.internal.util.Preconditions;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 /**
  * The AdSelectionResponse class represents the result from the runAdSelection API.
@@ -112,6 +113,8 @@ public final class AdSelectionResponse implements Parcelable {
     }
 
     private AdSelectionResponse(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         mAdData = AdData.CREATOR.createFromParcel(in);
         mAdSelectionId = in.readInt();
         mResultCode = in.readInt();
@@ -122,7 +125,9 @@ public final class AdSelectionResponse implements Parcelable {
     public static final Creator<AdSelectionResponse> CREATOR =
             new Creator<AdSelectionResponse>() {
                 @Override
-                public AdSelectionResponse createFromParcel(Parcel in) {
+                public AdSelectionResponse createFromParcel(@NonNull Parcel in) {
+                    Objects.requireNonNull(in);
+
                     return new AdSelectionResponse(in);
                 }
 
@@ -139,6 +144,8 @@ public final class AdSelectionResponse implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
         dest.writeInt(mAdSelectionId);
         mAdData.writeToParcel(dest, flags);
         dest.writeInt(mResultCode);
@@ -160,13 +167,13 @@ public final class AdSelectionResponse implements Parcelable {
 
         public Builder() {}
         /** the setter method of adSelectionId. */
-        public Builder setAdSelectionId(int adSelectionId) {
+        public @NonNull Builder setAdSelectionId(int adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }
 
         /** the setter method of Advert. */
-        public Builder setAdData(AdData adData) {
+        public @NonNull Builder setAdData(@Nullable AdData adData) {
             this.mAdData = adData;
             return this;
         }
@@ -192,8 +199,8 @@ public final class AdSelectionResponse implements Parcelable {
          */
         public @NonNull AdSelectionResponse build() {
             if (mResultCode == RESULT_OK) {
-                Preconditions.checkArgument(
-                        mAdData != null, "AdData is required for a successful response.");
+                Objects.requireNonNull(
+                        mAdData, "AdData is required for a successful response.");
                 Preconditions.checkArgument(
                         mAdSelectionId != 0,
                         "AdSelectionID should be non-zero for a successful response.");
@@ -201,8 +208,8 @@ public final class AdSelectionResponse implements Parcelable {
                         mErrorMessage == null,
                         "The ErrorMessage should be null for a successful response.");
             } else {
-                Preconditions.checkArgument(
-                        mErrorMessage != null,
+                Objects.requireNonNull(
+                        mErrorMessage,
                         "The ErrorMessage is required for non successful responses.");
             }
             return new AdSelectionResponse(mAdData, mAdSelectionId, mResultCode, mErrorMessage);

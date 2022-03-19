@@ -54,6 +54,8 @@ public class AdSelectionManager {
      * @hide
      */
     public AdSelectionManager(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
@@ -115,7 +117,7 @@ public class AdSelectionManager {
     /** Report the given impression. */
     @NonNull
     public void reportImpression(
-            @NonNull int adSelectionId,
+            int adSelectionId,
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
