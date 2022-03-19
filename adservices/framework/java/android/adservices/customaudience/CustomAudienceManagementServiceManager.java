@@ -40,14 +40,17 @@ public class CustomAudienceManagementServiceManager {
 
     // TODO(b/221861041): Remove warning suppression; context needed later for
     //  authorization/authentication
+    @NonNull
     @SuppressWarnings("unused")
     private final Context mContext;
+    @NonNull
     private final ServiceBinder<ICustomAudienceManagementService> mServiceBinder;
 
     /**
      * Create a service binder CustomAudienceManagementManager
      */
-    public CustomAudienceManagementServiceManager(Context context) {
+    public CustomAudienceManagementServiceManager(@NonNull Context context) {
+        Objects.requireNonNull(context);
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(context,
@@ -58,9 +61,7 @@ public class CustomAudienceManagementServiceManager {
     @NonNull
     private ICustomAudienceManagementService getService() {
         ICustomAudienceManagementService service = mServiceBinder.getService();
-        if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
-        }
+        Objects.requireNonNull(service);
         return service;
     }
 
