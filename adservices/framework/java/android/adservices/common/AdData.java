@@ -39,6 +39,8 @@ public final class AdData implements Parcelable {
     public static final Creator<AdData> CREATOR = new Creator<AdData>() {
         @Override
         public AdData createFromParcel(@NonNull Parcel in) {
+            Objects.requireNonNull(in);
+
             return new AdData(in);
         }
 
@@ -63,12 +65,15 @@ public final class AdData implements Parcelable {
     }
 
     private AdData(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         mRenderUrl = Uri.CREATOR.createFromParcel(in);
         mMetadata = in.readString();
     }
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
         mRenderUrl.writeToParcel(dest, flags);
         dest.writeString(mMetadata);
     }

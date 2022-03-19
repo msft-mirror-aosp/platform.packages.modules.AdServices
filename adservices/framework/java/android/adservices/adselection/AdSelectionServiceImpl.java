@@ -22,6 +22,8 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 
+import java.util.Objects;
+
 /**
  * Implementation of {@link AdSelectionService}.
  *
@@ -35,9 +37,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
      * TODO(b/212300065) remove the warning suppression once the service is implemented.
      */
     @SuppressWarnings("unused")
+    @NonNull
     private final Context mContext;
 
-    public AdSelectionServiceImpl(Context context) {
+    public AdSelectionServiceImpl(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
         mContext = context;
     }
 
@@ -45,6 +50,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
         // TODO(b/221876756): Implement
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(callback);
+
         try {
             callback.onResult(
                     new AdSelectionResponse.Builder()
@@ -62,6 +70,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull ReportImpressionRequest requestParams,
             @NonNull ReportImpressionCallback callback) {
         // TODO(b/212300065): Implement
+        Objects.requireNonNull(requestParams);
+        Objects.requireNonNull(callback);
+
         try {
             callback.onResult(
                     new ReportImpressionResponse.Builder()
