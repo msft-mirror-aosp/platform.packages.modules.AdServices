@@ -22,6 +22,8 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 
+import java.util.Objects;
+
 /**
  * Implementation of the Custom Audience Management service.
  *
@@ -30,10 +32,12 @@ import com.android.adservices.LogUtil;
 public class CustomAudienceManagementServiceImpl extends ICustomAudienceManagementService.Stub {
     // TODO(b/221861041): Remove warning suppression; context needed later for
     //  authorization/authentication
+    @NonNull
     @SuppressWarnings("unused")
     private final Context mContext;
 
-    public CustomAudienceManagementServiceImpl(Context context) {
+    public CustomAudienceManagementServiceImpl(@NonNull Context context) {
+        Objects.requireNonNull(context);
         mContext = context;
     }
 
@@ -45,6 +49,9 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
     @Override
     public void joinCustomAudience(@NonNull CustomAudience customAudience,
             @NonNull ICustomAudienceCallback callback) {
+        Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(callback);
+
         try {
             callback.onResult(
                     new CustomAudienceManagementResponse.Builder()
@@ -65,6 +72,11 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
     @Override
     public void leaveCustomAudience(@NonNull String owner, @NonNull String buyer,
             @NonNull String name, @NonNull ICustomAudienceCallback callback) {
+        Objects.requireNonNull(owner);
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(callback);
+
         try {
             callback.onResult(
                     new CustomAudienceManagementResponse.Builder()

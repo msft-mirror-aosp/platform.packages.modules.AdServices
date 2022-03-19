@@ -97,7 +97,8 @@ public final class CustomAudienceManagementResponse implements Parcelable {
     public static final Creator<CustomAudienceManagementResponse> CREATOR =
             new Creator<CustomAudienceManagementResponse>() {
                 @Override
-                public CustomAudienceManagementResponse createFromParcel(Parcel in) {
+                public CustomAudienceManagementResponse createFromParcel(@NonNull Parcel in) {
+                    Objects.requireNonNull(in);
                     return new CustomAudienceManagementResponse(in);
                 }
 
@@ -114,12 +115,14 @@ public final class CustomAudienceManagementResponse implements Parcelable {
     }
 
     private CustomAudienceManagementResponse(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
         mStatusCode = in.readInt();
         mErrorMessage = in.readString();
     }
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
         dest.writeInt(mStatusCode);
         dest.writeString(mErrorMessage);
     }
@@ -178,7 +181,6 @@ public final class CustomAudienceManagementResponse implements Parcelable {
     public static final class Builder {
         @StatusCode
         private int mStatusCode = STATUS_UNSET;
-
         @Nullable
         private String mErrorMessage;
 
@@ -199,14 +201,11 @@ public final class CustomAudienceManagementResponse implements Parcelable {
         }
 
         /**
-         * Sets the response's error message.
-         *
-         * This method does not permit a null message to be set; simply omit building a message to
-         * leave the error message {@code null}.
+         * Sets the response's error message, which can be null.
          */
         @NonNull
         public CustomAudienceManagementResponse.Builder setErrorMessage(
-                @NonNull String errorMessage) {
+                @Nullable String errorMessage) {
             mErrorMessage = errorMessage;
             return this;
         }
