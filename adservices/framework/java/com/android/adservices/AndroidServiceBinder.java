@@ -18,10 +18,14 @@ package com.android.adservices;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
 import static com.android.adservices.AdServicesCommon.ADSERVICES_PACKAGE;
 
+import android.annotation.Nullable;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.os.IBinder;
 
 import com.android.internal.annotations.GuardedBy;
@@ -108,10 +112,29 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         }
     }
 
-    @GuardedBy("mLock")
-    private T bindServiceLocked() {
+    @Nullable
+    private ComponentName getServiceComponentName() {
         final Intent intent = new Intent(ACTION_TOPICS_SERVICE);
         intent.setPackage(ADSERVICES_PACKAGE);
+
+        final ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(intent,
+                PackageManager.GET_SERVICES);
+        if (resolveInfo == null) {
+            LogUtil.e("Failed to find resolveInfo for adServices service");
+            return null;
+        }
+
+        final ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+        if (serviceInfo == null) {
+            LogUtil.e("Failed to find serviceInfo for adServices service");
+            return null;
+        }
+
+        return new ComponentName(serviceInfo.packageName, serviceInfo.name);
+    }
+
+    @GuardedBy("mLock")
+    private T bindServiceLocked() {
 
         // If we already have a service, just return it.
         if (mService != null) {
@@ -119,6 +142,13 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             // but we can't avoid that.
             return mService;
         }
+
+        ComponentName componentName = getServiceComponentName();
+        if (componentName == null) {
+            LogUtil.e("Failed to find adServices service");
+            return null;
+        }
+        final Intent intent = new Intent().setComponent(componentName);
 
         LogUtil.d("bindService: " + mServiceIntentAction);
         mCountDownLatch = new CountDownLatch(1);

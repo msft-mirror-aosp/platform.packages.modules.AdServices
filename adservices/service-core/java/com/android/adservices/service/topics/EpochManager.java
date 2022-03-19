@@ -301,7 +301,7 @@ public class EpochManager {
     // Saturday, January 1, 2022 12:00:00 AM.
     // Later, we will use per device starting origin.
     @VisibleForTesting
-    long getCurrentEpochId() {
+    public long getCurrentEpochId() {
         // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
         return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
                 /  AdServicesConfig.getTopicsEpochJobPeriodMs());
