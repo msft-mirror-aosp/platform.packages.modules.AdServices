@@ -98,8 +98,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
                 // We use Runnable::run so that the callback is called on a binder thread.
                 // Otherwise we'd use the main thread, which could cause a deadlock.
-                final boolean success = mContext.bindService(intent, BIND_FLAGS, Runnable::run,
-                        mServiceConnection);
+                final boolean success =
+                        mContext.bindService(intent, BIND_FLAGS, Runnable::run, mServiceConnection);
                 if (!success) {
                     LogUtil.e("Failed to bindService: " + intent);
                     mServiceConnection = null;
