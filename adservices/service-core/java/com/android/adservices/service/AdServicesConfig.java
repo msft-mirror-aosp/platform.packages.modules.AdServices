@@ -106,4 +106,34 @@ public class AdServicesConfig {
     public static int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
+
+    /**
+     * Job Id for Measurement Reporting Job ({@link ReportingJobService})
+     */
+    public static final int MEASUREMENT_REPORTING_JOB_ID = 3;
+    public static long MEASUREMENT_REPORTING_JOB_PERIOD_MS = 5 * 60 * 1000; // 5 minutes.
+
+    /**
+     * Returns the max time period (in millis) between each reporting maintenance job run.
+     */
+    public static long getMeasurementReportingJobPeriodMs() {
+        return MEASUREMENT_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Job Id for Measurement Delete Expired Records Job ({@link DeleteExpiredJobService})
+     */
+    public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
+    public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
+            24L * 60L * 60L * 1000L; // 24 hours.
+    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS =
+            28L * 24L * 60L * 60L * 1000L; // 28 days.
+
+    /**
+     * Returns the max time period (in millis) between each expired-record deletion maintenance job
+     * run.
+     */
+    public static long getMeasurementDeleteExpiredJobPeriodMs() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
+    }
 }

@@ -39,6 +39,16 @@ public class DbHelperTest {
         assertTrue(doesTableExist("topics_top_topics"));
         assertTrue(doesTableExist("topics_returned_topics"));
         assertTrue(doesTableExist("topics_usage_history"));
+        assertTrue(doesTableExist("msmt_source"));
+        assertTrue(doesTableExist("msmt_trigger"));
+        assertTrue(doesTableExist("msmt_adtech_urls"));
+        assertTrue(doesTableExist("msmt_event_report"));
+        assertTrue(doesTableExist("msmt_attribution_rate_limit"));
+        assertTrue(doesIndexExist("idx_msmt_source_ad_rt_et"));
+        assertTrue(doesIndexExist("idx_msmt_trigger_ad_rt_tt"));
+        assertTrue(doesIndexExist("idx_msmt_source_et"));
+        assertTrue(doesIndexExist("idx_msmt_trigger_tt"));
+        assertTrue(doesIndexExist("idx_msmt_attribution_rate_limit_ss_ds_tt"));
     }
 
     public boolean doesTableExist(String tableName) {
@@ -50,6 +60,16 @@ public class DbHelperTest {
             if (cursor.getCount() > 0) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean doesIndexExist(String index) {
+        String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
+        Cursor cursor = DbHelper.getInstance(sContext).safeGetReadableDatabase()
+                .rawQuery(query, null);
+        if (cursor != null) {
+            return cursor.getCount() > 0;
         }
         return false;
     }
