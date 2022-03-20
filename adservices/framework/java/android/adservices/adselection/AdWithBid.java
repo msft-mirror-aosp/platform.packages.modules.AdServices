@@ -43,7 +43,9 @@ public final class AdWithBid implements Parcelable {
     public static final Creator<AdWithBid> CREATOR =
             new Creator<AdWithBid>() {
                 @Override
-                public AdWithBid createFromParcel(Parcel in) {
+                public AdWithBid createFromParcel(@NonNull Parcel in) {
+                    Objects.requireNonNull(in);
+
                     return new AdWithBid(in);
                 }
 
@@ -67,7 +69,8 @@ public final class AdWithBid implements Parcelable {
         mBid = bid;
     }
 
-    private AdWithBid(Parcel in) {
+    private AdWithBid(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
         mAdData = AdData.CREATOR.createFromParcel(in);
         mBid = in.readDouble();
     }
@@ -100,6 +103,8 @@ public final class AdWithBid implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
         mAdData.writeToParcel(dest, flags);
         dest.writeDouble(mBid);
     }
