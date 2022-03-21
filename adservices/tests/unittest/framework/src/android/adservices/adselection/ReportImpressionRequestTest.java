@@ -71,7 +71,7 @@ public final class ReportImpressionRequestTest {
     public void testFailsToBuildWithNullAdSelectionConfig() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () -> {
                         new ReportImpressionRequest.Builder()
                                 .setAdSelectionId(AUCTION_ID)
