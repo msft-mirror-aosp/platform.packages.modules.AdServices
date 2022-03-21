@@ -18,9 +18,20 @@ package com.android.adservices.service.topics.classifier;
 import static java.util.Objects.requireNonNull;
 
 import android.annotation.NonNull;
+import android.content.Context;
 
+import com.android.adservices.LogUtil;
+
+import com.google.common.collect.ImmutableSet;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** Util class for pre-processing input for the classifier. */
 public final class Preprocessor {
@@ -41,6 +52,60 @@ public final class Preprocessor {
 
     private static final String SINGLE_SPACE = " ";
     private static final String EMPTY_STRING = "";
+
+    // Stop words file path with all lower case stop words.
+    private static final String STOP_WORDS_FILE_PATH = "classifier/stopwords.txt";
+
+    private Context mContext;
+    private ImmutableSet<String> mStopWords;
+
+    public Preprocessor(@NonNull Context context) {
+        mContext = context;
+    }
+
+    /**
+     * Removes stop words from description. Stop words are loaded if required.
+     *
+     * @param description pre-processed app description.
+     * @return description with stop words filtered out.
+     */
+    @NonNull
+    public String removeStopWords(@NonNull String description) {
+        requireNonNull(description);
+
+        // Load stop words if needed.
+        if (mStopWords == null || mStopWords.isEmpty()) {
+            loadStopWords();
+        }
+
+        return Arrays.stream(description.split(SINGLE_SPACE))
+                .filter(word -> !mStopWords.contains(word))
+                .collect(Collectors.joining(SINGLE_SPACE))
+                .trim();
+    }
+
+    // Load stop words from the assets. If the assets are missing, log the error and load nothing.
+    private void loadStopWords() {
+        ImmutableSet.Builder<String> setBuilder = ImmutableSet.builder();
+
+        int countWords = 0;
+        try {
+            InputStream inputStream = mContext.getAssets().open(STOP_WORDS_FILE_PATH);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            while (reader.ready()) {
+                countWords++;
+                String word = reader.readLine().trim();
+                setBuilder.add(word);
+            }
+        } catch (IOException e) {
+            // TODO(b/225937395): Fix logging upgrades.
+            LogUtil.e(e, "Unable to read the stop words assets at %s", STOP_WORDS_FILE_PATH);
+        }
+        mStopWords = setBuilder.build();
+
+        LogUtil.d("Read %d stop words for pre-processing.", countWords);
+    }
 
     /**
      * Pre-process the description strings for the classifier with the following steps.

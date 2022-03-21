@@ -22,13 +22,51 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /** Unit tests for {@link Preprocessor}. */
 @SmallTest
 public final class PreprocessorTest {
+
+    private Preprocessor mPreprocessor;
+
+    @Before
+    public void setUp() {
+        mPreprocessor = new Preprocessor(ApplicationProvider.getApplicationContext());
+    }
+
+    @Test
+    public void removeStopWords_removesLegitStopWords() {
+        assertThat(mPreprocessor.removeStopWords("sample it they them input string is are"))
+                .isEqualTo("sample input string");
+        assertThat(mPreprocessor.removeStopWords("do does sample it they them input string is are"))
+                .isEqualTo("sample input string");
+    }
+
+    @Test
+    public void removeStopWords_checksFinalTrimming() {
+        assertThat(mPreprocessor.removeStopWords("   do does sample it they them input is are  "))
+                .isEqualTo("sample input");
+    }
+
+    @Test
+    public void removeStopWords_justStopWords() {
+        assertThat(mPreprocessor.removeStopWords("can will now")).isEqualTo("");
+    }
+
+    @Test
+    public void removeStopWords_forEmptyInput() {
+        assertThat(mPreprocessor.removeStopWords("")).isEqualTo("");
+    }
+
+    @Test
+    public void removeStopWords_forNullInput() {
+        assertThrows(NullPointerException.class, () -> mPreprocessor.removeStopWords(null));
+    }
 
     @Test
     public void testPreprocessing_forHttpsURLRemoval() {

@@ -31,6 +31,7 @@ android_test {
         "truth-prebuilt",
         "ub-uiautomator",
         "framework-adservices.impl",
+        "adservices-assets-lib",
     ],
     libs: [
         "android.test.base",
