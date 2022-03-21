@@ -16,7 +16,6 @@
 package com.android.adservices;
 
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
-import static com.android.adservices.AdServicesCommon.ADSERVICES_PACKAGE;
 
 import android.annotation.Nullable;
 import android.content.ComponentName;
@@ -115,7 +114,6 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @Nullable
     private ComponentName getServiceComponentName() {
         final Intent intent = new Intent(ACTION_TOPICS_SERVICE);
-        intent.setPackage(ADSERVICES_PACKAGE);
 
         final ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(intent,
                 PackageManager.GET_SERVICES);
