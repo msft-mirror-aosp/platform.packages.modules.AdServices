@@ -18,6 +18,8 @@ package com.android.adservices.service.topics;
 
 import static com.android.adservices.service.AdServicesConfig.TOPICS_EPOCH_JOB_ID;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -27,6 +29,11 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.AdServicesExecutors;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Epoch computation job. This will be run approximately once per epoch to
@@ -37,7 +44,39 @@ public final class EpochJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("EpochJobService.onStartJob");
-        return false;
+
+        // This service executes each incoming job on a Handler running on the application's
+        // main thread. This means that we must offload the execution logic to background executor.
+        // TODO(b/225382268): Handle cancellation.
+        ListenableFuture<Void> epochComputationFuture = Futures.submit(
+                () -> {
+                    EpochManager.getInstance(this).processEpoch();
+                },
+                AdServicesExecutors.getBackgroundExecutor());
+
+        Futures.addCallback(
+                epochComputationFuture,
+                new FutureCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        LogUtil.d("Epoch Computation succeeded!");
+                        // Tell the JobScheduler that the job has completed and does not needs to be
+                        // rescheduled.
+                        jobFinished(params, /* wantsReschedule = */ false);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        LogUtil.e("Failed to handle JobService: " + params.getJobId(), t);
+                        //  When failure, also tell the JobScheduler that the job has completed and
+                        // does not need to be rescheduled.
+                        // TODO(b/225909845): Revisit this. We need a retry policy.
+                        jobFinished(params, /* wantsReschedule = */ false);
+                    }
+                },
+                directExecutor());
+
+        return true;
     }
 
     @Override
