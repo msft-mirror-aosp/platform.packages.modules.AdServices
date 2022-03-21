@@ -16,118 +16,47 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.AdData;
-import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * The AdSelectionResponse class represents the result from the runAdSelection API.
+ * This class represents the response returned by the {@link AdSelectionManager} as the result of a
+ * successful {@code runAdSelection} call.
  *
  * @hide
  */
 public final class AdSelectionResponse implements Parcelable {
-    /**
-     * Result codes from {@link AdSelectionResponse} methods.
-     *
-     * @hide
-     */
+    private static final int UNSET = -1;
 
-    @Nullable private final AdData mAdData;
     private final int mAdSelectionId;
-    private final @ResultCode int mResultCode;
-    @Nullable private final String mErrorMessage;
+    @NonNull private final Uri mRenderUrl;
 
-    @IntDef(
-            value = {
-                RESULT_OK,
-                RESULT_INTERNAL_ERROR,
-                RESULT_INVALID_ARGUMENT,
-            })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ResultCode {}
+    private AdSelectionResponse(int adSelectionId, @NonNull Uri renderUrl) {
+        Objects.requireNonNull(renderUrl);
 
-    /** The call is successful and the response will return a winning Ad and an adSelectionId */
-    public static final int RESULT_OK = 0;
-
-    /**
-     * An internal error occurred within AdSelection API, which the caller cannot address.
-     *
-     * <p>This error may be considered similar to {@link IllegalStateException}
-     */
-    public static final int RESULT_INTERNAL_ERROR = 1;
-
-    /**
-     * The caller supplied invalid arguments to the call, i.e. the decisonLogicUrl is invalid to
-     * fetch any java scripts required for the ad selection process.
-     *
-     * <p>This error may be considered similar to {@link IllegalArgumentException}.
-     */
-    public static final int RESULT_INVALID_ARGUMENT = 2;
-
-    /** An ID used to identify this ad selection. It is used by the {@see ReportingAPI} */
-    public int getAdSelectionId() {
-        return mAdSelectionId;
-    }
-
-    /** The winning adData. */
-    public @Nullable AdData getAdData() {
-        return mAdData;
-    }
-
-    /**
-     * Returns one of {@link ResultCode} constants defined in {@link AdSelectionResponse}.
-     * The valid return values are
-     *  0 for a successful run.
-     *  1 for failure due to internal error.
-     *  2 for failure due to invalid argument.
-     * Any other values are invalid.
-     */
-    @ResultCode
-    public int getResultCode() {
-        return mResultCode;
-    }
-
-    /** Returns the error message associated with this result. */
-    public String getErrorMessage() {
-        return mErrorMessage;
-    }
-
-    private AdSelectionResponse(
-            @Nullable AdData adData,
-            int adSelectionId,
-            @ResultCode int resultCode,
-            @Nullable String errorMessage) {
-        mAdData = adData;
         mAdSelectionId = adSelectionId;
-        mResultCode = resultCode;
-        mErrorMessage = errorMessage;
+        mRenderUrl = renderUrl;
     }
 
     private AdSelectionResponse(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mAdData = AdData.CREATOR.createFromParcel(in);
         mAdSelectionId = in.readInt();
-        mResultCode = in.readInt();
-        mErrorMessage = in.readString();
+        mRenderUrl = Uri.CREATOR.createFromParcel(in);
     }
 
     @NonNull
     public static final Creator<AdSelectionResponse> CREATOR =
-            new Creator<AdSelectionResponse>() {
+            new Parcelable.Creator<AdSelectionResponse>() {
                 @Override
                 public AdSelectionResponse createFromParcel(@NonNull Parcel in) {
                     Objects.requireNonNull(in);
-
                     return new AdSelectionResponse(in);
                 }
 
@@ -136,6 +65,33 @@ public final class AdSelectionResponse implements Parcelable {
                     return new AdSelectionResponse[size];
                 }
             };
+
+    /** Returns the renderUrl that the AdSelection returns. */
+    @NonNull
+    public Uri getRenderUrl() {
+        return mRenderUrl;
+    }
+
+    /** Returns the adSelectionId that identifies the AdSelection. */
+    @NonNull
+    public int getAdSelectionId() {
+        return mAdSelectionId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof AdSelectionResponse) {
+            AdSelectionResponse adSelectionResponse = (AdSelectionResponse) o;
+            return mAdSelectionId == adSelectionResponse.mAdSelectionId
+                    && Objects.equals(mRenderUrl, adSelectionResponse.mRenderUrl);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mAdSelectionId, mRenderUrl);
+    }
 
     @Override
     public int describeContents() {
@@ -147,9 +103,7 @@ public final class AdSelectionResponse implements Parcelable {
         Objects.requireNonNull(dest);
 
         dest.writeInt(mAdSelectionId);
-        mAdData.writeToParcel(dest, flags);
-        dest.writeInt(mResultCode);
-        dest.writeString(mErrorMessage);
+        mRenderUrl.writeToParcel(dest, flags);
     }
 
     /**
@@ -158,61 +112,42 @@ public final class AdSelectionResponse implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private @Nullable AdData mAdData;
-
-        private int mAdSelectionId;
-
-        private @ResultCode int mResultCode;
-        @Nullable private String mErrorMessage;
+        private int mAdSelectionId = UNSET;
+        @NonNull private Uri mRenderUrl;
 
         public Builder() {}
-        /** the setter method of adSelectionId. */
-        public @NonNull Builder setAdSelectionId(int adSelectionId) {
+
+        /** Sets the mAdSelectionId. */
+        @NonNull
+        public AdSelectionResponse.Builder setAdSelectionId(int adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }
 
-        /** the setter method of Advert. */
-        public @NonNull Builder setAdData(@Nullable AdData adData) {
-            this.mAdData = adData;
-            return this;
-        }
+        /** Sets the RenderUrl. */
+        @NonNull
+        public AdSelectionResponse.Builder setRenderUrl(@NonNull Uri renderUrl) {
+            Objects.requireNonNull(renderUrl);
 
-        /** the setter method of the Result Code. */
-        public @NonNull Builder setResultCode(@ResultCode int resultCode) {
-            mResultCode = resultCode;
-            return this;
-        }
-
-        /** the setter method of the Error Message. */
-        public @NonNull Builder setErrorMessage(@Nullable String errorMessage) {
-            mErrorMessage = errorMessage;
+            mRenderUrl = renderUrl;
             return this;
         }
 
         /**
          * Builds a {@link AdSelectionResponse} instance.
-         * Throws IllegalArgumentException
-         * 1. when the result code is {@link ResultCode#RESULT_OK} but
-         * {@link AdData} is null or the AdSelectionId is invalid or the error message is not null.
-         * 2. when the result code is not {ResultCode#RESULT_OK} but the error message is null.
+         *
+         * @throws IllegalArgumentException if the adSelectionIid is not set
+         *
+         * @throws NullPointerException if the RenderUrl is null
          */
-        public @NonNull AdSelectionResponse build() {
-            if (mResultCode == RESULT_OK) {
-                Objects.requireNonNull(
-                        mAdData, "AdData is required for a successful response.");
-                Preconditions.checkArgument(
-                        mAdSelectionId != 0,
-                        "AdSelectionID should be non-zero for a successful response.");
-                Preconditions.checkArgument(
-                        mErrorMessage == null,
-                        "The ErrorMessage should be null for a successful response.");
-            } else {
-                Objects.requireNonNull(
-                        mErrorMessage,
-                        "The ErrorMessage is required for non successful responses.");
-            }
-            return new AdSelectionResponse(mAdData, mAdSelectionId, mResultCode, mErrorMessage);
+        @NonNull
+        public AdSelectionResponse build() {
+            Objects.requireNonNull(mRenderUrl);
+
+            Preconditions.checkArgument(
+                    mAdSelectionId != UNSET, "AdSelectionId has not been set!");
+
+            return new AdSelectionResponse(mAdSelectionId, mRenderUrl);
         }
     }
 }

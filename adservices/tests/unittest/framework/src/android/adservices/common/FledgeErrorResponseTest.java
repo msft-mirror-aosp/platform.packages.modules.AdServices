@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -26,68 +26,67 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.adselection.ReportImpressionRequest} */
+/** Unit tests for {@link FledgeErrorResponse} */
 @SmallTest
-public final class ReportImpressionResponseTest {
+public final class FledgeErrorResponseTest {
+
+    @Test
+    public void testBuildFledgeErrorResponse() {
+        String notImplementedMessage = "Not Implemented!";
+        FledgeErrorResponse response =
+                new FledgeErrorResponse.Builder()
+                        .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                        .setErrorMessage(notImplementedMessage)
+                        .build();
+
+        assertThat(response.getStatusCode()).isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+        assertThat(response.getErrorMessage()).isEqualTo(notImplementedMessage);
+    }
 
     @Test
     public void testWriteToParcel() throws Exception {
         String notImplementedMessage = "Not Implemented!";
-        ReportImpressionResponse response =
-                new ReportImpressionResponse.Builder()
-                        .setResultCode(ReportImpressionResponse.STATUS_INTERNAL_ERROR)
+        FledgeErrorResponse response =
+                new FledgeErrorResponse.Builder()
+                        .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
                         .setErrorMessage(notImplementedMessage)
                         .build();
         Parcel p = Parcel.obtain();
         response.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        ReportImpressionResponse fromParcel = ReportImpressionResponse.CREATOR.createFromParcel(p);
+        FledgeErrorResponse fromParcel = FledgeErrorResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getResultCode())
-                .isEqualTo(ReportImpressionResponse.STATUS_INTERNAL_ERROR);
+        assertThat(fromParcel.getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         assertThat(fromParcel.getErrorMessage()).isEqualTo(notImplementedMessage);
     }
 
     @Test
     public void testWriteToParcelEmptyMessage() throws Exception {
-        ReportImpressionResponse response =
-                new ReportImpressionResponse.Builder()
-                        .setResultCode(ReportImpressionResponse.STATUS_OK)
+        FledgeErrorResponse response =
+                new FledgeErrorResponse.Builder()
+                        .setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS)
                         .build();
         Parcel p = Parcel.obtain();
         response.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        ReportImpressionResponse fromParcel = ReportImpressionResponse.CREATOR.createFromParcel(p);
+        FledgeErrorResponse fromParcel = FledgeErrorResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.isSuccess()).isTrue();
+        assertThat(AdServicesStatusUtils.isSuccess(fromParcel.getStatusCode())).isTrue();
         assertThat(fromParcel.getErrorMessage()).isNull();
     }
 
     @Test
-    public void testFailsForEmptyMessageWithNotOkStatus() {
-
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                        new ReportImpressionResponse.Builder()
-                                .setResultCode(ReportImpressionResponse.STATUS_INTERNAL_ERROR)
-                                // Not setting error message making it null.
-                                .build();
-                });
-    }
-
-    @Test
     public void testFailsForNotSetStatus() {
-
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                        new ReportImpressionResponse.Builder()
-                                .setErrorMessage("Status not set!")
-                                // Not setting status code making it -1.
-                                .build();
+                    new FledgeErrorResponse.Builder()
+                            .setErrorMessage("Status not set!")
+                            // Not setting status code making it -1.
+                            .build();
                 });
     }
 }

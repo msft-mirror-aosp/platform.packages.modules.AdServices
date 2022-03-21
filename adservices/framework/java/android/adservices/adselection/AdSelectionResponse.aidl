@@ -17,15 +17,10 @@
 package android.adservices.adselection;
 
 /**
-* This represents the result of the
-* {@link AdSelectionService#runAdSelection(AdSelectionConfig,AdSelectionCallback)} call returned to
-* the {@link AdSelectionCallback}. It contains:
-
- <ul>
-   <li>  {@link AdSelectionResponse#getResultCode()} indicates the status. {@link AdSelectionResponse#RESULT_OK} represent a successful completion.
-   <li>  {@link AdSelectionResponse#getErrorMessage()} describes the failure. It is {@code null} for a successful run and non-null otherwise.
-   <li> {@link AdSelectionResponse#getAdSelectionId()}: which uniquely identifies a successful ad selection event. It is non-zero in case of successful completion and zero otherwise.
-   <li> {@link AdSelectionResponse#getAdData()} for the selected winning Ads for a successful ad selection run. This value is {@code null} for an unsuccessful ad selection.
- </ul>
-*/
+ * This interface defines the AdSelectionResponse.
+ * An AdSelectionResponse is a Parcelable object that is returned upon success of {@link runAdAuction}'
+ * by {@link AdSelectionManager}.
+ *
+ * {@hide}
+ */
 parcelable AdSelectionResponse;
