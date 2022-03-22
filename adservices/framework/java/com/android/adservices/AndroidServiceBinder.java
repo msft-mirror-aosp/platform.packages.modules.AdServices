@@ -15,6 +15,7 @@
  */
 package com.android.adservices;
 
+import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
 
 import android.annotation.Nullable;
@@ -170,7 +171,13 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     @Nullable
     private ComponentName getServiceComponentName() {
-        final Intent intent = new Intent(ACTION_TOPICS_SERVICE);
+        if (!mServiceIntentAction.equals(ACTION_TOPICS_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_MEASUREMENT_SERVICE)) {
+            LogUtil.e("Bad service intent action: " + mServiceIntentAction);
+            return null;
+        }
+        final Intent intent = new Intent(mServiceIntentAction);
+
         final ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(intent,
                 PackageManager.GET_SERVICES);
         if (resolveInfo == null) {

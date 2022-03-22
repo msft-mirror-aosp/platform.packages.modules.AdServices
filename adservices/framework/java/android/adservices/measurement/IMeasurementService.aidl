@@ -18,8 +18,8 @@ package android.adservices.measurement;
 
 import android.adservices.measurement.IMeasurementCallback;
 
-parcelable RegistrationRequest;
-parcelable DeletionRequest;
+import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.DeletionRequest;
 
 /**
   * Measurement service.
