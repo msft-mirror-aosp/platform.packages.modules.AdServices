@@ -39,6 +39,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
@@ -333,13 +334,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onAppDeath(IBinder sdkToken, int appUid) {
         cleanUp(sdkToken);
-        final int sdkSandboxUid = Process.toSdkSandboxUid(appUid);
-        mServiceProvider.unbindService(appUid);
-        synchronized (mLock) {
-            mAppLoadedSdkUids.remove(appUid);
-        }
-        Log.i(TAG, "Killing sdk sandbox process " + sdkSandboxUid);
-        mActivityManager.killUid(sdkSandboxUid, "App " + appUid + " has died");
+        stopSdkSandboxService(appUid, "App " + appUid + " has died");
     }
 
     @Override
@@ -391,61 +386,124 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         writer.println();
     }
 
+    private static class SandboxServiceConnection implements ServiceConnection {
+
+        private final SdkSandboxServiceProvider mServiceProvider;
+        private final int mCallingUid;
+        private final String mCallingPackageName;
+        private boolean mServiceBound = false;
+
+        private interface SandboxServiceConnectionCallback {
+            void onInitialBindingSuccessful(ISdkSandboxService service);
+            void onBindingFailed();
+        }
+
+        private final SandboxServiceConnectionCallback mCallback;
+
+        SandboxServiceConnection(SdkSandboxServiceProvider serviceProvider,
+                int callingUid, String callingPackageName,
+                SandboxServiceConnectionCallback callback) {
+            mServiceProvider = serviceProvider;
+            mCallingUid = callingUid;
+            mCallingPackageName = callingPackageName;
+            mCallback = callback;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            final ISdkSandboxService mService =
+                    ISdkSandboxService.Stub.asInterface(service);
+            Log.d(TAG, String.format("Sdk sandbox has been bound for app package %s with uid %d",
+                            mCallingPackageName, mCallingUid));
+            mServiceProvider.setBoundServiceForApp(mCallingUid, mService);
+
+            if (!mServiceBound) {
+                mCallback.onInitialBindingSuccessful(mService);
+                mServiceBound = true;
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // Sdk sandbox crashed or killed, system will start it again.
+            // TODO(b/204991850): Handle restarts differently
+            //  (e.g. Exponential backoff retry strategy)
+            mServiceProvider.setBoundServiceForApp(mCallingUid, null);
+        }
+
+        @Override
+        public void onBindingDied(ComponentName name) {
+            mServiceProvider.setBoundServiceForApp(mCallingUid, null);
+            mServiceProvider.unbindService(mCallingUid);
+            mServiceProvider.bindService(mCallingUid, mCallingPackageName, this);
+        }
+
+        @Override
+        public void onNullBinding(ComponentName name) {
+            mCallback.onBindingFailed();
+        }
+    }
+
+    void invokeSdkSandboxService(int callingUid, String callingPackageName) {
+        ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingUid);
+        if (service != null) {
+            return;
+        }
+        mServiceProvider.bindService(
+                callingUid,
+                callingPackageName,
+                new SandboxServiceConnection(mServiceProvider, callingUid, callingPackageName,
+                        new SandboxServiceConnection.SandboxServiceConnectionCallback() {
+                    @Override
+                    public void onInitialBindingSuccessful(ISdkSandboxService service) {}
+
+                    @Override
+                    public void onBindingFailed() {}
+                })
+        );
+    }
 
     private void invokeSdkSandboxServiceToLoadSdk(
-            int callingUid, String callingPackageName, IBinder sdkToken, SdkProviderInfo sdkInfo,
+            int callingUid, String callingPackageName, IBinder sdkToken, SdkProviderInfo info,
             Bundle params, AppAndRemoteSdkLink link) {
         // check first if service already bound
         ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingUid);
         if (service != null) {
-            loadSdkForService(callingUid, sdkToken, sdkInfo, params, link, service);
+            loadSdkForService(callingUid, sdkToken, info, params, link, service);
             return;
         }
 
-        mServiceProvider.bindService(
-                callingUid,
-                callingPackageName,
-                new ServiceConnection() {
-                    private boolean mIsServiceBound = false;
+        mServiceProvider.bindService(callingUid, callingPackageName,
+                new SandboxServiceConnection(mServiceProvider, callingUid, callingPackageName,
+                        new SandboxServiceConnection.SandboxServiceConnectionCallback() {
+                            @Override
+                            public void onInitialBindingSuccessful(ISdkSandboxService service) {
+                                loadSdkForService(
+                                        callingUid, sdkToken, info, params, link, service);
+                            }
 
-                    @Override
-                    public void onServiceConnected(ComponentName name, IBinder service) {
-                        final ISdkSandboxService mService =
-                                ISdkSandboxService.Stub.asInterface(service);
-                        Log.i(TAG, "Sdk sandbox has been bound");
-                        mServiceProvider.setBoundServiceForApp(callingUid, mService);
-
-                        // Ensuring the code is not loaded again if connection restarted
-                        if (!mIsServiceBound) {
-                            loadSdkForService(callingUid, sdkToken, sdkInfo,
-                                    params, link, mService);
-                            mIsServiceBound = true;
-                        }
-                    }
-
-                    @Override
-                    public void onServiceDisconnected(ComponentName name) {
-                        // Sdk sandbox crashed or killed, system will start it again.
-                        // TODO(b/204991850): Handle restarts differently
-                        //  (e.g. Exponential backoff retry strategy)
-                        mServiceProvider.setBoundServiceForApp(callingUid, null);
-                    }
-
-                    @Override
-                    public void onBindingDied(ComponentName name) {
-                        mServiceProvider.setBoundServiceForApp(callingUid, null);
-                        mServiceProvider.unbindService(callingUid);
-                        mServiceProvider.bindService(callingUid, callingPackageName, this);
-                    }
-
-                    @Override
-                    public void onNullBinding(ComponentName name) {
-                        link.sendLoadSdkErrorToApp(
-                                SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
-                                "Failed to bind the service");
-                    }
-                }
+                            @Override
+                            public void onBindingFailed() {
+                                link.sendLoadSdkErrorToApp(
+                                        SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
+                                        "Failed to bind the service");
+                            }
+                        })
         );
+    }
+
+    void stopSdkSandboxService(int appUid, String reason) {
+        mServiceProvider.unbindService(appUid);
+        synchronized (mLock) {
+            mAppLoadedSdkUids.remove(appUid);
+        }
+        final int sdkSandboxUid = Process.toSdkSandboxUid(appUid);
+        Log.i(TAG, "Killing sdk sandbox process " + sdkSandboxUid);
+        mActivityManager.killUid(sdkSandboxUid, reason);
+    }
+
+    boolean isSdkSandboxServiceRunning(int appUid) {
+        return mServiceProvider.getBoundServiceForApp(appUid) != null;
     }
 
     private void loadSdkForService(
@@ -505,6 +563,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             throw new SecurityException(errorMsg
                     + "the intent's component package name must be non-null.");
         }
+    }
+
+    @Override
+    public int handleShellCommand(ParcelFileDescriptor in, ParcelFileDescriptor out,
+            ParcelFileDescriptor err, String[] args) {
+        return new SdkSandboxShellCommand(this, mContext).exec(this,
+                in.getFileDescriptor(), out.getFileDescriptor(), err.getFileDescriptor(), args);
     }
 
     private SdkProviderInfo createSdkProviderInfo(String sharedLibraryName, int callingUid) {
