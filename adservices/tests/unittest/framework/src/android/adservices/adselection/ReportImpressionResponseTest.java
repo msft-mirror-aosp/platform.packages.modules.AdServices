@@ -69,7 +69,7 @@ public final class ReportImpressionResponseTest {
     public void testFailsForEmptyMessageWithNotOkStatus() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () -> {
                         new ReportImpressionResponse.Builder()
                                 .setResultCode(ReportImpressionResponse.STATUS_INTERNAL_ERROR)

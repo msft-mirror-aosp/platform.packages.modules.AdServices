@@ -23,9 +23,6 @@ package com.android.adservices;
 public class AdServicesCommon {
     private AdServicesCommon() {}
 
-    /** The service APK name. */
-    public static final String ADSERVICES_PACKAGE = "com.android.adservices.api";
-
     /** Intent action to discover the Topics service in the APK. */
     public static final String ACTION_TOPICS_SERVICE = "android.adservices.TOPICS_SERVICE";
 

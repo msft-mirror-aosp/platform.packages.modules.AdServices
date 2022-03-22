@@ -21,6 +21,10 @@
     package="com.android.adservices.api">
 
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <!-- Permissions required for reading device configs -->
+    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
+
     <application
         android:label="Android AdServices"
         android:forceQueryable="true">
