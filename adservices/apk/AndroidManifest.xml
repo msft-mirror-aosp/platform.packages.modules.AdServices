@@ -20,7 +20,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.api">
 
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
     <!-- Permissions required for reading device configs -->
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
@@ -29,13 +29,34 @@
         android:label="Android AdServices"
         android:forceQueryable="true">
         <!-- TODO(b/221123093): Support multi-user. -->
-        <service android:name="com.android.adservices.topics.TopicsService"
-            android:exported="true"
-            android:singleUser="true"
-            android:visibleToInstantApps="false"
-            >
+        <service android:name="com.android.adservices.adselection.AdSelectionService"
+                 android:exported="true"
+                 android:singleUser="true"
+                 android:visibleToInstantApps="false">
             <intent-filter>
-                <action android:name="android.adservices.TOPICS_SERVICE" />
+                <action android:name="android.adservices.adselection.AD_SELECTION_SERVICE"/>
+            </intent-filter>
+        </service>
+
+        <!-- TODO(b/221123093): Support multi-user. -->
+        <service android:name=
+                     "com.android.adservices.customaudience.CustomAudienceManagementService"
+                 android:exported="true"
+                 android:singleUser="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter>
+                <action android:name=
+                            "android.adservices.customaudience.CUSTOM_AUDIENCE_MANAGEMENT_SERVICE"/>
+            </intent-filter>
+        </service>
+
+        <!-- TODO(b/221123093): Support multi-user. -->
+        <service android:name="com.android.adservices.topics.TopicsService"
+                 android:exported="true"
+                 android:singleUser="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter>
+                <action android:name="android.adservices.TOPICS_SERVICE"/>
             </intent-filter>
         </service>
         <service android:name="com.android.adservices.measurement.MeasurementService"
@@ -50,12 +71,12 @@
 
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE">
+                 android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Epoch computation Job. -->
         <service android:name="com.android.adservices.service.topics.EpochJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE">
+                 android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
     </application>
 </manifest>
