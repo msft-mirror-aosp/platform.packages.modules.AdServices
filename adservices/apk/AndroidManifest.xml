@@ -38,6 +38,15 @@
                 <action android:name="android.adservices.TOPICS_SERVICE" />
             </intent-filter>
         </service>
+        <service android:name="com.android.adservices.measurement.MeasurementService"
+            android:exported="true"
+            android:singleUser="true"
+            android:visibleToInstantApps="false"
+            >
+            <intent-filter>
+                <action android:name="android.adservices.MEASUREMENT_SERVICE" />
+            </intent-filter>
+        </service>
 
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
