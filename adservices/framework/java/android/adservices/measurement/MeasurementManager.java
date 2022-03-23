@@ -80,8 +80,7 @@ public class MeasurementManager {
         try {
             service.register(
                     registrationRequest,
-                    callback != null && executor != null
-                    ?  new IMeasurementCallback.Stub() {
+                    new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult(int result) {
                             if (callback != null && executor != null) {
@@ -90,7 +89,7 @@ public class MeasurementManager {
                                 });
                             }
                         }
-                    } : null);
+                    });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
             callback.onError(new AdServicesException("Internal Error!"));
@@ -100,7 +99,7 @@ public class MeasurementManager {
     /**
      * Register an attribution source URI.
      */
-    public void registerAttributionSource(
+    public void registerSource(
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
             @NonNull Uri topOrigin,
@@ -113,7 +112,7 @@ public class MeasurementManager {
         register(
                 new RegistrationRequest.Builder()
                 .setRegistrationType(
-                    RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                    RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(attributionSource)
                 .setInputEvent(inputEvent)
                 .setTopOriginUri(topOrigin)
@@ -127,11 +126,11 @@ public class MeasurementManager {
      * Register an attribution source URI.
      * Shortcut for the common case.
      */
-    public void registerAttributionSource(
+    public void registerSource(
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent) {
         Objects.requireNonNull(attributionSource);
-        registerAttributionSource(
+        registerSource(
                 attributionSource, inputEvent, Uri.EMPTY, Uri.EMPTY,
                 null, null);
     }
@@ -139,7 +138,7 @@ public class MeasurementManager {
     /**
      * Register a trigger URI.
      */
-    public void triggerAttribution(
+    public void registerTrigger(
             @NonNull Uri trigger,
             @NonNull Uri topOrigin,
             @NonNull Uri referrer,
@@ -151,7 +150,7 @@ public class MeasurementManager {
         register(
                 new RegistrationRequest.Builder()
                 .setRegistrationType(
-                    RegistrationRequest.TRIGGER_ATTRIBUTION)
+                    RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(trigger)
                 .setTopOriginUri(topOrigin)
                 .setReferrerUri(referrer)
@@ -164,9 +163,9 @@ public class MeasurementManager {
      * Register a trigger URI.
      * Shortcut for the common case.
      */
-    public void triggerAttribution(@NonNull Uri trigger) {
+    public void registerTrigger(@NonNull Uri trigger) {
         Objects.requireNonNull(trigger);
-        triggerAttribution(trigger, Uri.EMPTY, Uri.EMPTY, null, null);
+        registerTrigger(trigger, Uri.EMPTY, Uri.EMPTY, null, null);
     }
 
     /**
@@ -182,8 +181,7 @@ public class MeasurementManager {
         try {
             service.deleteRegistrations(
                     deletionRequest,
-                    callback != null && executor != null
-                    ?  new IMeasurementCallback.Stub() {
+                    new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult(int result) {
                             if (callback != null && executor != null) {
@@ -192,9 +190,10 @@ public class MeasurementManager {
                                 });
                             }
                         }
-                    } : null);
+                    });
         } catch (RemoteException e) {
-            throw new RuntimeException(e);
+            LogUtil.e("RemoteException", e);
+            callback.onError(new AdServicesException("Internal Error!"));
         }
     }
 

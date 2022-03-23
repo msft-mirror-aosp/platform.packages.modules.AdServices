@@ -69,7 +69,7 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             switch (request.getRegistrationType()) {
-                case RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE: {
+                case RegistrationRequest.REGISTER_SOURCE: {
                     ArrayList<SourceRegistration> results = new ArrayList();
                     boolean success = mSourceFetcher.fetchSource(request, results);
                     // TODO: Do something with results.
@@ -80,7 +80,7 @@ public final class MeasurementImpl {
                     }
                 }
 
-                case RegistrationRequest.TRIGGER_ATTRIBUTION: {
+                case RegistrationRequest.REGISTER_TRIGGER: {
                     ArrayList<TriggerRegistration> results = new ArrayList();
                     boolean success = mTriggerFetcher.fetchTrigger(request, results);
                     // TODO: Do something with results.

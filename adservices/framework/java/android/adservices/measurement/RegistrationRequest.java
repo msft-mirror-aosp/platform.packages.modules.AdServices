@@ -38,17 +38,17 @@ public final class RegistrationRequest implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({
        INVALID,
-       REGISTER_ATTRIBUTION_SOURCE,
-       TRIGGER_ATTRIBUTION,
+       REGISTER_SOURCE,
+       REGISTER_TRIGGER,
     })
     public @interface RegistrationType {}
     /** Invalid registration type used as a default. */
     public static final int INVALID = 0;
     /** A request to register an Attribution Source event
      * (NOTE: adservices type not android.context.AttributionSource). */
-    public static final int REGISTER_ATTRIBUTION_SOURCE = 1;
-    /** A request to register a trigger attribution trigger event. */
-    public static final int TRIGGER_ATTRIBUTION = 2;
+    public static final int REGISTER_SOURCE = 1;
+    /** A request to register a trigger event. */
+    public static final int REGISTER_TRIGGER = 2;
 
     private final @RegistrationType int mRegistrationType;
     private final Uri mRegistrationUri;
@@ -200,8 +200,8 @@ public final class RegistrationRequest implements Parcelable {
          */
         public @NonNull Builder setRegistrationType(
                 @RegistrationType int type) {
-            if (type != REGISTER_ATTRIBUTION_SOURCE
-                    && type != TRIGGER_ATTRIBUTION) {
+            if (type != REGISTER_SOURCE
+                    && type != REGISTER_TRIGGER) {
                 throw new IllegalArgumentException("Invalid registrationType");
             }
             mRegistrationType = type;
@@ -268,8 +268,8 @@ public final class RegistrationRequest implements Parcelable {
             // Ensure registrationType has been set,
             // throws IllegalArgumentException if mRegistrationType
             // isn't a valid choice.
-            if (mRegistrationType != REGISTER_ATTRIBUTION_SOURCE
-                    && mRegistrationType != TRIGGER_ATTRIBUTION) {
+            if (mRegistrationType != REGISTER_SOURCE
+                    && mRegistrationType != REGISTER_TRIGGER) {
                 throw new IllegalArgumentException("Invalid registrationType");
             }
             // Ensure attributionSource has been set.

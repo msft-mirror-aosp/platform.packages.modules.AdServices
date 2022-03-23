@@ -64,7 +64,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBasicSourceRequest() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -76,7 +76,7 @@ public final class SourceFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source",
                                    List.of("{\n"
                                          + "  \"destination\": \"android-app://com.myapps\",\n"
-                                         + "  \"source_priority\": \"123\",\n"
+                                         + "  \"priority\": \"123\",\n"
                                          + "  \"expiry\": \"456789\",\n"
                                          + "  \"source_event_id\": \"987654321\"\n"
                                          + "}\n")));
@@ -94,7 +94,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBadSourceUrl() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -108,7 +108,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBadSourceConnection() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -124,7 +124,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBadSourceJson() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -144,7 +144,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBasicSourceRequestMinimumFields() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -172,7 +172,7 @@ public final class SourceFetcherTest {
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))

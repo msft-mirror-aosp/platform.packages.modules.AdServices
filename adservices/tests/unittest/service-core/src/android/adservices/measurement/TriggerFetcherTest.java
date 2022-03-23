@@ -64,7 +64,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBasicTriggerRequest() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -76,7 +76,7 @@ public final class TriggerFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
                                    List.of("[{\n"
                                          + "  \"trigger_data\": \"3\",\n"
-                                         + "  \"trigger_priority\": \"11111\",\n"
+                                         + "  \"priority\": \"11111\",\n"
                                          + "  \"deduplication_key\": \"22222\"\n"
                                          + "}]\n")));
         ArrayList<TriggerRegistration> result = new ArrayList();
@@ -92,7 +92,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBadTriggerUrl() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -106,7 +106,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBadTriggerConnection() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -122,7 +122,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBadTriggerJson() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -142,7 +142,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBasicTriggerRequestMinimumFields() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -166,7 +166,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
