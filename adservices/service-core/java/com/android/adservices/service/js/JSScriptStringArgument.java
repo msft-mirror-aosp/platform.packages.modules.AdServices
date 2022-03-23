@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.js;
 
+import java.util.Objects;
+
 /** A JS string. */
 class JSScriptStringArgument extends JSScriptArgument {
     private final String mValue;
@@ -28,5 +30,23 @@ class JSScriptStringArgument extends JSScriptArgument {
     @Override
     public String initializationValue() {
         return String.format("\"%s\"", mValue);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JSScriptStringArgument)) return false;
+        JSScriptStringArgument that = (JSScriptStringArgument) o;
+        return mValue.equals(that.mValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mValue);
+    }
+
+    @Override
+    public String toString() {
+        return "JSScriptStringArgument{" + "mValue='" + mValue + '\'' + '}';
     }
 }
