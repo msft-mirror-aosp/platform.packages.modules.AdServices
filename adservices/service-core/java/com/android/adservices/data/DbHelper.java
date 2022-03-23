@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.TopicsTables;
 
 /**
@@ -68,6 +69,12 @@ public final class DbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(@NonNull SQLiteDatabase db) {
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
+            db.execSQL(sql);
+        }
+        for (String sql : MeasurementTables.CREATE_STATEMENTS) {
+            db.execSQL(sql);
+        }
+        for (String sql: MeasurementTables.CREATE_INDICES) {
             db.execSQL(sql);
         }
     }

@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices.customaudience;
+package com.android.adservices.service.customaudience;
 
+import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.CustomAudienceManagementResponse;
+import android.adservices.customaudience.ICustomAudienceCallback;
+import android.adservices.customaudience.ICustomAudienceManagementService;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
@@ -52,6 +56,7 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callback);
 
+        // TODO(b/225988784): Offload work to thread pool
         try {
             callback.onResult(
                     new CustomAudienceManagementResponse.Builder()
@@ -77,6 +82,7 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
         Objects.requireNonNull(name);
         Objects.requireNonNull(callback);
 
+        // TODO(b/225988784): Offload work to thread pool
         try {
             callback.onResult(
                     new CustomAudienceManagementResponse.Builder()

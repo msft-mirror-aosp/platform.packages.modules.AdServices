@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
-}
-
 android_test {
-    name: "AdServicesServiceCoreUnitTests",
+    name: "AdServicesEndToEndTests",
     srcs: [
         "src/**/*.java",
+        ":framework-adservices-sources",
     ],
-    sdk_version: "current", // We use hidden APIs in this test
+    // TODO(b/223684663): remove when unhide Topics API.
+    // We use hidden APIs in this test
+    // sdk_version: "current",
     static_libs: [
+        "adservices-clients",
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
@@ -31,7 +31,6 @@ android_test {
         "truth-prebuilt",
         "ub-uiautomator",
         "framework-adservices.impl",
-        "adservices-assets-lib",
     ],
     libs: [
         "android.test.base",
