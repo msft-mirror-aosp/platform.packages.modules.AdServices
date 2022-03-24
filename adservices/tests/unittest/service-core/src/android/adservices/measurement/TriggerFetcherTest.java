@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
@@ -87,6 +88,7 @@ public final class TriggerFetcherTest {
         assertEquals(3, result.get(0).getTriggerData());
         assertEquals(11111, result.get(0).getTriggerPriority());
         assertEquals(22222, result.get(0).getDeduplicationKey());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -137,6 +139,7 @@ public final class TriggerFetcherTest {
         ArrayList<TriggerRegistration> result = new ArrayList();
         assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -161,6 +164,7 @@ public final class TriggerFetcherTest {
         assertEquals(0, result.get(0).getTriggerData());
         assertEquals(0, result.get(0).getTriggerPriority());
         assertEquals(0, result.get(0).getDeduplicationKey());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test

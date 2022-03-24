@@ -146,6 +146,7 @@ public class TriggerFetcher {
         }
         boolean success = true;
         try {
+            urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Referer", referrer.toString());
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
