@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.topics;
 
-import android.adservices.topics.GetTopicsRequest;
+import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
@@ -43,20 +43,23 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     }
 
     @Override
-    public void getTopics(@NonNull GetTopicsRequest getTopicsRequest,
-            @NonNull IGetTopicsCallback callback) {
-        sBackgroundExecutor.execute(() -> {
-            try {
-                callback.onResult(mTopicsWorker.getTopics(
-                        getTopicsRequest.getAttributionSource().getPackageName(),
-                        getTopicsRequest.getSdkName()));
+    public void getTopics(
+            @NonNull GetTopicsParam topicsParam, @NonNull IGetTopicsCallback callback) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        callback.onResult(
+                                mTopicsWorker.getTopics(
+                                        topicsParam.getAttributionSource().getPackageName(),
+                                        topicsParam.getSdkName()));
 
-                mTopicsWorker.recordUsage(getTopicsRequest.getAttributionSource().getPackageName(),
-                        getTopicsRequest.getSdkName());
-            } catch (RemoteException e) {
-                LogUtil.e("Unable to send result to the callback", e);
-            }
-        });
+                        mTopicsWorker.recordUsage(
+                                topicsParam.getAttributionSource().getPackageName(),
+                                topicsParam.getSdkName());
+                    } catch (RemoteException e) {
+                        LogUtil.e("Unable to send result to the callback", e);
+                    }
+                });
     }
 
     /**

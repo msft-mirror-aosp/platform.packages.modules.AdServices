@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
- package android.adservices.topics;
+package android.adservices.topics;
 
- parcelable GetTopicsResponse;
+parcelable GetTopicsParam;
