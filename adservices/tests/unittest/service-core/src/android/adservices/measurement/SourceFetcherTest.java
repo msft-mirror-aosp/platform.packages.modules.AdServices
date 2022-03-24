@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
@@ -89,6 +90,7 @@ public final class SourceFetcherTest {
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(987654321, result.get(0).getSourceEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -139,6 +141,7 @@ public final class SourceFetcherTest {
         ArrayList<SourceRegistration> result = new ArrayList();
         assertFalse(mFetcher.fetchSource(request, result));
         assertEquals(0, result.size());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -167,6 +170,7 @@ public final class SourceFetcherTest {
         assertEquals(123, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(0, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
