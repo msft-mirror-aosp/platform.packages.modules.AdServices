@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.js;
 
+import java.util.Objects;
+
 /**
  * A numeric JS variable.
  *
@@ -32,5 +34,23 @@ public class JSScriptNumericArgument<T extends Number> extends JSScriptArgument 
     @Override
     public String initializationValue() {
         return mValue.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JSScriptNumericArgument)) return false;
+        JSScriptNumericArgument<?> that = (JSScriptNumericArgument<?>) o;
+        return mValue.equals(that.mValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mValue);
+    }
+
+    @Override
+    public String toString() {
+        return "JSScriptNumericArgument{" + "mValue=" + mValue + '}';
     }
 }

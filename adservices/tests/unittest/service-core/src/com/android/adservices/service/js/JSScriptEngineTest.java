@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
@@ -33,20 +34,25 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @SmallTest
 public class JSScriptEngineTest {
-    private static final String TAG = "JSScriptEngineTest";
+    private static final String TAG = JSScriptEngineTest.class.getSimpleName();
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private final JSScriptEngine mJSScriptEngine = new JSScriptEngine(sContext);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
 
     @Test
     public void testCanRunSimpleScriptWithNoArgs() throws Exception {
-        assertThat(callJSEngine("(function() { return \"hello world\"; })();", null))
+        assertThat(
+                        callJSEngine(
+                                "function test() { return \"hello world\"; }",
+                                ImmutableList.of(),
+                                "test"))
                 .isEqualTo("\"hello world\"");
     }
 
@@ -54,9 +60,9 @@ public class JSScriptEngineTest {
     public void testCanRunAScriptWithNoArgs() throws Exception {
         assertThat(
                         callJSEngine(
-                                "function helloWorld() { return \"hello world\"; };\n"
-                                        + "helloWorld();",
-                                null))
+                                "function helloWorld() { return \"hello world\"; };",
+                                ImmutableList.of(),
+                                "helloWorld"))
                 .isEqualTo("\"hello world\"");
     }
 
@@ -64,8 +70,9 @@ public class JSScriptEngineTest {
     public void testCanRunSimpleScriptWithOneArg() throws Exception {
         assertThat(
                         callJSEngine(
-                                "(function() { return \"hello \" + name; })();",
-                                ImmutableList.of(stringArg("name", "Stefano"))))
+                                "function hello(name) { return \"hello \" + name; };",
+                                ImmutableList.of(stringArg("name", "Stefano")),
+                                "hello"))
                 .isEqualTo("\"hello Stefano\"");
     }
 
@@ -74,9 +81,9 @@ public class JSScriptEngineTest {
         assertThat(
                         callJSEngine(
                                 "function helloPerson(personName) { return \"hello \" + personName;"
-                                        + " };\n"
-                                        + "helloPerson(name);",
-                                ImmutableList.of(stringArg("name", "Stefano"))))
+                                        + " };",
+                                ImmutableList.of(stringArg("name", "Stefano")),
+                                "helloPerson"))
                 .isEqualTo("\"hello Stefano\"");
     }
 
@@ -85,11 +92,23 @@ public class JSScriptEngineTest {
         assertThat(
                         callJSEngine(
                                 "function helloPerson(person) {  return \"hello \" + person.name; "
-                                        + " };\n"
-                                        + "helloPerson(jsonArg);",
+                                        + " };",
                                 ImmutableList.of(
-                                        recordArg("jsonArg", stringArg("name", "Stefano")))))
+                                        recordArg("jsonArg", stringArg("name", "Stefano"))),
+                                "helloPerson"))
                 .isEqualTo("\"hello Stefano\"");
+    }
+
+    @Test
+    public void testCanNotReferToScriptArguments() throws Exception {
+        assertThat(
+                        callJSEngine(
+                                "function helloPerson(person) {  return \"hello \" +"
+                                        + " personOuter.name;  };",
+                                ImmutableList.of(
+                                        recordArg("personOuter", stringArg("name", "Stefano"))),
+                                "helloPerson"))
+                .isEqualTo("null");
     }
 
     // During tests, look for logcat messages with tag "chromium" to check if any of your scripts
@@ -97,7 +116,12 @@ public class JSScriptEngineTest {
     // a listener to WebChromeClient.onConsoleMessage to receive them if needed).
     @Test
     public void testWillReturnAStringWithContentNullEvaluatingScriptWithErrors() throws Exception {
-        assertThat(callJSEngine("undefinedFunction();", null)).isEqualTo("null");
+        assertThat(
+                        callJSEngine(
+                                "function test() { return \"hello world\"; }",
+                                ImmutableList.of(),
+                                "undefinedFunction"))
+                .isEqualTo("null");
     }
 
     @Test
@@ -109,10 +133,9 @@ public class JSScriptEngineTest {
 
         ListenableFuture<String> firstCallResult =
                 callJSEngineAsync(
-                        "function helloPerson(person) {  return \"hello \" + person.name; "
-                                + " };\n"
-                                + "helloPerson(jsonArg);",
+                        "function helloPerson(person) {  return \"hello \" + person.name; " + " };",
                         arguments,
+                        "helloPerson",
                         resultsLatch);
 
         // The previous call reset the status, we can redefine the function and use the same
@@ -120,9 +143,9 @@ public class JSScriptEngineTest {
         ListenableFuture<String> secondCallResult =
                 callJSEngineAsync(
                         "function helloPerson(person) {  return \"hello again \" + person.name; "
-                                + " };\n"
-                                + "helloPerson(jsonArg);",
+                                + " };",
                         arguments,
+                        "helloPerson",
                         resultsLatch);
 
         resultsLatch.await();
@@ -132,17 +155,26 @@ public class JSScriptEngineTest {
         assertThat(secondCallResult.get()).isEqualTo("\"hello again Stefano\"");
     }
 
-    private String callJSEngine(String jsScript, List<JSScriptArgument> args) throws Exception {
+    private String callJSEngine(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String functionName)
+            throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
-        ListenableFuture<String> futureResult = callJSEngineAsync(jsScript, args, resultLatch);
+        ListenableFuture<String> futureResult =
+                callJSEngineAsync(jsScript, args, functionName, resultLatch);
         resultLatch.await();
         return futureResult.get();
     }
 
     private ListenableFuture<String> callJSEngineAsync(
-            String jsScript, List<JSScriptArgument> args, CountDownLatch resultLatch) {
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String functionName,
+            @NonNull CountDownLatch resultLatch) {
+        Objects.requireNonNull(resultLatch);
         Log.i(TAG, "Calling WebVew");
-        ListenableFuture<String> result = mJSScriptEngine.evaluate(jsScript, args);
+        ListenableFuture<String> result = mJSScriptEngine.evaluate(jsScript, args, functionName);
         result.addListener(resultLatch::countDown, mExecutorService);
         return result;
     }

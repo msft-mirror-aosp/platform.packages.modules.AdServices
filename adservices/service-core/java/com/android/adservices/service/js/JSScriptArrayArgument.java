@@ -17,6 +17,7 @@
 package com.android.adservices.service.js;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A JS array.
@@ -45,5 +46,23 @@ public class JSScriptArrayArgument<T extends JSScriptArgument> extends JSScriptA
         }
         valueInitialization.append("\n]");
         return valueInitialization.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JSScriptArrayArgument)) return false;
+        JSScriptArrayArgument<?> that = (JSScriptArrayArgument<?>) o;
+        return mValue.equals(that.mValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mValue);
+    }
+
+    @Override
+    public String toString() {
+        return "JSScriptArrayArgument{" + "mValue=" + mValue + '}';
     }
 }

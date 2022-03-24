@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.js;
 
+import android.annotation.NonNull;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
@@ -24,16 +25,16 @@ import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import androidx.annotation.Nullable;
-
 import com.android.internal.annotations.GuardedBy;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * A convenience class to execute JS scripts using a WebView. Because arguments to the {@link
@@ -45,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class JSScriptEngine {
     private static final String TAG = "JSScriptEngine";
+    public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
     // This needs to be the same for all the instance of the JSScriptEngine otherwise
     // the second webview instance initialization happening on a different thread would cause
     // the app to crash.
@@ -60,7 +62,7 @@ public class JSScriptEngine {
     private final WebViewClient mWebViewClient;
 
     @SuppressLint("SetJavaScriptEnabled")
-    public JSScriptEngine(Context context) {
+    public JSScriptEngine(@NonNull Context context) {
         Log.i(TAG, "Creating JSScriptEngine");
         mWebViewClient =
                 new WebViewClient() {
@@ -85,6 +87,7 @@ public class JSScriptEngine {
                 });
     }
 
+    @NonNull
     private static synchronized Handler getWebViewHandler() {
         if (sWebViewHandler == null) {
             sWebViewThread = new HandlerThread("WebViewExecutionThread");
@@ -95,15 +98,31 @@ public class JSScriptEngine {
     }
 
     /**
-     * Executes the JS code in {@code jsScript} and return the result. It will reset the WebView
-     * status after evaluating the script.
-     *
-     * @param jsScript The JS code.
-     * @param args A map from the argument name and the JSON serialized value
-     * @return The script result as a {@link ListenableFuture}
+     * Same as {@link #evaluate(String, List, String)} where the entry point function name is {@link
+     * #ENTRY_POINT_FUNC_NAME}.
      */
+    @NonNull
     public ListenableFuture<String> evaluate(
-            String jsScript, @Nullable List<JSScriptArgument> args) {
+            @NonNull String jsScript, @NonNull List<JSScriptArgument> args) {
+        return evaluate(jsScript, args, ENTRY_POINT_FUNC_NAME);
+    }
+
+    /**
+     * Invokes the function {@code entryFunctionName} defined by the JS code in {@code jsScript} and
+     * return the result. It will reset the WebView status after evaluating the script.
+     *
+     * @param jsScript The JS script
+     * @param args The arguments to pass when invoking {@code entryFunctionName}
+     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
+     *     invoked.
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName) {
         SettableFuture<String> result = SettableFuture.create();
         try {
             Log.i(TAG, "Trying to acquire lock on JS execution");
@@ -111,7 +130,8 @@ public class JSScriptEngine {
             // the evalateJavascript callback and it would deadlock if any other request is
             // blocking it.
             mJsExecutionLock.acquire();
-            runOnWebViewThread(() -> evaluateOnWebViewThread(jsScript, args, result));
+            runOnWebViewThread(
+                    () -> evaluateOnWebViewThread(jsScript, args, entryFunctionName, result));
         } catch (InterruptedException e) {
             result.setException(new IllegalStateException("Unable to acquire lock"));
         }
@@ -120,20 +140,21 @@ public class JSScriptEngine {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void evaluateOnWebViewThread(
-            String jsScript, @Nullable List<JSScriptArgument> args, SettableFuture<String> result) {
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @NonNull SettableFuture<String> result) {
+        Objects.requireNonNull(jsScript);
+        Objects.requireNonNull(args);
+        Objects.requireNonNull(entryFunctionName);
+        Objects.requireNonNull(result);
+
         // Calling resetWebViewStatus before evaluation didn't work, not sure why.
         // Moved it after evaluation
         Log.i(TAG, "Evaluating JS script on thread " + Thread.currentThread().getName());
-        StringBuilder jsParamsDeclaration = new StringBuilder();
-        if (args != null) {
-            for (JSScriptArgument arg : args) {
-                // Avoiding to use addJavaScriptInterface because too expensive, just
-                // declaring the string parameter as part of the script.
-                jsParamsDeclaration.append(arg.variableDeclaration());
-                jsParamsDeclaration.append("\n");
-            }
-        }
-        String fullScript = jsParamsDeclaration.toString() + jsScript;
+        String entryPointCall = callEntryPoint(args, entryFunctionName);
+
+        String fullScript = jsScript + "\n" + entryPointCall;
         Log.i(TAG, String.format("Calling WebView for script %s", fullScript));
         mWebView.get()
                 .evaluateJavascript(
@@ -151,11 +172,41 @@ public class JSScriptEngine {
     }
 
     /**
+     * @return The JS code for the definition an anonymous function containing the declaration of
+     *     the value of {@code args} and the invocation of the given {@code entryFunctionName}.
+     */
+    @NonNull
+    private String callEntryPoint(
+            @NonNull List<JSScriptArgument> args, @NonNull String entryFunctionName) {
+        StringBuilder resultBuilder = new StringBuilder("(function() {\n");
+        // Declare args as constant inside this function closure to avoid any direct access by
+        // the functions in the script we are calling.
+        for (JSScriptArgument arg : args) {
+            // Avoiding to use addJavaScriptInterface because too expensive, just
+            // declaring the string parameter as part of the script.
+            resultBuilder.append(arg.variableDeclaration());
+            resultBuilder.append("\n");
+        }
+
+        // Call entryFunctionName with the constants just declared as parameters
+        resultBuilder.append(
+                String.format(
+                        "return %s(%s);\n",
+                        entryFunctionName,
+                        args.stream()
+                                .map(JSScriptArgument::name)
+                                .collect(Collectors.joining(","))));
+        resultBuilder.append("})();\n");
+
+        return resultBuilder.toString();
+    }
+
+    /**
      * Interaction with the WebView object need to happen on the same thread used to initialize the
      * WebView otherwise WebView will cause the process to crash. This thread needs to be a looper
      * thread with its own handler.
      */
-    private void runOnWebViewThread(Runnable task) {
+    private void runOnWebViewThread(@NonNull Runnable task) {
         getWebViewHandler().post(task);
     }
 }
