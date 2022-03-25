@@ -82,7 +82,7 @@ public class EpochManager {
             if (sSingleton == null) {
                 sSingleton = new EpochManager(TopicsDao.getInstance(context),
                         DbHelper.getInstance(context), new Random(),
-                        Classifier.getInstance());
+                        Classifier.getInstance(context));
             }
             return sSingleton;
         }
@@ -141,7 +141,7 @@ public class EpochManager {
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
-            List<String> topTopics = computeTopTopics();
+            List<String> topTopics = computeTopTopics(appClassificationTopicsMap);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently hard-code the taxonomyVersion and the modelVersion.
@@ -158,9 +158,11 @@ public class EpochManager {
     }
 
     // Query the Classifier to get the top Topics for this epoch.
+    // appClassificationTopicsMap = Map<App, List<Topics>>
     @NonNull
-    private List<String> computeTopTopics() {
+    private List<String> computeTopTopics(Map<String, List<String>> appClassificationTopicsMap) {
         return mClassifier.getTopTopics(
+                appClassificationTopicsMap,
                 AdServicesConfig.getTopicsNumberOfTopTopics(),
                 AdServicesConfig.getTopicsNumberOfRandomTopics());
     }
