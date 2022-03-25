@@ -22,10 +22,7 @@ import android.annotation.NonNull;
 
 /**
  * Get Topics Request.
- *
- * @hide
  */
-// TODO(223684663): unhide this
 public class GetTopicsRequest {
 
     private final String mSdkName;
@@ -43,8 +40,6 @@ public class GetTopicsRequest {
 
     /**
      * Builder for {@link GetTopicsRequest} objects.
-     *
-     * @hide
      */
     public static final class Builder {
         private String mSdkName;
@@ -54,6 +49,8 @@ public class GetTopicsRequest {
         /**
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
          * set this field.
+         * <p> Currently we allow callers to specify the SdkName. In the future releases we will
+         * probably have a way to get the SdkName internally.
          */
         public @NonNull Builder setSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;

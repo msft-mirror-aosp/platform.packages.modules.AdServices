@@ -16,14 +16,11 @@
 
 package android.adservices.exceptions;
 
-import android.adservices.topics.TopicsManager;
 import android.adservices.topics.TopicsManager.ResultCode;
 import android.annotation.Nullable;
 
 /**
  * Exception thrown by Get Topics API.
- *
- * @hide
  */
 public class GetTopicsException extends AdServicesException {
 
@@ -32,7 +29,7 @@ public class GetTopicsException extends AdServicesException {
     /**
      * Initializes an {@link GetTopicsException} with no message.
      *
-     * @param resultCode One of the constants documented in {@link TopicsManager#getResultCode}.
+     * @param resultCode The resultCode.
      */
     public GetTopicsException(@ResultCode int resultCode) {
         this(resultCode, /*message=*/ null);
@@ -41,7 +38,7 @@ public class GetTopicsException extends AdServicesException {
     /**
      * Initializes an {@link GetTopicsException} with a result code and message.
      *
-     * @param resultCode One of the constants documented in {@link TopicsManager#getResultCode}.
+     * @param resultCode The resultCode.
      * @param message The detail message (which is saved for later retrieval by the {@link
      *     #getMessage()} method).
      */
@@ -53,7 +50,7 @@ public class GetTopicsException extends AdServicesException {
     /**
      * Initializes an {@link GetTopicsException} with a result code, message and cause.
      *
-     * @param resultCode One of the constants documented in {@link TopicsManager#getResultCode}.
+     * @param resultCode The resultCode.
      * @param message The detail message (which is saved for later retrieval by the {@link
      *     #getMessage()} method).
      * @param cause The cause (which is saved for later retrieval by the {@link #getCause()}
@@ -71,7 +68,7 @@ public class GetTopicsException extends AdServicesException {
     /**
      * Returns the result code this exception was constructed with.
      *
-     * @return One of the constants documented in {@link TopicsManager#getResultCode}.
+     * @return The resultCode.
      */
     public @ResultCode int getResultCode() {
         return mResultCode;
