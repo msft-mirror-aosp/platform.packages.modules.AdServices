@@ -15,7 +15,8 @@
  */
 package android.adservices.clients.topics;
 
-import android.adservices.exceptions.AdServicesException;
+import android.adservices.exceptions.GetTopicsException;
+import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
 import android.annotation.NonNull;
@@ -70,16 +71,16 @@ public class AdvertisingTopicsClient {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mTopicsManager.getTopics(
-                            mSdkName,
+                            new GetTopicsRequest.Builder().setSdkName(mSdkName).build(),
                             mExecutor,
-                            new OutcomeReceiver<GetTopicsResponse, AdServicesException>() {
+                            new OutcomeReceiver<GetTopicsResponse, GetTopicsException>() {
                                 @Override
                                 public void onResult(@NonNull GetTopicsResponse result) {
                                     completer.set(result);
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull GetTopicsException error) {
                                     completer.setException(error);
                                 }
                             });
