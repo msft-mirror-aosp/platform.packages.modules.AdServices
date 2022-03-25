@@ -27,13 +27,13 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
-/** Unit tests for {@link android.adservices.topics.GetTopicsResponse} */
+/** Unit tests for {@link GetTopicsResult} */
 @SmallTest
-public final class GetTopicsResponseTest {
+public final class GetTopicsResultTest {
     @Test
     public void testWriteToParcel() throws Exception {
-        GetTopicsResponse response =
-                new GetTopicsResponse.Builder()
+        GetTopicsResult response =
+                new GetTopicsResult.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L, 2L))
                         .setModelVersions(Arrays.asList(3L, 4L))
                         .setTopics(Arrays.asList("topic1", "topic2"))
@@ -42,7 +42,7 @@ public final class GetTopicsResponseTest {
         response.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        GetTopicsResponse fromParcel = GetTopicsResponse.CREATOR.createFromParcel(p);
+        GetTopicsResult fromParcel = GetTopicsResult.CREATOR.createFromParcel(p);
 
         assertThat(fromParcel.getTaxonomyVersions()).containsExactly(1L, 2L).inOrder();
         assertThat(fromParcel.getModelVersions()).containsExactly(3L, 4L).inOrder();
@@ -51,12 +51,12 @@ public final class GetTopicsResponseTest {
 
     @Test
     public void testWriteToParcel_emptyResponse() throws Exception {
-        GetTopicsResponse response = new GetTopicsResponse.Builder().build();
+        GetTopicsResult response = new GetTopicsResult.Builder().build();
         Parcel p = Parcel.obtain();
         response.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        GetTopicsResponse fromParcel = GetTopicsResponse.CREATOR.createFromParcel(p);
+        GetTopicsResult fromParcel = GetTopicsResult.CREATOR.createFromParcel(p);
 
         assertThat(fromParcel.getTaxonomyVersions()).isEmpty();
         assertThat(fromParcel.getModelVersions()).isEmpty();
@@ -68,13 +68,13 @@ public final class GetTopicsResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    GetTopicsResponse unusedResponse =
-                            new GetTopicsResponse.Builder().setTopics(null).build();
+                    GetTopicsResult unusedResponse =
+                            new GetTopicsResult.Builder().setTopics(null).build();
                 });
 
         // This should not throw.
-        GetTopicsResponse unusedResponse =
-                new GetTopicsResponse.Builder()
+        GetTopicsResult unusedResponse =
+                new GetTopicsResult.Builder()
                         // Not setting anything default to empty.
                         .build();
     }
@@ -84,8 +84,8 @@ public final class GetTopicsResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    GetTopicsResponse unusedResponse =
-                            new GetTopicsResponse.Builder()
+                    GetTopicsResult unusedResponse =
+                            new GetTopicsResult.Builder()
                                     .setTaxonomyVersions(Arrays.asList(1L))
                                     .setModelVersions(Arrays.asList(3L, 4L))
                                     .setTopics(Arrays.asList("topic1", "topic2"))
@@ -95,8 +95,8 @@ public final class GetTopicsResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    GetTopicsResponse unusedResponse =
-                            new GetTopicsResponse.Builder()
+                    GetTopicsResult unusedResponse =
+                            new GetTopicsResult.Builder()
                                     // Not setting TaxonomyVersions implies empty.
                                     .setModelVersions(Arrays.asList(3L, 4L))
                                     .setTopics(Arrays.asList("topic1", "topic2"))
@@ -106,8 +106,8 @@ public final class GetTopicsResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    GetTopicsResponse unusedResponse =
-                            new GetTopicsResponse.Builder()
+                    GetTopicsResult unusedResponse =
+                            new GetTopicsResult.Builder()
                                     .setTaxonomyVersions(Arrays.asList(1L, 2L))
                                     .setModelVersions(Arrays.asList(3L, 4L))
                                     .setTopics(Arrays.asList("topic1"))

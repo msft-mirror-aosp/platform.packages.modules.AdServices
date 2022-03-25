@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.GetTopicsResponse.RESULT_OK;
+import static android.adservices.topics.TopicsManager.RESULT_OK;
 
-import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.GetTopicsResult;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
@@ -93,12 +93,13 @@ public class TopicsWorker {
 
     /**
      * Get topics for the specified app and sdk.
+     *
      * @param app the app
      * @param sdk the sdk. In case the app calls the Topics API directly, the skd == empty string.
      * @return the Topics Response.
      */
     @NonNull
-    public GetTopicsResponse getTopics(@NonNull String app, @NonNull String sdk) {
+    public GetTopicsResult getTopics(@NonNull String app, @NonNull String sdk) {
         mReadWriteLock.readLock().lock();
         try {
             List<Topic> topics = mCacheManager.getTopics(
@@ -114,7 +115,7 @@ public class TopicsWorker {
                 topicStrings.add(topic.getTopic());
             }
 
-            return new GetTopicsResponse.Builder()
+            return new GetTopicsResult.Builder()
                     .setResultCode(RESULT_OK)
                     .setTaxonomyVersions(taxonomyVersions)
                     .setModelVersions(modelVersions)
