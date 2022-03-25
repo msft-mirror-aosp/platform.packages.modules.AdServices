@@ -16,12 +16,12 @@
 
 package android.adservices.topics;
 
-import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.GetTopicsResult;
 
 /**
   * Callback from a get Topics request.
   * {@hide}
   */
 oneway interface IGetTopicsCallback {
-  void onResult(in GetTopicsResponse responseParcel);
+  void onResult(in GetTopicsResult responseParcel);
 }

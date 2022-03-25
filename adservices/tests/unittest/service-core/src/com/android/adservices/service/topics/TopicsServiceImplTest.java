@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.GetTopicsResponse.RESULT_OK;
+import static android.adservices.topics.TopicsManager.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -26,8 +26,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.adservices.topics.GetTopicsRequest;
-import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.GetTopicsParam;
+import android.adservices.topics.GetTopicsResult;
 import android.adservices.topics.IGetTopicsCallback;
 import android.content.AttributionSource;
 import android.content.Context;
@@ -75,30 +75,32 @@ public class TopicsServiceImplTest {
                         .setPackageName(SOME_PACKAGE_NAME)
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
-        GetTopicsRequest request =
-                new GetTopicsRequest.Builder()
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
                         .setAttributionSource(source)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
-        GetTopicsResponse getTopicsResponse = new GetTopicsResponse.Builder()
-                .setTaxonomyVersions(Arrays.asList(1L, 2L))
-                .setModelVersions(Arrays.asList(3L, 4L))
-                .setTopics(Arrays.asList("topic1", "topic2"))
-                .build();
+        GetTopicsResult getTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L))
+                        .setModelVersions(Arrays.asList(3L, 4L))
+                        .setTopics(Arrays.asList("topic1", "topic2"))
+                        .build();
 
         when(mMockTopicsWorker.getTopics(/* app = */ anyString(), /* sdk = */ anyString()))
-                .thenReturn(getTopicsResponse);
+                .thenReturn(getTopicsResult);
 
         // To capture result in inner class, we have to declare final.
-        final GetTopicsResponse[] capturedResponseParcel = new GetTopicsResponse[1];
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
 
         mGetTopicsCallbackLatch = new CountDownLatch(1);
 
-        mTopicsServiceImpl.getTopics(request,
+        mTopicsServiceImpl.getTopics(
+                request,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResponse responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -110,7 +112,7 @@ public class TopicsServiceImplTest {
                 });
 
         mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResponse);
+        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
         verify(mMockTopicsWorker, times(1))
                 .recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
@@ -123,32 +125,34 @@ public class TopicsServiceImplTest {
                         .setPackageName(SOME_PACKAGE_NAME)
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
-        GetTopicsRequest request =
-                new GetTopicsRequest.Builder()
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
                         .setAttributionSource(source)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
         // No topics (empty list) were returned.
-        GetTopicsResponse getTopicsResponse = new GetTopicsResponse.Builder()
-                .setResultCode(RESULT_OK)
-                .setTaxonomyVersions(Arrays.asList())
-                .setModelVersions(Arrays.asList())
-                .setTopics(Arrays.asList())
-                .build();
+        GetTopicsResult getTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList())
+                        .setModelVersions(Arrays.asList())
+                        .setTopics(Arrays.asList())
+                        .build();
 
         when(mMockTopicsWorker.getTopics(/* app = */ anyString(), /* sdk = */ anyString()))
-                .thenReturn(getTopicsResponse);
+                .thenReturn(getTopicsResult);
 
         // To capture result in inner class, we have to declare final.
-        final GetTopicsResponse[] capturedResponseParcel = new GetTopicsResponse[1];
+        final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
 
         mGetTopicsCallbackLatch = new CountDownLatch(1);
 
-        mTopicsServiceImpl.getTopics(request,
+        mTopicsServiceImpl.getTopics(
+                request,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResponse responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -160,7 +164,7 @@ public class TopicsServiceImplTest {
                 });
 
         mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResponse);
+        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
         verify(mMockTopicsWorker, times(1))
                 .recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));

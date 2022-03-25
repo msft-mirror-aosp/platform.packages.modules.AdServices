@@ -25,9 +25,9 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.topics.GetTopicsRequest} */
+/** Unit tests for {@link GetTopicsParam} */
 @SmallTest
-public final class GetTopicsRequestTest {
+public final class GetTopicsParamTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
@@ -40,8 +40,9 @@ public final class GetTopicsRequestTest {
                         .setPackageName(SOME_PACKAGE_NAME)
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
-        GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setAttributionSource(source)
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAttributionSource(source)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
@@ -60,8 +61,8 @@ public final class GetTopicsRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    GetTopicsRequest unusedRequest =
-                            new GetTopicsRequest.Builder()
+                    GetTopicsParam unusedRequest =
+                            new GetTopicsParam.Builder()
                                     // Not setting AttributionSource making it null.
                                     .setSdkName(SOME_SDK_NAME)
                                     .build();
@@ -76,8 +77,8 @@ public final class GetTopicsRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    GetTopicsRequest unusedRequest =
-                            new GetTopicsRequest.Builder()
+                    GetTopicsParam unusedRequest =
+                            new GetTopicsParam.Builder()
                                     .setAttributionSource(source)
                                     .setSdkName(SOME_SDK_NAME)
                                     .build();
@@ -92,8 +93,8 @@ public final class GetTopicsRequestTest {
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
 
-        GetTopicsRequest request =
-                new GetTopicsRequest.Builder()
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
                         .setAttributionSource(source)
                         // Not setting SdkName will get empty string.
                         .build();
