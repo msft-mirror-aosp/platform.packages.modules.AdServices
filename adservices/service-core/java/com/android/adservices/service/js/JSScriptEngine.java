@@ -21,10 +21,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.android.adservices.LogUtil;
 import com.android.internal.annotations.GuardedBy;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -63,23 +63,20 @@ public class JSScriptEngine {
 
     @SuppressLint("SetJavaScriptEnabled")
     public JSScriptEngine(@NonNull Context context) {
-        Log.i(TAG, "Creating JSScriptEngine");
+        LogUtil.d("Creating JSScriptEngine");
         mWebViewClient =
                 new WebViewClient() {
                     @Override
                     public void onPageFinished(WebView view, String url) {
-                        Log.i(
-                                TAG,
-                                "WebView status cleaned up. Releasing lock on JS" + " execution");
+                        LogUtil.v(TAG, "WebView status cleaned up. Releasing lock on JS execution");
                         mJsExecutionLock.release();
                     }
                 };
         runOnWebViewThread(
                 () -> {
-                    Log.i(
-                            TAG,
-                            "Creating new WebView instance in thread "
-                                    + Thread.currentThread().getName());
+                    LogUtil.d(
+                            "Creating new WebView instance in thread %s",
+                            Thread.currentThread().getName());
                     WebView wv = new WebView(context);
                     wv.setWebViewClient(mWebViewClient);
                     wv.getSettings().setJavaScriptEnabled(true);
@@ -125,7 +122,7 @@ public class JSScriptEngine {
             @NonNull String entryFunctionName) {
         SettableFuture<String> result = SettableFuture.create();
         try {
-            Log.i(TAG, "Trying to acquire lock on JS execution");
+            LogUtil.v("Trying to acquire lock on JS execution");
             // Don't acquire the lock in the UI thread since that thread is used to run
             // the evalateJavascript callback and it would deadlock if any other request is
             // blocking it.
@@ -151,17 +148,17 @@ public class JSScriptEngine {
 
         // Calling resetWebViewStatus before evaluation didn't work, not sure why.
         // Moved it after evaluation
-        Log.i(TAG, "Evaluating JS script on thread " + Thread.currentThread().getName());
+        LogUtil.d(TAG, "Evaluating JS script on thread %s", Thread.currentThread().getName());
         String entryPointCall = callEntryPoint(args, entryFunctionName);
 
         String fullScript = jsScript + "\n" + entryPointCall;
-        Log.i(TAG, String.format("Calling WebView for script %s", fullScript));
+        LogUtil.v("Calling WebView for script %s", fullScript);
         mWebView.get()
                 .evaluateJavascript(
                         fullScript,
                         jsResult -> {
-                            Log.i(TAG, "Done Evaluating JS script result is " + jsResult);
-                            Log.i(TAG, "Resetting WebView status");
+                            LogUtil.v("Done Evaluating JS script result is %s", jsResult);
+                            LogUtil.v("Triggering reset of WebView status");
                             // The release of the lock is done in the WebViewClient
                             // The call to mWebView.load(about:blank) is not blocking so the
                             // unlock of the semaphore needs to be done only when WebView
