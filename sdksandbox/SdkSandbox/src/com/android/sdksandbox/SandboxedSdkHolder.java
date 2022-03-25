@@ -16,6 +16,7 @@
 
 package com.android.sdksandbox;
 
+import android.annotation.SuppressLint;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
@@ -38,6 +39,7 @@ import java.util.Random;
 /**
  * A holder for loaded code.
  */
+@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 class SandboxedSdkHolder {
 
     private static final String TAG = "SdkSandbox";
@@ -141,21 +143,20 @@ class SandboxedSdkHolder {
             extends ISdkSandboxManagerToSdkSandboxCallback.Stub {
 
         @Override
-        public void onSurfacePackageRequested(IBinder token, int displayId, Bundle params) {
+        public void onSurfacePackageRequested(IBinder token, int displayId,
+                int width, int height, Bundle params) {
             try {
                 Context displayContext = mContext.createDisplayContext(
                         mDisplayManager.getDisplay(displayId));
                 // TODO(b/209009304): Support other window contexts?
                 Context windowContext = displayContext.createWindowContext(
                         WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, null);
-                final View view = mSdk.getView(windowContext, params);
                 // Creating a SurfaceControlViewHost needs to done on the handler thread.
                 mHandler.post(() -> {
+                    final View view = mSdk.getView(windowContext, params);
                     try {
                         SurfaceControlViewHost host = new SurfaceControlViewHost(windowContext,
                                 mDisplayManager.getDisplay(displayId), token);
-                        int width = params.getInt(SdkSandboxServiceImpl.WIDTH_KEY, 500);
-                        int height = params.getInt(SdkSandboxServiceImpl.HEIGHT_KEY, 500);
                         host.setView(view, width, height);
                         SurfaceControlViewHost.SurfacePackage surfacePackage =
                                 host.getSurfacePackage();
