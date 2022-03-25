@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
@@ -64,7 +65,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBasicSourceRequest() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -76,7 +77,7 @@ public final class SourceFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source",
                                    List.of("{\n"
                                          + "  \"destination\": \"android-app://com.myapps\",\n"
-                                         + "  \"source_priority\": \"123\",\n"
+                                         + "  \"priority\": \"123\",\n"
                                          + "  \"expiry\": \"456789\",\n"
                                          + "  \"source_event_id\": \"987654321\"\n"
                                          + "}\n")));
@@ -89,12 +90,13 @@ public final class SourceFetcherTest {
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(987654321, result.get(0).getSourceEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBadSourceUrl() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -108,7 +110,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBadSourceConnection() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -124,7 +126,7 @@ public final class SourceFetcherTest {
     @Test
     public void testBadSourceJson() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -139,12 +141,13 @@ public final class SourceFetcherTest {
         ArrayList<SourceRegistration> result = new ArrayList();
         assertFalse(mFetcher.fetchSource(request, result));
         assertEquals(0, result.size());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBasicSourceRequestMinimumFields() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -167,12 +170,13 @@ public final class SourceFetcherTest {
         assertEquals(123, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(0, result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))

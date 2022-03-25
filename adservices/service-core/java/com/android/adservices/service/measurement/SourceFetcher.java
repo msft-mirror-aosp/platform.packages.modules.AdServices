@@ -57,8 +57,8 @@ public class SourceFetcher {
         if (json.has("expiry")) {
             result.setExpiry(json.getLong("expiry"));
         }
-        if (json.has("source_priority")) {
-            result.setSourcePriority(json.getLong("source_priority"));
+        if (json.has("priority")) {
+            result.setSourcePriority(json.getLong("priority"));
         }
     }
 
@@ -184,7 +184,7 @@ public class SourceFetcher {
     public boolean fetchSource(@NonNull RegistrationRequest request,
                                @NonNull List<SourceRegistration> out) {
         if (request.getRegistrationType()
-                != RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE) {
+                != RegistrationRequest.REGISTER_SOURCE) {
             throw new IllegalArgumentException("Expected source registration");
         }
         return fetchSource(

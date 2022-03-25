@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
@@ -64,7 +65,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBasicTriggerRequest() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -76,7 +77,7 @@ public final class TriggerFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
                                    List.of("[{\n"
                                          + "  \"trigger_data\": \"3\",\n"
-                                         + "  \"trigger_priority\": \"11111\",\n"
+                                         + "  \"priority\": \"11111\",\n"
                                          + "  \"deduplication_key\": \"22222\"\n"
                                          + "}]\n")));
         ArrayList<TriggerRegistration> result = new ArrayList();
@@ -87,12 +88,13 @@ public final class TriggerFetcherTest {
         assertEquals(3, result.get(0).getTriggerData());
         assertEquals(11111, result.get(0).getTriggerPriority());
         assertEquals(22222, result.get(0).getDeduplicationKey());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBadTriggerUrl() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -106,7 +108,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBadTriggerConnection() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -122,7 +124,7 @@ public final class TriggerFetcherTest {
     @Test
     public void testBadTriggerJson() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -137,12 +139,13 @@ public final class TriggerFetcherTest {
         ArrayList<TriggerRegistration> result = new ArrayList();
         assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testBasicTriggerRequestMinimumFields() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -161,12 +164,13 @@ public final class TriggerFetcherTest {
         assertEquals(0, result.get(0).getTriggerData());
         assertEquals(0, result.get(0).getTriggerPriority());
         assertEquals(0, result.get(0).getDeduplicationKey());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.TRIGGER_ATTRIBUTION)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))

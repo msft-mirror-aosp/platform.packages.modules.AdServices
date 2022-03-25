@@ -60,8 +60,8 @@ public class TriggerFetcher {
         if (inside.has("trigger_data")) {
             result.setTriggerData(inside.getLong("trigger_data"));
         }
-        if (inside.has("trigger_priority")) {
-            result.setTriggerPriority(inside.getLong("trigger_priority"));
+        if (inside.has("priority")) {
+            result.setTriggerPriority(inside.getLong("priority"));
         }
         if (inside.has("deduplication_key")) {
             result.setDeduplicationKey(inside.getLong("deduplication_key"));
@@ -146,6 +146,7 @@ public class TriggerFetcher {
         }
         boolean success = true;
         try {
+            urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Referer", referrer.toString());
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
@@ -192,7 +193,7 @@ public class TriggerFetcher {
     public boolean fetchTrigger(@NonNull RegistrationRequest request,
                                 @NonNull List<TriggerRegistration> out) {
         if (request.getRegistrationType()
-                != RegistrationRequest.TRIGGER_ATTRIBUTION) {
+                != RegistrationRequest.REGISTER_TRIGGER) {
             throw new IllegalArgumentException("Expected trigger registration");
         }
         return fetchTrigger(

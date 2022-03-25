@@ -25,6 +25,9 @@
     <!-- Permissions required for reading device configs -->
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
 
+    <!-- Used for reporting -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="Android AdServices"
         android:forceQueryable="true">
