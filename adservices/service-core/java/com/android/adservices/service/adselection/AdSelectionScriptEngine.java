@@ -27,8 +27,8 @@ import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.util.Log;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 
@@ -217,16 +217,15 @@ public class AdSelectionScriptEngine {
     }
 
     /**
-     * Parses the output from the invocation of the {@code generateBid} JS function on a list of
-     * ads and convert it to a list of {@link AdWithBid} objects. The script output has been
-     * pre-parsed into an {@link AuctionScriptResult} object that will contain the script status
-     * code and the list of ads. The method will return an empty list of ads if the status code is
-     * not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS
-     * response.
+     * Parses the output from the invocation of the {@code generateBid} JS function on a list of ads
+     * and convert it to a list of {@link AdWithBid} objects. The script output has been pre-parsed
+     * into an {@link AuctionScriptResult} object that will contain the script status code and the
+     * list of ads. The method will return an empty list of ads if the status code is not {@link
+     * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      */
     private List<AdWithBid> handleGenerateBidsOutput(AuctionScriptResult batchBidResult) {
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
-            Log.d(TAG, "Bid script failed, returning empty result.");
+            LogUtil.v("Bid script failed, returning empty result.");
             return ImmutableList.of();
         } else {
             try {
@@ -238,27 +237,25 @@ public class AdSelectionScriptEngine {
                 }
                 return result.build();
             } catch (IllegalArgumentException e) {
-                Log.w(
-                        TAG,
-                        String.format(
-                                "Invalid ad with bid returned by a generateBid script %s. Returning"
-                                    + " empty list of ad with bids.",
-                                e));
+                LogUtil.w(
+                        "Invalid ad with bid returned by a generateBid script %s. Returning"
+                                + " empty list of ad with bids.",
+                        e);
                 return ImmutableList.of();
             }
         }
     }
 
     /**
-     * Parses the output from the invocation of the {@code scoreAd} JS function on a list of ad
-     * with associated bids {@link Double}. The script output has been pre-parsed into an {@link
+     * Parses the output from the invocation of the {@code scoreAd} JS function on a list of ad with
+     * associated bids {@link Double}. The script output has been pre-parsed into an {@link
      * AuctionScriptResult} object that will contain the script status code and the list of scores.
      * The method will return an empty list of ads if the status code is not {@link
      * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
      */
     private List<Double> handleScoreAdsOutput(AuctionScriptResult batchBidResult) {
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
-            Log.d(TAG, "Scoring script failed, returning empty result.");
+            LogUtil.v("Scoring script failed, returning empty result.");
             return ImmutableList.of();
         } else {
             ImmutableList.Builder<Double> result = ImmutableList.builder();
