@@ -97,6 +97,7 @@ public final class MeasurementTables {
         // TODO: Revisit this column to handle multiple reporting endpoints per AdTech.
         String REPORT_TO = "report_to";
         String TRIGGER_TIME = "trigger_time";
+        String REGISTERER = "registerer";
     }
 
     public static final String CREATE_TABLE_SOURCE =
@@ -165,7 +166,8 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.SOURCE_SITE + " TEXT, "
                     + AttributionRateLimitContract.DESTINATION_SITE + " TEXT, "
                     + AttributionRateLimitContract.REPORT_TO + " TEXT, "
-                    + AttributionRateLimitContract.TRIGGER_TIME + " INTEGER "
+                    + AttributionRateLimitContract.TRIGGER_TIME + " INTEGER, "
+                    + AttributionRateLimitContract.REGISTERER + " TEXT "
                     + ")";
 
     public static final String[] CREATE_INDICES = {
