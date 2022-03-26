@@ -34,14 +34,12 @@ import java.util.concurrent.Executor;
 
 /**
  * Topics Manager.
- * @hide
  */
 public class TopicsManager {
 
     /**
-     * Result codes from {@link getTopics} methods.
-     *
-     * @hide
+     * Result codes from
+     * {@link TopicsManager#getTopics(GetTopicsRequest, Executor, OutcomeReceiver)} methods.
      */
     @IntDef(
             value = {
