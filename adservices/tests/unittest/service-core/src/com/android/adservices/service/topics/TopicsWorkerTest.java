@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.GetTopicsResponse.RESULT_OK;
+import static android.adservices.topics.TopicsManager.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.only;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.GetTopicsResult;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.AdServicesConfig;
@@ -69,16 +69,17 @@ public class TopicsWorkerTest {
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
 
-        GetTopicsResponse getTopicsResponse = mTopicsWorker.getTopics("app", "sdk");
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
 
-        GetTopicsResponse expectedGetTopicsResponse = new GetTopicsResponse.Builder()
-                .setResultCode(RESULT_OK)
-                .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
-                .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                .setTopics(Arrays.asList("topic1", "topic2", "topic3"))
-                .build();
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList("topic1", "topic2", "topic3"))
+                        .build();
 
-        assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
+        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
@@ -93,16 +94,17 @@ public class TopicsWorkerTest {
                 eq("app"), eq("sdk")))
                 .thenReturn(new ArrayList<>());
 
-        GetTopicsResponse getTopicsResponse = mTopicsWorker.getTopics("app", "sdk");
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
 
-        GetTopicsResponse expectedGetTopicsResponse = new GetTopicsResponse.Builder()
-                .setResultCode(RESULT_OK)
-                .setTaxonomyVersions(Arrays.asList())
-                .setModelVersions(Arrays.asList())
-                .setTopics(Arrays.asList())
-                .build();
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList())
+                        .setModelVersions(Arrays.asList())
+                        .setTopics(Arrays.asList())
+                        .build();
 
-        assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
+        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
@@ -124,17 +126,17 @@ public class TopicsWorkerTest {
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
 
-        GetTopicsResponse getTopicsResponse = mTopicsWorker.getTopics("app_not_in_cache",
-                "sdk");
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app_not_in_cache", "sdk");
 
-        GetTopicsResponse expectedGetTopicsResponse = new GetTopicsResponse.Builder()
-                .setResultCode(RESULT_OK)
-                .setTaxonomyVersions(Arrays.asList())
-                .setModelVersions(Arrays.asList())
-                .setTopics(Arrays.asList())
-                .build();
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList())
+                        .setModelVersions(Arrays.asList())
+                        .setTopics(Arrays.asList())
+                        .build();
 
-        assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
+        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
@@ -156,17 +158,17 @@ public class TopicsWorkerTest {
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
 
-        GetTopicsResponse getTopicsResponse = mTopicsWorker.getTopics("app",
-                "sdk_not_in_cache");
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk_not_in_cache");
 
-        GetTopicsResponse expectedGetTopicsResponse = new GetTopicsResponse.Builder()
-                .setResultCode(RESULT_OK)
-                .setTaxonomyVersions(Arrays.asList())
-                .setModelVersions(Arrays.asList())
-                .setTopics(Arrays.asList())
-                .build();
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList())
+                        .setModelVersions(Arrays.asList())
+                        .setTopics(Arrays.asList())
+                        .build();
 
-        assertThat(getTopicsResponse).isEqualTo(expectedGetTopicsResponse);
+        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
                 eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
