@@ -20,7 +20,6 @@ import android.annotation.Nullable;
 
 /**
  * Exception thrown by AdServices.
- * @hide
  */
 public class AdServicesException extends Exception {
     public AdServicesException(@Nullable String message, @Nullable Throwable e) {

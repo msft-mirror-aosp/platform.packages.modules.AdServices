@@ -24,10 +24,7 @@ import java.util.Objects;
 
 /**
  * Represent the result from the getTopics API.
- *
- * @hide
  */
-// TODO(223684663): unhide this
 public class GetTopicsResponse {
     private final List<Long> mTaxonomyVersions;
     private final List<Long> mModelVersions;
@@ -81,8 +78,7 @@ public class GetTopicsResponse {
 
     /**
      * Builder for {@link GetTopicsResponse} objects.
-     *
-     * @hide
+     * This class is unhidden so that developers can write tests.
      */
     public static final class Builder {
         private List<Long> mTaxonomyVersions = new ArrayList<>();
