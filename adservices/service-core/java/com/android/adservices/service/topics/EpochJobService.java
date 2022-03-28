@@ -50,7 +50,7 @@ public final class EpochJobService extends JobService {
         // TODO(b/225382268): Handle cancellation.
         ListenableFuture<Void> epochComputationFuture = Futures.submit(
                 () -> {
-                    EpochManager.getInstance(this).processEpoch();
+                    TopicsWorker.getInstance(this).computeEpoch();
                 },
                 AdServicesExecutors.getBackgroundExecutor());
 
