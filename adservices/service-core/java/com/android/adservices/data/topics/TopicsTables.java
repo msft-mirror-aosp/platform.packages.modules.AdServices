@@ -161,7 +161,7 @@ public final class TopicsTables {
     @VisibleForTesting
     public interface UsageHistoryContract {
         String TABLE = TOPICS_TABLE_PREFIX + "usage_history";
-        String EPOCH_ID = "timestamp";
+        String EPOCH_ID = "epoch_id";
         String APP = "app";
         String SDK = "sdk";
     }
