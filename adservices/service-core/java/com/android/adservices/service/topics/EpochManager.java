@@ -152,6 +152,9 @@ public class EpochManager {
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(epochId, /* taxonomyVersion = */ 1L,
                     /* modelVersion = */ 1L, returnedAppSdkTopics);
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
         }
@@ -284,7 +287,9 @@ public class EpochManager {
     // The Top Topics include the Top 5 Topics and one random topic from the Taxonomy.
     @VisibleForTesting
     String selectRandomTopic(List<String> topTopics) {
-        Preconditions.checkArgument(topTopics.size() == 6);
+        Preconditions.checkArgument(topTopics.size()
+                == AdServicesConfig.getTopicsNumberOfTopTopics()
+                + AdServicesConfig.getTopicsNumberOfRandomTopics());
         int random = mRandom.nextInt(100);
 
         // For 5%, get the random topic.

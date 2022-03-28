@@ -186,4 +186,11 @@ public class TopicsWorkerTest {
         mTopicsWorker.loadCache();
         verify(mMockCacheManager, only()).loadCache();
     }
+
+    @Test
+    public void testComputeEpoch() {
+        mTopicsWorker.computeEpoch();
+        verify(mMockEpochManager, only()).processEpoch();
+        verify(mMockCacheManager, only()).loadCache();
+    }
 }

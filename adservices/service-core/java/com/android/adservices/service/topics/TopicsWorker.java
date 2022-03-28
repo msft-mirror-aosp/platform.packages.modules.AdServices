@@ -160,4 +160,26 @@ public class TopicsWorker {
             mReadWriteLock.writeLock().unlock();
         }
     }
+
+    /**
+     * Compute Epoch algorithm.
+     * If the computation succeed, it will reload the cache.
+     */
+    @NonNull
+    public void computeEpoch() {
+        // This computeEpoch happens in the EpochJobService which happens every epoch. Since the
+        // epoch computation happens async, clients can call getTopics API during the epoch
+        // computation. Here we use Write lock to block Read during that computation time.
+        mReadWriteLock.writeLock().lock();
+        try {
+            mEpochManager.processEpoch();
+
+            // TODO(b/227179955): Handle error in mEpochManager.processEpoch and only reload Cache
+            // when the computation succeeded.
+            loadCache();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
 }
