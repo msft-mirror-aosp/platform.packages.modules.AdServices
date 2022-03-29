@@ -53,8 +53,8 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
         Log.i(TAG, "Handling phase: " + phaseName);
         switch (phaseName) {
-            case "testSdkSandboxDataAppDirectory_SharedStorageIsUsable":
-                testSdkSandboxDataAppDirectory_SharedStorageIsUsable();
+            case "testSdkDataPackageDirectory_SharedStorageIsUsable":
+                testSdkDataPackageDirectory_SharedStorageIsUsable();
                 break;
             case "testSdkDataIsAttributedToApp":
                 testSdkDataIsAttributedToApp();
@@ -63,7 +63,7 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
         }
     }
 
-    private void testSdkSandboxDataAppDirectory_SharedStorageIsUsable() {
+    private void testSdkDataPackageDirectory_SharedStorageIsUsable() {
         String sharedPath = getSharedStoragePath();
 
         try {

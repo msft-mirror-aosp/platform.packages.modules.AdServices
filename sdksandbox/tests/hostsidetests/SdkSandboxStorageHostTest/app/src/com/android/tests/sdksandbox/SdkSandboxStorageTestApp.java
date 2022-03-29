@@ -70,7 +70,7 @@ public class SdkSandboxStorageTestApp {
     }
 
     @Test
-    public void testSdkSandboxDataAppDirectory_SharedStorageIsUsable() throws Exception {
+    public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         // First load code
         Bundle params = new Bundle();
         params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
@@ -79,7 +79,7 @@ public class SdkSandboxStorageTestApp {
         IBinder codeToken = callback.getSdkToken();
 
         // Run phase inside the code
-        runPhaseInsideCode(codeToken, "testSdkSandboxDataAppDirectory_SharedStorageIsUsable");
+        runPhaseInsideCode(codeToken, "testSdkDataPackageDirectory_SharedStorageIsUsable");
 
         // Wait for code to finish handling the request
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
