@@ -17,6 +17,7 @@
 package com.android.sdksandbox;
 
 import android.annotation.RequiresPermission;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -45,15 +46,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 /** Implementation of Sdk Sandbox Service. */
+@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
-
-    // The options below may be passed in a {@code Bundle} while loading or rendering.
-    // TODO(b/210670819): Encapsulate in a parcelable.
-    public static final String SDK_PROVIDER_KEY = "sdk-provider-class";
-    public static final String WIDTH_KEY = "width";
-    public static final String HEIGHT_KEY = "height";
 
     @GuardedBy("mHeldSdk")
     private final Map<IBinder, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
@@ -141,12 +137,9 @@ public class SdkSandboxServiceImpl extends Service {
 
     private void loadSdkInternal(@NonNull IBinder sdkToken,
             @NonNull ApplicationInfo applicationInfo,
-            @Nullable String sdkProviderClassName,
+            @NonNull String sdkProviderClassName,
             @NonNull Bundle params,
             @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
-        if (params.containsKey(SDK_PROVIDER_KEY)) {
-            sdkProviderClassName = params.getString(SDK_PROVIDER_KEY);
-        }
         Preconditions.checkStringNotEmpty(sdkProviderClassName);
         synchronized (mHeldSdk) {
             if (mHeldSdk.containsKey(sdkToken)) {

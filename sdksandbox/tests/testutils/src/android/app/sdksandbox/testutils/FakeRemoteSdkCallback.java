@@ -17,17 +17,15 @@
 package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.app.sdksandbox.IRemoteSdkCallback;
+import android.app.sdksandbox.SdkSandboxManager.RemoteSdkCallback;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.SurfaceControlViewHost;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class FakeRemoteSdkCallback extends IRemoteSdkCallback.Stub {
+public class FakeRemoteSdkCallback implements RemoteSdkCallback {
     private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
     private final CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
@@ -37,11 +35,8 @@ public class FakeRemoteSdkCallback extends IRemoteSdkCallback.Stub {
     private int mErrorCode;
     private String mErrorMsg;
 
-    private IBinder mSdkToken;
-
     @Override
-    public void onLoadSdkSuccess(IBinder sdkToken, Bundle params) {
-        mSdkToken = sdkToken;
+    public void onLoadSdkSuccess(Bundle params) {
         mLoadSdkSuccess = true;
         mLoadSdkLatch.countDown();
     }
@@ -74,13 +69,6 @@ public class FakeRemoteSdkCallback extends IRemoteSdkCallback.Stub {
         return mLoadSdkSuccess;
     }
 
-    public IBinder getSdkToken() {
-        waitForLatch(mLoadSdkLatch);
-        assertWithMessage("Failed to load sdk: " + getLoadSdkErrorMsg())
-            .that(mLoadSdkSuccess).isTrue();
-        return mSdkToken;
-    }
-
     public int getLoadSdkErrorCode() {
         waitForLatch(mLoadSdkLatch);
         assertThat(mLoadSdkSuccess).isFalse();
@@ -92,7 +80,7 @@ public class FakeRemoteSdkCallback extends IRemoteSdkCallback.Stub {
         return mErrorMsg;
     }
 
-    public boolean isRequestSurfacePackageSuccessful() throws InterruptedException {
+    public boolean isRequestSurfacePackageSuccessful() {
         waitForLatch(mSurfacePackageLatch);
         return mSurfacePackageSuccess;
     }
