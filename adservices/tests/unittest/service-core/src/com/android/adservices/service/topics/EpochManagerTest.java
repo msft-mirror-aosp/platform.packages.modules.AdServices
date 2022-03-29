@@ -428,5 +428,4 @@ public final class EpochManagerTest {
 
         assertThat(returnedAppSdkTopicsCapture.getValue()).isEqualTo(expectedReturnedTopics);
     }
-
 }

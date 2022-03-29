@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.data.topics.TopicsDao} */
 @MediumTest
@@ -251,7 +252,7 @@ public final class TopicsDaoTest {
     }
 
     @Test
-    public void testPersistAndRetrieveReturnedAppTopics() {
+    public void testPersistAndRetrieveReturnedAppTopics_oneEpoch() {
         // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
         Map<Pair<String, String>, String> returnedAppSdkTopics = new HashMap<>();
         returnedAppSdkTopics.put(Pair.create("app1", ""), "topic1");
@@ -289,5 +290,114 @@ public final class TopicsDaoTest {
 
         // And the returedAppSdkTopics match.
         assertThat(returnedAppSdkTopicsFromDb).isEqualTo(expectedReturnedAppSdkTopics);
+    }
+
+    @Test
+    public void testPersistAndRetrieveReturnedAppTopics_multipleEpochs() {
+        // We will have 5 topics and setup the returned topics for epoch 3, 2, and 1.
+        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic4 = new Topic("topic4", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic5 = new Topic("topic5", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+
+        // Setup for EpochId 1
+        // Map<Pair<App, Sdk>, Topic>
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch1 = new HashMap<>();
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", ""), topic1);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", "sdk1"), topic1);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", "sdk2"), topic1);
+
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", "sdk1"), topic2);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", "sdk3"), topic2);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", "sdk4"), topic2);
+
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app3", "sdk1"), topic3);
+
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app5", "sdk1"), topic5);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app5", "sdk5"), topic5);
+
+        // Convert the returned Topics with POJO to returned Topics with String.
+        Map<Pair<String, String>, String> returnedTopicsStringForEpoch1 =
+                returnedAppSdkTopicsForEpoch1.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> e.getValue().getTopic()));
+
+        // Setup for EpochId 2
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch2 = new HashMap<>();
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", ""), topic2);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", "sdk1"), topic2);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", "sdk2"), topic2);
+
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app2", "sdk1"), topic3);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app2", "sdk3"), topic3);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app2", "sdk4"), topic3);
+
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app3", "sdk1"), topic4);
+
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app5", "sdk1"), topic1);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app5", "sdk5"), topic1);
+
+        // Convert the returned Topics with POJO to returned Topics with String.
+        Map<Pair<String, String>, String> returnedTopicsStringForEpoch2 =
+                returnedAppSdkTopicsForEpoch2.entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue().getTopic()));
+
+        // Setup for EpochId 3
+        // epochId == 3 does not have any topics. This could happen if the epoch computation failed
+        // or the device was offline and no epoch computation was done.
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch3 = new HashMap<>();
+        // Convert the returned Topics with POJO to returned Topics with String.
+        Map<Pair<String, String>, String> returnedTopicsStringForEpoch3 =
+                returnedAppSdkTopicsForEpoch3.entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue().getTopic()));
+
+        // Now persist the returned topics for 3 epochs
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 1L,
+                /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+                returnedTopicsStringForEpoch1);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 2L,
+                /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+                returnedTopicsStringForEpoch2);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 3L,
+                /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+                returnedTopicsStringForEpoch3);
+
+        // Now retrieve from DB and verify the result for reach epoch.
+        // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
+        // Since the epochId 3 is empty, the results are always empty.
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb =
+                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
+                /* numberOfLookBackEpochs = */ 1);
+        assertThat(returnedTopicsFromDb).isEmpty();
+
+        // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
+        returnedTopicsFromDb =
+                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
+                        /* numberOfLookBackEpochs = */ 2);
+        Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopics = new HashMap<>();
+        expectedReturnedTopics.put(2L, returnedAppSdkTopicsForEpoch2);
+        assertThat(returnedTopicsFromDb).isEqualTo(expectedReturnedTopics);
+
+        // Now look at epochId in {3, 2, 1} only by setting numberOfLookBackEpochs = 3.
+        returnedTopicsFromDb =
+                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
+                        /* numberOfLookBackEpochs = */ 3);
+        expectedReturnedTopics = new HashMap<>();
+        expectedReturnedTopics.put(1L, returnedAppSdkTopicsForEpoch1);
+        expectedReturnedTopics.put(2L, returnedAppSdkTopicsForEpoch2);
+        assertThat(returnedTopicsFromDb).isEqualTo(expectedReturnedTopics);
     }
 }
