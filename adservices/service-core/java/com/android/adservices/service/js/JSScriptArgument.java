@@ -18,10 +18,13 @@ package com.android.adservices.service.js;
 
 import static java.util.Arrays.asList;
 
+import com.google.common.collect.ImmutableList;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Represent an argument to supply to an JS script. */
@@ -48,6 +51,20 @@ public abstract class JSScriptArgument {
         // Creating the JSONObject just to parse value and cause a JSONException if invalid.
         new JSONObject(value);
         return new JSScriptJsonArgument(name, value);
+    }
+
+    /**
+     * @return a JS object with the given {@code name} and value obtained parsing the given map
+     *     {@code value}.
+     * @throws JSONException if {@code value} doesn't represent a valid JSON object
+     */
+    public static JSScriptArgument stringMapToRecordArg(String name, Map<String, String> stringMap)
+            throws JSONException {
+        ImmutableList.Builder<JSScriptArgument> mapArg = ImmutableList.builder();
+        for (Map.Entry<String, String> signal : stringMap.entrySet()) {
+            mapArg.add(jsonArg(signal.getKey(), signal.getValue()));
+        }
+        return recordArg(name, mapArg.build());
     }
 
     /**

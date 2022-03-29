@@ -59,6 +59,7 @@ public class AdSelectionScriptEngine {
 
     private static final String TAG = "AdSelectionScriptEngine";
 
+    // TODO: (b/228094391): Put these common constants in a separate class
     public static final String FUNCTION_NAMES_ARG_NAME = "__rb_functionNames";
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
     public static final String RESULTS_FIELD_NAME = "results";
