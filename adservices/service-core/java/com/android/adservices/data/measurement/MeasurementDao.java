@@ -28,6 +28,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.BaseUriExtractor;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
  */
 public class MeasurementDao {
 
-    private static final String TAG = "MeasurementDao";
+    private static final String TAG = "MeasurementDAO";
     private static MeasurementDao sSingleton;
     private final DbHelper mDbHelper;
 
@@ -51,12 +52,38 @@ public class MeasurementDao {
         mDbHelper = DbHelper.getInstance(ctx);
     }
 
-    /** Returns an instance of the MeasurementDao given a context. */
+    /** Returns an instance of the MeasurementDAO given a context. */
     public static synchronized MeasurementDao getInstance(Context ctx) {
         if (sSingleton == null) {
             sSingleton = new MeasurementDao(ctx);
         }
         return sSingleton;
+    }
+
+    /**
+     * Returns list of ids for all pending {@link Trigger}.
+     */
+    public List<String> getPendingTriggerIds() {
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+        try (Cursor cursor = db.query(
+                MeasurementTables.TriggerContract.TABLE,
+                new String[]{MeasurementTables.TriggerContract.ID},
+                MeasurementTables.TriggerContract.STATUS + " = ? ",
+                new String[]{String.valueOf(Trigger.Status.PENDING)},
+                /*groupBy=*/null, /*having=*/null,
+                /*orderBy=*/MeasurementTables.TriggerContract.TRIGGER_TIME, /*limit=*/null)) {
+            if (cursor == null) {
+                return null;
+            }
+            List<String> result = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                result.add(cursor.getString(/*columnIndex=*/0));
+            }
+            return result;
+        }
     }
 
     /**
@@ -319,9 +346,9 @@ public class MeasurementDao {
         values.put(MeasurementTables.AttributionRateLimitContract.ID,
                 UUID.randomUUID().toString());
         values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
-                source.getAttributionSource().getHost());
+                BaseUriExtractor.getBaseUri(source.getAttributionSource()));
         values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
-                trigger.getAttributionDestination().getHost());
+                BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()));
         values.put(MeasurementTables.AttributionRateLimitContract.REPORT_TO,
                 trigger.getReportTo().toString());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
@@ -344,23 +371,30 @@ public class MeasurementDao {
         if (db == null) {
             return -1;
         }
-        return DatabaseUtils.queryNumEntries(
-                db,
-                MeasurementTables.AttributionRateLimitContract.TABLE,
-                MeasurementTables.AttributionRateLimitContract.SOURCE_SITE + " = ? AND "
-                        + MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE
-                        + " = ? AND "
-                        + MeasurementTables.AttributionRateLimitContract.REPORT_TO
-                        + " = ? AND "
-                        + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " >= ? AND "
-                        + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " <= ? ",
-                new String[]{source.getAttributionSource().getHost(),
-                        trigger.getAttributionDestination().getHost(),
-                        trigger.getReportTo().toString(),
-                        String.valueOf(trigger.getTriggerTime()
-                                - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
-                        String.valueOf(trigger.getTriggerTime())}
-        );
+        try {
+            return DatabaseUtils.queryNumEntries(
+                    db,
+                    MeasurementTables.AttributionRateLimitContract.TABLE,
+                    MeasurementTables.AttributionRateLimitContract.SOURCE_SITE + " = ? AND "
+                            + MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE
+                            + " = ? AND "
+                            + MeasurementTables.AttributionRateLimitContract.REPORT_TO
+                            + " = ? AND "
+                            + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
+                            + " >= ? AND "
+                            + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
+                            + " <= ? ",
+                    new String[]{
+                            BaseUriExtractor.getBaseUri(source.getAttributionSource()),
+                            BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()),
+                            trigger.getReportTo().toString(),
+                            String.valueOf(trigger.getTriggerTime()
+                                    - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
+                            String.valueOf(trigger.getTriggerTime())}
+            );
+        } catch (IllegalArgumentException exception) {
+            return -1;
+        }
     }
 
     /**
@@ -375,7 +409,7 @@ public class MeasurementDao {
                 db,
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.REGISTERER + " = ? ",
-                new String[] {registerer.toString()});
+                new String[]{registerer.toString()});
     }
 
     /**
@@ -390,7 +424,7 @@ public class MeasurementDao {
                 db,
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.REGISTERER + " = ? ",
-                new String[] {registerer.toString()});
+                new String[]{registerer.toString()});
     }
 
     /**
@@ -549,6 +583,7 @@ public class MeasurementDao {
      */
     public boolean deleteExpiredRecords() {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+
         if (db == null) {
             return false;
         }
