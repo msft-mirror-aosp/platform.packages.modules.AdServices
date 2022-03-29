@@ -17,13 +17,21 @@ package com.android.adservices.service.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
+
 import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.service.AdServicesConfig;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,21 +43,37 @@ import java.util.Map;
 public final class CacheManagerTest {
     private static final String TAG = "CacheManagerTest";
 
+    @Mock TopicsDao mMockTopicsDao;
+    @Mock EpochManager mMockEpochManager;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
     public void testGetTopics_emptyCache() {
-        // The cache is empty.
-        CacheManager cacheManager = CacheManager.getInstance();
-        List<Topic> topics = cacheManager.getTopics(/* epochId = */ 1L,
+        // The cache is empty when first created.
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao);
+
+        List<Topic> topics = cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app", "sdk");
+
         assertThat(topics).isEmpty();
     }
 
     @Test
     public void testGetTopics() {
         // The cache is empty.
-        CacheManager cacheManager = CacheManager.getInstance();
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao);
 
+        // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
+        // epochs: epochId in {3, 2, 1}.
+        long currentEpochId = 4L;
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+
+        // EpochId 1
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch1 = new HashMap<>();
         Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
@@ -75,6 +99,7 @@ public final class CacheManagerTest {
         returnedAppSdkTopicsForEpoch1.put(Pair.create("app5", "sdk1"), topic5);
         returnedAppSdkTopicsForEpoch1.put(Pair.create("app5", "sdk5"), topic5);
 
+        // EpochId 2
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch2 = new HashMap<>();
 
         returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", ""), topic2);
@@ -90,59 +115,98 @@ public final class CacheManagerTest {
         returnedAppSdkTopicsForEpoch2.put(Pair.create("app5", "sdk1"), topic1);
         returnedAppSdkTopicsForEpoch2.put(Pair.create("app5", "sdk5"), topic1);
 
+        // EpochId 3
+        // epochId == 3 does not have any topics. This could happen if the epoch computation failed
+        // or the device was offline and no epoch computation was done.
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch3 = new HashMap<>();
+
         Map<Long, Map<Pair<String, String>, Topic>> cache = new HashMap<>();
         cache.put(/* epochId = */ 1L, returnedAppSdkTopicsForEpoch1);
         cache.put(/* epochId = */ 2L, returnedAppSdkTopicsForEpoch2);
-        // epochId == 3 does not have any topics. This could happen if the epoch computation failed
-        // or the device was offline and no epoch computation was done.
-        cache.put(/* epochId = */ 3L, new HashMap<>());
+        cache.put(/* epochId = */ 3L, returnedAppSdkTopicsForEpoch3);
 
-        cacheManager.updateCache(cache);
-        // Now look at epochId == 1 only.
-        assertThat(cacheManager.getTopics(/* epochId = */ 1L,
-                /* numberOfLookBackEpochs = */ 3,
-                "app1", "")).isEqualTo(Arrays.asList(topic1));
-        assertThat(cacheManager.getTopics(/* epochId = */ 1L,
-                /* numberOfLookBackEpochs = */ 3,
-                "app1", "sdk1")).isEqualTo(Arrays.asList(topic1));
-        assertThat(cacheManager.getTopics(/* epochId = */ 1L,
-                /* numberOfLookBackEpochs = */ 3,
-                "app1", "sdk2")).isEqualTo(Arrays.asList(topic1));
+        when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId - 1),
+                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()))).thenReturn(cache);
 
-        assertThat(cacheManager.getTopics(/* epochId = */ 1L,
-                /* numberOfLookBackEpochs = */ 3,
-                "app3", "sdk1")).isEqualTo(Arrays.asList(topic3));
+        cacheManager.loadCache();
 
-        assertThat(cacheManager.getTopics(/* epochId = */ 1L,
-                /* numberOfLookBackEpochs = */ 3,
+        // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
+        // Since the epochId 3 has empty cache, the results are always empty.
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
+                "app1", "")).isEmpty();
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
+                "app1", "sdk1")).isEmpty();
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
+                "app1", "sdk2")).isEmpty();
+
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
+                "app3", "sdk1")).isEmpty();
+
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
                 "app4", "sdk1")).isEmpty();
 
-        assertThat(cacheManager.getTopics(/* epochId = */ 1L,
-                /* numberOfLookBackEpochs = */ 3,
-                "app5", "sdk1")).isEqualTo(Arrays.asList(topic5));
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
+                "app5", "sdk1")).isEmpty();
 
+        // Now look at epochId i {3, 2} only by setting numberOfLookBackEpochs = 2.
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app1", "")).isEqualTo(Arrays.asList(topic2));
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app1", "sdk1")).isEqualTo(Arrays.asList(topic2));
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app1", "sdk2")).isEqualTo(Arrays.asList(topic2));
 
-        // Now look at epochId in [1,..,3].
-        assertThat(cacheManager.getTopics(/* epochId = */ 3L,
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app3", "sdk1")).isEqualTo(Arrays.asList(topic4));
+
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app4", "sdk1")).isEmpty();
+
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app5", "sdk1")).isEqualTo(Arrays.asList(topic1));
+
+        assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
+                "app5", "sdk5")).isEqualTo(Arrays.asList(topic1));
+
+        // Now look at epochId in [1,..,3] by setting numberOfLookBackEpochs = 3.
+        assertThat(cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app1", "")).isEqualTo(Arrays.asList(topic2, topic1));
-        assertThat(cacheManager.getTopics(/* epochId = */ 3L,
+        assertThat(cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app1", "sdk1")).isEqualTo(Arrays.asList(topic2, topic1));
-        assertThat(cacheManager.getTopics(/* epochId = */ 3L,
+        assertThat(cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app1", "sdk2")).isEqualTo(Arrays.asList(topic2, topic1));
 
-        assertThat(cacheManager.getTopics(/* epochId = */ 3L,
+        assertThat(cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app3", "sdk1")).isEqualTo(Arrays.asList(topic4, topic3));
 
-        assertThat(cacheManager.getTopics(/* epochId = */ 3L,
+        assertThat(cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app4", "sdk1")).isEmpty();
 
-        assertThat(cacheManager.getTopics(/* epochId = */ 3L,
+        assertThat(cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
                 "app5", "sdk1")).isEqualTo(Arrays.asList(topic1, topic5));
+    }
+
+    @Test
+    public void testGetTopics_failToLoadFromDb() {
+        // The cache is empty when first created.
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao);
+
+        long currentEpochId = 4L;
+        // Fail to load from DB will have empty cache.
+        Map<Long, Map<Pair<String, String>, Topic>> emptyCache = new HashMap<>();
+        when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId - 1),
+                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()))).thenReturn(emptyCache);
+
+        List<Topic> topics = cacheManager.getTopics(
+                /* numberOfLookBackEpochs = */ 3,
+                "app", "sdk");
+
+        assertThat(topics).isEmpty();
     }
 }

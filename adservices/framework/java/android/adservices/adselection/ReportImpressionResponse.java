@@ -23,6 +23,8 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
+import java.util.Objects;
+
 /**
  * Represent the result from the reportImpression API.
  *
@@ -76,23 +78,24 @@ public final class ReportImpressionResponse implements Parcelable {
     }
 
     private ReportImpressionResponse(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         mResultCode = in.readInt();
         mErrorMessage = in.readString();
     }
 
     @NonNull
-    public static final Creator<android.adservices.adselection.ReportImpressionResponse> CREATOR =
-            new Parcelable.Creator<android.adservices.adselection.ReportImpressionResponse>() {
+    public static final Creator<ReportImpressionResponse> CREATOR =
+            new Parcelable.Creator<ReportImpressionResponse>() {
                 @Override
-                public android.adservices.adselection.ReportImpressionResponse createFromParcel(
-                        Parcel in) {
-                    return new android.adservices.adselection.ReportImpressionResponse(in);
+                public ReportImpressionResponse createFromParcel(@NonNull Parcel in) {
+                    Objects.requireNonNull(in);
+                    return new ReportImpressionResponse(in);
                 }
 
                 @Override
-                public android.adservices.adselection.ReportImpressionResponse[] newArray(
-                        int size) {
-                    return new android.adservices.adselection.ReportImpressionResponse[size];
+                public ReportImpressionResponse[] newArray(int size) {
+                    return new ReportImpressionResponse[size];
                 }
             };
 
@@ -104,23 +107,22 @@ public final class ReportImpressionResponse implements Parcelable {
 
     /** @hide */
     @Override
-    public void writeToParcel(@NonNull Parcel out, int flags) {
-        out.writeInt(mResultCode);
-        out.writeString(mErrorMessage);
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
+        dest.writeInt(mResultCode);
+        dest.writeString(mErrorMessage);
     }
 
     /**
      * Returns {@code true} if {@link #getResultCode} equals {@link
-     * android.adservices.adselection.ReportImpressionResponse#STATUS_OK}.
+     * ReportImpressionResponse#STATUS_OK}.
      */
     public boolean isSuccess() {
         return getResultCode() == STATUS_OK;
     }
 
-    /**
-     * Returns one of the {@code RESULT} constants defined in {@link
-     * android.adservices.adselection.ReportImpressionResponse}.
-     */
+    /** Returns one of the {@code RESULT} constants defined in {@link ReportImpressionResponse}. */
     public int getResultCode() {
         return mResultCode;
     }
@@ -170,9 +172,10 @@ public final class ReportImpressionResponse implements Parcelable {
          */
         @NonNull
         public ReportImpressionResponse build() {
-            Preconditions.checkArgument(
-                    mResultCode == STATUS_OK || mErrorMessage != null,
-                    "Empty Error message with non-successful status code");
+            if (mResultCode != STATUS_OK) {
+                Objects.requireNonNull(
+                        mErrorMessage, "Empty Error message with non-successful status code!");
+            }
 
             Preconditions.checkArgument(
                     mResultCode != STATUS_UNSET, "Status code has not been set!");

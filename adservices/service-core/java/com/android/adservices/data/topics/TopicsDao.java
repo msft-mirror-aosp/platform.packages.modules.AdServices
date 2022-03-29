@@ -438,7 +438,7 @@ public class TopicsDao {
                 }
 
                 Topic topic = new Topic(topicString, taxonomyVersion, modelVersion);
-                topicsMap.get(epochId).put(Pair.create(app, sdk), topic);
+                topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
 

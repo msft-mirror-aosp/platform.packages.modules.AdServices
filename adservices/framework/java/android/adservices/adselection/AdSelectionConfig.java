@@ -57,7 +57,8 @@ public final class AdSelectionConfig implements Parcelable {
     public static final Creator<AdSelectionConfig> CREATOR =
             new Creator<AdSelectionConfig>() {
                 @Override
-                public AdSelectionConfig createFromParcel(Parcel in) {
+                public AdSelectionConfig createFromParcel(@NonNull Parcel in) {
+                    Objects.requireNonNull(in);
                     return new AdSelectionConfig(in);
                 }
 
@@ -85,6 +86,8 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     private AdSelectionConfig(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         mSeller = in.readString();
         mDecisionLogicUrl = Uri.CREATOR.createFromParcel(in);
         mCustomAudienceBuyers = in.createStringArrayList();
@@ -101,6 +104,8 @@ public final class AdSelectionConfig implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
         dest.writeString(mSeller);
         mDecisionLogicUrl.writeToParcel(dest, flags);
         dest.writeStringList(mCustomAudienceBuyers);
@@ -111,7 +116,8 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /** Converts {@link Map} to {@link Bundle} for {@link #writeToParcel(Parcel, int)}. */
-    private static Bundle mapToBundle(Map<String, String> stringMap) {
+    private static Bundle mapToBundle(@NonNull Map<String, String> stringMap) {
+        Objects.requireNonNull(stringMap);
         Bundle result = new Bundle();
         stringMap.forEach(result::putString);
         return result;
@@ -121,7 +127,9 @@ public final class AdSelectionConfig implements Parcelable {
      * Converts {@link Bundle} to {@link Map} for constructing an {@link AdSelectionConfig}
      * object from a {@link Parcel}.
      */
-    private static Map<String, String> bundleToMap(Bundle bundle) {
+    private static Map<String, String> bundleToMap(@NonNull Bundle bundle) {
+        Objects.requireNonNull(bundle);
+
         Map<String, String> result = new HashMap<>();
         for (String key : bundle.keySet()) {
             result.put(key, bundle.getString(key));
@@ -244,6 +252,8 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setSeller(@NonNull String seller) {
+            Objects.requireNonNull(seller);
+
             this.mSeller = seller;
             return this;
         }
@@ -255,6 +265,8 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull Uri decisionLogicURL) {
+            Objects.requireNonNull(decisionLogicURL);
+
             this.mDecisionLogicURL = decisionLogicURL;
             return this;
         }
@@ -267,6 +279,8 @@ public final class AdSelectionConfig implements Parcelable {
         @NonNull
         public AdSelectionConfig.Builder setCustomAudienceBuyers(
                 @NonNull List<String> customAudienceBuyers) {
+            Objects.requireNonNull(customAudienceBuyers);
+
             this.mCustomAudienceBuyers = customAudienceBuyers;
             return this;
         }
@@ -278,6 +292,8 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setAdSelectionSignals(@NonNull String adSelectionSignals) {
+            Objects.requireNonNull(adSelectionSignals);
+
             this.mAdSelectionSignals = adSelectionSignals;
             return this;
         }
@@ -289,6 +305,8 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setSellerSignals(@NonNull String sellerSignals) {
+            Objects.requireNonNull(sellerSignals);
+
             this.mSellerSignals = sellerSignals;
             return this;
         }
@@ -301,6 +319,8 @@ public final class AdSelectionConfig implements Parcelable {
         @NonNull
         public AdSelectionConfig.Builder setPerBuyerSignals(
                 @NonNull Map<String, String> perBuyerSignals) {
+            Objects.requireNonNull(perBuyerSignals);
+
             this.mPerBuyerSignals = perBuyerSignals;
             return this;
         }
@@ -315,6 +335,8 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setContextualAds(@NonNull List<AdWithBid> contextualAds) {
+            Objects.requireNonNull(contextualAds);
+
             this.mContextualAds = contextualAds;
             return this;
         }

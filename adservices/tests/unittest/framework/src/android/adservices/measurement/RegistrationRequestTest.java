@@ -41,7 +41,7 @@ public final class RegistrationRequestTest {
 
     private RegistrationRequest createExampleAttribution() {
         return new RegistrationRequest.Builder()
-            .setRegistrationType(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE)
+            .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
             .setTopOriginUri(Uri.parse("http://foo.com"))
             .setReferrerUri(Uri.parse("http://bar.com"))
             .setRegistrationUri(Uri.parse("http://baz.com"))
@@ -53,7 +53,7 @@ public final class RegistrationRequestTest {
         assertEquals("http://foo.com", request.getTopOriginUri().toString());
         assertEquals("http://bar.com", request.getReferrerUri().toString());
         assertEquals("http://baz.com", request.getRegistrationUri().toString());
-        assertEquals(RegistrationRequest.REGISTER_ATTRIBUTION_SOURCE,
+        assertEquals(RegistrationRequest.REGISTER_SOURCE,
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
         assertNotNull(request.getAttributionSource());
@@ -77,7 +77,7 @@ public final class RegistrationRequestTest {
                 () -> {
                     new RegistrationRequest.Builder()
                         .setRegistrationType(
-                                RegistrationRequest.TRIGGER_ATTRIBUTION)
+                                RegistrationRequest.REGISTER_TRIGGER)
                         .build();
                 });
     }
@@ -87,12 +87,12 @@ public final class RegistrationRequestTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setAttributionSource(sContext.getAttributionSource())
                 .setRegistrationType(
-                        RegistrationRequest.TRIGGER_ATTRIBUTION)
+                        RegistrationRequest.REGISTER_TRIGGER)
                 .build();
         assertEquals("", request.getTopOriginUri().toString());
         assertEquals("", request.getReferrerUri().toString());
         assertEquals("", request.getRegistrationUri().toString());
-        assertEquals(RegistrationRequest.TRIGGER_ATTRIBUTION,
+        assertEquals(RegistrationRequest.REGISTER_TRIGGER,
                 request.getRegistrationType());
         assertNull(request.getInputEvent());
         assertNotNull(request.getAttributionSource());

@@ -42,3 +42,12 @@ android_app {
     use_embedded_native_libs: true,
     apex_available: ["com.android.adservices"],
 }
+
+android_library {
+    name: "adservices-assets-lib",
+    sdk_version: "module_current",
+    asset_dirs: [
+        "assets",
+    ],
+    manifest: "AndroidManifest.xml",
+}

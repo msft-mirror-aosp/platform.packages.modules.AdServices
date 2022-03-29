@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.js;
 
+import java.util.Objects;
+
 /**
  * An argument defined as a JSON string. If you want to define a record structure to be serialized
  * as JSON use {@link JSScriptRecordArgument}
@@ -31,5 +33,23 @@ class JSScriptJsonArgument extends JSScriptArgument {
     @Override
     public String initializationValue() {
         return mValue;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JSScriptJsonArgument)) return false;
+        JSScriptJsonArgument that = (JSScriptJsonArgument) o;
+        return mValue.equals(that.mValue);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mValue);
+    }
+
+    @Override
+    public String toString() {
+        return "JSScriptJsonArgument{" + "mValue='" + mValue + '\'' + '}';
     }
 }

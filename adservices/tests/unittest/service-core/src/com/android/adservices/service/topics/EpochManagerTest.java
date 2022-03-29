@@ -390,7 +390,9 @@ public final class EpochManagerTest {
                 /* numberOfLookBackEpochs = */ anyInt()))
                 .thenReturn(callersCanLearnMap);
 
-        when(mMockClassifier.getTopTopics(eq(AdServicesConfig.getTopicsNumberOfTopTopics()),
+        when(mMockClassifier.getTopTopics(
+                eq(appClassificationTopicsMap),
+                eq(AdServicesConfig.getTopicsNumberOfTopTopics()),
                 eq(AdServicesConfig.getTopicsNumberOfRandomTopics())))
                 .thenReturn(topTopics);
 
@@ -426,5 +428,4 @@ public final class EpochManagerTest {
 
         assertThat(returnedAppSdkTopicsCapture.getValue()).isEqualTo(expectedReturnedTopics);
     }
-
 }

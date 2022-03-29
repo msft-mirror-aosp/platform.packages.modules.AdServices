@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
- package android.adservices.topics;
+package com.android.adservices.service.measurement;
 
- parcelable GetTopicsResponse;
+import java.util.Random;
+
+class RandomSelector {
+
+    static <T> T selectRandomDataWithProbability(
+            double randomProb, T trueValue, T[] possibleValues) {
+        Random rand = new Random();
+        double value = rand.nextDouble();
+        if (value < randomProb) {
+            return possibleValues[rand.nextInt(possibleValues.length)];
+        } else {
+            return trueValue;
+        }
+    }
+}

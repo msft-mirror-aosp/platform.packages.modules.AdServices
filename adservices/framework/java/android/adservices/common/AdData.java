@@ -26,34 +26,36 @@ import java.util.Objects;
 /**
  * Represents data specific to an ad that is necessary for ad selection and rendering.
  *
- * Hiding for future implementation and review for public exposure.
+ * <p>Hiding for future implementation and review for public exposure.
+ *
  * @hide
  */
 public final class AdData implements Parcelable {
-    @NonNull
-    private final Uri mRenderUrl;
-    @NonNull
-    private final String mMetadata;
+    @NonNull private final Uri mRenderUrl;
+    @NonNull private final String mMetadata;
 
     @NonNull
-    public static final Creator<AdData> CREATOR = new Creator<AdData>() {
-        @Override
-        public AdData createFromParcel(@NonNull Parcel in) {
-            return new AdData(in);
-        }
+    public static final Creator<AdData> CREATOR =
+            new Creator<AdData>() {
+                @Override
+                public AdData createFromParcel(@NonNull Parcel in) {
+                    Objects.requireNonNull(in);
 
-        @Override
-        public AdData[] newArray(int size) {
-            return new AdData[size];
-        }
-    };
+                    return new AdData(in);
+                }
+
+                @Override
+                public AdData[] newArray(int size) {
+                    return new AdData[size];
+                }
+            };
 
     /**
      * Represents data specific to a single ad that is necessary for ad selection and rendering.
      *
      * @param renderUrl - a URL pointing to the ad's rendering assets
-     * @param metadata - buyer ad metadata represented as a JSON string that is opaque to the
-     *                 custom audience management and ad selection services
+     * @param metadata - buyer ad metadata represented as a JSON string that is opaque to the custom
+     *     audience management and ad selection services
      */
     public AdData(@NonNull Uri renderUrl, @NonNull String metadata) {
         Objects.requireNonNull(renderUrl);
@@ -63,12 +65,15 @@ public final class AdData implements Parcelable {
     }
 
     private AdData(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
         mRenderUrl = Uri.CREATOR.createFromParcel(in);
         mMetadata = in.readString();
     }
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
         mRenderUrl.writeToParcel(dest, flags);
         dest.writeString(mMetadata);
     }
@@ -79,9 +84,7 @@ public final class AdData implements Parcelable {
         return 0;
     }
 
-    /**
-     * Gets the URL that points to the ad's rendering assets.
-     */
+    /** Gets the URL that points to the ad's rendering assets. */
     @NonNull
     public Uri getRenderUrl() {
         return mRenderUrl;
@@ -90,17 +93,15 @@ public final class AdData implements Parcelable {
     /**
      * Gets the buyer ad metadata used during the ad selection process.
      *
-     * The metadata is opaque to the Custom Audience and Ad Selection APIs and is represented as a
-     * JSON object string.
+     * <p>The metadata is opaque to the Custom Audience and Ad Selection APIs and is represented as
+     * a JSON object string.
      */
     @NonNull
     public String getMetadata() {
         return mMetadata;
     }
 
-    /**
-     * Checks whether two {@link AdData} objects contain the same information.
-     */
+    /** Checks whether two {@link AdData} objects contain the same information. */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -110,11 +111,14 @@ public final class AdData implements Parcelable {
                 && Objects.equals(mMetadata, adData.mMetadata);
     }
 
-    /**
-     * Returns the hash of the {@link AdData} object's data.
-     */
+    /** Returns the hash of the {@link AdData} object's data. */
     @Override
     public int hashCode() {
         return Objects.hash(mRenderUrl, mMetadata);
+    }
+
+    @Override
+    public String toString() {
+        return "AdData{" + "mRenderUrl=" + mRenderUrl + ", mMetadata='" + mMetadata + '\'' + '}';
     }
 }

@@ -23,9 +23,6 @@ package com.android.adservices;
 public class AdServicesCommon {
     private AdServicesCommon() {}
 
-    /** The service APK name. */
-    public static final String ADSERVICES_PACKAGE = "com.android.adservices.api";
-
     /** Intent action to discover the Topics service in the APK. */
     public static final String ACTION_TOPICS_SERVICE = "android.adservices.TOPICS_SERVICE";
 
@@ -36,4 +33,8 @@ public class AdServicesCommon {
     /** Intent action to discover the AdSelection service in the APK. */
     public static final String ACTION_AD_SELECTION_SERVICE =
             "android.adservices.adselection.AD_SELECTION_SERVICE";
+
+    /** Intent action to discover the Measurement servce in the APK. */
+    public static final String ACTION_MEASUREMENT_SERVICE =
+            "android.adservices.MEASUREMENT_SERVICE";
 }

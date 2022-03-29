@@ -82,7 +82,7 @@ public class EpochManager {
             if (sSingleton == null) {
                 sSingleton = new EpochManager(TopicsDao.getInstance(context),
                         DbHelper.getInstance(context), new Random(),
-                        Classifier.getInstance());
+                        Classifier.getInstance(context));
             }
             return sSingleton;
         }
@@ -141,7 +141,7 @@ public class EpochManager {
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
-            List<String> topTopics = computeTopTopics();
+            List<String> topTopics = computeTopTopics(appClassificationTopicsMap);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently hard-code the taxonomyVersion and the modelVersion.
@@ -152,15 +152,20 @@ public class EpochManager {
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(epochId, /* taxonomyVersion = */ 1L,
                     /* modelVersion = */ 1L, returnedAppSdkTopics);
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
         }
     }
 
     // Query the Classifier to get the top Topics for this epoch.
+    // appClassificationTopicsMap = Map<App, List<Topics>>
     @NonNull
-    private List<String> computeTopTopics() {
+    private List<String> computeTopTopics(Map<String, List<String>> appClassificationTopicsMap) {
         return mClassifier.getTopTopics(
+                appClassificationTopicsMap,
                 AdServicesConfig.getTopicsNumberOfTopTopics(),
                 AdServicesConfig.getTopicsNumberOfRandomTopics());
     }
@@ -282,7 +287,9 @@ public class EpochManager {
     // The Top Topics include the Top 5 Topics and one random topic from the Taxonomy.
     @VisibleForTesting
     String selectRandomTopic(List<String> topTopics) {
-        Preconditions.checkArgument(topTopics.size() == 6);
+        Preconditions.checkArgument(topTopics.size()
+                == AdServicesConfig.getTopicsNumberOfTopTopics()
+                + AdServicesConfig.getTopicsNumberOfRandomTopics());
         int random = mRandom.nextInt(100);
 
         // For 5%, get the random topic.
@@ -301,7 +308,7 @@ public class EpochManager {
     // Saturday, January 1, 2022 12:00:00 AM.
     // Later, we will use per device starting origin.
     @VisibleForTesting
-    long getCurrentEpochId() {
+    public long getCurrentEpochId() {
         // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
         return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
                 /  AdServicesConfig.getTopicsEpochJobPeriodMs());
