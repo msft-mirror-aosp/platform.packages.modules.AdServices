@@ -16,33 +16,37 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.AdData;
 import android.annotation.NonNull;
+import android.net.Uri;
+
+
+import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
-
 /**
- * This class represents the response returned by the {@link AdSelectionManager} as the result of a
- * successful {@code runAdSelection} call.
+ * This class represents a field in the {@code OutcomeReceiver}, which is an input to the
+ * {@code runAdSelection} in the {@link AdSelectionManager}.
+ * This field is populated in the case of a successful {@code runAdSelection} call.
  *
  * @hide
  */
-public final class AdSelectionOutcome{
+public class AdSelectionOutcome {
+    private static final int UNSET = -1;
 
     private final int mAdSelectionId;
-    @NonNull private final AdData mAdData;
+    @NonNull private final Uri mRenderUrl;
 
-    public AdSelectionOutcome(@NonNull AdData adData, int adSelectionId) {
-        Objects.requireNonNull(adData);
+    private AdSelectionOutcome(int adSelectionId, @NonNull Uri renderUrl) {
+        Objects.requireNonNull(renderUrl);
 
         mAdSelectionId = adSelectionId;
-        mAdData = adData;
+        mRenderUrl = renderUrl;
     }
 
-    /** Returns the adData that the AdSelection returns. */
+    /** Returns the renderUrl that the AdSelection returns. */
     @NonNull
-    public AdData getAdData() {
-        return mAdData;
+    public Uri getRenderUrl() {
+        return mRenderUrl;
     }
 
     /** Returns the adSelectionId that identifies the AdSelection. */
@@ -56,13 +60,58 @@ public final class AdSelectionOutcome{
         if (o instanceof AdSelectionOutcome) {
             AdSelectionOutcome adSelectionOutcome = (AdSelectionOutcome) o;
             return mAdSelectionId == adSelectionOutcome.mAdSelectionId
-                    && Objects.equals(mAdData, adSelectionOutcome.mAdData);
+                    && Objects.equals(mRenderUrl, adSelectionOutcome.mRenderUrl);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mAdData);
+        return Objects.hash(mAdSelectionId, mRenderUrl);
+    }
+
+    /**
+     * Builder for {@link AdSelectionOutcome} objects.
+     *
+     * @hide
+     */
+    public static final class Builder {
+        private int mAdSelectionId = UNSET;
+        @NonNull private Uri mRenderUrl;;
+
+        public Builder() {}
+
+        /** Sets the mAdSelectionId. */
+        @NonNull
+        public AdSelectionOutcome.Builder setAdSelectionId(int adSelectionId) {
+            this.mAdSelectionId = adSelectionId;
+            return this;
+        }
+
+        /** Sets the RenderUrl. */
+        @NonNull
+        public AdSelectionOutcome.Builder setRenderUrl(@NonNull Uri renderUrl) {
+            Objects.requireNonNull(renderUrl);
+
+            mRenderUrl = renderUrl;
+            return this;
+        }
+
+        /**
+         * Builds a {@link AdSelectionOutcome} instance.
+         *
+         * @throws IllegalArgumentException if the adSelectionIid is not set
+         *
+         * @throws NullPointerException if the RenderUrl is null
+         */
+        @NonNull
+        public AdSelectionOutcome build() {
+            Objects.requireNonNull(mRenderUrl);
+
+            Preconditions.checkArgument(
+                    mAdSelectionId != UNSET, "AdSelectionId has not been set!");
+
+            return new AdSelectionOutcome(mAdSelectionId, mRenderUrl);
+        }
     }
 }

@@ -25,14 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /** Utility class supporting custom audience API unit tests */
-public final class CustomAudienceUtils {
+public final class CustomAudienceFixture {
     // AdData
     private static final Uri VALID_RENDER_URL =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
-
-    // CustomAudienceManagementResponse
-    public static final String VALID_ERROR_MESSAGE = "Test valid error message";
 
     // TrustedBiddingData
     public static final Uri VALID_TRUSTED_BIDDING_URL =

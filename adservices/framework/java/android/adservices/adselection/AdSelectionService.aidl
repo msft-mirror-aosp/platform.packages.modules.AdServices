@@ -41,15 +41,17 @@ interface AdSelectionService {
     * outputs and business logic.
     *
     * The {@link AdSelectionConfig} is provided by the SDK and contains the required information
-    * to excecuate the on-device ad selection and impression reporting.
+    * to execute the on-device ad selection and impression reporting.
     *
     * The (@link AdSelectionCallback} returns {@link AdSelectionResponse} if the asynchronous call
     * succeeds.
+    * The (@link AdSelectionCallback} returns {@link FledgeErrorResponse} if the asynchronous call
+    * fails.
     * If the ad selection is successful, the {@link AdSelectionResponse} contains
-    * {@@link AdSelectionResponse#RESULT_OK} and {@link AdSelectionId} and {@link AdData}
+    * {@link AdSelectionId} and {@link AdData}
     * If the ad selection fails, the response contains only
-    * {@link AdSelectionResponse#RESULT_INTERNAL_ERROR} if an internal server error is encountered,
-    * or {@link AdSelectionResponse#RESULT_INVALID_ARGUMENT} if invalidf
+    * {@link FledgeErrorResponse#RESULT_INTERNAL_ERROR} if an internal server error is encountered,
+    * or {@link FledgeErrorResponse#RESULT_INVALID_ARGUMENT} if invalid
     * argument is provided.
     *
     * Otherwise, this call fails to send the response to the callback and throws a RemoteException.
@@ -65,11 +67,11 @@ interface AdSelectionService {
     * reporting could be delayed and events could be batched.
     *
     * The call will fail with a status of
-    * {@link ReportImpressionResponse#STATUS_INVALID_ARGUMENT} if there is no
+    * {@link FledgeErrorResponse#STATUS_INVALID_ARGUMENT} if there is no
     * auction matching the provided {@link ReportImpressionRequest#getAdSelectionId()} or if
     * the supplied {@link ReportImpressionRequest#getAdSelectionConfig()} is invalid.
     * The call will fail with status
-    * {@link ReportImpressionResponse#STATUS_INTERNAL_ERROR} if an
+    * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if an
     * internal server error is encountered.
     *
     * The reporting guarantee is at-most-once, any error during the connection to

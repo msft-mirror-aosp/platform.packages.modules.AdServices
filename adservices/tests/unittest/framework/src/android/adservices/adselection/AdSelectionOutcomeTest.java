@@ -18,7 +18,6 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.AdData;
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
@@ -27,12 +26,19 @@ import org.junit.Test;
 
 @SmallTest
 public class AdSelectionOutcomeTest {
+    private static final Uri VALID_RENDER_URL =
+            new Uri.Builder().path("valid.example.com/testing/hello").build();
+    private static final int TEST_AD_SELECTION_ID = 12345;
+
     @Test
-    public void testAdSelectionOutcomeValidOutcome() {
-        AdData adData = new AdData(new Uri.Builder().build(), "");
-        int adSelectionId = 5;
-        AdSelectionOutcome adSelectionOutcome = new AdSelectionOutcome(adData, adSelectionId);
-        assertThat(adSelectionOutcome).isEqualTo(
-                new AdSelectionOutcome(adData, adSelectionId));
+    public void testBuildAdSelectionOutcome() {
+        AdSelectionOutcome adSelectionOutcome =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUrl(VALID_RENDER_URL)
+                        .build();
+
+        assertThat(adSelectionOutcome.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(adSelectionOutcome.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
     }
 }
