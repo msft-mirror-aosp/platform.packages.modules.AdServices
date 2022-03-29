@@ -55,8 +55,8 @@ public class PrecomputedLoaderTest {
     public void checkLoadedAppTopics() throws IOException {
         Map<String, List<String>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
         // Check size of map
-        // The app topics file contains 1000 apps
-        assertThat(appTopic.size()).isEqualTo(1000);
+        // The app topics file contains 1000 apps + 11 sample apps.
+        assertThat(appTopic.size()).isEqualTo(1011);
 
         // Check whatsApp and chrome topics in map
         List<String> whatsAppTopics =
