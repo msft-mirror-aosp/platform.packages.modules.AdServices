@@ -20,7 +20,6 @@ import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE
 
 import android.annotation.Nullable;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -28,8 +27,6 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.BaseUriExtractor;
 import com.android.adservices.service.measurement.EventReport;
@@ -47,42 +44,28 @@ import java.util.stream.Collectors;
 /**
  * Data Access Object for the Measurement PPAPI module.
  */
-public class MeasurementDao {
+class MeasurementDao implements IMeasurementDao {
 
-    private static final String TAG = "MeasurementDAO";
-    private static MeasurementDao sSingleton;
-    private final DbHelper mDbHelper;
+    private static final String TAG = "MeasurementDao";
+    private SQLTransaction mSQLTransaction;
 
-    private MeasurementDao(Context ctx) {
-        mDbHelper = DbHelper.getInstance(ctx);
+    @Override
+    public void setTransaction(ITransaction transaction) {
+        if (!(transaction instanceof SQLTransaction)) {
+            throw new IllegalArgumentException("transaction should be a SQLTransaction.");
+        }
+        mSQLTransaction = (SQLTransaction) transaction;
     }
 
-    /** Returns an instance of the MeasurementDAO given a context. */
-    public static synchronized MeasurementDao getInstance(Context ctx) {
-        if (sSingleton == null) {
-            sSingleton = new MeasurementDao(ctx);
-        }
-        return sSingleton;
-    }
-
-    /**
-     * Returns list of ids for all pending {@link Trigger}.
-     */
-    public List<String> getPendingTriggerIds() {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return null;
-        }
-        try (Cursor cursor = db.query(
+    @Override
+    public List<String> getPendingTriggerIds() throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.TriggerContract.TABLE,
                 new String[]{MeasurementTables.TriggerContract.ID},
                 MeasurementTables.TriggerContract.STATUS + " = ? ",
                 new String[]{String.valueOf(Trigger.Status.PENDING)},
                 /*groupBy=*/null, /*having=*/null,
                 /*orderBy=*/MeasurementTables.TriggerContract.TRIGGER_TIME, /*limit=*/null)) {
-            if (cursor == null) {
-                return null;
-            }
             List<String> result = new ArrayList<>();
             while (cursor.moveToNext()) {
                 result.add(cursor.getString(/*columnIndex=*/0));
@@ -91,45 +74,25 @@ public class MeasurementDao {
         }
     }
 
-    /**
-     * Queries and returns the {@link Trigger}.
-     *
-     * @param triggerId Id of the request Trigger
-     * @return the requested Trigger; Null in case of SQL failure
-     */
-    @Nullable
-    public Trigger getTrigger(String triggerId) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return null;
-        }
-        try (Cursor cursor = db.query(
+    @Override
+    public Trigger getTrigger(String triggerId) throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.TriggerContract.TABLE,
                 /*columns=*/null,
                 MeasurementTables.TriggerContract.ID + " = ? ",
                 new String[]{triggerId},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
-            if (cursor == null || cursor.getCount() == 0) {
-                return null;
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException("Trigger retrieval failed. Id: " + triggerId);
             }
             cursor.moveToNext();
             return SqliteObjectMapper.constructTriggerFromCursor(cursor);
         }
     }
 
-    /**
-     * Queries and returns the {@link EventReport}.
-     *
-     * @param eventReportId Id of the request Event Report
-     * @return the requested Event Report; Null in case of SQL failure
-     */
-    @Nullable
-    public EventReport getEventReport(String eventReportId) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return null;
-        }
-        try (Cursor cursor = db.query(
+    @Override
+    public EventReport getEventReport(String eventReportId) throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.EventReportContract.TABLE,
                 null,
                 MeasurementTables.EventReportContract.ID + " = ? ",
@@ -138,26 +101,18 @@ public class MeasurementDao {
                 null,
                 null,
                 null)) {
-            if (cursor == null || cursor.getCount() == 0) {
-                return null;
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException(
+                        "EventReport retrieval failed. Id: " + eventReportId);
             }
             cursor.moveToNext();
             return SqliteObjectMapper.constructEventReportFromCursor(cursor);
         }
     }
 
-    /**
-     * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
-     *
-     * @return list of active matching sources; Null in case of SQL failure
-     */
-    @Nullable
-    public List<Source> getMatchingActiveSources(Trigger trigger) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return null;
-        }
-        try (Cursor cursor = db.query(
+    @Override
+    public List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.SourceContract.TABLE,
                 /*columns=*/null,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? AND "
@@ -169,9 +124,6 @@ public class MeasurementDao {
                         String.valueOf(trigger.getTriggerTime()),
                         String.valueOf(Trigger.Status.IGNORED)},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
-            if (cursor == null) {
-                return null;
-            }
             List<Source> sources = new ArrayList<>();
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
@@ -180,86 +132,58 @@ public class MeasurementDao {
         }
     }
 
-    /**
-     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
-     *
-     * @return success
-     */
-    public boolean updateTriggerStatus(Trigger trigger) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void updateTriggerStatus(Trigger trigger) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
-        long rows = db.update(MeasurementTables.TriggerContract.TABLE, values,
-                MeasurementTables.TriggerContract.ID + " = ?",
-                new String[]{trigger.getId()});
-        return rows == 1;
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.TriggerContract.TABLE, values,
+                        MeasurementTables.TriggerContract.ID + " = ?",
+                        new String[]{trigger.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Trigger status update failed.");
+        }
     }
 
-    /**
-     * Updates the {@link Source.Status} value for the provided list of {@link Source}
-     *
-     * @param sources list of sources.
-     * @param status  value to be set
-     * @return success
-     */
-    public boolean updateSourceStatus(List<Source> sources, @Source.Status int status) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void updateSourceStatus(List<Source> sources, @Source.Status int status)
+            throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.STATUS, status);
-        long rows = db.update(MeasurementTables.SourceContract.TABLE, values,
-                MeasurementTables.SourceContract.ID + " IN (?)",
-                new String[]{sources.stream().map(Source::getId)
-                        .collect(Collectors.joining(","))}
-        );
-        return rows == sources.size();
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.SourceContract.TABLE, values,
+                        MeasurementTables.SourceContract.ID + " IN (?)",
+                        new String[]{sources.stream().map(Source::getId)
+                                .collect(Collectors.joining(","))}
+                );
+        if (rows != sources.size()) {
+            throw new DatastoreException("Source status update failed.");
+        }
     }
 
-    /**
-     * Change the status of an event report to DELIVERED
-     * @param eventReportId the id of the event report to be updated
-     * @return success
-     */
-    public boolean markEventReportDelivered(String eventReportId) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void markEventReportDelivered(String eventReportId) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.STATUS, EventReport.Status.DELIVERED);
-        long rows = db.update(MeasurementTables.EventReportContract.TABLE, values,
-                MeasurementTables.EventReportContract.ID + " = ?",
-                new String[]{eventReportId});
-        return rows == 1;
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.EventReportContract.TABLE, values,
+                        MeasurementTables.EventReportContract.ID + " = ?",
+                        new String[]{eventReportId});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport update failed.");
+        }
     }
 
-    /**
-     * Returns list of all the reports associated with the {@link Source}.
-     *
-     * @param source for querying reports
-     * @return list of relevant eventReports; Null in case of SQL failure
-     */
+    @Override
     @Nullable
-    public List<EventReport> getSourceEventReports(Source source) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return null;
-        }
+    public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
-        try (Cursor cursor = db.query(
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.EventReportContract.TABLE,
                 /*columns=*/null,
                 MeasurementTables.EventReportContract.SOURCE_ID + " = ? ",
                 new String[]{source.getId()},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
-            if (cursor == null) {
-                return null;
-            }
             while (cursor.moveToNext()) {
                 eventReports.add(SqliteObjectMapper.constructEventReportFromCursor(cursor));
             }
@@ -267,32 +191,19 @@ public class MeasurementDao {
         }
     }
 
-    /**
-     * Deletes the {@link EventReport} from datastore.
-     *
-     * @return success
-     */
-    public boolean deleteEventReport(EventReport eventReport) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
+    @Override
+    public void deleteEventReport(EventReport eventReport) throws DatastoreException {
+        long rows = mSQLTransaction.getDatabase()
+                .delete(MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.ID + " = ?",
+                        new String[]{eventReport.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("EventReport deletion failed.");
         }
-        long rows = db.delete(MeasurementTables.EventReportContract.TABLE,
-                MeasurementTables.EventReportContract.ID + " = ?",
-                new String[]{eventReport.getId()});
-        return rows == 1;
     }
 
-    /**
-     * Saves the {@link EventReport} to datastore.
-     *
-     * @return success
-     */
-    public boolean insertEventReportToDB(EventReport eventReport) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void insertEventReport(EventReport eventReport) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID,
                 UUID.randomUUID().toString());
@@ -310,43 +221,32 @@ public class MeasurementDao {
                 eventReport.getReportTo().toString());
         values.put(MeasurementTables.EventReportContract.STATUS,
                 eventReport.getStatus());
-        long rowId = db.insert(MeasurementTables.EventReportContract.TABLE,
-                /*nullColumnHack=*/null, values);
-        return rowId != -1;
+        long rowId = mSQLTransaction.getDatabase()
+                .insert(MeasurementTables.EventReportContract.TABLE,
+                        /*nullColumnHack=*/null, values);
+        if (rowId == -1) {
+            throw new DatastoreException("EventReport insertion failed.");
+        }
     }
 
-    /**
-     * Update the value of {@link Source.Status} for the corresponding {@link Source}
-     *
-     * @param source the {@link Source} object.
-     * @return success
-     */
-    public boolean updateSourceDedupKeys(Source source) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void updateSourceDedupKeys(Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.DEDUP_KEYS,
                 source.getDedupKeys().stream().map(String::valueOf).collect(
                         Collectors.joining(",")));
-        long rows = db.update(MeasurementTables.SourceContract.TABLE, values,
-                MeasurementTables.SourceContract.ID + " = ?",
-                new String[]{source.getId()});
-        return rows == 1;
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.SourceContract.TABLE, values,
+                        MeasurementTables.SourceContract.ID + " = ?",
+                        new String[]{source.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Source dedup key updated failed.");
+        }
     }
 
-    /**
-     * Add an entry in AttributionRateLimit datastore for the provided {@link Source} and
-     * {@link Trigger}
-     *
-     * @return success
-     */
-    public boolean addAttributionRateLimitEntry(Source source, Trigger trigger) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void insertAttributionRateLimit(Source source, Trigger trigger)
+            throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionRateLimitContract.ID,
                 UUID.randomUUID().toString());
@@ -360,92 +260,62 @@ public class MeasurementDao {
                 trigger.getTriggerTime());
         values.put(MeasurementTables.AttributionRateLimitContract.REGISTERER,
                 BaseUriExtractor.getBaseUri(trigger.getRegisterer()));
-        long rowId = db.insert(MeasurementTables.AttributionRateLimitContract.TABLE,
-                /*nullColumnHack=*/null,
-                values);
-        return rowId != -1;
-    }
-
-    /**
-     * Find the number of entries for a rate limit window using the {@link Source} and
-     * {@link Trigger}.
-     * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
-     *
-     * @return the number of entries for the window. -1 if sql failure
-     */
-    public long getAttributionsPerRateLimitWindow(Source source, Trigger trigger) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return -1;
-        }
-        try {
-            return DatabaseUtils.queryNumEntries(
-                    db,
-                    MeasurementTables.AttributionRateLimitContract.TABLE,
-                    MeasurementTables.AttributionRateLimitContract.SOURCE_SITE + " = ? AND "
-                            + MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE
-                            + " = ? AND "
-                            + MeasurementTables.AttributionRateLimitContract.REPORT_TO
-                            + " = ? AND "
-                            + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
-                            + " >= ? AND "
-                            + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
-                            + " <= ? ",
-                    new String[]{
-                            BaseUriExtractor.getBaseUri(source.getAttributionSource()),
-                            BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()),
-                            trigger.getReportTo().toString(),
-                            String.valueOf(trigger.getTriggerTime()
-                                    - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
-                            String.valueOf(trigger.getTriggerTime())}
-            );
-        } catch (IllegalArgumentException exception) {
-            return -1;
+        long rowId = mSQLTransaction.getDatabase()
+                .insert(MeasurementTables.AttributionRateLimitContract.TABLE,
+                        /*nullColumnHack=*/null,
+                        values);
+        if (rowId == -1) {
+            throw new DatastoreException("AttributionRateLimit insertion failed.");
         }
     }
 
-    /**
-     * Gets the number of sources a registerer has registered.
-     */
-    public long getNumSourcesPerRegisterer(Uri registerer) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return -1;
-        }
+    @Override
+    public long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
+            throws DatastoreException {
         return DatabaseUtils.queryNumEntries(
-                db,
+                mSQLTransaction.getDatabase(),
+                MeasurementTables.AttributionRateLimitContract.TABLE,
+                MeasurementTables.AttributionRateLimitContract.SOURCE_SITE + " = ? AND "
+                        + MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE
+                        + " = ? AND "
+                        + MeasurementTables.AttributionRateLimitContract.REPORT_TO
+                        + " = ? AND "
+                        + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
+                        + " >= ? AND "
+                        + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
+                        + " <= ? ",
+                new String[]{
+                        BaseUriExtractor.getBaseUri(source.getAttributionSource()),
+                        BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()),
+                        trigger.getReportTo().toString(),
+                        String.valueOf(trigger.getTriggerTime()
+                                - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
+                        String.valueOf(trigger.getTriggerTime())}
+        );
+    }
+
+    @Override
+    public long getNumSourcesPerRegisterer(Uri registerer) throws DatastoreException {
+        return DatabaseUtils.queryNumEntries(
+                mSQLTransaction.getDatabase(),
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.REGISTERER + " = ? ",
                 new String[]{registerer.toString()});
     }
 
-    /**
-     * Gets the number of triggers a registerer has registered.
-     */
-    public long getNumTriggersPerRegisterer(Uri registerer) {
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
-        if (db == null) {
-            return -1;
-        }
+    @Override
+    public long getNumTriggersPerRegisterer(Uri registerer) throws DatastoreException {
         return DatabaseUtils.queryNumEntries(
-                db,
+                mSQLTransaction.getDatabase(),
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.REGISTERER + " = ? ",
                 new String[]{registerer.toString()});
     }
 
-    /**
-     * Deletes all records in measurement tables that correspond with the provided Uri.
-     *
-     * @param uri the Uri to match on
-     * @return success
-     */
-    public boolean deleteAppRecords(Uri uri) {
+    @Override
+    public void deleteAppRecords(Uri uri) throws DatastoreException {
         String uriStr = uri.toString();
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
         // For all Source records matching the given Uri
         // as REGISTERER, obtains EventReport records who's SOURCE_ID
         // matches a Source records' EVENT_ID.
@@ -484,27 +354,18 @@ public class MeasurementDao {
                 MeasurementTables.AttributionRateLimitContract.SOURCE_SITE + " = ? OR "
                         + MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE + " = ?",
                 new String[]{uriStr, uriStr});
-        return true;
     }
 
-    /**
-     * Queries and returns the {@link AdtechUrl}.
-     *
-     * @param postbackUrl the postback Url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
+    @Override
     @Nullable
-    public AdtechUrl getAdtechEnrollmentData(String postbackUrl) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return null;
-        }
-        try (Cursor cursor = db.query(MeasurementTables.AdTechUrlsContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.AdTechUrlsContract.POSTBACK_URL + " = ? ",
-                new String[]{postbackUrl},
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null,
-                /*limit=*/null)) {
+    public AdtechUrl getAdtechEnrollmentData(String postbackUrl) throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase()
+                .query(MeasurementTables.AdTechUrlsContract.TABLE,
+                        /*columns=*/null,
+                        MeasurementTables.AdTechUrlsContract.POSTBACK_URL + " = ? ",
+                        new String[]{postbackUrl},
+                        /*groupBy=*/null, /*having=*/null, /*orderBy=*/null,
+                        /*limit=*/null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 return null;
             }
@@ -513,18 +374,9 @@ public class MeasurementDao {
         }
     }
 
-    /**
-     * Given one postback urls, queries and returns all the postback urls with the same adtech id.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    public List<String> getAllAdtechUrls(String postbackUrl) {
+    @Override
+    public List<String> getAllAdtechUrls(String postbackUrl) throws DatastoreException {
         List<String> res = new ArrayList<>();
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return null;
-        }
         AdtechUrl adtechUrl = getAdtechEnrollmentData(postbackUrl);
         if (adtechUrl == null) {
             return res;
@@ -533,12 +385,13 @@ public class MeasurementDao {
         if (adtechId == null) {
             return res;
         }
-        try (Cursor cursor = db.query(MeasurementTables.AdTechUrlsContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.AdTechUrlsContract.AD_TECH_ID + " = ? ",
-                new String[]{adtechId},
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null,
-                /*limit=*/null)) {
+        try (Cursor cursor = mSQLTransaction.getDatabase()
+                .query(MeasurementTables.AdTechUrlsContract.TABLE,
+                        /*columns=*/null,
+                        MeasurementTables.AdTechUrlsContract.AD_TECH_ID + " = ? ",
+                        new String[]{adtechId},
+                        /*groupBy=*/null, /*having=*/null, /*orderBy=*/null,
+                        /*limit=*/null)) {
             if (cursor == null) {
                 return res;
             }
@@ -549,51 +402,33 @@ public class MeasurementDao {
         }
     }
 
-    /**
-     * Saves the {@link AdtechUrl} to datastore.
-     *
-     * @return success or not
-     */
-    public boolean insertAdtechUrlToDB(AdtechUrl adtechUrl) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void insertAdtechUrl(AdtechUrl adtechUrl) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AdTechUrlsContract.POSTBACK_URL, adtechUrl.getPostbackUrl());
         values.put(MeasurementTables.AdTechUrlsContract.AD_TECH_ID, adtechUrl.getAdtechId());
-        long rowId = db.insert(MeasurementTables.AdTechUrlsContract.TABLE,
-                /*nullColumnHack=*/null, values);
-        return rowId != 1;
+        long rowId = mSQLTransaction.getDatabase()
+                .insert(MeasurementTables.AdTechUrlsContract.TABLE,
+                        /*nullColumnHack=*/null, values);
+        if (rowId == -1) {
+            throw new DatastoreException("AdTechURL insertion failed.");
+        }
     }
 
-    /**
-     * Deletes the {@link AdtechUrl} from datastore using the given postback url.
-     *
-     * @return success or not
-     */
-    public boolean deleteAdtechUrl(String postbackUrl) {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        if (db == null) {
-            return false;
+    @Override
+    public void deleteAdtechUrl(String postbackUrl) throws DatastoreException {
+        long rows = mSQLTransaction.getDatabase()
+                .delete(MeasurementTables.AdTechUrlsContract.TABLE,
+                        MeasurementTables.AdTechUrlsContract.POSTBACK_URL + " = ?",
+                        new String[]{postbackUrl});
+        if (rows != 1) {
+            throw new DatastoreException("AdTechURL deletion failed.");
         }
-        long rows = db.delete(MeasurementTables.AdTechUrlsContract.TABLE,
-                MeasurementTables.AdTechUrlsContract.POSTBACK_URL + " = ?",
-                new String[]{postbackUrl});
-        return rows == 1;
     }
 
-    /**
-     * Deletes all expired records in measurement tables.
-     *
-     * @return success
-     */
-    public boolean deleteExpiredRecords() {
-        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-
-        if (db == null) {
-            return false;
-        }
+    @Override
+    public void deleteExpiredRecords() throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
         long earliestValidInsertion =
                 System.currentTimeMillis() - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
         String earliestValidInsertionStr = String.valueOf(earliestValidInsertion);
@@ -616,38 +451,18 @@ public class MeasurementDao {
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
                 MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " < ?",
                 new String[]{earliestValidInsertionStr});
-        return true;
     }
 
-    /**
-     * Deletes all measurement data owned by a registrant and optionally providing an origin uri
-     * and/or a range of dates.
-     *
-     * @param registerer who owns the data
-     * @param origin uri for deletion. May be null
-     * @param start time for deletion range. May be null. If null, end must be null as well
-     * @param end time for deletion range. May be null. If null, start must be null as well
-     * @return success
-     */
-    public boolean deleteMeasurementData(
+    @Override
+    public void deleteMeasurementData(
             @NonNull Uri registerer,
             @Nullable Uri origin,
             @Nullable Instant start,
-            @Nullable Instant end) {
+            @Nullable Instant end) throws DatastoreException {
         Objects.requireNonNull(registerer);
         validateOptionalRange(start, end);
-        final SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
-        db.beginTransaction();
-        try {
-            deleteMeasurementData(db, registerer, origin, start, end);
-            db.setTransactionSuccessful();
-        } catch (Exception e) {
-            LogUtil.e("Error while deleting browser measurement data", e);
-            return false;
-        } finally {
-            db.endTransaction();
-        }
-        return true;
+        final SQLiteDatabase db = mSQLTransaction.getDatabase();
+        deleteMeasurementData(db, registerer, origin, start, end);
     }
 
     private void validateOptionalRange(Instant start, Instant end) {

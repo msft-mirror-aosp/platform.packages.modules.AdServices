@@ -17,20 +17,17 @@
 package com.android.adservices.service.measurement;
 
 import com.android.adservices.data.measurement.DatabaseE2ETest;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * E2E tests for {@link AttributionJobHandler}
@@ -38,32 +35,23 @@ import java.util.List;
 @RunWith(Parameterized.class)
 public class AttributionJobHandlerE2ETest extends DatabaseE2ETest {
 
-    private final List<String> mAttributionTriggerIds;
-
-    @Parameterized.Parameters(name = "{3}")
+    @Parameterized.Parameters(name = "{2}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("attribution_service_test.json");
-        return DatabaseE2ETest.getTestCasesFrom(inputStream, (testObj) -> {
-            List<String> attributionTriggerIds = new ArrayList<>();
-            JSONArray aTriggerIds = ((JSONObject) testObj).getJSONArray("attributionTriggerIds");
-            for (int j = 0; j < aTriggerIds.length(); j++) {
-                attributionTriggerIds.add(aTriggerIds.getString(j));
-            }
-            return attributionTriggerIds;
-        });
+        return DatabaseE2ETest.getTestCasesFrom(inputStream, /*prepareAdditionalData=*/null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AttributionJobHandlerE2ETest(DbState input, DbState output,
-            List<String> attributionTriggerIds, String name) {
+    public AttributionJobHandlerE2ETest(DbState input, DbState output, String name) {
         super(input, output);
-        this.mAttributionTriggerIds = attributionTriggerIds;
     }
+
+    @Override
     public void runActionToTest() {
-        for (String triggerId : mAttributionTriggerIds) {
-            Assert.assertTrue("Attribution failed.", AttributionJobHandler.getInstance(sContext)
-                    .performPendingAttributions());
-        }
+        Assert.assertTrue("Attribution failed.",
+                (new AttributionJobHandler(
+                        DatastoreManagerFactory.getDatastoreManager(sContext)))
+                        .performPendingAttributions());
     }
 }
