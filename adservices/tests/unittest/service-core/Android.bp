@@ -33,11 +33,13 @@ android_test {
         "truth-prebuilt",
         "ub-uiautomator",
         "adservices-assets-lib",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
     ],
     libs: [
         "android.test.base",
         "framework-adservices.impl",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],

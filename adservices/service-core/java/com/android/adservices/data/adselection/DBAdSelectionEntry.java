@@ -32,7 +32,7 @@ import java.util.Objects;
  * This POJO represents the ad_selection_entry data that combines the data fields joined from the
  * ad_selection and buyer_decision_logic entities.
  */
-public final class AdSelectionEntry {
+public final class DBAdSelectionEntry {
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
@@ -60,7 +60,7 @@ public final class AdSelectionEntry {
     @Nullable
     private final String mBuyerDecisionLogicJs;
 
-    private AdSelectionEntry(
+    public DBAdSelectionEntry(
             long adSelectionId,
             @Nullable String customAudienceSignals,
             @NonNull String contextualSignals,
@@ -79,18 +79,18 @@ public final class AdSelectionEntry {
 
     @Override
     public boolean equals(@Nullable Object o) {
-        if (o instanceof AdSelectionEntry) {
-            AdSelectionEntry adSelectionEntry = (AdSelectionEntry) o;
+        if (o instanceof DBAdSelectionEntry) {
+            DBAdSelectionEntry adSelectionEntry = (DBAdSelectionEntry) o;
 
             return mAdSelectionId == adSelectionEntry.mAdSelectionId
                     && Objects.equals(
-                            mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
+                    mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
                     && mContextualSignals.equals(adSelectionEntry.mContextualSignals)
                     && Objects.equals(mWinningAdRenderUrl, adSelectionEntry.mWinningAdRenderUrl)
                     && mWinningAdBid == adSelectionEntry.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelectionEntry.mCreationTimestamp)
                     && Objects.equals(
-                            mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs);
+                    mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs);
         }
         return false;
     }
@@ -116,7 +116,7 @@ public final class AdSelectionEntry {
 
     /**
      * @return the custom audience signals used to select this winning ad if remarketing ads,
-     *     otherwise return null.
+     * otherwise return null.
      */
     @Nullable
     public String getCustomAudienceSignals() {
@@ -125,7 +125,7 @@ public final class AdSelectionEntry {
 
     /**
      * @return the contextual signals, for instance application name used in this
-     *     ad_selection_entry.
+     * ad_selection_entry.
      */
     @NonNull
     public String getContextualSignals() {
@@ -163,7 +163,7 @@ public final class AdSelectionEntry {
         return mBuyerDecisionLogicJs;
     }
 
-    /** Builder for {@link AdSelectionEntry} object. */
+    /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
         private long mAdSelectionId;
         private String mCustomAudienceSignals;
@@ -173,11 +173,12 @@ public final class AdSelectionEntry {
         private Instant mCreationTimestamp;
         private String mBuyerDecisionLogicJs;
 
-        public Builder() {}
+        public Builder() {
+        }
 
         /** Sets the ad selection id. */
         @NonNull
-        public AdSelectionEntry.Builder setAdSelectionId(long adSelectionId) {
+        public DBAdSelectionEntry.Builder setAdSelectionId(long adSelectionId) {
             Preconditions.checkArgument(adSelectionId != 0, "Ad selection Id should not be zero.");
             this.mAdSelectionId = adSelectionId;
             return this;
@@ -185,7 +186,7 @@ public final class AdSelectionEntry {
 
         /** Sets the custom audience signals. */
         @NonNull
-        public AdSelectionEntry.Builder setCustomAudienceSignals(
+        public DBAdSelectionEntry.Builder setCustomAudienceSignals(
                 @Nullable String customAudienceSignals) {
             this.mCustomAudienceSignals = customAudienceSignals;
             return this;
@@ -193,7 +194,7 @@ public final class AdSelectionEntry {
 
         /** Sets the contextual signals with this ad_selection_entry. */
         @NonNull
-        public AdSelectionEntry.Builder setContextualSignals(@NonNull String contextualSignals) {
+        public DBAdSelectionEntry.Builder setContextualSignals(@NonNull String contextualSignals) {
             Objects.requireNonNull(contextualSignals);
             this.mContextualSignals = contextualSignals;
             return this;
@@ -201,7 +202,7 @@ public final class AdSelectionEntry {
 
         /** Sets the winning ad's rendering URL for this ad_selection_entry. */
         @NonNull
-        public AdSelectionEntry.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
+        public DBAdSelectionEntry.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
             Objects.requireNonNull(mWinningAdRenderUrl);
             this.mWinningAdRenderUrl = mWinningAdRenderUrl;
             return this;
@@ -209,7 +210,7 @@ public final class AdSelectionEntry {
 
         /** Sets the winning ad's bid for this ad_selection_entry. */
         @NonNull
-        public AdSelectionEntry.Builder setWinningAdBid(double winningAdBid) {
+        public DBAdSelectionEntry.Builder setWinningAdBid(double winningAdBid) {
             Preconditions.checkArgument(
                     winningAdBid > 0, "A winning ad should not have non-positive bid.");
             this.mWinningAdBid = winningAdBid;
@@ -218,7 +219,7 @@ public final class AdSelectionEntry {
 
         /** Sets the creation time of this ad_selection_entry in the table. */
         @NonNull
-        public AdSelectionEntry.Builder setCreationTimestamp(@NonNull Instant creationTimestamp) {
+        public DBAdSelectionEntry.Builder setCreationTimestamp(@NonNull Instant creationTimestamp) {
             Objects.requireNonNull(creationTimestamp);
             this.mCreationTimestamp = creationTimestamp;
             return this;
@@ -226,20 +227,20 @@ public final class AdSelectionEntry {
 
         /** Sets the buyer_decision_logic_js of this ad_selection_entry. */
         @NonNull
-        public AdSelectionEntry.Builder setBuyerDecisionLogicJs(
+        public DBAdSelectionEntry.Builder setBuyerDecisionLogicJs(
                 @Nullable String buyerDecisionLogicJs) {
             this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
             return this;
         }
 
         /**
-         * Builds an {@link AdSelectionEntry} instance.
+         * Builds an {@link DBAdSelectionEntry} instance.
          *
-         * @throws NullPointerException if any non-nulll params are null.
+         * @throws NullPointerException     if any non-nulll params are null.
          * @throws IllegalArgumentException if adSelectionId is zero or bid is non-positive.
          */
         @NonNull
-        public AdSelectionEntry build() {
+        public DBAdSelectionEntry build() {
             Preconditions.checkArgument(mAdSelectionId != 0, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
@@ -247,7 +248,7 @@ public final class AdSelectionEntry {
             Objects.requireNonNull(mWinningAdRenderUrl);
             Objects.requireNonNull(mCreationTimestamp);
 
-            return new AdSelectionEntry(
+            return new DBAdSelectionEntry(
                     mAdSelectionId,
                     mCustomAudienceSignals,
                     mContextualSignals,

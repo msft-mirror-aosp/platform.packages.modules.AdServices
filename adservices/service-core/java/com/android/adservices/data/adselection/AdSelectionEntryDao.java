@@ -21,14 +21,14 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
  *
- * <p>Annotation will generate Room based SQLite Dao implementation. TODO(b/228114258) Implement SQL
- * queries, TypeConverter and add unit tests
+ * <p>Annotation will generate Room based SQLite Dao implementation.
+ * TODO(b/228114258) Add unit tests
  */
 @Dao
 public interface AdSelectionEntryDao {
@@ -36,25 +36,25 @@ public interface AdSelectionEntryDao {
      * Add a new successful ad selection entry into the table ad_selection.
      *
      * @param adSelection is the AdSelection to add to the table ad_selection if the ad_selection_id
-     *     not exists.
+     *                    not exists.
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    void persistAdSelection(AdSelection adSelection);
+    void persistAdSelection(DBAdSelection adSelection);
 
     /**
      * Add a buyer decision logic entry into the table buyer_decision_logic.
      *
      * @param buyerDecisionLogic is the BuyerDecisionLogic to add to table buyer_decision_logic if
-     *     not exists.
+     *                           not exists.
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    void persistBuyerDecisionLogic(BuyerDecisionLogic buyerDecisionLogic);
+    void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
      *
      * @param adSelectionId which is the key to query the corresponding ad selection entry.
-     * @return an {@link AdSelectionEntry} if exists.
+     * @return an {@link DBAdSelectionEntry} if exists.
      */
     @Query(
             "SELECT "
@@ -70,7 +70,7 @@ public interface AdSelectionEntryDao {
                     + "buyer_decision_logic "
                     + "ON ad_selection.bidding_logic_url = buyer_decision_logic.bidding_logic_url "
                     + "WHERE ad_selection.ad_selection_id = :adSelectionId")
-    AdSelectionEntry getAdSelectionEntityById(long adSelectionId);
+    DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
      * Get the ad selection entries with a batch of ad_selection_ids.
@@ -89,23 +89,23 @@ public interface AdSelectionEntryDao {
                     + "FROM ad_selection LEFT JOIN buyer_decision_logic "
                     + "ON ad_selection.bidding_logic_url = buyer_decision_logic.bidding_logic_url "
                     + "WHERE ad_selection.ad_selection_id IN (:adSelectionIds) ")
-    List<AdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
+    List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
-     * Clean up expired adSelection entries by a TTL.
+     * Clean up expired adSelection entries if it is older than the given timestamp. If
+     * creation_timestamp < expirationTime, the ad selection entry will be removed from the
+     * ad_selection table.
      *
-     * @param maxAge is the TTL to expire the entire AdSelection. If current_timestamp -
-     *     creation_timestamp > maxAge, this entire ad selection data will be removed from the
-     *     ad_selection.
+     * @param expirationTime is the cutoff time to expire the AdSelectionEntry.
      */
-    @Query("DELETE FROM ad_selection WHERE creation_timestamp + :maxAge < now()")
-    void removeExpiredAdSelection(Duration maxAge);
+    @Query("DELETE FROM ad_selection WHERE creation_timestamp < :expirationTime")
+    void removeExpiredAdSelection(Instant expirationTime);
 
     /**
      * Clean up selected ad selection data entry data in batch by their ad_selection_ids.
      *
      * @param adSelectionIds is the list of adSelectionIds to identify the data entries to be
-     *     removed from ad_selection and buyer_decision_logic tables.
+     *                       removed from ad_selection and buyer_decision_logic tables.
      */
     @Query("DELETE FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
     void removeAdSelectionEntriesByIds(List<Long> adSelectionIds);
