@@ -36,13 +36,13 @@ interface ICustomAudienceManagementService {
      * Note that the ads list will also be completely overwritten by the daily background fetch job.
      *
      * This call fails with a status of
-     * {@link CustomAudienceManagementResponse#STATUS_INVALID_ARGUMENT} if the call comes from an
+     * {@link FledgeErrorResponse#STATUS_INVALID_ARGUMENT} if the call comes from an
      * unauthorized party, if the storage limit has been exceeded by the calling party, or if any
      * URL parameters in the {@code customAudience} given are not authenticated with the
      * {@code customAudience} buyer.
      *
      * This call fails with a status of
-     * {@link CustomAudienceManagementResponse#STATUS_INTERNAL_ERROR} if an internal service error
+     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if an internal service error
      * is encountered.
      */
     void joinCustomAudience(in CustomAudience customAudience, in ICustomAudienceCallback callback);

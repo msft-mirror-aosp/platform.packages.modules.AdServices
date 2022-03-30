@@ -20,8 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.common.AdData;
 import android.net.Uri;
+import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
@@ -29,83 +29,60 @@ import org.junit.Test;
 
 @SmallTest
 public class AdSelectionResponseTest {
+    private static final Uri VALID_RENDER_URL =
+            new Uri.Builder().path("valid.example.com/testing/hello").build();
+    private static final int TEST_AD_SELECTION_ID = 12345;
+
     @Test
-    public void testAdSelectionResponseSuccessfulResponse() {
-        AdData adData = new AdData(new Uri.Builder().build(), "");
-        int adSelectionId = 5;
-        AdSelectionResponse.Builder builder =
+    public void testBuildAdSelectionResponse() {
+        AdSelectionResponse adSelectionResponse =
                 new AdSelectionResponse.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdData(adData)
-                        .setResultCode(AdSelectionResponse.RESULT_OK);
-        AdSelectionResponse adSelectionResponse = builder
-                .build();
-        assertThat(adSelectionResponse.getAdSelectionId()).isEqualTo(adSelectionId);
-        assertThat(adSelectionResponse.getAdData()).isEqualTo(adData);
-        assertThat(adSelectionResponse.getResultCode()).isEqualTo(AdSelectionResponse.RESULT_OK);
-        assertThat(adSelectionResponse.getErrorMessage()).isNull();
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUrl(VALID_RENDER_URL)
+                        .build();
+
+        assertThat(adSelectionResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(adSelectionResponse.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
     }
 
     @Test
-    public void testAdSelectionResponseNoAdDataSuccessfulResponse() {
-        int adSelectionId = 5;
-        NullPointerException thrown = assertThrows(
-                NullPointerException.class,
-                () ->  new AdSelectionResponse.Builder()
-                            // Leave AdsData null.
-                            .setAdSelectionId(adSelectionId)
-                            .setResultCode(AdSelectionResponse.RESULT_OK)
-                            .build());
-        assertThat(thrown).hasMessageThat()
-                .contains("AdData is required for a successful response.");
+    public void testParcelAdSelectionResponse() {
+        AdSelectionResponse adSelectionResponse =
+                new AdSelectionResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUrl(VALID_RENDER_URL)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        adSelectionResponse.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        AdSelectionResponse fromParcel = AdSelectionResponse.CREATOR.createFromParcel(p);
+
+        assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        assertThat(fromParcel.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
     }
 
     @Test
-    public void testAdSelectionResponseNoAdSelectionIdSuccessfulResponse() {
-        AdData adData = new AdData(new Uri.Builder().build(), "");
-        IllegalArgumentException thrown = assertThrows(
+    public void testFailsToBuildWithUnsetAdSelectionId() {
+        assertThrows(
                 IllegalArgumentException.class,
-                () -> new AdSelectionResponse.Builder()
-                            // leave adSelectionId unset.
-                            .setAdData(adData)
-                            .setResultCode(AdSelectionResponse.RESULT_OK)
-                            .build());
-        assertThat(thrown).hasMessageThat()
-                .contains("AdSelectionID should be non-zero for a successful response.");
+                () -> {
+                    new AdSelectionResponse.Builder()
+                            // Not setting AdSelectionId making it null.
+                            .setRenderUrl(VALID_RENDER_URL)
+                            .build();
+                });
     }
 
     @Test
-    public void testAdSelectionResponseNonNullErrorMessageSuccessfulResponse() {
-        AdData adData = new AdData(new Uri.Builder().build(), "");
-        int adSelectionId = 5;
-        IllegalArgumentException thrown = assertThrows(
-                IllegalArgumentException.class,
-                () -> new AdSelectionResponse.Builder()
-                            .setAdData(adData)
-                            .setAdSelectionId(adSelectionId)
-                            .setResultCode(AdSelectionResponse.RESULT_OK)
-                            .setErrorMessage("Non null")
-                            .build());
-        assertThat(thrown).hasMessageThat()
-                .contains("The ErrorMessage should be null for a successful response.");
-    }
-
-    @Test
-    public void testAdSelectionResponseNullErrorMessageUnsuccessfulResponse() {
-        NullPointerException thrownInternalError = assertThrows(
+    public void testFailsToBuildWithNullAdData() {
+        assertThrows(
                 NullPointerException.class,
-                () -> new AdSelectionResponse.Builder()
-                            .setResultCode(AdSelectionResponse.RESULT_INTERNAL_ERROR)
-                            .build());
-        assertThat(thrownInternalError).hasMessageThat()
-                .contains("The ErrorMessage is required for non successful responses.");
-
-        NullPointerException thrownInvalidArgument = assertThrows(
-                NullPointerException.class,
-                () -> new AdSelectionResponse.Builder()
-                            .setResultCode(AdSelectionResponse.RESULT_INVALID_ARGUMENT)
-                            .build());
-        assertThat(thrownInvalidArgument).hasMessageThat()
-                .contains("The ErrorMessage is required for non successful responses.");
+                () -> {
+                    new AdSelectionResponse.Builder()
+                            .setAdSelectionId(TEST_AD_SELECTION_ID)
+                            // Not setting AdData making it null.
+                            .build();
+                });
     }
 }

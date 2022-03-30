@@ -16,6 +16,7 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -92,29 +93,35 @@ public class AdSelectionManager {
                     adSelectionConfig,
                     new AdSelectionCallback.Stub() {
                         @Override
-                        public void onResult(AdSelectionResponse resultParcel) {
+                        public void onSuccess(AdSelectionResponse resultParcel) {
                             executor.execute(
                                     () -> {
-                                        if (resultParcel.getResultCode()
-                                                == AdSelectionResponse.RESULT_OK) {
-                                            receiver.onResult(
-                                                    new AdSelectionOutcome(
-                                                            resultParcel.getAdData(),
-                                                            resultParcel.getAdSelectionId()));
-                                        } else {
-                                            receiver.onError(new AdServicesException(
-                                                    resultParcel.getErrorMessage()));
-                                        }
+                                        receiver.onResult(new AdSelectionOutcome.Builder()
+                                                .setAdSelectionId(resultParcel.getAdSelectionId())
+                                                .setRenderUrl(resultParcel.getRenderUrl())
+                                                .build());
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(failureParcel.asException());
                                     });
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e("Failure of AdSelection service.", e);
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+            receiver.onError(new AdServicesException("Failure of AdSelection service."));
         }
     }
 
-    /** Report the given impression. */
+    /** Report the given impression.
+     * The inputs {@code adSelectionConfig} and {@code adSelectionId} are provided by the Ads SDK.
+     * The receiver either returns a {@code void} for a successful run, or an
+     * {@link AdServicesException} indicates the error.
+     */
     @NonNull
     public void reportImpression(
             int adSelectionId,
@@ -134,22 +141,24 @@ public class AdSelectionManager {
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override
-                        public void onResult(ReportImpressionResponse resultParcel) {
+                        public void onSuccess() {
                             executor.execute(
                                     () -> {
-                                        if (resultParcel.isSuccess()) {
-                                            receiver.onResult(null);
-                                        } else {
-                                            receiver.onError(
-                                                    new AdServicesException(
-                                                            resultParcel.getErrorMessage()));
-                                        }
+                                        receiver.onResult(null);
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(failureParcel.asException());
                                     });
                         }
                     });
-        } catch (Exception e) {
+        } catch (RemoteException e) {
             LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!", e));
+            receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
 }
