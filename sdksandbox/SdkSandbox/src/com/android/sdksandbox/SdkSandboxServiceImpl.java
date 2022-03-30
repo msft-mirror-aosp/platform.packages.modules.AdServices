@@ -16,6 +16,7 @@
 
 package com.android.sdksandbox;
 
+import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
 import android.app.Service;
@@ -28,12 +29,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.util.Preconditions;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -44,6 +42,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import java.util.Objects;
 
 /** Implementation of Sdk Sandbox Service. */
 @SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
@@ -140,7 +139,6 @@ public class SdkSandboxServiceImpl extends Service {
             @NonNull String sdkProviderClassName,
             @NonNull Bundle params,
             @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
-        Preconditions.checkStringNotEmpty(sdkProviderClassName);
         synchronized (mHeldSdk) {
             if (mHeldSdk.containsKey(sdkToken)) {
                 sendLoadError(callback,
@@ -199,13 +197,18 @@ public class SdkSandboxServiceImpl extends Service {
         public void loadSdk(
                 @NonNull IBinder sdkToken,
                 @NonNull ApplicationInfo applicationInfo,
-                @Nullable String sdkProviderClassName,
+                @NonNull String sdkProviderClassName,
                 @NonNull Bundle params,
                 @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
-            Preconditions.checkNotNull(sdkToken, "sdkToken should not be null");
-            Preconditions.checkNotNull(applicationInfo, "applicationInfo should not be null");
-            Preconditions.checkNotNull(params, "params should not be null");
-            Preconditions.checkNotNull(callback, "callback should not be null");
+            Objects.requireNonNull(sdkToken, "sdkToken should not be null");
+            Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
+            Objects.requireNonNull(sdkProviderClassName,
+                    "sdkProviderClassName should not be null");
+            Objects.requireNonNull(params, "params should not be null");
+            Objects.requireNonNull(callback, "callback should not be null");
+            if (TextUtils.isEmpty(sdkProviderClassName)) {
+                throw new IllegalArgumentException("sdkProviderClassName must not be empty");
+            }
             SdkSandboxServiceImpl.this.loadSdk(
                     sdkToken, applicationInfo, sdkProviderClassName, params, callback);
         }
