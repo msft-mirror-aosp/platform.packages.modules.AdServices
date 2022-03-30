@@ -25,9 +25,7 @@ import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
-import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Process;
 import android.os.UserHandle;
 
@@ -46,40 +44,37 @@ public class SdkSandboxStorageTestApp {
 
     private static final String CODE_PROVIDER_PACKAGE =
             "com.android.tests.codeprovider.storagetest";
-    private static final String CODE_PROVIDER_KEY = "sdk-provider-class";
-    private static final String CODE_PROVIDER_CLASS =
-            "com.android.tests.codeprovider.storagetest.StorageTestSandboxedSdkProvider";
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
+
+    private static Context sContext;
 
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
-        mSdkSandboxManager = context.getSystemService(
+        sContext = ApplicationProvider.getApplicationContext();
+        mSdkSandboxManager = sContext.getSystemService(
                 SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
     }
 
     // Run a phase of the test inside the code loaded for this app
-    private void runPhaseInsideCode(IBinder token, String phaseName) {
+    private void runPhaseInsideCode(String phaseName) {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(token, new Binder(), 0, bundle);
+        mSdkSandboxManager.requestSurfacePackage(CODE_PROVIDER_PACKAGE, 0, 500, 500, bundle);
     }
 
     @Test
-    public void testSdkSandboxDataAppDirectory_SharedStorageIsUsable() throws Exception {
+    public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         // First load code
-        Bundle params = new Bundle();
-        params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, callback);
-        IBinder codeToken = callback.getSdkToken();
+        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Run phase inside the code
-        runPhaseInsideCode(codeToken, "testSdkSandboxDataAppDirectory_SharedStorageIsUsable");
+        runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
 
         // Wait for code to finish handling the request
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
@@ -89,10 +84,8 @@ public class SdkSandboxStorageTestApp {
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
         Bundle params = new Bundle();
-        params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, callback);
-        IBinder codeToken = callback.getSdkToken();
+        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, Runnable::run, callback);
 
         final StorageStatsManager stats = InstrumentationRegistry.getInstrumentation().getContext()
                                                 .getSystemService(StorageStatsManager.class);
@@ -102,7 +95,7 @@ public class SdkSandboxStorageTestApp {
         // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
-        runPhaseInsideCode(codeToken, "testSdkDataIsAttributedToApp");
+        runPhaseInsideCode("testSdkDataIsAttributedToApp");
 
         // Wait for sdk to finish handling the request
         callback.isRequestSurfacePackageSuccessful();

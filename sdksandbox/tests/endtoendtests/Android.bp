@@ -20,8 +20,6 @@ android_test {
     name: "SdkSandboxManagerTests",
     srcs: [
         "src/**/*.java",
-        ":framework-sdksandbox-sources",
-        ":sdksandbox_aidl",
     ],
     static_libs: [
         "androidx.test.runner",
@@ -39,5 +37,8 @@ android_test {
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "current",
-    test_suites: ["general-tests"],
+    test_suites: [
+        "cts",
+        "general-tests",
+    ],
 }

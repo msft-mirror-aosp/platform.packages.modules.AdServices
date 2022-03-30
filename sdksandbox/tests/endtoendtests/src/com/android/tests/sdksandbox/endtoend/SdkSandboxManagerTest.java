@@ -18,15 +18,13 @@ package com.android.tests.sdksandbox.endtoend;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.sdksandbox.IRemoteSdkCallback;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.SdkSandboxManager.RemoteSdkCallback;
 import android.content.Context;
-import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.SurfaceControlViewHost;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,16 +39,16 @@ import java.util.concurrent.TimeUnit;
 public class SdkSandboxManagerTest {
 
     private static SdkSandboxManager sSdkSandboxManager;
-    private static final String CODE_PROVIDER_KEY = "sdk-provider-class";
-    private static FakeIniSdkCallback sCallback = new FakeIniSdkCallback();
+    private static Context sContext;
+    private static final FakeIniSdkCallback sCallback = new FakeIniSdkCallback();
     private static final String CODE_PROVDER_NAME = "com.android.sdksandboxcode.v1";
 
     @BeforeClass
     public static void setup() {
-        Context context = InstrumentationRegistry.getContext();
-        sSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+        sContext = InstrumentationRegistry.getInstrumentation().getContext();
+        sSdkSandboxManager = sContext.getSystemService(SdkSandboxManager.class);
         sSdkSandboxManager.loadSdk(
-                CODE_PROVDER_NAME, new Bundle(), sCallback);
+                CODE_PROVDER_NAME, new Bundle(), sContext.getMainExecutor(), sCallback);
     }
 
     @Test
@@ -62,28 +60,27 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void loadSdkFailureAlreadyLoaded() {
+        Bundle params = new Bundle();
         FakeIniSdkCallback cb = new FakeIniSdkCallback();
         sSdkSandboxManager.loadSdk(
-                CODE_PROVDER_NAME, new Bundle(), cb);
+                CODE_PROVDER_NAME, params,  Runnable::run, cb);
         assertThat(cb.getLoadSdkErrorCode())
-                .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_ALREADY_LOADED);
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED);
     }
 
     @Test
     public void loadCodeFailureNotFound() {
+        Bundle params = new Bundle();
         FakeIniSdkCallback cb = new FakeIniSdkCallback();
         sSdkSandboxManager.loadSdk(
-                "nonexistent.shared.lib", new Bundle(), cb);
+                "nonexistent.shared.lib", params,  Runnable::run, cb);
         assertThat(cb.getLoadSdkErrorCode())
-                .isEqualTo(SdkSandboxManager.LOAD_SDK_SDK_NOT_FOUND);
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_NOT_FOUND);
     }
 
     @Test
     public void surfacePackageSuccess() throws Exception {
-        IBinder codeToken = sCallback.getSdkToken();
-        assertThat(codeToken).isNotNull();
-
-        sSdkSandboxManager.requestSurfacePackage(codeToken, new Binder(), 0,
+        sSdkSandboxManager.requestSurfacePackage(CODE_PROVDER_NAME, 0, 500, 500,
                 new Bundle());
         assertThat(sCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
@@ -91,15 +88,13 @@ public class SdkSandboxManagerTest {
     @Test
     public void testResourcesAndAssets() {
         Bundle params = new Bundle();
-        params.putString(CODE_PROVIDER_KEY,
-                "com.android.codeproviderresources.ResourceSandboxedSdkProvider");
         FakeIniSdkCallback callback = new FakeIniSdkCallback();
-        sSdkSandboxManager.loadSdk("com.android.codeproviderresources",
-                params, callback);
+        sSdkSandboxManager.loadSdk("com.android.codeproviderresources", params,
+                Runnable::run, callback);
         assertThat(callback.getErrorMessage()).isNull();
     }
 
-    private static class FakeIniSdkCallback extends IRemoteSdkCallback.Stub {
+    private static class FakeIniSdkCallback implements RemoteSdkCallback {
         private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
         private final CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
@@ -109,11 +104,8 @@ public class SdkSandboxManagerTest {
 
         private int mErrorCode;
 
-        private IBinder mSdkToken;
-
         @Override
-        public void onLoadSdkSuccess(IBinder sdkToken, Bundle params) {
-            mSdkToken = sdkToken;
+        public void onLoadSdkSuccess(Bundle params) {
             mLoadSdkSuccess = true;
             mLoadSdkLatch.countDown();
         }
@@ -171,12 +163,6 @@ public class SdkSandboxManagerTest {
         String getErrorMessage() {
             waitForLatch(mLoadSdkLatch);
             return mErrorMsg;
-        }
-
-        IBinder getSdkToken() {
-            waitForLatch(mLoadSdkLatch);
-            assertThat(mLoadSdkSuccess).isTrue();
-            return mSdkToken;
         }
     }
 }

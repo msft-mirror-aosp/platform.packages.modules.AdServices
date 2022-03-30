@@ -16,11 +16,25 @@
 
 package com.android.adservices.service;
 
+import android.os.SystemProperties;
+
 /**
  * Configs for AdServices.
  * These configs will be backed by PH Flags.
  */
 public class AdServicesConfig {
+
+    /*
+     * Keys for ALL the flags stored in DeviceConfig.
+     */
+    public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
+    public static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
+
+
+    // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
+    // In the long run, we will use DeviceConfig instead.
+    private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+
     /**
      * Job Id for idle maintenance job ({@link MaintenanceJobService}).
      */
@@ -53,14 +67,22 @@ public class AdServicesConfig {
      * Returns the max time period (in millis) between each epoch computation job run.
      */
     public static long getTopicsEpochJobPeriodMs() {
-        return TOPICS_EPOCH_JOB_PERIOD_MS;
+        // TODO(b/227210617): Use DeviceConfig backed by PH instead.
+        return SystemProperties.getLong(getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
+                /* defaultValue =*/ TOPICS_EPOCH_JOB_PERIOD_MS);
+    }
+
+    private static String getSystemPropertyName(String key) {
+        return SYSTEM_PROPERTY_PREFIX + key;
     }
 
     /**
      * Returns flex for the Epoch computation job in Millisecond.
      */
     public static long getTopicsEpochJobFlexMs() {
-        return TOPICS_EPOCH_JOB_FLEX_MS;
+        // TODO(b/227210617): Use DeviceConfig backed by PH instead.
+        return SystemProperties.getLong(getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
+                /* defaultValue =*/ TOPICS_EPOCH_JOB_FLEX_MS);
     }
 
     /** The percentage that we will return a random topic from the Taxonomy. Default value is 5%. */

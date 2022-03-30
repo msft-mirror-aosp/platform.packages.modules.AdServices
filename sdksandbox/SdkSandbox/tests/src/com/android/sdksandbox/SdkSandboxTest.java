@@ -126,7 +126,7 @@ public class SdkSandboxTest {
         CountDownLatch surfaceLatch = new CountDownLatch(1);
         mRemoteCode.setLatch(surfaceLatch);
         mRemoteCode.getCallback().onSurfacePackageRequested(new Binder(),
-                mContext.getDisplayId(), new Bundle());
+                mContext.getDisplayId(), 500, 500, new Bundle());
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSurfacePackage).isNotNull();
     }
@@ -142,7 +142,8 @@ public class SdkSandboxTest {
         mRemoteCode.setLatch(surfaceLatch);
         mRemoteCode
                 .getCallback()
-                .onSurfacePackageRequested(new Binder(), 111111 /* invalid displayId */, null);
+                .onSurfacePackageRequested(new Binder(), 111111 /* invalid displayId */,
+                        500, 500, null);
         assertThat(surfaceLatch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSurfacePackage).isNull();
         assertThat(mRemoteCode.mSuccessful).isFalse();
