@@ -42,7 +42,14 @@ java_library {
     srcs: [
         ":adservices-service-core-sources", ":statslog-adservices-java-gen",
     ],
+    plugins: [
+        "androidx.room_room-compiler-plugin",
+    ],
+    javacflags: [
+        "-Aroom.schemaLocation=packages/modules/AdServices/adservices/service-core/schemas",
+    ],
     libs: [
+        "androidx.room_room-runtime",
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
         "framework-statsd.stubs.module_lib", // For WW logging
