@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices.customaudience;
+package android.adservices.common;
 
 /**
- * Custom audience management response object for communicating status codes and error messages when
- * interfacing with the Custom Audience management API.
+ * This interface defines the generic response of Fledge API's.
+ * An FledgeErrorResponse is a Parcelable object that contains a status code and a nullable error message.
  *
- * @hide
+ * {@hide}
  */
-parcelable CustomAudienceManagementResponse;
+parcelable FledgeErrorResponse;

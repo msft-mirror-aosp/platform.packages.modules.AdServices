@@ -16,11 +16,13 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
+import android.os.RemoteException;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -82,21 +84,24 @@ public class CustomAudienceManagementServiceManager {
 
             service.joinCustomAudience(customAudience, new ICustomAudienceCallback.Stub() {
                 @Override
-                public void onResult(CustomAudienceManagementResponse resultParcel) {
+                public void onSuccess() {
                     executor.execute(
                             () -> {
-                                if (resultParcel.isSuccess()) {
-                                    receiver.onResult(null);
-                                } else {
-                                    String error_message = resultParcel.getErrorMessage();
-                                    receiver.onError(new AdServicesException(error_message));
-                                }
+                                receiver.onResult(null);
+                            });
+                }
+
+                @Override
+                public void onFailure(FledgeErrorResponse failureParcel) {
+                    executor.execute(
+                            () -> {
+                                receiver.onError(failureParcel.asException());
                             });
                 }
             });
-        } catch (Exception e) {
+        } catch (RemoteException e) {
             LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!", e));
+            receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
 
@@ -121,7 +126,15 @@ public class CustomAudienceManagementServiceManager {
 
             service.leaveCustomAudience(owner, buyer, name, new ICustomAudienceCallback.Stub() {
                 @Override
-                public void onResult(CustomAudienceManagementResponse resultParcel) {
+                public void onSuccess() {
+                    executor.execute(
+                            () -> {
+                                receiver.onResult(null);
+                            });
+                }
+
+                @Override
+                public void onFailure(FledgeErrorResponse failureParcel) {
                     executor.execute(
                             () -> {
                                 // leaveCustomAudience() does not throw errors or exceptions in the
@@ -130,9 +143,9 @@ public class CustomAudienceManagementServiceManager {
                             });
                 }
             });
-        } catch (Exception e) {
+        } catch (RemoteException e) {
             LogUtil.e("Exception", e);
-            receiver.onError(new AdServicesException("Internal Error!", e));
+            receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
 }

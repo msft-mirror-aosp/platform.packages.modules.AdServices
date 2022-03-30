@@ -34,21 +34,25 @@ import java.util.Collections;
 public final class TrustedBiddingDataTest {
     @Test
     public void testBuildValidTrustedBiddingDataSuccess() {
-        TrustedBiddingData validTrustedBiddingData = new TrustedBiddingData.Builder()
-                .setTrustedBiddingUrl(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL)
-                .setTrustedBiddingKeys(CustomAudienceUtils.VALID_TRUSTED_BIDDING_KEYS).build();
+        TrustedBiddingData validTrustedBiddingData =
+                new TrustedBiddingData.Builder()
+                        .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingKeys(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS)
+                        .build();
 
         assertThat(validTrustedBiddingData.getTrustedBiddingUrl())
-                .isEqualTo(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL);
+                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL);
         assertThat(validTrustedBiddingData.getTrustedBiddingKeys())
-                .isEqualTo(CustomAudienceUtils.VALID_TRUSTED_BIDDING_KEYS);
+                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS);
     }
 
     @Test
     public void testParcelValidTrustedBiddingDataSuccess() {
-        TrustedBiddingData validTrustedBiddingData = new TrustedBiddingData.Builder()
-                .setTrustedBiddingUrl(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL)
-                .setTrustedBiddingKeys(CustomAudienceUtils.VALID_TRUSTED_BIDDING_KEYS).build();
+        TrustedBiddingData validTrustedBiddingData =
+                new TrustedBiddingData.Builder()
+                        .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingKeys(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS)
+                        .build();
 
         Parcel p = Parcel.obtain();
         validTrustedBiddingData.writeToParcel(p, 0);
@@ -56,27 +60,33 @@ public final class TrustedBiddingDataTest {
         TrustedBiddingData fromParcel = TrustedBiddingData.CREATOR.createFromParcel(p);
 
         assertThat(fromParcel.getTrustedBiddingUrl())
-                .isEqualTo(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL);
+                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL);
         assertThat(fromParcel.getTrustedBiddingKeys())
-                .isEqualTo(CustomAudienceUtils.VALID_TRUSTED_BIDDING_KEYS);
+                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS);
     }
 
     @Test
     public void testBuildNullUrlTrustedBiddingDataFails() {
-        assertThrows(NullPointerException.class, () -> {
-            // TrustedBiddingUrl is not set, so it gets built as null
-            new TrustedBiddingData.Builder()
-                    .setTrustedBiddingKeys(CustomAudienceUtils.VALID_TRUSTED_BIDDING_KEYS).build();
-        });
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    // TrustedBiddingUrl is not set, so it gets built as null
+                    new TrustedBiddingData.Builder()
+                            .setTrustedBiddingKeys(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS)
+                            .build();
+                });
     }
 
     @Test
     public void testBuildNullKeysTrustedBiddingDataFails() {
-        assertThrows(NullPointerException.class, () -> {
-            // TrustedBiddingKeys is not set, so it gets built as null
-            new TrustedBiddingData.Builder()
-                    .setTrustedBiddingUrl(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL).build();
-        });
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    // TrustedBiddingKeys is not set, so it gets built as null
+                    new TrustedBiddingData.Builder()
+                            .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
+                            .build();
+                });
     }
 
     @Test
@@ -84,12 +94,14 @@ public final class TrustedBiddingDataTest {
         // An empty list is allowed and should not throw any exceptions
         ArrayList<String> emptyTrustedBiddingKeys = new ArrayList<String>(Collections.emptyList());
 
-        TrustedBiddingData emptyKeysTrustedBiddingData = new TrustedBiddingData.Builder()
-                .setTrustedBiddingUrl(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL)
-                .setTrustedBiddingKeys(emptyTrustedBiddingKeys).build();
+        TrustedBiddingData emptyKeysTrustedBiddingData =
+                new TrustedBiddingData.Builder()
+                        .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingKeys(emptyTrustedBiddingKeys)
+                        .build();
 
         assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingUrl())
-                .isEqualTo(CustomAudienceUtils.VALID_TRUSTED_BIDDING_URL);
+                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL);
         assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingKeys())
                 .isEqualTo(emptyTrustedBiddingKeys);
     }
