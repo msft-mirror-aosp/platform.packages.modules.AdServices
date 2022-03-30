@@ -79,7 +79,8 @@
             "sourceSite": "https://www.example1.com",
             "destinationSite": "https://www.example2.com",
             "reportTo": "https://www.example3.com/r1",
-            "triggerTime": 8640000002
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.example.xyz"
           }
         ]
       }
@@ -254,7 +255,8 @@
             "sourceSite": "https://www.example1.com",
             "destinationSite": "https://www.example2.com",
             "reportTo": "https://www.example3.com/r1",
-            "triggerTime": 8640000002
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.example.xyz"
           }
         ]
       }
@@ -363,7 +365,8 @@
             "sourceSite": "android-app://com.example.abc",
             "destinationSite": "android-app://com.example.xyz",
             "reportTo": "https://www.example3.com/r1",
-            "triggerTime": 8640000003
+            "triggerTime": 8640000003,
+            "registerer": "android-app://com.example.xyz"
           }
         ]
       }

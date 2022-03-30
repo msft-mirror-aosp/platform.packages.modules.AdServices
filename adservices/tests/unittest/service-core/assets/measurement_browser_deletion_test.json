@@ -1,0 +1,2226 @@
+{
+  "testCases": [
+    {
+      "name": "No registerer found, with no origin nor range",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer1"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer1"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer1"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer2"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer1"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer1"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer1"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer2"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.toBeDeleted"
+      }
+    },
+    {
+      "name": "With no origin nor range",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.toBeDeleted"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer.toBeDeleted"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site3.toBeDeletedBecauseOfSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer.toBeDeleted"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer2"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer2"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer2"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.toBeDeleted"
+      }
+    },
+    {
+      "name": "With origin, but no range",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.toBeDeleted",
+            "attributionDestination": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.doNotDelete",
+            "attributionDestination": "android-app://com.site1",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site.toBeDeleted",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.toBeDeleted",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 3,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site.toBeDeleted",
+            "destinationSite": "android-app://com.site3",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site2",
+            "destinationSite": "android-app://com.site.toBeDeleted",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site1.doNotDelete",
+            "destinationSite": "android-app://com.site2.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.doNotDelete",
+            "attributionDestination": "android-app://com.site1",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 3,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site1.doNotDelete",
+            "destinationSite": "android-app://com.site2.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 10,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "origin": "android-app://com.site.toBeDeleted"
+      }
+    },
+    {
+      "name": "With range, but no origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733601,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733602
+      }
+    },
+    {
+      "name": "With range on starting edge, but no origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733602
+      }
+    },
+    {
+      "name": "With range on ending edge, but no origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733602,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733602
+      }
+    },
+    {
+      "name": "With range on starting equals ending date, but no origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site2.toBeDeletedDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site1.triggerTimeInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site1.eventTimeNotInRangeForDeletion",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site2.triggerTimeNotInRangeForDeletion",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733600
+      }
+    },
+    {
+      "name": "With range and origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733601,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733601,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E4",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/deleteAsInRangeAndDestinationMatch",
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733601,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733601,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "origin": "android-app://com.site.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733602
+      }
+    },
+    {
+      "name": "With range on starting edge and origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E4",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/deleteAsInRangeAndDestinationMatch",
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "origin": "android-app://com.site.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733602
+      }
+    },
+    {
+      "name": "With range on ending edge and origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733602,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733602,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E4",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/deleteAsInRangeAndDestinationMatch",
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733602,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733602,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "origin": "android-app://com.site.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733602
+      }
+    },
+    {
+      "name": "With range on starting equals ending date and origin",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E4",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/deleteAsInRangeAndDestinationMatch",
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A1",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site.deleteCandidate",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/eventTimeNotInRange",
+            "eventTime": 1648665733605,
+            "expiryTime": 1648665733615,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "S3",
+            "eventId": 3,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.site3.siteNotMatch",
+            "attributionDestination": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com",
+            "eventTime": 1648665733600,
+            "expiryTime": 1648665733611,
+            "priority": 100,
+            "status": 0,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "T3",
+            "attributionDestination": "android-app://com.site.doNotDeleteButInRange",
+            "reportTo": "https://report-to.example.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "E3",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.doNotDelete",
+            "reportTo": "https://report-to.example.com",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "E5",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.site.deleteCandidate",
+            "reportTo": "https://report-to.example.com/doNotDeleteNotInRange",
+            "triggerData": 2,
+            "triggerTime": 1648665733605,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "A2",
+            "sourceSite": "android-app://com.site.deleteCandidate",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/notInRange",
+            "triggerTime": 1648665733605,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          },
+          {
+            "id": "A3",
+            "sourceSite": "android-app://com.site3",
+            "destinationSite": "android-app://com.site2",
+            "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
+            "triggerTime": 1648665733600,
+            "registerer": "android-app://com.registerer.deleteCandidate"
+          }
+        ]
+      },
+      "param": {
+        "registerer": "android-app://com.registerer.deleteCandidate",
+        "origin": "android-app://com.site.deleteCandidate",
+        "start": 1648665733600,
+        "end": 1648665733600
+      }
+    }
+  ]
+}
