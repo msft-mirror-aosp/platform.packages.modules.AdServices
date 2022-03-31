@@ -18,11 +18,11 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportImpressionResponse;
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
@@ -62,10 +62,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(callback);
 
         try {
-            callback.onResult(
-                    new AdSelectionResponse.Builder()
-                            .setResultCode(AdSelectionResponse.RESULT_INTERNAL_ERROR)
-                            .setErrorMessage("Not implemented.")
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                            .setErrorMessage("Not Implemented!")
                             .build());
         } catch (RemoteException e) {
             LogUtil.e("Unable to send result to the callback", e);
@@ -83,9 +83,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(callback);
 
         try {
-            callback.onResult(
-                    new ReportImpressionResponse.Builder()
-                            .setResultCode(ReportImpressionResponse.STATUS_INTERNAL_ERROR)
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
                             .setErrorMessage("Not Implemented!")
                             .build());
         } catch (RemoteException e) {

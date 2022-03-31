@@ -16,16 +16,22 @@
 
 package android.adservices.customaudience;
 
-import android.adservices.customaudience.CustomAudienceManagementResponse;
+import android.adservices.common.FledgeErrorResponse;
 
 /**
-  * Callback from custom audience management joinCustomAudience() or leaveCustomAudience().
+  * This interface defines callback functions for joinCustomAudience() or leaveCustomAudience(),
+  * which contain a function to be called upon success that accepts a void argument, as well
+  * as a function to be called upon failure that accepts an FledgeErrorResponse argument.
   *
-  * @hide
+  * {@hide}
   */
 oneway interface ICustomAudienceCallback {
     /**
-     * Sends back a status code and error message indicating success or failure.
+     * Sends back a void indicating success.
      */
-    void onResult(in CustomAudienceManagementResponse responseParcel);
+    void onSuccess();
+    /**
+     * Sends back a status code and error message indicating failure.
+     */
+    void onFailure(in FledgeErrorResponse responseParcel);
 }

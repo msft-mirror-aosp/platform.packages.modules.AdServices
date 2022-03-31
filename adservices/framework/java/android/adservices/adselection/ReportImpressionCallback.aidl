@@ -16,14 +16,16 @@
 
 package android.adservices.adselection;
 
-import android.adservices.adselection.ReportImpressionResponse;
+import android.adservices.common.FledgeErrorResponse;
 
 /**
-  * This interface defines a callback for a reportImpression request,
-  * which invokes a function accepting a ReportImpressionResponse as an argument.
+  * This interface defines callback functions for a reportImpression request,
+  * which contain a function to be called upon success that accepts a void argument, as well
+  * as a function to be called upon failure that accepts an FledgeErrorResponse argument.
   *
   * {@hide}
   */
 oneway interface ReportImpressionCallback {
-    void onResult(in ReportImpressionResponse responseParcel);
+    void onSuccess();
+    void onFailure(in FledgeErrorResponse responseParcel);
 }

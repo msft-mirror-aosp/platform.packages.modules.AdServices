@@ -16,8 +16,9 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.CustomAudienceManagementResponse;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceManagementService;
 import android.annotation.NonNull;
@@ -58,9 +59,9 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
 
         // TODO(b/225988784): Offload work to thread pool
         try {
-            callback.onResult(
-                    new CustomAudienceManagementResponse.Builder()
-                            .setStatusCode(CustomAudienceManagementResponse.STATUS_INTERNAL_ERROR)
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
                             .setErrorMessage("Not Implemented!")
                             .build());
         } catch (RemoteException e) {
@@ -84,9 +85,9 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
 
         // TODO(b/225988784): Offload work to thread pool
         try {
-            callback.onResult(
-                    new CustomAudienceManagementResponse.Builder()
-                            .setStatusCode(CustomAudienceManagementResponse.STATUS_INTERNAL_ERROR)
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
                             .setErrorMessage("Not Implemented!")
                             .build());
         } catch (RemoteException e) {
