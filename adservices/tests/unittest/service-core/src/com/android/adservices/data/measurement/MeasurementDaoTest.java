@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
@@ -36,7 +37,10 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class MeasurementDaoTest {
 
@@ -48,6 +52,7 @@ public class MeasurementDaoTest {
     private final Uri mAppTwoTriggers = Uri.parse("android-app://com.example1.two-triggers");
     private final Uri mAppOneTrigger = Uri.parse("android-app://com.example1.one-trigger");
     private final Uri mAppNoTriggers = Uri.parse("android-app://com.example1.no-triggers");
+    private final Uri mInstalledPackage = Uri.parse("android-app://com.example.installed");
 
     @Before
     public void before() {
@@ -166,5 +171,139 @@ public class MeasurementDaoTest {
             dao.deleteMeasurementData(
                     mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
         });
+    }
+
+    @Test
+    public void testInstallAttribution_selectHighestPriority() {
+        long currentTimestamp = System.currentTimeMillis();
+
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA1", currentTimestamp, 100, -1, false),
+                db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA2", currentTimestamp, 50, -1, false),
+                db);
+        // Should select id IA1 because it has higher priority
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
+                measurementDao -> {
+                    measurementDao.doInstallAttribution(mInstalledPackage, currentTimestamp);
+                }));
+        Assert.assertTrue(getInstallAttributionStatus("IA1", db));
+        Assert.assertFalse(getInstallAttributionStatus("IA2", db));
+        removeSources(Arrays.asList("IA1", "IA2"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_selectLatest() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
+                db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
+                db);
+        // Should select id=IA2 as it is latest
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
+                measurementDao -> {
+                    measurementDao.doInstallAttribution(mInstalledPackage, currentTimestamp);
+                }));
+        Assert.assertFalse(getInstallAttributionStatus("IA1", db));
+        Assert.assertTrue(getInstallAttributionStatus("IA2", db));
+
+        removeSources(Arrays.asList("IA1", "IA2"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_ignoreNewerSources() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
+                db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
+                db);
+        // Should select id=IA1 as it is the only valid choice.
+        // id=IA2 is newer than the evenTimestamp of install event.
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
+                measurementDao -> {
+                    measurementDao.doInstallAttribution(mInstalledPackage,
+                            currentTimestamp - TimeUnit.DAYS.toMillis(7));
+                }));
+        Assert.assertTrue(getInstallAttributionStatus("IA1", db));
+        Assert.assertFalse(getInstallAttributionStatus("IA2", db));
+
+        removeSources(Arrays.asList("IA1", "IA2"), db);
+    }
+
+    @Test
+    public void testInstallAttribution_noValidSource() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, true),
+                db);
+        DatabaseE2ETest.insertToDb(
+                createSourceForIATest("IA2", currentTimestamp, 10, 11, true),
+                db);
+        // Should not update any sources.
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
+                measurementDao -> measurementDao.doInstallAttribution(mInstalledPackage,
+                        currentTimestamp)));
+        Assert.assertFalse(getInstallAttributionStatus("IA1", db));
+        Assert.assertFalse(getInstallAttributionStatus("IA2", db));
+        removeSources(Arrays.asList("IA1", "IA2"), db);
+    }
+
+    @Test
+    public void testUndoInstallAttribution_noMarkedSource() {
+        long currentTimestamp = System.currentTimeMillis();
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        Source source = createSourceForIATest("IA1", currentTimestamp, 10, 10, false);
+        source.setInstallAttributed(true);
+        DatabaseE2ETest.insertToDb(source, db);
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
+                measurementDao -> measurementDao.undoInstallAttribution(mInstalledPackage)));
+        // Should set installAttributed = false for id=IA1
+        Assert.assertFalse(getInstallAttributionStatus("IA1", db));
+    }
+
+    private Source createSourceForIATest(String id, long currentTime, long priority,
+            int eventTimePastDays, boolean expiredIAWindow) {
+        return new Source.Builder()
+                .setId(id)
+                .setAttributionSource(Uri.parse("android-app://com.example.sample"))
+                .setRegistrant(Uri.parse("android-app://com.example.sample"))
+                .setReportTo(Uri.parse("https://example.com"))
+                .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
+                .setAttributionDestination(mInstalledPackage)
+                .setEventTime(currentTime - TimeUnit.DAYS.toMillis(
+                        eventTimePastDays == -1 ? 10 : eventTimePastDays))
+                .setPriority(priority == -1 ? 100 : priority)
+                .build();
+    }
+
+    private boolean getInstallAttributionStatus(String sourceDbId, SQLiteDatabase db) {
+        Cursor cursor = db.query(MeasurementTables.SourceContract.TABLE,
+                new String[]{ MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED },
+                MeasurementTables.SourceContract.ID + " = ? ", new String[]{ sourceDbId },
+                null, null,
+                null, null);
+        Assert.assertTrue(cursor.moveToFirst());
+        return cursor.getInt(0) == 1;
+    }
+
+    private void removeSources(List<String> dbIds, SQLiteDatabase db) {
+        db.delete(MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.ID + " IN ( ? )",
+                new String[]{String.join(",", dbIds)});
     }
 }
