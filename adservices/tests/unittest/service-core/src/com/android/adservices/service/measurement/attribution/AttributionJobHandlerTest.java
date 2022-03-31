@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Unit test for {@link AttributionJobHandler}
@@ -500,5 +501,95 @@ public class AttributionJobHandlerTest {
             Assert.assertEquals(newReportArgs.get(i).getTriggerDedupKey(),
                     triggers.get(i).getDedupKey());
         }
+    }
+
+    @Test
+    public void shouldAttributedToInstallAttributedSource() throws DatastoreException {
+        long eventTime = System.currentTimeMillis();
+        Trigger trigger = new Trigger.Builder()
+                .setStatus(Trigger.Status.PENDING)
+                .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(5))
+                .setDedupKey(2L)
+                .build();
+        // Lower priority and older priority source.
+        Source source1 = new Source.Builder()
+                .setEventId(1)
+                .setPriority(100L)
+                .setInstallAttributed(true)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                .build();
+        Source source2 = new Source.Builder()
+                .setEventId(2)
+                .setPriority(200L)
+                .setEventTime(eventTime)
+                .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source2);
+        matchingSourceList.add(source1);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
+        Assert.assertEquals(1, matchingSourceList.size());
+        Assert.assertEquals(source2.getEventId(), matchingSourceList.get(0).getEventId());
+        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
+        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
+        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
+        Assert.assertEquals(source1.getEventId(), sourceArg.getValue().getEventId());
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(2L));
+        verify(mMeasurementDao).insertEventReport(any());
+    }
+
+    @Test
+    public void shouldNotAttributeToOldInstallAttributedSource() throws DatastoreException {
+        long eventTime = System.currentTimeMillis();
+        Trigger trigger = new Trigger.Builder()
+                .setStatus(Trigger.Status.PENDING)
+                .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .setDedupKey(2L)
+                .build();
+        // Lower Priority. Install cooldown Window passed.
+        Source source1 = new Source.Builder()
+                .setEventId(1)
+                .setPriority(100L)
+                .setInstallAttributed(true)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
+                .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
+                .build();
+        Source source2 = new Source.Builder()
+                .setEventId(2)
+                .setPriority(200L)
+                .setEventTime(eventTime)
+                .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source2);
+        matchingSourceList.add(source1);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        verify(mMeasurementDao).updateSourceStatus(matchingSourceList, Source.Status.IGNORED);
+        Assert.assertEquals(1, matchingSourceList.size());
+        Assert.assertEquals(source1.getEventId(), matchingSourceList.get(0).getEventId());
+        ArgumentCaptor<Trigger> triggerArg = ArgumentCaptor.forClass(Trigger.class);
+        verify(mMeasurementDao).updateTriggerStatus(triggerArg.capture());
+        Assert.assertEquals(Trigger.Status.ATTRIBUTED, triggerArg.getValue().getStatus());
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceDedupKeys(sourceArg.capture());
+        Assert.assertEquals(source2.getEventId(), sourceArg.getValue().getEventId());
+        Assert.assertEquals(sourceArg.getValue().getDedupKeys(), Collections.singletonList(2L));
+        verify(mMeasurementDao).insertEventReport(any());
     }
 }

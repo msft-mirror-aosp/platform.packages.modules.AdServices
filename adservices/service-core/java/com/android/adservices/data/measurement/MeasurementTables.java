@@ -45,6 +45,9 @@ public final class MeasurementTables {
         String SOURCE_TYPE = "source_type";
         String REGISTRANT = "registrant";
         String ATTRIBUTION_MODE = "attribution_mode";
+        String INSTALL_ATTRIBUTION_WINDOW = "install_attribution_window";
+        String INSTALL_COOLDOWN_WINDOW = "install_cooldown_window";
+        String IS_INSTALL_ATTRIBUTED = "is_install_attributed";
     }
 
     /**
@@ -116,7 +119,10 @@ public final class MeasurementTables {
                     + SourceContract.DEDUP_KEYS + " TEXT, "
                     + SourceContract.SOURCE_TYPE + " TEXT, "
                     + SourceContract.REGISTRANT + " TEXT, "
-                    + SourceContract.ATTRIBUTION_MODE + " INTEGER "
+                    + SourceContract.ATTRIBUTION_MODE + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_TRIGGER =

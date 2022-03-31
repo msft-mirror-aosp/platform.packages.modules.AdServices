@@ -122,8 +122,17 @@ class AttributionJobHandler {
                 return;
             }
 
-            matchingSources.sort((Comparator.comparingLong(Source::getPriority).reversed())
-                    .thenComparing(Comparator.comparingLong(Source::getEventTime).reversed()));
+            // Sort based on isInstallAttributed, Priority and Event Time.
+            matchingSources.sort(
+                    Comparator.comparing(
+                            (Source source) ->
+                                    // Is a valid install-attributed source.
+                                    source.isInstallAttributed()
+                                            && isWithinInstallCooldownWindow(source,
+                                            trigger),
+                                    Comparator.reverseOrder())
+                            .thenComparing(Source::getPriority, Comparator.reverseOrder())
+                            .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
 
             Source selectedSource = matchingSources.get(0);
             matchingSources.remove(0);
@@ -198,5 +207,10 @@ class AttributionJobHandler {
 
     private boolean isWithinReportLimit(Source source, int existingReportCount) {
         return source.getMaxReportCount() > existingReportCount;
+    }
+
+    private boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
+        return trigger.getTriggerTime()
+                < (source.getEventTime() + source.getInstallCooldownWindow());
     }
 }
