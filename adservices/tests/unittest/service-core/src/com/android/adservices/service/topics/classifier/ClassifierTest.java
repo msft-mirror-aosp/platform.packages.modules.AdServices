@@ -53,10 +53,10 @@ public class ClassifierTest {
         List<String> expectedWhatsAppTopics =
                 Arrays.asList(
                         "/Internet & Telecom/Email & Messaging/Voice & Video Chat",
-                        "/Beauty & Fitness/Fitness/Yoga & Pilates",
                         "/Internet & Telecom/Email & Messaging/Text & Instant Messaging",
-                        "/Games/Computer & Video Games/Simulation Games",
-                        "/Online Communities/Social Networks");
+                        "/Computers & Electronics/Software/Business & Productivity Software",
+                        "/Business & Industrial/Energy & Utilities/Oil & Gas",
+                        "/Food & Drink/Restaurants");
 
         Map<String, List<String>> expectedAppTopicsResponse = new HashMap<>();
         expectedAppTopicsResponse.put("com.whatsapp", expectedWhatsAppTopics);
