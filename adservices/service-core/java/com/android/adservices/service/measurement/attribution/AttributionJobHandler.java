@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.attribution;
 
 import android.annotation.Nullable;
 
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.Trigger;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.registration;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ import java.util.Map;
 
 
 /**
- * Unit tests for {@link com.android.adservices.service.measurement.ResponseBasedFetcher}
+ * Unit tests for {@link ResponseBasedFetcher}
  */
 @SmallTest
 public final class ResponseBasedFetcherTest {

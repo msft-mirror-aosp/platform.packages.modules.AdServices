@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.attribution;
 
 import com.android.adservices.data.measurement.DatabaseE2ETest;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;

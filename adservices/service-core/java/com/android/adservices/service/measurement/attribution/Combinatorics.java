@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.attribution;
 
-class Combinatorics {
+/**
+ * Combinatorics utilities used for randomization.
+ */
+public class Combinatorics {
 
     /**
      * Computes the binomial coefficient aka {@code n} choose {@code k}.
@@ -131,7 +134,7 @@ class Combinatorics {
      * @param numBars  number of bars
      * @return number of possible sequences
      */
-    static int getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
+    public static int getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
         return getBinomialCoefficient(numStars + numBars, numStars);
     }
 
@@ -143,7 +146,7 @@ class Combinatorics {
      * @param sequenceIndex index of the sequence
      * @return list of indices of every star in stars & bars sequence
      */
-    static int[] getStarIndices(int numStars, int sequenceIndex) {
+    public static int[] getStarIndices(int numStars, int sequenceIndex) {
         return getKCombinationAtIndex(sequenceIndex, numStars);
     }
 
@@ -154,7 +157,7 @@ class Combinatorics {
      * @param starIndices indices of the stars in descending order
      * @return count of bars preceding every star
      */
-    static int[] getBarsPrecedingEachStar(int[] starIndices) {
+    public static int[] getBarsPrecedingEachStar(int[] starIndices) {
         for (int i = 0; i < starIndices.length; i++) {
             int starIndex = starIndices[i];
             // There are {@code starIndex} prior positions in the sequence, and `i` prior

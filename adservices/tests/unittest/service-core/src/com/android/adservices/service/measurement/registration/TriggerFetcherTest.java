@@ -13,14 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.measurement;
-
-import android.adservices.measurement.RegistrationRequest;
-import android.content.Context;
-import android.net.Uri;
-
-import androidx.test.InstrumentationRegistry;
-import androidx.test.filters.SmallTest;
+package com.android.adservices.service.measurement.registration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,6 +22,13 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import android.adservices.measurement.RegistrationRequest;
+import android.content.Context;
+import android.net.Uri;
+
+import androidx.test.InstrumentationRegistry;
+import androidx.test.filters.SmallTest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,15 +46,15 @@ import javax.net.ssl.HttpsURLConnection;
 
 
 /**
- * Unit tests for {@link com.android.adservices.service.measurement.SourceFetcher}
+ * Unit tests for {@link TriggerFetcher}
  */
 @SmallTest
-public final class SourceFetcherTest {
-    private static final String TAG = "SourceFetcherTest";
+public final class TriggerFetcherTest {
+    private static final String TAG = "TriggerFetcherTest";
 
     private static final Context sContext = InstrumentationRegistry.getTargetContext();
 
-    @Spy SourceFetcher mFetcher;
+    @Spy TriggerFetcher mFetcher;
     @Mock HttpsURLConnection mUrlConnection;
 
     @Before
@@ -63,9 +63,9 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void testBasicSourceRequest() throws Exception {
+    public void testBasicTriggerRequest() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -74,43 +74,41 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                                   List.of("{\n"
-                                         + "  \"destination\": \"android-app://com.myapps\",\n"
-                                         + "  \"priority\": \"123\",\n"
-                                         + "  \"expiry\": \"456789\",\n"
-                                         + "  \"source_event_id\": \"987654321\"\n"
-                                         + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
+                                   List.of("[{\n"
+                                         + "  \"trigger_data\": \"3\",\n"
+                                         + "  \"priority\": \"11111\",\n"
+                                         + "  \"deduplication_key\": \"22222\"\n"
+                                         + "}]\n")));
+        ArrayList<TriggerRegistration> result = new ArrayList();
+        assertTrue(mFetcher.fetchTrigger(request, result));
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
-        assertEquals(123, result.get(0).getSourcePriority());
-        assertEquals(456789, result.get(0).getExpiry());
-        assertEquals(987654321, result.get(0).getSourceEventId());
+        assertEquals(3, result.get(0).getTriggerData());
+        assertEquals(11111, result.get(0).getTriggerPriority());
+        assertEquals(22222, result.get(0).getDeduplicationKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
-    public void testBadSourceUrl() throws Exception {
+    public void testBadTriggerUrl() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
+        ArrayList<TriggerRegistration> result = new ArrayList();
+        assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
     }
 
     @Test
-    public void testBadSourceConnection() throws Exception {
+    public void testBadTriggerConnection() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -118,15 +116,15 @@ public final class SourceFetcherTest {
                 .build();
         doThrow(new IOException("Bad internet things"))
                 .when(mFetcher).openUrl(new URL("https://foo.com"));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
+        ArrayList<TriggerRegistration> result = new ArrayList();
+        assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
     }
 
     @Test
-    public void testBadSourceJson() throws Exception {
+    public void testBadTriggerJson() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -135,19 +133,19 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
                                    List.of("{\n"
-                                         + "\"destination\": \"android-app://com.myapps\"")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
+                                         + "\"foo\": 123")));
+        ArrayList<TriggerRegistration> result = new ArrayList();
+        assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
-    public void testBasicSourceRequestMinimumFields() throws Exception {
+    public void testBasicTriggerRequestMinimumFields() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
@@ -156,35 +154,31 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                                   List.of("{\n"
-                                         + "\"destination\": \"android-app://com.myapps\",\n"
-                                         + "\"source_event_id\": \"123\"\n"
-                                         + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
+                                   List.of("[{}]")));
+        ArrayList<TriggerRegistration> result = new ArrayList();
+        assertTrue(mFetcher.fetchTrigger(request, result));
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
-        assertEquals(123, result.get(0).getSourceEventId());
-        assertEquals(0, result.get(0).getSourcePriority());
-        assertEquals(0, result.get(0).getExpiry());
+        assertEquals(0, result.get(0).getTriggerData());
+        assertEquals(0, result.get(0).getTriggerPriority());
+        assertEquals(0, result.get(0).getDeduplicationKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
                 .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
-        ArrayList<SourceRegistration> result = new ArrayList();
-        // Require https.
-        assertFalse(mFetcher.fetchSource(request, result));
+        // Non-https should fail.
+        ArrayList<TriggerRegistration> result = new ArrayList();
+        assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
     }
 

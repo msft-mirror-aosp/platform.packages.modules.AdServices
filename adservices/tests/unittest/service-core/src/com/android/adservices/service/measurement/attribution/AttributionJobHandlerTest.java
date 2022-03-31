@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.attribution;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -38,6 +38,10 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
+import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.Trigger;
 
 import org.junit.After;
 import org.junit.Assert;

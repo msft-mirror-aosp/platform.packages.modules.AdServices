@@ -14,13 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.attribution;
 
 import java.util.Random;
 
-class RandomSelector {
+/**
+ * Class for random selection utilities.
+ */
+public class RandomSelector {
 
-    static <T> T selectRandomDataWithProbability(
+    /**
+     * Function to select true or randomly pick from possible value based on probability.
+     *
+     * @param randomProb     probability to use for selecting a random state.
+     * @param trueValue      truth value
+     * @param possibleValues set of all possible value for the result
+     * @return selected value
+     */
+    public static <T> T selectRandomDataWithProbability(
             double randomProb, T trueValue, T[] possibleValues) {
         Random rand = new Random();
         double value = rand.nextDouble();
