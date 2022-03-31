@@ -18,10 +18,10 @@
 -->
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.adservices">
+    package="com.android.adservices.api">
 
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-    <application>
+    <application
         android:label="Android AdServices"
         android:forceQueryable="true"
         android:directBootAware="true">
