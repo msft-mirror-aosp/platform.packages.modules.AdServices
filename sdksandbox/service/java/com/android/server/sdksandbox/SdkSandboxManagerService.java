@@ -33,6 +33,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
@@ -52,6 +53,7 @@ import android.util.Pair;
 import android.view.SurfaceControlViewHost;
 import android.webkit.WebViewUpdateService;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
@@ -106,6 +108,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final SdkSandboxManagerLocal mLocalManager;
 
+    private final String mAdServicesPackageName;
+
 
     SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
         mContext = context;
@@ -119,6 +123,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         registerBroadcastReceivers();
 
         mLocalManager = new LocalImpl();
+        mAdServicesPackageName = resolveAdServicesPackage();
     }
 
     private void registerBroadcastReceivers() {
@@ -495,9 +500,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
         String componentPackageName = component.getPackageName();
         if (componentPackageName != null) {
-            // TODO(b/225327125): Allowlist AdServices.
-            if (!componentPackageName.equals(
-                    WebViewUpdateService.getCurrentWebViewPackageName())) {
+            if (!componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
+                    && !componentPackageName.equals(getAdServicesPackageName())) {
                 throw new SecurityException(errorMsg + "component package name "
                         + componentPackageName + " is not allowlisted.");
             }
@@ -538,6 +542,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (PackageManager.NameNotFoundException ignored) {
             return null;
         }
+    }
+
+    private String resolveAdServicesPackage() {
+        PackageManager pm = mContext.getPackageManager();
+        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
+        List<ResolveInfo> resolveInfos = pm.queryIntentServicesAsUser(serviceIntent,
+                PackageManager.GET_SERVICES | PackageManager.MATCH_SYSTEM_ONLY,
+                UserHandle.SYSTEM);
+        if (resolveInfos == null || resolveInfos.size() == 0) {
+            Log.e(TAG, "AdServices package could not be resolved");
+        } else if (resolveInfos.size() > 1) {
+            Log.e(TAG, "More than one service matched intent " + serviceIntent.getAction());
+        } else {
+            return resolveInfos.get(0).serviceInfo.packageName;
+        }
+        return null;
+    }
+
+    @VisibleForTesting
+    String getAdServicesPackageName() {
+        return mAdServicesPackageName;
     }
 
     @ThreadSafe
