@@ -38,6 +38,7 @@ java_sdk_library {
         "com.android.server.sdksandbox",
     ],
     libs: [
+        "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "jsr305",
     ],

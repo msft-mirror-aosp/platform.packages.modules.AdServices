@@ -459,6 +459,11 @@ public class SdkSandboxManagerServiceUnitTest {
                 () -> mSdkSandboxManagerLocal.enforceAllowedToStartOrBindService(disallowedIntent));
     }
 
+    @Test
+    public void testAdServicesPackageIsResolved() {
+        assertThat(mService.getAdServicesPackageName()).contains("adservices");
+    }
+
     /**
      * Fake service provider that returns local instance of {@link SdkSandboxServiceProvider}
      */
