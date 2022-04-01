@@ -14,17 +14,12 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Runs sdk sandbox lifecycle host tests">
-    <option name="test-suite-tag" value="SdkSandboxLifecycleHostTest" />
+<configuration description="Runs sdk sandbox shell command host tests">
+    <option name="test-suite-tag" value="SdkSandboxShellHostTest" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
         <option name="test-file-name" value="TestCodeProvider.apk" />
-    </target_preparer>
-
-    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="TestCodeProvider2.apk" />
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
@@ -34,21 +29,13 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="SdkSandboxTestApp2.apk" />
-    </target_preparer>
-
-    <!--
-      ~ TODO(b/214506422) Remove commands which handle hidden APIs when APIs are no longer hidden
-    -->
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="settings put global hidden_api_policy 1" />
-        <option name="teardown-command" value="settings delete global hidden_api_policy" />
+        <option name="test-file-name" value="SdkSandboxTestDebuggableApp.apk" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.HostTest" >
         <option
             name="class"
-            value="com.android.tests.sdksandbox.host.SdkSandboxLifecycleHostTest"
+            value="com.android.tests.sdksandbox.host.SdkSandboxShellHostTest"
         />
     </test>
 </configuration>

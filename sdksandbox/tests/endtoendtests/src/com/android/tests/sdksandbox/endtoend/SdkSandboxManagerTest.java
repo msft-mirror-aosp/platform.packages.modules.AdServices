@@ -80,6 +80,8 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void surfacePackageSuccess() throws Exception {
+        assertThat(sCallback.isLoadSdkSuccessful()).isTrue();
+
         sSdkSandboxManager.requestSurfacePackage(CODE_PROVDER_NAME, 0, 500, 500,
                 new Bundle());
         assertThat(sCallback.isRequestSurfacePackageSuccessful()).isTrue();
