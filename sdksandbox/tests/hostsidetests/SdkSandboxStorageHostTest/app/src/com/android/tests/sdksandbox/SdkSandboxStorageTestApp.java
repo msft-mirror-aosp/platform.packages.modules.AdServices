@@ -83,9 +83,10 @@ public class SdkSandboxStorageTestApp {
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
-        Bundle params = new Bundle();
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
+        // Wait for sdk to finish loading
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         final StorageStatsManager stats = InstrumentationRegistry.getInstrumentation().getContext()
                                                 .getSystemService(StorageStatsManager.class);
@@ -95,6 +96,7 @@ public class SdkSandboxStorageTestApp {
         // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
+
         runPhaseInsideCode("testSdkDataIsAttributedToApp");
 
         // Wait for sdk to finish handling the request
@@ -120,7 +122,7 @@ public class SdkSandboxStorageTestApp {
                            errorMarginSize);
     }
 
-    public static void assertMostlyEquals(long expected, long actual, long delta) {
+    private static void assertMostlyEquals(long expected, long actual, long delta) {
         if (Math.abs(expected - actual) > delta) {
             throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
         }
