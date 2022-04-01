@@ -74,9 +74,14 @@ public class TopicsDao {
         }
     }
 
-    // Persist the list of Top Topics to DB.
+    /**
+     * Persist the list of Top Topics in this epoch to DB.
+     *
+     * @param epochId Id of current epoch
+     * @param topTopics the topics list to persist into DB
+     */
     @VisibleForTesting
-    void persistTopTopics(long epochId, @NonNull List<String> topTopics) {
+    public void persistTopTopics(long epochId, @NonNull List<String> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
         Objects.requireNonNull(topTopics);
