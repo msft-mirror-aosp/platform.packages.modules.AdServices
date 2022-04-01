@@ -45,6 +45,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,7 +55,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-/** Unit tests for {@link com.android.adservices.topics.EpochManager} */
+/** Unit tests for {@link com.android.adservices.service.topics} */
 @SmallTest
 public final class EpochManagerTest {
     private static final String TAG = "EpochManagerTest";
@@ -397,6 +398,14 @@ public final class EpochManagerTest {
                 .thenReturn(topTopics);
 
         epochManager.processEpoch();
+
+        ArgumentCaptor<List<String>> capturedPersistedTopTopics =
+                ArgumentCaptor.forClass(ArrayList.class);
+
+        verify(mMockTopicsDao, times(1)).persistTopTopics(
+                /* epochId = */ anyLong(), capturedPersistedTopTopics.capture());
+
+        assertThat(capturedPersistedTopTopics.getValue()).isEqualTo(topTopics);
 
         ArgumentCaptor<HashMap<Pair<String, String>, String>> returnedAppSdkTopicsCapture =
                 ArgumentCaptor.forClass(HashMap.class);
