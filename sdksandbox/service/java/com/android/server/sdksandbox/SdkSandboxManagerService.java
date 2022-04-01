@@ -524,7 +524,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             AppAndRemoteSdkLink link, ISdkSandboxService service) {
         try {
             service.loadSdk(sdkToken, sdkProviderInfo.getApplicationInfo(),
-                    sdkProviderInfo.getSdkProviderClassName(), params, link);
+                    sdkProviderInfo.getSdkName(), sdkProviderInfo.getSdkProviderClassName(),
+                    params, link);
 
             onSdkLoaded(callingUid, sdkProviderInfo.getApplicationInfo().uid);
         } catch (RemoteException e) {
@@ -608,7 +609,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     ApplicationInfo applicationInfo = pm.getPackageInfo(
                             sharedLibrary.getDeclaringPackage(),
                             PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES).applicationInfo;
-                    return new SdkProviderInfo(applicationInfo, sdkProviderClassName);
+                    return new SdkProviderInfo(
+                            applicationInfo, sharedLibraryName, sdkProviderClassName);
                 }
             }
             return null;
@@ -858,14 +860,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     /**
      * Class which retrieves and stores the sdkProviderClassName and ApplicationInfo
      */
-    private class SdkProviderInfo {
+    private static class SdkProviderInfo {
 
         private ApplicationInfo mApplicationInfo;
+        private String mSdkName;
         private String mSdkProviderClassName;
 
-        private SdkProviderInfo(ApplicationInfo applicationInfo, String sdkProviderClassName) {
+        private SdkProviderInfo(ApplicationInfo applicationInfo, String sdkName,
+                String sdkProviderClassName) {
             mApplicationInfo = applicationInfo;
+            mSdkName = sdkName;
             mSdkProviderClassName = sdkProviderClassName;
+        }
+
+        public String getSdkName() {
+            return mSdkName;
         }
 
         public String getSdkProviderClassName() {
