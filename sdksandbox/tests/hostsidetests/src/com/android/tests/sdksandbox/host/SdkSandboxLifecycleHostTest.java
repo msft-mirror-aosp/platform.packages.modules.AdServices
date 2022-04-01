@@ -163,7 +163,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testOnlyRelevantAppIsKilledForLoadedSdkUpdate() throws Exception {
+    public void testOnlyRelevantAppAndSdkSandboxIsKilledForLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
         startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
 
@@ -176,15 +176,16 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         assertThat(processDump).contains(APP_2_PACKAGE);
 
-        String sdkSandbox2 = getSdkSandboxNameForPackage(APP_PACKAGE);
+        String sdkSandbox2 = getSdkSandboxNameForPackage(APP_2_PACKAGE);
         assertThat(processDump).contains(sdkSandbox2);
 
         installPackage(CODE_APK_2, "-d");
 
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE);
-        assertThat(processDump).doesNotContain(APP_2_PACKAGE);
+        assertThat(processDump).contains(sdkSandbox);
 
-        // TODO(b/215012578) check that sdk sandbox for app 1 is still running
+        assertThat(processDump).doesNotContain(APP_2_PACKAGE);
+        assertThat(processDump).doesNotContain(sdkSandbox2);
     }
 }
