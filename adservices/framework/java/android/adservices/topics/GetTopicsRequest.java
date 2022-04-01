@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package android.adservices.topics;
-
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
-
 import android.annotation.NonNull;
-
 /**
  * Get Topics Request.
  */
 public class GetTopicsRequest {
-
     private final String mSdkName;
-
     private GetTopicsRequest(@NonNull String sdkName) {
         mSdkName = sdkName;
     }
@@ -37,15 +31,12 @@ public class GetTopicsRequest {
     public String getSdkName() {
         return mSdkName;
     }
-
     /**
      * Builder for {@link GetTopicsRequest} objects.
      */
     public static final class Builder {
         private String mSdkName;
-
         public Builder() {}
-
         /**
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
          * set this field.
@@ -56,7 +47,6 @@ public class GetTopicsRequest {
             mSdkName = sdkName;
             return this;
         }
-
         /** Builds a {@link GetTopicsRequest} instance. */
         public @NonNull GetTopicsRequest build() {
             if (mSdkName == null) {
@@ -64,7 +54,6 @@ public class GetTopicsRequest {
                 // We set the Sdk name to empty to mark this.
                 mSdkName = EMPTY_SDK;
             }
-
             return new GetTopicsRequest(mSdkName);
         }
     }
