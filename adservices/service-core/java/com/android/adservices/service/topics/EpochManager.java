@@ -142,6 +142,8 @@ public class EpochManager {
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
             List<String> topTopics = computeTopTopics(appClassificationTopicsMap);
+            // Then save Top Topics into DB
+            mTopicsDao.persistTopTopics(epochId, topTopics);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently hard-code the taxonomyVersion and the modelVersion.
