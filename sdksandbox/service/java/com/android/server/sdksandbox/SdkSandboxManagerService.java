@@ -270,6 +270,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         enforceCallingPackage(callingPackageName, callingUid);
+        enforceCallerHasNetworkAccess(callingPackageName);
         final long token = Binder.clearCallingIdentity();
         try {
             loadSdkWithClearIdentity(callingUid, callingPackageName,
@@ -335,6 +336,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         if (packageUid != callingUid) {
             throw new SecurityException(callingPackage + " does not belong to uid " + callingUid);
         }
+    }
+
+    private void enforceCallerHasNetworkAccess(String callingPackage) {
+        mContext.enforceCallingPermission(android.Manifest.permission.INTERNET,
+                callingPackage + " does not hold INTERNET permission");
+        mContext.enforceCallingPermission(android.Manifest.permission.ACCESS_NETWORK_STATE,
+                callingPackage + " does not hold ACCESS_NETWORK_STATE permission");
     }
 
     private void onAppDeath(IBinder sdkToken, int appUid) {

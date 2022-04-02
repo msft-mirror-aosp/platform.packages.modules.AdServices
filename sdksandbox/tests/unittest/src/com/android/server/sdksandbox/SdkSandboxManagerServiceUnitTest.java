@@ -76,6 +76,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private FakeSdkSandboxService mSdkSandboxService;
     private FakeSdkSandboxProvider mProvider;
     private MockitoSession mStaticMockSession = null;
+    private Context mSpyContext;
 
     private static final String SDK_PROVIDER_PACKAGE = "com.android.codeprovider";
     private static final String SDK_PROVIDER_RESOURCES_PACKAGE =
@@ -89,12 +90,12 @@ public class SdkSandboxManagerServiceUnitTest {
             .startMocking();
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        Context spyContext = Mockito.spy(context);
+        mSpyContext = Mockito.spy(context);
 
         ActivityManager am = context.getSystemService(ActivityManager.class);
         mAmSpy = Mockito.spy(Objects.requireNonNull(am));
 
-        Mockito.when(spyContext.getSystemService(ActivityManager.class)).thenReturn(mAmSpy);
+        Mockito.when(mSpyContext.getSystemService(ActivityManager.class)).thenReturn(mAmSpy);
 
         // Required to access <sdk-library> information.
         InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
@@ -106,7 +107,7 @@ public class SdkSandboxManagerServiceUnitTest {
         ExtendedMockito.doReturn(Mockito.mock(PackageManagerLocal.class))
             .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
 
-        mService = new SdkSandboxManagerService(spyContext, mProvider);
+        mService = new SdkSandboxManagerService(mSpyContext, mProvider);
     }
 
     @After
@@ -119,8 +120,18 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.doNothing().when(mAmSpy).killUid(Mockito.anyInt(), Mockito.anyString());
     }
 
+    /* Ignores network permission checks. */
+    private void disableNetworkPermissionChecks() {
+        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
+                Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
+        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
+                Mockito.eq("android.permission.ACCESS_NETWORK_STATE"), Mockito.anyString());
+    }
+
     @Test
     public void testLoadSdkIsSuccessful() throws Exception {
+        disableNetworkPermissionChecks();
+
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, new Bundle(), callback);
         // Assume SupplementalProcess loads successfully
@@ -152,6 +163,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testLoadSdkPackageDoesNotExist() {
+        disableNetworkPermissionChecks();
+
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, "does.not.exist", new Bundle(), callback);
 
@@ -164,7 +177,10 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testLoadSdk_errorFromSdkSandbox() throws Exception {
+        disableNetworkPermissionChecks();
+
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
+
         mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeError();
 
@@ -175,7 +191,35 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLoadSdk_errorNoInternet() throws Exception {
+        FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
+        SecurityException thrown = assertThrows(SecurityException.class,
+                () -> mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE,
+                new Bundle(), callback));
+
+        assertThat(thrown).hasMessageThat().contains(android.Manifest.permission.INTERNET);
+    }
+
+    @Test
+    public void testLoadSdk_errorNoAccessNetworkState() throws Exception {
+        // Stub out internet permission check
+        Mockito.doNothing().when(mSpyContext).enforceCallingPermission(
+                Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
+
+        FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
+        SecurityException thrown = assertThrows(SecurityException.class,
+                () -> mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE,
+                new Bundle(), callback));
+
+        assertThat(thrown).hasMessageThat().contains(
+                android.Manifest.permission.ACCESS_NETWORK_STATE);
+    }
+
+
+    @Test
     public void testLoadSdk_successOnFirstLoad_errorOnLoadAgain() throws Exception {
+        disableNetworkPermissionChecks();
+
         // Load it once
         {
             FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
@@ -199,6 +243,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testLoadSdk_errorOnFirstLoad_canBeLoadedAgain() throws Exception {
+        disableNetworkPermissionChecks();
+
         // Load code, but make it fail
         {
             FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
@@ -232,6 +278,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testRequestSurfacePackage() throws Exception {
+        disableNetworkPermissionChecks();
+
         // 1. We first need to collect a proper sdkToken by calling loadCode
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, new Bundle(), callback);
@@ -248,6 +296,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testRequestSurfacePackageFailedAfterAppDied() throws Exception {
         disableKillUid();
+        disableNetworkPermissionChecks();
 
         FakeRemoteSdkCallbackBinder callback = Mockito.spy(new FakeRemoteSdkCallbackBinder());
         Mockito.doReturn(Mockito.mock(Binder.class)).when(callback).asBinder();
@@ -277,6 +326,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSurfacePackageError() throws Exception {
+        disableNetworkPermissionChecks();
+
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
         mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_PACKAGE, new Bundle(), callback);
         // Assume SurfacePackage encounters an error.
@@ -295,6 +346,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testSupplementalProcessUnbindingWhenAppDied() throws Exception {
         disableKillUid();
+        disableNetworkPermissionChecks();
 
         IRemoteSdkCallback.Stub callback = Mockito.spy(IRemoteSdkCallback.Stub.class);
         int callingUid = Binder.getCallingUid();
@@ -376,6 +428,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testNotifyInstrumentationStarted_killsSandboxProcess() throws Exception {
         disableKillUid();
+        disableNetworkPermissionChecks();
 
         // First load SDK.
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
@@ -398,6 +451,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testNotifyInstrumentationStarted_doesNotAllowLoadSdk() throws Exception {
         disableKillUid();
+        disableNetworkPermissionChecks();
 
         // First load SDK.
         FakeRemoteSdkCallbackBinder callback = new FakeRemoteSdkCallbackBinder();
@@ -425,6 +479,7 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testNotifyInstrumentationFinished_canLoadSdk() throws Exception {
         disableKillUid();
+        disableNetworkPermissionChecks();
 
         final SdkSandboxManagerLocal localManager = mService.getLocalManager();
         localManager.notifyInstrumentationStarted(TEST_PACKAGE, Process.myUid());
