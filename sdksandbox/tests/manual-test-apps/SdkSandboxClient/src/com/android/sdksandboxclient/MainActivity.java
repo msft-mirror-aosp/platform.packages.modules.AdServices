@@ -29,7 +29,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    private static final String SDK_PACKAGE_NAME = "com.android.sdksandboxcode.v1";
+    private static final String SDK_NAME = "com.android.sdksandboxcode";
 
     private boolean mSdkLoaded = false;
     private SdkSandboxManager mSdkSandboxManager;
@@ -59,7 +59,7 @@ public class MainActivity extends Activity {
         mLoadButton.setOnClickListener(v -> {
             Bundle params = new Bundle();
             final RemoteSdkCallbackImpl callback = new RemoteSdkCallbackImpl();
-            mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params, Runnable::run, callback);
+            mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
         });
     }
 
@@ -68,7 +68,7 @@ public class MainActivity extends Activity {
             if (mSdkLoaded) {
                 new Handler(Looper.getMainLooper()).post(
                         () -> mSdkSandboxManager.requestSurfacePackage(
-                                SDK_PACKAGE_NAME, getDisplay().getDisplayId(),
+                                SDK_NAME, getDisplay().getDisplayId(),
                                 mRenderedView.getWidth(), mRenderedView.getHeight(), new Bundle()));
             } else {
                 makeToast("Sdk is not loaded");
