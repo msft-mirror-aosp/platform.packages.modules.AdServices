@@ -22,8 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.topics.GetTopicsParam;
@@ -39,6 +37,7 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -93,8 +92,14 @@ public class TopicsServiceImplTest {
 
         // To capture result in inner class, we have to declare final.
         final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
-
         mGetTopicsCallbackLatch = new CountDownLatch(1);
+
+        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(invocation -> {
+            // The method TopicsWorker.recordUsage is called.
+            recordUsageCalledLatch.countDown();
+            return null;
+        }).when(mMockTopicsWorker).recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
 
         mTopicsServiceImpl.getTopics(
                 request,
@@ -111,11 +116,12 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertThat(mGetTopicsCallbackLatch
+                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
-        verify(mMockTopicsWorker, times(1))
-                .recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
+        assertThat(recordUsageCalledLatch
+                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
@@ -145,8 +151,14 @@ public class TopicsServiceImplTest {
 
         // To capture result in inner class, we have to declare final.
         final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
-
         mGetTopicsCallbackLatch = new CountDownLatch(1);
+
+        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
+        Mockito.doAnswer(invocation -> {
+            // The method TopicsWorker.recordUsage is called.
+            recordUsageCalledLatch.countDown();
+            return null;
+        }).when(mMockTopicsWorker).recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
 
         mTopicsServiceImpl.getTopics(
                 request,
@@ -163,10 +175,11 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        mGetTopicsCallbackLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertThat(mGetTopicsCallbackLatch
+                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
-        verify(mMockTopicsWorker, times(1))
-                .recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
+        assertThat(recordUsageCalledLatch
+                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
     }
 }
