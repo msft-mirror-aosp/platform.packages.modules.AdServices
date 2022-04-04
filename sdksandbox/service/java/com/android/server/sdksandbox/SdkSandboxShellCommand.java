@@ -43,8 +43,9 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
     @Override
     public int onCommand(String cmd) {
-        if (Binder.getCallingUid() != Process.SHELL_UID) {
-            throw new SecurityException("Only shell process can call sdk_sandbox command");
+        int callingUid = Binder.getCallingUid();
+        if (callingUid != Process.ROOT_UID && callingUid != Process.SHELL_UID) {
+            throw new SecurityException("sdk_sandbox shell command is only callable by ADB");
         }
         final long token = Binder.clearCallingIdentity();
 
