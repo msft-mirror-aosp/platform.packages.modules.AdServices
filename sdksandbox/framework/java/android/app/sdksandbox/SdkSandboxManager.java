@@ -140,7 +140,7 @@ public final class SdkSandboxManager {
      */
     @SdkSandboxState
     public static int getSdkSandboxState() {
-        return SDK_SANDBOX_STATE_DISABLED;
+        return SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION;
     }
 
     /**
