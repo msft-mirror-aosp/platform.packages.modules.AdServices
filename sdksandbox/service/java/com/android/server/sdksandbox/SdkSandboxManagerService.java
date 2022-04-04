@@ -303,6 +303,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void sendData(String sdkPackageName, Bundle params) {
     }
 
+    private void onUserUnlocking(int userId) {
+        Log.i(TAG, "onUserUnlocking " + userId);
+        mHandler.post(() -> mSdkSandboxStorageManager.onUserUnlocking(userId));
+    }
+
     @Override
     @RequiresPermission(android.Manifest.permission.DUMP)
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
@@ -763,19 +768,25 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     /** @hide */
     public static class Lifecycle extends SystemService {
+        private final SdkSandboxManagerService mService;
+
         public Lifecycle(Context context) {
             super(context);
+            SdkSandboxServiceProvider provider = new SdkSandboxServiceProviderImpl(getContext());
+            mService = new SdkSandboxManagerService(getContext(), provider);
         }
 
         @Override
         public void onStart() {
-            SdkSandboxServiceProvider provider =
-                    new SdkSandboxServiceProviderImpl(getContext());
-            SdkSandboxManagerService service =
-                    new SdkSandboxManagerService(getContext(), provider);
-            publishBinderService(SDK_SANDBOX_SERVICE, service);
+            publishBinderService(SDK_SANDBOX_SERVICE, mService);
             LocalManagerRegistry.addManager(
-                    SdkSandboxManagerLocal.class, service.getLocalManager());
+                    SdkSandboxManagerLocal.class, mService.getLocalManager());
+        }
+
+        @Override
+        public void onUserUnlocking(TargetUser user) {
+            final int userId = user.getUserHandle().getIdentifier();
+            mService.onUserUnlocking(userId);
         }
     }
 
