@@ -28,8 +28,8 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -91,8 +91,8 @@ public final class EpochJobService extends JobService {
         final JobInfo job = new JobInfo.Builder(TOPICS_EPOCH_JOB_ID,
                 new ComponentName(context, EpochJobService.class))
                 .setRequiresCharging(true)
-                .setPeriodic(AdServicesConfig.getTopicsEpochJobPeriodMs(),
-                        AdServicesConfig.getTopicsEpochJobFlexMs())
+                .setPeriodic(FlagsFactory.getFlags().getTopicsEpochJobPeriodMs(),
+                        FlagsFactory.getFlags().getTopicsEpochJobFlexMs())
                 .build();
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling Epoch job ...");

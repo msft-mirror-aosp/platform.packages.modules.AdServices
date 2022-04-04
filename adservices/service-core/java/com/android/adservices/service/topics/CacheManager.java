@@ -22,7 +22,8 @@ import android.util.Pair;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -42,14 +43,16 @@ public class CacheManager {
 
     private final EpochManager mEpochManager;
     private final TopicsDao mTopicsDao;
+    private final Flags mFlags;
 
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
 
     @VisibleForTesting
-    CacheManager(EpochManager epochManager, TopicsDao topicsDao) {
+    CacheManager(EpochManager epochManager, TopicsDao topicsDao, Flags flags) {
         mEpochManager = epochManager;
         mTopicsDao = topicsDao;
+        mFlags = flags;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -58,7 +61,7 @@ public class CacheManager {
         synchronized (CacheManager.class) {
             if (sSingleton == null) {
                 sSingleton = new CacheManager(EpochManager.getInstance(context),
-                        TopicsDao.getInstance(context));
+                        TopicsDao.getInstance(context), FlagsFactory.getFlags());
             }
             return sSingleton;
         }
@@ -74,7 +77,7 @@ public class CacheManager {
         // Map<EpochId, Map<Pair<App, Sdk>, Topic>
         Map<Long, Map<Pair<String, String>, Topic>> cacheFromDb =
                 mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId() - 1,
-                        AdServicesConfig.getTopicsNumberOfLookBackEpochs());
+                        mFlags.getTopicsNumberOfLookBackEpochs());
 
         mReadWriteLock.writeLock().lock();
         mCachedTopics = cacheFromDb;
