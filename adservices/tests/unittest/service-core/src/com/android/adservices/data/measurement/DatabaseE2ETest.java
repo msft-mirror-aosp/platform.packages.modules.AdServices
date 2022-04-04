@@ -270,6 +270,8 @@ public abstract class DatabaseE2ETest {
                 attrRateLimit.getReportTo());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
                 attrRateLimit.getTriggerTime());
+        values.put(MeasurementTables.AttributionRateLimitContract.REGISTERER,
+                attrRateLimit.getRegisterer());
         long row = db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AttributionRateLimit insertion failed");
