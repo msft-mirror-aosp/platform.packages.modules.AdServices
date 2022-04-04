@@ -13,80 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package android.adservices.topics;
-
+import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 import android.annotation.NonNull;
-import android.content.AttributionSource;
-import android.os.Parcel;
-import android.os.Parcelable;
-
 /**
- * Represent input params to the getTopics API.
- *
- * @hide
+ * Get Topics Request.
  */
-public class GetTopicsRequest implements Parcelable {
-    AttributionSource mAttributionSource;
-
-    private GetTopicsRequest(AttributionSource attributionSource) {
-        mAttributionSource = attributionSource;
+public class GetTopicsRequest {
+    private final String mSdkName;
+    private GetTopicsRequest(@NonNull String sdkName) {
+        mSdkName = sdkName;
     }
-
-    private GetTopicsRequest(@NonNull Parcel in) {
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
-    }
-
-    public static final @NonNull Creator<GetTopicsRequest> CREATOR =
-            new Parcelable.Creator<GetTopicsRequest>() {
-                @Override
-                public GetTopicsRequest createFromParcel(Parcel in) {
-                    return new GetTopicsRequest(in);
-                }
-
-                @Override
-                public GetTopicsRequest[] newArray(int size) {
-                    return new GetTopicsRequest[size];
-                }
-            };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(@NonNull Parcel out, int flags) {
-        mAttributionSource.writeToParcel(out, flags);
-    }
-
-    /** Get the AttributionSource.
-     * The AttributionSource is used to obtain the calling chain
+    /**
+     * Get the Sdk Name.
      */
     @NonNull
-    public AttributionSource getAttributionSource() {
-        return mAttributionSource;
+    public String getSdkName() {
+        return mSdkName;
     }
-
-    /** Builder for {@link GetTopicsRequest} objects. */
+    /**
+     * Builder for {@link GetTopicsRequest} objects.
+     */
     public static final class Builder {
-        private AttributionSource mAttributionSource;
-
+        private String mSdkName;
         public Builder() {}
-
-        /** Set the AttributionSource. */
-        public @NonNull Builder setAttributionSource(@NonNull AttributionSource attributionSource) {
-            mAttributionSource = attributionSource;
+        /**
+         * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
+         * set this field.
+         * <p> Currently we allow callers to specify the SdkName. In the future releases we will
+         * probably have a way to get the SdkName internally.
+         */
+        public @NonNull Builder setSdkName(@NonNull String sdkName) {
+            mSdkName = sdkName;
             return this;
         }
-
         /** Builds a {@link GetTopicsRequest} instance. */
         public @NonNull GetTopicsRequest build() {
-            if (mAttributionSource == null) {
-                throw new IllegalArgumentException("AttributionSource unset");
+            if (mSdkName == null) {
+                // When Sdk name is not set, we assume the App calls the Topics API directly.
+                // We set the Sdk name to empty to mark this.
+                mSdkName = EMPTY_SDK;
             }
-
-            return new GetTopicsRequest(mAttributionSource);
+            return new GetTopicsRequest(mSdkName);
         }
     }
 }

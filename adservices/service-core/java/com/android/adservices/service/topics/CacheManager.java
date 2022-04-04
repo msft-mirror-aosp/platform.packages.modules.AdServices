@@ -17,9 +17,13 @@
 package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
+import android.content.Context;
 import android.util.Pair;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.service.AdServicesConfig;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,31 +40,44 @@ public class CacheManager {
     // This allows concurrent reads but exclusive update to the cache.
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
+    private final EpochManager mEpochManager;
+    private final TopicsDao mTopicsDao;
+
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
 
-    private CacheManager() {}
+    @VisibleForTesting
+    CacheManager(EpochManager epochManager, TopicsDao topicsDao) {
+        mEpochManager = epochManager;
+        mTopicsDao = topicsDao;
+    }
 
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
-    public static CacheManager getInstance() {
+    public static CacheManager getInstance(Context context) {
         synchronized (CacheManager.class) {
             if (sSingleton == null) {
-                sSingleton = new CacheManager();
+                sSingleton = new CacheManager(EpochManager.getInstance(context),
+                        TopicsDao.getInstance(context));
             }
             return sSingleton;
         }
     }
 
     /**
-     * Update the cache.
+     * Load the cache from DB.
      *
-     * When first created, the Cache is empty. We will need to retrieve the cache from DB and
-     * call this method to update the cache.
+     * When first created, the Cache is empty. We will need to retrieve the cache from DB.
      */
-    public void updateCache(@NonNull Map<Long, Map<Pair<String, String>, Topic>> cache) {
+    public void loadCache() {
+        // Retrieve the cache from DB.
+        // Map<EpochId, Map<Pair<App, Sdk>, Topic>
+        Map<Long, Map<Pair<String, String>, Topic>> cacheFromDb =
+                mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId() - 1,
+                        AdServicesConfig.getTopicsNumberOfLookBackEpochs());
+
         mReadWriteLock.writeLock().lock();
-        mCachedTopics = cache;
+        mCachedTopics = cacheFromDb;
         mReadWriteLock.writeLock().unlock();
     }
 
@@ -74,7 +91,9 @@ public class CacheManager {
      * @return The list of Topics.
      */
     @NonNull
-    public List<Topic> getTopics(long epochId, int numberOfLookBackEpochs, String app, String sdk) {
+    public List<Topic> getTopics(int numberOfLookBackEpochs, String app, String sdk) {
+        // We will need to look at the 3 historical epochs starting from last epoch.
+        long epochId = mEpochManager.getCurrentEpochId() - 1;
         List<Topic> topics = new ArrayList<>();
         mReadWriteLock.readLock().lock();
         for (int numEpoch = 0; numEpoch < numberOfLookBackEpochs; numEpoch++) {

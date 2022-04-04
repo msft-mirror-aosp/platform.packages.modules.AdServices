@@ -21,6 +21,9 @@ import static java.util.Arrays.asList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /** Represent an argument to supply to an JS script. */
 public abstract class JSScriptArgument {
     private final String mName;
@@ -32,7 +35,7 @@ public abstract class JSScriptArgument {
     /**
      * @return an argument with the given {@code name} and the given string value {@code value}
      */
-    static JSScriptStringArgument stringArg(String name, String value) {
+    public static JSScriptStringArgument stringArg(String name, String value) {
         return new JSScriptStringArgument(name, value);
     }
 
@@ -41,7 +44,7 @@ public abstract class JSScriptArgument {
      *     value}.
      * @throws JSONException if {@code value} doesn't represent a valid JSON object
      */
-    static JSScriptJsonArgument jsonArg(String name, String value) throws JSONException {
+    public static JSScriptJsonArgument jsonArg(String name, String value) throws JSONException {
         // Creating the JSONObject just to parse value and cause a JSONException if invalid.
         new JSONObject(value);
         return new JSScriptJsonArgument(name, value);
@@ -51,21 +54,49 @@ public abstract class JSScriptArgument {
      * @return a JS array argument with the given {@code name} initialized with the values specified
      *     with {@code items}.
      */
-    static <T extends JSScriptArgument> JSScriptArrayArgument<T> arrayArg(String name, T... items) {
+    public static <T extends JSScriptArgument> JSScriptArrayArgument<T> arrayArg(
+            String name, T... items) {
         return new JSScriptArrayArgument<>(name, asList(items));
+    }
+
+    /**
+     * @return a JS array argument with the given {@code name} initialized with the values specified
+     *     with {@code items}.
+     */
+    public static <T extends JSScriptArgument> JSScriptArrayArgument<T> arrayArg(
+            String name, List<T> items) {
+        return new JSScriptArrayArgument<>(name, items);
+    }
+
+    /**
+     * @return a JS array argument with the given {@code name} initialized with the values specified
+     *     with {@code items}.
+     */
+    public static JSScriptArrayArgument<JSScriptStringArgument> stringArrayArg(
+            String name, List<String> items) {
+        return new JSScriptArrayArgument<>(
+                name,
+                items.stream().map(str -> stringArg("ignored", str)).collect(Collectors.toList()));
     }
 
     /**
      * @return a JS object with the given {@code name} and {@code fields} as fields values.
      */
-    static JSScriptRecordArgument recordArg(String name, JSScriptArgument... fields) {
+    public static JSScriptRecordArgument recordArg(String name, JSScriptArgument... fields) {
         return new JSScriptRecordArgument(name, asList(fields));
+    }
+
+    /**
+     * @return a JS object with the given {@code name} and {@code fields} as fields values.
+     */
+    public static JSScriptRecordArgument recordArg(String name, List<JSScriptArgument> fields) {
+        return new JSScriptRecordArgument(name, fields);
     }
 
     /**
      * @return a numeric variable with the given {@code name} and {@code value}.
      */
-    static <T extends Number> JSScriptNumericArgument<T> numericArg(String name, T value) {
+    public static <T extends Number> JSScriptNumericArgument<T> numericArg(String name, T value) {
         return new JSScriptNumericArgument<>(name, value);
     }
 
@@ -79,7 +110,7 @@ public abstract class JSScriptArgument {
     /**
      * @return name of the argument as referred in the call to the auction script function.
      */
-    protected String name() {
+    public String name() {
         return mName;
     }
 

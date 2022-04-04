@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package android.adservices;
+package android.adservices.adselection;
 
 /**
-  * Remarketing service.
-  * {@hide}
-  */
-interface Remarketing {
-  // TODO: Define Remarketing API.
-}
+ * This interface defines the AdSelectionResponse.
+ * An AdSelectionResponse is a Parcelable object that is returned upon success of {@link runAdAuction}'
+ * by {@link AdSelectionManager}.
+ *
+ * {@hide}
+ */
+parcelable AdSelectionResponse;

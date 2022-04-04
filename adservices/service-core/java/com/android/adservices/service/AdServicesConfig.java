@@ -16,11 +16,25 @@
 
 package com.android.adservices.service;
 
+import android.os.SystemProperties;
+
 /**
  * Configs for AdServices.
  * These configs will be backed by PH Flags.
  */
 public class AdServicesConfig {
+
+    /*
+     * Keys for ALL the flags stored in DeviceConfig.
+     */
+    public static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
+    public static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
+
+
+    // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
+    // In the long run, we will use DeviceConfig instead.
+    private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+
     /**
      * Job Id for idle maintenance job ({@link MaintenanceJobService}).
      */
@@ -53,14 +67,22 @@ public class AdServicesConfig {
      * Returns the max time period (in millis) between each epoch computation job run.
      */
     public static long getTopicsEpochJobPeriodMs() {
-        return TOPICS_EPOCH_JOB_PERIOD_MS;
+        // TODO(b/227210617): Use DeviceConfig backed by PH instead.
+        return SystemProperties.getLong(getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
+                /* defaultValue =*/ TOPICS_EPOCH_JOB_PERIOD_MS);
+    }
+
+    private static String getSystemPropertyName(String key) {
+        return SYSTEM_PROPERTY_PREFIX + key;
     }
 
     /**
      * Returns flex for the Epoch computation job in Millisecond.
      */
     public static long getTopicsEpochJobFlexMs() {
-        return TOPICS_EPOCH_JOB_FLEX_MS;
+        // TODO(b/227210617): Use DeviceConfig backed by PH instead.
+        return SystemProperties.getLong(getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
+                /* defaultValue =*/ TOPICS_EPOCH_JOB_FLEX_MS);
     }
 
     /** The percentage that we will return a random topic from the Taxonomy. Default value is 5%. */
@@ -71,11 +93,69 @@ public class AdServicesConfig {
         return TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
     }
 
+    /**
+     * The number of top Topics for each epoch.
+     *
+     * With the current explainer, for each epoch, Topics API will select 5 top Topics and 1 random
+     * topic.
+     * This param here is to make the number of selected top topics configurable.
+     */
+    public static int TOPICS_NUMBER_OF_TOP_TOPICS = 5;
+
+    /** Returns the number of top topics. */
+    public static int getTopicsNumberOfTopTopics() {
+        return TOPICS_NUMBER_OF_TOP_TOPICS;
+    }
+
+    /**
+     * The number of random Topics for each epoch.
+     *
+     * With the current explainer, for each epoch, Topics API will select 5 top Topics and 1 random
+     * topic.
+     * This param here is to make the number of random topics configurable.
+     */
+    public static int TOPICS_NUMBER_OF_RANDOM_TOPICS = 1;
+
+    /** Returns the number of top topics. */
+    public static int getTopicsNumberOfRandomTopics() {
+        return TOPICS_NUMBER_OF_RANDOM_TOPICS;
+    }
+
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     public static int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
     /** Returns the percentage that we will return a random topic from the Taxonomy. */
     public static int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
+    }
+
+    /**
+     * Job Id for Measurement Reporting Job ({@link ReportingJobService})
+     */
+    public static final int MEASUREMENT_REPORTING_JOB_ID = 3;
+    public static long MEASUREMENT_REPORTING_JOB_PERIOD_MS = 5 * 60 * 1000; // 5 minutes.
+
+    /**
+     * Returns the max time period (in millis) between each reporting maintenance job run.
+     */
+    public static long getMeasurementReportingJobPeriodMs() {
+        return MEASUREMENT_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Job Id for Measurement Delete Expired Records Job ({@link DeleteExpiredJobService})
+     */
+    public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
+    public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
+            24L * 60L * 60L * 1000L; // 24 hours.
+    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS =
+            28L * 24L * 60L * 60L * 1000L; // 28 days.
+
+    /**
+     * Returns the max time period (in millis) between each expired-record deletion maintenance job
+     * run.
+     */
+    public static long getMeasurementDeleteExpiredJobPeriodMs() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
     }
 }

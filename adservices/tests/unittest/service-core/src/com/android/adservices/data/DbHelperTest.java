@@ -33,23 +33,45 @@ public class DbHelperTest {
 
     @Test
     public void testOnCreate() {
-        assertTrue(doesTableExist("topics_taxonomy"));
-        assertTrue(doesTableExist("topics_app_classification_topics"));
-        assertTrue(doesTableExist("topics_caller_can_learn_topic"));
-        assertTrue(doesTableExist("topics_top_topics"));
-        assertTrue(doesTableExist("topics_returned_topics"));
-        assertTrue(doesTableExist("topics_usage_history"));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 3));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_app_classification_topics", 6));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 4));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 7));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_returned_topics", 7));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_usage_history", 3));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_source", 13));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_trigger", 9));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_adtech_urls", 2));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_event_report", 10));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_attribution_rate_limit", 6));
+        assertTrue(doesIndexExist("idx_msmt_source_ad_rt_et"));
+        assertTrue(doesIndexExist("idx_msmt_trigger_ad_rt_tt"));
+        assertTrue(doesIndexExist("idx_msmt_source_et"));
+        assertTrue(doesIndexExist("idx_msmt_trigger_tt"));
+        assertTrue(doesIndexExist("idx_msmt_attribution_rate_limit_ss_ds_tt"));
     }
 
-    public boolean doesTableExist(String tableName) {
+    public boolean doesTableExistAndColumnCountMatch(String tableName, int columnCount) {
         String query =
-                "select DISTINCT tbl_name from sqlite_master where tbl_name = '" + tableName + "'";
-        Cursor cursor = DbHelper.getInstance(sContext).safeGetReadableDatabase()
+                "select s.tbl_name, p.name from sqlite_master s "
+                        + "join pragma_table_info(s.name) p "
+                        + "where s.tbl_name = '" + tableName + "'";
+        Cursor cursor = DbHelper.getInstanceForTest(sContext).safeGetReadableDatabase()
                 .rawQuery(query, null);
         if (cursor != null) {
-            if (cursor.getCount() > 0) {
+            if (cursor.getCount() == columnCount) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean doesIndexExist(String index) {
+        String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
+        Cursor cursor = DbHelper.getInstanceForTest(sContext).safeGetReadableDatabase()
+                .rawQuery(query, null);
+        if (cursor != null) {
+            return cursor.getCount() > 0;
         }
         return false;
     }

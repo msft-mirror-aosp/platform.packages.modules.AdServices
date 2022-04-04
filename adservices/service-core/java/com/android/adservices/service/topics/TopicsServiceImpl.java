@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.topics;
 
-import android.adservices.topics.GetTopicsRequest;
+import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
@@ -43,16 +43,38 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     }
 
     @Override
-    public void getTopics(@NonNull GetTopicsRequest getTopicsRequest,
-            @NonNull IGetTopicsCallback callback) {
+    public void getTopics(
+            @NonNull GetTopicsParam topicsParam, @NonNull IGetTopicsCallback callback) {
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        callback.onResult(
+                                mTopicsWorker.getTopics(
+                                        topicsParam.getAttributionSource().getPackageName(),
+                                        topicsParam.getSdkName()));
+
+                        mTopicsWorker.recordUsage(
+                                topicsParam.getAttributionSource().getPackageName(),
+                                topicsParam.getSdkName());
+                    } catch (RemoteException e) {
+                        LogUtil.e("Unable to send result to the callback", e);
+                    }
+                });
+    }
+
+    /**
+     * Init the Topics Service.
+     */
+    public void init() {
         sBackgroundExecutor.execute(() -> {
-            try {
-                // TODO(b/223396937): use real app and sdk instead of hard coded.
-                callback.onResult(mTopicsWorker.getTopics(/* app = */ "app",
-                        /* sdk = */ "sdk"));
-            } catch (RemoteException e) {
-                LogUtil.e("Unable to send result to the callback", e);
-            }
+            // This is to prevent cold-start latency on getTopics API.
+            // Load cache when the service is created.
+            // The recommended pattern is:
+            // 1) In app startup, wake up the TopicsService.
+            // 2) The TopicsService will load the Topics Cache from DB into memory.
+            // 3) Later, when the app calls Topics API, the returned Topics will be served from
+            // Cache in memory.
+            mTopicsWorker.loadCache();
         });
     }
 }

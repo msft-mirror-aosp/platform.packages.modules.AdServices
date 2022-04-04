@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices.topics;
+package android.adservices.adselection;
 
-parcelable GetTopicsRequest;
+/**
+ * This interface defines the input to the reportImpression API.
+ * A ReportImpressionRequest is a Parcelable object that contains an adSelectionId and an AdSelectionConfig.
+ *
+ * {@hide}
+ */
+parcelable ReportImpressionRequest;

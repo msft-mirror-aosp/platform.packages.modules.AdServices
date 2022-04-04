@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
- package android.adservices.topics;
+package android.adservices.common;
 
- parcelable GetTopicsResponse;
+/**
+ * This interface defines the generic response of Fledge API's.
+ * An FledgeErrorResponse is a Parcelable object that contains a status code and a nullable error message.
+ *
+ * {@hide}
+ */
+parcelable FledgeErrorResponse;

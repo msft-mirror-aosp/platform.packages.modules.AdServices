@@ -15,49 +15,37 @@
  */
 package android.adservices.topics;
 
+import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+
 import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertThrows;
-
-import android.content.AttributionSource;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.topics.GetTopicsRequest} */
+/**
+ * Unit tests for {@link android.adservices.topics.GetTopicsRequest}
+ */
 @SmallTest
 public final class GetTopicsRequestTest {
-    private static final String SOME_PACKAGE_NAME = "SomePackageName";
-    private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
-    private static final int SOME_UID = 11;
+
+    private static final String SOME_SDK_NAME = "SomeSDKName";
 
     @Test
-    public void testNonNullAttributionSource() {
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(SOME_PACKAGE_NAME)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
+    public void testNonNullSdkName() {
         GetTopicsRequest request =
-                new GetTopicsRequest.Builder().setAttributionSource(source).build();
+            new GetTopicsRequest.Builder().setSdkName(SOME_SDK_NAME).build();
 
-        AttributionSource source2 = request.getAttributionSource();
-        assertThat(source2).isNotNull();
-        assertThat(source2.getUid()).isEqualTo(SOME_UID);
-        assertThat(source2.getPackageName()).isEqualTo(SOME_PACKAGE_NAME);
-        assertThat(source2.getAttributionTag()).isEqualTo(SOME_ATTRIBUTION_TAG);
+        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
     }
 
     @Test
-    public void testNullAttributionSource() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    GetTopicsRequest unusedRequest =
-                            new GetTopicsRequest.Builder()
-                                    // Not setting AttributionSource making it null.
-                                    .build();
-                });
+    public void testNullSdkName() {
+        GetTopicsRequest request =
+            new GetTopicsRequest.Builder()
+                // Not setting mSdkName making it null.
+                .build();
+        // When sdkName is not set in builder, we will use EMPTY_SDK by default
+        assertThat(request.getSdkName()).isEqualTo(EMPTY_SDK);
     }
 }

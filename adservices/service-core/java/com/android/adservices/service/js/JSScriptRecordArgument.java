@@ -17,6 +17,7 @@
 package com.android.adservices.service.js;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A value object to be represented as a JSON structure in the auction script. If you already have a
@@ -44,5 +45,23 @@ public class JSScriptRecordArgument extends JSScriptArgument {
         }
         result.append("\n}");
         return result.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JSScriptRecordArgument)) return false;
+        JSScriptRecordArgument that = (JSScriptRecordArgument) o;
+        return mFields.equals(that.mFields);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mFields);
+    }
+
+    @Override
+    public String toString() {
+        return "JSScriptRecordArgument{" + "mFields=" + mFields + '}';
     }
 }

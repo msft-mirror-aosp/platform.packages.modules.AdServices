@@ -16,7 +16,7 @@
 
 package android.adservices.topics;
 
-import android.adservices.topics.GetTopicsRequest;
+import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
 
 /**
@@ -29,6 +29,6 @@ interface ITopicsService {
      * Get Topics.
      */
     void getTopics(
-        in GetTopicsRequest request,
+        in GetTopicsParam param,
         in IGetTopicsCallback callback);
 }

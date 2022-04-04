@@ -33,10 +33,13 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String TAG = "StorageTestSandboxedSdkProvider";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
+    private SandboxedSdkContext mContext;
+
     @Override
     public void initSdk(SandboxedSdkContext context, Bundle params, Executor executor,
             InitSdkCallback callback) {
         callback.onInitSdkFinished(null);
+        mContext = context;
     }
 
     @Override
@@ -53,8 +56,8 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
         Log.i(TAG, "Handling phase: " + phaseName);
         switch (phaseName) {
-            case "testSdkSandboxDataAppDirectory_SharedStorageIsUsable":
-                testSdkSandboxDataAppDirectory_SharedStorageIsUsable();
+            case "testSdkDataPackageDirectory_SharedStorageIsUsable":
+                testSdkDataPackageDirectory_SharedStorageIsUsable();
                 break;
             case "testSdkDataIsAttributedToApp":
                 testSdkDataIsAttributedToApp();
@@ -63,7 +66,7 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
         }
     }
 
-    private void testSdkSandboxDataAppDirectory_SharedStorageIsUsable() {
+    private void testSdkDataPackageDirectory_SharedStorageIsUsable() {
         String sharedPath = getSharedStoragePath();
 
         try {
@@ -100,13 +103,11 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
         }
     }
 
-    // TODO(209061627): this should be coming from code context instead
     private String getSharedStoragePath() {
-        return "/data/misc_ce/0/sdksandbox/com.android.tests.sdksandbox/shared";
+        return mContext.getDataDir().toString();
     }
 
-    // TODO(209061627): this should be coming from code context instead
     private String getSharedStorageCachePath() {
-        return getSharedStoragePath() + "/cache";
+        return mContext.getCacheDir().toString();
     }
 }

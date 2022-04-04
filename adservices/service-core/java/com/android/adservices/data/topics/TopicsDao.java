@@ -41,7 +41,7 @@ import java.util.Set;
 /**
  * Data Access Object for the Topics API.
  */
-public final class TopicsDao {
+public class TopicsDao {
     private static TopicsDao sSingleton;
 
     @SuppressWarnings("unused")
@@ -74,9 +74,14 @@ public final class TopicsDao {
         }
     }
 
-    // Persist the list of Top Topics to DB.
+    /**
+     * Persist the list of Top Topics in this epoch to DB.
+     *
+     * @param epochId Id of current epoch
+     * @param topTopics the topics list to persist into DB
+     */
     @VisibleForTesting
-    void persistTopTopics(long epochId, @NonNull List<String> topTopics) {
+    public void persistTopTopics(long epochId, @NonNull List<String> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
         Objects.requireNonNull(topTopics);
@@ -340,8 +345,16 @@ public final class TopicsDao {
 
     // Persist the Apps, Sdks returned topics to DB.
     // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
-    @VisibleForTesting
-    void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
+
+    /**
+     * Persist the Apps, Sdks returned topics to DB.
+     *
+     * @param epochId the epoch Id
+     * @param taxonomyVersion The Taxonomy Version
+     * @param modelVersion The Model Version
+     * returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+     */
+    public void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
             @NonNull Map<Pair<String, String>, String> returnedAppSdkTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -430,7 +443,7 @@ public final class TopicsDao {
                 }
 
                 Topic topic = new Topic(topicString, taxonomyVersion, modelVersion);
-                topicsMap.get(epochId).put(Pair.create(app, sdk), topic);
+                topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
 

@@ -23,7 +23,6 @@ android_test_helper_app {
     certificate: ":cts-keyset-test-b",
     srcs: [
        "src/**/*.java",
-       ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
 }

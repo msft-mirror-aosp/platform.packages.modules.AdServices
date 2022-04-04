@@ -36,7 +36,8 @@ public class TopicsService extends Service {
     public void onCreate() {
         super.onCreate();
         if (mTopicsService == null) {
-            mTopicsService = new TopicsServiceImpl(this, TopicsWorker.getInstance());
+            mTopicsService = new TopicsServiceImpl(this, TopicsWorker.getInstance(this));
+            mTopicsService.init();
         }
 
         schedulePeriodicJobs();

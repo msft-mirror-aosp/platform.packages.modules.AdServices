@@ -23,6 +23,8 @@ import android.os.Bundle;
 
 public class SdkSandboxTestActivity extends Activity {
 
+    private static final String SDK_PACKAGE_NAME = "com.android.testcode";
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -31,13 +33,14 @@ public class SdkSandboxTestActivity extends Activity {
                 getApplicationContext().getSystemService(SdkSandboxManager.class);
 
         Bundle params = new Bundle();
-        params.putString("sdk-provider-class", "com.android.testcode.TestSandboxedSdkProvider");
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        sdkSandboxManager.loadSdk(
-                "com.android.testcode", params, callback);
+        assert sdkSandboxManager != null;
+        sdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params,
+                Runnable::run, callback);
         if (!callback.isLoadSdkSuccessful()) {
             throw new AssertionError(
-                    "Failed to load com.android.testcode : " + callback.getLoadSdkErrorCode() + "["
+                    "Failed to load " + SDK_PACKAGE_NAME + ": "
+                            + callback.getLoadSdkErrorCode() + "["
                             + callback.getLoadSdkErrorMsg() + "]");
         }
     }
