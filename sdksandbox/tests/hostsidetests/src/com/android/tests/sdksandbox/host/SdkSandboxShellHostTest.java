@@ -54,6 +54,8 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         }
 
         mOriginalUsers = new HashSet<>(getDevice().listUsers());
+
+        assertThat(getDevice().enableAdbRoot()).isTrue();
     }
 
     @After
@@ -63,6 +65,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
                 getDevice().removeUser(userId);
             }
         }
+        getDevice().disableAdbRoot();
     }
 
     @Test
