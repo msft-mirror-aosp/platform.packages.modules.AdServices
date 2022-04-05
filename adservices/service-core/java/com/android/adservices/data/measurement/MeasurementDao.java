@@ -26,6 +26,9 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.BaseUriExtractor;
@@ -34,8 +37,10 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -353,6 +358,8 @@ public class MeasurementDao {
                 trigger.getReportTo().toString());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
                 trigger.getTriggerTime());
+        values.put(MeasurementTables.AttributionRateLimitContract.REGISTERER,
+                BaseUriExtractor.getBaseUri(trigger.getRegisterer()));
         long rowId = db.insert(MeasurementTables.AttributionRateLimitContract.TABLE,
                 /*nullColumnHack=*/null,
                 values);
@@ -610,5 +617,304 @@ public class MeasurementDao {
                 MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " < ?",
                 new String[]{earliestValidInsertionStr});
         return true;
+    }
+
+    /**
+     * Deletes all measurement data owned by a registrant and optionally providing an origin uri
+     * and/or a range of dates.
+     *
+     * @param registerer who owns the data
+     * @param origin uri for deletion. May be null
+     * @param start time for deletion range. May be null. If null, end must be null as well
+     * @param end time for deletion range. May be null. If null, start must be null as well
+     * @return success
+     */
+    public boolean deleteMeasurementData(
+            @NonNull Uri registerer,
+            @Nullable Uri origin,
+            @Nullable Instant start,
+            @Nullable Instant end) {
+        Objects.requireNonNull(registerer);
+        validateOptionalRange(start, end);
+        final SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        db.beginTransaction();
+        try {
+            deleteMeasurementData(db, registerer, origin, start, end);
+            db.setTransactionSuccessful();
+        } catch (Exception e) {
+            LogUtil.e("Error while deleting browser measurement data", e);
+            return false;
+        } finally {
+            db.endTransaction();
+        }
+        return true;
+    }
+
+    private void validateOptionalRange(Instant start, Instant end) {
+        if (start == null ^ end == null) {
+            throw new IllegalArgumentException(
+                    "invalid range, both start and end dates must be provided if providing any");
+        }
+        if (start != null && start.isAfter(end)) {
+            throw new IllegalArgumentException(
+                    "invalid range, start date must be equal or before end date");
+        }
+    }
+
+    private void deleteMeasurementData(
+            SQLiteDatabase db, Uri registerer, Uri origin, Instant start, Instant end) {
+        if (origin == null && start == null) {
+            // Deletes all measurement data
+            deleteAttributionRateLimitByRegisterer(db, registerer);
+            deleteEventReportByRegisterer(db, registerer);
+            deleteTriggerByRegisterer(db, registerer);
+            deleteSourceByRegisterer(db, registerer);
+        } else if (start == null) {
+            // Deletes all measurement data by uri
+            deleteAttributionRateLimitByRegistererAndUri(db, registerer, origin);
+            deleteEventReportByRegistererAndUri(db, registerer, origin);
+            deleteTriggerByRegistererAndUri(db, registerer, origin);
+            deleteSourceByRegistererAndUri(db, registerer, origin);
+        } else if (origin == null) {
+            // Deletes all measurement data by date range
+            deleteAttributionRateLimitByRegistererAndRange(db, registerer, start, end);
+            deleteEventReportByRegistererAndRange(db, registerer, start, end);
+            deleteTriggerByRegistererAndRange(db, registerer, start, end);
+            deleteSourceByRegistererAndRange(db, registerer, start, end);
+        } else {
+            // Deletes all measurement data by uri and date range
+            deleteAttributionRateLimitByRegistererAndUriAndRange(
+                    db, registerer, origin, start, end);
+            deleteEventReportByRegistererAndUriAndRange(db, registerer, origin, start, end);
+            deleteTriggerByRegistererAndUriAndRange(db, registerer, origin, start, end);
+            deleteSourceByRegistererAndUriAndRange(db, registerer, origin, start, end);
+        }
+    }
+
+    private void deleteSourceByRegisterer(SQLiteDatabase db, Uri registerer) {
+        db.delete(MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.REGISTERER + " = ?",
+                new String[]{registerer.toString()});
+    }
+
+    private void deleteSourceByRegistererAndUri(
+            SQLiteDatabase db, Uri registerer, Uri attributionSource) {
+        db.delete(MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.SourceContract.ATTRIBUTION_SOURCE + " = ?",
+                new String[]{registerer.toString(), attributionSource.toString()});
+    }
+
+    private void deleteSourceByRegistererAndRange(
+            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+        db.delete(MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.SourceContract.EVENT_TIME + " >= ? AND "
+                        + MeasurementTables.SourceContract.EVENT_TIME + " <= ?",
+                new String[]{
+                        registerer.toString(),
+                        String.valueOf(start.toEpochMilli()),
+                        String.valueOf(end.toEpochMilli())
+                });
+    }
+
+    private void deleteSourceByRegistererAndUriAndRange(
+            SQLiteDatabase db, Uri registerer, Uri attributionSource, Instant start, Instant end) {
+        db.delete(MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.SourceContract.ATTRIBUTION_SOURCE + " = ? AND "
+                        + MeasurementTables.SourceContract.EVENT_TIME + " >= ? AND "
+                        + MeasurementTables.SourceContract.EVENT_TIME + " <= ?",
+                new String[]{
+                        registerer.toString(),
+                        attributionSource.toString(),
+                        String.valueOf(start.toEpochMilli()),
+                        String.valueOf(end.toEpochMilli())
+                });
+    }
+
+    private void deleteTriggerByRegisterer(SQLiteDatabase db, Uri registerer) {
+        db.delete(MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.REGISTERER + " = ?",
+                new String[]{registerer.toString()});
+    }
+
+    private void deleteTriggerByRegistererAndUri(
+            SQLiteDatabase db, Uri registerer, Uri attributionDestination) {
+        db.delete(MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION + " = ?",
+                new String[]{registerer.toString(), attributionDestination.toString()});
+    }
+
+    private void deleteTriggerByRegistererAndRange(
+            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+        db.delete(MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.TriggerContract.TRIGGER_TIME + " >= ? AND "
+                        + MeasurementTables.TriggerContract.TRIGGER_TIME + " <= ?",
+                new String[]{
+                        registerer.toString(),
+                        String.valueOf(start.toEpochMilli()),
+                        String.valueOf(end.toEpochMilli())
+                });
+    }
+
+    private void deleteTriggerByRegistererAndUriAndRange(
+            SQLiteDatabase db,
+            Uri registerer,
+            Uri attributionDestination,
+            Instant start,
+            Instant end) {
+        db.delete(MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION + " = ? AND "
+                        + MeasurementTables.TriggerContract.TRIGGER_TIME + " >= ? AND "
+                        + MeasurementTables.TriggerContract.TRIGGER_TIME + " <= ?",
+                new String[]{
+                        registerer.toString(),
+                        attributionDestination.toString(),
+                        String.valueOf(start.toEpochMilli()),
+                        String.valueOf(end.toEpochMilli())
+                });
+    }
+
+    private void deleteEventReportByRegisterer(SQLiteDatabase db, Uri registerer) {
+        db.delete(MeasurementTables.EventReportContract.TABLE,
+                String.format("%1$s IN ("
+                                + "SELECT e.%1$s FROM %2$s e "
+                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
+                                + "WHERE %6$s = ?"
+                                + ")",
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.SourceContract.REGISTERER),
+                new String[]{registerer.toString()});
+    }
+
+    private void deleteEventReportByRegistererAndUri(SQLiteDatabase db, Uri registerer, Uri site) {
+        db.delete(MeasurementTables.EventReportContract.TABLE,
+                String.format("%1$s IN ("
+                                + "SELECT e.%1$s FROM %2$s e "
+                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
+                                + "WHERE s.%6$s = ? AND (s.%7$s = ? OR e.%8$s = ?)"
+                                + ")",
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.SourceContract.REGISTERER,
+                        MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
+                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION),
+                new String[]{registerer.toString(), site.toString(), site.toString()});
+    }
+
+    private void deleteEventReportByRegistererAndRange(
+            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+        final String startValue = String.valueOf(start.toEpochMilli());
+        final String endValue = String.valueOf(end.toEpochMilli());
+        db.delete(MeasurementTables.EventReportContract.TABLE,
+                String.format("%1$s IN ("
+                                + "SELECT e.%1$s FROM %2$s e "
+                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
+                                + "WHERE %6$s = ? AND "
+                                + "((%7$s >= ? AND %7$s <= ?) OR (%8$s >= ? AND %8$s <= ?))"
+                                + ")",
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.SourceContract.REGISTERER,
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.EventReportContract.TRIGGER_TIME),
+                new String[]{
+                        registerer.toString(),
+                        startValue,
+                        endValue,
+                        startValue,
+                        endValue
+                });
+    }
+
+    private void deleteEventReportByRegistererAndUriAndRange(
+            SQLiteDatabase db, Uri registerer, Uri site, Instant start, Instant end) {
+        final String startValue = String.valueOf(start.toEpochMilli());
+        final String endValue = String.valueOf(end.toEpochMilli());
+        db.delete(MeasurementTables.EventReportContract.TABLE,
+                String.format("%1$s IN ("
+                                + "SELECT e.%1$s FROM %2$s e "
+                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
+                                + "WHERE s.%6$s = ? AND "
+                                + "((s.%7$s = ? AND s.%8$s >= ? AND s.%8$s <= ?) OR "
+                                + "(e.%9$s = ? AND e.%10$s >= ? AND e.%10$s <= ?))"
+                                + ")",
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.SourceContract.REGISTERER,
+                        MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                        MeasurementTables.EventReportContract.TRIGGER_TIME),
+                new String[]{
+                        registerer.toString(),
+                        site.toString(),
+                        startValue,
+                        endValue,
+                        site.toString(),
+                        startValue,
+                        endValue
+                });
+    }
+
+    private void deleteAttributionRateLimitByRegisterer(SQLiteDatabase db, Uri registerer) {
+        db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
+                MeasurementTables.AttributionRateLimitContract.REGISTERER + " = ?",
+                new String[]{registerer.toString()});
+    }
+
+    private void deleteAttributionRateLimitByRegistererAndUri(
+            SQLiteDatabase db, Uri registerer, Uri site) {
+        db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
+                String.format("%1$s = ? AND (%2$s = ? OR %3$s = ?)",
+                        MeasurementTables.AttributionRateLimitContract.REGISTERER,
+                        MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
+                        MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE),
+                new String[]{registerer.toString(), site.toString(), site.toString()});
+    }
+
+    private void deleteAttributionRateLimitByRegistererAndRange(
+            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+        db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
+                MeasurementTables.AttributionRateLimitContract.REGISTERER + " = ? AND "
+                        + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " >= ? AND "
+                        + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " <= ?",
+                new String[]{
+                        registerer.toString(),
+                        String.valueOf(start.toEpochMilli()),
+                        String.valueOf(end.toEpochMilli())});
+    }
+
+    private void deleteAttributionRateLimitByRegistererAndUriAndRange(
+            SQLiteDatabase db, Uri registerer, Uri site, Instant start, Instant end) {
+        db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
+                String.format("%1$s = ? AND (%2$s = ? OR %3$s = ?) AND (%4$s >= ? AND %4$s <= ?)",
+                        MeasurementTables.AttributionRateLimitContract.REGISTERER,
+                        MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
+                        MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
+                        MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME),
+                new String[]{
+                        registerer.toString(),
+                        site.toString(),
+                        site.toString(),
+                        String.valueOf(start.toEpochMilli()),
+                        String.valueOf(end.toEpochMilli())});
     }
 }
