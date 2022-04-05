@@ -34,6 +34,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,5 +119,29 @@ public class MeasurementDaoTest {
                 .getNumTriggersPerRegisterer(mAppOneTrigger));
         assertEquals(0, MeasurementDao.getInstance(sContext)
                 .getNumTriggersPerRegisterer(mAppNoTriggers));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testDeleteMeasurementData_requiredRegistererAsNull() {
+        MeasurementDao.getInstance(sContext).deleteMeasurementData(
+                null /* registerer */, null /* origin */, null /* start */, null /* end */);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDeleteMeasurementData_invalidRangeNoStartDate() {
+        MeasurementDao.getInstance(sContext).deleteMeasurementData(
+                mAppOneSource, null /* origin */, null /* start */, Instant.now());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDeleteMeasurementData_invalidRangeNoEndDate() {
+        MeasurementDao.getInstance(sContext).deleteMeasurementData(
+                mAppOneSource, null /* origin */, Instant.now(), null /* end */);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
+        MeasurementDao.getInstance(sContext).deleteMeasurementData(
+                mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
     }
 }
