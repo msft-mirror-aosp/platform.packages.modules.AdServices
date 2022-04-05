@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.net.Uri;
 
