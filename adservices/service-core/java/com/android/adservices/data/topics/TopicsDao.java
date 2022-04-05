@@ -167,6 +167,10 @@ public class TopicsDao {
 
     /**
      * Record the App and SDK into the Usage History table.
+     *
+     * @param epochId epochId epoch id to record
+     * @param app app name
+     * @param sdk sdk name
      */
     public void recordUsageHistory(long epochId, @NonNull String app, @NonNull String sdk) {
         Objects.requireNonNull(app);
@@ -186,12 +190,40 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.UsageHistoryContract.TABLE, null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record App usage history." + e.getMessage());
+            LogUtil.e("Failed to record App-Sdk usage history." + e.getMessage());
         }
     }
 
     /**
+     * Record the usage history for app only
+     *
+     * @param epochId epoch id to record
+     * @param app app name
+     */
+    public void recordAppUsageHistory(long epochId, @NonNull String app) {
+        Objects.requireNonNull(app);
+        Preconditions.checkStringNotEmpty(app);
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(TopicsTables.AppUsageHistoryContract.APP, app);
+        values.put(TopicsTables.AppUsageHistoryContract.EPOCH_ID, epochId);
+
+        try {
+            db.insert(TopicsTables.AppUsageHistoryContract.TABLE, null, values);
+        } catch (SQLException e) {
+            LogUtil.e("Failed to record App Only usage history." + e.getMessage());
+        }
+    }
+
+
+    /**
      * Return all apps and their SDKs that called Topics API in the epoch.
+     *
      * @param epochId the epoch to retrieve the app and sdk usage for.
      * @return Return Map<App, List<SDK>>.
      */
@@ -232,6 +264,45 @@ public class TopicsDao {
         }
 
         return appSdksUsageMap;
+    }
+
+    /**
+     * Get topic api usage of an app in an epoch.
+     *
+     * @param epochId the epoch to retrieve the app usage for.
+     * @return Map<App, UsageCount>, how many times an app called topics API in this epoch
+     */
+    @NonNull
+    public Map<String, Integer> retrieveAppUsageMap(long epochId) {
+        Map<String, Integer> appUsageMap = new HashMap<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return appUsageMap;
+        }
+
+        String[] projection = {
+                TopicsTables.AppUsageHistoryContract.APP,
+        };
+
+        String selection = TopicsTables.AppUsageHistoryContract.EPOCH_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(epochId) };
+
+        try (
+                Cursor cursor =
+                        db.query(/* distinct = */false,
+                                TopicsTables.AppUsageHistoryContract.TABLE, projection,
+                                selection,
+                                selectionArgs, null, null,
+                                null, null)
+        ) {
+            while (cursor.moveToNext()) {
+                String app = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.AppUsageHistoryContract.APP));
+                appUsageMap.put(app, appUsageMap.getOrDefault(app, 0) + 1);
+            }
+        }
+
+        return appUsageMap;
     }
 
     /**
