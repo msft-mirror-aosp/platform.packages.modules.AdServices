@@ -32,10 +32,12 @@ android_test {
         "ub-uiautomator",
         "framework-adservices.impl",
         "adservices-assets-lib",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
     ],
     libs: [
         "android.test.base",
-        ],
+    ],
     test_suites: [
         "general-tests",
     ],
