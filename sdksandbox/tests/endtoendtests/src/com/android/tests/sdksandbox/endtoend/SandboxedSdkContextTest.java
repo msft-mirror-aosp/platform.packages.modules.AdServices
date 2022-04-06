@@ -42,6 +42,7 @@ import java.io.InputStreamReader;
 public class SandboxedSdkContextTest {
 
     private SandboxedSdkContext mSandboxedSdkContext;
+    private static final String SDK_NAME = "com.android.codeproviderresources";
     private static final String RESOURCES_PACKAGE = "com.android.codeproviderresources";
     private static final String TEST_INTEGER_KEY = "test_integer";
     private static final int TEST_INTEGER_VALUE = 1234;
@@ -56,7 +57,8 @@ public class SandboxedSdkContextTest {
         ApplicationInfo info = context.getPackageManager().getApplicationInfo(
                 RESOURCES_PACKAGE,
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
-        mSandboxedSdkContext = new SandboxedSdkContext(InstrumentationRegistry.getContext(), info);
+        mSandboxedSdkContext = new SandboxedSdkContext(
+                InstrumentationRegistry.getContext(), info, SDK_NAME);
     }
 
     @Test
