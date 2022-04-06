@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.attribution.RandomSelector;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;

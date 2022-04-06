@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.attribution.Combinatorics;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;

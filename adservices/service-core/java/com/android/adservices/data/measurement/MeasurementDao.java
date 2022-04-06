@@ -28,11 +28,11 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.service.measurement.AdtechUrl;
-import com.android.adservices.service.measurement.BaseUriExtractor;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 
 import java.time.Instant;
 import java.util.ArrayList;
