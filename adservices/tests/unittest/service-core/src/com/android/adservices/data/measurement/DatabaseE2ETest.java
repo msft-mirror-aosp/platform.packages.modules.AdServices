@@ -203,7 +203,7 @@ public abstract class DatabaseE2ETest {
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
-        values.put(MeasurementTables.SourceContract.REGISTERER, source.getRegisterer().toString());
+        values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -225,8 +225,8 @@ public abstract class DatabaseE2ETest {
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
         values.put(MeasurementTables.TriggerContract.TRIGGER_DATA, trigger.getTriggerData());
         values.put(MeasurementTables.TriggerContract.PRIORITY, trigger.getPriority());
-        values.put(MeasurementTables.TriggerContract.REGISTERER,
-                trigger.getRegisterer().toString());
+        values.put(MeasurementTables.TriggerContract.REGISTRANT,
+                trigger.getRegistrant().toString());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
@@ -274,8 +274,8 @@ public abstract class DatabaseE2ETest {
                 attrRateLimit.getReportTo());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
                 attrRateLimit.getTriggerTime());
-        values.put(MeasurementTables.AttributionRateLimitContract.REGISTERER,
-                attrRateLimit.getRegisterer());
+        values.put(MeasurementTables.AttributionRateLimitContract.REGISTRANT,
+                attrRateLimit.getRegistrant());
         long row = db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AttributionRateLimit insertion failed");

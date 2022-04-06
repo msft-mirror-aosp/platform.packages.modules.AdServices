@@ -52,9 +52,9 @@ public interface IMeasurementDao {
     Trigger getTrigger(String triggerId) throws DatastoreException;
 
     /**
-     * Gets the number of sources a registerer has registered.
+     * Gets the number of sources a registrant has registered.
      */
-    long getNumTriggersPerRegisterer(Uri registerer) throws DatastoreException;
+    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
@@ -62,9 +62,9 @@ public interface IMeasurementDao {
     void updateTriggerStatus(Trigger trigger) throws DatastoreException;
 
     /**
-     * Gets the number of triggers a registerer has registered.
+     * Gets the number of triggers a registrant has registered.
      */
-    long getNumSourcesPerRegisterer(Uri registerer) throws DatastoreException;
+    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
@@ -182,13 +182,13 @@ public interface IMeasurementDao {
      * Deletes all measurement data owned by a registrant and optionally providing an origin uri
      * and/or a range of dates.
      *
-     * @param registerer who owns the data
+     * @param registrant who owns the data
      * @param origin uri for deletion. May be null
      * @param start time for deletion range. May be null. If null, end must be null as well
      * @param end time for deletion range. May be null. If null, start must be null as well
      */
     void deleteMeasurementData(
-            @NonNull Uri registerer,
+            @NonNull Uri registrant,
             @Nullable Uri origin,
             @Nullable Instant start,
             @Nullable Instant end) throws DatastoreException;

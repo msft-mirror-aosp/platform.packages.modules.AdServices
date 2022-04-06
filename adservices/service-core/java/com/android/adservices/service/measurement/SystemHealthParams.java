@@ -25,12 +25,12 @@ public class SystemHealthParams {
     /*
      * Max number of sources an app can register.
      */
-    public static final int MAX_SOURCE_REGISTERS_PER_REGISTERER = 1600; // placeholder value
+    public static final int MAX_SOURCE_REGISTERS_PER_REGISTRANT = 1600; // placeholder value
 
     /*
      * Max number of triggers an app can register.
      */
-    public static final int MAX_TRIGGER_REGISTERS_PER_REGISTERER = 1000; // placeholder value
+    public static final int MAX_TRIGGER_REGISTERS_PER_REGISTRANT = 1000; // placeholder value
 
     /**
      * Delay for attribution job triggering.

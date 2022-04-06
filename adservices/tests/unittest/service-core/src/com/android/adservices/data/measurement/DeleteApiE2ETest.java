@@ -53,13 +53,13 @@ public class DeleteApiE2ETest extends DatabaseE2ETest {
     }
 
     public void runActionToTest() {
-        final String registererValue = (String) get("registerer");
+        final String registrantValue = (String) get("registrant");
         final String originValue = (String) get("origin");
         final Long startValue = (Long) get("start");
         final Long endValue = (Long) get("end");
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
             dao.deleteMeasurementData(
-                    Uri.parse(registererValue),
+                    Uri.parse(registrantValue),
                     null == originValue ? null : Uri.parse(originValue),
                     null == startValue ? null : Instant.ofEpochMilli(startValue),
                     null == endValue ? null : Instant.ofEpochMilli(endValue)

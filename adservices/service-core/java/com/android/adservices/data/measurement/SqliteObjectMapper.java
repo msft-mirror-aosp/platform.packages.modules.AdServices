@@ -92,8 +92,8 @@ class SqliteObjectMapper {
                         .collect(Collectors.toList())));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
                 builder::setStatus);
-        setUriColumn(cursor, MeasurementTables.SourceContract.REGISTERER,
-                builder::setRegisterer);
+        setUriColumn(cursor, MeasurementTables.SourceContract.REGISTRANT,
+                builder::setRegistrant);
         setIntColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_MODE,
                 builder::setAttributionMode);
         return builder.build();
@@ -120,8 +120,8 @@ class SqliteObjectMapper {
                 builder::setDedupKey);
         setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_TIME,
                 builder::setTriggerTime);
-        setUriColumn(cursor, MeasurementTables.TriggerContract.REGISTERER,
-                builder::setRegisterer);
+        setUriColumn(cursor, MeasurementTables.TriggerContract.REGISTRANT,
+                builder::setRegistrant);
         return builder.build();
     }
 
