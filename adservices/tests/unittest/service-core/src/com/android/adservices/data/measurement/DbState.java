@@ -144,7 +144,7 @@ public class DbState {
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
-                .setRegisterer(Uri.parse(sJSON.getString("registerer")))
+                .setRegistrant(Uri.parse(sJSON.getString("registrant")))
                 .build();
     }
 
@@ -157,7 +157,7 @@ public class DbState {
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setPriority(tJSON.getLong("priority"))
                 .setStatus(tJSON.getInt("status"))
-                .setRegisterer(Uri.parse(tJSON.getString("registerer")))
+                .setRegistrant(Uri.parse(tJSON.getString("registrant")))
                 .build();
     }
 
@@ -183,7 +183,7 @@ public class DbState {
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setReportTo(attrJSON.getString("reportTo"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
-                .setRegisterer(attrJSON.getString("registerer"))
+                .setRegistrant(attrJSON.getString("registrant"))
                 .build();
     }
 
@@ -199,8 +199,8 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.REPORT_TO)))
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)))
-                .setRegisterer(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.REGISTERER)))
+                .setRegistrant(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.REGISTRANT)))
                 .build();
     }
 }

@@ -1,7 +1,7 @@
 {
   "testCases": [
     {
-      "name": "No registerer found, with no origin nor range",
+      "name": "No registrant found, with no origin nor range",
       "input": {
         "sources": [
           {
@@ -15,7 +15,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer1"
+            "registrant": "android-app://com.registrant1"
           },
           {
             "id": "S2",
@@ -28,7 +28,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "triggers": [
@@ -40,7 +40,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer1"
+            "registrant": "android-app://com.registrant1"
           },
           {
             "id": "T2",
@@ -50,7 +50,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "event_reports": [
@@ -84,7 +84,7 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer1"
+            "registrant": "android-app://com.registrant1"
           },
           {
             "id": "A2",
@@ -92,7 +92,7 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ]
       },
@@ -109,7 +109,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer1"
+            "registrant": "android-app://com.registrant1"
           },
           {
             "id": "S2",
@@ -122,7 +122,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "triggers": [
@@ -134,7 +134,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer1"
+            "registrant": "android-app://com.registrant1"
           },
           {
             "id": "T2",
@@ -144,7 +144,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "event_reports": [
@@ -178,7 +178,7 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer1"
+            "registrant": "android-app://com.registrant1"
           },
           {
             "id": "A2",
@@ -186,12 +186,12 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.toBeDeleted"
+        "registrant": "android-app://com.registrant.toBeDeleted"
       }
     },
     {
@@ -209,7 +209,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.toBeDeleted"
+            "registrant": "android-app://com.registrant.toBeDeleted"
           },
           {
             "id": "S2",
@@ -222,7 +222,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "triggers": [
@@ -234,7 +234,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer.toBeDeleted"
+            "registrant": "android-app://com.registrant.toBeDeleted"
           },
           {
             "id": "T2",
@@ -244,7 +244,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "event_reports": [
@@ -278,7 +278,7 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer.toBeDeleted"
+            "registrant": "android-app://com.registrant.toBeDeleted"
           },
           {
             "id": "A2",
@@ -286,7 +286,7 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ]
       },
@@ -303,7 +303,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "triggers": [
@@ -315,7 +315,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ],
         "event_reports": [
@@ -338,12 +338,12 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer2"
+            "registrant": "android-app://com.registrant2"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.toBeDeleted"
+        "registrant": "android-app://com.registrant.toBeDeleted"
       }
     },
     {
@@ -361,7 +361,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -374,7 +374,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -386,7 +386,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -396,7 +396,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -441,7 +441,7 @@
             "destinationSite": "android-app://com.site3",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -449,7 +449,7 @@
             "destinationSite": "android-app://com.site.toBeDeleted",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -457,7 +457,7 @@
             "destinationSite": "android-app://com.site2.doNotDelete",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -474,7 +474,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -486,7 +486,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -509,12 +509,12 @@
             "destinationSite": "android-app://com.site2.doNotDelete",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 10,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "origin": "android-app://com.site.toBeDeleted"
       }
     },
@@ -533,7 +533,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -546,7 +546,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -558,7 +558,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -568,7 +568,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -613,7 +613,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -621,7 +621,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -638,7 +638,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -650,7 +650,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -673,12 +673,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733602
       }
@@ -698,7 +698,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -711,7 +711,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -723,7 +723,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -733,7 +733,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -778,7 +778,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -786,7 +786,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -803,7 +803,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -815,7 +815,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -838,12 +838,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733602
       }
@@ -863,7 +863,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -876,7 +876,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -888,7 +888,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -898,7 +898,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -943,7 +943,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -951,7 +951,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -968,7 +968,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -980,7 +980,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1003,12 +1003,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733602
       }
@@ -1028,7 +1028,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -1041,7 +1041,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1053,7 +1053,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -1063,7 +1063,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1108,7 +1108,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -1116,7 +1116,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -1133,7 +1133,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1145,7 +1145,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1168,12 +1168,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733600
       }
@@ -1193,7 +1193,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -1206,7 +1206,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -1219,7 +1219,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1231,7 +1231,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -1241,7 +1241,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -1251,7 +1251,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1318,7 +1318,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -1326,7 +1326,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -1334,7 +1334,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -1351,7 +1351,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -1364,7 +1364,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1376,7 +1376,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -1386,7 +1386,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1420,7 +1420,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -1428,12 +1428,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733601,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "origin": "android-app://com.site.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733602
@@ -1454,7 +1454,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -1467,7 +1467,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -1480,7 +1480,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1492,7 +1492,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -1502,7 +1502,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -1512,7 +1512,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1579,7 +1579,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -1587,7 +1587,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -1595,7 +1595,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -1612,7 +1612,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -1625,7 +1625,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1637,7 +1637,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -1647,7 +1647,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1681,7 +1681,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -1689,12 +1689,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "origin": "android-app://com.site.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733602
@@ -1715,7 +1715,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -1728,7 +1728,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -1741,7 +1741,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1753,7 +1753,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -1763,7 +1763,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -1773,7 +1773,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1840,7 +1840,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -1848,7 +1848,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -1856,7 +1856,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -1873,7 +1873,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -1886,7 +1886,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -1898,7 +1898,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -1908,7 +1908,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -1942,7 +1942,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -1950,12 +1950,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733602,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "origin": "android-app://com.site.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733602
@@ -1976,7 +1976,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S2",
@@ -1989,7 +1989,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -2002,7 +2002,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -2014,7 +2014,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T2",
@@ -2024,7 +2024,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -2034,7 +2034,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -2101,7 +2101,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A2",
@@ -2109,7 +2109,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -2117,7 +2117,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
@@ -2134,7 +2134,7 @@
             "expiryTime": 1648665733615,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "S3",
@@ -2147,7 +2147,7 @@
             "expiryTime": 1648665733611,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "triggers": [
@@ -2159,7 +2159,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "T3",
@@ -2169,7 +2169,7 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ],
         "event_reports": [
@@ -2203,7 +2203,7 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/notInRange",
             "triggerTime": 1648665733605,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           },
           {
             "id": "A3",
@@ -2211,12 +2211,12 @@
             "destinationSite": "android-app://com.site2",
             "reportTo": "https://report-to.example.com/sourceNotDestinationNotMatch",
             "triggerTime": 1648665733600,
-            "registerer": "android-app://com.registerer.deleteCandidate"
+            "registrant": "android-app://com.registrant.deleteCandidate"
           }
         ]
       },
       "param": {
-        "registerer": "android-app://com.registerer.deleteCandidate",
+        "registrant": "android-app://com.registrant.deleteCandidate",
         "origin": "android-app://com.site.deleteCandidate",
         "start": 1648665733600,
         "end": 1648665733600

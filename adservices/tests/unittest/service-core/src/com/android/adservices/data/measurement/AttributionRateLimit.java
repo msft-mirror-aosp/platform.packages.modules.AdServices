@@ -29,7 +29,7 @@ class AttributionRateLimit {
     private String mDestinationSite;
     private String mReportTo;
     private long mTriggerTime;
-    private String mRegisterer;
+    private String mRegistrant;
 
     @Override
     public boolean equals(Object obj) {
@@ -41,13 +41,13 @@ class AttributionRateLimit {
                 && Objects.equals(mSourceSite, attr.mSourceSite)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
                 && Objects.equals(mReportTo, attr.mReportTo)
-                && Objects.equals(mRegisterer, attr.mRegisterer);
+                && Objects.equals(mRegistrant, attr.mRegistrant);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                mId, mSourceSite, mDestinationSite, mReportTo, mTriggerTime, mRegisterer);
+                mId, mSourceSite, mDestinationSite, mReportTo, mTriggerTime, mRegistrant);
     }
 
     public String getId() {
@@ -70,8 +70,8 @@ class AttributionRateLimit {
         return mTriggerTime;
     }
 
-    public String getRegisterer() {
-        return mRegisterer;
+    public String getRegistrant() {
+        return mRegistrant;
     }
 
     /**
@@ -109,8 +109,8 @@ class AttributionRateLimit {
             return this;
         }
 
-        public Builder setRegisterer(String registerer) {
-            mBuilding.mRegisterer = registerer;
+        public Builder setRegistrant(String registrant) {
+            mBuilding.mRegistrant = registrant;
             return this;
         }
 
