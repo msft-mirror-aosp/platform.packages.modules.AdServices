@@ -106,7 +106,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final String mAdServicesPackageName;
 
-
     SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
         mContext = context;
         mServiceProvider = provider;
@@ -193,6 +192,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         "Currently running instrumentation of this sdk sandbox process");
             }
         }
+        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingPackageName, callingUid);
         enforceCallingPackage(callingPackageName, callingUid);
         enforceCallerHasNetworkAccess(callingPackageName);
         final long token = Binder.clearCallingIdentity();
