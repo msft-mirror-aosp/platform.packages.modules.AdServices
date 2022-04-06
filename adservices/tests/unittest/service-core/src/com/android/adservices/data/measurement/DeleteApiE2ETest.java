@@ -33,7 +33,6 @@ import java.util.Collection;
  */
 @RunWith(Parameterized.class)
 public class DeleteApiE2ETest extends DatabaseE2ETest {
-    private final MeasurementDao mMeasurementDao;
     private final JSONObject mParam;
 
     // The 'name' parameter is needed for the JUnit parameterized
@@ -42,7 +41,6 @@ public class DeleteApiE2ETest extends DatabaseE2ETest {
     public DeleteApiE2ETest(
             DbState input, DbState output, JSONObject param, String name) {
         super(input, output);
-        this.mMeasurementDao = MeasurementDao.getInstance(sContext);
         mParam = param;
     }
 
@@ -59,13 +57,14 @@ public class DeleteApiE2ETest extends DatabaseE2ETest {
         final String originValue = (String) get("origin");
         final Long startValue = (Long) get("start");
         final Long endValue = (Long) get("end");
-        mMeasurementDao.deleteMeasurementData(
-                Uri.parse(registererValue),
-                null == originValue ? null : Uri.parse(originValue),
-                null == startValue ? null : Instant.ofEpochMilli(startValue),
-                null == endValue ? null : Instant.ofEpochMilli(endValue)
-        );
-
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    Uri.parse(registererValue),
+                    null == originValue ? null : Uri.parse(originValue),
+                    null == startValue ? null : Instant.ofEpochMilli(startValue),
+                    null == endValue ? null : Instant.ofEpochMilli(endValue)
+            );
+        });
     }
 
     private Object get(String name) {
