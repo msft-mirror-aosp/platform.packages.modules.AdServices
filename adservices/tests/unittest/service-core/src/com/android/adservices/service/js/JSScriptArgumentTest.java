@@ -21,13 +21,18 @@ import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
+import static com.android.adservices.service.js.JSScriptArgument.stringMapToRecordArg;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.json.JSONException;
 import org.junit.Test;
+
+import java.util.Map;
 
 public class JSScriptArgumentTest {
     @Test
@@ -87,5 +92,25 @@ public class JSScriptArgumentTest {
                 .isEqualTo(
                         "const recordArg = {\n\"intField\": 123,\n\"arrayField\": [\n\"value1\","
                                 + "\n\"value2\"\n]\n};");
+    }
+
+    @Test
+    public void testStringMapToRecordArg() throws JSONException {
+        Map<String, String> signals =
+                ImmutableMap.of(
+                        "key1",
+                        "{\"signals\":1}",
+                        "key2",
+                        "{\"signals\":2}",
+                        "key3",
+                        "{\"signals\":3}");
+        JSScriptArgument arg = stringMapToRecordArg("stringMapToRecordArg", signals);
+        assertThat(arg.variableDeclaration())
+                .isEqualTo(
+                        "const stringMapToRecordArg = {\n"
+                            + "\"key1\": {\"signals\":1},\n"
+                            + "\"key2\": {\"signals\":2},\n"
+                            + "\"key3\": {\"signals\":3}\n"
+                            + "};");
     }
 }
