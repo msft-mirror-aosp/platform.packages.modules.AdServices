@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public final class TopicsDaoTest {
     private static final String TAG = "TopicsDaoTest";
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private TopicsDao mTopicsDao = TopicsDao.getInstanceForTest(mContext);
+    private final TopicsDao mTopicsDao = TopicsDao.getInstanceForTest(mContext);
 
     @Before
     public void setup() {
@@ -58,13 +58,13 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.TopTopicsContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
     }
 
     @Test
     public void testGetTopTopicsAndPersistTopics() {
         List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
                 "random_topic");
-
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
         List<String> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 1L);
@@ -190,6 +190,76 @@ public final class TopicsDaoTest {
                 IllegalArgumentException.class,
                 () -> {
                     mTopicsDao.recordUsageHistory(/* epochId = */ 1L, /* app = */ "", "sdk");
+                });
+    }
+
+    @Test
+    public void testRecordAndRetrieveAppUsageHistory() {
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app1");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 2L, "app1");
+
+        // Epoch 1
+        Map<String, Integer> expectedAppUsageMap1 = new HashMap<>();
+        expectedAppUsageMap1.put("app1", 1);
+        expectedAppUsageMap1.put("app2", 2);
+        expectedAppUsageMap1.put("app3", 3);
+
+        // Now read back the usages from DB.
+        Map<String, Integer> appUsageMapFromDb1 =
+                mTopicsDao.retrieveAppUsageMap(/* epochId = */ 1L);
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(appUsageMapFromDb1).isEqualTo(expectedAppUsageMap1);
+
+        // Epoch 2
+        Map<String, Integer> expectedAppUsageMap2 = new HashMap<>();
+        expectedAppUsageMap2.put("app1", 1);
+
+        // Now read back the usages from DB.
+        Map<String, Integer> appUsageMapFromDb2 =
+                mTopicsDao.retrieveAppUsageMap(/* epochId = */ 2L);
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(appUsageMapFromDb2).isEqualTo(expectedAppUsageMap2);
+    }
+
+    @Test
+    public void testRecordAppUsageHistory_notFoundEpochId() {
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app1");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
+
+        // Now read back the usages from DB.
+        Map<String, Integer> appUsageMapFromDb =
+                mTopicsDao.retrieveAppUsageMap(/* epochId = */ 2L);
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(appUsageMapFromDb).isEmpty();
+    }
+
+    @Test
+    public void testRecordAppUsageHistory_nullApp() {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, /* app = */ null);
+                });
+    }
+
+    @Test
+    public void testRecordAppUsageHistory_emptyApp() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, /* app = */ "");
                 });
     }
 
