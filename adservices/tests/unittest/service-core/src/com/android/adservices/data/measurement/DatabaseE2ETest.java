@@ -107,8 +107,8 @@ public abstract class DatabaseE2ETest {
      * to prepare test-specific data.
      */
     @FunctionalInterface
-    public interface CheckedJsonFunction<T, R> {
-        R apply(T t) throws JSONException;
+    public interface CheckedJsonFunction {
+        Object apply(JSONObject jsonObject) throws JSONException;
     }
 
     /**
@@ -139,8 +139,12 @@ public abstract class DatabaseE2ETest {
             JSONObject output = testObj.getJSONObject("output");
             DbState inputState = new DbState(input);
             DbState outputState = new DbState(output);
-            testCases.add(new Object[]{inputState, outputState,
-                    prepareAdditionalData.apply(testObj), name});
+            if (prepareAdditionalData != null) {
+                testCases.add(new Object[]{inputState, outputState,
+                        prepareAdditionalData.apply(testObj), name});
+            } else {
+                testCases.add(new Object[]{inputState, outputState, name});
+            }
         }
         return testCases;
     }

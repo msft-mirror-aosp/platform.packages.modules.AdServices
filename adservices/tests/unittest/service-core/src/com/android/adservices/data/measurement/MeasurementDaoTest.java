@@ -103,45 +103,68 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetNumSourcesPerRegisterer() {
-        assertEquals(2, MeasurementDao.getInstance(sContext)
-                .getNumSourcesPerRegisterer(mAppTwoSources));
-        assertEquals(1, MeasurementDao.getInstance(sContext)
-                .getNumSourcesPerRegisterer(mAppOneSource));
-        assertEquals(0, MeasurementDao.getInstance(sContext)
-                .getNumSourcesPerRegisterer(mAppNoSources));
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(2, measurementDao
+                    .getNumSourcesPerRegisterer(mAppTwoSources));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(1, measurementDao
+                    .getNumSourcesPerRegisterer(mAppOneSource));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(0, measurementDao
+                    .getNumSourcesPerRegisterer(mAppNoSources));
+        });
     }
 
     @Test
     public void testGetNumTriggersPerRegisterer() {
-        assertEquals(2, MeasurementDao.getInstance(sContext)
-                .getNumTriggersPerRegisterer(mAppTwoTriggers));
-        assertEquals(1, MeasurementDao.getInstance(sContext)
-                .getNumTriggersPerRegisterer(mAppOneTrigger));
-        assertEquals(0, MeasurementDao.getInstance(sContext)
-                .getNumTriggersPerRegisterer(mAppNoTriggers));
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(2, measurementDao
+                    .getNumTriggersPerRegisterer(mAppTwoTriggers));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(1, measurementDao
+                    .getNumTriggersPerRegisterer(mAppOneTrigger));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(0, measurementDao
+                    .getNumTriggersPerRegisterer(mAppNoTriggers));
+        });
     }
 
     @Test(expected = NullPointerException.class)
     public void testDeleteMeasurementData_requiredRegistererAsNull() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                null /* registerer */, null /* origin */, null /* start */, null /* end */);
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    null /* registerer */, null /* origin */,
+                    null /* start */, null /* end */);
+        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeNoStartDate() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                mAppOneSource, null /* origin */, null /* start */, Instant.now());
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    mAppOneSource, null /* origin */, null /* start */, Instant.now());
+        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeNoEndDate() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                mAppOneSource, null /* origin */, Instant.now(), null /* end */);
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    mAppOneSource, null /* origin */, Instant.now(), null /* end */);
+        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
+        });
     }
 }
