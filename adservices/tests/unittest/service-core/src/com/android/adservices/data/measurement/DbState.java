@@ -183,6 +183,7 @@ public class DbState {
                 .setDestinationSite(attrJSON.getString("destinationSite"))
                 .setReportTo(attrJSON.getString("reportTo"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
+                .setRegisterer(attrJSON.getString("registerer"))
                 .build();
     }
 
@@ -198,6 +199,8 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.REPORT_TO)))
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)))
+                .setRegisterer(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.REGISTERER)))
                 .build();
     }
 }

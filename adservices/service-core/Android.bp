@@ -43,6 +43,7 @@ java_library {
         ":adservices-service-core-sources", ":statslog-adservices-java-gen",
     ],
     libs: [
+        "androidx.room_room-runtime",
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
         "framework-statsd.stubs.module_lib", // For WW logging
