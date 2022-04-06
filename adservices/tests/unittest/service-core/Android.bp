@@ -21,7 +21,9 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
-    sdk_version: "current", // We use hidden APIs in this test
+    defaults: ["modules-utils-testable-device-config-defaults"],
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
@@ -30,11 +32,11 @@ android_test {
         "adservices-service-core",
         "truth-prebuilt",
         "ub-uiautomator",
-        "framework-adservices.impl",
         "adservices-assets-lib",
     ],
     libs: [
         "android.test.base",
+        "framework-adservices.impl",
         ],
     test_suites: [
         "general-tests",
