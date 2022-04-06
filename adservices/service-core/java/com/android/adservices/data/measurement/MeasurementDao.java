@@ -258,8 +258,8 @@ class MeasurementDao implements IMeasurementDao {
                 trigger.getReportTo().toString());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
                 trigger.getTriggerTime());
-        values.put(MeasurementTables.AttributionRateLimitContract.REGISTERER,
-                BaseUriExtractor.getBaseUri(trigger.getRegisterer()));
+        values.put(MeasurementTables.AttributionRateLimitContract.REGISTRANT,
+                BaseUriExtractor.getBaseUri(trigger.getRegistrant()));
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AttributionRateLimitContract.TABLE,
                         /*nullColumnHack=*/null,
@@ -295,21 +295,21 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public long getNumSourcesPerRegisterer(Uri registerer) throws DatastoreException {
+    public long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTERER + " = ? ",
-                new String[]{registerer.toString()});
+                MeasurementTables.SourceContract.REGISTRANT + " = ? ",
+                new String[]{registrant.toString()});
     }
 
     @Override
-    public long getNumTriggersPerRegisterer(Uri registerer) throws DatastoreException {
+    public long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTERER + " = ? ",
-                new String[]{registerer.toString()});
+                MeasurementTables.TriggerContract.REGISTRANT + " = ? ",
+                new String[]{registrant.toString()});
     }
 
     @Override
@@ -317,7 +317,7 @@ class MeasurementDao implements IMeasurementDao {
         String uriStr = uri.toString();
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         // For all Source records matching the given Uri
-        // as REGISTERER, obtains EventReport records who's SOURCE_ID
+        // as REGISTRANT, obtains EventReport records who's SOURCE_ID
         // matches a Source records' EVENT_ID.
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 String.format("%1$s IN ("
@@ -335,7 +335,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.EventReportContract.REPORT_TO,
                         MeasurementTables.SourceContract.REPORT_TO,
-                        MeasurementTables.SourceContract.REGISTERER),
+                        MeasurementTables.SourceContract.REGISTRANT),
                 new String[]{uriStr});
         // EventReport table
         db.delete(MeasurementTables.EventReportContract.TABLE,
@@ -343,11 +343,11 @@ class MeasurementDao implements IMeasurementDao {
                 new String[]{uriStr});
         // Source table
         db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTERER + " = ?",
+                MeasurementTables.SourceContract.REGISTRANT + " = ?",
                 new String[]{uriStr});
         // Trigger table
         db.delete(MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTERER + " = ?",
+                MeasurementTables.TriggerContract.REGISTRANT + " = ?",
                 new String[]{uriStr});
         // AttributionRateLimit table
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
@@ -455,14 +455,14 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public void deleteMeasurementData(
-            @NonNull Uri registerer,
+            @NonNull Uri registrant,
             @Nullable Uri origin,
             @Nullable Instant start,
             @Nullable Instant end) throws DatastoreException {
-        Objects.requireNonNull(registerer);
+        Objects.requireNonNull(registrant);
         validateOptionalRange(start, end);
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
-        deleteMeasurementData(db, registerer, origin, start, end);
+        deleteMeasurementData(db, registrant, origin, start, end);
     }
 
     private void validateOptionalRange(Instant start, Instant end) {
@@ -477,124 +477,124 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private void deleteMeasurementData(
-            SQLiteDatabase db, Uri registerer, Uri origin, Instant start, Instant end) {
+            SQLiteDatabase db, Uri registrant, Uri origin, Instant start, Instant end) {
         if (origin == null && start == null) {
             // Deletes all measurement data
-            deleteAttributionRateLimitByRegisterer(db, registerer);
-            deleteEventReportByRegisterer(db, registerer);
-            deleteTriggerByRegisterer(db, registerer);
-            deleteSourceByRegisterer(db, registerer);
+            deleteAttributionRateLimitByRegistrant(db, registrant);
+            deleteEventReportByRegistrant(db, registrant);
+            deleteTriggerByRegistrant(db, registrant);
+            deleteSourceByRegistrant(db, registrant);
         } else if (start == null) {
             // Deletes all measurement data by uri
-            deleteAttributionRateLimitByRegistererAndUri(db, registerer, origin);
-            deleteEventReportByRegistererAndUri(db, registerer, origin);
-            deleteTriggerByRegistererAndUri(db, registerer, origin);
-            deleteSourceByRegistererAndUri(db, registerer, origin);
+            deleteAttributionRateLimitByRegistrantAndUri(db, registrant, origin);
+            deleteEventReportByRegistrantAndUri(db, registrant, origin);
+            deleteTriggerByRegistrantAndUri(db, registrant, origin);
+            deleteSourceByRegistrantAndUri(db, registrant, origin);
         } else if (origin == null) {
             // Deletes all measurement data by date range
-            deleteAttributionRateLimitByRegistererAndRange(db, registerer, start, end);
-            deleteEventReportByRegistererAndRange(db, registerer, start, end);
-            deleteTriggerByRegistererAndRange(db, registerer, start, end);
-            deleteSourceByRegistererAndRange(db, registerer, start, end);
+            deleteAttributionRateLimitByRegistrantAndRange(db, registrant, start, end);
+            deleteEventReportByRegistrantAndRange(db, registrant, start, end);
+            deleteTriggerByRegistrantAndRange(db, registrant, start, end);
+            deleteSourceByRegistrantAndRange(db, registrant, start, end);
         } else {
             // Deletes all measurement data by uri and date range
-            deleteAttributionRateLimitByRegistererAndUriAndRange(
-                    db, registerer, origin, start, end);
-            deleteEventReportByRegistererAndUriAndRange(db, registerer, origin, start, end);
-            deleteTriggerByRegistererAndUriAndRange(db, registerer, origin, start, end);
-            deleteSourceByRegistererAndUriAndRange(db, registerer, origin, start, end);
+            deleteAttributionRateLimitByRegistrantAndUriAndRange(
+                    db, registrant, origin, start, end);
+            deleteEventReportByRegistrantAndUriAndRange(db, registrant, origin, start, end);
+            deleteTriggerByRegistrantAndUriAndRange(db, registrant, origin, start, end);
+            deleteSourceByRegistrantAndUriAndRange(db, registrant, origin, start, end);
         }
     }
 
-    private void deleteSourceByRegisterer(SQLiteDatabase db, Uri registerer) {
+    private void deleteSourceByRegistrant(SQLiteDatabase db, Uri registrant) {
         db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTERER + " = ?",
-                new String[]{registerer.toString()});
+                MeasurementTables.SourceContract.REGISTRANT + " = ?",
+                new String[]{registrant.toString()});
     }
 
-    private void deleteSourceByRegistererAndUri(
-            SQLiteDatabase db, Uri registerer, Uri attributionSource) {
+    private void deleteSourceByRegistrantAndUri(
+            SQLiteDatabase db, Uri registrant, Uri attributionSource) {
         db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTERER + " = ? AND "
+                MeasurementTables.SourceContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.SourceContract.ATTRIBUTION_SOURCE + " = ?",
-                new String[]{registerer.toString(), attributionSource.toString()});
+                new String[]{registrant.toString(), attributionSource.toString()});
     }
 
-    private void deleteSourceByRegistererAndRange(
-            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+    private void deleteSourceByRegistrantAndRange(
+            SQLiteDatabase db, Uri registrant, Instant start, Instant end) {
         db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTERER + " = ? AND "
+                MeasurementTables.SourceContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.SourceContract.EVENT_TIME + " >= ? AND "
                         + MeasurementTables.SourceContract.EVENT_TIME + " <= ?",
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())
                 });
     }
 
-    private void deleteSourceByRegistererAndUriAndRange(
-            SQLiteDatabase db, Uri registerer, Uri attributionSource, Instant start, Instant end) {
+    private void deleteSourceByRegistrantAndUriAndRange(
+            SQLiteDatabase db, Uri registrant, Uri attributionSource, Instant start, Instant end) {
         db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTERER + " = ? AND "
+                MeasurementTables.SourceContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.SourceContract.ATTRIBUTION_SOURCE + " = ? AND "
                         + MeasurementTables.SourceContract.EVENT_TIME + " >= ? AND "
                         + MeasurementTables.SourceContract.EVENT_TIME + " <= ?",
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         attributionSource.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())
                 });
     }
 
-    private void deleteTriggerByRegisterer(SQLiteDatabase db, Uri registerer) {
+    private void deleteTriggerByRegistrant(SQLiteDatabase db, Uri registrant) {
         db.delete(MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTERER + " = ?",
-                new String[]{registerer.toString()});
+                MeasurementTables.TriggerContract.REGISTRANT + " = ?",
+                new String[]{registrant.toString()});
     }
 
-    private void deleteTriggerByRegistererAndUri(
-            SQLiteDatabase db, Uri registerer, Uri attributionDestination) {
+    private void deleteTriggerByRegistrantAndUri(
+            SQLiteDatabase db, Uri registrant, Uri attributionDestination) {
         db.delete(MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTERER + " = ? AND "
+                MeasurementTables.TriggerContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION + " = ?",
-                new String[]{registerer.toString(), attributionDestination.toString()});
+                new String[]{registrant.toString(), attributionDestination.toString()});
     }
 
-    private void deleteTriggerByRegistererAndRange(
-            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+    private void deleteTriggerByRegistrantAndRange(
+            SQLiteDatabase db, Uri registrant, Instant start, Instant end) {
         db.delete(MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTERER + " = ? AND "
+                MeasurementTables.TriggerContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.TriggerContract.TRIGGER_TIME + " >= ? AND "
                         + MeasurementTables.TriggerContract.TRIGGER_TIME + " <= ?",
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())
                 });
     }
 
-    private void deleteTriggerByRegistererAndUriAndRange(
+    private void deleteTriggerByRegistrantAndUriAndRange(
             SQLiteDatabase db,
-            Uri registerer,
+            Uri registrant,
             Uri attributionDestination,
             Instant start,
             Instant end) {
         db.delete(MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTERER + " = ? AND "
+                MeasurementTables.TriggerContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION + " = ? AND "
                         + MeasurementTables.TriggerContract.TRIGGER_TIME + " >= ? AND "
                         + MeasurementTables.TriggerContract.TRIGGER_TIME + " <= ?",
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         attributionDestination.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())
                 });
     }
 
-    private void deleteEventReportByRegisterer(SQLiteDatabase db, Uri registerer) {
+    private void deleteEventReportByRegistrant(SQLiteDatabase db, Uri registrant) {
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 String.format("%1$s IN ("
                                 + "SELECT e.%1$s FROM %2$s e "
@@ -606,11 +606,11 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.TABLE,
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
-                        MeasurementTables.SourceContract.REGISTERER),
-                new String[]{registerer.toString()});
+                        MeasurementTables.SourceContract.REGISTRANT),
+                new String[]{registrant.toString()});
     }
 
-    private void deleteEventReportByRegistererAndUri(SQLiteDatabase db, Uri registerer, Uri site) {
+    private void deleteEventReportByRegistrantAndUri(SQLiteDatabase db, Uri registrant, Uri site) {
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 String.format("%1$s IN ("
                                 + "SELECT e.%1$s FROM %2$s e "
@@ -622,14 +622,14 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.TABLE,
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
-                        MeasurementTables.SourceContract.REGISTERER,
+                        MeasurementTables.SourceContract.REGISTRANT,
                         MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION),
-                new String[]{registerer.toString(), site.toString(), site.toString()});
+                new String[]{registrant.toString(), site.toString(), site.toString()});
     }
 
-    private void deleteEventReportByRegistererAndRange(
-            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+    private void deleteEventReportByRegistrantAndRange(
+            SQLiteDatabase db, Uri registrant, Instant start, Instant end) {
         final String startValue = String.valueOf(start.toEpochMilli());
         final String endValue = String.valueOf(end.toEpochMilli());
         db.delete(MeasurementTables.EventReportContract.TABLE,
@@ -644,11 +644,11 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.TABLE,
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
-                        MeasurementTables.SourceContract.REGISTERER,
+                        MeasurementTables.SourceContract.REGISTRANT,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         MeasurementTables.EventReportContract.TRIGGER_TIME),
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         startValue,
                         endValue,
                         startValue,
@@ -656,8 +656,8 @@ class MeasurementDao implements IMeasurementDao {
                 });
     }
 
-    private void deleteEventReportByRegistererAndUriAndRange(
-            SQLiteDatabase db, Uri registerer, Uri site, Instant start, Instant end) {
+    private void deleteEventReportByRegistrantAndUriAndRange(
+            SQLiteDatabase db, Uri registrant, Uri site, Instant start, Instant end) {
         final String startValue = String.valueOf(start.toEpochMilli());
         final String endValue = String.valueOf(end.toEpochMilli());
         db.delete(MeasurementTables.EventReportContract.TABLE,
@@ -673,13 +673,13 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.TABLE,
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
-                        MeasurementTables.SourceContract.REGISTERER,
+                        MeasurementTables.SourceContract.REGISTRANT,
                         MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.EventReportContract.TRIGGER_TIME),
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         site.toString(),
                         startValue,
                         endValue,
@@ -689,44 +689,44 @@ class MeasurementDao implements IMeasurementDao {
                 });
     }
 
-    private void deleteAttributionRateLimitByRegisterer(SQLiteDatabase db, Uri registerer) {
+    private void deleteAttributionRateLimitByRegistrant(SQLiteDatabase db, Uri registrant) {
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
-                MeasurementTables.AttributionRateLimitContract.REGISTERER + " = ?",
-                new String[]{registerer.toString()});
+                MeasurementTables.AttributionRateLimitContract.REGISTRANT + " = ?",
+                new String[]{registrant.toString()});
     }
 
-    private void deleteAttributionRateLimitByRegistererAndUri(
-            SQLiteDatabase db, Uri registerer, Uri site) {
+    private void deleteAttributionRateLimitByRegistrantAndUri(
+            SQLiteDatabase db, Uri registrant, Uri site) {
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
                 String.format("%1$s = ? AND (%2$s = ? OR %3$s = ?)",
-                        MeasurementTables.AttributionRateLimitContract.REGISTERER,
+                        MeasurementTables.AttributionRateLimitContract.REGISTRANT,
                         MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
                         MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE),
-                new String[]{registerer.toString(), site.toString(), site.toString()});
+                new String[]{registrant.toString(), site.toString(), site.toString()});
     }
 
-    private void deleteAttributionRateLimitByRegistererAndRange(
-            SQLiteDatabase db, Uri registerer, Instant start, Instant end) {
+    private void deleteAttributionRateLimitByRegistrantAndRange(
+            SQLiteDatabase db, Uri registrant, Instant start, Instant end) {
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
-                MeasurementTables.AttributionRateLimitContract.REGISTERER + " = ? AND "
+                MeasurementTables.AttributionRateLimitContract.REGISTRANT + " = ? AND "
                         + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " >= ? AND "
                         + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME + " <= ?",
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())});
     }
 
-    private void deleteAttributionRateLimitByRegistererAndUriAndRange(
-            SQLiteDatabase db, Uri registerer, Uri site, Instant start, Instant end) {
+    private void deleteAttributionRateLimitByRegistrantAndUriAndRange(
+            SQLiteDatabase db, Uri registrant, Uri site, Instant start, Instant end) {
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE,
                 String.format("%1$s = ? AND (%2$s = ? OR %3$s = ?) AND (%4$s >= ? AND %4$s <= ?)",
-                        MeasurementTables.AttributionRateLimitContract.REGISTERER,
+                        MeasurementTables.AttributionRateLimitContract.REGISTRANT,
                         MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
                         MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
                         MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME),
                 new String[]{
-                        registerer.toString(),
+                        registrant.toString(),
                         site.toString(),
                         site.toString(),
                         String.valueOf(start.toEpochMilli()),

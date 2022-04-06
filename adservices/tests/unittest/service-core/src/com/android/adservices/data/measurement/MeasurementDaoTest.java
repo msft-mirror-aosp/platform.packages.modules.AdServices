@@ -55,40 +55,40 @@ public class MeasurementDaoTest {
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(new Source.Builder()
                 .setId("S1")
-                .setRegisterer(mAppTwoSources)
+                .setRegistrant(mAppTwoSources)
                 .build());
         sourcesList.add(new Source.Builder()
                 .setId("S2")
-                .setRegisterer(mAppTwoSources)
+                .setRegistrant(mAppTwoSources)
                 .build());
         sourcesList.add(new Source.Builder()
                 .setId("S3")
-                .setRegisterer(mAppOneSource)
+                .setRegistrant(mAppOneSource)
                 .build());
         for (Source source : sourcesList) {
             ContentValues values = new ContentValues();
             values.put("_id", source.getId());
-            values.put("registerer", source.getRegisterer().toString());
+            values.put("registrant", source.getRegistrant().toString());
             long row = db.insert("msmt_source", null, values);
             Assert.assertNotEquals("Source insertion failed", -1, row);
         }
         List<Trigger> triggersList = new ArrayList<>();
         triggersList.add(new Trigger.Builder()
                 .setId("T1")
-                .setRegisterer(mAppTwoTriggers)
+                .setRegistrant(mAppTwoTriggers)
                 .build());
         triggersList.add(new Trigger.Builder()
                 .setId("T2")
-                .setRegisterer(mAppTwoTriggers)
+                .setRegistrant(mAppTwoTriggers)
                 .build());
         triggersList.add(new Trigger.Builder()
                 .setId("T3")
-                .setRegisterer(mAppOneTrigger)
+                .setRegistrant(mAppOneTrigger)
                 .build());
         for (Trigger trigger : triggersList) {
             ContentValues values = new ContentValues();
             values.put("_id", trigger.getId());
-            values.put("registerer", trigger.getRegisterer().toString());
+            values.put("registrant", trigger.getRegistrant().toString());
             long row = db.insert("msmt_trigger", null, values);
             Assert.assertNotEquals("Trigger insertion failed", -1, row);
         }
@@ -102,44 +102,44 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetNumSourcesPerRegisterer() {
+    public void testGetNumSourcesPerRegistrant() {
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         dm.runInTransaction(measurementDao -> {
             assertEquals(2, measurementDao
-                    .getNumSourcesPerRegisterer(mAppTwoSources));
+                    .getNumSourcesPerRegistrant(mAppTwoSources));
         });
         dm.runInTransaction(measurementDao -> {
             assertEquals(1, measurementDao
-                    .getNumSourcesPerRegisterer(mAppOneSource));
+                    .getNumSourcesPerRegistrant(mAppOneSource));
         });
         dm.runInTransaction(measurementDao -> {
             assertEquals(0, measurementDao
-                    .getNumSourcesPerRegisterer(mAppNoSources));
+                    .getNumSourcesPerRegistrant(mAppNoSources));
         });
     }
 
     @Test
-    public void testGetNumTriggersPerRegisterer() {
+    public void testGetNumTriggersPerRegistrant() {
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         dm.runInTransaction(measurementDao -> {
             assertEquals(2, measurementDao
-                    .getNumTriggersPerRegisterer(mAppTwoTriggers));
+                    .getNumTriggersPerRegistrant(mAppTwoTriggers));
         });
         dm.runInTransaction(measurementDao -> {
             assertEquals(1, measurementDao
-                    .getNumTriggersPerRegisterer(mAppOneTrigger));
+                    .getNumTriggersPerRegistrant(mAppOneTrigger));
         });
         dm.runInTransaction(measurementDao -> {
             assertEquals(0, measurementDao
-                    .getNumTriggersPerRegisterer(mAppNoTriggers));
+                    .getNumTriggersPerRegistrant(mAppNoTriggers));
         });
     }
 
     @Test(expected = NullPointerException.class)
-    public void testDeleteMeasurementData_requiredRegistererAsNull() {
+    public void testDeleteMeasurementData_requiredRegistrantAsNull() {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
             dao.deleteMeasurementData(
-                    null /* registerer */, null /* origin */,
+                    null /* registrant */, null /* origin */,
                     null /* start */, null /* end */);
         });
     }
