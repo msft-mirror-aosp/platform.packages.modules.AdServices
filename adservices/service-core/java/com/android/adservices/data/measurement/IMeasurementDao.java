@@ -124,6 +124,12 @@ public interface IMeasurementDao {
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
 
     /**
+     * Returns list of all event reports that have a scheduled reporting time in the given window.
+     */
+    List<String> getPendingEventReportIdsInWindow(long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
      * Find the number of entries for a rate limit window using the {@link Source} and
      * {@link Trigger}.
      * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
