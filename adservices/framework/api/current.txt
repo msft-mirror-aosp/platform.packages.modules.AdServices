@@ -21,10 +21,10 @@ package android.adservices.exceptions {
   }
 
   public class GetTopicsException extends android.adservices.exceptions.AdServicesException {
-    ctor public GetTopicsException(@android.adservices.topics.TopicsManager.ResultCode int);
-    ctor public GetTopicsException(@android.adservices.topics.TopicsManager.ResultCode int, @Nullable String);
-    ctor public GetTopicsException(@android.adservices.topics.TopicsManager.ResultCode int, @Nullable String, @Nullable Throwable);
-    method @android.adservices.topics.TopicsManager.ResultCode public int getResultCode();
+    ctor public GetTopicsException(int);
+    ctor public GetTopicsException(int, @Nullable String);
+    ctor public GetTopicsException(int, @Nullable String, @Nullable Throwable);
+    method public int getResultCode();
   }
 
 }
@@ -42,8 +42,8 @@ package android.adservices.topics {
   }
 
   public class GetTopicsResponse {
-    method public java.util.List<java.lang.Long> getModelVersions();
-    method public java.util.List<java.lang.Long> getTaxonomyVersions();
+    method @NonNull public java.util.List<java.lang.Long> getModelVersions();
+    method @NonNull public java.util.List<java.lang.Long> getTaxonomyVersions();
     method @NonNull public java.util.List<java.lang.String> getTopics();
   }
 
@@ -63,9 +63,6 @@ package android.adservices.topics {
     field public static final int RESULT_OK = 0; // 0x0
     field public static final int RESULT_RATE_LIMIT_REACHED = 4; // 0x4
     field public static final String TOPICS_SERVICE = "topics_service";
-  }
-
-  @IntDef({android.adservices.topics.TopicsManager.RESULT_OK, android.adservices.topics.TopicsManager.RESULT_INTERNAL_ERROR, android.adservices.topics.TopicsManager.RESULT_INVALID_ARGUMENT, android.adservices.topics.TopicsManager.RESULT_IO_ERROR, android.adservices.topics.TopicsManager.RESULT_RATE_LIMIT_REACHED}) @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.SOURCE) public static @interface TopicsManager.ResultCode {
   }
 
 }

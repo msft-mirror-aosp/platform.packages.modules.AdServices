@@ -40,6 +40,8 @@ public class TopicsManager {
     /**
      * Result codes from
      * {@link TopicsManager#getTopics(GetTopicsRequest, Executor, OutcomeReceiver)} methods.
+     *
+     * @hide
      */
     @IntDef(
             value = {
