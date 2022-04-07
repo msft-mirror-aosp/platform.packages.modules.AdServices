@@ -55,40 +55,40 @@ public class MeasurementDaoTest {
         List<Source> sourcesList = new ArrayList<>();
         sourcesList.add(new Source.Builder()
                 .setId("S1")
-                .setRegisterer(mAppTwoSources)
+                .setRegistrant(mAppTwoSources)
                 .build());
         sourcesList.add(new Source.Builder()
                 .setId("S2")
-                .setRegisterer(mAppTwoSources)
+                .setRegistrant(mAppTwoSources)
                 .build());
         sourcesList.add(new Source.Builder()
                 .setId("S3")
-                .setRegisterer(mAppOneSource)
+                .setRegistrant(mAppOneSource)
                 .build());
         for (Source source : sourcesList) {
             ContentValues values = new ContentValues();
             values.put("_id", source.getId());
-            values.put("registerer", source.getRegisterer().toString());
+            values.put("registrant", source.getRegistrant().toString());
             long row = db.insert("msmt_source", null, values);
             Assert.assertNotEquals("Source insertion failed", -1, row);
         }
         List<Trigger> triggersList = new ArrayList<>();
         triggersList.add(new Trigger.Builder()
                 .setId("T1")
-                .setRegisterer(mAppTwoTriggers)
+                .setRegistrant(mAppTwoTriggers)
                 .build());
         triggersList.add(new Trigger.Builder()
                 .setId("T2")
-                .setRegisterer(mAppTwoTriggers)
+                .setRegistrant(mAppTwoTriggers)
                 .build());
         triggersList.add(new Trigger.Builder()
                 .setId("T3")
-                .setRegisterer(mAppOneTrigger)
+                .setRegistrant(mAppOneTrigger)
                 .build());
         for (Trigger trigger : triggersList) {
             ContentValues values = new ContentValues();
             values.put("_id", trigger.getId());
-            values.put("registerer", trigger.getRegisterer().toString());
+            values.put("registrant", trigger.getRegistrant().toString());
             long row = db.insert("msmt_trigger", null, values);
             Assert.assertNotEquals("Trigger insertion failed", -1, row);
         }
@@ -102,46 +102,69 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetNumSourcesPerRegisterer() {
-        assertEquals(2, MeasurementDao.getInstance(sContext)
-                .getNumSourcesPerRegisterer(mAppTwoSources));
-        assertEquals(1, MeasurementDao.getInstance(sContext)
-                .getNumSourcesPerRegisterer(mAppOneSource));
-        assertEquals(0, MeasurementDao.getInstance(sContext)
-                .getNumSourcesPerRegisterer(mAppNoSources));
+    public void testGetNumSourcesPerRegistrant() {
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(2, measurementDao
+                    .getNumSourcesPerRegistrant(mAppTwoSources));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(1, measurementDao
+                    .getNumSourcesPerRegistrant(mAppOneSource));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(0, measurementDao
+                    .getNumSourcesPerRegistrant(mAppNoSources));
+        });
     }
 
     @Test
-    public void testGetNumTriggersPerRegisterer() {
-        assertEquals(2, MeasurementDao.getInstance(sContext)
-                .getNumTriggersPerRegisterer(mAppTwoTriggers));
-        assertEquals(1, MeasurementDao.getInstance(sContext)
-                .getNumTriggersPerRegisterer(mAppOneTrigger));
-        assertEquals(0, MeasurementDao.getInstance(sContext)
-                .getNumTriggersPerRegisterer(mAppNoTriggers));
+    public void testGetNumTriggersPerRegistrant() {
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(2, measurementDao
+                    .getNumTriggersPerRegistrant(mAppTwoTriggers));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(1, measurementDao
+                    .getNumTriggersPerRegistrant(mAppOneTrigger));
+        });
+        dm.runInTransaction(measurementDao -> {
+            assertEquals(0, measurementDao
+                    .getNumTriggersPerRegistrant(mAppNoTriggers));
+        });
     }
 
     @Test(expected = NullPointerException.class)
-    public void testDeleteMeasurementData_requiredRegistererAsNull() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                null /* registerer */, null /* origin */, null /* start */, null /* end */);
+    public void testDeleteMeasurementData_requiredRegistrantAsNull() {
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    null /* registrant */, null /* origin */,
+                    null /* start */, null /* end */);
+        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeNoStartDate() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                mAppOneSource, null /* origin */, null /* start */, Instant.now());
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    mAppOneSource, null /* origin */, null /* start */, Instant.now());
+        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeNoEndDate() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                mAppOneSource, null /* origin */, Instant.now(), null /* end */);
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    mAppOneSource, null /* origin */, Instant.now(), null /* end */);
+        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
-        MeasurementDao.getInstance(sContext).deleteMeasurementData(
-                mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+            dao.deleteMeasurementData(
+                    mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
+        });
     }
 }

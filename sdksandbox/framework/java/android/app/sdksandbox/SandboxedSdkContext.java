@@ -45,9 +45,12 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     private final Resources mResources;
     private final AssetManager mAssets;
+    private final String mSdkName;
 
-    public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info) {
+    public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info,
+            @NonNull String sdkName) {
         super(baseContext);
+        mSdkName = sdkName;
         Resources resources = null;
         try {
             resources = baseContext.getPackageManager().getResourcesForApplication(info);
@@ -63,14 +66,23 @@ public final class SandboxedSdkContext extends ContextWrapper {
         }
     }
 
-    /** Returns the resources defined in the SDKs .apk file. */
+    /**
+     * Returns the SDK name defined in the SDK's manifest.
+     * @hide
+     */
+    @NonNull
+    public String getSdkName() {
+        return mSdkName;
+    }
+
+    /** Returns the resources defined in the SDK's .apk file. */
     @Override
     @Nullable
     public Resources getResources() {
         return mResources;
     }
 
-    /** Returns the assets defined in the SDKs .apk file. */
+    /** Returns the assets defined in the SDK's .apk file. */
     @Override
     @Nullable
     public AssetManager getAssets() {

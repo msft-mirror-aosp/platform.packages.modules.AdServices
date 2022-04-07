@@ -15,7 +15,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -27,13 +27,12 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -47,7 +46,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -59,7 +58,7 @@
             "status": 2,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [{
@@ -80,7 +79,7 @@
             "destinationSite": "https://www.example2.com",
             "reportTo": "https://www.example3.com/r1",
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ]
       }
@@ -100,7 +99,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -112,13 +111,12 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -132,7 +130,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -144,7 +142,7 @@
             "status": 1,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [],
@@ -166,7 +164,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           },
           {
             "id": "S2",
@@ -179,7 +177,7 @@
             "expiryTime": 8640000030,
             "priority": 200,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -191,13 +189,12 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -211,7 +208,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 1,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           },
           {
             "id": "S2",
@@ -224,7 +221,7 @@
             "expiryTime": 8640000030,
             "priority": 200,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -236,7 +233,7 @@
             "status": 2,
             "triggerData": 2,
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [{
@@ -256,7 +253,7 @@
             "destinationSite": "https://www.example2.com",
             "reportTo": "https://www.example3.com/r1",
             "triggerTime": 8640000002,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ]
       }
@@ -276,7 +273,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           },
           {
             "id": "S2",
@@ -289,7 +286,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -301,13 +298,12 @@
             "status": 0,
             "triggerData": 2,
             "triggerTime": 8640000003,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -321,7 +317,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 1,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           },
           {
             "id": "S2",
@@ -334,7 +330,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://com.example.abc"
+            "registrant": "android-app://com.example.abc"
           }
         ],
         "triggers": [
@@ -346,7 +342,7 @@
             "status": 2,
             "triggerData": 2,
             "triggerTime": 8640000003,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ],
         "event_reports": [{
@@ -366,7 +362,7 @@
             "destinationSite": "android-app://com.example.xyz",
             "reportTo": "https://www.example3.com/r1",
             "triggerTime": 8640000003,
-            "registerer": "android-app://com.example.xyz"
+            "registrant": "android-app://com.example.xyz"
           }
         ]
       }

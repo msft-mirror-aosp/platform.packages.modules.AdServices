@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service;
 
-import java.util.Random;
+/** Factory class to create AdServices Flags */
+public class FlagsFactory {
+    /** Ad Services Flags backed by Phenotype/Heterodyne. */
+    public static Flags getFlags() {
+        // Use the Flags backed by PH.
+        return PhFlags.getInstance();
+    }
 
-class RandomSelector {
-
-    static <T> T selectRandomDataWithProbability(
-            double randomProb, T trueValue, T[] possibleValues) {
-        Random rand = new Random();
-        double value = rand.nextDouble();
-        if (value < randomProb) {
-            return possibleValues[rand.nextInt(possibleValues.length)];
-        } else {
-            return trueValue;
-        }
+    /** Ad Services Flags backed by hard coded constants. This should be used in unit tests only */
+    public static Flags getFlagsForTest() {
+        // Use the Flags that has constant values.
+        return new Flags() {};
     }
 }

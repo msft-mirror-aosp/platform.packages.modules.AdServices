@@ -22,6 +22,11 @@ import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 
+import com.android.adservices.service.measurement.registration.SourceFetcher;
+import com.android.adservices.service.measurement.registration.SourceRegistration;
+import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.registration.TriggerRegistration;
+
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;

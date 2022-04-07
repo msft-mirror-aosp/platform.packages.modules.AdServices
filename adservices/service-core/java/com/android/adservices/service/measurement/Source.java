@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.attribution.Combinatorics;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -44,7 +45,7 @@ public class Source {
     private Uri mAttributionSource;
     private Uri mAttributionDestination;
     private Uri mReportTo;
-    private Uri mRegisterer;
+    private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
     private @Status int mStatus;
@@ -188,7 +189,7 @@ public class Source {
                 && mEventId == source.mEventId
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
-                && Objects.equals(mRegisterer, source.mRegisterer);
+                && Objects.equals(mRegistrant, source.mRegistrant);
     }
 
     @Override
@@ -271,7 +272,7 @@ public class Source {
     }
 
     /**
-     * Identifier provided by the registerer.
+     * Identifier provided by the registrant.
      */
     public long getEventId() {
         return mEventId;
@@ -341,10 +342,10 @@ public class Source {
     }
 
     /**
-     * Registerer of this source, primarily an App.
+     * Registrant of this source, primarily an App.
      */
-    public Uri getRegisterer() {
-        return mRegisterer;
+    public Uri getRegistrant() {
+        return mRegistrant;
     }
 
     /**
@@ -460,10 +461,10 @@ public class Source {
         }
 
         /**
-         * See {@link Source#getRegisterer()}
+         * See {@link Source#getRegistrant()}
          */
-        public Builder setRegisterer(Uri registerer) {
-            mBuilding.mRegisterer = registerer;
+        public Builder setRegistrant(Uri registrant) {
+            mBuilding.mRegistrant = registrant;
             return this;
         }
 

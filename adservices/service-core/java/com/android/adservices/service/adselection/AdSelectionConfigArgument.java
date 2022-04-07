@@ -38,6 +38,7 @@ import java.util.Map;
  */
 public class AdSelectionConfigArgument {
 
+    // TODO: (b/228094391): Put these common constants in a separate class
     public static final String SELLER_FIELD_NAME = "seller";
     public static final String DECISION_LOGIC_URL_FIELD_NAME = "decision_logic_url";
     public static final String CUSTOM_AUDIENCE_BYERS_FIELD_NAME = "custom_audience_byers";
