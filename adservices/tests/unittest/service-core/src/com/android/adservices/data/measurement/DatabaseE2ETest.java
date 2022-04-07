@@ -78,10 +78,10 @@ public abstract class DatabaseE2ETest {
     /**
      * Runs the action we want to test.
      */
-    public abstract void runActionToTest();
+    public abstract void runActionToTest() throws DatastoreException;
 
     @Test
-    public void runTest() {
+    public void runTest() throws DatastoreException {
         runActionToTest();
         SQLiteDatabase readerDb = DbHelper.getInstance(sContext).getReadableDatabase();
         DbState dbState = new DbState(readerDb);

@@ -21,6 +21,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.DbHelper;
+import com.android.internal.annotations.VisibleForTesting;
 
 /**
  *  Datastore manager for SQLite database.
@@ -55,7 +56,8 @@ class SQLDatastoreManager extends DatastoreManager {
     }
 
     @Override
-    protected IMeasurementDao getMeasurementDao() {
+    @VisibleForTesting
+    public IMeasurementDao getMeasurementDao() {
         return new MeasurementDao();
     }
 }
