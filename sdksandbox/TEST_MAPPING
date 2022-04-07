@@ -1,6 +1,9 @@
 {
   "presubmit": [
     {
+      "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
       "name": "SdkSandboxManagerServiceUnitTests"
     },
     {
