@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright (C) 2022 The Android Open Source Project
   ~
@@ -15,15 +14,7 @@
   ~ limitations under the License.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.adservices.servicecoretest" >
-
-    <!-- android:debuggable="true is needed. See b/228384531 -->
-    <application
-        android:debuggable="true">
-    </application>
-    <instrumentation
-        android:name="androidx.test.runner.AndroidJUnitRunner"
-        android:targetPackage="com.android.adservices.servicecoretest" >
-    </instrumentation>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.adservices.api">
 </manifest>
