@@ -8,6 +8,9 @@
     },
     {
       "name": "AdServicesEndToEndTests"
+    },
+    {
+      "name": "CtsAdServicesDeviceTestCases"
     }
   ]
 }
