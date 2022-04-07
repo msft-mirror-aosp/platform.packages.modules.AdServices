@@ -36,7 +36,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final MeasurementImpl mMeasurementImpl;
 
     public MeasurementServiceImpl(Context context) {
-        mMeasurementImpl = MeasurementImpl.getInstance();
+        mMeasurementImpl = MeasurementImpl.getInstance(context);
     }
 
     @Override
