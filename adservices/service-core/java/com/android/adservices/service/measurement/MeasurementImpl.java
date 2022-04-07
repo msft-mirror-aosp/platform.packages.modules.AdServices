@@ -21,11 +21,17 @@ import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
+import android.content.Context;
+import android.net.Uri;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -49,6 +55,17 @@ public final class MeasurementImpl {
 
     private static volatile MeasurementImpl sMeasurementImpl;
 
+    private final DatastoreManager mDatastoreManager;
+
+    private MeasurementImpl(Context context) {
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+    }
+
+    @VisibleForTesting
+    MeasurementImpl(DatastoreManager datastoreManager) {
+        mDatastoreManager = datastoreManager;
+    }
+
     /**
      * Gets an instance of MeasurementImpl to be used.
      *
@@ -56,11 +73,11 @@ public final class MeasurementImpl {
      * existing instance will be returned.
      */
     @NonNull
-    public static MeasurementImpl getInstance() {
+    public static MeasurementImpl getInstance(Context context) {
         if (sMeasurementImpl == null) {
             synchronized (MeasurementImpl.class) {
                 if (sMeasurementImpl == null) {
-                    sMeasurementImpl = new MeasurementImpl();
+                    sMeasurementImpl = new MeasurementImpl(context);
                 }
             }
         }
@@ -110,8 +127,19 @@ public final class MeasurementImpl {
     public int deleteRegistrations(@NonNull DeletionRequest request) {
         mReadWriteLock.readLock().lock();
         try {
-            // TODO: Implement!
-            return IMeasurementCallback.RESULT_OK;
+            final boolean deleteResult = mDatastoreManager.runInTransaction((dao) ->
+                    dao.deleteMeasurementData(
+                            Uri.parse(request.getAttributionSource().getPackageName()),
+                            request.getOriginUri(),
+                            request.getStart(),
+                            request.getEnd()
+                    )
+            );
+            return deleteResult
+                    ? IMeasurementCallback.RESULT_OK : IMeasurementCallback.RESULT_INTERNAL_ERROR;
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, "Delete registration received invalid parameters");
+            return IMeasurementCallback.RESULT_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
         }
