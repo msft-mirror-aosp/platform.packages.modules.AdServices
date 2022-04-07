@@ -44,11 +44,17 @@ android_app {
     apex_available: ["com.android.adservices"],
 }
 
+// Assets needs to be bundled via this android_library since our classes in service-core needs to
+// load assets.
 android_library {
     name: "adservices-assets-lib",
     sdk_version: "module_current",
     asset_dirs: [
         "assets",
     ],
-    manifest: "AndroidManifest.xml",
+    // Must use EmptyManifest.xml since "adservices-assets-lib" will also be used by the
+    // service-core tests. If we use the normal "AndroidManifest.xml", we will redeclare permissions
+    // in the tests
+    // See b/228270294 for the error about duplicated permissions.
+    manifest: "EmptyManifest.xml",
 }
