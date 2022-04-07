@@ -43,7 +43,7 @@ public final class MeasurementTables {
         String PRIORITY = "priority";
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
-        String REGISTERER = "registerer";
+        String REGISTRANT = "registrant";
         String ATTRIBUTION_MODE = "attribution_mode";
     }
 
@@ -60,7 +60,7 @@ public final class MeasurementTables {
         String DEDUP_KEY = "deduplication_key";
         String PRIORITY = "priority";
         String STATUS = "status";
-        String REGISTERER = "registerer";
+        String REGISTRANT = "registrant";
     }
 
     interface AdTechUrlsContract {
@@ -97,7 +97,7 @@ public final class MeasurementTables {
         // TODO: Revisit this column to handle multiple reporting endpoints per AdTech.
         String REPORT_TO = "report_to";
         String TRIGGER_TIME = "trigger_time";
-        String REGISTERER = "registerer";
+        String REGISTRANT = "registrant";
     }
 
     public static final String CREATE_TABLE_SOURCE =
@@ -115,7 +115,7 @@ public final class MeasurementTables {
                     + SourceContract.STATUS + " INTEGER, "
                     + SourceContract.DEDUP_KEYS + " TEXT, "
                     + SourceContract.SOURCE_TYPE + " TEXT, "
-                    + SourceContract.REGISTERER + " TEXT, "
+                    + SourceContract.REGISTRANT + " TEXT, "
                     + SourceContract.ATTRIBUTION_MODE + " INTEGER "
                     + ")";
 
@@ -131,7 +131,7 @@ public final class MeasurementTables {
                     + TriggerContract.PRIORITY + " INTEGER, "
                     + TriggerContract.DEDUP_KEY + " TEXT, "
                     + TriggerContract.STATUS + " INTEGER, "
-                    + TriggerContract.REGISTERER + " TEXT "
+                    + TriggerContract.REGISTRANT + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_ADTECH_URLS =
@@ -167,7 +167,7 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.DESTINATION_SITE + " TEXT, "
                     + AttributionRateLimitContract.REPORT_TO + " TEXT, "
                     + AttributionRateLimitContract.TRIGGER_TIME + " INTEGER, "
-                    + AttributionRateLimitContract.REGISTERER + " TEXT "
+                    + AttributionRateLimitContract.REGISTRANT + " TEXT "
                     + ")";
 
     public static final String[] CREATE_INDICES = {

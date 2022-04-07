@@ -23,9 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-/** This is a static class meant to help with tests that involve creating an AdSelectionConfig.
- *
- * @hide
+/**
+ * This is a static class meant to help with tests that involve creating an AdSelectionConfig.
  */
 public class AdSelectionConfigFixture {
 
@@ -41,22 +40,28 @@ public class AdSelectionConfigFixture {
     public static final List<String> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList("buyer1", "buyer2", "buyer3");
 
-    public static final String AD_SELECTION_SIGNALS = "testAdSelectionSignals";
+    public static final String AD_SELECTION_SIGNALS = "{\"ad_selection_signals\":1}";
 
-    public static final String SELLER_SIGNALS = "testSellerSignals";
+    public static final String SELLER_SIGNALS = "{\"test_seller_signals\":1}";
 
     public static final Map<String, String> PER_BUYER_SIGNALS =
-            Map.of("key1", "value1", "key2", "value2", "key3", "value3");
+            Map.of(
+                    "buyer1",
+                    "{\"buyer_signals\":1}",
+                    "buyer2",
+                    "{\"buyer_signals\":2}",
+                    "buyer3",
+                    "{\"buyer_signals\":3}");
 
     // Contextual Ads Components
     public static final AdWithBid ADS_WITH_BID_1 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp", null), "metaData1", 1.0);
+            createAdsWithBid(Uri.fromParts("adsScheme", "ssp1", null), "{\"metadata\":1}", 1.0);
 
     public static final AdWithBid ADS_WITH_BID_2 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp2", null), "metaData2", 2.0);
+            createAdsWithBid(Uri.fromParts("adsScheme", "ssp2", null), "{\"metadata\":2}", 2.0);
 
     public static final AdWithBid ADS_WITH_BID_3 =
-            createAdsWithBid(Uri.fromParts("adsScheme", "ssp3", null), "metaData2", 3.0);
+            createAdsWithBid(Uri.fromParts("adsScheme", "ssp3", null), "{\"metadata\":3}", 3.0);
 
     public static final List<AdWithBid> CONTEXTUAL_ADS =
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);

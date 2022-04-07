@@ -29,6 +29,7 @@ class AttributionRateLimit {
     private String mDestinationSite;
     private String mReportTo;
     private long mTriggerTime;
+    private String mRegistrant;
 
     @Override
     public boolean equals(Object obj) {
@@ -36,15 +37,17 @@ class AttributionRateLimit {
             return false;
         }
         AttributionRateLimit attr = (AttributionRateLimit) obj;
-        return Objects.equals(mSourceSite, attr.mSourceSite)
+        return mTriggerTime == attr.mTriggerTime
+                && Objects.equals(mSourceSite, attr.mSourceSite)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
                 && Objects.equals(mReportTo, attr.mReportTo)
-                && Objects.equals(mTriggerTime, attr.mTriggerTime);
+                && Objects.equals(mRegistrant, attr.mRegistrant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mSourceSite, mDestinationSite, mReportTo, mTriggerTime);
+        return Objects.hash(
+                mId, mSourceSite, mDestinationSite, mReportTo, mTriggerTime, mRegistrant);
     }
 
     public String getId() {
@@ -67,11 +70,16 @@ class AttributionRateLimit {
         return mTriggerTime;
     }
 
+    public String getRegistrant() {
+        return mRegistrant;
+    }
+
     /**
      * Builder for AttributionRateLimit
      */
     public static final class Builder {
         private final AttributionRateLimit mBuilding;
+
         Builder() {
             mBuilding = new AttributionRateLimit();
         }
@@ -98,6 +106,11 @@ class AttributionRateLimit {
 
         public Builder setTriggerTime(long time) {
             mBuilding.mTriggerTime = time;
+            return this;
+        }
+
+        public Builder setRegistrant(String registrant) {
+            mBuilding.mRegistrant = registrant;
             return this;
         }
 

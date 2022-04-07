@@ -95,12 +95,14 @@ public class SdkSandboxServiceImpl extends Service {
      * Loads SDK.
      */
     public void loadSdk(
-            IBinder sdkToken, ApplicationInfo applicationInfo, String sdkProviderClassName,
-            Bundle params, ISdkSandboxToSdkSandboxManagerCallback callback) {
+            IBinder sdkToken, ApplicationInfo applicationInfo, String sdkName,
+            String sdkProviderClassName, Bundle params,
+            ISdkSandboxToSdkSandboxManagerCallback callback) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
-            loadSdkInternal(sdkToken, applicationInfo, sdkProviderClassName, params, callback);
+            loadSdkInternal(
+                    sdkToken, applicationInfo, sdkName, sdkProviderClassName, params, callback);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
@@ -136,6 +138,7 @@ public class SdkSandboxServiceImpl extends Service {
 
     private void loadSdkInternal(@NonNull IBinder sdkToken,
             @NonNull ApplicationInfo applicationInfo,
+            @NonNull String sdkName,
             @NonNull String sdkProviderClassName,
             @NonNull Bundle params,
             @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
@@ -155,7 +158,7 @@ public class SdkSandboxServiceImpl extends Service {
             SandboxedSdkHolder sandboxedSdkHolder =
                     (SandboxedSdkHolder) clz.getDeclaredConstructor().newInstance();
             SandboxedSdkContext sandboxedSdkContext = new SandboxedSdkContext(
-                    mInjector.getContext(), applicationInfo);
+                    mInjector.getContext(), applicationInfo, sdkName);
             sandboxedSdkHolder.init(
                     mInjector.getContext(),
                     params,
@@ -197,11 +200,13 @@ public class SdkSandboxServiceImpl extends Service {
         public void loadSdk(
                 @NonNull IBinder sdkToken,
                 @NonNull ApplicationInfo applicationInfo,
+                @NonNull String sdkName,
                 @NonNull String sdkProviderClassName,
                 @NonNull Bundle params,
                 @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
+            Objects.requireNonNull(sdkName, "sdkName should not be null");
             Objects.requireNonNull(sdkProviderClassName,
                     "sdkProviderClassName should not be null");
             Objects.requireNonNull(params, "params should not be null");
@@ -210,7 +215,7 @@ public class SdkSandboxServiceImpl extends Service {
                 throw new IllegalArgumentException("sdkProviderClassName must not be empty");
             }
             SdkSandboxServiceImpl.this.loadSdk(
-                    sdkToken, applicationInfo, sdkProviderClassName, params, callback);
+                    sdkToken, applicationInfo, sdkName, sdkProviderClassName, params, callback);
         }
     }
 }

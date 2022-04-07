@@ -193,7 +193,9 @@ public class EpochManager {
      *            == empty string.
      */
     public void recordUsageHistory(String app, String sdk) {
-        mTopicsDao.recordUsageHistory(getCurrentEpochId(), app, sdk);
+        long epochID = getCurrentEpochId();
+        mTopicsDao.recordUsageHistory(epochID, app, sdk);
+        mTopicsDao.recordAppUsageHistory(epochID, app);
     }
 
     // Return a Map from Topic to set of App or Sdk that can learn about that topic.

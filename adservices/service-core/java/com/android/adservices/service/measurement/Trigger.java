@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.attribution.RandomSelector;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
@@ -38,7 +40,7 @@ public class Trigger {
     private long mPriority;
     private long mTriggerData;
     private @Status int mStatus;
-    private Uri mRegisterer;
+    private Uri mRegistrant;
 
     @IntDef(value = {
             Status.PENDING,
@@ -71,7 +73,7 @@ public class Trigger {
                 && mPriority == trigger.mPriority
                 && mStatus == trigger.mStatus
                 && Objects.equals(mDedupKey, trigger.mDedupKey)
-                && Objects.equals(mRegisterer, trigger.mRegisterer);
+                && Objects.equals(mRegistrant, trigger.mRegistrant);
     }
 
     @Override
@@ -144,10 +146,10 @@ public class Trigger {
     }
 
     /**
-     * Registerer of this trigger, primarily an App.
+     * Registrant of this trigger, primarily an App.
      */
-    public Uri getRegisterer() {
-        return mRegisterer;
+    public Uri getRegistrant() {
+        return mRegistrant;
     }
 
     /**
@@ -239,10 +241,10 @@ public class Trigger {
         }
 
         /**
-         * See {@link Trigger#getRegisterer()}
+         * See {@link Trigger#getRegistrant()}
          */
-        public Builder setRegisterer(Uri registerer) {
-            mBuilding.mRegisterer = registerer;
+        public Builder setRegistrant(Uri registrant) {
+            mBuilding.mRegistrant = registrant;
             return this;
         }
 

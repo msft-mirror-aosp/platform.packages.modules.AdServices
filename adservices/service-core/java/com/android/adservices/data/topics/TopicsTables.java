@@ -166,7 +166,6 @@ public final class TopicsTables {
         String SDK = "sdk";
     }
 
-
     // Create Statement for the Usage History table
     private static final String CREATE_TABLE_USAGE_HISTORY =
             "CREATE TABLE "
@@ -175,6 +174,28 @@ public final class TopicsTables {
                     + UsageHistoryContract.EPOCH_ID + " INTEGER NOT NULL, "
                     + UsageHistoryContract.APP + " TEXT NOT NULL, "
                     + UsageHistoryContract.SDK + " TEXT"
+                    + ")";
+
+    /**
+     * Table to store history for app only
+     * Whenever an app calls the Topics API, one entry will be generated.
+     */
+    @VisibleForTesting
+    public interface AppUsageHistoryContract {
+        String TABLE = TOPICS_TABLE_PREFIX + "app_usage_history";
+        String ID = "_id";
+        String EPOCH_ID = "epoch_id";
+        String APP = "app";
+    }
+
+    // Create Statement for the Usage History App Only table
+    private static final String CREATE_TABLE_APP_USAGE_HISTORY =
+            "CREATE TABLE "
+                    + AppUsageHistoryContract.TABLE
+                    + "("
+                    + AppUsageHistoryContract.ID + " INTEGER PRIMARY KEY, "
+                    + AppUsageHistoryContract.EPOCH_ID + " INTEGER NOT NULL, "
+                    + AppUsageHistoryContract.APP + " TEXT NOT NULL"
                     + ")";
 
     // Consolidated list of create statements for all tables.
@@ -186,6 +207,7 @@ public final class TopicsTables {
                             CREATE_TABLE_TOP_TOPICS,
                             CREATE_TABLE_RETURNED_TOPIC,
                             CREATE_TABLE_USAGE_HISTORY,
+                            CREATE_TABLE_APP_USAGE_HISTORY,
                             CREATE_TABLE_CALLER_CAN_LEARN_TOPICS));
 
     // Private constructor to prevent instantiation.

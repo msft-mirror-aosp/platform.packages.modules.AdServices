@@ -18,7 +18,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.servicecoretest" >
 
-    <application>
+    <!-- android:debuggable="true is needed. See b/228384531 -->
+    <application
+        android:debuggable="true">
     </application>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
