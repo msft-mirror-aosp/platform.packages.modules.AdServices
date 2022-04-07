@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data.adselection;
+package com.android.adservices.data;
 
 import android.content.Context;
 import android.net.Uri;
@@ -27,43 +27,53 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.internal.annotations.GuardedBy;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Room based database for Ad Selection. */
+/**
+ * Room based PP API database.
+ */
 @Database(
+        // Set exportSchema to true to see generated schema file.
+        // File location is defined in Android.bp -Aroom.schemaLocation.
         exportSchema = false,
-        entities = {DBAdSelection.class, DBBuyerDecisionLogic.class},
-        version = 1)
-@TypeConverters({AdSelectionDatabase.Converters.class})
-public abstract class AdSelectionDatabase extends RoomDatabase {
+        entities = {DBCustomAudience.class},
+        version = AdServicesDatabase.DATABASE_VERSION
+)
+@TypeConverters({AdServicesDatabase.Converters.class})
+public abstract class AdServicesDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final String DATABASE_NAME = "adservicesroom.db";
+    public static final int DATABASE_VERSION = 1;
+    public static final String DATABASE_NAME = "adservices.db";
 
     @GuardedBy("SINGLETON_LOCK")
-    private static AdSelectionDatabase sSingleton = null;
+    private static AdServicesDatabase sSingleton;
 
-    /** Returns an instance of the AdSelectionDatabase given a context. */
-    public static AdSelectionDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    // TODO: How we want handle synchronized situation (b/228101878).
+    /** Returns an instance of the AdServiceDatabase given a context. */
+    public static AdServicesDatabase getInstance(@NonNull Context context) {
+        Objects.requireNonNull(context, "Context must be provided.");
         synchronized (SINGLETON_LOCK) {
-            if (Objects.isNull(sSingleton)) {
-                sSingleton =
-                        Room.databaseBuilder(context, AdSelectionDatabase.class, DATABASE_NAME)
-                                .build();
+            if (sSingleton == null) {
+                sSingleton = Room.databaseBuilder(context, AdServicesDatabase.class, DATABASE_NAME)
+                        .build();
             }
             return sSingleton;
         }
     }
 
     /**
-     * @return a Dao to access entities in AdSelection database.
+     * Custom Audience Dao.
+     *
+     * @return Dao to access custom audience storage.
      */
-    public abstract AdSelectionEntryDao adSelectionEntryDao();
+    public abstract CustomAudienceDao customAudienceDao();
 
     /**
      * Room DB type converters.

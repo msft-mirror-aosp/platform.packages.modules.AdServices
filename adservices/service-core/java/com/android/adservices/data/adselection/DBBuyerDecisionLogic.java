@@ -32,7 +32,7 @@ import java.util.Objects;
  * @hide
  */
 @Entity(tableName = "buyer_decision_logic")
-public final class BuyerDecisionLogic {
+public final class DBBuyerDecisionLogic {
     @ColumnInfo(name = "bidding_logic_url")
     @PrimaryKey
     @NonNull
@@ -41,13 +41,15 @@ public final class BuyerDecisionLogic {
     @ColumnInfo(name = "buyer_decision_logic_js")
     @NonNull
     private final String mBuyerDecisionLogicJs;
+
     /**
-     * @param biddingLogicUrl An {@link Uri} object defining the URL to fetch the buyer-provided
-     *     bidding and reporting javascript.
+     * @param biddingLogicUrl      An {@link Uri} object defining the URL to fetch the
+     *                             buyer-provided bidding and reporting javascript.
      * @param buyerDecisionLogicJs A {@link String} object contains both the generateBid() and
-     *     reportResult() javascript fetched from the biddingLogicUrl.
+     *                             reportResult() javascript fetched from the biddingLogicUrl.
      */
-    public BuyerDecisionLogic(@NonNull Uri biddingLogicUrl, @NonNull String buyerDecisionLogicJs) {
+    public DBBuyerDecisionLogic(@NonNull Uri biddingLogicUrl,
+            @NonNull String buyerDecisionLogicJs) {
         Objects.requireNonNull(biddingLogicUrl);
         Objects.requireNonNull(buyerDecisionLogicJs);
 
@@ -65,7 +67,7 @@ public final class BuyerDecisionLogic {
 
     /**
      * @return the string contains the buyer-side provided generateBit() and reportResult()
-     *     javascript.
+     * javascript.
      */
     @NonNull
     public String getBuyerDecisionLogicJs() {
@@ -75,8 +77,8 @@ public final class BuyerDecisionLogic {
     @Override
     public boolean equals(@Nullable Object o) {
         if (this == o) return true;
-        if (!(o instanceof BuyerDecisionLogic)) return false;
-        BuyerDecisionLogic buyerDecisionLogic = (BuyerDecisionLogic) o;
+        if (!(o instanceof DBBuyerDecisionLogic)) return false;
+        DBBuyerDecisionLogic buyerDecisionLogic = (DBBuyerDecisionLogic) o;
         return mBiddingLogicUrl.equals(buyerDecisionLogic.mBiddingLogicUrl)
                 && mBuyerDecisionLogicJs.equals(buyerDecisionLogic.mBuyerDecisionLogicJs);
     }
