@@ -123,6 +123,9 @@ public class EpochManager {
             // appClassificationTopicsMap = Map<App, List<Topics>>
             Map<String, List<String>> appClassificationTopicsMap =
                     computeAppClassificationTopics(appSdksUsageMap);
+            // Then save app-topics Map into DB
+            mTopicsDao.persistAppClassificationTopics(epochId, /* taxonomyVersion = */ 1L,
+                    /* modelVersion = */ 1L, appSdksUsageMap);
 
             // Step 3: Compute the Callers can learn map for this epoch.
             // This is similar to the Callers Can Learn table in the explainer.
