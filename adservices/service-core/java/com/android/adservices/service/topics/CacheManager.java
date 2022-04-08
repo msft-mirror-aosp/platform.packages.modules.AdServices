@@ -76,8 +76,8 @@ public class CacheManager {
         // Retrieve the cache from DB.
         // Map<EpochId, Map<Pair<App, Sdk>, Topic>
         Map<Long, Map<Pair<String, String>, Topic>> cacheFromDb =
-                mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId() - 1,
-                        mFlags.getTopicsNumberOfLookBackEpochs());
+                mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId(),
+                        mFlags.getTopicsNumberOfLookBackEpochs() + 1);
 
         mReadWriteLock.writeLock().lock();
         mCachedTopics = cacheFromDb;
