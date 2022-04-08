@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -59,6 +60,66 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+    }
+
+    @Test
+    public void testPersistAndGetAppClassificationTopics() {
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+
+        final long epochId1 = 1L;
+        final long epochId2 = 2L;
+
+        final String app1 = "app1";
+        final String app2 = "app2";
+
+        // Initialize appClassificationTopicsMap and topics
+        Map<String, List<String>> appClassificationTopicsMap1 = new HashMap<>();
+        Map<String, List<String>> appClassificationTopicsMap2 = new HashMap<>();
+        Topic topic1 = new Topic("topic1", taxonomyVersion, modelVersion);
+        Topic topic2 = new Topic("topic1", taxonomyVersion, modelVersion);
+        // to test multiple topics for one app
+        appClassificationTopicsMap1.put(app1, Arrays.asList(topic1.getTopic(), topic2.getTopic()));
+
+        // to test different apps
+        appClassificationTopicsMap1.put(app2, Collections.singletonList(topic1.getTopic()));
+
+        // to test different epochs for same app
+        appClassificationTopicsMap2.put(app1, Collections.singletonList(topic1.getTopic()));
+
+        mTopicsDao.persistAppClassificationTopics(epochId1, taxonomyVersion, modelVersion,
+                appClassificationTopicsMap1);
+        mTopicsDao.persistAppClassificationTopics(epochId2, taxonomyVersion, modelVersion,
+                appClassificationTopicsMap2);
+
+        // MapEpoch1: app1 -> topic1, topic2; app2 -> topic1
+        // MapEpoch2: app1 -> topic1
+        Map<String, List<Topic>> expectedTopicsMap1 = new HashMap<>();
+        Map<String, List<Topic>> expectedTopicsMap2 = new HashMap<>();
+        expectedTopicsMap1.put(app1, Arrays.asList(topic1, topic2));
+        expectedTopicsMap1.put(app2, Collections.singletonList(topic1));
+        expectedTopicsMap2.put(app1, Collections.singletonList(topic1));
+
+        Map<String, List<Topic>> topicsMapFromDb1 = mTopicsDao
+                .retrieveAppClassificationTopics(epochId1);
+        Map<String, List<Topic>> topicsMapFromDb2 = mTopicsDao
+                .retrieveAppClassificationTopics(epochId2);
+        assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
+        assertThat(topicsMapFromDb2).isEqualTo(expectedTopicsMap2);
+
+        // to test non-existed epoch ID
+        final long epochId3 = 3L;
+        assertThat(mTopicsDao.retrieveAppClassificationTopics(epochId3)).isEmpty();
+    }
+
+    @Test
+    public void testPersistAppClassificationTopics_nullTopicsMap() {
+        assertThrows(
+                NullPointerException.class,
+                () -> mTopicsDao.persistAppClassificationTopics(/* epochId */ 1L,
+                        /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+                        /* appClassificationMap */ null)
+        );
     }
 
     @Test
