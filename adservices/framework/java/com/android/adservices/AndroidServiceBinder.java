@@ -106,8 +106,10 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                     mServiceConnection = null;
                     return null;
                 } else {
-                    LogUtil.d("bindService() already pending...");
+                    LogUtil.d("bindService() succeeded...");
                 }
+            } else {
+                LogUtil.d("bindService() already pending...");
             }
         }
 
