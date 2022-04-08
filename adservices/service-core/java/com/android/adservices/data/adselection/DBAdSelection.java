@@ -41,7 +41,7 @@ import java.util.Objects;
 @Entity(
         tableName = "ad_selection",
         indices = {@Index(value = {"bidding_logic_url"})})
-public final class AdSelection {
+public final class DBAdSelection {
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
@@ -69,7 +69,7 @@ public final class AdSelection {
     @NonNull
     private final Instant mCreationTimestamp;
 
-    private AdSelection(
+    public DBAdSelection(
             long adSelectionId,
             @Nullable String customAudienceSignals,
             @NonNull String contextualSignals,
@@ -88,8 +88,8 @@ public final class AdSelection {
 
     @Override
     public boolean equals(@Nullable Object o) {
-        if (o instanceof AdSelection) {
-            AdSelection adSelection = (AdSelection) o;
+        if (o instanceof DBAdSelection) {
+            DBAdSelection adSelection = (DBAdSelection) o;
 
             return mAdSelectionId == adSelection.mAdSelectionId
                     && Objects.equals(mCustomAudienceSignals, adSelection.mCustomAudienceSignals)
@@ -123,7 +123,7 @@ public final class AdSelection {
 
     /**
      * @return the custom audience signals used to select this winning ad if remarketing ads, o.w.
-     *     return null.
+     * return null.
      */
     @Nullable
     public String getCustomAudienceSignals() {
@@ -169,7 +169,7 @@ public final class AdSelection {
         return mCreationTimestamp;
     }
 
-    /** Builder for {@link AdSelection} object. */
+    /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
         private long mAdSelectionId;
         private String mCustomAudienceSignals;
@@ -179,11 +179,12 @@ public final class AdSelection {
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
 
-        public Builder() {}
+        public Builder() {
+        }
 
         /** Sets the ad selection id. */
         @NonNull
-        public AdSelection.Builder setAdSelectionId(long adSelectionId) {
+        public DBAdSelection.Builder setAdSelectionId(long adSelectionId) {
             Preconditions.checkArgument(adSelectionId != 0, "Ad selection Id should not be zero.");
             this.mAdSelectionId = adSelectionId;
             return this;
@@ -191,7 +192,7 @@ public final class AdSelection {
 
         /** Sets the custom audience signals. */
         @NonNull
-        public AdSelection.Builder setCustomAudienceSignals(
+        public DBAdSelection.Builder setCustomAudienceSignals(
                 @Nullable String customAudienceSignals) {
             this.mCustomAudienceSignals = customAudienceSignals;
             return this;
@@ -199,7 +200,7 @@ public final class AdSelection {
 
         /** Sets the contextual signals with this ad selection. */
         @NonNull
-        public AdSelection.Builder setContextualSignals(@NonNull String contextualSignals) {
+        public DBAdSelection.Builder setContextualSignals(@NonNull String contextualSignals) {
             Objects.requireNonNull(contextualSignals);
             this.mContextualSignals = contextualSignals;
             return this;
@@ -210,14 +211,14 @@ public final class AdSelection {
          * reportResults() javascript.
          */
         @NonNull
-        public AdSelection.Builder setBiddingLogicUrl(@Nullable Uri biddingLogicUrl) {
+        public DBAdSelection.Builder setBiddingLogicUrl(@Nullable Uri biddingLogicUrl) {
             this.mBiddingLogicUrl = biddingLogicUrl;
             return this;
         }
 
         /** Sets the winning ad's rendering URL for this AdSelection. */
         @NonNull
-        public AdSelection.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
+        public DBAdSelection.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
             Objects.requireNonNull(mWinningAdRenderUrl);
             this.mWinningAdRenderUrl = mWinningAdRenderUrl;
             return this;
@@ -225,7 +226,7 @@ public final class AdSelection {
 
         /** Sets the winning ad's bid for this AdSelection. */
         @NonNull
-        public AdSelection.Builder setWinningAdBid(double winningAdBid) {
+        public DBAdSelection.Builder setWinningAdBid(double winningAdBid) {
             Preconditions.checkArgument(
                     winningAdBid > 0, "A winning ad should not have non-positive bid.");
             this.mWinningAdBid = winningAdBid;
@@ -234,20 +235,20 @@ public final class AdSelection {
 
         /** Sets the creation time of this ad selection in the table. */
         @NonNull
-        public AdSelection.Builder setCreationTimestamp(@NonNull Instant creationTimestamp) {
+        public DBAdSelection.Builder setCreationTimestamp(@NonNull Instant creationTimestamp) {
             Objects.requireNonNull(creationTimestamp);
             this.mCreationTimestamp = creationTimestamp;
             return this;
         }
 
         /**
-         * Builds an {@link AdSelection} instance.
+         * Builds an {@link DBAdSelection} instance.
          *
-         * @throws NullPointerException if any non-nulll params are null.
+         * @throws NullPointerException     if any non-nulll params are null.
          * @throws IllegalArgumentException if adSelectionId is zero or bid is non-positive.
          */
         @NonNull
-        public AdSelection build() {
+        public DBAdSelection build() {
             Preconditions.checkArgument(mAdSelectionId != 0, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
@@ -255,7 +256,7 @@ public final class AdSelection {
             Objects.requireNonNull(mWinningAdRenderUrl);
             Objects.requireNonNull(mCreationTimestamp);
 
-            return new AdSelection(
+            return new DBAdSelection(
                     mAdSelectionId,
                     mCustomAudienceSignals,
                     mContextualSignals,
