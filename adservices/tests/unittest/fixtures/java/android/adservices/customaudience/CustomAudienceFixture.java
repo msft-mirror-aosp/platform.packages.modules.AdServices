@@ -16,28 +16,14 @@
 
 package android.adservices.customaudience;
 
-import android.adservices.common.AdData;
 import android.net.Uri;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
-    // AdData
-    private static final Uri VALID_RENDER_URL =
-            new Uri.Builder().path("valid.example.com/testing/hello").build();
-    private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
 
-    // TrustedBiddingData
-    public static final Uri VALID_TRUSTED_BIDDING_URL =
-            new Uri.Builder().path("valid.example.com/testing/hello").build();
-    public static final ArrayList<String> VALID_TRUSTED_BIDDING_KEYS = new ArrayList<String>(
-            Arrays.asList("example", "valid", "list", "of", "keys"));
-
-    // CustomAudience
     public static final long DAY_IN_SECONDS = 60 * 60 * 24;
     public static final String VALID_OWNER = "testOwnerApplication";
     public static final String VALID_BUYER = "valid-buyer.example.com";
@@ -68,15 +54,7 @@ public final class CustomAudienceFixture {
             new Uri.Builder().path("valid-update-url.example.com").build();
     public static final String VALID_USER_BIDDING_SIGNALS =
             "{'valid': 'yep', 'opaque': 'definitely'}";
-    public static final TrustedBiddingData VALID_TRUSTED_BIDDING_DATA =
-            new TrustedBiddingData.Builder()
-                    .setTrustedBiddingUrl(VALID_TRUSTED_BIDDING_URL)
-                    .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
-                    .build();
+
     public static final Uri VALID_BIDDING_LOGIC_URL =
             new Uri.Builder().path("valid-buyer.example.com/bidding/logic/here/").build();
-    public static final ArrayList<AdData> VALID_ADS =
-            new ArrayList<AdData>(Arrays.asList(
-                    new AdData(VALID_RENDER_URL, VALID_METADATA),
-                    new AdData(VALID_RENDER_URL, VALID_METADATA)));
 }
