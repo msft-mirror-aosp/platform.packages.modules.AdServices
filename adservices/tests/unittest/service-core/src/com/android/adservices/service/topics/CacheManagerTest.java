@@ -26,7 +26,8 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,10 +39,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Unit tests for {@link com.android.adservices.topics.CacheManager} */
+/** Unit tests for {@link com.android.adservices.service.topics.CacheManager} */
 @SmallTest
 public final class CacheManagerTest {
     private static final String TAG = "CacheManagerTest";
+
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
     @Mock TopicsDao mMockTopicsDao;
     @Mock EpochManager mMockEpochManager;
@@ -54,7 +57,7 @@ public final class CacheManagerTest {
     @Test
     public void testGetTopics_emptyCache() {
         // The cache is empty when first created.
-        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao);
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao, mFlags);
 
         List<Topic> topics = cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,
@@ -66,7 +69,7 @@ public final class CacheManagerTest {
     @Test
     public void testGetTopics() {
         // The cache is empty.
-        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao);
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao, mFlags);
 
         // Assume the current epochId is 4L, we will load cache for returned topics in the last 3
         // epochs: epochId in {3, 2, 1}.
@@ -126,7 +129,7 @@ public final class CacheManagerTest {
         cache.put(/* epochId = */ 3L, returnedAppSdkTopicsForEpoch3);
 
         when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId - 1),
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()))).thenReturn(cache);
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()))).thenReturn(cache);
 
         cacheManager.loadCache();
 
@@ -195,13 +198,13 @@ public final class CacheManagerTest {
     @Test
     public void testGetTopics_failToLoadFromDb() {
         // The cache is empty when first created.
-        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao);
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mMockTopicsDao, mFlags);
 
         long currentEpochId = 4L;
         // Fail to load from DB will have empty cache.
         Map<Long, Map<Pair<String, String>, Topic>> emptyCache = new HashMap<>();
         when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId - 1),
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()))).thenReturn(emptyCache);
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()))).thenReturn(emptyCache);
 
         List<Topic> topics = cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,

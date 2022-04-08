@@ -24,7 +24,8 @@ import android.annotation.WorkerThread;
 import android.content.Context;
 
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -55,10 +56,13 @@ public class TopicsWorker {
 
     private final EpochManager mEpochManager;
     private final CacheManager mCacheManager;
+    private final Flags mFlags;
 
-    private TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager) {
+    private TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager,
+            Flags flags) {
         mEpochManager = epochManager;
         mCacheManager = cacheManager;
+        mFlags = flags;
     }
 
     /**
@@ -73,7 +77,7 @@ public class TopicsWorker {
             synchronized (TopicsWorker.class) {
                 if (sTopicsWorker == null) {
                     sTopicsWorker = new TopicsWorker(EpochManager.getInstance(context),
-                            CacheManager.getInstance(context));
+                            CacheManager.getInstance(context), FlagsFactory.getFlags());
                 }
             }
         }
@@ -87,8 +91,8 @@ public class TopicsWorker {
     @VisibleForTesting
     @NonNull
     static TopicsWorker getInstanceForTest(@NonNull EpochManager epochManager,
-            @NonNull CacheManager cacheManager) {
-        return new TopicsWorker(epochManager, cacheManager);
+            @NonNull CacheManager cacheManager, @NonNull Flags flags) {
+        return new TopicsWorker(epochManager, cacheManager, flags);
     }
 
     /**
@@ -103,7 +107,7 @@ public class TopicsWorker {
         mReadWriteLock.readLock().lock();
         try {
             List<Topic> topics = mCacheManager.getTopics(
-                    AdServicesConfig.getTopicsNumberOfLookBackEpochs(), app, sdk);
+                    mFlags.getTopicsNumberOfLookBackEpochs(), app, sdk);
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
