@@ -18,10 +18,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.servicecoretest" >
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- android:debuggable="true is needed. See b/228384531 -->
     <application
-        android:debuggable="true">
-    </application>
+        android:debuggable="true"
+        android:usesCleartextTraffic="true"/>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
         android:targetPackage="com.android.adservices.servicecoretest" >
