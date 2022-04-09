@@ -18,7 +18,10 @@ package {
 
 java_test_host {
     name: "SdkSandboxStorageHostTest",
-    srcs: ["src/**/SdkSandboxStorageHostTest.java"],
+    srcs: [
+        "src/**/SdkSandboxStorageHostTest.java",
+        ":CtsHostsideTestsAppSecurityUtil",
+    ],
     test_config: "SdkSandboxStorageHostTest.xml",
     libs: [
         "tradefed",
@@ -28,6 +31,7 @@ java_test_host {
     ],
     test_suites: ["general-tests"],
     data: [
+        ":CtsAppDataIsolationAppDirectBootA",
         ":StorageTestCodeProvider",
         ":SdkSandboxStorageTestApp",
         ":SdkSandboxStorageTestAppV2_DoesNotConsumeSdk",
@@ -72,4 +76,6 @@ android_test_helper_app {
        ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
+    // TODO(b/215372846): Create our own signing key.
+    certificate: ":cts-keyset-test-b",
 }
