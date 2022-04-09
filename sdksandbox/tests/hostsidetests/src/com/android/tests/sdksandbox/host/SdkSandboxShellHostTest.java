@@ -41,6 +41,10 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     private static final String APP_PACKAGE = "com.android.sdksandbox.app";
     private static final String APP_ACTIVITY = "SdkSandboxTestActivity";
 
+    private static final String DEBUGGABLE_APP_PROCESS_NAME = DEBUGGABLE_APP_PACKAGE
+      + "_sdk_sandbox";
+    private static final String APP_PROCESS_NAME = APP_PACKAGE + "_sdk_sandbox";
+
     private HashSet<Integer> mOriginalUsers;
 
     @Before
@@ -75,9 +79,8 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         assertThat(output.getStderr()).isEmpty();
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 
-        String sdkSandboxName = getSdkSandboxNameForPackage(DEBUGGABLE_APP_PACKAGE);
         String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).contains(sdkSandboxName);
+        assertThat(processDump).contains(DEBUGGABLE_APP_PROCESS_NAME);
 
         output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", DEBUGGABLE_APP_PACKAGE));
@@ -85,7 +88,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 
         processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).doesNotContain(sdkSandboxName);
+        assertThat(processDump).doesNotContain(DEBUGGABLE_APP_PROCESS_NAME);
     }
 
     @Test
@@ -94,9 +97,8 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
                 String.format("cmd sdk_sandbox start %s", APP_PACKAGE));
         assertThat(output.getStatus()).isEqualTo(CommandStatus.FAILED);
 
-        String sdkSandboxName = getSdkSandboxNameForPackage(APP_PACKAGE);
         String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).doesNotContain(sdkSandboxName);
+        assertThat(processDump).doesNotContain(APP_PROCESS_NAME);
     }
 
     @Test
@@ -107,16 +109,13 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
                         otherUserId, DEBUGGABLE_APP_PACKAGE));
         assertThat(output.getStatus()).isEqualTo(CommandStatus.FAILED);
 
-        String sdkSandboxName = getSdkSandboxNameForPackage(DEBUGGABLE_APP_PACKAGE);
         String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).doesNotContain(sdkSandboxName);
+        assertThat(processDump).doesNotContain(DEBUGGABLE_APP_PROCESS_NAME);
     }
 
     @Test
     public void testStopSdkSandboxSucceedsForRunningDebuggableApp() throws Exception {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
-
-        String sdkSandboxName = getSdkSandboxNameForPackage(DEBUGGABLE_APP_PACKAGE);
 
         CommandResult output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", DEBUGGABLE_APP_PACKAGE));
@@ -124,7 +123,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 
         String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).doesNotContain(sdkSandboxName);
+        assertThat(processDump).doesNotContain(DEBUGGABLE_APP_PROCESS_NAME);
     }
 
     @Test
@@ -139,21 +138,17 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     public void testStopSdkSandboxFailsForNonDebuggableApp() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
-        String sdkSandboxName = getSdkSandboxNameForPackage(APP_PACKAGE);
-
         CommandResult output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", APP_PACKAGE));
         assertThat(output.getStatus()).isEqualTo(CommandStatus.FAILED);
 
         String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).contains(sdkSandboxName);
+        assertThat(processDump).contains(APP_PROCESS_NAME);
     }
 
     @Test
     public void testStopSdkSandboxFailsForIncorrectUser() throws Exception {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
-
-        String sdkSandboxName = getSdkSandboxNameForPackage(DEBUGGABLE_APP_PACKAGE);
 
         int otherUserId = getDevice().createUser("TestUser_" + System.currentTimeMillis());
         CommandResult output = getDevice().executeShellV2Command(String.format(
@@ -161,23 +156,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         assertThat(output.getStatus()).isEqualTo(CommandStatus.FAILED);
 
         String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).contains(sdkSandboxName);
-    }
-
-
-    private String getUidForPackage(String pkg) throws Exception {
-        int currentUser = getDevice().getCurrentUser();
-        String uidLine = getDevice()
-                .executeShellCommand(
-                        "cmd package list packages -U --user " + currentUser + " "
-                                + pkg);
-        return uidLine.split(":")[2].trim();
-    }
-
-    // TODO(b/216302023): Update sdk sandbox process name format
-    private String getSdkSandboxNameForPackage(String pkg) throws Exception {
-        String appUid = getUidForPackage(pkg);
-        return String.format("sdk_sandbox_%s", appUid);
+        assertThat(processDump).contains(DEBUGGABLE_APP_PROCESS_NAME);
     }
 
     private void clearProcess(String pkg) throws Exception {

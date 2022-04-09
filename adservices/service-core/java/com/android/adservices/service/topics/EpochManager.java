@@ -25,7 +25,8 @@ import android.util.Pair;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.TopicsDao;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -65,14 +66,16 @@ public class EpochManager {
     private final DbHelper mDbHelper;
     private final Random mRandom;
     private final Classifier mClassifier;
+    private final Flags mFlags;
 
     @VisibleForTesting
     EpochManager(@NonNull TopicsDao topicsDao, @NonNull DbHelper dbHelper,
-            @NonNull Random random, @NonNull Classifier classifier) {
+            @NonNull Random random, @NonNull Classifier classifier, Flags flags) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
         mClassifier = classifier;
+        mFlags = flags;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -82,7 +85,7 @@ public class EpochManager {
             if (sSingleton == null) {
                 sSingleton = new EpochManager(TopicsDao.getInstance(context),
                         DbHelper.getInstance(context), new Random(),
-                        Classifier.getInstance(context));
+                        Classifier.getInstance(context), FlagsFactory.getFlags());
             }
             return sSingleton;
         }
@@ -96,7 +99,8 @@ public class EpochManager {
     public static EpochManager getInstanceForTest(@NonNull Context context,
             @NonNull Random random, @NonNull Classifier classifier) {
         return new EpochManager(TopicsDao.getInstanceForTest(context),
-                DbHelper.getInstanceForTest(context), random, classifier);
+                DbHelper.getInstanceForTest(context), random, classifier,
+                FlagsFactory.getFlagsForTest());
     }
 
     /**
@@ -123,6 +127,9 @@ public class EpochManager {
             // appClassificationTopicsMap = Map<App, List<Topics>>
             Map<String, List<String>> appClassificationTopicsMap =
                     computeAppClassificationTopics(appSdksUsageMap);
+            // Then save app-topics Map into DB
+            mTopicsDao.persistAppClassificationTopics(epochId, /* taxonomyVersion = */ 1L,
+                    /* modelVersion = */ 1L, appSdksUsageMap);
 
             // Step 3: Compute the Callers can learn map for this epoch.
             // This is similar to the Callers Can Learn table in the explainer.
@@ -136,7 +143,7 @@ public class EpochManager {
             // Return callersCanLearnMap = Map<Topic, Set<Caller>>  where Caller = App or Sdk.
             Map<String, Set<String>> callersCanLearnMap =
                     mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId,
-                            AdServicesConfig.getTopicsNumberOfLookBackEpochs());
+                            mFlags.getTopicsNumberOfLookBackEpochs());
 
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
@@ -168,8 +175,8 @@ public class EpochManager {
     private List<String> computeTopTopics(Map<String, List<String>> appClassificationTopicsMap) {
         return mClassifier.getTopTopics(
                 appClassificationTopicsMap,
-                AdServicesConfig.getTopicsNumberOfTopTopics(),
-                AdServicesConfig.getTopicsNumberOfRandomTopics());
+                mFlags.getTopicsNumberOfTopTopics(),
+                mFlags.getTopicsNumberOfRandomTopics());
     }
 
     // Compute the Map from App to its classification topics.
@@ -292,12 +299,12 @@ public class EpochManager {
     @VisibleForTesting
     String selectRandomTopic(List<String> topTopics) {
         Preconditions.checkArgument(topTopics.size()
-                == AdServicesConfig.getTopicsNumberOfTopTopics()
-                + AdServicesConfig.getTopicsNumberOfRandomTopics());
+                == mFlags.getTopicsNumberOfTopTopics()
+                + mFlags.getTopicsNumberOfRandomTopics());
         int random = mRandom.nextInt(100);
 
         // For 5%, get the random topic.
-        if (random < AdServicesConfig.getTopicsPercentageForRandomTopic()) {
+        if (random < mFlags.getTopicsPercentageForRandomTopic()) {
             // The random topic is the last one on the list.
             return topTopics.get(RANDOM_TOPIC_INDEX);
         }
@@ -315,6 +322,6 @@ public class EpochManager {
     public long getCurrentEpochId() {
         // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
         return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
-                /  AdServicesConfig.getTopicsEpochJobPeriodMs());
+                /  mFlags.getTopicsEpochJobPeriodMs());
     }
 }

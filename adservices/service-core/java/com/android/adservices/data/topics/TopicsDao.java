@@ -75,6 +75,104 @@ public class TopicsDao {
     }
 
     /**
+     * Persist the apps and their classification topics.
+     *
+     * @param epochId the epoch Id to persist
+     * @param taxonomyVersion The version of taxonomy
+     * @param modelVersion The version of model
+     * @param appClassificationTopicsMap Map of app -> classified topics
+     */
+    @VisibleForTesting
+    public void persistAppClassificationTopics(long epochId, long taxonomyVersion,
+            long modelVersion, @NonNull Map<String, List<String>> appClassificationTopicsMap) {
+        Objects.requireNonNull(appClassificationTopicsMap);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        for (Map.Entry<String, List<String>> entry : appClassificationTopicsMap.entrySet()) {
+            String app = entry.getKey();
+
+            // save each topic in the list by app -> topic mapping in the DB
+            for (String topic : entry.getValue()) {
+                ContentValues values = new ContentValues();
+                values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, epochId);
+                values.put(TopicsTables.AppClassificationTopicsContract.APP, app);
+                values.put(TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
+                        taxonomyVersion);
+                values.put(TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
+                        modelVersion);
+                values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, topic);
+
+                try {
+                    db.insert(TopicsTables.AppClassificationTopicsContract.TABLE,
+                            /* number of hack */ null, values);
+                } catch (SQLException e) {
+                    LogUtil.e("Failed to persist classified Topics. Exception : "
+                            + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the map of apps and their classification topics.
+     *
+     * @param epochId the epoch Id to retrieve
+     * @return {@link Map} a map of app -> topics
+     */
+    @VisibleForTesting
+    @NonNull
+    public Map<String, List<Topic>> retrieveAppClassificationTopics(long epochId) {
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        Map<String, List<Topic>> appTopicsMap = new HashMap<>();
+        if (db == null) {
+            return appTopicsMap;
+        }
+
+        String[] projection = {
+                TopicsTables.AppClassificationTopicsContract.APP,
+                TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
+                TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
+                TopicsTables.AppClassificationTopicsContract.TOPIC,
+        };
+
+        String selection = TopicsTables.AppClassificationTopicsContract.EPOCH_ID + " = ?";
+        String[] selectionArgs = { String.valueOf(epochId) };
+
+        try (
+                Cursor cursor = db.query(
+                        TopicsTables.AppClassificationTopicsContract.TABLE,   // The table to query
+                        projection,        // The array of columns to return (pass null to get all)
+                        selection,         // The columns for the WHERE clause
+                        selectionArgs,     // The values for the WHERE clause
+                        null,      // don't group the rows
+                        null,       // don't filter by row groups
+                        null       // The sort order
+                )) {
+            while (cursor.moveToNext()) {
+                String app = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.AppClassificationTopicsContract.APP));
+                long taxonomyVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
+                        TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION));
+                long modelVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
+                        TopicsTables.AppClassificationTopicsContract.MODEL_VERSION));
+                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
+                        TopicsTables.AppClassificationTopicsContract.TOPIC));
+                Topic topic = new Topic(topicString, taxonomyVersion, modelVersion);
+
+                List<Topic> list = appTopicsMap.getOrDefault(app, new ArrayList<>());
+                list.add(topic);
+                appTopicsMap.put(app, list);
+            }
+        }
+
+        return appTopicsMap;
+    }
+
+    /**
      * Persist the list of Top Topics in this epoch to DB.
      *
      * @param epochId Id of current epoch
@@ -101,7 +199,7 @@ public class TopicsDao {
         values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, topTopics.get(5));
 
         try {
-            db.insert(TopicsTables.TopTopicsContract.TABLE, null, values);
+            db.insert(TopicsTables.TopTopicsContract.TABLE, /* number of hack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to persist Top Topics. Exception : " + e.getMessage());
         }
@@ -188,7 +286,7 @@ public class TopicsDao {
         values.put(TopicsTables.UsageHistoryContract.EPOCH_ID, epochId);
 
         try {
-            db.insert(TopicsTables.UsageHistoryContract.TABLE, null, values);
+            db.insert(TopicsTables.UsageHistoryContract.TABLE, /* number of hack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record App-Sdk usage history." + e.getMessage());
         }
@@ -214,7 +312,8 @@ public class TopicsDao {
         values.put(TopicsTables.AppUsageHistoryContract.EPOCH_ID, epochId);
 
         try {
-            db.insert(TopicsTables.AppUsageHistoryContract.TABLE, null, values);
+            db.insert(TopicsTables.AppUsageHistoryContract.TABLE,
+                    /* number of hack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record App Only usage history." + e.getMessage());
         }
@@ -289,8 +388,7 @@ public class TopicsDao {
 
         try (
                 Cursor cursor =
-                        db.query(/* distinct = */false,
-                                TopicsTables.AppUsageHistoryContract.TABLE, projection,
+                        db.query(TopicsTables.AppUsageHistoryContract.TABLE, projection,
                                 selection,
                                 selectionArgs, null, null,
                                 null, null)
@@ -331,7 +429,8 @@ public class TopicsDao {
                 values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, epochId);
 
                 try {
-                    db.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE, null, values);
+                    db.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                            /* number of hack */ null, values);
                 } catch (SQLException e) {
                     LogUtil.e(e, "Failed to record can learn topic.");
                 }
@@ -443,7 +542,8 @@ public class TopicsDao {
             values.put(TopicsTables.ReturnedTopicContract.MODEL_VERSION, modelVersion);
 
             try {
-                db.insert(TopicsTables.ReturnedTopicContract.TABLE, null, values);
+                db.insert(TopicsTables.ReturnedTopicContract.TABLE,
+                        /* number of hack */ null, values);
             } catch (SQLException e) {
                 LogUtil.e(e, "Failed to record returned topic.");
             }

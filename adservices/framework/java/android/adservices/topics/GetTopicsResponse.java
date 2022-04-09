@@ -15,9 +15,11 @@
  */
 package android.adservices.topics;
 import android.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 /**
  * Represent the result from the getTopics API.
  */
@@ -33,11 +35,15 @@ public class GetTopicsResponse {
         mModelVersions = modelVersions;
         mTopics = topics;
     }
+
     /** Get the Taxonomy Versions. */
+    @NonNull
     public List<Long> getTaxonomyVersions() {
         return mTaxonomyVersions;
     }
+
     /** Get the Model Versions. */
+    @NonNull
     public List<Long> getModelVersions() {
         return mModelVersions;
     }
@@ -62,6 +68,7 @@ public class GetTopicsResponse {
     public int hashCode() {
         return Objects.hash(mTaxonomyVersions, mModelVersions, mTopics);
     }
+
     /**
      * Builder for {@link GetTopicsResponse} objects.
      * This class is unhidden so that developers can write tests.
@@ -71,21 +78,25 @@ public class GetTopicsResponse {
         private List<Long> mModelVersions = new ArrayList<>();
         private List<String> mTopics = new ArrayList<>();
         public Builder() {}
+
         /** Set the Taxonomy Version. */
         public @NonNull Builder setTaxonomyVersions(@NonNull List<Long> taxonomyVersions) {
             mTaxonomyVersions = taxonomyVersions;
             return this;
         }
+
         /** Set the Model Version. */
         public @NonNull Builder setModelVersions(@NonNull List<Long> modelVersions) {
             mModelVersions = modelVersions;
             return this;
         }
+
         /** Set the list of the returned Topics */
         public @NonNull Builder setTopics(@NonNull List<String> topics) {
             mTopics = topics;
             return this;
         }
+
         /**
          * Builds a {@link GetTopicsResponse} instance.
          *

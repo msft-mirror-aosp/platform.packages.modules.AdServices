@@ -36,7 +36,8 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.Classifier;
 
 import org.junit.Before;
@@ -55,12 +56,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-/** Unit tests for {@link com.android.adservices.service.topics} */
+/** Unit tests for {@link com.android.adservices.service.topics.EpochManager} */
 @SmallTest
 public final class EpochManagerTest {
     private static final String TAG = "EpochManagerTest";
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
     @Mock TopicsDao mMockTopicsDao;
     @Mock Classifier mMockClassifier;
@@ -324,7 +326,7 @@ public final class EpochManagerTest {
         // Create a new EpochManager that we can control the random generator.
         EpochManager epochManager = new EpochManager(mMockTopicsDao,
                 DbHelper.getInstanceForTest(mContext),
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier);
+                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags);
         List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
                 "random_topic");
 
@@ -393,8 +395,8 @@ public final class EpochManagerTest {
 
         when(mMockClassifier.getTopTopics(
                 eq(appClassificationTopicsMap),
-                eq(AdServicesConfig.getTopicsNumberOfTopTopics()),
-                eq(AdServicesConfig.getTopicsNumberOfRandomTopics())))
+                eq(mFlags.getTopicsNumberOfTopTopics()),
+                eq(mFlags.getTopicsNumberOfRandomTopics())))
                 .thenReturn(topTopics);
 
         epochManager.processEpoch();

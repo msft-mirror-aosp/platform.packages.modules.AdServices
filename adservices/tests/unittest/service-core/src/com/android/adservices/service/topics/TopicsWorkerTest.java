@@ -28,7 +28,8 @@ import static org.mockito.Mockito.when;
 import android.adservices.topics.GetTopicsResult;
 
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +45,7 @@ import java.util.List;
  */
 public class TopicsWorkerTest {
     private TopicsWorker mTopicsWorker;
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
     @Mock private EpochManager mMockEpochManager;
     @Mock private CacheManager mMockCacheManager;
@@ -51,7 +53,8 @@ public class TopicsWorkerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager, mMockCacheManager);
+        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager, mMockCacheManager,
+                mFlags);
     }
 
     @Test
@@ -65,7 +68,7 @@ public class TopicsWorkerTest {
                 /* modelVersion = */ 6L));
 
         when(mMockCacheManager.getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
 
@@ -82,7 +85,7 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk"));
     }
 
@@ -90,7 +93,7 @@ public class TopicsWorkerTest {
     public void testGetTopics_emptyCache() {
         // Empty cache.
         when(mMockCacheManager.getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(new ArrayList<>());
 
@@ -107,7 +110,7 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk"));
     }
 
@@ -122,7 +125,7 @@ public class TopicsWorkerTest {
                 /* modelVersion = */ 6L));
 
         when(mMockCacheManager.getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
 
@@ -139,7 +142,7 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app_not_in_cache"), eq("sdk"));
     }
 
@@ -154,7 +157,7 @@ public class TopicsWorkerTest {
                 /* modelVersion = */ 6L));
 
         when(mMockCacheManager.getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk")))
                 .thenReturn(topics);
 
@@ -171,7 +174,7 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
         verify(mMockCacheManager, only()).getTopics(
-                eq(AdServicesConfig.getTopicsNumberOfLookBackEpochs()),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
                 eq("app"), eq("sdk_not_in_cache"));
     }
 
