@@ -16,30 +16,30 @@
 
 package com.android.tests.sdksandbox.host;
 
-import static com.google.common.truth.Truth.assertThat;
+import static android.appsecurity.cts.Utils.waitForBootCompleted;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.cts.install.lib.host.InstallUtilsHost;
+import android.platform.test.annotations.LargeTest;
 
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.security.MessageDigest;
-import java.security.cert.Certificate;
 import java.util.Arrays;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import javax.annotation.Nullable;
 
@@ -57,14 +57,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             "SdkSandboxStorageTestAppV2_DoesNotConsumeSdk.apk";
     private static final String SDK_PACKAGE = "com.android.tests.codeprovider.storagetest";
 
-    private static final String SYS_PROP_DEFAULT_CERT_DIGEST =
-            "debug.pm.uses_sdk_library_default_cert_digest";
-
     private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
 
     private final InstallUtilsHost mHostUtils = new InstallUtilsHost(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
+    private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device.
@@ -73,7 +71,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
      * For example, <code>runPhase("testExample");</code>
      */
     private void runPhase(String phase) throws Exception {
-        assertThat(runDeviceTests("com.android.tests.sdksandbox",
+        assertThat(runDeviceTests(TEST_APP_STORAGE_PACKAGE,
                 "com.android.tests.sdksandbox.SdkSandboxStorageTestApp",
                 phase)).isTrue();
     }
@@ -86,15 +84,12 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         getDevice().enableAdbRoot();
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
         mOriginalUserId = getDevice().getCurrentUser();
-        getDevice().setProperty(SYS_PROP_DEFAULT_CERT_DIGEST,
-                getPackageCertDigest(CODE_PROVIDER_APK));
     }
 
     @After
     public void tearDown() throws Exception {
         removeSecondaryUserIfNecessary();
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
-        getDevice().setProperty(SYS_PROP_DEFAULT_CERT_DIGEST, "invalid");
         if (!mWasRoot) {
             getDevice().disableAdbRoot();
         }
@@ -188,6 +183,108 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest
+    public void testSdkDataPackageDirectory_IsDestroyedOnUninstall_DeviceLocked()
+            throws Exception {
+        assumeThat("Device is NOT encrypted with file-based encryption.",
+                getDevice().getProperty("ro.crypto.type"), equalTo("file"));
+        assumeTrue("Screen lock is not supported so skip direct boot test",
+                hasDeviceFeature("android.software.secure_lock_screen"));
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Verify sdk ce directory contains TEST_APP_STORAGE_PACKAGE
+        final String ceSandboxPath = getSdkDataRootPath(0, /*isCeData=*/true);
+        String[] children = getDevice().getChildren(ceSandboxPath);
+        assertThat(children).isNotEmpty();
+        final int numberOfChildren = children.length;
+        assertThat(children).asList().contains(TEST_APP_STORAGE_PACKAGE);
+
+        try {
+            mDeviceLockUtils.rebootToLockedDevice();
+
+            // Verify sdk ce package directory is encrypted, so longer contains the test package
+            children = getDevice().getChildren(ceSandboxPath);
+            assertThat(children).hasLength(numberOfChildren);
+            assertThat(children).asList().doesNotContain(TEST_APP_STORAGE_PACKAGE);
+
+            // Uninstall while device is locked
+            uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+
+            // Verify ce sdk data did not change while device is locked
+            children = getDevice().getChildren(ceSandboxPath);
+            assertThat(children).hasLength(numberOfChildren);
+
+            // Meanwhile, de storage area should already be deleted
+            final String dePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+            assertThat(getDevice().isDirectory(dePath)).isFalse();
+        } finally {
+            mDeviceLockUtils.clearScreenLock();
+        }
+
+        // Once device is unlocked, the uninstallation during locked state should take effect.
+        // Allow some time for background task to run.
+        Thread.sleep(10000);
+
+        final String cePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        assertDirectoryDoesNotExist(cePath);
+        // Verify number of children under root directory is one less than before
+        children = getDevice().getChildren(ceSandboxPath);
+        assertThat(children).hasLength(numberOfChildren - 1);
+        assertThat(children).asList().doesNotContain(TEST_APP_STORAGE_PACKAGE);
+    }
+
+    @Test
+    @LargeTest
+    public void testSdkDataPackageDirectory_IsReconciled_InvalidPackage() throws Exception {
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Rename the sdk data directory to some non-existing package name
+        final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String ceInvalidDir = getSdkDataPackagePath(0, "com.invalid.foo", true);
+        getDevice().executeShellCommand(String.format("mv %s %s", cePackageDir, ceInvalidDir));
+        assertDirectoryExists(ceInvalidDir);
+
+        final String dePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        final String deInvalidDir = getSdkDataPackagePath(0, "com.invalid.foo", false);
+        getDevice().executeShellCommand(String.format("mv %s %s", dePackageDir, deInvalidDir));
+        assertDirectoryExists(deInvalidDir);
+
+        // Reboot since reconcilation happens on user unlock only
+        getDevice().reboot();
+        Thread.sleep(5000);
+
+        // Verify invalid directory doesn't exist
+        assertDirectoryDoesNotExist(ceInvalidDir);
+        assertDirectoryDoesNotExist(deInvalidDir);
+    }
+
+    @Test
+    @LargeTest
+    public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepData() throws Exception {
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Uninstall while keeping the data
+        getDevice().executeShellCommand("pm uninstall -k --user 0 " + TEST_APP_STORAGE_PACKAGE);
+
+        // Rename the sdk data directory to some non-existing package name
+        final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        assertDirectoryExists(cePackageDir);
+        assertDirectoryExists(dePackageDir);
+
+        // Reboot since reconcilation happens on user unlock only
+        getDevice().reboot();
+        Thread.sleep(5000);
+
+        // Verify sdk data are not cleaned up during reconcilation
+        assertDirectoryExists(cePackageDir);
+        assertDirectoryExists(dePackageDir);
+    }
+
+    @Test
     public void testSdkDataPackageDirectory_IsClearedOnClearAppData() throws Exception {
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
@@ -270,6 +367,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app on new user
         installPackage(TEST_APP_STORAGE_APK);
 
+        assertThat(getDevice().isDirectory(ceAppPath)).isTrue();
+        assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
         assertThat(getDevice().isDirectory(dePath)).isTrue();
     }
@@ -313,7 +412,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testSdkDataPerSdkDirectory_IsCreatedOnInstall() throws Exception {
+    public void testSdkDataSubDirectory_IsCreatedOnInstall() throws Exception {
         // Directory should not exist before install
         assertThat(getSdkDataPerSdkPath(
                     0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, true)).isNull();
@@ -459,53 +558,20 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
     }
 
-    /**
-     * Extracts the certificate used to sign an apk in HexEncoded form.
-     */
-    private String getPackageCertDigest(String apkFileName) throws Exception {
-        File apkFile = mHostUtils.getTestFile(apkFileName);
-        JarFile apkJar = new JarFile(apkFile);
-        JarEntry manifestEntry = apkJar.getJarEntry("AndroidManifest.xml");
-        // #getCertificate can only be called once the JarEntry has been completely
-        // verified by reading from the entry input stream until the end of the
-        // stream has been reached.
-        byte[] readBuffer = new byte[8192];
-        InputStream input = new BufferedInputStream(apkJar.getInputStream(manifestEntry));
-        while (input.read(readBuffer, 0, readBuffer.length) != -1) {
-            // not used
-        }
-        // We can now call #getCertificates
-        Certificate[] certs = manifestEntry.getCertificates();
-
-        // Create SHA256 digest of the certificate
-        MessageDigest sha256DigestCreator = MessageDigest.getInstance("SHA-256");
-        sha256DigestCreator.update(certs[0].getEncoded());
-        byte[] digest = sha256DigestCreator.digest();
-        return new String(encodeToHex(digest)).trim();
-    }
-
-    /**
-     * Encodes the provided data as a sequence of hexadecimal characters.
-     */
-    private static char[] encodeToHex(byte[] data) {
-        final char[] digits = {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-        };
-        char[] result = new char[data.length * 2];
-        for (int i = 0; i < data.length; i++) {
-            byte b = data[i];
-            int resultIndex = 2 * i;
-            result[resultIndex] = (digits[(b >> 4) & 0x0f]);
-            result[resultIndex + 1] = (digits[b & 0x0f]);
-        }
-
-        return result;
-    }
-
     private static void assertSuccess(String str) {
         if (str == null || !str.startsWith("Success")) {
             throw new AssertionError("Expected success string but found " + str);
         }
+    }
+
+    private void assertDirectoryExists(String path) throws Exception {
+        assertWithMessage(path + " is not a directory or does not exist")
+            .that(getDevice().isDirectory(path)).isTrue();
+    }
+
+    private void assertDirectoryDoesNotExist(String path) throws Exception {
+        assertWithMessage(path + " exists when expected not to")
+            .that(getDevice().doesFileExist(path)).isFalse();
     }
 
     private static class AdoptableStorageUtils {
@@ -620,6 +686,99 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             }
             throw new AssertionError("Volume not ready " + vol.volId);
         }
+    }
+
+    private static class DeviceLockUtils {
+
+        private static final String FBE_MODE_EMULATED = "emulated";
+        private static final String FBE_MODE_NATIVE = "native";
+
+        private final BaseHostJUnit4Test mTest;
+
+        private boolean mIsDeviceLocked = false;
+
+        DeviceLockUtils(BaseHostJUnit4Test test) {
+            mTest = test;
+        }
+
+        public void rebootToLockedDevice() throws Exception {
+            // Setup screenlock
+            mTest.getDevice().executeShellCommand(
+                    "settings put global require_password_to_decrypt 0");
+            mTest.getDevice().executeShellCommand("locksettings set-disabled false");
+            String response = mTest.getDevice().executeShellCommand("locksettings set-pin 1234");
+            if (!response.contains("1234")) {
+                // This seems to fail occasionally. Try again once, then give up.
+                Thread.sleep(500);
+                response = mTest.getDevice().executeShellCommand("locksettings set-pin 1234");
+                assertWithMessage("Test requires setting a pin, which failed: " + response)
+                    .that(response).contains("1234");
+            }
+
+            // Give enough time for vold to update keys
+            Thread.sleep(15000);
+
+            // Follow DirectBootHostTest, reboot system into known state with keys ejected
+            if (isFbeModeEmulated()) {
+                final String res = mTest.getDevice().executeShellCommand("sm set-emulate-fbe true");
+                if (res != null && res.contains("Emulation not supported")) {
+                    throw new AssumptionViolatedException("FBE emulation is not supported");
+                }
+                mTest.getDevice().waitForDeviceNotAvailable(30000);
+                mTest.getDevice().waitForDeviceOnline(120000);
+            } else {
+                mTest.getDevice().rebootUntilOnline();
+            }
+            waitForBootCompleted(mTest.getDevice());
+
+            mIsDeviceLocked = true;
+        }
+
+        public void clearScreenLock() throws Exception {
+            Thread.sleep(5000);
+            try {
+                unlockDevice();
+                mTest.getDevice().executeShellCommand("locksettings clear --old 1234");
+                mTest.getDevice().executeShellCommand("locksettings set-disabled true");
+                mTest.getDevice().executeShellCommand(
+                        "settings delete global require_password_to_decrypt");
+            } finally {
+                // Get ourselves back into a known-good state
+                if (isFbeModeEmulated()) {
+                    mTest.getDevice().executeShellCommand("sm set-emulate-fbe false");
+                    mTest.getDevice().waitForDeviceNotAvailable(30000);
+                    mTest.getDevice().waitForDeviceOnline();
+                } else {
+                    mTest.getDevice().rebootUntilOnline();
+                }
+                mTest.getDevice().waitForDeviceAvailable();
+            }
+        }
+
+        public void unlockDevice() throws Exception {
+            if (!mIsDeviceLocked) return;
+            assertThat(mTest.runDeviceTests("com.android.cts.appdataisolation.appa",
+                        "com.android.cts.appdataisolation.appa.AppATests",
+                        "testUnlockDevice")).isTrue();
+            mIsDeviceLocked = false;
+        }
+
+        private boolean isFbeModeEmulated() throws Exception {
+            String mode = "unknown";
+            for (int i = 0; i < 2; i++) {
+                mode = mTest.getDevice().executeShellCommand("sm get-fbe-mode").trim();
+                if (mode.equals(FBE_MODE_EMULATED)) {
+                    return true;
+                } else if (mode.equals(FBE_MODE_NATIVE)) {
+                    return false;
+                }
+                // Sometimes mount service takes time to get ready
+                Thread.sleep(5000);
+            }
+            fail("Unknown FBE mode: " + mode);
+            return false;
+        }
+
     }
 
 }
