@@ -16,14 +16,26 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import com.android.adservices.data.measurement.DatabaseE2ETest;
+import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.measurement.Trigger;
 
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,10 +60,21 @@ public class AttributionJobHandlerE2ETest extends DatabaseE2ETest {
     }
 
     @Override
-    public void runActionToTest() {
+    public void runActionToTest() throws DatastoreException {
+        DatastoreManager datastoreManager = spy(
+                DatastoreManagerFactory.getDatastoreManager(sContext));
+        // Mocking the randomized trigger data to always return the truth value.
+        IMeasurementDao dao = spy(datastoreManager.getMeasurementDao());
+        when(datastoreManager.getMeasurementDao()).thenReturn(dao);
+        doAnswer((Answer<Trigger>) invocation -> {
+            Trigger trigger = spy((Trigger) invocation.callRealMethod());
+            doReturn(trigger.getTriggerData())
+                    .when(trigger).getRandomizedTriggerData(any());
+            return trigger;
+        }).when(dao).getTrigger(anyString());
+
         Assert.assertTrue("Attribution failed.",
-                (new AttributionJobHandler(
-                        DatastoreManagerFactory.getDatastoreManager(sContext)))
+                (new AttributionJobHandler(datastoreManager))
                         .performPendingAttributions());
     }
 }
