@@ -16,22 +16,32 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.SharedLibraryInfo;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.text.TextUtils;
+import android.util.ArraySet;
 import android.util.Base64;
 import android.util.Log;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.pm.PackageManagerLocal;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Helper class to handle all logics related to sdk data
@@ -41,10 +51,17 @@ class SdkSandboxStorageManager {
 
     private final Context mContext;
     private final PackageManagerLocal mPackageManagerLocal;
+    private final Object mLock = new Object();
 
     SdkSandboxStorageManager(Context context) {
         mContext = context;
         mPackageManagerLocal = LocalManagerRegistry.getManager(PackageManagerLocal.class);
+    }
+
+    public void notifyInstrumentationStarted(String packageName, int uid) {
+        synchronized (mLock) {
+            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/true);
+        }
     }
 
     /**
@@ -54,15 +71,28 @@ class SdkSandboxStorageManager {
      * package.
      */
     void onPackageAddedOrUpdated(String packageName, int uid) {
-        reconcileSdkData(packageName, uid, /*forInstrumentation=*/false);
+        synchronized (mLock) {
+            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
+        }
     }
 
-    void notifyInstrumentationStarted(String packageName, int uid) {
-        reconcileSdkData(packageName, uid, /*forInstrumentation=*/true);
+    /**
+     * Handle user unlock event.
+     *
+     * When user unlocks their device, the credential encrypted storage becomes available for
+     * reconcilation.
+     */
+    public void onUserUnlocking(int userId) {
+        synchronized (mLock) {
+            reconcileSdkDataInvalidPackageDirs(userId);
+        }
     }
 
-    private void reconcileSdkData(String packageName, int uid, boolean forInstrumentation) {
-        final List<SharedLibraryInfo> sdksUsed = getSdksUsed(packageName);
+    @GuardedBy("mLock")
+    private void reconcileSdkDataSubDirs(String packageName, int uid, boolean forInstrumentation) {
+        final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
+        final int userId = userHandle.getIdentifier();
+        final List<SharedLibraryInfo> sdksUsed = getSdksUsed(userId, packageName);
         if (sdksUsed.isEmpty()) {
             if (forInstrumentation) {
                 Log.w(TAG,
@@ -83,8 +113,6 @@ class SdkSandboxStorageManager {
             //multiple subdirectories for the same sdk, due to passing different random suffix.
             subDirNames.add(sdk.getName() + "@" + getRandomString());
         }
-        final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
-        final int userId = userHandle.getIdentifier();
         final int appId = UserHandle.getAppId(uid);
         final int flags = mContext.getSystemService(UserManager.class).isUserUnlocked(userHandle)
                 ? PackageManagerLocal.FLAG_STORAGE_CE | PackageManagerLocal.FLAG_STORAGE_DE
@@ -113,9 +141,9 @@ class SdkSandboxStorageManager {
      * Returns list of sdks {@code packageName} uses
      */
     @SuppressWarnings("MixedMutabilityReturnType")
-    private List<SharedLibraryInfo> getSdksUsed(String packageName) {
+    private List<SharedLibraryInfo> getSdksUsed(int userId, String packageName) {
         List<SharedLibraryInfo> result = new ArrayList<>();
-        PackageManager pm = mContext.getPackageManager();
+        PackageManager pm = getPackageManager(userId);
         try {
             ApplicationInfo info = pm.getApplicationInfo(
                     packageName, PackageManager.GET_SHARED_LIBRARY_FILES);
@@ -133,4 +161,101 @@ class SdkSandboxStorageManager {
         }
     }
 
+    /**
+     * For the given {@code userId}, ensure that sdk data package directories are still valid.
+     *
+     * The primary concern of this method is to remove invalid data directories. Missing valid
+     * directories will get created when the app loads sdk for the first time.
+     */
+    @GuardedBy("mLock")
+    private void reconcileSdkDataInvalidPackageDirs(int userId) {
+        Log.i(TAG, "Reconciling sdk data package directories for " + userId);
+        reconcileSdkDataInvalidPackageDirs(userId, /*isCeData=*/true);
+        reconcileSdkDataInvalidPackageDirs(userId, /*isCeData=*/false);
+    }
+
+    @GuardedBy("mLock")
+    private void reconcileSdkDataInvalidPackageDirs(int userId, boolean isCeData) {
+        Set<String> packageNamesWithDataDirs = getPackageNamesWithDataDirectories(userId);
+
+        // Collect package names from root directory
+        //TODO(b/226095967): We should sync data on all volumes
+        final String rootDir = getSdkDataRootDirectory(null, userId, isCeData);
+        final String[] sdkPackages = new File(rootDir).list();
+
+        // Now loop over package directories and remove the ones that are invalid
+        for (int i = 0; i < sdkPackages.length; i++) {
+            final String packageName = sdkPackages[i];
+            if (packageNamesWithDataDirs.contains(packageName)) continue;
+            destroySdkDataPackageDirectory(null, userId, packageName, isCeData);
+        }
+    }
+
+    private Set<String> getPackageNamesWithDataDirectories(int userId) {
+        PackageManager pm = getPackageManager(userId);
+        List<PackageInfo> packageInfoList = pm.getInstalledPackages(
+                PackageManager.MATCH_UNINSTALLED_PACKAGES);
+        ArraySet<String> result = new ArraySet<>();
+        for (int i = 0; i < packageInfoList.size(); i++) {
+            result.add(packageInfoList.get(i).packageName);
+        }
+        return result;
+    }
+
+    private PackageManager getPackageManager(int userId) {
+        return mContext.createContextAsUser(UserHandle.of(userId), 0).getPackageManager();
+    }
+
+    @GuardedBy("mLock")
+    private void destroySdkDataPackageDirectory(@Nullable String volumeUuid, int userId,
+            String packageName, boolean isCeData) {
+        final Path packageDir = Paths.get(getSdkDataPackageDirectory(volumeUuid, userId,
+                    packageName, isCeData));
+        if (!Files.exists(packageDir)) {
+            return;
+        }
+
+        Log.i(TAG, "Destroying sdk data package directory " + packageDir);
+
+        // Even though system owns the package directory, the sub-directories are owned by sandbox.
+        // We first need to get rid of sub-directories.
+        try {
+            final int flag = isCeData
+                    ? PackageManagerLocal.FLAG_STORAGE_CE
+                    : PackageManagerLocal.FLAG_STORAGE_DE;
+            mPackageManagerLocal.reconcileSdkData(volumeUuid, packageName,
+                    Collections.emptyList(), userId, /*appId=*/-1, /*previousAppId=*/-1,
+                    /*seInfo=*/"default", flag);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to destroy sdk data on user unlock for userId: " + userId
+                    + " packageName: " + packageName +  " error: " + e.getMessage());
+        }
+
+        // Now that the package directory is empty, we can delete it
+        try {
+            Files.delete(packageDir);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to destroy sdk data on user unlock for userId: " + userId
+                    + " packageName: " + packageName +  " error: " + e.getMessage());
+        }
+    }
+
+    private static String getDataDirectory(@Nullable String volumeUuid) {
+        if (TextUtils.isEmpty(volumeUuid)) {
+            return "/data";
+        } else {
+            return "/mnt/expand/" + volumeUuid;
+        }
+    }
+
+    private static String getSdkDataRootDirectory(@Nullable String volumeUuid, int userId,
+            boolean isCeData) {
+        return getDataDirectory(volumeUuid) + (isCeData ? "/misc_ce/" : "/misc_de/") + userId
+            + "/sdksandbox";
+    }
+
+    private static String getSdkDataPackageDirectory(@Nullable String volumeUuid, int userId,
+            String packageName, boolean isCeData) {
+        return getSdkDataRootDirectory(volumeUuid, userId, isCeData) + "/" + packageName;
+    }
 }
