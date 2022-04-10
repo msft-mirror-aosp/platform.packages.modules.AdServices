@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import java.util.Optional;
 
 /**
@@ -61,7 +63,8 @@ public abstract class DatastoreManager {
      *
      * @return Dao object.
      */
-    protected abstract IMeasurementDao getMeasurementDao();
+    @VisibleForTesting
+    public abstract IMeasurementDao getMeasurementDao();
 
     /**
      * Runs the {@code execute} lambda in a transaction.
