@@ -36,22 +36,22 @@ public final class TrustedBiddingDataTest {
     public void testBuildValidTrustedBiddingDataSuccess() {
         TrustedBiddingData validTrustedBiddingData =
                 new TrustedBiddingData.Builder()
-                        .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
-                        .setTrustedBiddingKeys(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS)
+                        .setTrustedBiddingUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                         .build();
 
         assertThat(validTrustedBiddingData.getTrustedBiddingUrl())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL);
         assertThat(validTrustedBiddingData.getTrustedBiddingKeys())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS);
     }
 
     @Test
     public void testParcelValidTrustedBiddingDataSuccess() {
         TrustedBiddingData validTrustedBiddingData =
                 new TrustedBiddingData.Builder()
-                        .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
-                        .setTrustedBiddingKeys(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS)
+                        .setTrustedBiddingUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -60,9 +60,9 @@ public final class TrustedBiddingDataTest {
         TrustedBiddingData fromParcel = TrustedBiddingData.CREATOR.createFromParcel(p);
 
         assertThat(fromParcel.getTrustedBiddingUrl())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL);
         assertThat(fromParcel.getTrustedBiddingKeys())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS);
     }
 
     @Test
@@ -72,7 +72,8 @@ public final class TrustedBiddingDataTest {
                 () -> {
                     // TrustedBiddingUrl is not set, so it gets built as null
                     new TrustedBiddingData.Builder()
-                            .setTrustedBiddingKeys(CustomAudienceFixture.VALID_TRUSTED_BIDDING_KEYS)
+                            .setTrustedBiddingKeys(
+                                    TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
                             .build();
                 });
     }
@@ -84,7 +85,8 @@ public final class TrustedBiddingDataTest {
                 () -> {
                     // TrustedBiddingKeys is not set, so it gets built as null
                     new TrustedBiddingData.Builder()
-                            .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
+                            .setTrustedBiddingUrl(
+                                    TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
                             .build();
                 });
     }
@@ -96,12 +98,12 @@ public final class TrustedBiddingDataTest {
 
         TrustedBiddingData emptyKeysTrustedBiddingData =
                 new TrustedBiddingData.Builder()
-                        .setTrustedBiddingUrl(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
                         .setTrustedBiddingKeys(emptyTrustedBiddingKeys)
                         .build();
 
         assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingUrl())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_URL);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL);
         assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingKeys())
                 .isEqualTo(emptyTrustedBiddingKeys);
     }

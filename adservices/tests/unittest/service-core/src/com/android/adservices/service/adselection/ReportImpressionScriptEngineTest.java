@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdData;
 import android.content.Context;
 import android.net.Uri;
