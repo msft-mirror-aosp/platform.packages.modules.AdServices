@@ -343,8 +343,10 @@ class MeasurementDao implements IMeasurementDao {
                 new String[]{uriStr});
         // Source table
         db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.REGISTRANT + " = ?",
-                new String[]{uriStr});
+                "( " + MeasurementTables.SourceContract.REGISTRANT + " = ? ) OR "
+                        + "(" + MeasurementTables.SourceContract.STATUS + " = ? AND "
+                        + MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? )",
+                new String[]{uriStr, String.valueOf(Source.Status.IGNORED), uriStr});
         // Trigger table
         db.delete(MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.REGISTRANT + " = ?",
