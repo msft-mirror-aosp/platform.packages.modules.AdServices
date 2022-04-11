@@ -1,0 +1,441 @@
+{
+  "testCases": [
+    {
+      "name": "Remove a Source and its EventReport",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "uri": "android-app://com.example.abc"
+    },
+    {
+      "name": "Match a Source's registrant that has no matching report",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://remove.me"
+          },
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://no-match.com/d2",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://no-match.com/d2",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "uri": "android-app://remove.me"
+    },
+    {
+      "name": "Match a Trigger's registrant",
+      "input": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://remove.me"
+          },
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://no-match.com/d2",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T2",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://no-match.com/d2",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "uri": "android-app://remove.me"
+    },
+    {
+      "name": "Match EventReports' attribution destination",
+      "input": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "R1",
+            "sourceId": 1,
+            "attributionDestination": "android-app://remove.me",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "R2",
+            "sourceId": 1,
+            "attributionDestination": "android-app://remove.me",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          },
+          {
+            "id": "R3",
+            "sourceId": 1,
+            "attributionDestination": "android-app://dont.remove.me",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S2",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "R3",
+            "sourceId": 1,
+            "attributionDestination": "android-app://dont.remove.me",
+            "reportTo": "android-app://example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "uri": "android-app://remove.me"
+    },
+    {
+      "name": "Remove an AttributionRateLimit",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "dont.remove.me"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "dont.remove.me",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "Attr1",
+            "sourceSite": "android-app://remove.me",
+            "destinationSite": "no.match",
+            "reportTo": "android-app://example.one",
+            "triggerTime": 10,
+            "registrant": "android-app://com.example.xyz"
+          },
+          {
+            "id": "Attr2",
+            "sourceSite": "no.match",
+            "destinationSite": "android-app://remove.me",
+            "reportTo": "android-app://example.one",
+            "triggerTime": 10,
+            "registrant": "android-app://com.example.xyz"
+          },
+          {
+            "id": "Attr3",
+            "sourceSite": "dont.remove.me",
+            "destinationSite": "dont.remove.me",
+            "reportTo": "android-app://example.one",
+            "triggerTime": 10,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "android-app://example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "dont.remove.me"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "id",
+            "sourceId": 1,
+            "attributionDestination": "android-app://example2.com/d1",
+            "reportTo": "dont.remove.me",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": -1,
+            "triggerPriority": 101
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "Attr3",
+            "sourceSite": "dont.remove.me",
+            "destinationSite": "dont.remove.me",
+            "reportTo": "android-app://example.one",
+            "triggerTime": 10,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      },
+      "uri": "android-app://remove.me"
+    }
+  ]
+}
