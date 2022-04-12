@@ -29,6 +29,7 @@ android_test {
         "mockito-target-extended-minus-junit4",
         "ub-uiautomator",
         "adservices-service-core",
+        "adservices-test-fixtures",
     ],
     libs: [
         "android.test.base",

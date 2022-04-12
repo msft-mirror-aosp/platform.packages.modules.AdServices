@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
@@ -43,9 +44,9 @@ public final class CustomAudienceTest {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                 .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                .setAds(CustomAudienceFixture.VALID_ADS)
+                .setAds(AdDataFixture.VALID_ADS)
                 .build();
 
         assertThat(validCustomAudience.getOwner()).isEqualTo(CustomAudienceFixture.VALID_OWNER);
@@ -60,10 +61,10 @@ public final class CustomAudienceTest {
         assertThat(validCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(validCustomAudience.getTrustedBiddingData())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA);
         assertThat(validCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL);
-        assertThat(validCustomAudience.getAds()).isEqualTo(CustomAudienceFixture.VALID_ADS);
+        assertThat(validCustomAudience.getAds()).isEqualTo(AdDataFixture.VALID_ADS);
     }
 
     @Test
@@ -76,9 +77,9 @@ public final class CustomAudienceTest {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                 .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                .setAds(CustomAudienceFixture.VALID_ADS)
+                .setAds(AdDataFixture.VALID_ADS)
                 .build();
 
         // TODO check owner auto-population
@@ -94,10 +95,10 @@ public final class CustomAudienceTest {
         assertThat(emptyAdsCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(emptyAdsCustomAudience.getTrustedBiddingData())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA);
         assertThat(emptyAdsCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL);
-        assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(CustomAudienceFixture.VALID_ADS);
+        assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(AdDataFixture.VALID_ADS);
     }
 
     @Test
@@ -110,9 +111,9 @@ public final class CustomAudienceTest {
                 .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                 .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                .setAds(CustomAudienceFixture.VALID_ADS)
+                .setAds(AdDataFixture.VALID_ADS)
                 .build();
 
         assertThat(validDelayedActivationCustomAudience.getOwner())
@@ -130,11 +131,11 @@ public final class CustomAudienceTest {
         assertThat(validDelayedActivationCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(validDelayedActivationCustomAudience.getTrustedBiddingData())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA);
         assertThat(validDelayedActivationCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL);
         assertThat(validDelayedActivationCustomAudience.getAds())
-                .isEqualTo(CustomAudienceFixture.VALID_ADS);
+                .isEqualTo(AdDataFixture.VALID_ADS);
     }
 
     @Test
@@ -147,9 +148,9 @@ public final class CustomAudienceTest {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                 .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                .setAds(CustomAudienceFixture.VALID_ADS)
+                .setAds(AdDataFixture.VALID_ADS)
                 .build();
 
         Parcel p = Parcel.obtain();
@@ -169,10 +170,10 @@ public final class CustomAudienceTest {
         assertThat(fromParcel.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(fromParcel.getTrustedBiddingData())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA);
         assertThat(fromParcel.getBiddingLogicUrl())
                 .isEqualTo(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL);
-        assertThat(fromParcel.getAds()).isEqualTo(CustomAudienceFixture.VALID_ADS);
+        assertThat(fromParcel.getAds()).isEqualTo(AdDataFixture.VALID_ADS);
     }
 
     @Test
@@ -187,9 +188,9 @@ public final class CustomAudienceTest {
                     .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                     .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                     .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                    .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                    .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                     .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                    .setAds(CustomAudienceFixture.VALID_ADS)
+                    .setAds(AdDataFixture.VALID_ADS)
                     .build();
         });
     }
@@ -206,9 +207,9 @@ public final class CustomAudienceTest {
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEFORE_NOW_EXPIRATION_TIME)
                     .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                     .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                    .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                    .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                     .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                    .setAds(CustomAudienceFixture.VALID_ADS)
+                    .setAds(AdDataFixture.VALID_ADS)
                     .build();
         });
     }
@@ -225,9 +226,9 @@ public final class CustomAudienceTest {
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                     .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                     .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                    .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                    .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                     .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                    .setAds(CustomAudienceFixture.VALID_ADS)
+                    .setAds(AdDataFixture.VALID_ADS)
                     .build();
         });
     }
@@ -244,9 +245,9 @@ public final class CustomAudienceTest {
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEFORE_DELAYED_EXPIRATION_TIME)
                     .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                     .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                    .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                    .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                     .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                    .setAds(CustomAudienceFixture.VALID_ADS)
+                    .setAds(AdDataFixture.VALID_ADS)
                     .build();
         });
     }
@@ -263,7 +264,7 @@ public final class CustomAudienceTest {
                     .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                     .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                     .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                    .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                    .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                     .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
                     .build();
         });
@@ -282,7 +283,7 @@ public final class CustomAudienceTest {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA)
+                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
                 .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
                 .setAds(emptyAds)
                 .build();
@@ -299,7 +300,7 @@ public final class CustomAudienceTest {
         assertThat(emptyAdsCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
         assertThat(emptyAdsCustomAudience.getTrustedBiddingData())
-                .isEqualTo(CustomAudienceFixture.VALID_TRUSTED_BIDDING_DATA);
+                .isEqualTo(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA);
         assertThat(emptyAdsCustomAudience.getBiddingLogicUrl())
                 .isEqualTo(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL);
         assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(emptyAds);
