@@ -59,6 +59,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
+    private static final long WAIT_FOR_RECONCILE_MS = 5000;
 
     private final InstallUtilsHost mHostUtils = new InstallUtilsHost(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
@@ -236,7 +237,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest
-    public void testSdkDataPackageDirectory_IsReconciled_InvalidPackage() throws Exception {
+    public void testSdkDataPackageDirectory_IsReconciled_InvalidAndMissingPackage()
+            throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);
 
@@ -253,11 +255,34 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Reboot since reconcilation happens on user unlock only
         getDevice().reboot();
-        Thread.sleep(5000);
+        Thread.sleep(WAIT_FOR_RECONCILE_MS);
 
         // Verify invalid directory doesn't exist
         assertDirectoryDoesNotExist(ceInvalidDir);
         assertDirectoryDoesNotExist(deInvalidDir);
+        assertDirectoryExists(cePackageDir);
+        assertDirectoryExists(dePackageDir);
+    }
+
+    @Test
+    @LargeTest
+    public void testSdkDataPackageDirectory_IsReconciled_MissingSubDirs() throws Exception {
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Rename the sdk data directory to some non-existing package name
+        final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        // Delete the shared directory
+        final String sharedDir = cePackageDir + "/shared";
+        getDevice().deleteFile(sharedDir);
+        assertDirectoryDoesNotExist(sharedDir);
+
+        // Reboot since reconcilation happens on user unlock only
+        getDevice().reboot();
+        Thread.sleep(WAIT_FOR_RECONCILE_MS);
+
+        // Verify shared dir exists
+        assertDirectoryExists(sharedDir);
     }
 
     @Test
@@ -277,7 +302,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Reboot since reconcilation happens on user unlock only
         getDevice().reboot();
-        Thread.sleep(5000);
+        Thread.sleep(WAIT_FOR_RECONCILE_MS);
 
         // Verify sdk data are not cleaned up during reconcilation
         assertDirectoryExists(cePackageDir);
@@ -430,6 +455,43 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest
+    public void testSdkDataSubDirectory_IsCreatedOnInstall_DeviceLocked()
+            throws Exception {
+        assumeThat("Device is NOT encrypted with file-based encryption.",
+                getDevice().getProperty("ro.crypto.type"), equalTo("file"));
+        assumeTrue("Screen lock is not supported so skip direct boot test",
+                hasDeviceFeature("android.software.secure_lock_screen"));
+
+        // Store number of package directories under root path for comparison later
+        final String ceSandboxPath = getSdkDataRootPath(0, /*isCeData=*/true);
+        String[] children = getDevice().getChildren(ceSandboxPath);
+        final int numberOfChildren = children.length;
+
+        try {
+            mDeviceLockUtils.rebootToLockedDevice();
+            // Install app after installation
+            installPackage(TEST_APP_STORAGE_APK);
+            // De storage area should already have per-sdk directories
+            assertThat(getSdkDataPerSdkPath(
+                        0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, /*isCeData=*/false)).isNotNull();
+
+            mDeviceLockUtils.unlockDevice();
+
+            // Allow some time for reconciliation task to finish
+            Thread.sleep(WAIT_FOR_RECONCILE_MS);
+
+            assertThat(getSdkDataPerSdkPath(
+                        0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, /*isCeData=*/false)).isNotNull();
+            // Once device is unlocked, the per-sdk ce directories should be created
+            assertThat(getSdkDataPerSdkPath(
+                        0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, /*isCeData=*/true)).isNotNull();
+        } finally {
+            mDeviceLockUtils.clearScreenLock();
+        }
+    }
+
+    @Test
     public void testSdkData_CanBeMovedToDifferentVolume() throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
@@ -461,7 +523,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         } finally {
             mAdoptableUtils.cleanUpVolume();
         }
-
     }
 
     @Test
