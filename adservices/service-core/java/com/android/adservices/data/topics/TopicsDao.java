@@ -108,7 +108,7 @@ public class TopicsDao {
 
                 try {
                     db.insert(TopicsTables.AppClassificationTopicsContract.TABLE,
-                            /* number of hack */ null, values);
+                            /* nullColumnHack */ null, values);
                 } catch (SQLException e) {
                     LogUtil.e("Failed to persist classified Topics. Exception : "
                             + e.getMessage());
@@ -199,7 +199,8 @@ public class TopicsDao {
         values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, topTopics.get(5));
 
         try {
-            db.insert(TopicsTables.TopTopicsContract.TABLE, /* number of hack */ null, values);
+            db.insert(TopicsTables.TopTopicsContract.TABLE,
+                    /* nullColumnHack */null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to persist Top Topics. Exception : " + e.getMessage());
         }
@@ -286,7 +287,8 @@ public class TopicsDao {
         values.put(TopicsTables.UsageHistoryContract.EPOCH_ID, epochId);
 
         try {
-            db.insert(TopicsTables.UsageHistoryContract.TABLE, /* number of hack */ null, values);
+            db.insert(TopicsTables.UsageHistoryContract.TABLE,
+                    /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record App-Sdk usage history." + e.getMessage());
         }
@@ -313,7 +315,7 @@ public class TopicsDao {
 
         try {
             db.insert(TopicsTables.AppUsageHistoryContract.TABLE,
-                    /* number of hack */ null, values);
+                    /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record App Only usage history." + e.getMessage());
         }
@@ -430,7 +432,7 @@ public class TopicsDao {
 
                 try {
                     db.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE,
-                            /* number of hack */ null, values);
+                            /* nullColumnHack */ null, values);
                 } catch (SQLException e) {
                     LogUtil.e(e, "Failed to record can learn topic.");
                 }
@@ -543,7 +545,7 @@ public class TopicsDao {
 
             try {
                 db.insert(TopicsTables.ReturnedTopicContract.TABLE,
-                        /* number of hack */ null, values);
+                        /* nullColumnHack */ null, values);
             } catch (SQLException e) {
                 LogUtil.e(e, "Failed to record returned topic.");
             }
