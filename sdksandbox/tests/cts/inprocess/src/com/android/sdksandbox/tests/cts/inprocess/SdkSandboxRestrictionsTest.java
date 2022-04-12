@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox.inprocess;
+package com.android.sdksandbox.tests.cts.inprocess;
 
 import static com.google.common.truth.Truth.assertThat;
 

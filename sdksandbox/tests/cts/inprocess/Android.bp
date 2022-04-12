@@ -17,7 +17,7 @@ package {
 }
 
 android_test {
-    name: "SdkSandboxInprocessTests",
+    name: "CtsSdkSandboxInprocessTests",
 
     target_sdk_version: "Tiramisu",
     min_sdk_version: "Tiramisu",
@@ -37,5 +37,5 @@ android_test {
         "androidx.test.ext.junit",
         "truth-prebuilt",
     ],
-    test_suites: ["general-tests"],
+    test_suites: ["cts", "general-tests"],
 }
