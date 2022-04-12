@@ -56,7 +56,7 @@ public class CacheManager {
         mFlags = flags;
     }
 
-    /** Returns an instance of the EpochManager given a context. */
+    /** Returns an instance of the CacheManager given a context. */
     @NonNull
     public static CacheManager getInstance(Context context) {
         synchronized (CacheManager.class) {
@@ -66,6 +66,21 @@ public class CacheManager {
             }
             return sSingleton;
         }
+    }
+
+    /**
+     * A constructor for test usage ONLY.
+     * Don't use singleton pattern since we want to create different instance per test case.
+     *
+     * @param epochManager the epoch Manager instance
+     * @param topicsDao the TopicsDao Instance
+     * @param flags The Flags Instance
+     * @return an instance of CacheManager for test usage
+     */
+    @NonNull
+    public static CacheManager getInstanceForTest(@NonNull EpochManager epochManager,
+            @NonNull TopicsDao topicsDao, @NonNull Flags flags) {
+        return new CacheManager(epochManager, topicsDao, flags);
     }
 
     /**
@@ -92,7 +107,7 @@ public class CacheManager {
     /**
      * Get list of topics for the numberOfLookBackEpochs epoch starting from
      * [epochId - numberOfLookBackEpochs + 1, epochId]
-     * @param epochId the current epochId.
+     *
      * @param numberOfLookBackEpochs how many epochs to look back.
      * @param app the app
      * @param sdk the sdk. In case the app calls the Topics API directly, the sdk == empty string.
