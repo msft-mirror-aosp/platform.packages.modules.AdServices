@@ -452,7 +452,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 1,
-            "registerer": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me"
           },
           {
             "id": "S2",
@@ -465,7 +465,7 @@
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me"
           }
         ],
         "triggers": [],
@@ -479,13 +479,13 @@
             "eventId": 1,
             "sourceType": "navigation",
             "attributionSource": "android-app://com.example.xyz",
-            "attributionDestination": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
             "reportTo": "https://example3.com/r1",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "priority": 100,
             "status": 0,
-            "registerer": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me"
           }
         ],
         "triggers": [],
