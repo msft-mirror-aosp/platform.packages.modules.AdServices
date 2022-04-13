@@ -24,8 +24,11 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.AdServicesExecutors;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * Implementation of {@link IMeasurementService}.
@@ -34,9 +37,15 @@ import java.util.Objects;
  */
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final MeasurementImpl mMeasurementImpl;
+    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     public MeasurementServiceImpl(Context context) {
         mMeasurementImpl = MeasurementImpl.getInstance(context);
+    }
+
+    @VisibleForTesting
+    MeasurementServiceImpl(MeasurementImpl measurementImpl) {
+        mMeasurementImpl = measurementImpl;
     }
 
     @Override
@@ -45,12 +54,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        try {
-            callback.onResult(Integer.valueOf(
+        sBackgroundExecutor.execute(() -> {
+            try {
+                callback.onResult(Integer.valueOf(
                         mMeasurementImpl.register(request)));
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-        }
+            } catch (RemoteException e) {
+                LogUtil.e("Unable to send result to the callback", e);
+            }
+        });
     }
 
     @Override
@@ -58,11 +69,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
-        try {
-            callback.onResult(Integer.valueOf(
+
+        sBackgroundExecutor.execute(() -> {
+            try {
+                callback.onResult(Integer.valueOf(
                         mMeasurementImpl.deleteRegistrations(request)));
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-        }
+            } catch (RemoteException e) {
+                LogUtil.e("Unable to send result to the callback", e);
+            }
+        });
     }
 }
