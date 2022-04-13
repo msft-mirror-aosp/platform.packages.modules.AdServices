@@ -25,6 +25,7 @@ import android.content.pm.SharedLibraryInfo;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.text.TextUtils;
+import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Base64;
 import android.util.Log;
@@ -39,7 +40,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -84,7 +87,7 @@ class SdkSandboxStorageManager {
      */
     public void onUserUnlocking(int userId) {
         synchronized (mLock) {
-            reconcileSdkDataInvalidPackageDirs(userId);
+            reconcileSdkDataPackageDirs(userId);
         }
     }
 
@@ -92,7 +95,7 @@ class SdkSandboxStorageManager {
     private void reconcileSdkDataSubDirs(String packageName, int uid, boolean forInstrumentation) {
         final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
         final int userId = userHandle.getIdentifier();
-        final List<SharedLibraryInfo> sdksUsed = getSdksUsed(userId, packageName);
+        final List<String> sdksUsed = getSdksUsed(userId, packageName);
         if (sdksUsed.isEmpty()) {
             if (forInstrumentation) {
                 Log.w(TAG,
@@ -108,13 +111,14 @@ class SdkSandboxStorageManager {
         final List<String> subDirNames = new ArrayList<>();
         subDirNames.add("shared");
         for (int i = 0; i < sdksUsed.size(); i++) {
-            final SharedLibraryInfo sdk = sdksUsed.get(i);
-            //TODO(b/223386213): We need to scan the sdk package directory so that we don't create
-            //multiple subdirectories for the same sdk, due to passing different random suffix.
-            subDirNames.add(sdk.getName() + "@" + getRandomString());
+            final String sdk = sdksUsed.get(i);
+            //TODO(b/228432673): We need to scan the sdk package directory so that we don't remove
+            //existing subdirs that has different random suffix than the one we are sending.
+            subDirNames.add(sdk + "@" + getRandomString());
         }
         final int appId = UserHandle.getAppId(uid);
-        final int flags = mContext.getSystemService(UserManager.class).isUserUnlocked(userHandle)
+        final UserManager um = mContext.getSystemService(UserManager.class);
+        final int flags = um.isUserUnlockingOrUnlocked(userHandle)
                 ? PackageManagerLocal.FLAG_STORAGE_CE | PackageManagerLocal.FLAG_STORAGE_DE
                 : PackageManagerLocal.FLAG_STORAGE_DE;
 
@@ -141,24 +145,28 @@ class SdkSandboxStorageManager {
      * Returns list of sdks {@code packageName} uses
      */
     @SuppressWarnings("MixedMutabilityReturnType")
-    private List<SharedLibraryInfo> getSdksUsed(int userId, String packageName) {
-        List<SharedLibraryInfo> result = new ArrayList<>();
+    private List<String> getSdksUsed(int userId, String packageName) {
         PackageManager pm = getPackageManager(userId);
         try {
             ApplicationInfo info = pm.getApplicationInfo(
                     packageName, PackageManager.GET_SHARED_LIBRARY_FILES);
-            List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
-            for (int i = 0; i < sharedLibraries.size(); i++) {
-                final SharedLibraryInfo sharedLib = sharedLibraries.get(i);
-                if (sharedLib.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
-                    continue;
-                }
-                result.add(sharedLib);
-            }
-            return result;
+            return getSdksUsed(info);
         } catch (PackageManager.NameNotFoundException ignored) {
             return Collections.emptyList();
         }
+    }
+
+    private static List<String> getSdksUsed(ApplicationInfo info) {
+        List<String> result = new ArrayList<>();
+        List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
+        for (int i = 0; i < sharedLibraries.size(); i++) {
+            final SharedLibraryInfo sharedLib = sharedLibraries.get(i);
+            if (sharedLib.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
+                continue;
+            }
+            result.add(sharedLib.getName());
+        }
+        return result;
     }
 
     /**
@@ -168,36 +176,76 @@ class SdkSandboxStorageManager {
      * directories will get created when the app loads sdk for the first time.
      */
     @GuardedBy("mLock")
-    private void reconcileSdkDataInvalidPackageDirs(int userId) {
+    private void reconcileSdkDataPackageDirs(int userId) {
         Log.i(TAG, "Reconciling sdk data package directories for " + userId);
-        reconcileSdkDataInvalidPackageDirs(userId, /*isCeData=*/true);
-        reconcileSdkDataInvalidPackageDirs(userId, /*isCeData=*/false);
+
+        PackageInfoHolder pmInfoHolder = new PackageInfoHolder(mContext, userId);
+
+        reconcileSdkDataPackageDirs(userId, /*isCeData=*/true, pmInfoHolder);
+        reconcileSdkDataPackageDirs(userId, /*isCeData=*/false, pmInfoHolder);
     }
 
     @GuardedBy("mLock")
-    private void reconcileSdkDataInvalidPackageDirs(int userId, boolean isCeData) {
-        Set<String> packageNamesWithDataDirs = getPackageNamesWithDataDirectories(userId);
+    private void reconcileSdkDataPackageDirs(int userId, boolean isCeData,
+            PackageInfoHolder pmInfoHolder) {
 
         // Collect package names from root directory
         //TODO(b/226095967): We should sync data on all volumes
-        final String rootDir = getSdkDataRootDirectory(null, userId, isCeData);
+        final String volumeUuid = null;
+        final String rootDir = getSdkDataRootDirectory(volumeUuid, userId, isCeData);
         final String[] sdkPackages = new File(rootDir).list();
 
         // Now loop over package directories and remove the ones that are invalid
         for (int i = 0; i < sdkPackages.length; i++) {
             final String packageName = sdkPackages[i];
-            if (packageNamesWithDataDirs.contains(packageName)) continue;
-            destroySdkDataPackageDirectory(null, userId, packageName, isCeData);
+            // Ignore packages that consume sdks or have been uninstalled
+            if (pmInfoHolder.usesSdk(packageName) || pmInfoHolder.isUninstalled(packageName)) {
+                continue;
+            }
+            destroySdkDataPackageDirectory(volumeUuid, userId, packageName, isCeData);
+        }
+
+        // Now loop over all installed packages and ensure all packages have sdk data directories
+        final Iterator<String> it = pmInfoHolder.getInstalledPackagesUsingSdks().iterator();
+        while (it.hasNext()) {
+            final String packageName = it.next();
+
+            // Verify if package dir contains a subdir for each sdk and a shared directory
+            final String packageDir = getSdkDataPackageDirectory(volumeUuid, userId, packageName,
+                    isCeData);
+            final Set<String> subDirs = getSubDirs(packageDir, /*includeRandomSuffix=*/false);
+            final Set<String> expectedSubDirNames = pmInfoHolder.getSdksUsed(packageName);
+            // Add the shared directory name to expectedSubDirNames
+            expectedSubDirNames.add("shared");
+            if (subDirs.equals(expectedSubDirNames)) {
+                continue;
+            }
+
+            Log.i(TAG, "Reconciling missing package directory for: " + packageDir);
+            final int uid = pmInfoHolder.getUid(packageName);
+            if (uid == -1) {
+                Log.w(TAG, "Failed to get uid for reconcilation of " + packageDir);
+                // Safe to continue since we will retry during loading sdk
+                continue;
+            }
+            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
         }
     }
 
-    private Set<String> getPackageNamesWithDataDirectories(int userId) {
-        PackageManager pm = getPackageManager(userId);
-        List<PackageInfo> packageInfoList = pm.getInstalledPackages(
-                PackageManager.MATCH_UNINSTALLED_PACKAGES);
-        ArraySet<String> result = new ArraySet<>();
-        for (int i = 0; i < packageInfoList.size(); i++) {
-            result.add(packageInfoList.get(i).packageName);
+    @SuppressWarnings("MixedMutabilityReturnType")
+    private Set<String> getSubDirs(String path, boolean includeRandomSuffix) {
+        final File parent = new File(path);
+        final String[] children = parent.list();
+        if (children == null) {
+            return Collections.emptySet();
+        }
+        if (includeRandomSuffix) {
+            return new ArraySet<>(Arrays.asList(children));
+        }
+        final Set<String> result = new ArraySet();
+        for (int i = 0; i < children.length; i++) {
+            final String[] tokens = children[i].split("@");
+            result.add(tokens[0]);
         }
         return result;
     }
@@ -257,5 +305,65 @@ class SdkSandboxStorageManager {
     private static String getSdkDataPackageDirectory(@Nullable String volumeUuid, int userId,
             String packageName, boolean isCeData) {
         return getSdkDataRootDirectory(volumeUuid, userId, isCeData) + "/" + packageName;
+    }
+
+    private static class PackageInfoHolder {
+        private final Context mContext;
+        final ArrayMap<String, Set<String>> mPackagesWithSdks = new ArrayMap<>();
+        final ArrayMap<String, Integer> mPackageNameToUid = new ArrayMap<>();
+        final Set<String> mUninstalledPackages = new ArraySet<>();
+
+        PackageInfoHolder(Context context, int userId) {
+            mContext = context.createContextAsUser(UserHandle.of(userId), 0);
+
+            PackageManager pm = mContext.getPackageManager();
+            final List<PackageInfo> packageInfoList = pm.getInstalledPackages(
+                    PackageManager.GET_SHARED_LIBRARY_FILES);
+            final ArraySet<String> installedPackages = new ArraySet<>();
+
+            for (int i = 0; i < packageInfoList.size(); i++) {
+                final PackageInfo info = packageInfoList.get(i);
+                installedPackages.add(info.packageName);
+                final List<String> sdksUsedNames =
+                        SdkSandboxStorageManager.getSdksUsed(info.applicationInfo);
+                if (sdksUsedNames.isEmpty()) {
+                    continue;
+                }
+                mPackagesWithSdks.put(info.packageName, new ArraySet<>(sdksUsedNames));
+                mPackageNameToUid.put(info.packageName, info.applicationInfo.uid);
+            }
+
+            // If an app is uninstalled with DELETE_KEEP_DATA flag, we need to preserve its sdk
+            // data. For that, we need names of uninstalled packages.
+            final List<PackageInfo> allPackages = pm.getInstalledPackages(
+                    PackageManager.MATCH_UNINSTALLED_PACKAGES);
+            for (int i = 0; i < allPackages.size(); i++) {
+                final String packageName = allPackages.get(i).packageName;
+                if (!installedPackages.contains(packageName)) {
+                    mUninstalledPackages.add(packageName);
+                }
+            }
+        }
+
+        public boolean isUninstalled(String packageName) {
+            return mUninstalledPackages.contains(packageName);
+        }
+
+        public int getUid(String packageName) {
+            return mPackageNameToUid.getOrDefault(packageName, -1);
+        }
+
+        public Set<String> getInstalledPackagesUsingSdks() {
+            return mPackagesWithSdks.keySet();
+        }
+
+        public Set<String> getSdksUsed(String packageName) {
+            return mPackagesWithSdks.get(packageName);
+        }
+
+        public boolean usesSdk(String packageName) {
+            return mPackagesWithSdks.containsKey(packageName);
+        }
+
     }
 }

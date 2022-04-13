@@ -13,6 +13,9 @@
       "name": "SdkSandboxLifecycleHostTest"
     },
     {
+      "name": "SdkSandboxShellHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {
@@ -24,9 +27,6 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
-    },
-    {
-      "name": "SdkSandboxShellHostTest"
     }
   ]
 }

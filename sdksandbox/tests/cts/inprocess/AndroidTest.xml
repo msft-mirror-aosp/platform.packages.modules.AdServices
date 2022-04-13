@@ -14,18 +14,19 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for unit tests instrumenting Sdk Sandbox process">
+<configuration description="Config for cts tests instrumenting Sdk Sandbox process">
+    <option name="test-suite-tag" value="cts" />
     <option name="config-descriptor:metadata" key="component" value="framework" />
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="SdkSandboxInprocessTests.apk" />
+        <option name="test-file-name" value="CtsSdkSandboxInprocessTests.apk" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" />
-        <option name="package" value="com.android.sdksandbox.inprocesstests" />
+        <option name="package" value="com.android.sdksandbox.tests.cts.inprocesstests" />
         <option name="instrumentation-arg"
                 key="thisisignored" value="thisisignored --instrument-sdk-sandbox" />
     </test>

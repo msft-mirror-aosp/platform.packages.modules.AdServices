@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox.inprocess;
+package com.android.sdksandbox.tests.cts.inprocess;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -44,7 +44,7 @@ import java.io.OutputStreamWriter;
 @RunWith(JUnit4.class)
 public class SdkSandboxConfigurationTest {
 
-    private static final String TEST_PKG = "com.android.sdksandbox.inprocesstests";
+    private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";
 
     /**
      * Tests that uid belongs to the sdk sandbox processes uid range.
