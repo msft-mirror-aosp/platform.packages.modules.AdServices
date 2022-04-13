@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.customaudience.CustomAudience;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -23,11 +24,22 @@ import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Embedded;
 import androidx.room.Entity;
+import androidx.room.TypeConverter;
+import androidx.room.TypeConverters;
 
+import com.android.adservices.data.common.DBAdData;
 import com.android.internal.util.Preconditions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * POJO represents a Custom Audience.
@@ -37,6 +49,7 @@ import java.util.Objects;
         tableName = DBCustomAudience.TABLE_NAME,
         primaryKeys = {"owner", "buyer", "name"}
 )
+@TypeConverters({DBCustomAudience.Converters.class})
 public class DBCustomAudience {
     public static final String TABLE_NAME = "custom_audience";
 
@@ -86,14 +99,14 @@ public class DBCustomAudience {
 
     @ColumnInfo(name = "ads")
     @Nullable
-    private final String mAds;
+    private final List<DBAdData> mAds;
 
     public DBCustomAudience(@NonNull String owner, @NonNull String buyer,
             @NonNull String name, @NonNull Instant expirationTime, @Nullable Instant activationTime,
             @NonNull Instant creationTime, @NonNull Instant lastUpdatedTime,
             @NonNull Uri dailyUpdateUrl, @Nullable String userBiddingSignals,
             @Nullable DBTrustedBiddingData trustedBiddingData, @Nullable Uri biddingLogicUrl,
-            @Nullable String ads) {
+            @Nullable List<DBAdData> ads) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
         Preconditions.checkStringNotEmpty(buyer, "Buyer must be provided.");
         Preconditions.checkStringNotEmpty(name, "Name must be provided");
@@ -114,6 +127,37 @@ public class DBCustomAudience {
         mTrustedBiddingData = trustedBiddingData;
         mBiddingLogicUrl = biddingLogicUrl;
         mAds = ads;
+    }
+
+    /**
+     * Parse parcelable {@link CustomAudience} to storage model {@link DBCustomAudience}.
+     *
+     * @param parcelable the service model.
+     * @return storage model
+     */
+    @NonNull
+    public static DBCustomAudience fromServiceObject(@NonNull CustomAudience parcelable,
+            @NonNull Instant currentTime) {
+        Objects.requireNonNull(parcelable);
+        Objects.requireNonNull(currentTime);
+
+        return new DBCustomAudience.Builder()
+                .setName(parcelable.getName())
+                .setBuyer(parcelable.getBuyer())
+                .setOwner(parcelable.getOwner())
+                .setActivationTime(parcelable.getActivationTime())
+                .setCreationTime(currentTime)
+                .setLastUpdatedTime(currentTime)
+                .setExpirationTime(parcelable.getExpirationTime())
+                .setBiddingLogicUrl(parcelable.getBiddingLogicUrl())
+                .setTrustedBiddingData(
+                        DBTrustedBiddingData.fromServiceObject(parcelable.getTrustedBiddingData()))
+                .setAds(parcelable.getAds().stream()
+                        .map(DBAdData::fromServiceObject)
+                        .collect(Collectors.toList()))
+                .setDailyUpdateUrl(parcelable.getDailyUpdateUrl())
+                .setUserBiddingSignals(parcelable.getUserBiddingSignals())
+                .build();
     }
 
     /**
@@ -228,7 +272,7 @@ public class DBCustomAudience {
      * Returns Ads metadata that used to render an ad.
      */
     @Nullable
-    public String getAds() {
+    public List<DBAdData> getAds() {
         return mAds;
     }
 
@@ -287,7 +331,7 @@ public class DBCustomAudience {
         private String mUserBiddingSignals;
         private DBTrustedBiddingData mTrustedBiddingData;
         private Uri mBiddingLogicUrl;
-        private String mAds;
+        private List<DBAdData> mAds;
 
         public Builder() {
         }
@@ -399,7 +443,7 @@ public class DBCustomAudience {
         /**
          * See {@link #getAds()} for detail.
          */
-        public Builder setAds(String ads) {
+        public Builder setAds(List<DBAdData> ads) {
             mAds = ads;
             return this;
         }
@@ -413,6 +457,104 @@ public class DBCustomAudience {
             return new DBCustomAudience(mOwner, mBuyer, mName, mExpirationTime, mActivationTime,
                     mCreationTime, mLastUpdatedTime, mDailyUpdateUrl, mUserBiddingSignals,
                     mTrustedBiddingData, mBiddingLogicUrl, mAds);
+        }
+    }
+
+    /**
+     * Room DB type converters.
+     * Register custom type converters here.
+     * {@link TypeConverter} registered here only apply to data access with {@link
+     * DBCustomAudience}
+     */
+    public static class Converters {
+
+        private static final String RENDER_URL_FIELD_NAME = "renderUrl";
+        private static final String METADATA_FIELD_NAME = "metadata";
+
+        private Converters() {
+        }
+
+        /**
+         * Serialize {@link List<DBAdData>} to Json.
+         */
+        @TypeConverter
+        @Nullable
+        public static String toJson(@Nullable List<DBAdData> adDataList) {
+            if (adDataList == null) {
+                return null;
+            }
+
+            try {
+                JSONArray jsonArray = new JSONArray();
+                for (DBAdData adData : adDataList) {
+                    jsonArray.put(toJson(adData));
+                }
+                return jsonArray.toString();
+            } catch (JSONException jsonException) {
+                throw new RuntimeException("Error serialize List<AdData>.", jsonException);
+            }
+        }
+
+        /**
+         * Deserialize {@link List<DBAdData>} from Json.
+         */
+        @TypeConverter
+        @Nullable
+        public static List<DBAdData> fromJson(String json) {
+            if (json == null) {
+                return null;
+            }
+
+            try {
+                JSONArray array = new JSONArray(json);
+                List<DBAdData> result = new ArrayList<>();
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject jsonObject = array.getJSONObject(i);
+                    result.add(fromJson(jsonObject));
+                }
+                return result;
+            } catch (JSONException jsonException) {
+                throw new RuntimeException("Error deserialize List<AdData>.", jsonException);
+            }
+        }
+
+        /**
+         * Serialize {@link DBAdData} to {@link JSONObject}.
+         */
+        private static JSONObject toJson(DBAdData adData) throws JSONException {
+            return new org.json.JSONObject()
+                    .put(RENDER_URL_FIELD_NAME, serializeUrl(adData.getRenderUrl()))
+                    .put(METADATA_FIELD_NAME, adData.getMetadata());
+        }
+
+        /**
+         * Deserialize {@link DBAdData} from {@link JSONObject}.
+         */
+        private static DBAdData fromJson(JSONObject json) throws JSONException {
+            String renderUrlString = json.getString(RENDER_URL_FIELD_NAME);
+            String metadata = json.getString(METADATA_FIELD_NAME);
+            Uri renderUrl = deserializeUrl(renderUrlString);
+            return new DBAdData(renderUrl, metadata);
+        }
+
+        /**
+         * Deserialize {@link Uri} from String.
+         */
+        @Nullable
+        private static Uri deserializeUrl(@Nullable String uri) {
+            return Optional.ofNullable(uri)
+                    .map(Uri::parse)
+                    .orElse(null);
+        }
+
+        /**
+         * Serialize {@link Uri} to String.
+         */
+        @Nullable
+        private static String serializeUrl(@Nullable Uri uri) {
+            return Optional.ofNullable(uri)
+                    .map(Uri::toString)
+                    .orElse(null);
         }
     }
 }

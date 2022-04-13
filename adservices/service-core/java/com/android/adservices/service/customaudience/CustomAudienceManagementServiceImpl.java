@@ -23,16 +23,16 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceManagementService;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.AdServicesExecutors;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * Implementation of the Custom Audience Management service.
- *
- * @hide
  */
 public class CustomAudienceManagementServiceImpl extends ICustomAudienceManagementService.Stub {
     // TODO(b/221861041): Remove warning suppression; context needed later for
@@ -41,9 +41,26 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
     @SuppressWarnings("unused")
     private final Context mContext;
 
+    @NonNull
+    private final CustomAudienceManagementImpl mCustomAudienceManagement;
+
+    @NonNull
+    private final Executor mExecutor;
+
     public CustomAudienceManagementServiceImpl(@NonNull Context context) {
+        this(context, CustomAudienceManagementImpl.getInstance(context),
+                AdServicesExecutors.getBackgroundExecutor());
+    }
+
+    @VisibleForTesting
+    CustomAudienceManagementServiceImpl(@NonNull Context context,
+            @NonNull CustomAudienceManagementImpl customAudienceManagement,
+            @NonNull Executor executor) {
         Objects.requireNonNull(context);
+        Objects.requireNonNull(customAudienceManagement);
         mContext = context;
+        mCustomAudienceManagement = customAudienceManagement;
+        mExecutor = executor;
     }
 
     /**
@@ -57,17 +74,22 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callback);
 
-        // TODO(b/225988784): Offload work to thread pool
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
+        mExecutor.execute(() -> {
+            try {
+                try {
+                    mCustomAudienceManagement.joinCustomAudience(customAudience);
+                    callback.onSuccess();
+                } catch (Exception exception) {
+                    callback.onFailure(new FledgeErrorResponse.Builder()
                             .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw new RuntimeException(e.getMessage());
-        }
+                            .setErrorMessage(exception.getMessage())
+                            .build()
+                    );
+                }
+            } catch (Exception exception) {
+                LogUtil.e("Unable to send result to the callback", exception);
+            }
+        });
     }
 
     /**
@@ -83,16 +105,21 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
         Objects.requireNonNull(name);
         Objects.requireNonNull(callback);
 
-        // TODO(b/225988784): Offload work to thread pool
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
+        mExecutor.execute(() -> {
+            try {
+                try {
+                    mCustomAudienceManagement.leaveCustomAudience(owner, buyer, name);
+                    callback.onSuccess();
+                } catch (Exception exception) {
+                    callback.onFailure(new FledgeErrorResponse.Builder()
                             .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw new RuntimeException(e.getMessage());
-        }
+                            .setErrorMessage(exception.getMessage())
+                            .build()
+                    );
+                }
+            } catch (Exception exception) {
+                LogUtil.e("Unable to send result to the callback", exception);
+            }
+        });
     }
 }
