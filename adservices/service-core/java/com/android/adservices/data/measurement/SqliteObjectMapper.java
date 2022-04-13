@@ -96,6 +96,12 @@ class SqliteObjectMapper {
                 builder::setRegistrant);
         setIntColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_MODE,
                 builder::setAttributionMode);
+        setLongColumn(cursor, MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
+                builder::setInstallAttributionWindow);
+        setLongColumn(cursor, MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW,
+                builder::setInstallCooldownWindow);
+        setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
+                builder::setInstallAttributed);
         return builder.build();
     }
 
@@ -155,6 +161,11 @@ class SqliteObjectMapper {
     private static <BuilderType> void setTextColumn(Cursor cursor, String column,
                                                     Function<String, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getString, setter);
+    }
+
+    private static <BuilderType> void setBooleanColumn(Cursor cursor, String column,
+            Function<Boolean, BuilderType> setter) {
+        setIntColumn(cursor, column, (x) -> setter.apply(x == 1));
     }
 
     private static <BuilderType, DataType> void setColumnValue(

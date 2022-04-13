@@ -53,6 +53,9 @@ public class Source {
     private long mExpiryTime;
     private List<Long> mDedupKeys;
     private @AttributionMode int mAttributionMode;
+    private long mInstallAttributionWindow;
+    private long mInstallCooldownWindow;
+    private boolean mIsInstallAttributed;
 
     @IntDef(value = {
             Status.ACTIVE,
@@ -88,6 +91,7 @@ public class Source {
         mStatus = Status.ACTIVE;
         mSourceType = SourceType.EVENT;
         mAttributionMode = AttributionMode.UNASSIGNED;
+        mIsInstallAttributed = false;
     }
 
     /**
@@ -109,11 +113,20 @@ public class Source {
     }
 
     private ImmutableList<Long> getEarlyReportingWindows() {
-        if (mSourceType == SourceType.EVENT) {
-            return ImmutableList.of();
+        long[] earlyWindows;
+        if (mIsInstallAttributed) {
+            earlyWindows = mSourceType == SourceType.EVENT
+                    ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
+                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
+        } else {
+            earlyWindows = mSourceType == SourceType.EVENT
+                    ? PrivacyParams.EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
+                    : PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
         }
+
         List<Long> windowList = new ArrayList<>();
-        for (long windowDelta : PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS) {
+
+        for (long windowDelta : earlyWindows) {
             long window = mEventTime + windowDelta;
             if (mExpiryTime <= window) {
                 continue;
@@ -158,9 +171,14 @@ public class Source {
      * @return Maximum number of reports allowed
      */
     public int getMaxReportCount() {
+        if (mIsInstallAttributed) {
+            return mSourceType == SourceType.EVENT
+                    ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
+                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
+        }
         return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS :
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
+                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS
+                : PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
     }
 
     /**
@@ -356,6 +374,34 @@ public class Source {
     }
 
     /**
+     * Attribution window for install events.
+     */
+    public long getInstallAttributionWindow() {
+        return mInstallAttributionWindow;
+    }
+
+    /**
+     * Cooldown for attributing post-install {@link Trigger} events.
+     */
+    public long getInstallCooldownWindow() {
+        return mInstallCooldownWindow;
+    }
+
+    /**
+     * Is an App-install attributed to the {@link Source}.
+     */
+    public boolean isInstallAttributed() {
+        return mIsInstallAttributed;
+    }
+
+    /**
+     * Set app install attribution to the {@link Source}.
+     */
+    public void setInstallAttributed(boolean isInstallAttributed) {
+        mIsInstallAttributed = isInstallAttributed;
+    }
+
+    /**
      * Set the status.
      */
     public void setStatus(@Status int status) {
@@ -473,6 +519,30 @@ public class Source {
          */
         public Builder setAttributionMode(@AttributionMode int attributionMode) {
             mBuilding.mAttributionMode = attributionMode;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getInstallAttributionWindow()}
+         */
+        public Builder setInstallAttributionWindow(long installAttributionWindow) {
+            mBuilding.mInstallAttributionWindow = installAttributionWindow;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getInstallCooldownWindow()}
+         */
+        public Builder setInstallCooldownWindow(long installCooldownWindow) {
+            mBuilding.mInstallCooldownWindow = installCooldownWindow;
+            return this;
+        }
+
+        /**
+         * See {@link Source#isInstallAttributed()}
+         */
+        public Builder setInstallAttributed(boolean installAttributed) {
+            mBuilding.mIsInstallAttributed = installAttributed;
             return this;
         }
 

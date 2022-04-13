@@ -34,6 +34,16 @@ public final class PrivacyParams {
     public static final int EVENT_SOURCE_MAX_REPORTS = 1;
 
     /**
+     * Max reports for Install Attributed 'Navigation' {@link Source}.
+     */
+    public static final int INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS = 3;
+
+    /**
+     * Max reports for Install Attributed 'Event' {@link Source}.
+     */
+    public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;
+
+    /**
      * Maximum attributions per rate limit window.
      * Rate limit unit: (Source Site, Destination Site, Reporting Site, Window).
      */
@@ -52,6 +62,26 @@ public final class PrivacyParams {
     public static final long[] NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS = new long[]{
             TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)
     };
+
+    /**
+     * Early reporting window for 'Event' {@link Source}.
+     * No windows.
+     */
+    public static final long[] EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS = new long[]{ };
+
+    /**
+     * Early reporting window for Install Attributed 'Navigation' {@link Source}.
+     * 2 days and 7 days.
+     */
+    public static final long[] INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS =
+            new long[]{ TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7) };
+
+    /**
+     * Early reporting window for Install Attributed 'Event' {@link Source}.
+     * 2 days.
+     */
+    public static final long[] INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS =
+            new long[]{ TimeUnit.DAYS.toMillis(2) };
 
     /**
      * {@link Source} attribution state selection randomness probability for 'Event'
