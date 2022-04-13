@@ -24,6 +24,7 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "truth-prebuilt",
+        "SdkSandboxTestUtils",
     ],
     libs: [
         "android.test.base",
@@ -31,8 +32,11 @@ android_test {
         "android.test.runner",
     ],
     data: [
-      ":SdkSandboxCodeProvider",
-      ":FailingSdkProvider",
+      ":LoadSdkSuccessfullySdkProvider",
+      ":RetryLoadSameSdkShouldFailSdkProvider",
+      ":LoadSdkWithInternalErrorSdkProvider",
+      ":RequestSurfacePackageSuccessfullySdkProvider",
+      ":RequestSurfacePackageWithInternalErrorSdkProvider",
       ":CodeProviderWithResources",
     ],
     min_sdk_version: "Tiramisu",

@@ -108,8 +108,7 @@ class SandboxedSdkHolder {
     private void sendSurfacePackageError(String errorMessage) {
         try {
             mCallback.onSurfacePackageError(
-                    ISdkSandboxToSdkSandboxManagerCallback
-                            .SURFACE_PACKAGE_INTERNAL_ERROR,
+                    ISdkSandboxToSdkSandboxManagerCallback.SURFACE_PACKAGE_INTERNAL_ERROR,
                     errorMessage);
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onSurfacePackageError: " + e);
@@ -153,8 +152,8 @@ class SandboxedSdkHolder {
                         WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, null);
                 // Creating a SurfaceControlViewHost needs to done on the handler thread.
                 mHandler.post(() -> {
-                    final View view = mSdk.getView(windowContext, params);
                     try {
+                        final View view = mSdk.getView(windowContext, params);
                         SurfaceControlViewHost host = new SurfaceControlViewHost(windowContext,
                                 mDisplayManager.getDisplay(displayId), token);
                         host.setView(view, width, height);
