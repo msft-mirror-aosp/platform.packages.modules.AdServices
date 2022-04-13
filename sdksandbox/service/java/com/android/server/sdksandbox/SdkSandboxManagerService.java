@@ -645,8 +645,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * We maintain a link for each unique {app, remoteCode} pair, which is identified with
      * {@code codeToken}.
      */
-    private class AppAndRemoteSdkLink extends
-            ISdkSandboxToSdkSandboxManagerCallback.Stub {
+    private class AppAndRemoteSdkLink extends ISdkSandboxToSdkSandboxManagerCallback.Stub {
         // The codeToken for which this channel has been created
         private final IBinder mSdkToken;
         private final IRemoteSdkCallback mManagerToAppCallback;
@@ -672,7 +671,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onLoadSdkError(int errorCode, String errorMsg) {
-            sendLoadSdkErrorToApp(errorCode, errorMsg);
+            sendLoadSdkErrorToApp(toSdkSandboxManagerLoadSdkErrorCode(errorCode), errorMsg);
         }
 
         @Override
@@ -683,7 +682,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onSurfacePackageError(int errorCode, String errorMsg) {
-            sendSurfacePackageErrorToApp(errorCode, errorMsg);
+            sendSurfacePackageErrorToApp(
+                    SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, errorMsg);
         }
 
         private void sendLoadSdkSuccessToApp(Bundle params) {
@@ -735,6 +735,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to requestSurfacePackage", e);
                 // TODO(b/204991850): send request surface package error back to app
+            }
+        }
+
+        @SdkSandboxManager.LoadSdkErrorCode
+        private int toSdkSandboxManagerLoadSdkErrorCode(int sdkSandboxErrorCode) {
+            switch (sdkSandboxErrorCode) {
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_ALREADY_LOADED:
+                    return SdkSandboxManager.LOAD_SDK_ALREADY_LOADED;
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_NOT_FOUND:
+                    return SdkSandboxManager.LOAD_SDK_NOT_FOUND;
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_PROVIDER_INIT_ERROR:
+                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_INSTANTIATION_ERROR:
+                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+                default:
+                    Log.e(TAG, "Error code" + sdkSandboxErrorCode
+                            + "has no mapping to the SdkSandboxManager error codes");
+                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
             }
         }
     }
