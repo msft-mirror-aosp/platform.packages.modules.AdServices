@@ -38,7 +38,7 @@ public interface CustomAudienceDao {
      * @param customAudience the custom audience to add.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void createOrOverride(@NonNull DBCustomAudience customAudience);
+    void insertOrOverrideCustomAudience(@NonNull DBCustomAudience customAudience);
 
     /**
      * Get custom audience by its unique key.
