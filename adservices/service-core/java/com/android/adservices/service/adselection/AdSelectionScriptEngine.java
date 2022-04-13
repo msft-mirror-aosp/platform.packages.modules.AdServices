@@ -191,7 +191,6 @@ public class AdSelectionScriptEngine {
             throws JSONException {
         Objects.requireNonNull(scoreAdJS);
         Objects.requireNonNull(adsWithBid);
-        Objects.requireNonNull(adsWithBid);
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(sellerSignals);
         Objects.requireNonNull(trustedScoringSignals);
