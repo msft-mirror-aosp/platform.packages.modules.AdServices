@@ -19,7 +19,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
+import com.android.adservices.service.measurement.ReportingJobService;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
 
 import java.util.Objects;
 
@@ -35,6 +38,13 @@ public class MeasurementService extends Service {
         if (mMeasurementService == null) {
             mMeasurementService = new MeasurementServiceImpl(this);
         }
+        schedulePeriodicJobs();
+    }
+
+    private void schedulePeriodicJobs() {
+        AttributionJobService.schedule(this);
+        ReportingJobService.schedule(this);
+        DeleteExpiredJobService.schedule(this);
     }
 
     @Override
