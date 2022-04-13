@@ -16,11 +16,12 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
+import androidx.room.Embedded;
 import androidx.room.PrimaryKey;
 
 import com.android.internal.util.Preconditions;
@@ -32,14 +33,15 @@ import java.util.Objects;
  * This POJO represents the ad_selection_entry data that combines the data fields joined from the
  * ad_selection and buyer_decision_logic entities.
  */
+// TODO (b/229660121): Ad unit tests for this class
 public final class DBAdSelectionEntry {
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
 
-    @ColumnInfo(name = "custom_audience_signals")
+    @Embedded(prefix = "custom_audience_signals_")
     @Nullable
-    private final String mCustomAudienceSignals;
+    private final CustomAudienceSignals mCustomAudienceSignals;
 
     @ColumnInfo(name = "contextual_signals")
     @NonNull
@@ -62,7 +64,7 @@ public final class DBAdSelectionEntry {
 
     public DBAdSelectionEntry(
             long adSelectionId,
-            @Nullable String customAudienceSignals,
+            @Nullable CustomAudienceSignals customAudienceSignals,
             @NonNull String contextualSignals,
             @NonNull Uri winningAdRenderUrl,
             double winningAdBid,
@@ -84,13 +86,13 @@ public final class DBAdSelectionEntry {
 
             return mAdSelectionId == adSelectionEntry.mAdSelectionId
                     && Objects.equals(
-                    mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
+                            mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
                     && mContextualSignals.equals(adSelectionEntry.mContextualSignals)
                     && Objects.equals(mWinningAdRenderUrl, adSelectionEntry.mWinningAdRenderUrl)
                     && mWinningAdBid == adSelectionEntry.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelectionEntry.mCreationTimestamp)
                     && Objects.equals(
-                    mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs);
+                            mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs);
         }
         return false;
     }
@@ -116,16 +118,16 @@ public final class DBAdSelectionEntry {
 
     /**
      * @return the custom audience signals used to select this winning ad if remarketing ads,
-     * otherwise return null.
+     *     otherwise return null.
      */
     @Nullable
-    public String getCustomAudienceSignals() {
+    public CustomAudienceSignals getCustomAudienceSignals() {
         return mCustomAudienceSignals;
     }
 
     /**
      * @return the contextual signals, for instance application name used in this
-     * ad_selection_entry.
+     *     ad_selection_entry.
      */
     @NonNull
     public String getContextualSignals() {
@@ -156,7 +158,7 @@ public final class DBAdSelectionEntry {
     }
 
     /**
-     * @return the buyer-provided generateBid() and reportResult() javascript.
+     * @return the buyer-provided generateBid() and reportWin() javascript.
      */
     @Nullable
     public String getBuyerDecisionLogicJs() {
@@ -166,15 +168,14 @@ public final class DBAdSelectionEntry {
     /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
         private long mAdSelectionId;
-        private String mCustomAudienceSignals;
+        private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
         private Uri mWinningAdRenderUrl;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mBuyerDecisionLogicJs;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         /** Sets the ad selection id. */
         @NonNull
@@ -187,7 +188,7 @@ public final class DBAdSelectionEntry {
         /** Sets the custom audience signals. */
         @NonNull
         public DBAdSelectionEntry.Builder setCustomAudienceSignals(
-                @Nullable String customAudienceSignals) {
+                @Nullable CustomAudienceSignals customAudienceSignals) {
             this.mCustomAudienceSignals = customAudienceSignals;
             return this;
         }
@@ -236,7 +237,7 @@ public final class DBAdSelectionEntry {
         /**
          * Builds an {@link DBAdSelectionEntry} instance.
          *
-         * @throws NullPointerException     if any non-nulll params are null.
+         * @throws NullPointerException if any non-nulll params are null.
          * @throws IllegalArgumentException if adSelectionId is zero or bid is non-positive.
          */
         @NonNull
