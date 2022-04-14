@@ -12,18 +12,21 @@
       android:text="@string/button_name"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintHorizontal_bias="0.5"
+      app:layout_constraintHorizontal_bias="0.497"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="parent" />
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintVertical_bias="0.06" />
   <TextView
       android:id="@+id/textView"
-      android:layout_width="358dp"
-      android:layout_height="108dp"
+      android:layout_width="377dp"
+      android:layout_height="362dp"
+      android:scrollbars="vertical"
       android:text=""
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintHorizontal_bias="0.49"
+      app:layout_constraintHorizontal_bias="0.301"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.144" />
+      app:layout_constraintVertical_bias="0.359"
+      android:layout_below="@+id/topics_client_button"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
