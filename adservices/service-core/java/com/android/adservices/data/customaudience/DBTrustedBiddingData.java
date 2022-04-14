@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -54,6 +55,23 @@ public class DBTrustedBiddingData {
 
         this.mUrl = url;
         this.mKeys = keys;
+    }
+
+    /**
+     * Parse parcelable {@link TrustedBiddingData} to storage model {@link DBTrustedBiddingData}.
+     *
+     * @param parcelable the service model.
+     * @return storage model
+     */
+    @Nullable
+    public static DBTrustedBiddingData fromServiceObject(@Nullable TrustedBiddingData parcelable) {
+        if (parcelable == null) {
+            return null;
+        }
+        return new DBTrustedBiddingData.Builder()
+                .setUrl(parcelable.getTrustedBiddingUrl())
+                .setKeys(parcelable.getTrustedBiddingKeys())
+                .build();
     }
 
     /**

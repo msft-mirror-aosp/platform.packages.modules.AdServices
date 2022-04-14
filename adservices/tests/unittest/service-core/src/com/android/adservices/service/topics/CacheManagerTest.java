@@ -128,8 +128,8 @@ public final class CacheManagerTest {
         cache.put(/* epochId = */ 2L, returnedAppSdkTopicsForEpoch2);
         cache.put(/* epochId = */ 3L, returnedAppSdkTopicsForEpoch3);
 
-        when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId - 1),
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()))).thenReturn(cache);
+        when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs() + 1))).thenReturn(cache);
 
         cacheManager.loadCache();
 
@@ -151,7 +151,7 @@ public final class CacheManagerTest {
         assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 1,
                 "app5", "sdk1")).isEmpty();
 
-        // Now look at epochId i {3, 2} only by setting numberOfLookBackEpochs = 2.
+        // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
         assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
                 "app1", "")).isEqualTo(Arrays.asList(topic2));
         assertThat(cacheManager.getTopics(/* numberOfLookBackEpochs = */ 2,
@@ -203,8 +203,8 @@ public final class CacheManagerTest {
         long currentEpochId = 4L;
         // Fail to load from DB will have empty cache.
         Map<Long, Map<Pair<String, String>, Topic>> emptyCache = new HashMap<>();
-        when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId - 1),
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()))).thenReturn(emptyCache);
+        when(mMockTopicsDao.retrieveReturnedTopics(eq(currentEpochId),
+                eq(mFlags.getTopicsNumberOfLookBackEpochs() + 1))).thenReturn(emptyCache);
 
         List<Topic> topics = cacheManager.getTopics(
                 /* numberOfLookBackEpochs = */ 3,

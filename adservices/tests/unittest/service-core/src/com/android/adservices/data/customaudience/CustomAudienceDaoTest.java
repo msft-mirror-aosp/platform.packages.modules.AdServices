@@ -26,6 +26,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.AdServicesDatabase;
+import com.android.adservices.data.common.DBAdData;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,10 +43,20 @@ public class CustomAudienceDaoTest {
 
     private static final Uri DAILY_UPDATE_URL_1 = Uri.parse("https://www.example.com/d1");
     private static final String USER_BIDDING_SIGNALS_1 = "ExampleBiddingSignal1";
-    private static final String ADS_1 = "test ads list 1";
+    private static final Uri AD_DATA_RENDER_URL_1 = Uri.parse("https://www.example.com/a1");
+    private static final String AD_DATA_METADATA_1 = "meta1";
+    private static final DBAdData ADS_1 = new DBAdData.Builder()
+            .setRenderUrl(AD_DATA_RENDER_URL_1)
+            .setMetadata(AD_DATA_METADATA_1)
+            .build();
     private static final Uri DAILY_UPDATE_URL_2 = Uri.parse("https://www.example.com/d2");
     private static final String USER_BIDDING_SIGNALS_2 = "ExampleBiddingSignal2";
-    private static final String ADS_2 = "test ads list 2";
+    private static final Uri AD_DATA_RENDER_URL_2 = Uri.parse("https://www.example.com/a2");
+    private static final String AD_DATA_METADATA_2 = "meta2";
+    private static final DBAdData ADS_2 = new DBAdData.Builder()
+            .setRenderUrl(AD_DATA_RENDER_URL_2)
+            .setMetadata(AD_DATA_METADATA_2)
+            .build();
     private static final Uri TRUSTED_BIDDING_DATA_URL_2 = Uri.parse("https://www.example.com/t1");
     private static final List<String> TRUSTED_BIDDING_DATA_KEYS_2 =
             Collections.singletonList("key2");
@@ -97,7 +108,7 @@ public class CustomAudienceDaoTest {
             .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
             .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
             .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
-            .setAds(ADS_1)
+            .setAds(List.of(ADS_1))
             .setTrustedBiddingData(null)
             .build();
 
@@ -112,7 +123,7 @@ public class CustomAudienceDaoTest {
             .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
             .setDailyUpdateUrl(DAILY_UPDATE_URL_2)
             .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
-            .setAds(ADS_1)
+            .setAds(List.of(ADS_1))
             .setTrustedBiddingData(null)
             .build();
 
@@ -127,7 +138,7 @@ public class CustomAudienceDaoTest {
             .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
             .setDailyUpdateUrl(DAILY_UPDATE_URL_2)
             .setUserBiddingSignals(USER_BIDDING_SIGNALS_2)
-            .setAds(ADS_2)
+            .setAds(List.of(ADS_2))
             .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
             .build();
 
@@ -141,11 +152,11 @@ public class CustomAudienceDaoTest {
 
     @Test
     public void getByPrimaryKey_keyExistOrNotExist() {
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_1);
         assertNull(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_2, BUYER_2, NAME_2));
         assertEquals(CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_2);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_2);
         assertEquals(CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
         assertEquals(CUSTOM_AUDIENCE_2,
@@ -154,8 +165,8 @@ public class CustomAudienceDaoTest {
 
     @Test
     public void deleteByPrimaryKey_keyExist() {
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_1);
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_2);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_2);
         assertEquals(CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
         assertEquals(CUSTOM_AUDIENCE_2,
@@ -168,8 +179,8 @@ public class CustomAudienceDaoTest {
 
     @Test
     public void deleteByPrimaryKey_keyNotExist() {
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_1);
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_2);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_2);
         assertEquals(CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
         assertEquals(CUSTOM_AUDIENCE_2,
@@ -183,15 +194,15 @@ public class CustomAudienceDaoTest {
 
     @Test(expected = NullPointerException.class)
     public void testCreateOrUpdate_nullCustomAudience() {
-        mCustomAudienceDao.createOrOverride(null);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(null);
     }
 
     @Test
     public void testCreateOrUpdate_UpdateExist() {
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_1);
         assertEquals(CUSTOM_AUDIENCE_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
-        mCustomAudienceDao.createOrOverride(CUSTOM_AUDIENCE_1_1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_1_1);
         assertEquals(CUSTOM_AUDIENCE_1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
     }

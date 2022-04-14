@@ -204,6 +204,12 @@ public abstract class DatabaseE2ETest {
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
         values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
+        values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
+                source.getInstallAttributionWindow());
+        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW,
+                source.getInstallCooldownWindow());
+        values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
+                source.isInstallAttributed() ? 1 : 0);
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");

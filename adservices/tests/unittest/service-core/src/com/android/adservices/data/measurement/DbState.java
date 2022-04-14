@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class for providing test data for measurement tests.
@@ -145,6 +146,11 @@ public class DbState {
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
+                .setInstallAttributionWindow(sJSON.optLong("installAttributionWindow",
+                        TimeUnit.DAYS.toMillis(30)))
+                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow",
+                        0))
+                .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
                 .build();
     }
 
@@ -171,6 +177,7 @@ public class DbState {
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
+                .setTriggerPriority(rJSON.getLong("triggerPriority"))
                 .setStatus(rJSON.getInt("status"))
                 .build();
     }
