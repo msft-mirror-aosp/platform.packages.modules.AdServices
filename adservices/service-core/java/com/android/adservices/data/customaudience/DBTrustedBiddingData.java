@@ -84,8 +84,8 @@ public class DBTrustedBiddingData {
 
     /**
      * The IDs of the information items we need to collect.
-     * They will be passed using a keys' query argument as for example:
-     * https://www.kv-server.example/getvalues?keys=key1,key2
+     * <p>They will be passed using a keys' query argument as for example:
+     * <p>https://www.kv-server.example/getvalues?keys=key1,key2
      */
     @NonNull
     public List<String> getKeys() {
@@ -157,8 +157,8 @@ public class DBTrustedBiddingData {
 
     /**
      * Room DB type converters.
-     * Register custom type converters here.
-     * {@link TypeConverter} registered here only apply to data access with {@link
+     * <p>Register custom type converters here.
+     * <p>{@link TypeConverter} registered here only apply to data access with {@link
      * DBTrustedBiddingData}
      */
     public static class Converters {

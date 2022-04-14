@@ -107,16 +107,12 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
 
         mExecutor.execute(() -> {
             try {
-                try {
-                    mCustomAudienceManagement.leaveCustomAudience(owner, buyer, name);
-                    callback.onSuccess();
-                } catch (Exception exception) {
-                    callback.onFailure(new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage(exception.getMessage())
-                            .build()
-                    );
-                }
+                mCustomAudienceManagement.leaveCustomAudience(owner, buyer, name);
+            } catch (Exception exception) {
+                LogUtil.e("Unexpected error leave custom audience.", exception);
+            }
+            try {
+                callback.onSuccess();
             } catch (Exception exception) {
                 LogUtil.e("Unable to send result to the callback", exception);
             }
