@@ -63,7 +63,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -74,7 +75,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -157,7 +159,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -168,7 +171,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -257,7 +261,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -268,7 +273,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -328,7 +334,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -409,7 +416,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -420,7 +428,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -431,7 +440,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -499,7 +509,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -581,7 +592,8 @@
             "triggerTime": 1648665733601,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -592,7 +604,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -603,7 +616,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -663,7 +677,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -746,7 +761,8 @@
             "triggerTime": 1648665733600,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -757,7 +773,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -768,7 +785,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -828,7 +846,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -911,7 +930,8 @@
             "triggerTime": 1648665733602,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -922,7 +942,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -933,7 +954,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -993,7 +1015,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1076,7 +1099,8 @@
             "triggerTime": 1648665733600,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -1087,7 +1111,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -1098,7 +1123,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1158,7 +1184,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1264,7 +1291,8 @@
             "triggerTime": 1648665733601,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -1275,7 +1303,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -1286,7 +1315,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E4",
@@ -1297,7 +1327,8 @@
             "triggerTime": 1648665733601,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -1308,7 +1339,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1399,7 +1431,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -1410,7 +1443,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1525,7 +1559,8 @@
             "triggerTime": 1648665733600,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -1536,7 +1571,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -1547,7 +1583,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E4",
@@ -1558,7 +1595,8 @@
             "triggerTime": 1648665733600,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -1569,7 +1607,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1660,7 +1699,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -1671,7 +1711,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1786,7 +1827,8 @@
             "triggerTime": 1648665733602,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -1797,7 +1839,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -1808,7 +1851,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E4",
@@ -1819,7 +1863,8 @@
             "triggerTime": 1648665733602,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -1830,7 +1875,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -1921,7 +1967,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -1932,7 +1979,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -2047,7 +2095,8 @@
             "triggerTime": 1648665733600,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E2",
@@ -2058,7 +2107,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E3",
@@ -2069,7 +2119,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E4",
@@ -2080,7 +2131,8 @@
             "triggerTime": 1648665733600,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -2091,7 +2143,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -2182,7 +2235,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "E5",
@@ -2193,7 +2247,8 @@
             "triggerTime": 1648665733605,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [

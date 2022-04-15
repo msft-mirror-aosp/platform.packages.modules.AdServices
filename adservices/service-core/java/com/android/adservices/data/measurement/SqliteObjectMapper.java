@@ -58,6 +58,8 @@ class SqliteObjectMapper {
                 builder::setReportTime);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_TIME,
                 builder::setTriggerTime);
+        setTextColumn(cursor, MeasurementTables.EventReportContract.SOURCE_TYPE,
+                (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         return builder.build();
     }
 
