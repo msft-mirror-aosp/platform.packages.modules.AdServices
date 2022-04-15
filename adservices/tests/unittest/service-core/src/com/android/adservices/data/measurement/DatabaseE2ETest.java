@@ -189,7 +189,7 @@ public abstract class DatabaseE2ETest {
     /**
      * Inserts a Source record into the given database.
      */
-    private static void insertToDb(Source source, SQLiteDatabase db) throws SQLiteException {
+    public static void insertToDb(Source source, SQLiteDatabase db) throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, source.getId());
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
