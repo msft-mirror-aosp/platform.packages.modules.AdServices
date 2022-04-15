@@ -162,7 +162,19 @@ public class Trigger {
         Long[] possibleValues = LongStream.range(0, source.getTriggerDataCardinality())
                 .boxed().toArray(Long[]::new);
         return RandomSelector.selectRandomDataWithProbability(
-                source.getTriggerDataNoiseRate(), mTriggerData, possibleValues);
+                source.getTriggerDataNoiseRate(),
+                getTruncatedTriggerData(source),
+                possibleValues);
+    }
+
+    /**
+     * Function to truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
+     *
+     * @param source for which trigger data is being retrieved
+     * @return truncated trigger data
+     */
+    public long getTruncatedTriggerData(Source source) {
+        return mTriggerData % source.getTriggerDataCardinality();
     }
 
     /**
