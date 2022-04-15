@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -38,7 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SPACE = " ";
-    private static String mSdkName = "SdkName";
+    private static final String NEWLINE = "\n";
+    private static List<String> mSdkNameList = new ArrayList<>(
+        Arrays.asList("SdkName1", "SdkName2", "SdkName3"));
     private Button mTopicsClientButton;
     private TextView mResultTextView;
     private AdvertisingTopicsClient mAdvertisingTopicsClient;
@@ -49,23 +53,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mTopicsClientButton = findViewById(R.id.topics_client_button);
         mResultTextView = findViewById(R.id.textView);
-        mAdvertisingTopicsClient = new AdvertisingTopicsClient.Builder()
-                .setContext(this)
-                .setSdkName(mSdkName)
-                .setExecutor(CALLBACK_EXECUTOR)
-                .build();
+
         registerGetTopicsButton();
     }
 
     private void registerGetTopicsButton() {
         mTopicsClientButton.setOnClickListener(v -> {
+            String text = "";
             try {
-                // TODO(b/225902793): This will cause ANRs if the getTopics().get() take more than 5 seconds.
-                GetTopicsResponse result = mAdvertisingTopicsClient.getTopics().get();
-                String topics = getTopics(result.getTopics()),
-                        text = "Topics are " + topics;
+                for (String sdkName : mSdkNameList) {
+                    mAdvertisingTopicsClient = new AdvertisingTopicsClient.Builder()
+                        .setContext(this)
+                        .setSdkName(sdkName)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+                    // TODO(b/225902793): This will cause ANRs if the getTopics().get()
+                    //  take more than 5 seconds.
+                    GetTopicsResponse result = mAdvertisingTopicsClient.getTopics().get();
+                    String topics = getTopics(result.getTopics());
+                    text += sdkName + "'s topics: " + NEWLINE + topics + NEWLINE;
+                }
                 mResultTextView.setText(text);
-                makeToast(text);
             } catch (ExecutionException | InterruptedException e) {
                 makeToast(e.getMessage());
             }
@@ -74,8 +82,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String getTopics(List<String> arr) {
         StringBuilder sb = new StringBuilder();
-        for (String s : arr) {
-            sb.append(s).append(SPACE);
+        int index = 1;
+        for (String topic : arr) {
+            sb.append(index++).append(". ").append(topic).append(NEWLINE);
         }
         return sb.toString();
     }
