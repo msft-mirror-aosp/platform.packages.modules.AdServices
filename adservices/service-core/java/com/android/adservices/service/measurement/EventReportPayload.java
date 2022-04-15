@@ -31,7 +31,7 @@ public final class EventReportPayload {
     private String mTriggerData;
     private String mReportId;
     private String mSourceType;
-    private String mRandomizedTriggerRate;
+    private double mRandomizedTriggerRate;
 
     private EventReportPayload() {};
 
@@ -114,7 +114,7 @@ public final class EventReportPayload {
         /**
          * Decimal number between 0 and 1 indicating how often noise is applied.
          */
-        public @NonNull Builder setRandomizedTriggerRate(@NonNull String randomizedTriggerRate) {
+        public @NonNull Builder setRandomizedTriggerRate(@NonNull double randomizedTriggerRate) {
             mBuilding.mRandomizedTriggerRate = randomizedTriggerRate;
             return this;
         }
