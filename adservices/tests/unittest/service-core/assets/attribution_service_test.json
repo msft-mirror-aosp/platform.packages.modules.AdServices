@@ -418,7 +418,6 @@
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -646,7 +645,7 @@
             "reportTo": "https://www.example3.com/r1",
             "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "triggerData": 1,
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -654,7 +653,6 @@
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -693,7 +691,7 @@
             "reportTo": "https://www.example3.com/r1",
             "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "triggerData": 1,
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -704,7 +702,7 @@
             "sourceId": 2,
             "attributionDestination": "android-app://com.example.xyz",
             "reportTo": "https://www.example3.com/r1",
-            "triggerData": 2,
+            "triggerData": 1,
             "triggerTime": 8640000002,
             "triggerPriority": 101,
             "status": 0,
@@ -772,7 +770,6 @@
         "event_reports": [],
         "attribution_rate_limits": []
       },
-      "attributionTriggerIds": ["T1"],
       "output": {
         "sources": [
           {
@@ -822,7 +819,7 @@
             "sourceId": 1,
             "attributionDestination": "android-app://com.example.xyz",
             "reportTo": "https://www.example3.com/r1",
-            "triggerData": 2,
+            "triggerData": 0,
             "triggerTime": 9072000001,
             "triggerPriority": 101,
             "status": 0,
@@ -836,6 +833,176 @@
             "destinationSite": "android-app://com.example.xyz",
             "reportTo": "https://www.example3.com/r1",
             "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Should truncate trigger data - Event",
+      "description": "1 Source, 1 Trigger. They should match and event report's trigger data should be truncated.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 7,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 7,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 1,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Should truncate trigger data - Navigation",
+      "description": "1 Source, 1 Trigger. They should match and event report's trigger data should be truncated.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 15,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 15,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 7,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
         ]

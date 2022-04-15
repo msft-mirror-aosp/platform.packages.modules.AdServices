@@ -19,7 +19,6 @@ package com.android.adservices.service.measurement.attribution;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -66,10 +65,13 @@ public class AttributionJobHandlerE2ETest extends DatabaseE2ETest {
         // Mocking the randomized trigger data to always return the truth value.
         IMeasurementDao dao = spy(datastoreManager.getMeasurementDao());
         when(datastoreManager.getMeasurementDao()).thenReturn(dao);
-        doAnswer((Answer<Trigger>) invocation -> {
-            Trigger trigger = spy((Trigger) invocation.callRealMethod());
-            doReturn(trigger.getTriggerData())
-                    .when(trigger).getRandomizedTriggerData(any());
+        doAnswer((Answer<Trigger>) triggerInvocation -> {
+            Trigger trigger = spy((Trigger) triggerInvocation.callRealMethod());
+            doAnswer((Answer<Long>) triggerDataInvocation ->
+                    trigger.getTruncatedTriggerData(
+                            triggerDataInvocation.getArgument(0)))
+                    .when(trigger)
+                    .getRandomizedTriggerData(any());
             return trigger;
         }).when(dao).getTrigger(anyString());
 
