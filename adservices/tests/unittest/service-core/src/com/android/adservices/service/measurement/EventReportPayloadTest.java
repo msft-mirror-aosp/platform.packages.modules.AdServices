@@ -29,7 +29,7 @@ public class EventReportPayloadTest {
     private static final String TRIGGER_DATA = "2";
     private static final String REPORT_ID = "678";
     private static final String SOURCE_TYPE = "event";
-    private static final String RANDOMIZED_TRIGGER_RATE = "0.24";
+    private static final double RANDOMIZED_TRIGGER_RATE = 0.0024;
 
     private EventReportPayload createEventReportPayloadExample1() {
         return new EventReportPayload.Builder()
