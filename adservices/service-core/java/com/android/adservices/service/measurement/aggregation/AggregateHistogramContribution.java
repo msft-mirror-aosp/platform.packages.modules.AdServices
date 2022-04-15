@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.aggregation;
 
 import java.math.BigInteger;
 import java.util.Objects;
