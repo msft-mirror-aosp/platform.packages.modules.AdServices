@@ -48,9 +48,9 @@ public final class AggregatableAttributionTriggerTest {
                                 Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
                         .build();
 
-        Map<String, Long> values = new HashMap<>();
-        values.put("campCounts", 1L);
-        values.put("campGeoCounts", 100L);
+        Map<String, Integer> values = new HashMap<>();
+        values.put("campCounts", 1);
+        values.put("campGeoCounts", 100);
 
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
@@ -69,8 +69,8 @@ public final class AggregatableAttributionTriggerTest {
         assertEquals(attributionTrigger.getTriggerData().get(1).getKey().getLowBits().longValue(),
                 5L);
         assertEquals(attributionTrigger.getTriggerData().get(1).getSourceKeys().size(), 3);
-        assertEquals(attributionTrigger.getValues().get("campCounts").longValue(), 1L);
-        assertEquals(attributionTrigger.getValues().get("campGeoCounts").longValue(), 100L);
+        assertEquals(attributionTrigger.getValues().get("campCounts").intValue(), 1);
+        assertEquals(attributionTrigger.getValues().get("campGeoCounts").intValue(), 100);
     }
 
     @Test

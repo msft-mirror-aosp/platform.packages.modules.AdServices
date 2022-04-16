@@ -28,7 +28,7 @@ import java.util.Objects;
 public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
-    private Map<String, Long> mValues;
+    private Map<String, Integer> mValues;
 
     private AggregatableAttributionTrigger() {
         mTriggerData = new ArrayList<>();
@@ -61,7 +61,7 @@ public class AggregatableAttributionTrigger {
     /**
      * Returns the value map which contains the value for each aggregatable_source.
      */
-    public Map<String, Long> getValues() {
+    public Map<String, Integer> getValues() {
         return mValues;
     }
 
@@ -86,7 +86,7 @@ public class AggregatableAttributionTrigger {
         /**
          * See {@link AggregatableAttributionTrigger#getValues()}.
          */
-        public Builder setValues(Map<String, Long> values) {
+        public Builder setValues(Map<String, Integer> values) {
             mBuilding.mValues = values;
             return this;
         }
