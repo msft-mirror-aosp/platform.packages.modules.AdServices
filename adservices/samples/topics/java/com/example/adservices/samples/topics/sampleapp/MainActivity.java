@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.samples.topics.sampleapp;
+package com.example.adservices.samples.topics.sampleapp;
 
 import android.adservices.topics.GetTopicsResponse;
 import android.os.Bundle;

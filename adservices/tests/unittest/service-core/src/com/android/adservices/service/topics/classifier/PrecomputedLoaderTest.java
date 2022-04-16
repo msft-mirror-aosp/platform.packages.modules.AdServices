@@ -41,14 +41,14 @@ public class PrecomputedLoaderTest {
         List<String> labels = sPrecomputedLoader.retrieveLabels();
         // Check size of list
         // The labels.txt contains 350 topics
-        assertThat(labels.size()).isEqualTo(350);
+        assertThat(labels.size()).isEqualTo(349);
 
         // Check some labels
         assertThat(labels).containsAtLeast(
-                "/Finance/Banking",
-                "/Shopping/Shopping Portals",
-                "/Internet & Telecom/Email & Messaging/Voice & Video Chat",
-                "/Games/Board Games/Chess & Abstract Strategy Games");
+                "/Sports/Tennis",
+                "/Arts & Entertainment/Music & Audio/Pop Music",
+                "/Internet & Telecom/Web Hosting",
+                "/Games/Computer & Video Games/Simulation Games");
     }
 
     @Test
@@ -61,32 +61,25 @@ public class PrecomputedLoaderTest {
         // Check whatsApp, chrome and a sample app topics in map
         List<String> whatsAppTopics =
                 Arrays.asList(
-                        "/Internet & Telecom/Email & Messaging/Voice & Video Chat",
-                        "/Internet & Telecom/Email & Messaging/Text & Instant Messaging",
-                        "/Computers & Electronics/Software/Business & Productivity Software",
-                        "/Business & Industrial/Energy & Utilities/Oil & Gas",
-                        "/Food & Drink/Restaurants");
+                        "/Internet & Telecom/Text & Instant Messaging");
         assertThat(appTopic.get("com.whatsapp")).isEqualTo(whatsAppTopics);
 
         List<String> chromeTopics =
                 Arrays.asList(
-                        "/Home & Garden/Kitchen & Dining/Small Kitchen Appliances/"
-                                + "Coffee & Espresso Makers",
-                        "/Computers & Electronics/Software/Internet Software/Web Browsers",
-                        "/Business & Industrial/Business Operations/Human Resources/"
-                                + "Compensation & Benefits",
-                        "/Internet & Telecom/Service Providers/Cable & Satellite Providers",
-                        "/Computers & Electronics/Consumer Electronics/Media Streaming Devices");
+                        "/Computers & Electronics/Software/Web Browsers");
         assertThat(appTopic.get("com.android.chrome")).isEqualTo(chromeTopics);
 
         List<String> sampleAppTopics =
-                Arrays.asList(
-                        "/Internet & Telecom/Email & Messaging/Voice & Video Chat",
-                        "/Internet & Telecom/Email & Messaging/Text & Instant Messaging",
-                        "/Computers & Electronics/Software/Business & Productivity Software",
-                        "/Business & Industrial/Energy & Utilities/Oil & Gas",
-                        "/Food & Drink/Restaurants");
-        assertThat(appTopic.get("com.android.adservices.samples.topics.sampleapp"))
+                Arrays.asList("/Internet & Telecom/Text & Instant Messaging");
+        assertThat(appTopic.get("com.example.adservices.samples.topics.sampleapp"))
                 .isEqualTo(sampleAppTopics);
+
+        List<String> sampleApp4Topics =
+                Arrays.asList(
+                        "/Online Communities/Social Networks",
+                        "/Computers & Electronics/Software/Photo Software",
+                        "/Reference/Foreign Language Study");
+        assertThat(appTopic.get("com.example.adservices.samples.topics.sampleapp4"))
+                .isEqualTo(sampleApp4Topics);
     }
 }

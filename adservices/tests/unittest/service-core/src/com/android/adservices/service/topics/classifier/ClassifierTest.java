@@ -49,14 +49,10 @@ public class ClassifierTest {
 
     @Test
     public void checkExistingApp() {
-        // Using What's App. This app has 5 classification topics.
+        // Using What's App. This app has 1 classification topic.
         List<String> expectedWhatsAppTopics =
                 Arrays.asList(
-                        "/Internet & Telecom/Email & Messaging/Voice & Video Chat",
-                        "/Internet & Telecom/Email & Messaging/Text & Instant Messaging",
-                        "/Computers & Electronics/Software/Business & Productivity Software",
-                        "/Business & Industrial/Energy & Utilities/Oil & Gas",
-                        "/Food & Drink/Restaurants");
+                        "/Internet & Telecom/Text & Instant Messaging");
 
         Map<String, List<String>> expectedAppTopicsResponse = new HashMap<>();
         expectedAppTopicsResponse.put("com.whatsapp", expectedWhatsAppTopics);

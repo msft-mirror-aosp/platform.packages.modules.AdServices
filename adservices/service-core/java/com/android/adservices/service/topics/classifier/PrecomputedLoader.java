@@ -35,10 +35,15 @@ import java.util.Map;
  * PrecomputedLoader to load label file and app topics file which is precomputed server side
  */
 public class PrecomputedLoader {
-    private static final String LABELS_FILE_PATH = "classifier/labels.txt";
-    private static final String TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
+    private static final String LABELS_FILE_PATH =
+            "classifier/labels_chrome_topics.txt";
+    private static final String TOP_APP_FILE_PATH =
+            "classifier/precomputed_app_list_chrome_topics.csv";
     // Use "\t" as a delimiter to read the precomputed app topics file
     private static final String DELIMITER = "\t";
+    // TODO(b/229323531): Implement new encoding method for dynamic topics size
+    // Use "None" as a null topic for each app
+    private static final String NONE_TOPIC = "None";
 
     private final AssetManager mAssetManager;
 
@@ -104,6 +109,10 @@ public class PrecomputedLoader {
 
                 appTopicsMap.put(app, new ArrayList<>());
                 for (int i = 1; i < columns.length; i++) {
+                    // NONE_TOPIC will not be added to the app topics list
+                    if (NONE_TOPIC.equals(columns[i])) {
+                        break;
+                    }
                     // The other columns are topics of the app
                     appTopicsMap.get(app).add(columns[i]);
                 }
