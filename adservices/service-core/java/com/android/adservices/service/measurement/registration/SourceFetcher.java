@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.registration;
 import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
-import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 
@@ -113,11 +112,7 @@ public class SourceFetcher {
             @NonNull Uri target,
             @NonNull String sourceInfo,
             boolean initialFetch,
-            int maxRedirects,
             @NonNull List<SourceRegistration> registrationsOut) {
-        if (maxRedirects <= 0) {
-            return false;
-        }
         // Require https.
         if (!target.getScheme().equals("https")) {
             return false;
@@ -154,18 +149,11 @@ public class SourceFetcher {
                 success = false;
             }
 
-            // TODO: Decide if we want to redirect a redirect response code
-            // for redirects.
-            ArrayList<Pair<Uri, Boolean>> redirects = new ArrayList();
-            if (!ResponseBasedFetcher.parseRedirects(
-                        initialFetch, headers, redirects)) {
-                success = false;
-            }
-            for (Pair<Uri, Boolean> redirect : redirects) {
+            ArrayList<Uri> redirects = new ArrayList();
+            ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
+            for (Uri redirect : redirects) {
                 if (!fetchSource(
-                        topOrigin, target, redirect.first, sourceInfo,
-                        false, redirect.second.booleanValue() ? maxRedirects - 1 : 0,
-                        registrationsOut)) {
+                        topOrigin, target, redirect, sourceInfo, false, registrationsOut)) {
                     success = false;
                 }
             }
@@ -192,6 +180,6 @@ public class SourceFetcher {
                 request.getReferrerUri(),
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
-                true, ResponseBasedFetcher.REDIRECT_LIMIT, out);
+                true, out);
     }
 }

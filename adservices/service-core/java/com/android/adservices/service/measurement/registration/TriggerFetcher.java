@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.registration;
 import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
-import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 
@@ -121,11 +120,7 @@ public class TriggerFetcher {
             @NonNull Uri referrer,
             @NonNull Uri target,
             boolean initialFetch,
-            int maxRedirects,
             @NonNull List<TriggerRegistration> registrationsOut) {
-        if (maxRedirects <= 0) {
-            return false;
-        }
         // Require https.
         if (!target.getScheme().equals("https")) {
             return false;
@@ -161,18 +156,10 @@ public class TriggerFetcher {
                 success = false;
             }
 
-            // TODO: Decide if we want to redirect a redirect response code
-            // for redirects.
-            ArrayList<Pair<Uri, Boolean>> redirects = new ArrayList();
-            if (!ResponseBasedFetcher.parseRedirects(
-                        initialFetch, headers, redirects)) {
-                success = false;
-            }
-            for (Pair<Uri, Boolean> redirect : redirects) {
-                if (!fetchTrigger(
-                        topOrigin, target, redirect.first,
-                        false, redirect.second.booleanValue() ? maxRedirects - 1 : 0,
-                        registrationsOut)) {
+            ArrayList<Uri> redirects = new ArrayList();
+            ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
+            for (Uri redirect : redirects) {
+                if (!fetchTrigger(topOrigin, target, redirect, false, registrationsOut)) {
                     success = false;
                 }
             }
@@ -200,6 +187,6 @@ public class TriggerFetcher {
                 request.getTopOriginUri(),
                 request.getReferrerUri(),
                 request.getRegistrationUri(),
-                true, ResponseBasedFetcher.REDIRECT_LIMIT, out);
+                true, out);
     }
 }
