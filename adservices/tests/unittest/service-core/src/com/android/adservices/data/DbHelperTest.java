@@ -36,9 +36,10 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 3));
         assertTrue(doesTableExistAndColumnCountMatch("topics_app_classification_topics", 6));
         assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 4));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 7));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 8));
         assertTrue(doesTableExistAndColumnCountMatch("topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch("topics_usage_history", 3));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_source", 16));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_trigger", 9));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_adtech_urls", 2));
