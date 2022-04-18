@@ -24,11 +24,17 @@ import static org.mockito.Mockito.spy;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -52,8 +58,22 @@ public class SourceTest {
     }
 
     @Test
-    public void testEqualsPass() {
+    public void testEqualsPass() throws JSONException {
         assertEquals(new Source.Builder().build(), new Source.Builder().build());
+        JSONArray aggregateSource = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("id", "campaignCounts");
+        jsonObject1.put("key_piece", "0x159");
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("id", "geoValue");
+        jsonObject2.put("key_piece", "0x5");
+        aggregateSource.put(jsonObject1);
+        aggregateSource.put(jsonObject2);
+
+        JSONObject aggregateFilterData = new JSONObject();
+        aggregateFilterData.put(
+                "conversion_subdomain", Arrays.asList("electronics.megastore"));
+        aggregateFilterData.put("product", Arrays.asList("1234", "2345"));
         assertEquals(
                 new Source.Builder()
                         .setReportTo(Uri.parse("https://example.com/rT"))
@@ -68,6 +88,8 @@ public class SourceTest {
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
+                        .setAggregateFilterData(aggregateFilterData.toString())
+                        .setAggregateSource(aggregateSource.toString())
                         .build(),
                 new Source.Builder()
                         .setReportTo(Uri.parse("https://example.com/rT"))
@@ -82,11 +104,13 @@ public class SourceTest {
                         .setStatus(Source.Status.ACTIVE)
                         .setSourceType(Source.SourceType.EVENT)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
+                        .setAggregateFilterData(aggregateFilterData.toString())
+                        .setAggregateSource(aggregateSource.toString())
                         .build());
     }
 
     @Test
-    public void testEqualsFail() {
+    public void testEqualsFail() throws JSONException {
         assertNotEquals(
                 new Source.Builder().setId("1").build(),
                 new Source.Builder().setId("2").build());
@@ -133,6 +157,20 @@ public class SourceTest {
                 new Source.Builder()
                         .setRegistrant(Uri.parse("android-app://com.example.xyz"))
                         .build());
+        JSONArray aggregateSource1 = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("id", "campaignCounts");
+        jsonObject1.put("key_piece", "0x159");
+        aggregateSource1.put(jsonObject1);
+
+        JSONArray aggregateSource2 = new JSONArray();
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("id", "geoValue");
+        jsonObject2.put("key_piece", "0x5");
+        aggregateSource2.put(jsonObject2);
+        assertNotEquals(
+                new Source.Builder().setAggregateSource(aggregateSource1.toString()).build(),
+                new Source.Builder().setAggregateSource(aggregateSource2.toString()).build());
     }
 
     @Test
@@ -381,4 +419,39 @@ public class SourceTest {
                 /*sequenceIndex=*/1268);
     }
 
+    @Test
+    public void testParseAggregateSource() throws JSONException {
+        JSONArray aggregatableSource = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("id", "campaignCounts");
+        jsonObject1.put("key_piece", "0x159");
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("id", "geoValue");
+        jsonObject2.put("key_piece", "0x5");
+        aggregatableSource.put(jsonObject1);
+        aggregatableSource.put(jsonObject2);
+
+        JSONObject filterData = new JSONObject();
+        filterData.put("conversion_subdomain",
+                new JSONArray(Collections.singletonList("electronics.megastore")));
+        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+
+        Source source = new Source.Builder().setAggregateSource(aggregatableSource.toString())
+                .setAggregateFilterData(filterData.toString()).build();
+        Optional<AggregatableAttributionSource> aggregatableAttributionSource =
+                source.parseAggregateSource();
+        assertTrue(aggregatableAttributionSource.isPresent());
+        AggregatableAttributionSource aggregateSource = aggregatableAttributionSource.get();
+        assertEquals(aggregateSource.getAggregatableSource().size(), 2);
+        assertEquals(aggregateSource.getAggregatableSource()
+                .get("campaignCounts").getHighBits().longValue(), 0L);
+        assertEquals(aggregateSource.getAggregatableSource()
+                .get("campaignCounts").getLowBits().longValue(), 345L);
+        assertEquals(aggregateSource.getAggregatableSource()
+                .get("geoValue").getHighBits().longValue(), 0L);
+        assertEquals(aggregateSource.getAggregatableSource()
+                .get("geoValue").getLowBits().longValue(), 5L);
+        assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(),
+                2);
+    }
 }
