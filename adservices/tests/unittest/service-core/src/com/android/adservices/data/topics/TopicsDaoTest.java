@@ -169,6 +169,22 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testGetTopTopicsAndPersistTopics_multiPersistWithSameEpoch() {
+        final long epochId = 1L;
+        List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
+                "random_topic");
+        mTopicsDao.persistTopTopics(epochId, topTopics);
+        // Persist the TopTopics twice with the same epochID
+        mTopicsDao.persistTopTopics(epochId, topTopics);
+
+        // This assertion is to test above persisting calls with same epoch Id didn't throw
+        // any exceptions
+        assertThat(mTopicsDao.retrieveTopTopics(epochId)).isEqualTo(topTopics);
+        // Also check that no incremental epoch id is saved in DB
+        assertThat(mTopicsDao.retrieveTopTopics(epochId + 1)).isEmpty();
+    }
+
+    @Test
     public void testRecordUsageHistory() {
         // Record some usages.
         // App1 called the Topics API directly and its SDKs also call Topics API.
