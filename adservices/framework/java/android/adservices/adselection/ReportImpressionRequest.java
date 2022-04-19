@@ -32,9 +32,9 @@ import java.util.Objects;
  * @hide
  */
 public final class ReportImpressionRequest implements Parcelable {
-    private static final int UNSET = -1;
+    private static final long UNSET = -1;
 
-    private final int mAdSelectionId;
+    private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
     @NonNull
@@ -50,7 +50,7 @@ public final class ReportImpressionRequest implements Parcelable {
             };
 
     public ReportImpressionRequest(
-            int adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
+            long adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
         this.mAdSelectionId = adSelectionId;
@@ -60,7 +60,7 @@ public final class ReportImpressionRequest implements Parcelable {
     private ReportImpressionRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        this.mAdSelectionId = in.readInt();
+        this.mAdSelectionId = in.readLong();
         this.mAdSelectionConfig = AdSelectionConfig.CREATOR.createFromParcel(in);
     }
 
@@ -73,7 +73,7 @@ public final class ReportImpressionRequest implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeInt(mAdSelectionId);
+        dest.writeLong(mAdSelectionId);
         mAdSelectionConfig.writeToParcel(dest, flags);
     }
 
@@ -81,7 +81,7 @@ public final class ReportImpressionRequest implements Parcelable {
      * Returns the adSelectionId, one of the inputs to {@link ReportImpressionRequest} as noted in
      * {@link AdSelectionService}.
      */
-    public int getAdSelectionId() {
+    public long getAdSelectionId() {
         return mAdSelectionId;
     }
 
@@ -98,14 +98,14 @@ public final class ReportImpressionRequest implements Parcelable {
     public static final class Builder {
         // Initializing mAdSelectionId to start as -1, to differentiate it from the default
         // initialization of 0.
-        private int mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET;
         private AdSelectionConfig mAdSelectionConfig;
 
         public Builder() {}
 
         /** Set the mAdSelectionId. */
         @NonNull
-        public ReportImpressionRequest.Builder setAdSelectionId(int adSelectionId) {
+        public ReportImpressionRequest.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }

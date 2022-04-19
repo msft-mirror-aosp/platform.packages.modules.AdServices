@@ -28,7 +28,7 @@ import com.android.internal.util.Preconditions;
 import java.util.Objects;
 
 /**
- * Represent a generic response for Fledge API's.
+ * Represent a generic response for FLEDGE API's.
  *
  * @hide
  */

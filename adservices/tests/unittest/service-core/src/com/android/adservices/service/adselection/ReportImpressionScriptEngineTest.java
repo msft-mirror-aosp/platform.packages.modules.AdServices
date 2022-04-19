@@ -30,6 +30,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -39,8 +40,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -63,14 +64,16 @@ public class ReportImpressionScriptEngineTest {
 
     private final String mSignalsForBuyer = "{\"test_signals_for_buyer\":1}";
 
-    private final Map<String, String> mCustomAudienceSignals =
-            Map.of(
-                    "buyer1",
-                    "{\"custom_audience_signals\":1}",
-                    "buyer2",
-                    "{\"custom_audience_signals\":2}",
-                    "buyer3",
-                    "{\"custom_audience_signals\":3}");
+    private final CustomAudienceSignals mCustomAudienceSignals =
+            new CustomAudienceSignals.Builder()
+                    .setOwner("test_owner")
+                    .setBuyer("test_buyer")
+                    .setName("test_name")
+                    .setActivationTime(Instant.now())
+                    .setExpirationTime(Instant.now())
+                    .setUserBiddingSignals("{\"user_bidding_signals\":1}")
+                    .build();
+
 
     @Test
     public void testCanCallScript() throws Exception {
@@ -321,7 +324,7 @@ public class ReportImpressionScriptEngineTest {
             String perBuyerSignals,
             String signalsForBuyer,
             String contextualSignals,
-            Map<String, String> customAudienceSignals)
+            CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
                 () -> {

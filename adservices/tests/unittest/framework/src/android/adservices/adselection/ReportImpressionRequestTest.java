@@ -31,7 +31,7 @@ import org.junit.Test;
 /** Unit tests for {@link android.adservices.adselection.ReportImpressionRequest} */
 @SmallTest
 public final class ReportImpressionRequestTest {
-    private static final int AUCTION_ID = 123;
+    private static final long AUCTION_ID = 123;
 
     @Test
     public void testWriteToParcel() throws Exception {

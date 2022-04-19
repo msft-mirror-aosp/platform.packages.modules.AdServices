@@ -21,6 +21,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
+import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
@@ -38,6 +39,7 @@ import java.util.Objects;
  *
  * @hide
  */
+// TODO (b/229660121): Ad unit tests for this class
 @Entity(
         tableName = "ad_selection",
         indices = {@Index(value = {"bidding_logic_url"})})
@@ -46,9 +48,9 @@ public final class DBAdSelection {
     @PrimaryKey
     private final long mAdSelectionId;
 
-    @ColumnInfo(name = "custom_audience_signals")
+    @Embedded(prefix = "custom_audience_signals_")
     @Nullable
-    private final String mCustomAudienceSignals;
+    private final CustomAudienceSignals mCustomAudienceSignals;
 
     @ColumnInfo(name = "contextual_signals")
     @NonNull
@@ -71,7 +73,7 @@ public final class DBAdSelection {
 
     public DBAdSelection(
             long adSelectionId,
-            @Nullable String customAudienceSignals,
+            @Nullable CustomAudienceSignals customAudienceSignals,
             @NonNull String contextualSignals,
             @Nullable Uri biddingLogicUrl,
             @NonNull Uri winningAdRenderUrl,
@@ -126,7 +128,7 @@ public final class DBAdSelection {
      * return null.
      */
     @Nullable
-    public String getCustomAudienceSignals() {
+    public CustomAudienceSignals getCustomAudienceSignals() {
         return mCustomAudienceSignals;
     }
 
@@ -172,7 +174,7 @@ public final class DBAdSelection {
     /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
         private long mAdSelectionId;
-        private String mCustomAudienceSignals;
+        private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
         private Uri mBiddingLogicUrl;
         private Uri mWinningAdRenderUrl;
@@ -193,7 +195,7 @@ public final class DBAdSelection {
         /** Sets the custom audience signals. */
         @NonNull
         public DBAdSelection.Builder setCustomAudienceSignals(
-                @Nullable String customAudienceSignals) {
+                @Nullable CustomAudienceSignals customAudienceSignals) {
             this.mCustomAudienceSignals = customAudienceSignals;
             return this;
         }

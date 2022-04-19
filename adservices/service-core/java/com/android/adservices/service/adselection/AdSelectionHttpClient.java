@@ -17,12 +17,16 @@
 package com.android.adservices.service.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -34,6 +38,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 /**
  * This is an HTTPClient to be used by both the AdSelection API and Report Impression API. The
@@ -44,13 +49,16 @@ public class AdSelectionHttpClient {
 
     private final int mTimeoutMS;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
+    private final ListeningExecutorService mExecutorService;
 
-    public AdSelectionHttpClient(int timeoutMS) {
+    public AdSelectionHttpClient(int timeoutMS, ExecutorService executorService) {
         mTimeoutMS = timeoutMS;
+        this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
     }
 
-    public AdSelectionHttpClient() {
+    public AdSelectionHttpClient(ExecutorService executorService) {
         mTimeoutMS = DEFAULT_TIMEOUT_MS;
+        this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
     }
 
     /** Opens the Url Connection */
@@ -89,14 +97,10 @@ public class AdSelectionHttpClient {
     }
 
     @NonNull
-    private String inputStreamToString(@NonNull InputStream in) {
+    private String inputStreamToString(@NonNull InputStream in) throws IOException {
         Objects.requireNonNull(in);
 
-        try {
-            return new String(ByteStreams.toByteArray(in), Charsets.UTF_8);
-        } catch (IOException e) {
-            throw new IllegalStateException("Error reading GET response to string!");
-        }
+        return new String(ByteStreams.toByteArray(in), Charsets.UTF_8);
     }
 
     /**
@@ -106,9 +110,13 @@ public class AdSelectionHttpClient {
      * @return a string containing the fetched javascript
      */
     @NonNull
-    public String fetchJavascript(@NonNull Uri uri) {
+    public ListenableFuture<String> fetchJavascript(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
+        return mExecutorService.submit(() -> doFetchJavascript(uri));
+    }
+
+    private String doFetchJavascript(@NonNull Uri uri) throws IOException {
         URL url = toUrl(uri);
         // TODO (b/228380865): Change to HttpSURLConnection
         HttpURLConnection urlConnection;
@@ -116,7 +124,7 @@ public class AdSelectionHttpClient {
         try {
             urlConnection = setupConnection(url);
         } catch (SocketTimeoutException e) {
-            throw new IllegalStateException("Connection timed out!");
+            throw new IOException("Connection timed out!");
         } catch (IOException e) {
             LogUtil.d("Failed to open URL", e);
             throw new IllegalArgumentException("Failed to open URL!");
@@ -134,27 +142,27 @@ public class AdSelectionHttpClient {
                     String exceptionMessage =
                             String.format(
                                     Locale.US,
-                                    "Server returned an error with code %d and message: %s",
+                                    "Server returned an error with code %d and message:" + " %s",
                                     responseCode,
                                     errorMessage);
 
                     LogUtil.d(exceptionMessage);
-                    throw new IllegalStateException(exceptionMessage);
+                    throw new IOException(exceptionMessage);
                 } else {
                     String exceptionMessage =
                             String.format(
                                     Locale.US,
-                                    "Server returned an error with code %d and null message",
+                                    "Server returned an error with code %d and null" + " message",
                                     responseCode);
 
                     LogUtil.d(exceptionMessage);
-                    throw new IllegalStateException(exceptionMessage);
+                    throw new IOException(exceptionMessage);
                 }
             }
         } catch (SocketTimeoutException e) {
-            throw new IllegalStateException("Connection times out while reading response!", e);
-        } catch (IOException e) {
-            throw new IllegalStateException(e.getMessage(), e);
+            throw new IOException("Connection times out while reading response!", e);
+        } finally {
+            maybeDisconnect(urlConnection);
         }
     }
 
@@ -162,11 +170,16 @@ public class AdSelectionHttpClient {
      * Performs a GET request on a Uri to perform reporting
      *
      * @param uri Provided as a result of invoking buyer or seller javascript.
-     * @return an int that represents the response code
+     * @return an int that represents the HTTP response code in a successful case
      */
-    public int reportUrl(@NonNull Uri uri) {
+    // TODO (b/229660545): Return a void instead of an int
+    public ListenableFuture<Void> reportUrl(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
+        return mExecutorService.submit(() -> doReportUrl(uri));
+    }
+
+    private Void doReportUrl(@NonNull Uri uri) throws IOException {
         URL url = toUrl(uri);
         // TODO (b/228380865): Change to HttpSURLConnection
         HttpURLConnection urlConnection;
@@ -174,7 +187,7 @@ public class AdSelectionHttpClient {
         try {
             urlConnection = setupConnection(url);
         } catch (SocketTimeoutException e) {
-            throw new IllegalStateException("Connection timed out!");
+            throw new IOException("Connection timed out!");
         } catch (IOException e) {
             LogUtil.d("Failed to open URL", e);
             throw new IllegalArgumentException("Failed to open URL!");
@@ -184,33 +197,47 @@ public class AdSelectionHttpClient {
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d("Successfully reported for URl: " + url);
+                return null;
             } else {
                 LogUtil.w("Failed to report for URL: " + url);
                 InputStream errorStream = urlConnection.getErrorStream();
                 if (!Objects.isNull(errorStream)) {
                     String errorMessage = inputStreamToString(urlConnection.getErrorStream());
-                    String logMessage =
+                    String exceptionMessage =
                             String.format(
                                     Locale.US,
-                                    "Server returned an error with code %d and message: %s",
+                                    "Server returned an error with code %d and message:" + " %s",
                                     responseCode,
                                     errorMessage);
 
-                    LogUtil.d(logMessage);
+                    LogUtil.d(exceptionMessage);
+                    throw new IOException(exceptionMessage);
+
                 } else {
-                    String logMessage =
+                    String exceptionMessage =
                             String.format(
                                     Locale.US,
-                                    "Server returned an error with code %d and null message",
+                                    "Server returned an error with code %d and null" + " message",
                                     responseCode);
-                    LogUtil.d(logMessage);
+                    LogUtil.d(exceptionMessage);
+                    throw new IOException(exceptionMessage);
                 }
             }
-            return responseCode;
         } catch (SocketTimeoutException e) {
-            throw new IllegalStateException("Connection times out while reading response!", e);
-        } catch (IOException e) {
-            throw new IllegalStateException(e.getMessage(), e);
+            throw new IOException("Connection times out while reading response!", e);
+        } finally {
+            maybeDisconnect(urlConnection);
+        }
+    }
+
+    private static void maybeDisconnect(@Nullable URLConnection urlConnection) {
+        if (urlConnection == null) {
+            return;
+        }
+
+        if (urlConnection instanceof HttpURLConnection) {
+            HttpURLConnection httpUrlConnection = (HttpURLConnection) urlConnection;
+            httpUrlConnection.disconnect();
         }
     }
 
