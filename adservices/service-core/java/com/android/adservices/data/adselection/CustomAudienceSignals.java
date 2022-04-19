@@ -17,8 +17,9 @@
 package com.android.adservices.data.adselection;
 
 import android.adservices.customaudience.CustomAudience;
+import android.annotation.NonNull;
 
-import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -28,16 +29,27 @@ import java.util.Objects;
  * It contains fields from the {@link CustomAudience}.
  */
 public class CustomAudienceSignals {
+    @ColumnInfo(name = "owner")
     @NonNull
     private final String mOwner;
+
+    @ColumnInfo(name = "buyer")
     @NonNull
     private final String mBuyer;
+
+    @ColumnInfo(name = "name")
     @NonNull
     private final String mName;
+
+    @ColumnInfo(name = "activation_time")
     @NonNull
     private final Instant mActivationTime;
+
+    @ColumnInfo(name = "expiration_time")
     @NonNull
     private final Instant mExpirationTime;
+
+    @ColumnInfo(name = "user_bidding_signals")
     @NonNull
     private final String mUserBiddingSignals;
 

@@ -19,7 +19,6 @@ package com.android.adservices.service.adselection;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
-import static com.android.adservices.service.js.JSScriptArgument.stringMapToRecordArg;
 
 import static com.google.common.util.concurrent.Futures.transform;
 
@@ -28,6 +27,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.internal.util.Preconditions;
@@ -40,7 +40,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -143,7 +142,7 @@ public class ReportImpressionScriptEngine {
             @NonNull String perBuyerSignals,
             @NonNull String signalsForBuyer,
             @NonNull String contextualSignals,
-            @NonNull Map<String, String> customAudienceSignals)
+            @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(biddingLogicJS);
         Objects.requireNonNull(adSelectionSignals);
@@ -159,8 +158,8 @@ public class ReportImpressionScriptEngine {
                         .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
                         .add(
-                                stringMapToRecordArg(
-                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
+                                CustomAudienceSignalsArgument.asScriptArgument(
+                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
                         .build();
 
         return transform(
