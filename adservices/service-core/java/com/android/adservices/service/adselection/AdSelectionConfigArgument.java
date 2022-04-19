@@ -34,7 +34,7 @@ import org.json.JSONException;
 import java.util.Map;
 
 /**
- * An utility class to convert instances of {@link AdSelectionConfig} into {@link JSScriptArgument}
+ * A utility class to convert instances of {@link AdSelectionConfig} into {@link JSScriptArgument}
  */
 public class AdSelectionConfigArgument {
 
