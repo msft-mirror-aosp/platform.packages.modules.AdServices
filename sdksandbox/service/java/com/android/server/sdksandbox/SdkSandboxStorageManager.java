@@ -91,6 +91,27 @@ class SdkSandboxStorageManager {
         }
     }
 
+    void prepareSdkDataOnLoad(String packageName, int uid) {
+        final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
+        final int userId = userHandle.getIdentifier();
+        String ceSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
+                userId, packageName, /*isCeData=*/true);
+        String deSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
+                userId, packageName, /*isCeData=*/false);
+        final Set<String> ceSdkDirsBeforeLoadingSdks = getSubDirs(ceSdkDataPackagePath,
+                /*includeRandomSuffix=*/false);
+        final Set<String> deSdkDirsBeforeLoadingSdks = getSubDirs(deSdkDataPackagePath,
+                /*includeRandomSuffix=*/false);
+        final Set<String> expectedSubDirNames = new ArraySet<>(getSdksUsed(userId, packageName));
+        expectedSubDirNames.add("shared");
+        if (!ceSdkDirsBeforeLoadingSdks.equals(expectedSubDirNames)
+                || !deSdkDirsBeforeLoadingSdks.equals(expectedSubDirNames)) {
+            synchronized (mLock) {
+                reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
+            }
+        }
+    }
+
     @GuardedBy("mLock")
     private void reconcileSdkDataSubDirs(String packageName, int uid, boolean forInstrumentation) {
         final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
