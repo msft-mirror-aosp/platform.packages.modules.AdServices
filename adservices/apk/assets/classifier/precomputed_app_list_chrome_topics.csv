@@ -999,14 +999,14 @@ com.diamond.freefire.freediamond	/Games/Computer & Video Games/Action & Platform
 com.hts.ams	/Games/Computer & Video Games/Strategy Games	None	None	None	None
 net.kernys.aooni	/Games/Computer & Video Games/Action & Platform Games	None	None	None	None
 com.firsttouchgames.hero2	/Games/Computer & Video Games/Casual Games	/Games/Computer & Video Games/Sports Games	None	None	None
-com.example.adservices.samples.topics.sampleapp	/Internet & Telecom/Text & Instant Messaging	None	None	None	None
-com.example.adservices.samples.topics.sampleapp1	/Arts & Entertainment/Online Video	None	None	None	None
-com.example.adservices.samples.topics.sampleapp2	/Online Communities/Social Networks	None	None	None	None
-com.example.adservices.samples.topics.sampleapp3	/Online Communities/Social Networks	/Games/Computer & Video Games/Casual Games	None	None	None
-com.example.adservices.samples.topics.sampleapp4	/Online Communities/Social Networks	/Computers & Electronics/Software/Photo Software	/Reference/Foreign Language Study	None	None
-com.example.adservices.samples.topics.sampleapp5	/Games/Computer & Video Games/Strategy Games	None	None	None	None
-com.example.adservices.samples.topics.sampleapp6	/Computers & Electronics/Software/Video Software	/Online Communities/Social Networks	None	None	None
-com.example.adservices.samples.topics.sampleapp7	/Computers & Electronics/Antivirus & Malware	None	None	None	None
-com.example.adservices.samples.topics.sampleapp8	/Computers & Electronics/Software/Web Browsers	None	None	None	None
-com.example.adservices.samples.topics.sampleapp9	/Games/Computer & Video Games/Action & Platform Games	None	None	None	None
-com.example.adservices.samples.topics.sampleapp10	/Games/Computer & Video Games/Massively Multiplayer Games	/Games/Computer & Video Games/Strategy Games	None	None	None
+com.example.adservices.samples.topics.sampleapp	/Internet & Telecom/Text & Instant Messaging	/Internet & Telecom/Web Apps & Online Tools	/Business & Industrial/Defense Industry	/News	/People & Society
+com.example.adservices.samples.topics.sampleapp1	/Arts & Entertainment/Online Video	/Computers & Electronics/Consumer Electronics	/Business & Industrial/Defense Industry	/News	/People & Society
+com.example.adservices.samples.topics.sampleapp2	/Online Communities/Social Networks	/Computers & Electronics/Software/Audio & Music Software	/Arts & Entertainment/Music & Audio/Rock Music	/People & Society	/Science/Machine Learning & Artificial Intelligence
+com.example.adservices.samples.topics.sampleapp3	/Online Communities/Social Networks	/Games/Computer & Video Games/Casual Games	/News/World News	/People & Society	/Finance/Accounting & Auditing
+com.example.adservices.samples.topics.sampleapp4	/Online Communities/Social Networks	/Computers & Electronics/Software/Photo Software	/Reference/Foreign Language Study	/Autos & Vehicles/Classic Vehicles	/Computers & Electronics/Antivirus & Malware
+com.example.adservices.samples.topics.sampleapp5	/Games/Computer & Video Games/Strategy Games	/News/World News	/People & Society/Family & Relationships	/Reference/Foreign Language Study	/Computers & Electronics/Antivirus & Malware
+com.example.adservices.samples.topics.sampleapp6	/Computers & Electronics/Software/Video Software	/Online Communities/Social Networks	/Food & Drink/Cooking & Recipes/Cuisines	/People & Society	/Arts & Entertainment/Music & Audio/Rock Music
+com.example.adservices.samples.topics.sampleapp7	/Computers & Electronics/Antivirus & Malware	/Computers & Electronics/Software/Photo Software	/Reference/Foreign Language Study	/Autos & Vehicles/Classic Vehicles	/Finance/Accounting & Auditing
+com.example.adservices.samples.topics.sampleapp8	/Computers & Electronics/Software/Web Browsers	/Law & Government/Crime & Justice	/Arts & Entertainment/Music & Audio/Rock Music	/People & Society	/Finance/Accounting & Auditing
+com.example.adservices.samples.topics.sampleapp9	/Games/Computer & Video Games/Action & Platform Games	/Games/Computer & Video Games/Massively Multiplayer Games	/Games/Computer & Video Games/Strategy Games	/Business & Industrial/Defense Industry	/Autos & Vehicles/Cargo Trucks & Trailers
+com.example.adservices.samples.topics.sampleapp10	/Games/Computer & Video Games/Massively Multiplayer Games	/Games/Computer & Video Games/Strategy Games	/Arts & Entertainment/Music & Audio/Rock Music	/People & Society	/Finance/Accounting & Auditing
