@@ -192,4 +192,19 @@ public interface IMeasurementDao {
             @Nullable Uri origin,
             @Nullable Instant start,
             @Nullable Instant end) throws DatastoreException;
+
+    /**
+     * Mark relevant source as install attributed.
+     *
+     * @param uri            package identifier
+     * @param eventTimestamp timestamp of installation event
+     */
+    void doInstallAttribution(Uri uri, long eventTimestamp) throws DatastoreException;
+
+    /**
+     * Undo any install attributed source events.
+     *
+     * @param uri            package identifier
+     */
+    void undoInstallAttribution(Uri uri) throws DatastoreException;
 }

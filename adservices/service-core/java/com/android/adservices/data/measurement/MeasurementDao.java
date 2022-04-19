@@ -23,6 +23,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -737,5 +738,47 @@ class MeasurementDao implements IMeasurementDao {
                         site.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())});
+    }
+
+    @Override
+    public void doInstallAttribution(Uri uri, long eventTimestamp) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+
+        SQLiteQueryBuilder sqb = new SQLiteQueryBuilder();
+        sqb.setTables(MeasurementTables.SourceContract.TABLE);
+        // Sub query for selecting relevant source ids.
+        // Selecting the highest priority, most recent source with eventTimestamp falling in the
+        // source's install attribution window.
+        String subQuery = sqb.buildQuery(new String[]{MeasurementTables.SourceContract.ID},
+                String.format(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION
+                                + " = \"%s\" AND "
+                                + MeasurementTables.SourceContract.EVENT_TIME + " <= %2$d AND "
+                                + MeasurementTables.SourceContract.EXPIRY_TIME + " > %2$d AND "
+                                + MeasurementTables.SourceContract.EVENT_TIME + " + "
+                                + MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                                + " >= %2$d",
+                        uri.toString(), eventTimestamp),
+                /* groupBy= */null, /* having= */null,
+                /* sortOrder= */MeasurementTables.SourceContract.PRIORITY + " DESC, "
+                        + MeasurementTables.SourceContract.EVENT_TIME + " DESC",
+                /* limit = */ "1");
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, true);
+        db.update(MeasurementTables.SourceContract.TABLE,
+                values,
+                MeasurementTables.SourceContract.ID + " IN (" + subQuery + ")",
+                null);
+    }
+
+    @Override
+    public void undoInstallAttribution(Uri uri) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, false);
+        db.update(MeasurementTables.SourceContract.TABLE,
+                values,
+                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ?",
+                new String[]{uri.toString()});
     }
 }
