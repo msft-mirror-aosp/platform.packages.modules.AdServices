@@ -62,22 +62,22 @@ public class CustomAudienceSignalsArgument {
                 stringArg(NAME_FIELD_NAME, customAudienceSignals.getName()),
                 numericArg(
                         ACTIVATION_TIME_FIELD_NAME,
-                        instantToLong(customAudienceSignals.getActivationTime())),
+                        instantToEpochMilli(customAudienceSignals.getActivationTime())),
                 numericArg(
                         EXPIRATION_TIME_FIELD_NAME,
-                        instantToLong(customAudienceSignals.getExpirationTime())),
+                        instantToEpochMilli(customAudienceSignals.getExpirationTime())),
                 jsonArg(
                         USER_BIDDING_SIGNALS_FIELD_NAME,
                         customAudienceSignals.getUserBiddingSignals()));
     }
 
     /**
-     * Converts an Instant to a Long
+     * Maps an Instant to a long representation of its number of milliseconds
      *
      * @param instant an Instant to be converted
-     * @return a Long representation of the Instant
+     * @return a Long representation of the Instant's number of milliseconds
      */
-    public static Long instantToLong(@NonNull Instant instant) {
+    public static Long instantToEpochMilli(@NonNull Instant instant) {
         Objects.requireNonNull(instant);
 
         return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
