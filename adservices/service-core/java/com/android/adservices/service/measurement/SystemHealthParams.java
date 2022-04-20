@@ -43,6 +43,12 @@ public class SystemHealthParams {
      */
     public static final int MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
+    /**
+     * Maximum event report upload retry window.
+     */
+    public static final long MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS =
+            TimeUnit.DAYS.toMillis(28);
+
     private SystemHealthParams() {
     }
 }
