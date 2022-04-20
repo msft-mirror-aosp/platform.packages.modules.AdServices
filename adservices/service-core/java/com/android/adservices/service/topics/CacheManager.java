@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.util.Pair;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
@@ -79,9 +80,13 @@ public class CacheManager {
                 mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId(),
                         mFlags.getTopicsNumberOfLookBackEpochs() + 1);
 
-        mReadWriteLock.writeLock().lock();
-        mCachedTopics = cacheFromDb;
-        mReadWriteLock.writeLock().unlock();
+        LogUtil.v("CachedTopics mapping size is  " + cacheFromDb.size());
+        try {
+            mReadWriteLock.writeLock().lock();
+            mCachedTopics = cacheFromDb;
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
     }
 
     /**
