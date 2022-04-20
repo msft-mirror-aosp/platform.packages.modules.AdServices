@@ -50,6 +50,8 @@ public class CustomAudienceManagementServiceManager {
 
     /**
      * Create a service binder CustomAudienceManagementManager
+     *
+     * @hide
      */
     public CustomAudienceManagementServiceManager(@NonNull Context context) {
         Objects.requireNonNull(context);

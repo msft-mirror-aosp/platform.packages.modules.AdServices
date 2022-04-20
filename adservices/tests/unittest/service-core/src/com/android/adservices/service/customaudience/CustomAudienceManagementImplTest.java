@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
@@ -30,7 +31,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
-import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -38,14 +38,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceManagementImplTest {
-
-    private static final Instant NOW = Instant.now();
-
     private static final CustomAudience VALID_CUSTOM_AUDIENCE = new CustomAudience.Builder()
             .setOwner(CustomAudienceFixture.VALID_OWNER)
             .setBuyer(CustomAudienceFixture.VALID_BUYER)
@@ -65,8 +61,8 @@ public class CustomAudienceManagementImplTest {
             .setName(CustomAudienceFixture.VALID_NAME)
             .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
             .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-            .setCreationTime(NOW)
-            .setLastUpdatedTime(NOW)
+            .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+            .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
             .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
             .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
             .setTrustedBiddingData(new DBTrustedBiddingData.Builder()
@@ -88,8 +84,8 @@ public class CustomAudienceManagementImplTest {
     public CustomAudienceManagementImpl mManagement;
 
     @Test
-    public void testJoinCustomAudience_runNormally() throws JSONException {
-        when(mClock.instant()).thenReturn(NOW);
+    public void testJoinCustomAudience_runNormally() {
+        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         mManagement.joinCustomAudience(VALID_CUSTOM_AUDIENCE);
 

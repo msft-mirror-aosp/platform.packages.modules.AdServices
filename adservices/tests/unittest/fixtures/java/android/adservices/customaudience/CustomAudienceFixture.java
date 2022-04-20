@@ -16,10 +16,12 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.data.customaudience.DBCustomAudience;
+
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
@@ -30,16 +32,16 @@ public final class CustomAudienceFixture {
     public static final String VALID_NAME = "testCustomAudienceName";
 
     public static final Instant VALID_ACTIVATION_TIME =
-            Instant.now().truncatedTo(ChronoUnit.SECONDS);
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
     public static final Instant VALID_DELAYED_ACTIVATION_TIME =
-            Instant.now().plusSeconds(CustomAudience.getMaxFutureActivationTimeSeconds() / 2)
-                    .truncatedTo(ChronoUnit.SECONDS);
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI
+                    .plus(DBCustomAudience.getMaxActivateIn().dividedBy(2));
     public static final Instant INVALID_DELAYED_ACTIVATION_TIME =
-            Instant.now().plusSeconds(CustomAudience.getMaxFutureActivationTimeSeconds() * 2)
-                    .truncatedTo(ChronoUnit.SECONDS);
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI
+                    .plus(DBCustomAudience.getMaxActivateIn().multipliedBy(2));
 
     public static final Instant VALID_EXPIRATION_TIME =
-            VALID_ACTIVATION_TIME.plusSeconds(CustomAudience.getDefaultExpirationTimeSeconds());
+            VALID_ACTIVATION_TIME.plus(DBCustomAudience.getDefaultExpireIn());
     public static final Instant VALID_DELAYED_EXPIRATION_TIME =
             VALID_DELAYED_ACTIVATION_TIME.plusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEFORE_NOW_EXPIRATION_TIME =
@@ -47,8 +49,7 @@ public final class CustomAudienceFixture {
     public static final Instant INVALID_BEFORE_DELAYED_EXPIRATION_TIME =
             VALID_DELAYED_ACTIVATION_TIME.minusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEYOND_MAX_EXPIRATION_TIME =
-            VALID_ACTIVATION_TIME.plusSeconds(
-                    CustomAudience.getMaxFutureExpirationTimeSeconds() * 2);
+            VALID_ACTIVATION_TIME.plus(DBCustomAudience.getMaxExpireIn().multipliedBy(2));
 
     public static final Uri VALID_DAILY_UPDATE_URL =
             new Uri.Builder().path("valid-update-url.example.com").build();
