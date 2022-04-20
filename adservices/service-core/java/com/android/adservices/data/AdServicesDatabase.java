@@ -77,7 +77,7 @@ public abstract class AdServicesDatabase extends RoomDatabase {
 
     /**
      * Room DB type converters.
-     * Register custom type converters here.
+     * <p>Register custom type converters here.
      */
     public static class Converters {
 

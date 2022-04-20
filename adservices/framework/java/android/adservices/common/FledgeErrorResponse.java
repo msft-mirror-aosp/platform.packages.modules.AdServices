@@ -32,7 +32,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public class FledgeErrorResponse implements Parcelable {
+public final class FledgeErrorResponse implements Parcelable {
     @StatusCode private final int mStatusCode;
     @Nullable private final String mErrorMessage;
 

@@ -33,7 +33,6 @@ import android.os.RemoteException;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,7 +75,7 @@ public class CustomAudienceManagementServiceImplTest {
     }
 
     @Test
-    public void testJoinCustomAudience_runNormally() throws JSONException, RemoteException {
+    public void testJoinCustomAudience_runNormally() throws RemoteException {
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
         verify(mCustomAudienceManagement).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
         verify(mICustomAudienceCallback).onSuccess();
@@ -100,8 +99,8 @@ public class CustomAudienceManagementServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_errorCreateCustomAudience()
-            throws JSONException, RemoteException {
-        doThrow(JSONException.class)
+            throws RemoteException {
+        doThrow(RuntimeException.class)
                 .when(mCustomAudienceManagement)
                 .joinCustomAudience(VALID_CUSTOM_AUDIENCE);
 
@@ -114,7 +113,7 @@ public class CustomAudienceManagementServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_errorReturnCallback()
-            throws JSONException, RemoteException {
+            throws RemoteException {
         doThrow(RemoteException.class)
                 .when(mICustomAudienceCallback)
                 .onSuccess();
@@ -174,6 +173,23 @@ public class CustomAudienceManagementServiceImplTest {
     }
 
     @Test
+    public void testLeaveCustomAudience_errorCallManagementImpl() throws RemoteException {
+        doThrow(RuntimeException.class)
+                .when(mCustomAudienceManagement)
+                .leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
+                        CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+
+        mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
+                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME,
+                mICustomAudienceCallback);
+
+        verify(mCustomAudienceManagement).leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
+                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+        verify(mICustomAudienceCallback).onSuccess();
+        verifyNoMoreInteractions(mCustomAudienceManagement, mICustomAudienceCallback, mContext);
+    }
+
+    @Test
     public void testLeaveCustomAudience_errorReturnCallback() throws RemoteException {
         doThrow(RemoteException.class)
                 .when(mICustomAudienceCallback)
@@ -186,7 +202,6 @@ public class CustomAudienceManagementServiceImplTest {
         verify(mCustomAudienceManagement).leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
                 CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
-        verify(mICustomAudienceCallback).onFailure(any(FledgeErrorResponse.class));
         verifyNoMoreInteractions(mCustomAudienceManagement, mICustomAudienceCallback, mContext);
     }
 }
