@@ -20,9 +20,13 @@ import android.annotation.NonNull;
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 
+import androidx.annotation.Nullable;
+
 import com.android.internal.annotations.VisibleForTesting;
 
-/** Flags Implementation that delegates to Phenotype. */
+import java.io.PrintWriter;
+
+/** Flags Implementation that delegates to DeviceConfig. */
 // TODO(b/228037065): Add validation logics for Feature flags read from PH.
 public final class PhFlags implements Flags {
     /*
@@ -122,5 +126,12 @@ public final class PhFlags implements Flags {
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
+    }
+
+    @Override
+    public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println("==== AdServices PH Flags Dump ====");
+        writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
+        writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
     }
 }

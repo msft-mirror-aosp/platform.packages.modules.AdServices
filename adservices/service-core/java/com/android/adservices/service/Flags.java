@@ -16,11 +16,18 @@
 
 package com.android.adservices.service;
 
+import android.annotation.NonNull;
+import android.util.Dumpable;
+
+import androidx.annotation.Nullable;
+
+import java.io.PrintWriter;
+
 /**
  * AdServices Feature Flags interface.
  * This Flags interface hold the default values of Ad Services Flags.
  */
-public interface Flags {
+public interface Flags extends Dumpable {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -93,4 +100,7 @@ public interface Flags {
     default long getMaintenanceJobFlexMs() {
         return MAINTENANCE_JOB_FLEX_MS;
     }
+
+    /** Dump some debug info for the flags */
+    default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 }
