@@ -37,6 +37,7 @@ android_app {
     static_libs: [
         "adservices-service-core",
     ],
+    resource_dirs: ["res"],
     // TODO(b/208705888): Renable tflite.
     // jni_libs: ["libtensorflowlite_jni"],
     use_embedded_native_libs: true,
