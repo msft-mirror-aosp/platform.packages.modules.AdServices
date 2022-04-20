@@ -38,6 +38,7 @@ java_library {
         "framework-adservices.impl",
     ],
     static_libs: [
+        "adservices-service-core",
     ],
     apex_available: ["com.android.adservices"],
 }

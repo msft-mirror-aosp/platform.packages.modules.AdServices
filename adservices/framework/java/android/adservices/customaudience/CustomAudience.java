@@ -18,6 +18,7 @@ package android.adservices.customaudience;
 
 import android.adservices.common.AdData;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -25,41 +26,37 @@ import android.os.Parcelable;
 import com.android.internal.util.Preconditions;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * Represents the information necessary for a custom audience to participate in ad selection.
- *
+ * <p>
  * A custom audience is an abstract grouping of users with similar demonstrated interests.  This
  * class is a collection of some data stored on a device that is necessary to serve advertisements
  * targeting a single custom audience.
- *
+ * <p>
  * Hiding for future implementation and review for public exposure.
+ *
  * @hide
  */
 public final class CustomAudience implements Parcelable {
-    // Default to 60-day expiry
-    private static final long DEFAULT_EXPIRY_SECONDS = 60 * 60 * 24 * 60;
-    private static final long MAX_FUTURE_ACTIVATION_TIME_SECONDS = 60 * 60 * 24 * 365;
-    private static final long MAX_FUTURE_EXPIRATION_TIME_SECONDS = 60 * 60 * 24 * 365;
 
-    @NonNull
+    @Nullable
     private final String mOwner;
     @NonNull
     private final String mBuyer;
     @NonNull
     private final String mName;
-    @NonNull
+    @Nullable
     private final Instant mActivationTime;
-    @NonNull
+    @Nullable
     private final Instant mExpirationTime;
     @NonNull
     private final Uri mDailyUpdateUrl;
-    @NonNull
+    @Nullable
     private final String mUserBiddingSignals;
-    @NonNull
+    @Nullable
     private final TrustedBiddingData mTrustedBiddingData;
     @NonNull
     private final Uri mBiddingLogicUrl;
@@ -81,19 +78,14 @@ public final class CustomAudience implements Parcelable {
         }
     };
 
-    private CustomAudience(@NonNull String owner, @NonNull String buyer, @NonNull  String name,
-            @NonNull Instant activationTime, @NonNull Instant expirationTime,
-            @NonNull Uri dailyUpdateUrl, @NonNull String userBiddingSignals,
-            @NonNull TrustedBiddingData trustedBiddingData, @NonNull Uri biddingLogicUrl,
+    private CustomAudience(@Nullable String owner, @NonNull String buyer, @NonNull String name,
+            @Nullable Instant activationTime, @Nullable Instant expirationTime,
+            @NonNull Uri dailyUpdateUrl, @Nullable String userBiddingSignals,
+            @Nullable TrustedBiddingData trustedBiddingData, @NonNull Uri biddingLogicUrl,
             @NonNull List<AdData> ads) {
-        Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
-        Objects.requireNonNull(activationTime);
-        Objects.requireNonNull(expirationTime);
         Objects.requireNonNull(dailyUpdateUrl);
-        Objects.requireNonNull(userBiddingSignals);
-        Objects.requireNonNull(trustedBiddingData);
         Objects.requireNonNull(biddingLogicUrl);
         Objects.requireNonNull(ads);
 
@@ -112,14 +104,15 @@ public final class CustomAudience implements Parcelable {
     private CustomAudience(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mOwner = in.readString();
+        mOwner = in.readBoolean() ? in.readString() : null;
         mBuyer = in.readString();
         mName = in.readString();
-        mActivationTime = Instant.ofEpochSecond(in.readLong());
-        mExpirationTime = Instant.ofEpochSecond(in.readLong());
+        mActivationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
+        mExpirationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
         mDailyUpdateUrl = Uri.CREATOR.createFromParcel(in);
-        mUserBiddingSignals = in.readString();
-        mTrustedBiddingData = TrustedBiddingData.CREATOR.createFromParcel(in);
+        mUserBiddingSignals = in.readBoolean() ? in.readString() : null;
+        mTrustedBiddingData = in.readBoolean()
+                ? TrustedBiddingData.CREATOR.createFromParcel(in) : null;
         mBiddingLogicUrl = Uri.CREATOR.createFromParcel(in);
         mAds = in.createTypedArrayList(AdData.CREATOR);
     }
@@ -128,16 +121,27 @@ public final class CustomAudience implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeString(mOwner);
+        writeNullable(dest, mOwner, () -> dest.writeString(mOwner));
         dest.writeString(mBuyer);
         dest.writeString(mName);
-        dest.writeLong(mActivationTime.getEpochSecond());
-        dest.writeLong(mExpirationTime.getEpochSecond());
+        writeNullable(dest, mActivationTime,
+                () -> dest.writeLong(mActivationTime.toEpochMilli()));
+        writeNullable(dest, mExpirationTime,
+                () -> dest.writeLong(mExpirationTime.toEpochMilli()));
         mDailyUpdateUrl.writeToParcel(dest, flags);
-        dest.writeString(mUserBiddingSignals);
-        mTrustedBiddingData.writeToParcel(dest, flags);
+        writeNullable(dest, mUserBiddingSignals, () -> dest.writeString(mUserBiddingSignals));
+        writeNullable(dest, mTrustedBiddingData,
+                () -> mTrustedBiddingData.writeToParcel(dest, flags));
         mBiddingLogicUrl.writeToParcel(dest, flags);
         dest.writeTypedList(mAds);
+    }
+
+    private static void writeNullable(Parcel parcel, Object o, Runnable howToWrite) {
+        boolean isFieldPresents = o != null;
+        parcel.writeBoolean(isFieldPresents);
+        if (isFieldPresents) {
+            howToWrite.run();
+        }
     }
 
     /** @hide */
@@ -147,39 +151,10 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
-     * See {@link #getExpirationTime()} for more information about expiration times.
-     *
-     * @return the default amount of time (in seconds) a {@link CustomAudience} object will live
-     * before being expiring and being removed
+     * Returns a String representing the custom audience's owner application or null to be the
+     * calling application.
      */
-    public static long getDefaultExpirationTimeSeconds() {
-        return DEFAULT_EXPIRY_SECONDS;
-    }
-
-    /**
-     * See {@link #getActivationTime()} for more information about activation times.
-     *
-     * @return the maximum permitted difference in seconds between the {@link CustomAudience}
-     * object's creation time and its activation time
-     */
-    public static long getMaxFutureActivationTimeSeconds() {
-        return MAX_FUTURE_ACTIVATION_TIME_SECONDS;
-    }
-
-    /**
-     * See {@link #getExpirationTime()} for more information about expiration times.
-     *
-     * @return the maximum permitted difference in seconds between the {@link CustomAudience}
-     * object's creation time and its expiration time
-     */
-    public static long getMaxFutureExpirationTimeSeconds() {
-        return MAX_FUTURE_EXPIRATION_TIME_SECONDS;
-    }
-
-    /**
-     * @return a String representing the custom audience's owner application
-     */
-    @NonNull
+    @Nullable
     public String getOwner() {
         return mOwner;
     }
@@ -212,12 +187,11 @@ public final class CustomAudience implements Parcelable {
      * audience's ads will participate in the ad selection process, potentially redirecting lapsed
      * users to the original owner application.
      *
-     * The maximum delay in activation is one year (365 days) from initial creation.
+     * <p>The maximum delay in activation is one year (365 days) from initial creation.
      *
-     * @return the custom audience's time, truncated to whole seconds, after which the custom
-     * audience is active; restricted to one year (365 days) from initial creation
+     * @return the timestamp, truncated to milliseconds, after which the custom audience is active;
      */
-    @NonNull
+    @Nullable
     public Instant getActivationTime() {
         return mActivationTime;
     }
@@ -227,14 +201,14 @@ public final class CustomAudience implements Parcelable {
      * ad/bidding data updates or participation in the ad selection process.  The custom audience
      * will then be deleted from memory by the next daily update.
      *
-     * If no expiration time is provided on creation of the {@link CustomAudience}, expiry will
-     * default to 60 days.  The maximum expiry is one year (365 days) from initial creation.
+     * <p>If no expiration time is provided on creation of the {@link CustomAudience}, expiry will
+     * default to 60 days from activation.
+     * <p>The maximum expiry is one year (365 days) from initial activation.
      *
-     * @return the custom audience's time, truncated to whole seconds, after which the custom
-     * audience should be removed; this is restricted to one year (365 days) from initial creation
-     * and defaults to 60 days
+     * @return the timestamp, truncated to milliseconds, after which the custom audience should
+     * be removed;
      */
-    @NonNull
+    @Nullable
     public Instant getExpirationTime() {
         return mExpirationTime;
     }
@@ -257,7 +231,7 @@ public final class CustomAudience implements Parcelable {
      *
      * @return a JSON String representing the opaque user bidding signals for the custom audience
      */
-    @NonNull
+    @Nullable
     public String getUserBiddingSignals() {
         return mUserBiddingSignals;
     }
@@ -270,13 +244,13 @@ public final class CustomAudience implements Parcelable {
      * @return a {@link TrustedBiddingData} object containing the custom audience's semi-opaque
      * trusted bidding data
      */
-    @NonNull
+    @Nullable
     public TrustedBiddingData getTrustedBiddingData() {
         return mTrustedBiddingData;
     }
 
     /**
-     * @return the target URL used to fetch bidding logic when a custom audience participates in the
+     * Returns the target URL used to fetch bidding logic when a custom audience participates in the
      * ad selection process
      */
     @NonNull
@@ -304,12 +278,13 @@ public final class CustomAudience implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof CustomAudience)) return false;
         CustomAudience that = (CustomAudience) o;
-        return mOwner.equals(that.mOwner) && mBuyer.equals(that.mBuyer) && mName.equals(that.mName)
-                && mActivationTime.equals(that.mActivationTime)
-                && mExpirationTime.equals(that.mExpirationTime)
+        return Objects.equals(mOwner, that.mOwner) && mBuyer.equals(that.mBuyer)
+                && mName.equals(that.mName)
+                && Objects.equals(mActivationTime, that.mActivationTime)
+                && Objects.equals(mExpirationTime, that.mExpirationTime)
                 && mDailyUpdateUrl.equals(that.mDailyUpdateUrl)
-                && mUserBiddingSignals.equals(that.mUserBiddingSignals)
-                && mTrustedBiddingData.equals(that.mTrustedBiddingData)
+                && Objects.equals(mUserBiddingSignals, that.mUserBiddingSignals)
+                && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUrl.equals(that.mBiddingLogicUrl)
                 && mAds.equals(that.mAds);
     }
@@ -325,35 +300,38 @@ public final class CustomAudience implements Parcelable {
 
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
-        @NonNull
+        @Nullable
         private String mOwner;
         @NonNull
         private String mBuyer;
         @NonNull
         private String mName;
-        @NonNull
+        @Nullable
         private Instant mActivationTime;
-        @NonNull
+        @Nullable
         private Instant mExpirationTime;
         @NonNull
         private Uri mDailyUpdateUrl;
-        @NonNull
+        @Nullable
         private String mUserBiddingSignals;
-        @NonNull
+        @Nullable
         private TrustedBiddingData mTrustedBiddingData;
         @NonNull
         private Uri mBiddingLogicUrl;
         @NonNull
         private List<AdData> mAds;
 
-        public Builder() { }
+        public Builder() {
+        }
 
         /**
          * Sets the owner application.
+         * <p>See {@link #getOwner()} for more information.
+         *
+         * @param owner application name or leave null to default to the calling app.
          */
         @NonNull
-        public CustomAudience.Builder setOwner(@NonNull String owner) {
-            Objects.requireNonNull(owner);
+        public CustomAudience.Builder setOwner(@Nullable String owner) {
             mOwner = owner;
             return this;
         }
@@ -361,7 +339,7 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the buyer domain URL.
          *
-         * See {@link #getBuyer()} for more information.
+         * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setBuyer(@NonNull String buyer) {
@@ -373,7 +351,7 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the {@link CustomAudience} object's name.
          *
-         * See {@link #getName()} for more information.
+         * <p>See {@link #getName()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setName(@NonNull String name) {
@@ -386,40 +364,22 @@ public final class CustomAudience implements Parcelable {
          * Sets the time, truncated to seconds, after which the {@link CustomAudience} will serve
          * ads.
          *
-         * See {@link #getActivationTime()} for more information.
-         *
-         * @throws IllegalArgumentException if the activation time is delayed by more than one year
-         * (365 days)
+         * <p>See {@link #getActivationTime()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setActivationTime(@NonNull Instant activationTime) {
-            Objects.requireNonNull(activationTime);
-            activationTime = activationTime.truncatedTo(ChronoUnit.SECONDS);
-            Preconditions.checkArgument(
-                    activationTime.isBefore(Instant.now().truncatedTo(ChronoUnit.SECONDS)
-                            .plusSeconds(getMaxFutureActivationTimeSeconds())),
-                    "Invalid activation time");
+        public CustomAudience.Builder setActivationTime(@Nullable Instant activationTime) {
             mActivationTime = activationTime;
             return this;
         }
 
         /**
-         * Sets the time, truncated to seconds, after which the {@link CustomAudience} should be
-         * removed.
+         * Sets the time, truncated to milliseconds, after which the {@link CustomAudience} should
+         * be removed.
          *
-         * See {@link #getExpirationTime()} for more information.
-         *
-         * @throws IllegalArgumentException if the expiration time is set before the current time or
-         * if expiration time is more than one year (365 days) in the future
+         * <p>See {@link #getExpirationTime()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setExpirationTime(@NonNull Instant expirationTime) {
-            Objects.requireNonNull(expirationTime);
-            expirationTime = expirationTime.truncatedTo(ChronoUnit.SECONDS);
-            Preconditions.checkArgument(expirationTime.isAfter(Instant.now())
-                            && expirationTime.isBefore(Instant.now().truncatedTo(ChronoUnit.SECONDS)
-                                    .plusSeconds(getMaxFutureExpirationTimeSeconds())),
-                    "Invalid expiration time");
+        public CustomAudience.Builder setExpirationTime(@Nullable Instant expirationTime) {
             mExpirationTime = expirationTime;
             return this;
         }
@@ -427,7 +387,7 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the daily update URL.
          *
-         * See {@link #getDailyUpdateUrl()} for more information.
+         * <p>See {@link #getDailyUpdateUrl()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setDailyUpdateUrl(@NonNull Uri dailyUpdateUrl) {
@@ -439,11 +399,10 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the user bidding signals used in the ad selection process.
          *
-         * See {@link #getUserBiddingSignals()} for more information.
+         * <p>See {@link #getUserBiddingSignals()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setUserBiddingSignals(@NonNull String userBiddingSignals) {
-            Objects.requireNonNull(userBiddingSignals);
+        public CustomAudience.Builder setUserBiddingSignals(@Nullable String userBiddingSignals) {
             mUserBiddingSignals = userBiddingSignals;
             return this;
         }
@@ -451,18 +410,18 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the trusted bidding data to be queried and used in the ad selection process.
          *
-         * See {@link #getTrustedBiddingData()} for more information.
+         * <p>See {@link #getTrustedBiddingData()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setTrustedBiddingData(
-                @NonNull TrustedBiddingData trustedBiddingData) {
-            Objects.requireNonNull(trustedBiddingData);
+                @Nullable TrustedBiddingData trustedBiddingData) {
             mTrustedBiddingData = trustedBiddingData;
             return this;
         }
 
         /**
          * Sets the URL to fetch bidding logic from for use in the ad selection process.
+         * <p>See {@link #getBiddingLogicUrl()} ()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
@@ -473,12 +432,11 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the initial remarketing ads served by the custom audience.
-         *
-         * See {@link #getAds()} for more information.
+         * Will be assigned with an empty list if not provided.
+         * <p>See {@link #getAds()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setAds(@NonNull List<AdData> ads) {
-            Objects.requireNonNull(ads);
+        public CustomAudience.Builder setAds(@Nullable List<AdData> ads) {
             mAds = ads;
             return this;
         }
@@ -486,30 +444,31 @@ public final class CustomAudience implements Parcelable {
         /**
          * Builds an instance of a {@link CustomAudience}.
          *
-         * @throws NullPointerException if any parameter is null
+         * @throws NullPointerException     if any non-null parameter is null
          * @throws IllegalArgumentException if the expiration time occurs before activation time
+         * @throws IllegalArgumentException if the expiration time is set before the current time
          */
         @NonNull
         public CustomAudience build() {
-            if (mOwner == null) {
-                // TODO(b/221861002): Implement default owner population
-                mOwner = "not.implemented.yet";
-            }
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
-            Objects.requireNonNull(mActivationTime);
-            if (mExpirationTime == null) {
-                mExpirationTime = Instant.now().plusSeconds(getDefaultExpirationTimeSeconds())
-                        .truncatedTo(ChronoUnit.SECONDS);
-            }
             Objects.requireNonNull(mDailyUpdateUrl);
-            Objects.requireNonNull(mUserBiddingSignals);
-            Objects.requireNonNull(mTrustedBiddingData);
             Objects.requireNonNull(mBiddingLogicUrl);
-            Objects.requireNonNull(mAds);
 
-            Preconditions.checkArgument(mActivationTime.isBefore(mExpirationTime),
-                    "Invalid expiration time");
+            if (mExpirationTime != null) {
+                Preconditions.checkArgument(mExpirationTime.isAfter(Instant.now()),
+                        "Expiration time must be in the future.");
+            }
+
+            if (mActivationTime != null && mExpirationTime != null) {
+                Preconditions.checkArgument(mExpirationTime.isAfter(mActivationTime),
+                        "Expiration time must be before activation time.");
+            }
+
+            // To pass the API lint, we should not allow null Collection.
+            if (mAds == null) {
+                mAds = List.of();
+            }
 
             return new CustomAudience(mOwner, mBuyer, mName, mActivationTime, mExpirationTime,
                     mDailyUpdateUrl, mUserBiddingSignals, mTrustedBiddingData, mBiddingLogicUrl,

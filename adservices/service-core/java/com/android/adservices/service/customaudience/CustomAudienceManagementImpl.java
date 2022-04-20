@@ -27,8 +27,6 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
-import org.json.JSONException;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
@@ -77,11 +75,13 @@ public class CustomAudienceManagementImpl {
      *
      * @param customAudience instance staged to be inserted.
      */
-    public void joinCustomAudience(@NonNull CustomAudience customAudience) throws JSONException {
+    public void joinCustomAudience(@NonNull CustomAudience customAudience) {
+        Objects.requireNonNull(customAudience);
         Instant currentTime = mClock.instant();
 
         DBCustomAudience dbCustomAudience =
-                DBCustomAudience.fromServiceObject(customAudience, currentTime);
+                DBCustomAudience.fromServiceObject(customAudience, "not.implemented.yet",
+                        currentTime);
 
         mCustomAudienceDao.insertOrOverrideCustomAudience(dbCustomAudience);
     }
