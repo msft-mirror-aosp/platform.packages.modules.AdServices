@@ -17,7 +17,6 @@ package com.android.adservices.service.measurement.registration;
 
 import android.annotation.NonNull;
 import android.net.Uri;
-import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 
@@ -44,33 +43,20 @@ class ResponseBasedFetcher {
      * Returns true if all steps succeed.
      * Returns false if there are any failures.
      */
-    static boolean parseRedirects(
+    static void parseRedirects(
             boolean initialFetch,
             @NonNull Map<String, List<String>> headers,
-            @NonNull List<Pair<Uri, Boolean>> redirectsOut) {
-        boolean success = true;
-        List<String> field;
-        field = headers.get("Location");
-        if (field != null) {
-            if (field.size() == 1) {
-                redirectsOut.add(new Pair(Uri.parse(field.get(0)), Boolean.TRUE));
-            } else {
-                LogUtil.d("Expected one Location redirect only, others ignored!");
-                success = false;
-            }
-        }
-        field = headers.get("Attribution-Reporting-Redirect");
+            @NonNull List<Uri> redirectsOut) {
+        List<String> field = headers.get("Attribution-Reporting-Redirect");
         if (field != null) {
             if (initialFetch) {
-                for (String item : field) {
-                    redirectsOut.add(new Pair(Uri.parse(item), Boolean.FALSE));
+                for (int i = 0; i < Math.min(field.size(), REDIRECT_LIMIT); i++) {
+                    redirectsOut.add(Uri.parse(field.get(i)));
                 }
             } else {
                 LogUtil.d("Unexpected use of Attribution-Reporting-Redirect");
-                success = false;
             }
         }
-        return success;
     }
 
     /**
