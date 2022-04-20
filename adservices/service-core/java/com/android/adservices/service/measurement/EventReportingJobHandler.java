@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -26,6 +27,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -47,14 +49,38 @@ public class EventReportingJobHandler {
     }
 
     /**
+     * Finds all reports within the given window that have a status
+     * {@link EventReport.Status.PENDING} and attempts to upload them individually.
+     * @param windowStartTime Start time of the search window
+     * @param windowEndTime End time of the search window
+     * @return always return true to signal to JobScheduler that the task is done.
+     */
+    synchronized boolean performScheduledPendingReportsInWindow(long windowStartTime,
+            long windowEndTime) {
+        Optional<List<String>> pendingEventReportsInWindowOpt = mDatastoreManager
+                .runInTransactionWithResult((dao) ->
+                        dao.getPendingEventReportIdsInWindow(windowStartTime, windowEndTime));
+        if (!pendingEventReportsInWindowOpt.isPresent()) {
+            // Failure during event report retrieval
+            return true;
+        }
+
+        List<String> pendingEventReportIdsInWindow = pendingEventReportsInWindowOpt.get();
+        for (String eventReportId : pendingEventReportIdsInWindow) {
+            // TODO: Use result to track rate of success vs retry vs failure
+            PerformReportResult result = performReport(eventReportId);
+        }
+        return true;
+    }
+
+    /**
      * Perform reporting by finding the relevant {@link EventReport} and making an HTTP POST
      * request to the specified report to URL with the report data as a JSON in the body.
      *
      * @param eventReportId for the datastore id of the {@link EventReport}
      * @return success
      */
-    synchronized PerformReportResult performReport(String eventReportId)
-            throws JSONException, IOException {
+    synchronized PerformReportResult performReport(String eventReportId) {
         Optional<EventReport> eventReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
@@ -65,17 +91,22 @@ public class EventReportingJobHandler {
         if (eventReport.getStatus() != EventReport.Status.PENDING) {
             return PerformReportResult.ALREADY_DELIVERED;
         }
+        try {
+            JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
+            int returnCode = makeHttpPostRequest(eventReport.getReportTo(), eventReportJsonPayload);
 
-        JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-        int returnCode = makeHttpPostRequest(eventReport.getReportTo(), eventReportJsonPayload);
+            if (returnCode >= HttpURLConnection.HTTP_OK
+                    && returnCode <= 299) {
+                boolean success = mDatastoreManager.runInTransaction((dao) ->
+                        dao.markEventReportDelivered(eventReportId));
 
-        if (returnCode >= HttpURLConnection.HTTP_OK
-                && returnCode <= 299) {
-            boolean success = mDatastoreManager.runInTransaction((dao) ->
-                    dao.markEventReportDelivered(eventReportId));
-            return success ? PerformReportResult.SUCCESS : PerformReportResult.DATASTORE_ERROR;
-        } else {
-            // TODO: Determine behavior for other response codes?
+                return success ? PerformReportResult.SUCCESS : PerformReportResult.DATASTORE_ERROR;
+            } else {
+                // TODO: Determine behavior for other response codes?
+                return PerformReportResult.POST_REQUEST_ERROR;
+            }
+        } catch (Exception e) {
+            LogUtil.e(e, e.toString());
             return PerformReportResult.POST_REQUEST_ERROR;
         }
     }
