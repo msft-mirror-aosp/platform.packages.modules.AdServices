@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Room based database for Ad Selection. */
+// TODO (b/229660121): Ad unit tests for this class
 @Database(
         exportSchema = false,
         entities = {DBAdSelection.class, DBBuyerDecisionLogic.class},

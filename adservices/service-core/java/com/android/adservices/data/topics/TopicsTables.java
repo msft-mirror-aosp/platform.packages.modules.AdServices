@@ -103,6 +103,7 @@ public final class TopicsTables {
     // In case there is not enough usage to generate top 5 topics, random ones will be generated.
     interface TopTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "top_topics";
+        String ID = "_id";
         String EPOCH_ID = "epoch_id";
         String TOPIC1 = "topic1";
         String TOPIC2 = "topic2";
@@ -117,7 +118,8 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + TopTopicsContract.TABLE
                     + "("
-                    + TopTopicsContract.EPOCH_ID + " INTEGER PRIMARY KEY, "
+                    + TopTopicsContract.ID + " INTEGER PRIMARY KEY, "
+                    + TopTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
                     + TopTopicsContract.TOPIC1 + " TEXT NOT NULL, "
                     + TopTopicsContract.TOPIC2 + " TEXT NOT NULL, "
                     + TopTopicsContract.TOPIC3 + " TEXT NOT NULL, "

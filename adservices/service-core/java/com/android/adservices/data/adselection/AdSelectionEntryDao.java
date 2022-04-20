@@ -27,16 +27,17 @@ import java.util.List;
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
  *
- * <p>Annotation will generate Room based SQLite Dao implementation.
- * TODO(b/228114258) Add unit tests
+ * <p>Annotation will generate Room based SQLite Dao implementation. TODO(b/228114258) Add unit
+ * tests
  */
+// TODO (b/229660121): Ad unit tests for this class
 @Dao
 public interface AdSelectionEntryDao {
     /**
      * Add a new successful ad selection entry into the table ad_selection.
      *
      * @param adSelection is the AdSelection to add to the table ad_selection if the ad_selection_id
-     *                    not exists.
+     *     not exists.
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     void persistAdSelection(DBAdSelection adSelection);
@@ -45,10 +46,21 @@ public interface AdSelectionEntryDao {
      * Add a buyer decision logic entry into the table buyer_decision_logic.
      *
      * @param buyerDecisionLogic is the BuyerDecisionLogic to add to table buyer_decision_logic if
-     *                           not exists.
+     *     not exists.
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
+
+    /**
+     * Checks if there is a row in the ad selection data with the unique key ad_selection_id
+     *
+     * @param adSelectionId which is the key to query the corresponding ad selection data.
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId LIMIT"
+                    + " 1)")
+    boolean doesAdSelectionIdExist(long adSelectionId);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -57,19 +69,23 @@ public interface AdSelectionEntryDao {
      * @return an {@link DBAdSelectionEntry} if exists.
      */
     @Query(
-            "SELECT "
-                    + "ad_selection.ad_selection_id as ad_selection_id, "
-                    + "ad_selection.custom_audience_signals as custom_audience_signals,"
-                    + "ad_selection.contextual_signals as contextual_signals,"
-                    + "ad_selection.winning_ad_render_url as winning_ad_render_url,"
-                    + "ad_selection.winning_ad_bid as winning_ad_bid,"
-                    + "ad_selection.creation_timestamp as creation_timestamp,"
-                    + "buyer_decision_logic.buyer_decision_logic_js as buyer_decision_logic_js "
-                    + "FROM ad_selection "
-                    + "LEFT JOIN "
-                    + "buyer_decision_logic "
-                    + "ON ad_selection.bidding_logic_url = buyer_decision_logic.bidding_logic_url "
-                    + "WHERE ad_selection.ad_selection_id = :adSelectionId")
+            "SELECT ad_selection.ad_selection_id as ad_selection_id,"
+                + " ad_selection.custom_audience_signals_owner as custom_audience_signals_owner,"
+                + " ad_selection.custom_audience_signals_buyer as custom_audience_signals_buyer,"
+                + " ad_selection.custom_audience_signals_name as custom_audience_signals_name,"
+                + " ad_selection.custom_audience_signals_activation_time as"
+                + " custom_audience_signals_activation_time,"
+                + " ad_selection.custom_audience_signals_expiration_time as"
+                + " custom_audience_signals_expiration_time,"
+                + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
+                + " as contextual_signals,ad_selection.winning_ad_render_url as"
+                + " winning_ad_render_url,ad_selection.winning_ad_bid as"
+                + " winning_ad_bid,ad_selection.creation_timestamp as"
+                + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
+                + " buyer_decision_logic_js FROM ad_selection LEFT JOIN buyer_decision_logic ON"
+                + " ad_selection.bidding_logic_url = buyer_decision_logic.bidding_logic_url WHERE"
+                + " ad_selection.ad_selection_id = :adSelectionId")
     DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
@@ -79,16 +95,24 @@ public interface AdSelectionEntryDao {
      * @return ad selection entries if exists.
      */
     @Query(
-            "SELECT ad_selection.ad_selection_id AS ad_selection_id,"
-                    + "ad_selection.custom_audience_signals AS custom_audience_signals,"
-                    + "ad_selection.contextual_signals AS contextual_signals,"
-                    + "ad_selection.winning_ad_render_url AS winning_ad_render_url,"
-                    + "ad_selection.winning_ad_bid AS winning_ad_bid, "
-                    + "ad_selection.creation_timestamp as creation_timestamp, "
-                    + "buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js "
-                    + "FROM ad_selection LEFT JOIN buyer_decision_logic "
-                    + "ON ad_selection.bidding_logic_url = buyer_decision_logic.bidding_logic_url "
-                    + "WHERE ad_selection.ad_selection_id IN (:adSelectionIds) ")
+            "SELECT ad_selection.ad_selection_id AS"
+                + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
+                + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer as"
+                + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
+                + " custom_audience_signals_name,"
+                + " ad_selection.custom_audience_signals_activation_time as"
+                + " custom_audience_signals_activation_time,"
+                + " ad_selection.custom_audience_signals_expiration_time as"
+                + " custom_audience_signals_expiration_time,"
+                + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
+                + " AS contextual_signals,ad_selection.winning_ad_render_url AS"
+                + " winning_ad_render_url,ad_selection.winning_ad_bid AS winning_ad_bid,"
+                + " ad_selection.creation_timestamp as creation_timestamp,"
+                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js FROM"
+                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_url ="
+                + " buyer_decision_logic.bidding_logic_url WHERE ad_selection.ad_selection_id IN"
+                + " (:adSelectionIds) ")
     List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
@@ -105,7 +129,7 @@ public interface AdSelectionEntryDao {
      * Clean up selected ad selection data entry data in batch by their ad_selection_ids.
      *
      * @param adSelectionIds is the list of adSelectionIds to identify the data entries to be
-     *                       removed from ad_selection and buyer_decision_logic tables.
+     *     removed from ad_selection and buyer_decision_logic tables.
      */
     @Query("DELETE FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
     void removeAdSelectionEntriesByIds(List<Long> adSelectionIds);

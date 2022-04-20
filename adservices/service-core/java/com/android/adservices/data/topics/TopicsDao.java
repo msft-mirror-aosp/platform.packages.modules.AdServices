@@ -189,6 +189,7 @@ public class TopicsDao {
         if (db == null) {
             return;
         }
+
         ContentValues values = new ContentValues();
         values.put(TopicsTables.TopTopicsContract.EPOCH_ID, epochId);
         values.put(TopicsTables.TopTopicsContract.TOPIC1, topTopics.get(0));

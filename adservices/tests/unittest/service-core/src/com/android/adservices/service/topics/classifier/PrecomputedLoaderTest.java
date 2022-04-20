@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +71,12 @@ public class PrecomputedLoaderTest {
         assertThat(appTopic.get("com.android.chrome")).isEqualTo(chromeTopics);
 
         List<String> sampleAppTopics =
-                Arrays.asList("/Internet & Telecom/Text & Instant Messaging");
+                Arrays.asList(
+                        "/Internet & Telecom/Text & Instant Messaging",
+                        "/Internet & Telecom/Web Apps & Online Tools",
+                        "/Business & Industrial/Defense Industry",
+                        "/News",
+                        "/People & Society");
         assertThat(appTopic.get("com.example.adservices.samples.topics.sampleapp"))
                 .isEqualTo(sampleAppTopics);
 
@@ -78,8 +84,17 @@ public class PrecomputedLoaderTest {
                 Arrays.asList(
                         "/Online Communities/Social Networks",
                         "/Computers & Electronics/Software/Photo Software",
-                        "/Reference/Foreign Language Study");
+                        "/Reference/Foreign Language Study",
+                        "/Autos & Vehicles/Classic Vehicles",
+                        "/Computers & Electronics/Antivirus & Malware");
         assertThat(appTopic.get("com.example.adservices.samples.topics.sampleapp4"))
                 .isEqualTo(sampleApp4Topics);
+
+        // Check if all sample apps have 5 unique topics
+        for (int appIndex = 1; appIndex <= 10; appIndex++) {
+            assertThat(new HashSet<>(appTopic.get(
+                    "com.example.adservices.samples.topics.sampleapp" + appIndex)).size())
+                    .isEqualTo(5);
+        }
     }
 }
