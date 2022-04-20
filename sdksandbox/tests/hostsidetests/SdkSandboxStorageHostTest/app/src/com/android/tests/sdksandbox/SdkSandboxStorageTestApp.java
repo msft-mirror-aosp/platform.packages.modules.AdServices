@@ -81,6 +81,14 @@ public class SdkSandboxStorageTestApp {
     }
 
     @Test
+    public void testSdkDataPackageDirectory_CreateMissingSdkDirs() throws Exception {
+        // First load code
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
