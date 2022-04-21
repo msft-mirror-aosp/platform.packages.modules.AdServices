@@ -32,7 +32,7 @@ import java.util.Objects;
  * @hide
  */
 public final class ReportImpressionRequest implements Parcelable {
-    private static final long UNSET = -1;
+    private static final long UNSET = 0;
 
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;

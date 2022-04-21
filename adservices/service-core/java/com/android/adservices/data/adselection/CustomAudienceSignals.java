@@ -101,7 +101,7 @@ public class CustomAudienceSignals {
 
     /**
      * @return the custom audience's time, truncated to whole seconds, after which the custom
-     * audience is active.
+     *     audience is active.
      */
     @NonNull
     public Instant getActivationTime() {
@@ -110,7 +110,7 @@ public class CustomAudienceSignals {
 
     /**
      * @return the custom audience's time, truncated to whole seconds, after which the custom
-     * audience should be removed.
+     *     audience should be removed.
      */
     @NonNull
     public Instant getExpirationTime() {
@@ -144,33 +144,25 @@ public class CustomAudienceSignals {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(mOwner, mBuyer, mName, mActivationTime, mExpirationTime,
-                mUserBiddingSignals);
+        return Objects.hash(
+                mOwner, mBuyer, mName, mActivationTime, mExpirationTime, mUserBiddingSignals);
     }
 
-    /**
-     * Builder for @link CustomAudienceSignals} object.
-     */
+    /** Builder for @link CustomAudienceSignals} object. */
     public static final class Builder {
-        @NonNull
-        private String mOwner;
-        @NonNull
-        private String mBuyer;
-        @NonNull
-        private String mName;
-        @NonNull
-        private Instant mActivationTime;
-        @NonNull
-        private Instant mExpirationTime;
-        @NonNull
-        private String mUserBiddingSignals;
+        @NonNull private String mOwner;
+        @NonNull private String mBuyer;
+        @NonNull private String mName;
+        @NonNull private Instant mActivationTime;
+        @NonNull private Instant mExpirationTime;
+        @NonNull private String mUserBiddingSignals;
 
         public Builder() {}
 
         /**
          * Sets the owner application.
          *
-         * See {@link #getOwner()} for more information.
+         * <p>See {@link #getOwner()} for more information.
          */
         @NonNull
         public CustomAudienceSignals.Builder setOwner(@NonNull String owner) {
@@ -182,7 +174,7 @@ public class CustomAudienceSignals {
         /**
          * Sets the buyer domain URL.
          *
-         * See {@link #getBuyer()} for more information.
+         * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
         public CustomAudienceSignals.Builder setBuyer(String buyer) {
@@ -194,7 +186,7 @@ public class CustomAudienceSignals {
         /**
          * Sets the {@link CustomAudience} name.
          *
-         * See {@link #getName()} for more information.
+         * <p>See {@link #getName()} for more information.
          */
         @NonNull
         public CustomAudienceSignals.Builder setName(String name) {
@@ -206,7 +198,7 @@ public class CustomAudienceSignals {
         /**
          * Sets the {@link CustomAudience} activation time.
          *
-         * See {@link #getActivationTime()} for more information.
+         * <p>See {@link #getActivationTime()} for more information.
          */
         @NonNull
         public CustomAudienceSignals.Builder setActivationTime(Instant activationTime) {
@@ -218,7 +210,7 @@ public class CustomAudienceSignals {
         /**
          * Sets the {@link CustomAudience} expiration time.
          *
-         * See {@link #getExpirationTime()} for more information.
+         * <p>See {@link #getExpirationTime()} for more information.
          */
         @NonNull
         public CustomAudienceSignals.Builder setExpirationTime(Instant expirationTime) {
@@ -230,7 +222,7 @@ public class CustomAudienceSignals {
         /**
          * Sets the user bidding signals used in the ad selection.
          *
-         * See {@link #getUserBiddingSignals()} for more information.
+         * <p>See {@link #getUserBiddingSignals()} for more information.
          */
         @NonNull
         public CustomAudienceSignals.Builder setUserBiddingSignals(String userBiddingSignals) {
@@ -253,8 +245,8 @@ public class CustomAudienceSignals {
             Objects.requireNonNull(mExpirationTime);
             Objects.requireNonNull(mUserBiddingSignals);
 
-            return new CustomAudienceSignals(mOwner, mBuyer, mName, mActivationTime,
-                    mExpirationTime, mUserBiddingSignals);
+            return new CustomAudienceSignals(
+                    mOwner, mBuyer, mName, mActivationTime, mExpirationTime, mUserBiddingSignals);
         }
     }
 }

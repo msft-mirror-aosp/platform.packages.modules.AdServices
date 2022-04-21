@@ -44,13 +44,13 @@ public final class DBBuyerDecisionLogic {
     private final String mBuyerDecisionLogicJs;
 
     /**
-     * @param biddingLogicUrl      An {@link Uri} object defining the URL to fetch the
-     *                             buyer-provided bidding and reporting javascript.
+     * @param biddingLogicUrl An {@link Uri} object defining the URL to fetch the buyer-provided
+     *     bidding and reporting javascript.
      * @param buyerDecisionLogicJs A {@link String} object contains both the generateBid() and
-     *                             reportResult() javascript fetched from the biddingLogicUrl.
+     *     reportResult() javascript fetched from the biddingLogicUrl.
      */
-    public DBBuyerDecisionLogic(@NonNull Uri biddingLogicUrl,
-            @NonNull String buyerDecisionLogicJs) {
+    public DBBuyerDecisionLogic(
+            @NonNull Uri biddingLogicUrl, @NonNull String buyerDecisionLogicJs) {
         Objects.requireNonNull(biddingLogicUrl);
         Objects.requireNonNull(buyerDecisionLogicJs);
 
@@ -68,7 +68,7 @@ public final class DBBuyerDecisionLogic {
 
     /**
      * @return the string contains the buyer-side provided generateBit() and reportResult()
-     * javascript.
+     *     javascript.
      */
     @NonNull
     public String getBuyerDecisionLogicJs() {
@@ -87,5 +87,46 @@ public final class DBBuyerDecisionLogic {
     @Override
     public int hashCode() {
         return Objects.hash(mBiddingLogicUrl, mBuyerDecisionLogicJs);
+    }
+
+    /** Builder for {@link DBBuyerDecisionLogic} object. */
+    public static final class Builder {
+        @NonNull private Uri mBiddingLogicUrl;
+
+        @NonNull private String mBuyerDecisionLogicJs;
+
+        public Builder() {}
+
+        /** Sets the Bidding Logic Url. */
+        @NonNull
+        public DBBuyerDecisionLogic.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
+            Objects.requireNonNull(biddingLogicUrl);
+
+            this.mBiddingLogicUrl = biddingLogicUrl;
+            return this;
+        }
+
+        /** Sets the Buyer Decision Logic JS. */
+        @NonNull
+        public DBBuyerDecisionLogic.Builder setBuyerDecisionLogicJs(
+                @NonNull String buyerDecisionLogicJs) {
+            Objects.requireNonNull(buyerDecisionLogicJs);
+
+            this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
+            return this;
+        }
+
+        /**
+         * Builds an {@link DBBuyerDecisionLogic} instance.
+         *
+         * @throws NullPointerException if any non-null params are null.
+         */
+        @NonNull
+        public DBBuyerDecisionLogic build() {
+            Objects.requireNonNull(mBiddingLogicUrl);
+            Objects.requireNonNull(mBuyerDecisionLogicJs);
+
+            return new DBBuyerDecisionLogic(mBiddingLogicUrl, mBuyerDecisionLogicJs);
+        }
     }
 }

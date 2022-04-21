@@ -32,7 +32,7 @@ import java.util.Objects;
  * @hide
  */
 public final class AdSelectionResponse implements Parcelable {
-    private static final int UNSET = -1;
+    private static final int UNSET = 0;
 
     private final int mAdSelectionId;
     @NonNull private final Uri mRenderUrl;
