@@ -15,18 +15,23 @@
  */
 package com.example.adservices.samples.topics.sampleapp;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import android.adservices.topics.GetTopicsResponse;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -39,8 +44,8 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final String SPACE = " ";
     private static final String NEWLINE = "\n";
+    private static final String TAG = "SampleApp";
     private static List<String> mSdkNameList = new ArrayList<>(
         Arrays.asList("SdkName1", "SdkName2", "SdkName3"));
     private Button mTopicsClientButton;
@@ -53,29 +58,41 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mTopicsClientButton = findViewById(R.id.topics_client_button);
         mResultTextView = findViewById(R.id.textView);
-
         registerGetTopicsButton();
     }
 
     private void registerGetTopicsButton() {
         mTopicsClientButton.setOnClickListener(v -> {
-            String text = "";
-            try {
-                for (String sdkName : mSdkNameList) {
-                    mAdvertisingTopicsClient = new AdvertisingTopicsClient.Builder()
-                        .setContext(this)
-                        .setSdkName(sdkName)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-                    // TODO(b/225902793): This will cause ANRs if the getTopics().get()
-                    //  take more than 5 seconds.
-                    GetTopicsResponse result = mAdvertisingTopicsClient.getTopics().get();
-                    String topics = getTopics(result.getTopics());
-                    text += sdkName + "'s topics: " + NEWLINE + topics + NEWLINE;
-                }
-                mResultTextView.setText(text);
-            } catch (ExecutionException | InterruptedException e) {
-                makeToast(e.getMessage());
+            mResultTextView.setText("");
+            for (String sdkName : mSdkNameList) {
+                mAdvertisingTopicsClient = new AdvertisingTopicsClient.Builder()
+                    .setContext(this)
+                    .setSdkName(sdkName)
+                    .setExecutor(CALLBACK_EXECUTOR)
+                    .build();
+                ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
+                        mAdvertisingTopicsClient.getTopics();
+
+                Futures.addCallback(
+                        getTopicsResponseFuture,
+                        new FutureCallback<GetTopicsResponse>() {
+                            @Override
+                            public void onSuccess(GetTopicsResponse result) {
+                                Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
+                                String topics = getTopics(result.getTopics());
+                                mResultTextView.append(sdkName + "'s topics: "
+                                        + NEWLINE + topics + NEWLINE);
+                                Log.d(TAG, sdkName + "'s topics: " + NEWLINE + topics + NEWLINE);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                Log.e(TAG, "Failed to getTopics for sdk " + sdkName);
+                                mResultTextView.append("Failed to getTopics for sdk "
+                                        + sdkName + NEWLINE);
+                            }
+                        },
+                        directExecutor());
             }
         });
     }
@@ -87,9 +104,5 @@ public class MainActivity extends AppCompatActivity {
             sb.append(index++).append(". ").append(topic).append(NEWLINE);
         }
         return sb.toString();
-    }
-
-    private void makeToast(String message) {
-        runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
     }
 }
