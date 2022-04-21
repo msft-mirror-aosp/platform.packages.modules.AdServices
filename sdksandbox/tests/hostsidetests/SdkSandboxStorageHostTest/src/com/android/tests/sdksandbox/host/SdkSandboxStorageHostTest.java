@@ -39,7 +39,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -422,6 +425,82 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirEmpty()
+            throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        final String cePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        final List<String> ceSdkDirsBeforeLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/true);
+        final List<String> deSdkDirsBeforeLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/true);
+        // Delete the sdk sub directories
+        for (String child : ceSdkDirsBeforeLoadingSdksList) {
+            getDevice().deleteFile(cePackagePath + "/" + child);
+        }
+        for (String child : deSdkDirsBeforeLoadingSdksList) {
+            getDevice().deleteFile(dePackagePath + "/" + child);
+        }
+        assertThat(getDevice().getChildren(cePackagePath)).asList().isEmpty();
+        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+
+        final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/false);
+        final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/false);
+        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_PACKAGE);
+        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_PACKAGE);
+    }
+
+    @Test
+    public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirMissing()
+            throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        final String cePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        // Delete the package paths
+        getDevice().deleteFile(cePackagePath);
+        getDevice().deleteFile(dePackagePath);
+        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+
+        final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/false);
+        final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/false);
+        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_PACKAGE);
+        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_PACKAGE);
+    }
+
+    @Test
+    public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirIsNotEmpty()
+            throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        final String cePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        final List<String> ceSdkDirsBeforeLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/true);
+        final List<String> deSdkDirsBeforeLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/true);
+        // Delete the sdk sub directories
+        getDevice().deleteFile(cePackagePath + "/" + ceSdkDirsBeforeLoadingSdksList.get(0));
+        getDevice().deleteFile(dePackagePath + "/" + deSdkDirsBeforeLoadingSdksList.get(0));
+        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+
+        final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/false);
+        final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/false);
+        assertThat(ceSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_PACKAGE);
+        assertThat(deSdkDirsAfterLoadingSdksList).containsExactly("shared", SDK_PACKAGE);
+    }
+
+    @Test
     public void testSdkDataPackageDirectory_OnUpdateDoesNotConsumeSdk() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
@@ -579,6 +658,23 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                     throw new IllegalStateException("Found two per-sdk directory for " + sdkName);
                 }
             }
+        }
+        return result;
+    }
+
+    private List<String> getSubDirs(String path, boolean includeRandomSuffix)
+            throws Exception {
+        final String[] children = getDevice().getChildren(path);
+        if (children == null) {
+            return Collections.emptyList();
+        }
+        if (includeRandomSuffix) {
+            return new ArrayList<>(Arrays.asList(children));
+        }
+        final List<String> result = new ArrayList();
+        for (int i = 0; i < children.length; i++) {
+            final String[] tokens = children[i].split("@");
+            result.add(tokens[0]);
         }
         return result;
     }

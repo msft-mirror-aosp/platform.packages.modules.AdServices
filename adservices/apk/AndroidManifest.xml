@@ -63,7 +63,11 @@
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
     <application
         android:label="Android AdServices"
-        android:forceQueryable="true">
+        android:forceQueryable="true"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true">
         <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name="com.android.adservices.adselection.AdSelectionService"
                  android:exported="true"
@@ -114,5 +118,15 @@
         <service android:name="com.android.adservices.service.topics.EpochJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <!-- Activity for Adservices Settings UI -->
+        <activity
+            android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.adservices.ui.SETTINGS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
