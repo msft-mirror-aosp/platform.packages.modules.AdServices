@@ -18,7 +18,6 @@ package com.android.adservices.data.measurement;
 
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_WINDOW_MS;
 
-import android.annotation.Nullable;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -27,6 +26,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.AdtechUrl;
@@ -63,7 +63,8 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri reportTo,
             @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority) throws DatastoreException {
+            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues) throws DatastoreException {
         validateNonNull(attributionDestination, reportTo, registrant, triggerTime, triggerData,
                 priority);
         validateUri(attributionDestination, reportTo, registrant);
@@ -79,6 +80,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
         values.put(MeasurementTables.TriggerContract.REPORT_TO, reportTo.toString());
         values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES, aggregateValues);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -145,8 +148,9 @@ class MeasurementDao implements IMeasurementDao {
     public void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
             @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType,
-            @Source.AttributionMode int attributionMode) throws DatastoreException {
+            @NonNull Source.SourceType sourceType, @Source.AttributionMode int attributionMode,
+            @Nullable String aggregateSource, @Nullable String aggregateFilterData)
+            throws DatastoreException {
         validateNonNull(sourceEventId, attributionSource, attributionDestination, reportTo,
                 registrant, sourceEventTime, expiryTime, priority, sourceType);
         validateUri(attributionSource, attributionDestination, reportTo, registrant);
@@ -166,6 +170,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, sourceType.name());
         values.put(MeasurementTables.SourceContract.REGISTRANT, registrant.toString());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);

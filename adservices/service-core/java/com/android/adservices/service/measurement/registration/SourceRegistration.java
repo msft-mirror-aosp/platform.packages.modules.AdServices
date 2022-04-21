@@ -31,6 +31,8 @@ public final class SourceRegistration {
     private final long mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
+    private final String mAggregateSource;
+    private final String mAggregateFilterData;
 
     /**
      * Create a new source registration.
@@ -41,13 +43,17 @@ public final class SourceRegistration {
             @NonNull Uri destination,
             long sourceEventId,
             long expiry,
-            long sourcePriority) {
+            long sourcePriority,
+            String aggregateSource,
+            String aggregateFilterData) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mDestination = destination;
         mSourceEventId = sourceEventId;
         mExpiry = expiry;
         mSourcePriority = sourcePriority;
+        mAggregateSource = aggregateSource;
+        mAggregateFilterData = aggregateFilterData;
     }
 
     /**
@@ -93,6 +99,20 @@ public final class SourceRegistration {
     }
 
     /**
+     * Aggregate source used to generate aggregate report.
+     */
+    public String getAggregateSource() {
+        return mAggregateSource;
+    }
+
+    /**
+     * Aggregate filter data used to generate aggregate report.
+     */
+    public String getAggregateFilterData() {
+        return mAggregateFilterData;
+    }
+
+    /**
      * A builder for {@link SourceRegistration}.
      */
     public static final class Builder {
@@ -102,6 +122,8 @@ public final class SourceRegistration {
         private long mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
+        private String mAggregateSource;
+        private String mAggregateFilterData;
 
         public Builder() {
             mTopOrigin = Uri.EMPTY;
@@ -159,13 +181,29 @@ public final class SourceRegistration {
         }
 
         /**
+         * See {@link SourceRegistration#getAggregateSource()}.
+         */
+        public Builder setAggregateSource(String aggregateSource) {
+            mAggregateSource = aggregateSource;
+            return this;
+        }
+
+        /**
+         * See {@link SourceRegistration#getAggregateFilterData()}.
+         */
+        public Builder setAggregateFilterData(String aggregateFilterData) {
+            mAggregateFilterData = aggregateFilterData;
+            return this;
+        }
+
+        /**
          * Build the SourceRegistration.
          */
         public @NonNull SourceRegistration build() {
             if (mTopOrigin == null
                     || mReportingOrigin == null
                     || mDestination == null) {
-                throw new IllegalArgumentException("uinitialized fields");
+                throw new IllegalArgumentException("uninitialized fields");
             }
             return new SourceRegistration(
                     mTopOrigin,
@@ -173,7 +211,9 @@ public final class SourceRegistration {
                     mDestination,
                     mSourceEventId,
                     mExpiry,
-                    mSourcePriority);
+                    mSourcePriority,
+                    mAggregateSource,
+                    mAggregateFilterData);
         }
     }
 }

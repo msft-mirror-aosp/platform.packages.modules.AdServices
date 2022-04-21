@@ -183,6 +183,8 @@ public final class MeasurementImpl {
                     // Setting as TRUTHFULLY as default value for tests.
                     // This will be overwritten by getSourceEventReports.
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                    .setAggregateSource(registration.getAggregateSource())
+                    .setAggregateFilterData(registration.getAggregateFilterData())
                     .build();
             List<EventReport> eventReports = getSourceEventReports(source);
             mDatastoreManager.runInTransaction((dao) -> {
@@ -196,7 +198,9 @@ public final class MeasurementImpl {
                         /* expiryTime */ source.getExpiryTime(),
                         /* priority */ source.getPriority(),
                         /* sourceType */ source.getSourceType(),
-                        /* attributionMode */ source.getAttributionMode());
+                        /* attributionMode */ source.getAttributionMode(),
+                        /* aggregateSource */ source.getAggregateSource(),
+                        /* aggregateFilterData */ source.getAggregateFilterData());
                 for (EventReport report : eventReports) {
                     dao.insertEventReport(report);
                 }
@@ -241,7 +245,9 @@ public final class MeasurementImpl {
                             /* triggerTime */ triggerTime,
                             /* triggerData */ registration.getTriggerData(),
                             /* dedupKey */ registration.getDeduplicationKey(),
-                            /* priority */ registration.getTriggerPriority()));
+                            /* priority */ registration.getTriggerPriority(),
+                            /* aggregateTriggerData */ registration.getAggregateTriggerData(),
+                            /* aggregateValues */ registration.getAggregateValues()));
         }
         try (ContentProviderClient contentProviderClient =
                      mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {

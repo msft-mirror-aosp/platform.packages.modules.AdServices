@@ -441,17 +441,68 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION)))
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                List.of("{\n"
-                        + "  \"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                        + "  \"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
-                        + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
-                        + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
-                        + "}\n")));
+                        List.of("{\n"
+                                + "  \"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
+                                + "  \"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
+                                + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
+                                + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
+                                + "}\n")));
 
         ArrayList<SourceRegistration> result = new ArrayList();
         assertFalse(mFetcher.fetchSource(request, result));
         assertEquals(0, result.size());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithAggregateFilterData() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        String filterData =
+                "  \"filter_data\": {\"product\":[\"1234\",\"2345\"], \"ctid\":[\"id\"]} \n";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + filterData
+                                + "}\n")));
+        ArrayList<SourceRegistration> result = new ArrayList<>();
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals(123, result.get(0).getSourcePriority());
+        assertEquals(456789, result.get(0).getExpiry());
+        assertEquals(987654321, result.get(0).getSourceEventId());
+        assertEquals("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
+                result.get(0).getAggregateFilterData());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithAggregateSource() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Source",
+                        List.of("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                                + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")));
+        ArrayList<SourceRegistration> result = new ArrayList<>();
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals(
+                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},{\"id\" : "
+                        + "\"geoValue\", \"key_piece\" : \"0x5\"}]",
+                result.get(0).getAggregateSource());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     private RegistrationRequest buildRequest(String registrationUri, String topOrigin) {
