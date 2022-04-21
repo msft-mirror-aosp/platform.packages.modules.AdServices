@@ -58,11 +58,11 @@ public class CustomAudienceSignalsArgumentTest {
                                         CUSTOM_AUDIENCE_SIGNALS.getName()),
                                 numericArg(
                                         CustomAudienceSignalsArgument.ACTIVATION_TIME_FIELD_NAME,
-                                        CustomAudienceSignalsArgument.instantToLong(
+                                        CustomAudienceSignalsArgument.instantToEpochMilli(
                                                 CUSTOM_AUDIENCE_SIGNALS.getActivationTime())),
                                 numericArg(
                                         CustomAudienceSignalsArgument.EXPIRATION_TIME_FIELD_NAME,
-                                        CustomAudienceSignalsArgument.instantToLong(
+                                        CustomAudienceSignalsArgument.instantToEpochMilli(
                                                 CUSTOM_AUDIENCE_SIGNALS.getExpirationTime())),
                                 jsonArg(
                                         CustomAudienceSignalsArgument
@@ -74,6 +74,6 @@ public class CustomAudienceSignalsArgumentTest {
     public void testInstantToLong() {
         long testLong = 123456789;
         Instant instant = Instant.ofEpochMilli(testLong);
-        assertThat(CustomAudienceSignalsArgument.instantToLong(instant)).isEqualTo(testLong);
+        assertThat(CustomAudienceSignalsArgument.instantToEpochMilli(instant)).isEqualTo(testLong);
     }
 }

@@ -16,10 +16,10 @@
 
 package com.android.adservices.data.adselection;
 
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Embedded;
 import androidx.room.Entity;
@@ -44,6 +44,8 @@ import java.util.Objects;
         tableName = "ad_selection",
         indices = {@Index(value = {"bidding_logic_url"})})
 public final class DBAdSelection {
+    private static final int UNSET = 0;
+
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
@@ -125,7 +127,7 @@ public final class DBAdSelection {
 
     /**
      * @return the custom audience signals used to select this winning ad if remarketing ads, o.w.
-     * return null.
+     *     return null.
      */
     @Nullable
     public CustomAudienceSignals getCustomAudienceSignals() {
@@ -173,7 +175,7 @@ public final class DBAdSelection {
 
     /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
-        private long mAdSelectionId;
+        private long mAdSelectionId = UNSET;
         private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
         private Uri mBiddingLogicUrl;
@@ -181,8 +183,7 @@ public final class DBAdSelection {
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         /** Sets the ad selection id. */
         @NonNull
@@ -246,14 +247,20 @@ public final class DBAdSelection {
         /**
          * Builds an {@link DBAdSelection} instance.
          *
-         * @throws NullPointerException     if any non-nulll params are null.
-         * @throws IllegalArgumentException if adSelectionId is zero or bid is non-positive.
+         * @throws NullPointerException if any non-null params are null.
+         * @throws IllegalArgumentException if adSelectionId is zero , the bid is non-positive, or
+         *     if exactly {@code mCustomAudienceSignals} or {@code mBuyerDecisionLogicJs} is null
          */
         @NonNull
         public DBAdSelection build() {
-            Preconditions.checkArgument(mAdSelectionId != 0, "Ad selection Id should not be zero.");
+            Preconditions.checkArgument(
+                    mAdSelectionId != UNSET, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
+            boolean oneNull =
+                    Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBiddingLogicUrl);
+            Preconditions.checkArgument(
+                    !oneNull, "Buyer fields must both be null in case of contextual ad.");
             Objects.requireNonNull(mContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUrl);
             Objects.requireNonNull(mCreationTimestamp);
