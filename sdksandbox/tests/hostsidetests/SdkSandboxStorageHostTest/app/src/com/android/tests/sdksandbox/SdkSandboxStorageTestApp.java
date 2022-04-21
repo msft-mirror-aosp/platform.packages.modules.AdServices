@@ -42,8 +42,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SdkSandboxStorageTestApp {
 
-    private static final String CODE_PROVIDER_PACKAGE =
-            "com.android.tests.codeprovider.storagetest";
+    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
@@ -63,14 +62,14 @@ public class SdkSandboxStorageTestApp {
     private void runPhaseInsideCode(String phaseName) {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(CODE_PROVIDER_PACKAGE, 0, 500, 500, bundle);
+        mSdkSandboxManager.requestSurfacePackage(SDK_NAME, 0, 500, 500, bundle);
     }
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         // First load code
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Run phase inside the code
@@ -92,7 +91,7 @@ public class SdkSandboxStorageTestApp {
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         // Wait for sdk to finish loading
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
