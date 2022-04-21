@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tests.codeprovider.storagetest_1;
+package com.android.tests.codeprovider.storagetest;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
