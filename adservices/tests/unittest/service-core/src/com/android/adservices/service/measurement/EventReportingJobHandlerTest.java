@@ -120,10 +120,62 @@ public class EventReportingJobHandlerTest {
                     mTimestampMs - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS - 1)
             .build();
 
+    private final EventReport mPendingEventReportNoDeadline1 = new EventReport.Builder()
+            .setId("100")
+            .setSourceId(10L)
+            .setAttributionDestination(
+                    Uri.parse("https://www.example1.com/d1"))
+            .setReportTo(
+                    Uri.parse("https://www.example1.com/r1"))
+            .setTriggerData(2)
+            .setTriggerTime(8640000002L)
+            .setStatus(EventReport.Status.PENDING)
+            .build();
+
+    private final EventReport mPendingEventReportNoDeadline2 = new EventReport.Builder()
+            .setId("101")
+            .setSourceId(11L)
+            .setAttributionDestination(
+                    Uri.parse("https://www.example1.com/d1"))
+            .setReportTo(
+                    Uri.parse("https://www.example1.com/r1"))
+            .setTriggerData(2)
+            .setTriggerTime(8640000002L)
+            .setStatus(EventReport.Status.PENDING)
+            .build();
+
+    private final EventReport mNotPendingEventReportNoDeadline = new EventReport.Builder()
+            .setId("102")
+            .setSourceId(12L)
+            .setAttributionDestination(
+                    Uri.parse("https://www.example1.com/d1"))
+            .setReportTo(
+                    Uri.parse("https://www.example1.com/r1"))
+            .setTriggerData(2)
+            .setTriggerTime(8640000002L)
+            .setStatus(EventReport.Status.DELIVERED)
+            .build();
+
+    private final Source mSourceWithAppName1 = new Source.Builder()
+            .setId("1000")
+            .setEventId(10L)
+            .setRegistrant(Uri.parse("android-app://com.example.abc")).build();
+
+    private final Source mSourceWithAppName2 = new Source.Builder()
+            .setId("1001")
+            .setEventId(11L)
+            .setRegistrant(Uri.parse("android-app://com.example.xyz")).build();
+
+    private final Source mSourceWithAppName3 = new Source.Builder()
+            .setId("1002")
+            .setEventId(12L)
+            .setRegistrant(Uri.parse("android-app://com.example.abc")).build();
+
     @After
     public void after() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         db.delete("msmt_event_report", null, null);
+        db.delete("msmt_source", null, null);
     }
 
     /**
@@ -348,6 +400,45 @@ public class EventReportingJobHandlerTest {
                 createEventReportFromCursor(eventReportCursor).getStatus());
     }
 
+    /**
+     * Test calling performAllPendingReportsForGivenApp with multiple pending reports for the given
+     * app name.
+     */
+    @Test
+    public void testPerformAllPendingReportsForGivenApp() throws IOException {
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        EventReportingJobHandler reportingService = new EventReportingJobHandler(datastoreManager);
+        EventReportingJobHandler spyReportingService = Mockito.spy(reportingService);
+        Mockito.doReturn(HttpURLConnection.HTTP_OK).when(spyReportingService)
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+
+        DbHelper dbHelper = DbHelper.getInstance(sContext);
+        SQLiteDatabase db = dbHelper.safeGetWritableDatabase();
+        db.insert("msmt_event_report", null,
+                valuesFromReport(mPendingEventReportNoDeadline1));
+        db.insert("msmt_event_report", null,
+                valuesFromReport(mPendingEventReportNoDeadline2));
+        db.insert("msmt_event_report", null,
+                valuesFromReport(mNotPendingEventReportNoDeadline));
+        db.insert("msmt_source", null, valuesFromSource(mSourceWithAppName1));
+        db.insert("msmt_source", null, valuesFromSource(mSourceWithAppName2));
+        db.insert("msmt_source", null, valuesFromSource(mSourceWithAppName3));
+
+        spyReportingService.performAllPendingReportsForGivenApp(
+                Uri.parse("android-app://com.example.abc"));
+        Mockito.verify(spyReportingService, Mockito.times(1))
+                .makeHttpPostRequest(Mockito.any(), Mockito.any());
+
+        Cursor eventReportCursor = db.query("msmt_event_report", null,
+                "_id = ? ", new String[]{mPendingEventReportNoDeadline1.getId()},
+                null, null, "_id", null);
+        eventReportCursor.moveToFirst();
+        Assert.assertEquals(EventReport.Status.DELIVERED,
+                createEventReportFromCursor(eventReportCursor).getStatus());
+        Assert.assertEquals(10L,
+                createEventReportFromCursor(eventReportCursor).getSourceId());
+    }
+
     private ContentValues valuesFromReport(EventReport eventReport) {
         ContentValues values = new ContentValues();
         values.put("_id", eventReport.getId());
@@ -358,6 +449,14 @@ public class EventReportingJobHandlerTest {
         values.put("trigger_time", eventReport.getTriggerTime());
         values.put("status", eventReport.getStatus());
         values.put("report_time", eventReport.getReportTime());
+        return values;
+    }
+
+    private ContentValues valuesFromSource(Source source) {
+        ContentValues values = new ContentValues();
+        values.put("_id", source.getId());
+        values.put("event_id", source.getEventId());
+        values.put("registrant", source.getRegistrant().toString());
         return values;
     }
 

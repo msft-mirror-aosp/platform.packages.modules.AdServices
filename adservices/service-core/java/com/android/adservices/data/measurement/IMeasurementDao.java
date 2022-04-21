@@ -130,6 +130,11 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Returns list of all pending event reports for a given app right away.
+     */
+    List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
+
+    /**
      * Find the number of entries for a rate limit window using the {@link Source} and
      * {@link Trigger}.
      * Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
