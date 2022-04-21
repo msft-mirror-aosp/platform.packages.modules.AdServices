@@ -43,7 +43,7 @@ public class SandboxedSdkContextTest {
 
     private SandboxedSdkContext mSandboxedSdkContext;
     private static final String SDK_NAME = "com.android.codeproviderresources";
-    private static final String RESOURCES_PACKAGE = "com.android.codeproviderresources_1";
+    private static final String RESOURCES_PACKAGE = "com.android.codeproviderresources";
     private static final String TEST_INTEGER_KEY = "test_integer";
     private static final int TEST_INTEGER_VALUE = 1234;
     private static final String TEST_STRING_KEY = "test_string";

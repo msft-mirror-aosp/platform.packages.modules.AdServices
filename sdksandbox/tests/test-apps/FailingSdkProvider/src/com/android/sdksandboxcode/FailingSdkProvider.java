@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.testcode2_1;
+package com.android.sdksandboxcode;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
@@ -24,12 +24,11 @@ import android.view.View;
 
 import java.util.concurrent.Executor;
 
-public class TestSandboxedSdkProvider2 extends SandboxedSdkProvider {
-
+public class FailingSdkProvider extends SandboxedSdkProvider {
     @Override
     public void initSdk(SandboxedSdkContext context, Bundle params,
             Executor executor, InitSdkCallback callback) {
-        callback.onInitSdkFinished(null);
+        callback.onInitSdkError("Failed to initialize.");
     }
 
     @Override
