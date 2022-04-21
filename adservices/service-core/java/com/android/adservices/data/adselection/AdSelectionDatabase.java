@@ -66,57 +66,37 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
      */
     public abstract AdSelectionEntryDao adSelectionEntryDao();
 
-    /**
-     * Room DB type converters.
-     * Register custom type converters here.
-     */
+    /** Room DB type converters. Register custom type converters here. */
     public static class Converters {
 
-        private Converters() {
-        }
+        private Converters() {}
 
-        /**
-         * Serialize {@link Instant} to Long.
-         */
+        /** Serialize {@link Instant} to Long. */
         @TypeConverter
         @Nullable
         public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant)
-                    .map(Instant::toEpochMilli)
-                    .orElse(null);
+            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
         }
 
-        /**
-         * Deserialize {@link Instant} from long.
-         */
+        /** Deserialize {@link Instant} from long. */
         @TypeConverter
         @Nullable
         public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli)
-                    .map(Instant::ofEpochMilli)
-                    .orElse(null);
+            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
         }
 
-        /**
-         * Deserialize {@link Uri} from String.
-         */
+        /** Deserialize {@link Uri} from String. */
         @TypeConverter
         @Nullable
         public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::parse)
-                    .orElse(null);
+            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
         }
 
-        /**
-         * Serialize {@link Uri} to String.
-         */
+        /** Serialize {@link Uri} to String. */
         @TypeConverter
         @Nullable
         public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::toString)
-                    .orElse(null);
+            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
         }
     }
 }

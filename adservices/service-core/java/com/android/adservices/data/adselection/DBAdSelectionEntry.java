@@ -35,6 +35,8 @@ import java.util.Objects;
  */
 // TODO (b/229660121): Ad unit tests for this class
 public final class DBAdSelectionEntry {
+    private static final int UNSET = 0;
+
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
@@ -167,7 +169,7 @@ public final class DBAdSelectionEntry {
 
     /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
-        private long mAdSelectionId;
+        private long mAdSelectionId = UNSET;
         private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
         private Uri mWinningAdRenderUrl;
@@ -180,7 +182,8 @@ public final class DBAdSelectionEntry {
         /** Sets the ad selection id. */
         @NonNull
         public DBAdSelectionEntry.Builder setAdSelectionId(long adSelectionId) {
-            Preconditions.checkArgument(adSelectionId != 0, "Ad selection Id should not be zero.");
+            Preconditions.checkArgument(
+                    adSelectionId != UNSET, "Ad selection Id should not be zero.");
             this.mAdSelectionId = adSelectionId;
             return this;
         }
@@ -237,14 +240,20 @@ public final class DBAdSelectionEntry {
         /**
          * Builds an {@link DBAdSelectionEntry} instance.
          *
-         * @throws NullPointerException if any non-nulll params are null.
-         * @throws IllegalArgumentException if adSelectionId is zero or bid is non-positive.
+         * @throws NullPointerException if any non-null params are null.
+         * @throws IllegalArgumentException if adSelectionId is zero or bid is non-positive, or if
+         *     exactly {@code mCustomAudienceSignals} or {@code mBuyerDecisionLogicJs} is null
          */
         @NonNull
         public DBAdSelectionEntry build() {
-            Preconditions.checkArgument(mAdSelectionId != 0, "Ad selection Id should not be zero.");
+            Preconditions.checkArgument(
+                    mAdSelectionId != UNSET, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
+            boolean oneNull =
+                    Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBuyerDecisionLogicJs);
+            Preconditions.checkArgument(
+                    !oneNull, "Buyer fields must both be null in case of contextual ad.");
             Objects.requireNonNull(mContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUrl);
             Objects.requireNonNull(mCreationTimestamp);

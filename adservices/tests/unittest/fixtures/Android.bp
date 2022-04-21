@@ -36,6 +36,7 @@ java_library {
     ],
     libs: [
         "framework-adservices.impl",
+        "adservices-service-core",
     ],
     static_libs: [
         "adservices-service-core",
