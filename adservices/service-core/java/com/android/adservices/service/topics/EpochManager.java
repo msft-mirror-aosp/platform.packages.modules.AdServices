@@ -116,17 +116,21 @@ public class EpochManager {
         // This cross db and java boundaries multiple times so we need to have a db transaction.
         db.beginTransaction();
         long epochId = getCurrentEpochId();
+        LogUtil.v("Current epochId is %d", epochId);
         try {
             // Step 1: Compute the UsageMap from the UsageHistory table.
             // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
             // in the current Epoch.
             Map<String, List<String>> appSdksUsageMap = mTopicsDao.retrieveAppSdksUsageMap(epochId);
+            LogUtil.v("appSdksUsageMap size is  %d", appSdksUsageMap.size());
 
             // Step 2: Compute the Map from App to its classification topics.
             // Only produce for apps that called the Topics API in the current Epoch.
             // appClassificationTopicsMap = Map<App, List<Topics>>
             Map<String, List<String>> appClassificationTopicsMap =
                     computeAppClassificationTopics(appSdksUsageMap);
+            LogUtil.v("appClassificationTopicsMap size is %d", appClassificationTopicsMap.size());
+
             // Then save app-topics Map into DB
             mTopicsDao.persistAppClassificationTopics(epochId, /* taxonomyVersion = */ 1L,
                     /* modelVersion = */ 1L, appClassificationTopicsMap);
@@ -135,6 +139,9 @@ public class EpochManager {
             // This is similar to the Callers Can Learn table in the explainer.
             Map<String, Set<String>> callersCanLearnThisEpochMap =
                     computeCallersCanLearnMap(appSdksUsageMap, appClassificationTopicsMap);
+            LogUtil.v("callersCanLearnThisEpochMap size is  %d",
+                    callersCanLearnThisEpochMap.size());
+
             // And then save this CallersCanLearnMap to DB.
             mTopicsDao.persistCallerCanLearnTopics(epochId, callersCanLearnThisEpochMap);
 
@@ -144,11 +151,14 @@ public class EpochManager {
             Map<String, Set<String>> callersCanLearnMap =
                     mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId,
                             mFlags.getTopicsNumberOfLookBackEpochs());
+            LogUtil.v("callersCanLearnMap size is %d", callersCanLearnMap.size());
 
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
             List<String> topTopics = computeTopTopics(appClassificationTopicsMap);
+            LogUtil.v("topTopics are  %s", topTopics.toString());
+
             // Then save Top Topics into DB
             mTopicsDao.persistTopTopics(epochId, topTopics);
 
@@ -157,6 +167,7 @@ public class EpochManager {
             // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
             Map<Pair<String, String>, String> returnedAppSdkTopics =
                     computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap, topTopics);
+            LogUtil.v("returnedAppSdkTopics size is  %d", returnedAppSdkTopics.size());
 
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(epochId, /* taxonomyVersion = */ 1L,
@@ -201,6 +212,7 @@ public class EpochManager {
      */
     public void recordUsageHistory(String app, String sdk) {
         long epochID = getCurrentEpochId();
+        LogUtil.v("Current epochId is %d", epochID);
         mTopicsDao.recordUsageHistory(epochID, app, sdk);
         mTopicsDao.recordAppUsageHistory(epochID, app);
     }
@@ -321,6 +333,7 @@ public class EpochManager {
     @VisibleForTesting
     public long getCurrentEpochId() {
         // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
+        LogUtil.v("Epoch length is  %d", mFlags.getTopicsEpochJobPeriodMs());
         return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
                 /  mFlags.getTopicsEpochJobPeriodMs());
     }
