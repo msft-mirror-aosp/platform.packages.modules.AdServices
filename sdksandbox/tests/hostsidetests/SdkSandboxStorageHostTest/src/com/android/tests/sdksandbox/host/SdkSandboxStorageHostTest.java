@@ -58,7 +58,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private static final String TEST_APP_STORAGE_APK = "SdkSandboxStorageTestApp.apk";
     private static final String TEST_APP_STORAGE_V2_NO_SDK =
             "SdkSandboxStorageTestAppV2_DoesNotConsumeSdk.apk";
-    private static final String SDK_PACKAGE = "com.android.tests.codeprovider.storagetest";
+    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
 
     private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
@@ -111,9 +111,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertSelinuxLabel(getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false),
                 "sdk_sandbox_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/<sdk-package>
-        assertSelinuxLabel(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, true),
+        assertSelinuxLabel(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true),
                 "sdk_sandbox_data_file");
-        assertSelinuxLabel(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, false),
+        assertSelinuxLabel(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false),
                 "sdk_sandbox_data_file");
     }
 
@@ -519,18 +519,18 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataSubDirectory_IsCreatedOnInstall() throws Exception {
         // Directory should not exist before install
         assertThat(getSdkDataPerSdkPath(
-                    0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, true)).isNull();
+                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNull();
         assertThat(getSdkDataPerSdkPath(
-                    0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, false)).isNull();
+                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNull();
 
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify directory is created
         assertThat(getSdkDataPerSdkPath(
-                    0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, true)).isNotNull();
+                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNotNull();
         assertThat(getSdkDataPerSdkPath(
-                    0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, false)).isNotNull();
+                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
     }
 
     @Test
@@ -553,7 +553,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             installPackage(TEST_APP_STORAGE_APK);
             // De storage area should already have per-sdk directories
             assertThat(getSdkDataPerSdkPath(
-                        0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, /*isCeData=*/false)).isNotNull();
+                        0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/false)).isNotNull();
 
             mDeviceLockUtils.unlockDevice();
 
@@ -561,10 +561,10 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             Thread.sleep(WAIT_FOR_RECONCILE_MS);
 
             assertThat(getSdkDataPerSdkPath(
-                        0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, /*isCeData=*/false)).isNotNull();
+                        0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/false)).isNotNull();
             // Once device is unlocked, the per-sdk ce directories should be created
             assertThat(getSdkDataPerSdkPath(
-                        0, TEST_APP_STORAGE_PACKAGE, SDK_PACKAGE, /*isCeData=*/true)).isNotNull();
+                        0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/true)).isNotNull();
         } finally {
             mDeviceLockUtils.clearScreenLock();
         }
