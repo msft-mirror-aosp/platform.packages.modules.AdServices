@@ -183,7 +183,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void loadSdk(String callingPackageName, String sdkName,
+    public void loadSdk(String callingPackageName, String sdkPackageName,
             Bundle params, IRemoteSdkCallback callback) {
         final int callingUid = Binder.getCallingUid();
         synchronized (mLock) {
@@ -198,16 +198,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final long token = Binder.clearCallingIdentity();
         try {
             loadSdkWithClearIdentity(callingUid, callingPackageName,
-                    sdkName, params, callback);
+                    sdkPackageName, params, callback);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
     }
 
     private void loadSdkWithClearIdentity(int callingUid, String callingPackageName,
-            String sdkName, Bundle params, IRemoteSdkCallback callback) {
-        // Step 1: create unique identity for the {callingUid, sdkName} pair
-        final IBinder sdkToken = mSdkTokenManager.createOrGetSdkToken(callingUid, sdkName);
+            String sdkPackageName, Bundle params, IRemoteSdkCallback callback) {
+        // Step 1: create unique identity for the {callingUid, sdkPackageName} pair
+        final IBinder sdkToken = mSdkTokenManager.createOrGetSdkToken(callingUid, sdkPackageName);
 
         // Ensure we are not already loading sdk for this sdkToken. That's determined by
         // checking if we already have an AppAndRemoteCodeLink for the sdkToken.
@@ -215,18 +215,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         synchronized (mLock) {
             if (mAppAndRemoteSdkLinks.putIfAbsent(sdkToken, link) != null) {
                 link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
-                        sdkName + " is being loaded or has been loaded already");
+                        sdkPackageName + " is being loaded or has been loaded already");
                 return;
             }
         }
         // Step 2: fetch the installed code in device
-        SdkProviderInfo sdkProviderInfo = createSdkProviderInfo(sdkName, callingUid);
+        SdkProviderInfo sdkProviderInfo = createSdkProviderInfo(sdkPackageName, callingUid);
 
         String errorMsg = "";
         if (sdkProviderInfo == null) {
-            errorMsg = sdkName + " not found for loading";
+            errorMsg = sdkPackageName + " not found for loading";
         } else if (TextUtils.isEmpty(sdkProviderInfo.getSdkProviderClassName())) {
-            errorMsg = sdkName + " did not set " + PROPERTY_SDK_PROVIDER_CLASS_NAME;
+            errorMsg = sdkPackageName + " did not set " + PROPERTY_SDK_PROVIDER_CLASS_NAME;
         }
 
         if (!TextUtils.isEmpty(errorMsg)) {
@@ -275,14 +275,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void requestSurfacePackage(String sdkName, IBinder hostToken,
+    public void requestSurfacePackage(String sdkPackageName, IBinder hostToken,
             int displayId, int width, int height, Bundle params) {
         final int callingUid = Binder.getCallingUid();
         final long token = Binder.clearCallingIdentity();
         try {
-            final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingUid, sdkName);
+            final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingUid, sdkPackageName);
             if (sdkToken == null) {
-                throw new SecurityException("Sdk " + sdkName + "is not loaded");
+                throw new SecurityException("Sdk " + sdkPackageName + "is not loaded");
             }
             requestSurfacePackageWithClearIdentity(sdkToken, hostToken, displayId,
                     width, height, params);
@@ -300,7 +300,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void sendData(String sdkName, Bundle params) {
+    public void sendData(String sdkPackageName, Bundle params) {
     }
 
     private void onUserUnlocking(int userId) {

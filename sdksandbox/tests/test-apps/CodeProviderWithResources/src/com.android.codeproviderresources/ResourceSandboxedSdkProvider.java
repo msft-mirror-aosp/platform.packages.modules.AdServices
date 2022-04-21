@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.codeproviderresources_1;
+package com.android.codeproviderresources;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
