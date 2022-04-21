@@ -146,7 +146,7 @@ public final class SdkSandboxManager {
     /**
      * Load SDK in a SDK sandbox java process.
      *
-     * <p>It loads SDK library with {@code sdkName} to a sandbox process
+     * <p>It loads SDK library with {@code sdkPackageName} to a sandbox process
      * asynchronously, caller should be notified through
      * {@link RemoteSdkCallback} {@code callback}.
      *
@@ -158,20 +158,20 @@ public final class SdkSandboxManager {
      * will be created, otherwise other SDKs will be loaded into the same sandbox which
      * already created for the client application.
      *
-     * @param sdkName name of the SDK to be loaded
+     * @param sdkPackageName name of the SDK to be loaded
      * @param params the parameters App passes to SDK
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param callback the {@link RemoteSdkCallback} which will receive events from
      *                 loading and interacting with SDKs
      */
     public void loadSdk(
-            @NonNull String sdkName,
+            @NonNull String sdkPackageName,
             @NonNull Bundle params, @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull RemoteSdkCallback callback) {
         RemoteSdkCallbackProxy callbackProxy =
                 new RemoteSdkCallbackProxy(callbackExecutor, callback);
         try {
-            mService.loadSdk(mContext.getPackageName(), sdkName, params, callbackProxy);
+            mService.loadSdk(mContext.getPackageName(), sdkPackageName, params, callbackProxy);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -186,16 +186,16 @@ public final class SdkSandboxManager {
      * <p>The requested {@link SurfacePackage} is returned to client application through
      * {@link RemoteSdkCallback#onSurfacePackageReady(SurfacePackage, int, Bundle)}.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox
+     * @param sdkPackageName name of the SDK loaded into sdk sandbox
      * @param displayId the id of the logical display to display the surface package
      * @param width the width of the surface package
      * @param height the height of the surface package
      * @param params the parameters which client application passes to SDK
      */
-    public void requestSurfacePackage(@NonNull String sdkName,
+    public void requestSurfacePackage(@NonNull String sdkPackageName,
             int displayId, int width, int height, @NonNull Bundle params) {
         try {
-            mService.requestSurfacePackage(sdkName, new Binder(), displayId,
+            mService.requestSurfacePackage(sdkPackageName, new Binder(), displayId,
                     width, height, params);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
@@ -205,13 +205,13 @@ public final class SdkSandboxManager {
     /**
      * Sends a bundle of {@code params} to SDK.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in
+     * @param sdkPackageName a String maps to the SDK library package name, the same name used in
      *              {@link SdkSandboxManager#loadSdk(String, Bundle,Executor, RemoteSdkCallback)}
      * @hide
      */
-    public void sendData(@NonNull String sdkName, @NonNull Bundle params) {
+    public void sendData(@NonNull String sdkPackageName, @NonNull Bundle params) {
         try {
-            mService.sendData(sdkName, params);
+            mService.sendData(sdkPackageName, params);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
