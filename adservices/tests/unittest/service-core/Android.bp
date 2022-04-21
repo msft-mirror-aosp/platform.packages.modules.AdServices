@@ -35,6 +35,7 @@ android_test {
         "androidx.room_room-testing",
         "mockwebserver",
         "adservices-test-fixtures",
+        "tensorflowlite_java",
     ],
     libs: [
         "android.test.base",
@@ -42,5 +43,16 @@ android_test {
     ],
     test_suites: [
         "general-tests",
+    ],
+    jni_libs: [
+        "libtensorflowlite_jni",
+    ],
+    aaptflags: [
+        // avoid compression on lite and tflite files as the Interpreter
+        // can not load compressed flat buffer formats. (*appt compresses all
+        // assets into the apk by default)
+        // See https://elinux.org/Android_aapt for more detail.
+        "-0 .lite",
+        "-0 .tflite",
     ],
 }
