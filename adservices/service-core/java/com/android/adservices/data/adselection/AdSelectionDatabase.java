@@ -43,7 +43,8 @@ import java.util.Optional;
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final String DATABASE_NAME = "adservicesroom.db";
+    // TODO(b/230653780): Should we separate the DB.
+    public static final String DATABASE_NAME = "adselection.db";
 
     @GuardedBy("SINGLETON_LOCK")
     private static AdSelectionDatabase sSingleton = null;

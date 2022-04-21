@@ -38,6 +38,8 @@ android_app {
         "adservices-service-core",
         "androidx.preference_preference",
         "androidx.fragment_fragment",
+        // TODO(b/230653497): Try to remove this.
+        "androidx.room_room-runtime",
     ],
     resource_dirs: ["res"],
     // TODO(b/208705888): Renable tflite.

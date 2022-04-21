@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
-import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
@@ -32,8 +31,8 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
-import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import com.google.common.collect.ImmutableList;
@@ -58,7 +57,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 public class AdBidGeneratorImplTest {
     public static final List<Double> BIDS =
@@ -85,7 +83,9 @@ public class AdBidGeneratorImplTest {
     private static final String EMPTY_USER_SIGNALS = "{}";
     private static final ArrayList<AdData> ADS = AdDataFixture.VALID_ADS;
     private static final DBCustomAudience CUSTOM_AUDIENCE_WITHOUT_ADS =
-            CustomAudienceFixture.getDBCustomAudienceBuilder().build();
+            DBCustomAudienceFixture.getValidBuilder()
+                    .setAds(null)
+                    .build();
     @Rule
     public final MockitoRule rule = MockitoJUnit.rule();
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
@@ -128,11 +128,7 @@ public class AdBidGeneratorImplTest {
         mDecisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
         mCustomAudienceWithAds =
-                CustomAudienceFixture.getDBCustomAudienceBuilder()
-                        .setAds(
-                                AdDataFixture.VALID_ADS.stream()
-                                        .map(DBAdData::fromServiceObject)
-                                        .collect(Collectors.toList()))
+                DBCustomAudienceFixture.getValidBuilder()
                         .setBiddingLogicUrl(mDecisionLogicUri)
                         .build();
 

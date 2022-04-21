@@ -26,9 +26,9 @@ public class AdServicesCommon {
     /** Intent action to discover the Topics service in the APK. */
     public static final String ACTION_TOPICS_SERVICE = "android.adservices.TOPICS_SERVICE";
 
-    /** Intent action to discover the Custom Audience Management service in the APK. */
-    public static final String ACTION_CUSTOM_AUDIENCE_MANAGEMENT_SERVICE =
-            "android.adservices.customaudience.CUSTOM_AUDIENCE_MANAGEMENT_SERVICE";
+    /** Intent action to discover the Custom Audience service in the APK. */
+    public static final String ACTION_CUSTOM_AUDIENCE_SERVICE =
+            "android.adservices.customaudience.CUSTOM_AUDIENCE_SERVICE";
 
     /** Intent action to discover the AdSelection service in the APK. */
     public static final String ACTION_AD_SELECTION_SERVICE =
