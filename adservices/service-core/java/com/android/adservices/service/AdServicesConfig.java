@@ -61,4 +61,10 @@ public class AdServicesConfig {
     public static long getMeasurementDeleteExpiredJobPeriodMs() {
         return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
     }
+
+    /**
+     * Job Id for Measurement Attribution Job
+     * ({@link com.android.adservices.service.measurement.AttributionJobService}).
+     */
+    public static final int MEASUREMENT_ATTRIBUTION_JOB_ID = 5;
 }
