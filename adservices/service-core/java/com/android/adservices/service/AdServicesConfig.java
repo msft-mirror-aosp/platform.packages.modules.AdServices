@@ -33,16 +33,17 @@ public class AdServicesConfig {
     public static final int TOPICS_EPOCH_JOB_ID = 2;
 
     /**
-     * Job Id for Measurement Reporting Job ({@link ReportingJobService})
+     * Job Id for Measurement Main Reporting Job ({@link ReportingJobService})
      */
-    public static final int MEASUREMENT_REPORTING_JOB_ID = 3;
-    public static long MEASUREMENT_REPORTING_JOB_PERIOD_MS = 5 * 60 * 1000; // 5 minutes.
+    public static final int MEASUREMENT_MAIN_REPORTING_JOB_ID = 3;
+    public static long MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS =
+            4L * 60L * 60L * 1000L; // 4 hours.
 
     /**
-     * Returns the max time period (in millis) between each reporting maintenance job run.
+     * Returns the max time period (in millis) between each main reporting maintenance job run.
      */
-    public static long getMeasurementReportingJobPeriodMs() {
-        return MEASUREMENT_REPORTING_JOB_PERIOD_MS;
+    public static long getMeasurementMainReportingJobPeriodMs() {
+        return MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS;
     }
 
     /**
@@ -67,4 +68,15 @@ public class AdServicesConfig {
      * ({@link com.android.adservices.service.measurement.AttributionJobService}).
      */
     public static final int MEASUREMENT_ATTRIBUTION_JOB_ID = 5;
+
+    /**
+     * Job Id for Measurement Fallback Reporting Job ({@link FallbackReportingJobService})
+     */
+    public static final int MEASUREMENT_FALLBACK_REPORTING_JOB_ID = 6;
+    public static long MEASUREMENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
+            24L * 60L * 60L * 1000L; // 24 hours.
+
+    public static long getMeasurementFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
+    }
 }
