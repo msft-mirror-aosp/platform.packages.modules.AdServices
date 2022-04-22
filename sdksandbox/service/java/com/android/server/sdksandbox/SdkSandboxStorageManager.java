@@ -92,23 +92,8 @@ class SdkSandboxStorageManager {
     }
 
     void prepareSdkDataOnLoad(String packageName, int uid) {
-        final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
-        final int userId = userHandle.getIdentifier();
-        String ceSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                userId, packageName, /*isCeData=*/true);
-        String deSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                userId, packageName, /*isCeData=*/false);
-        final Set<String> ceSdkDirsBeforeLoadingSdks = getSubDirs(ceSdkDataPackagePath,
-                /*includeRandomSuffix=*/false);
-        final Set<String> deSdkDirsBeforeLoadingSdks = getSubDirs(deSdkDataPackagePath,
-                /*includeRandomSuffix=*/false);
-        final Set<String> expectedSubDirNames = new ArraySet<>(getSdksUsed(userId, packageName));
-        expectedSubDirNames.add("shared");
-        if (!ceSdkDirsBeforeLoadingSdks.equals(expectedSubDirNames)
-                || !deSdkDirsBeforeLoadingSdks.equals(expectedSubDirNames)) {
-            synchronized (mLock) {
-                reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
-            }
+        synchronized (mLock) {
+            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
         }
     }
 
@@ -129,28 +114,58 @@ class SdkSandboxStorageManager {
                 return;
             }
         }
+        final String deSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
+                userId, packageName, /*isCeData=*/false);
+        final ArrayMap<String, String> existingSubDirMap = new ArrayMap<>();
+        final Set<String> deSdkDirsBeforeReconcile = getSubDirs(deSdkDataPackagePath,
+                /*includeRandomSuffix=*/true);
+        for (String sdkSubdir : deSdkDirsBeforeReconcile) {
+            final String[] tokens = sdkSubdir.split("@");
+            existingSubDirMap.put(tokens[0], sdkSubdir);
+        }
         final List<String> subDirNames = new ArrayList<>();
         subDirNames.add("shared");
         for (int i = 0; i < sdksUsed.size(); i++) {
             final String sdk = sdksUsed.get(i);
-            //TODO(b/228432673): We need to scan the sdk package directory so that we don't remove
-            //existing subdirs that has different random suffix than the one we are sending.
-            subDirNames.add(sdk + "@" + getRandomString());
+            if (!existingSubDirMap.containsKey(sdk)) {
+                subDirNames.add(sdk + "@" + getRandomString());
+            } else {
+                subDirNames.add(existingSubDirMap.get(sdk));
+            }
         }
         final int appId = UserHandle.getAppId(uid);
         final UserManager um = mContext.getSystemService(UserManager.class);
-        final int flags = um.isUserUnlockingOrUnlocked(userHandle)
-                ? PackageManagerLocal.FLAG_STORAGE_CE | PackageManagerLocal.FLAG_STORAGE_DE
-                : PackageManagerLocal.FLAG_STORAGE_DE;
-
-        try {
-            //TODO(b/224719352): Pass actual seinfo from here
-            mPackageManagerLocal.reconcileSdkData(/*volumeUuid=*/null, packageName, subDirNames,
-                    userId, appId, /*previousAppId=*/-1, /*seInfo=*/"default", flags);
-        } catch (Exception e) {
-            // We will retry when sdk gets loaded
-            Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
-                    + String.join(", ", subDirNames) + " error: " + e.getMessage());
+        int flags = 0;
+        boolean doesCeNeedReconcile = false;
+        boolean doesDeNeedReconcile = false;
+        final Set<String> expectedSubDirNames = new ArraySet<>(sdksUsed);
+        expectedSubDirNames.add("shared");
+        if (um.isUserUnlockingOrUnlocked(userHandle)) {
+            final String ceSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
+                    userId, packageName, /*isCeData=*/true);
+            final Set<String> ceSdkDirsBeforeReconcilePrefix = getSubDirs(ceSdkDataPackagePath,
+                    /*includeRandomSuffix=*/false);
+            final Set<String> deSdkDirsBeforeReconcilePrefix = getSubDirs(deSdkDataPackagePath,
+                    /*includeRandomSuffix=*/false);
+            flags = PackageManagerLocal.FLAG_STORAGE_CE | PackageManagerLocal.FLAG_STORAGE_DE;
+            doesCeNeedReconcile = !ceSdkDirsBeforeReconcilePrefix.equals(expectedSubDirNames);
+            doesDeNeedReconcile = !deSdkDirsBeforeReconcilePrefix.equals(expectedSubDirNames);
+        } else {
+            final Set<String> deSdkDirsBeforeReconcilePrefix = getSubDirs(deSdkDataPackagePath,
+                    /*includeRandomSuffix=*/false);
+            flags = PackageManagerLocal.FLAG_STORAGE_DE;
+            doesDeNeedReconcile = !deSdkDirsBeforeReconcilePrefix.equals(expectedSubDirNames);
+        }
+        if (doesCeNeedReconcile || doesDeNeedReconcile) {
+            try {
+                //TODO(b/224719352): Pass actual seinfo from here
+                mPackageManagerLocal.reconcileSdkData(/*volumeUuid=*/null, packageName, subDirNames,
+                        userId, appId, /*previousAppId=*/-1, /*seInfo=*/"default", flags);
+            } catch (Exception e) {
+                // We will retry when sdk gets loaded
+                Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
+                        + String.join(", ", subDirNames) + " error: " + e.getMessage());
+            }
         }
     }
 
