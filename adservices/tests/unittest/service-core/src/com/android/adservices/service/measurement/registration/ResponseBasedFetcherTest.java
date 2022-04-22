@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.test.filters.SmallTest;
 
@@ -60,68 +59,45 @@ public final class ResponseBasedFetcherTest {
     }
 
     @Test
-    public void testParseRedirectsDuplicateLocations() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertFalse(ResponseBasedFetcher.parseRedirects(
-                    true,
-                    Map.of("Location", List.of("foo.com", "bar.com")), redirs));
-        assertEquals(0, redirs.size());
-    }
-
-    @Test
     public void testParseRedirectsNothingInitial() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertTrue(ResponseBasedFetcher.parseRedirects(true, Map.of(), redirs));
+        ArrayList<Uri> redirs = new ArrayList();
+        ResponseBasedFetcher.parseRedirects(true, Map.of(), redirs);
         assertEquals(0, redirs.size());
     }
 
     @Test
     public void testParseRedirectsNothingLater() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertTrue(ResponseBasedFetcher.parseRedirects(
-                    false, Map.of(), redirs));
+        ArrayList<Uri> redirs = new ArrayList();
+        ResponseBasedFetcher.parseRedirects(false, Map.of(), redirs);
         assertEquals(0, redirs.size());
     }
 
     @Test
-    public void testParseRedirectsOneLocation() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertTrue(ResponseBasedFetcher.parseRedirects(
-                    true, Map.of("Location", List.of("foo.com")), redirs));
-        assertEquals(1, redirs.size());
-        assertEquals(Uri.parse("foo.com"), redirs.get(0).first);
-        assertTrue(redirs.get(0).second);
-    }
-
-    @Test
-    public void testParseRedirectsOneLocationLater() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertTrue(ResponseBasedFetcher.parseRedirects(
-                    false, Map.of("Location", List.of("foo.com")), redirs));
-        assertEquals(1, redirs.size());
-        assertEquals(Uri.parse("foo.com"), redirs.get(0).first);
-        assertTrue(redirs.get(0).second);
-    }
-
-    @Test
     public void testParseRedirectsARR() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertTrue(ResponseBasedFetcher.parseRedirects(
-                    true, Map.of("Attribution-Reporting-Redirect",
-                        List.of("foo.com", "bar.com")), redirs));
+        ArrayList<Uri> redirs = new ArrayList();
+        ResponseBasedFetcher.parseRedirects(
+                true, Map.of("Attribution-Reporting-Redirect",
+                    List.of("foo.com", "bar.com")), redirs);
         assertEquals(2, redirs.size());
-        assertEquals(Uri.parse("foo.com"), redirs.get(0).first);
-        assertFalse(redirs.get(0).second);
-        assertEquals(Uri.parse("bar.com"), redirs.get(1).first);
-        assertFalse(redirs.get(1).second);
+        assertEquals(Uri.parse("foo.com"), redirs.get(0));
+        assertEquals(Uri.parse("bar.com"), redirs.get(1));
+    }
+
+    @Test
+    public void testParseRedirectsSingleElementARR() throws Exception {
+        ArrayList<Uri> redirs = new ArrayList();
+        ResponseBasedFetcher.parseRedirects(
+                true, Map.of("Attribution-Reporting-Redirect",
+                    List.of("foo.com")), redirs);
+        assertEquals(1, redirs.size());
     }
 
     @Test
     public void testParseRedirectsARRLater() throws Exception {
-        ArrayList<Pair<Uri, Boolean>> redirs = new ArrayList();
-        assertFalse(ResponseBasedFetcher.parseRedirects(
-                    false, Map.of("Attribution-Reporting-Redirect",
-                        List.of("foo.com", "bar.com")), redirs));
+        ArrayList<Uri> redirs = new ArrayList();
+        ResponseBasedFetcher.parseRedirects(
+                false, Map.of("Attribution-Reporting-Redirect",
+                    List.of("foo.com", "bar.com")), redirs);
         assertEquals(0, redirs.size());
     }
 }
