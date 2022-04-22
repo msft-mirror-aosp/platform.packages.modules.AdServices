@@ -124,11 +124,18 @@ public class DbState {
         attrCursor.close();
     }
 
-    public void sortAllById() {
-        mSourceList.sort(Comparator.comparing(Source::getId));
-        mTriggerList.sort(Comparator.comparing(Trigger::getId));
-        mReportList.sort(Comparator.comparing(EventReport::getId));
-        mAttrRateLimitList.sort(Comparator.comparing(AttributionRateLimit::getId));
+    public void sortAll() {
+        mSourceList.sort(
+                Comparator.comparing(Source::getEventTime)
+                        .thenComparing(Source::getPriority));
+        mTriggerList.sort(
+                Comparator.comparing(Trigger::getTriggerTime)
+                        .thenComparing(Trigger::getPriority));
+        mReportList.sort(
+                Comparator.comparing(EventReport::getReportTime)
+                        .thenComparing(EventReport::getSourceId));
+        mAttrRateLimitList.sort(
+                Comparator.comparing(AttributionRateLimit::getTriggerTime));
     }
 
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {

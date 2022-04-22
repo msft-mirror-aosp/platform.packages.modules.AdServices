@@ -27,6 +27,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
@@ -38,9 +39,11 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
 
@@ -305,5 +308,64 @@ public class MeasurementDaoTest {
         db.delete(MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.ID + " IN ( ? )",
                 new String[]{String.join(",", dbIds)});
+    }
+
+
+    @Test
+    public void testGetSourceEventReports() {
+        List<Source> sourceList = new ArrayList<>();
+        sourceList.add(new Source.Builder().setId("1").setEventId(3).build());
+        sourceList.add(new Source.Builder().setId("2").setEventId(4).build());
+
+        // Should match with source 1
+        List<EventReport> reportList1 = new ArrayList<>();
+        reportList1.add(new EventReport.Builder().setId("1").setSourceId(3).build());
+        reportList1.add(new EventReport.Builder().setId("7").setSourceId(3).build());
+
+        // Should match with source 2
+        List<EventReport> reportList2 = new ArrayList<>();
+        reportList2.add(new EventReport.Builder().setId("3").setSourceId(4).build());
+        reportList2.add(new EventReport.Builder().setId("8").setSourceId(4).build());
+
+        List<EventReport> reportList3 = new ArrayList<>();
+        // Should not match with any source
+        reportList3.add(new EventReport.Builder().setId("2").setSourceId(5).build());
+        reportList3.add(new EventReport.Builder().setId("4").setSourceId(6).build());
+        reportList3.add(new EventReport.Builder().setId("5").setSourceId(1).build());
+        reportList3.add(new EventReport.Builder().setId("6").setSourceId(2).build());
+
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sourceList.forEach(source -> {
+            ContentValues values = new ContentValues();
+            values.put(MeasurementTables.SourceContract.ID, source.getId());
+            values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+            db.insert(MeasurementTables.SourceContract.TABLE, null, values);
+        });
+        Stream.of(reportList1, reportList2, reportList3)
+                .flatMap(Collection::stream)
+                .forEach(eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.EventReportContract.ID, eventReport.getId());
+                    values.put(MeasurementTables.EventReportContract.SOURCE_ID,
+                            eventReport.getSourceId());
+                    db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
+                });
+
+        Assert.assertEquals(
+                reportList1,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSourceEventReports(
+                                        sourceList.get(0)))
+                        .orElseThrow());
+
+        Assert.assertEquals(
+                reportList2,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSourceEventReports(
+                                        sourceList.get(1)))
+                        .orElseThrow());
     }
 }
