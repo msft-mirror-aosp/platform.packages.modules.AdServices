@@ -31,10 +31,11 @@ import com.android.adservices.service.AdServicesExecutors;
 import java.util.concurrent.Executor;
 
 /**
- * Main service for scheduling reporting jobs.
+ * Fallback service for scheduling reporting jobs (runs less frequently than the main service
+ * without a network type requirement).
  * The actual job execution logic is part of {@link EventReportingJobHandler}
  */
-public final class ReportingJobService extends JobService {
+public final class FallbackReportingJobService extends JobService {
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
@@ -52,16 +53,17 @@ public final class ReportingJobService extends JobService {
                     .performScheduledPendingReportsInWindow(
                             System.currentTimeMillis()
                                     - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                            System.currentTimeMillis());
+                            System.currentTimeMillis()
+                                    - AdServicesConfig.getMeasurementMainReportingJobPeriodMs());
             jobFinished(params, !success);
         });
-        LogUtil.d("ReportingJobService.onStartJob");
+        LogUtil.d("FallbackReportingJobService.onStartJob");
         return false;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("ReportingJobService.onStopJob");
+        LogUtil.d("FallbackReportingJobService.onStopJob");
         return false;
     }
 
@@ -71,14 +73,14 @@ public final class ReportingJobService extends JobService {
     public static void schedule(Context context) {
         final JobScheduler jobScheduler = context.getSystemService(
                 JobScheduler.class);
-        final JobInfo job = new JobInfo.Builder(AdServicesConfig.MEASUREMENT_MAIN_REPORTING_JOB_ID,
-                new ComponentName(context, ReportingJobService.class))
+        final JobInfo job = new JobInfo.Builder(AdServicesConfig
+                .MEASUREMENT_FALLBACK_REPORTING_JOB_ID,
+                new ComponentName(context, FallbackReportingJobService.class))
                 .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPeriodic(AdServicesConfig.getMeasurementMainReportingJobPeriodMs())
+                .setPeriodic(AdServicesConfig.getMeasurementFallbackReportingJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
-        LogUtil.d("Scheduling Reporting job ...");
+        LogUtil.d("Scheduling Fallback Reporting job ...");
     }
 }
