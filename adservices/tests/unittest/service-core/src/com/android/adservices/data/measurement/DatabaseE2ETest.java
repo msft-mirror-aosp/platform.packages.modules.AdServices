@@ -85,12 +85,8 @@ public abstract class DatabaseE2ETest {
         runActionToTest();
         SQLiteDatabase readerDb = DbHelper.getInstance(sContext).getReadableDatabase();
         DbState dbState = new DbState(readerDb);
-        // Sorting by record ID can align the records in tables that are unaffected by actions taken
-        // during the test. This works here because only one EventReport record is created by these
-        // tests, but may need to be revisited if more than one record is created in tables affected
-        // by the test.
-        mOutput.sortAllById();
-        dbState.sortAllById();
+        mOutput.sortAll();
+        dbState.sortAll();
         Assert.assertTrue("Source mismatch",
                 areEqual(mOutput.mSourceList, dbState.mSourceList));
         Assert.assertTrue("Trigger mismatch",
