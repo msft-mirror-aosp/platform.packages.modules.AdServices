@@ -26,9 +26,11 @@ import java.util.Objects;
 public class AggregatableAttributionSource {
 
     private Map<String, AttributionAggregatableKey> mAggregatableSource;
+    private AggregateFilterData mAggregateFilterData;
 
     private AggregatableAttributionSource() {
         mAggregatableSource = new HashMap<>();
+        mAggregateFilterData = null;
     }
 
     @Override
@@ -37,7 +39,8 @@ public class AggregatableAttributionSource {
             return false;
         }
         AggregatableAttributionSource attributionSource = (AggregatableAttributionSource) obj;
-        return Objects.equals(mAggregatableSource, attributionSource.mAggregatableSource);
+        return Objects.equals(mAggregatableSource, attributionSource.mAggregatableSource)
+                && Objects.equals(mAggregateFilterData, attributionSource.mAggregateFilterData);
     }
 
     @Override
@@ -51,6 +54,13 @@ public class AggregatableAttributionSource {
      */
     public Map<String, AttributionAggregatableKey> getAggregatableSource() {
         return mAggregatableSource;
+    }
+
+    /**
+     * Returns aggregate filter data which represents a map in JSONObject.
+     */
+    public AggregateFilterData getAggregateFilterData() {
+        return mAggregateFilterData;
     }
 
     /**
@@ -69,6 +79,14 @@ public class AggregatableAttributionSource {
         public Builder setAggregatableSource(
                 Map<String, AttributionAggregatableKey> aggregatableSource) {
             mBuilding.mAggregatableSource = aggregatableSource;
+            return this;
+        }
+
+        /**
+         * See {@link AggregatableAttributionSource#getAggregateFilterData()}.
+         */
+        public Builder setAggregateFilterData(AggregateFilterData aggregateFilterData) {
+            mBuilding.mAggregateFilterData = aggregateFilterData;
             return this;
         }
 

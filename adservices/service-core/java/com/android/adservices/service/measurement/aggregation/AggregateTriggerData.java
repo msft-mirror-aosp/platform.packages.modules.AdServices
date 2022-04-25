@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.aggregation;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,10 +28,14 @@ public class AggregateTriggerData {
 
     private AttributionAggregatableKey mKey;
     private Set<String> mSourceKeys;
+    private Optional<AggregateFilterData> mFilter;
+    private Optional<AggregateFilterData> mNotFilter;
 
     private AggregateTriggerData() {
         mKey = null;
         mSourceKeys = new HashSet<>();
+        mFilter = Optional.empty();
+        mNotFilter = Optional.empty();
     }
 
     @Override
@@ -40,7 +45,9 @@ public class AggregateTriggerData {
         }
         AggregateTriggerData attributionTriggerData = (AggregateTriggerData) obj;
         return Objects.equals(mKey, attributionTriggerData.mKey)
-                && Objects.equals(mSourceKeys, attributionTriggerData.mSourceKeys);
+                && Objects.equals(mSourceKeys, attributionTriggerData.mSourceKeys)
+                && Objects.equals(mFilter, attributionTriggerData.mFilter)
+                && Objects.equals(mNotFilter, attributionTriggerData.mNotFilter);
     }
 
     @Override
@@ -60,6 +67,21 @@ public class AggregateTriggerData {
      */
     public Set<String> getSourceKeys() {
         return mSourceKeys;
+    }
+
+    /**
+     * Returns the filter which controls when aggregate trigger data ise used based on impression
+     * side information.
+     */
+    public Optional<AggregateFilterData> getFilter() {
+        return mFilter;
+    }
+
+    /**
+     * Returns the not_filter, reverse of filter.
+     */
+    public Optional<AggregateFilterData> getNotFilter() {
+        return mNotFilter;
     }
 
     /**
@@ -85,6 +107,22 @@ public class AggregateTriggerData {
          */
         public Builder setSourceKeys(Set<String> sourceKeys) {
             mBuilding.mSourceKeys = sourceKeys;
+            return this;
+        }
+
+        /**
+         * See {@link AggregateTriggerData#getFilter()}.
+         */
+        public Builder setFilter(AggregateFilterData filter) {
+            mBuilding.mFilter = Optional.of(filter);
+            return this;
+        }
+
+        /**
+         * See {@link AggregateTriggerData#getNotFilter()}
+         */
+        public Builder setNotFilter(AggregateFilterData notFilter) {
+            mBuilding.mNotFilter = Optional.of(notFilter);
             return this;
         }
 
