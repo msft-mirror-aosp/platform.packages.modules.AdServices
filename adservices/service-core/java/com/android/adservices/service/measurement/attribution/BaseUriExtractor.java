@@ -29,7 +29,7 @@ public class BaseUriExtractor {
      * "android-app://com.example.sample" -> "android-app://com.example.sample"
      * "https://www.example.com:8080/abc" -> "https://www.example.com:8080"
      */
-    public static String getBaseUri(Uri uri) {
+    public static Uri getBaseUri(Uri uri) {
         if (!uri.isHierarchical() || !uri.isAbsolute()) {
             throw new IllegalArgumentException(
                     String.format("URI should be hierarchical and absolute. Input: %s", uri));
@@ -37,8 +37,7 @@ public class BaseUriExtractor {
         return new Uri.Builder()
                 .scheme(uri.getScheme())
                 .encodedAuthority(uri.getEncodedAuthority())
-                .build()
-                .toString();
+                .build();
     }
     private BaseUriExtractor() {
     }

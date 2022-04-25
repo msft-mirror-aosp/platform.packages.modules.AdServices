@@ -39,6 +39,13 @@ public interface IMeasurementDao {
     void setTransaction(ITransaction transaction);
 
     /**
+     * Add an entry to the Trigger datastore.
+     */
+    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri reportTo,
+            @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
+            @Nullable Long dedupKey, @NonNull Long priority) throws DatastoreException;
+
+    /**
      * Returns list of ids for all pending {@link Trigger}.
      */
     List<String> getPendingTriggerIds() throws DatastoreException;
@@ -65,6 +72,14 @@ public interface IMeasurementDao {
      * Gets the number of triggers a registrant has registered.
      */
     long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+
+    /**
+     * Add an entry to the Source datastore.
+     */
+    void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
+            @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
+            @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
+            @NonNull Source.SourceType sourceType) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
