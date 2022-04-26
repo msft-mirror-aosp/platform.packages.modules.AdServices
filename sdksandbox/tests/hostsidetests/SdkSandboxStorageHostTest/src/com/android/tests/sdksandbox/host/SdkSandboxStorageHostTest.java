@@ -501,6 +501,33 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkDataPackageDirectory_ReuseExistingRandomSuffixInReconcile()
+            throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+        final String cePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePackagePath =
+                getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        final List<String> ceSdkDirsBeforeLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/true);
+        final List<String> deSdkDirsBeforeLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/true);
+        // Delete the sdk sub directories
+        getDevice().deleteFile(cePackagePath + "/" + ceSdkDirsBeforeLoadingSdksList.get(1));
+        getDevice().deleteFile(dePackagePath + "/" + deSdkDirsBeforeLoadingSdksList.get(1));
+        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+
+        final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
+                /*includeRandomSuffix=*/true);
+        final List<String> deSdkDirsAfterLoadingSdksList = getSubDirs(dePackagePath,
+                /*includeRandomSuffix=*/true);
+        assertThat(ceSdkDirsAfterLoadingSdksList)
+                .containsExactlyElementsIn(ceSdkDirsBeforeLoadingSdksList);
+        assertThat(deSdkDirsAfterLoadingSdksList)
+                .containsExactlyElementsIn(deSdkDirsBeforeLoadingSdksList);
+    }
+
+    @Test
     public void testSdkDataPackageDirectory_OnUpdateDoesNotConsumeSdk() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
