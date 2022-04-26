@@ -66,8 +66,7 @@ public final class DeleteExpiredJobService extends JobService {
                 JobScheduler.class);
         final JobInfo job = new JobInfo.Builder(MEASUREMENT_DELETE_EXPIRED_JOB_ID,
                 new ComponentName(context, DeleteExpiredJobService.class))
-                // Temporarily disable this for testing.
-                //.setRequiresDeviceIdle(true)
+                .setRequiresDeviceIdle(true)
                 .setPeriodic(AdServicesConfig.getMeasurementDeleteExpiredJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
