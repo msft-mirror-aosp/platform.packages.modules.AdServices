@@ -74,6 +74,32 @@ public class EventReportingJobHandler {
     }
 
     /**
+     * Finds all event reports for an app, these event reports have a status
+     * {@link EventReport.Status.PENDING} and attempts to upload them individually.
+     * @param appName the given app name corresponding to the registrant field in Source table.
+     * @return always return true to signal to JobScheduler that the task is done.
+     */
+    synchronized boolean performAllPendingReportsForGivenApp(Uri appName) {
+        Optional<List<String>> pendingEventReportsForGivenApp = mDatastoreManager
+                .runInTransactionWithResult((dao) ->
+                        dao.getPendingEventReportIdsForGivenApp(appName));
+        if (!pendingEventReportsForGivenApp.isPresent()) {
+            // Failure during event report retrieval
+            return true;
+        }
+
+        List<String> pendingEventReportForGivenApp = pendingEventReportsForGivenApp.get();
+        for (String eventReportId : pendingEventReportForGivenApp) {
+            PerformReportResult result = performReport(eventReportId);
+            if (result != PerformReportResult.SUCCESS) {
+                LogUtil.i("Perform report status is %s for app : %s",
+                        result, String.valueOf(appName));
+            }
+        }
+        return true;
+    }
+
+    /**
      * Perform reporting by finding the relevant {@link EventReport} and making an HTTP POST
      * request to the specified report to URL with the report data as a JSON in the body.
      *
