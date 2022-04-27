@@ -18,6 +18,7 @@ package android.adservices.topics;
 
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
+import android.adservices.common.CallerMetadata;
 
 /**
   * Topics Service.
@@ -30,5 +31,6 @@ interface ITopicsService {
      */
     void getTopics(
         in GetTopicsParam param,
+        in CallerMetadata callerMetadata,
         in IGetTopicsCallback callback);
 }

@@ -15,6 +15,7 @@
  */
 package android.adservices.topics;
 
+import android.adservices.common.CallerMetadata;
 import android.adservices.exceptions.GetTopicsException;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
@@ -22,6 +23,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -125,6 +127,9 @@ public class TopicsManager {
         Objects.requireNonNull(getTopicsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
+        CallerMetadata callerMetadata = new CallerMetadata.Builder()
+                .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                .build();
         final ITopicsService service = getService();
 
         try {
@@ -133,6 +138,7 @@ public class TopicsManager {
                             .setAttributionSource(mContext.getAttributionSource())
                             .setSdkName(getTopicsRequest.getSdkName())
                             .build(),
+                    callerMetadata,
                     new IGetTopicsCallback.Stub() {
                         @Override
                         public void onResult(GetTopicsResult resultParcel) {
