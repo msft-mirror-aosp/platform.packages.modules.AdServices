@@ -32,7 +32,7 @@
 
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
-        <option name="mainline-module-package-name" value="com.google.android.supplementalprocess"/>
+        <option name="mainline-module-package-name" value="com.google.android.adservices" />
     </object>
 </configuration>
 
