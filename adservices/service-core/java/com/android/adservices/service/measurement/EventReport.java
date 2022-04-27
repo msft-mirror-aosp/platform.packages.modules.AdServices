@@ -38,6 +38,7 @@ public class EventReport {
     private long mTriggerData;
     private Long mTriggerDedupKey;
     private @Status int mStatus;
+    private Source.SourceType mSourceType;
 
     @IntDef(value = {
             Status.PENDING,
@@ -67,13 +68,14 @@ public class EventReport {
                 && mTriggerData == eventReport.mTriggerData
                 && mSourceId == eventReport.mSourceId
                 && mTriggerPriority == eventReport.mTriggerPriority
-                && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey);
+                && Objects.equals(mTriggerDedupKey, eventReport.mTriggerDedupKey)
+                && mSourceType == eventReport.mSourceType;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(mStatus, mReportTime, mAttributionDestination, mReportTo, mTriggerTime,
-                mTriggerData, mSourceId, mTriggerPriority, mTriggerDedupKey);
+                mTriggerData, mSourceId, mTriggerPriority, mTriggerDedupKey, mSourceType);
     }
 
     /**
@@ -144,6 +146,13 @@ public class EventReport {
      */
     public @Status int getStatus() {
         return mStatus;
+    }
+
+    /**
+     * SourceType of the event's source.
+     */
+    public Source.SourceType getSourceType() {
+        return mSourceType;
     }
 
     /**
@@ -238,6 +247,14 @@ public class EventReport {
         }
 
         /**
+         * See {@link EventReport#getSourceType()}
+         */
+        public Builder setSourceType(Source.SourceType sourceType) {
+            mBuilding.mSourceType = sourceType;
+            return this;
+        }
+
+        /**
          * Populates fields using {@link Source} and {@link Trigger}.
          */
         public Builder populateFromSourceAndTrigger(Source source, Trigger trigger) {
@@ -250,6 +267,7 @@ public class EventReport {
             mBuilding.mStatus = Status.PENDING;
             mBuilding.mAttributionDestination = source.getAttributionDestination();
             mBuilding.mReportTime = source.getReportingTime(trigger.getTriggerTime());
+            mBuilding.mSourceType = source.getSourceType();
             return this;
         }
 

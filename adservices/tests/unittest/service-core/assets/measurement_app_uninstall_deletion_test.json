@@ -29,7 +29,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -84,7 +85,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -116,7 +118,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -173,7 +176,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -216,7 +220,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -263,7 +268,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "R2",
@@ -274,7 +280,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "R3",
@@ -285,7 +292,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -328,7 +336,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -364,7 +373,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -421,7 +431,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": -1,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
