@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.service.measurement.attribution.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementCallback;
@@ -24,8 +25,11 @@ import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.AttributionSource;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
+import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -57,16 +61,19 @@ public final class MeasurementImpl {
     private final DatastoreManager mDatastoreManager;
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
+    private final ContentResolver mContentResolver;
 
     private MeasurementImpl(Context context) {
+        mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
         mTriggerFetcher = new TriggerFetcher();
     }
 
     @VisibleForTesting
-    MeasurementImpl(DatastoreManager datastoreManager, SourceFetcher sourceFetcher,
-            TriggerFetcher triggerFetcher) {
+    MeasurementImpl(ContentResolver contentResolver, DatastoreManager datastoreManager,
+            SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
+        mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
         mTriggerFetcher = triggerFetcher;
@@ -192,6 +199,14 @@ public final class MeasurementImpl {
                             /* triggerData */ registration.getTriggerData(),
                             /* dedupKey */ registration.getDeduplicationKey(),
                             /* priority */ registration.getTriggerPriority()));
+        }
+        try (ContentProviderClient contentProviderClient =
+                     mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {
+            if (contentProviderClient != null) {
+                contentProviderClient.insert(TRIGGER_URI, null);
+            }
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Trigger Content Provider invocation failed.");
         }
     }
 
