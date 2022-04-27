@@ -283,6 +283,31 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public List<String> getPendingEventReportIdsForGivenApp(Uri appName)
+            throws DatastoreException {
+        List<String> eventReports = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(
+                String.format("SELECT e.%1$s FROM %2$s e "
+                                + "INNER JOIN %3$s s ON (e.%4$s = s.%5$s) "
+                                + "WHERE e.%6$s = ? AND s.%7$s = ?",
+                        MeasurementTables.EventReportContract.ID,
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.EventReportContract.SOURCE_ID,
+                        MeasurementTables.SourceContract.EVENT_ID,
+                        MeasurementTables.EventReportContract.STATUS,
+                        MeasurementTables.SourceContract.REGISTRANT),
+                new String[]{String.valueOf(EventReport.Status.PENDING),
+                        String.valueOf(appName)})) {
+            while (cursor.moveToNext()) {
+                eventReports.add(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.EventReportContract.ID)));
+            }
+            return eventReports;
+        }
+    }
+
+    @Override
     public void insertEventReport(EventReport eventReport) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID,
