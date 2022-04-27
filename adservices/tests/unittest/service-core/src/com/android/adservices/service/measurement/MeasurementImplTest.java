@@ -52,7 +52,7 @@ public final class MeasurementImplTest {
     private static final Uri DEFAULT_REFERRER_URI = Uri.parse("https://example.com");
 
     @Test
-    public void testRegister_sourceTypeSuccess() {
+    public void testRegister_registrationTypeSource_sourceFetchSuccess() {
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
@@ -75,7 +75,7 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testRegister_sourceTypeFailure() {
+    public void testRegister_registrationTypeSource_sourceFetchFailure() {
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
@@ -98,7 +98,7 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testRegister_triggerTypeSuccess() {
+    public void testRegister_registrationTypeTrigger_triggerFetchSuccess() {
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
@@ -121,7 +121,7 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testRegister_triggerTypeFailure() {
+    public void testRegister_registrationTypeTrigger_triggerFetchFailure() {
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
