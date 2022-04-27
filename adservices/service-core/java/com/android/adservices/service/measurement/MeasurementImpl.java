@@ -160,7 +160,9 @@ public final class MeasurementImpl {
                     dao.insertSource(
                             /* sourceEventId */ registration.getSourceEventId(),
                             /* attributionSource */ request.getTopOriginUri(),
-                            /* attributionDestination */ registration.getDestination(),
+                            // Only first destination to avoid AdTechs change this
+                            /* attributionDestination */ responseBasedRegistrations.get(0)
+                                    .getDestination(),
                             /* reportTo */ getBaseUri(request.getRegistrationUri()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* sourceEventTime */ sourceEventTime,
@@ -187,14 +189,10 @@ public final class MeasurementImpl {
                             /* reportTo */ getBaseUri(request.getRegistrationUri()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* triggerTime */ triggerTime,
-                            /* triggerData */ getTruncatedTriggerData(registration),
+                            /* triggerData */ registration.getTriggerData(),
                             /* dedupKey */ registration.getDeduplicationKey(),
                             /* priority */ registration.getTriggerPriority()));
         }
-    }
-
-    private long getTruncatedTriggerData(TriggerRegistration registration) {
-        return registration.getTriggerData() & 7;
     }
 
     private Uri getRegistrant(AttributionSource attributionSource) {
