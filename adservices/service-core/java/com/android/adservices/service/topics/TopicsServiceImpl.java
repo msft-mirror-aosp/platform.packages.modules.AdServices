@@ -15,6 +15,12 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+
+import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
@@ -24,6 +30,10 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.service.stats.Clock;
 
 import java.util.concurrent.Executor;
 
@@ -36,28 +46,58 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final Context mContext;
     private final TopicsWorker mTopicsWorker;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private final AdServicesLogger mAdServicesLogger;
+    private Clock mClock;
 
-    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker) {
+    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker,
+            AdServicesLogger adServicesLogger, Clock clock) {
         mContext = context;
         mTopicsWorker = topicsWorker;
+        mAdServicesLogger = adServicesLogger;
+        mClock = clock;
     }
 
     @Override
     public void getTopics(
-            @NonNull GetTopicsParam topicsParam, @NonNull IGetTopicsCallback callback) {
+            @NonNull GetTopicsParam topicsParam,
+            @NonNull CallerMetadata callerMetadata,
+            @NonNull IGetTopicsCallback callback) {
+
+        final long startServiceTime = mClock.elapsedRealtime();
+        final String packageName = topicsParam.getAttributionSource().getPackageName();
+        final String sdkName = topicsParam.getSdkName();
         sBackgroundExecutor.execute(
                 () -> {
+                    int resultCode = RESULT_OK;
                     try {
                         callback.onResult(
                                 mTopicsWorker.getTopics(
-                                        topicsParam.getAttributionSource().getPackageName(),
-                                        topicsParam.getSdkName()));
+                                        packageName,
+                                        sdkName));
 
                         mTopicsWorker.recordUsage(
                                 topicsParam.getAttributionSource().getPackageName(),
                                 topicsParam.getSdkName());
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
+                        resultCode = RESULT_INTERNAL_ERROR;
+                    } finally {
+                        long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
+                        long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
+                        // Double it to simulate the return binder time is same to call binder time
+                        long binderLatency =
+                                (startServiceTime - binderCallStartTimeMillis) * 2;
+
+                        final int apiLatency = (int) (serviceLatency + binderLatency);
+                        mAdServicesLogger.logApiCallStats(new ApiCallStats.Builder()
+                                .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
+                                .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
+                                .setApiName(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS)
+                                .setAppPackageName(packageName)
+                                .setSdkPackageName(sdkName)
+                                .setLatencyMillisecond(apiLatency)
+                                .setResultCode(resultCode)
+                                .build());
                     }
                 });
     }
