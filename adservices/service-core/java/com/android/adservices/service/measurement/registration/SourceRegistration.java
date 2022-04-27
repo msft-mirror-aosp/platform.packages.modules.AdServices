@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 
@@ -105,6 +107,7 @@ public final class SourceRegistration {
             mTopOrigin = Uri.EMPTY;
             mReportingOrigin = Uri.EMPTY;
             mDestination = Uri.EMPTY;
+            mExpiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
         }
 
         /**

@@ -57,7 +57,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sBackgroundExecutor.execute(() -> {
             try {
                 callback.onResult(Integer.valueOf(
-                        mMeasurementImpl.register(request)));
+                        mMeasurementImpl.register(request, System.currentTimeMillis())));
             } catch (RemoteException e) {
                 LogUtil.e("Unable to send result to the callback", e);
             }

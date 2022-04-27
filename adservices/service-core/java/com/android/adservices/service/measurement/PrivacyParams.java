@@ -113,6 +113,19 @@ public final class PrivacyParams {
      */
     public static final int NAVIGATION_TRIGGER_DATA_CARDINALITY = 8;
 
+    /**
+     * Min expiration value in seconds for attribution reporting register source.
+     */
+    public static final long MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            TimeUnit.DAYS.toSeconds(2);
+
+    /**
+     * Max expiration value in seconds for attribution reporting register source. This value is
+     * also the default no expiration was specified.
+     */
+    public static final long MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
+            TimeUnit.DAYS.toSeconds(30);
+
     private PrivacyParams() {
     }
 }

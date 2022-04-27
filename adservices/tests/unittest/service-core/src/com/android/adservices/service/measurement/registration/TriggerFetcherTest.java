@@ -17,6 +17,7 @@ package com.android.adservices.service.measurement.registration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -87,7 +88,7 @@ public final class TriggerFetcherTest {
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
         assertEquals(3, result.get(0).getTriggerData());
         assertEquals(11111, result.get(0).getTriggerPriority());
-        assertEquals(22222, result.get(0).getDeduplicationKey());
+        assertEquals(22222, result.get(0).getDeduplicationKey().longValue());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -163,7 +164,7 @@ public final class TriggerFetcherTest {
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
         assertEquals(0, result.get(0).getTriggerData());
         assertEquals(0, result.get(0).getTriggerPriority());
-        assertEquals(0, result.get(0).getDeduplicationKey());
+        assertNull(result.get(0).getDeduplicationKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
