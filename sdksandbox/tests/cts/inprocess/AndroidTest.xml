@@ -30,4 +30,8 @@
         <option name="instrumentation-arg"
                 key="thisisignored" value="thisisignored --instrument-sdk-sandbox" />
     </test>
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
+        <option name="mainline-module-package-name" value="com.google.android.adservices" />
+    </object>
 </configuration>
