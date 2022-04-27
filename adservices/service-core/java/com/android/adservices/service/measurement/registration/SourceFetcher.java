@@ -15,6 +15,9 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+
 import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -54,10 +57,20 @@ public class SourceFetcher {
         result.setSourceEventId(json.getLong("source_event_id"));
         result.setDestination(Uri.parse(json.getString("destination")));
         if (json.has("expiry")) {
-            result.setExpiry(json.getLong("expiry"));
+            setExpiry(json.getLong("expiry"), result);
         }
         if (json.has("priority")) {
             result.setSourcePriority(json.getLong("priority"));
+        }
+    }
+
+    private static void setExpiry(long expiry, SourceRegistration.Builder result) {
+        if (expiry < MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
+            result.setExpiry(MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        } else if (expiry > MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
+            result.setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        } else {
+            result.setExpiry(expiry);
         }
     }
 

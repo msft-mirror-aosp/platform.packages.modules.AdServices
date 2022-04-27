@@ -35,6 +35,9 @@ import java.net.URL;
  */
 public class EventReportSender {
 
+    private static final String ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-attribution";
+
     /**
      * Sends an event report to the reporting origin.
      */
@@ -54,8 +57,7 @@ public class EventReportSender {
      */
     private URL createReportingFullUrl(Uri reportingUrl)
             throws MalformedURLException {
-        Uri reportingFullUrl = Uri.withAppendedPath(reportingUrl,
-                ".well-known/attribution-reporting/report-attribution");
+        Uri reportingFullUrl = Uri.withAppendedPath(reportingUrl, ATTRIBUTION_REPORT_URI_PATH);
         return new URL(reportingFullUrl.toString());
     }
 
