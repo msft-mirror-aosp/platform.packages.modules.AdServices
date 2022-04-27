@@ -183,7 +183,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.EventReportContract.TABLE,
                 /*columns=*/null,
                 MeasurementTables.EventReportContract.SOURCE_ID + " = ? ",
-                new String[]{source.getId()},
+                new String[]{String.valueOf(source.getEventId())},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
             while (cursor.moveToNext()) {
                 eventReports.add(SqliteObjectMapper.constructEventReportFromCursor(cursor));
