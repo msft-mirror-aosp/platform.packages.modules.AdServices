@@ -43,6 +43,7 @@ android_test {
     target_sdk_version: "current",
     test_suites: [
         "cts",
+        "mts-adservices",
         "general-tests",
     ],
 }
