@@ -70,7 +70,8 @@
           "triggerTime": 8640000002,
           "status": 0,
           "reportTime": 8643600030,
-          "triggerPriority": 101
+          "triggerPriority": 101,
+          "sourceType": "navigation"
         }],
         "attribution_rate_limits": [
           {
@@ -245,7 +246,8 @@
           "triggerData": 2,
           "triggerTime": 8640000002,
           "triggerPriority": 101,
-          "status": 0
+          "status": 0,
+          "sourceType": "navigation"
         }],
         "attribution_rate_limits": [
           {
@@ -355,7 +357,8 @@
           "triggerData": 2,
           "triggerTime": 8640000003,
           "triggerPriority": 101,
-          "status": 0
+          "status": 0,
+          "sourceType": "navigation"
         }],
         "attribution_rate_limits": [
           {
@@ -471,7 +474,8 @@
             "triggerTime": 8640000002,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 8816400000
+            "reportTime": 8816400000,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -589,7 +593,8 @@
             "triggerTime": 9072000001,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 9248400001
+            "reportTime": 9248400001,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": [
@@ -706,7 +711,8 @@
             "triggerTime": 8640000002,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 8816400000
+            "reportTime": 8816400000,
+            "sourceType": "event"
           }
         ],
         "attribution_rate_limits": [
@@ -823,7 +829,8 @@
             "triggerTime": 9072000001,
             "triggerPriority": 101,
             "status": 0,
-            "reportTime": 10371600000
+            "reportTime": 10371600000,
+            "sourceType": "event"
           }
         ],
         "attribution_rate_limits": [
@@ -909,7 +916,8 @@
           "triggerTime": 8640000002,
           "status": 0,
           "reportTime": 8643600030,
-          "triggerPriority": 101
+          "triggerPriority": 101,
+          "sourceType": "event"
         }],
         "attribution_rate_limits": [
           {
@@ -994,7 +1002,8 @@
           "triggerTime": 8640000002,
           "status": 0,
           "reportTime": 8643600030,
-          "triggerPriority": 101
+          "triggerPriority": 101,
+          "sourceType": "navigation"
         }],
         "attribution_rate_limits": [
           {
@@ -1089,7 +1098,8 @@
           "triggerTime": 8640000002,
           "status": 0,
           "reportTime": 8643600030,
-          "triggerPriority": 101
+          "triggerPriority": 101,
+          "sourceType": "event"
         }],
         "attribution_rate_limits": [{
           "id": "unused",
@@ -1182,7 +1192,8 @@
           "triggerTime": 8640000003,
           "status": 0,
           "reportTime": 8643600030,
-          "triggerPriority": 102
+          "triggerPriority": 102,
+          "sourceType": "event"
         }],
         "attribution_rate_limits": [
           {
