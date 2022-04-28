@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-
 import android.annotation.NonNull;
 import android.net.Uri;
 
@@ -51,7 +50,7 @@ public abstract class CustomAudienceBiddingInfo {
     /**
      * @return generic builder
      */
-    static Builder builder() {
+    public static Builder builder() {
         return new AutoValue_CustomAudienceBiddingInfo.Builder();
     }
 
@@ -103,11 +102,20 @@ public abstract class CustomAudienceBiddingInfo {
                 .build();
     }
 
+    /** Builder for {@link CustomAudienceBiddingInfo} */
     @AutoValue.Builder
-    abstract static class Builder {
-        abstract Builder setBiddingLogicUrl(Uri biddingUri);
-        abstract Builder setBuyerDecisionLogicJs(String buyerDecisionLogicJs);
-        abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
-        abstract CustomAudienceBiddingInfo build();
+    public abstract static class Builder {
+        /** Sets the BiddingLogicUrl. */
+        public abstract Builder setBiddingLogicUrl(Uri biddingUri);
+
+        /** Sets the BuyerDecisionLogicJs. */
+        public abstract Builder setBuyerDecisionLogicJs(String buyerDecisionLogicJs);
+
+        /** Sets the CustomAudienceSignals. */
+        public abstract Builder setCustomAudienceSignals(
+                CustomAudienceSignals customAudienceSignals);
+
+        /** Build a CustomAudienceBiddingInfo object. */
+        public abstract CustomAudienceBiddingInfo build();
     }
 }

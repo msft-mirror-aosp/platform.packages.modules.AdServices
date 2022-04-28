@@ -41,4 +41,24 @@ public class CustomAudienceSignalsTest {
                 customAudienceSignals.getUserBiddingSignals(),
                 CustomAudienceSignalsFixture.USER_BIDDING_SIGNALS);
     }
+
+    @Test
+    public void testBuildFromCustomAudience() {
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignals.buildFromCustomAudience(
+                        CustomAudienceSignalsFixture.CUSTOM_AUDIENCE);
+
+        assertEquals(customAudienceSignals.getOwner(), CustomAudienceSignalsFixture.OWNER);
+        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceSignalsFixture.BUYER);
+        assertEquals(customAudienceSignals.getName(), CustomAudienceSignalsFixture.NAME);
+        assertEquals(
+                customAudienceSignals.getActivationTime(),
+                CustomAudienceSignalsFixture.ACTIVATION_TIME);
+        assertEquals(
+                customAudienceSignals.getExpirationTime(),
+                CustomAudienceSignalsFixture.EXPIRATION_TIME);
+        assertEquals(
+                customAudienceSignals.getUserBiddingSignals(),
+                CustomAudienceSignalsFixture.USER_BIDDING_SIGNALS);
+    }
 }

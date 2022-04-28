@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package android.adservices.adselection;
 
-import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;

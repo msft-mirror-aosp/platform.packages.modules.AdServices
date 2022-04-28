@@ -20,6 +20,7 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import java.time.Instant;
 
@@ -58,4 +59,23 @@ public final class CustomAudienceFixture {
 
     public static final Uri VALID_BIDDING_LOGIC_URL =
             new Uri.Builder().path("valid-buyer.example.com/bidding/logic/here/").build();
+
+    public static DBCustomAudience.Builder getDBCustomAudienceBuilder() {
+        return new DBCustomAudience.Builder()
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(CustomAudienceFixture.VALID_BUYER)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        new DBTrustedBiddingData.Builder()
+                                .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
+                                .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                .build())
+                .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL);
+    }
 }
