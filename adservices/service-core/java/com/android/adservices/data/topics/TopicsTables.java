@@ -128,10 +128,12 @@ public final class TopicsTables {
                     + TopTopicsContract.RANDOM_TOPIC + " TEXT NOT NULL"
                     + ")";
 
-    // The returned topic for the app or for the sdk.
-    // Note: for App usages directly without any SDK, the SDK Name is set to empty
-    // string.
-    interface ReturnedTopicContract {
+    /**
+     * The returned topic for the app or for the sdk.
+     * Note: for App usages directly without any SDK, the SDK Name is set to empty string.
+     */
+    @VisibleForTesting
+    public interface ReturnedTopicContract {
         String TABLE = TOPICS_TABLE_PREFIX + "returned_topics";
         String ID = "_id";
         String EPOCH_ID = "epoch_id";

@@ -36,8 +36,10 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.ResultCode;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -78,9 +80,9 @@ public class TopicsServiceImplTest {
     private TopicsServiceImpl mTopicsServiceImpl;
     private CountDownLatch mGetTopicsCallbackLatch;
     private CallerMetadata mCallerMetadata;
+    private TopicsDao mTopicsDao;
 
     @Mock private EpochManager mMockEpochManager;
-    @Mock private TopicsDao mMockTopicsDao;
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
 
@@ -88,8 +90,12 @@ public class TopicsServiceImplTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
+        // Clean DB before each test
+        DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+
+        mTopicsDao = TopicsDao.getInstanceForTest(mContext);
         CacheManager cacheManager = CacheManager.getInstanceForTest(mMockEpochManager,
-                mMockTopicsDao, mMockFlags);
+                mTopicsDao, mMockFlags);
         TopicsWorker mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager,
                 cacheManager,
                 mMockFlags);
@@ -124,20 +130,17 @@ public class TopicsServiceImplTest {
         Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 3L,
                 /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
-        // A Map of <EpochId, Map<Pair<App, Sdk>, Topic>>
-        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+        // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
-            returnedTopicsFromDb.put(currentEpochId - numEpoch, new HashMap<>());
-            returnedTopicsFromDb.get(currentEpochId - numEpoch)
-                    .put(appSdkKey, topics[numEpoch - 1]);
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, String> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
+                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
-        when(mMockTopicsDao.retrieveReturnedTopics(
-                /* epochId */ Mockito.eq(currentEpochId),
-                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1)))
-                .thenReturn(returnedTopicsFromDb);
 
         GetTopicsResult getTopicsResult =
                 new GetTopicsResult.Builder()
@@ -171,9 +174,6 @@ public class TopicsServiceImplTest {
 
         assertThat(mGetTopicsCallbackLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockTopicsDao).retrieveReturnedTopics(
-                /* epochId */ Mockito.eq(currentEpochId),
-                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1));
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
         // loadcache() and getTopics() in CacheManager calls this mock
@@ -197,15 +197,9 @@ public class TopicsServiceImplTest {
 
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
-        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
-        when(mMockTopicsDao.retrieveReturnedTopics(
-                /* epochId */ Mockito.eq(currentEpochId),
-                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1)))
-                .thenReturn(returnedTopicsFromDb);
-
 
         // No topics (empty list) were returned.
         GetTopicsResult getTopicsResult =
@@ -241,9 +235,6 @@ public class TopicsServiceImplTest {
 
         assertThat(mGetTopicsCallbackLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockTopicsDao).retrieveReturnedTopics(
-                /* epochId */ Mockito.eq(currentEpochId),
-                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1));
 
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
@@ -268,15 +259,9 @@ public class TopicsServiceImplTest {
 
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
-        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
-        when(mMockTopicsDao.retrieveReturnedTopics(
-                /* epochId */ Mockito.eq(currentEpochId),
-                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1)))
-                .thenReturn(returnedTopicsFromDb);
-
 
         // No topics (empty list) were returned.
         GetTopicsResult getTopicsResult =
@@ -339,9 +324,6 @@ public class TopicsServiceImplTest {
 
         assertThat(mGetTopicsCallbackLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockTopicsDao).retrieveReturnedTopics(
-                /* epochId */ Mockito.eq(currentEpochId),
-                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1));
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
         assertThat(logOperationCalledLatch
