@@ -30,6 +30,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -42,6 +43,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -56,7 +59,11 @@ public class AdSelectionScriptEngineTest {
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
             new AdSelectionScriptEngine(sContext);
-
+    private static final Instant NOW = Instant.now();
+    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
+            new CustomAudienceSignals("owner", "buyer", "name",
+                    NOW, NOW.plus(Duration.ofDays(1)),
+                    "{}");
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {
         assertFalse(
@@ -161,7 +168,7 @@ public class AdSelectionScriptEngineTest {
                         "{}",
                         "{}",
                         "{}",
-                        "{}");
+                        CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
     }
 
@@ -185,7 +192,7 @@ public class AdSelectionScriptEngineTest {
                         "{}",
                         "{}",
                         "{}",
-                        "{}");
+                        CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).isEmpty();
     }
 
@@ -212,7 +219,7 @@ public class AdSelectionScriptEngineTest {
                         "{}",
                         "{}",
                         "{}",
-                        "{}");
+                        CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).isEmpty();
     }
 
@@ -236,7 +243,7 @@ public class AdSelectionScriptEngineTest {
                         "{}",
                         "{}",
                         "{}",
-                        "{}");
+                        CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).containsExactly(100.0, 200.0);
     }
 
@@ -260,7 +267,7 @@ public class AdSelectionScriptEngineTest {
                         "{}",
                         "{}",
                         "{}",
-                        "{}");
+                        CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).isEmpty();
     }
 
@@ -307,7 +314,7 @@ public class AdSelectionScriptEngineTest {
             String trustedBiddingSignals,
             String contextualSignals,
             String userSignals,
-            String customAudienceSignals)
+            CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
                 () -> {
@@ -331,7 +338,7 @@ public class AdSelectionScriptEngineTest {
             String sellerSignals,
             String trustedScoringSignals,
             String contextualSignals,
-            String customAudienceSignals)
+            CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
                 () -> {
