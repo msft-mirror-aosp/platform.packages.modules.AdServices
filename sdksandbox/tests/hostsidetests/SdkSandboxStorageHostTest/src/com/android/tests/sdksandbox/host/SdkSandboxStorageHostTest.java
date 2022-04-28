@@ -605,6 +605,39 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkSharedStorage_DifferentVolumeIsUsable() throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Move the app to another volume and check if the sdk can read and write to it.
+        try {
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+            assertSuccess(getDevice().executeShellCommand(
+                    "pm move-package " + TEST_APP_STORAGE_PACKAGE + " " + newVolumeUuid));
+
+            final String sharedCePath = "/mnt/expand/" + newVolumeUuid + "/misc_ce/0/sdksandbox/"
+                    + TEST_APP_STORAGE_PACKAGE + "/shared";
+            assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
+
+            String fileToRead = sharedCePath + "/readme.txt";
+            getDevice().executeShellCommand("echo something to read > " + fileToRead);
+            assertThat(getDevice().doesFileExist(fileToRead)).isTrue();
+
+            runPhase("testSdkDataPackageDirectory_SharedStorageIsUsable");
+
+            // Assert that the sdk was able to create file and directories
+            assertThat(getDevice().isDirectory(sharedCePath + "/dir")).isTrue();
+            assertThat(getDevice().doesFileExist(sharedCePath + "/dir/file")).isTrue();
+            String content = getDevice().executeShellCommand("cat " + sharedCePath + "/dir/file");
+            assertThat(content).isEqualTo("something to read");
+
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    @Test
     public void testSdkData_IsAttributedToApp() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
         runPhase("testSdkDataIsAttributedToApp");
