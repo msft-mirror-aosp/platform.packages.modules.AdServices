@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionRequest;
@@ -51,7 +52,7 @@ public final class MeasurementServiceImplTest {
     @Before
     public void setUp() {
         mMockMeasurementImpl = Mockito.mock(MeasurementImpl.class);
-        when(mMockMeasurementImpl.register(any(RegistrationRequest.class)))
+        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
                 .thenReturn(IMeasurementCallback.RESULT_OK);
     }
 

@@ -17,6 +17,8 @@
 package com.android.adservices.data.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,6 +29,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
@@ -38,9 +41,11 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
 
@@ -100,10 +105,433 @@ public class MeasurementDaoTest {
     }
 
     @After
-    public void after() {
+    public void cleanup() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         db.delete("msmt_source", null, null);
         db.delete("msmt_trigger", null, null);
+    }
+
+    @Test
+    public void testInsertSource() {
+        cleanup();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
+                dao.insertSource(
+                        ValidSourceParams.SOURCE_EVENT_ID,
+                        ValidSourceParams.sAttributionSource,
+                        ValidSourceParams.sAttributionDestination,
+                        ValidSourceParams.sReportTo,
+                        ValidSourceParams.sRegistrant,
+                        ValidSourceParams.SOURCE_EVENT_TIME,
+                        ValidSourceParams.EXPIRY_TIME,
+                        ValidSourceParams.PRIORITY,
+                        ValidSourceParams.sSourceType
+                )
+        );
+
+        try (Cursor sourceCursor =
+                     DbHelper.getInstance(sContext).getReadableDatabase()
+                             .query(MeasurementTables.SourceContract.TABLE,
+                                     null, null, null, null, null, null)) {
+            Assert.assertTrue(sourceCursor.moveToNext());
+            Source source = SqliteObjectMapper.constructSourceFromCursor(sourceCursor);
+            Assert.assertNotNull(source);
+            Assert.assertNotNull(source.getId());
+            assertEquals(ValidSourceParams.sAttributionSource, source.getAttributionSource());
+            assertEquals(ValidSourceParams.sAttributionDestination,
+                    source.getAttributionDestination());
+            assertEquals(ValidSourceParams.sReportTo, source.getReportTo());
+            assertEquals(ValidSourceParams.sRegistrant, source.getRegistrant());
+            assertEquals(ValidSourceParams.SOURCE_EVENT_TIME.longValue(), source.getEventTime());
+            assertEquals(ValidSourceParams.EXPIRY_TIME.longValue(), source.getExpiryTime());
+            assertEquals(ValidSourceParams.PRIORITY.longValue(), source.getPriority());
+            assertEquals(ValidSourceParams.sSourceType, source.getSourceType());
+        }
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentSourceEventId() {
+        assertInvalidSourceArguments(
+                null,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentAttributionSource() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                null,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                Uri.parse("com.source"),
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentAttributionDestination() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                null,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                Uri.parse("com.destination"),
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentReportTo() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                null,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                Uri.parse("com.reportTo"),
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentRegistrant() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                null,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                Uri.parse("com.registrant"),
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentSourceEventTime() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                null,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentSourceExpiryTime() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                null,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentPriority() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                null,
+                ValidSourceParams.sSourceType);
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentSourceType() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sReportTo,
+                ValidSourceParams.sRegistrant,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                null);
+    }
+
+    private void assertInvalidSourceArguments(Long sourceEventId, Uri attributionSource,
+            Uri attributionDestination, Uri reportTo, Uri registrant, Long sourceEventTime,
+            Long expiryTime, Long priority, Source.SourceType sourceType) {
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+                    try {
+                        dao.insertSource(
+                                sourceEventId,
+                                attributionSource,
+                                attributionDestination,
+                                reportTo,
+                                registrant,
+                                sourceEventTime,
+                                expiryTime,
+                                priority,
+                                sourceType
+                        );
+                        fail();
+                    } catch (DatastoreException e) {
+                        // Valid Exception
+                    }
+                }
+        );
+
+    }
+
+    @Test
+    public void testInsertTrigger() {
+        cleanup();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
+                dao.insertTrigger(
+                        ValidTriggerParams.sAttributionDestination,
+                        ValidTriggerParams.sReportTo,
+                        ValidTriggerParams.sRegistrant,
+                        ValidTriggerParams.TRIGGER_TIME,
+                        ValidTriggerParams.TRIGGER_DATA,
+                        ValidTriggerParams.DEDUP_KEY,
+                        ValidTriggerParams.PRIORITY
+                )
+        );
+
+        try (Cursor sourceCursor =
+                     DbHelper.getInstance(sContext).getReadableDatabase()
+                             .query(MeasurementTables.TriggerContract.TABLE,
+                                     null, null, null, null, null, null)) {
+            Assert.assertTrue(sourceCursor.moveToNext());
+            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
+            Assert.assertNotNull(trigger);
+            Assert.assertNotNull(trigger.getId());
+            assertEquals(ValidTriggerParams.sAttributionDestination,
+                    trigger.getAttributionDestination());
+            assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
+            assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
+            assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
+            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(), trigger.getTriggerData());
+            assertEquals(ValidTriggerParams.DEDUP_KEY, trigger.getDedupKey());
+            assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
+        }
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentAttributionDestination() {
+        assertInvalidTriggerArguments(
+                null,
+                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+
+        assertInvalidTriggerArguments(
+                Uri.parse("com.destination"),
+                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentReportTo() {
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                null,
+                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                Uri.parse("com.reportTo"),
+                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentRegistrant() {
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sReportTo,
+                null,
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sReportTo,
+                Uri.parse("com.registrant"),
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentTriggerTime() {
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.sRegistrant,
+                null,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentTriggerData() {
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.TRIGGER_TIME,
+                null,
+                ValidTriggerParams.DEDUP_KEY,
+                ValidTriggerParams.PRIORITY);
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentDedupKey() {
+        cleanup();
+
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
+                dao.insertTrigger(
+                        ValidTriggerParams.sAttributionDestination,
+                        ValidTriggerParams.sReportTo,
+                        ValidTriggerParams.sRegistrant,
+                        ValidTriggerParams.TRIGGER_TIME,
+                        ValidTriggerParams.TRIGGER_DATA,
+                        null,
+                        ValidTriggerParams.PRIORITY
+                )
+        );
+
+        try (Cursor sourceCursor =
+                     DbHelper.getInstance(sContext).getReadableDatabase()
+                             .query(MeasurementTables.TriggerContract.TABLE,
+                                     null, null, null, null, null, null)) {
+            Assert.assertTrue(sourceCursor.moveToNext());
+            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
+            Assert.assertNotNull(trigger);
+            Assert.assertNotNull(trigger.getId());
+            assertEquals(ValidTriggerParams.sAttributionDestination,
+                    trigger.getAttributionDestination());
+            assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
+            assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
+            assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
+            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(), trigger.getTriggerData());
+            assertNull(trigger.getDedupKey());
+            assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
+        }
+    }
+
+    @Test
+    public void testInsertTrigger_validateArgumentPriority() {
+        assertInvalidTriggerArguments(
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.TRIGGER_TIME,
+                ValidTriggerParams.TRIGGER_DATA,
+                ValidTriggerParams.DEDUP_KEY,
+                null);
+    }
+
+    public void assertInvalidTriggerArguments(Uri attributionDestination, Uri reportTo,
+            Uri registrant, Long triggerTime, Long triggerData, Long dedupKey, Long priority) {
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
+                    try {
+                        dao.insertTrigger(
+                                attributionDestination,
+                                reportTo,
+                                registrant,
+                                triggerTime,
+                                triggerData,
+                                dedupKey,
+                                priority
+                        );
+                        fail();
+                    } catch (DatastoreException e) {
+                        // Valid Exception
+                    }
+                }
+        );
     }
 
     @Test
@@ -306,4 +734,85 @@ public class MeasurementDaoTest {
                 MeasurementTables.SourceContract.ID + " IN ( ? )",
                 new String[]{String.join(",", dbIds)});
     }
+
+    @Test
+    public void testGetSourceEventReports() {
+        List<Source> sourceList = new ArrayList<>();
+        sourceList.add(new Source.Builder().setId("1").setEventId(3).build());
+        sourceList.add(new Source.Builder().setId("2").setEventId(4).build());
+
+        // Should match with source 1
+        List<EventReport> reportList1 = new ArrayList<>();
+        reportList1.add(new EventReport.Builder().setId("1").setSourceId(3).build());
+        reportList1.add(new EventReport.Builder().setId("7").setSourceId(3).build());
+
+        // Should match with source 2
+        List<EventReport> reportList2 = new ArrayList<>();
+        reportList2.add(new EventReport.Builder().setId("3").setSourceId(4).build());
+        reportList2.add(new EventReport.Builder().setId("8").setSourceId(4).build());
+
+        List<EventReport> reportList3 = new ArrayList<>();
+        // Should not match with any source
+        reportList3.add(new EventReport.Builder().setId("2").setSourceId(5).build());
+        reportList3.add(new EventReport.Builder().setId("4").setSourceId(6).build());
+        reportList3.add(new EventReport.Builder().setId("5").setSourceId(1).build());
+        reportList3.add(new EventReport.Builder().setId("6").setSourceId(2).build());
+
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sourceList.forEach(source -> {
+            ContentValues values = new ContentValues();
+            values.put(MeasurementTables.SourceContract.ID, source.getId());
+            values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+            db.insert(MeasurementTables.SourceContract.TABLE, null, values);
+        });
+        Stream.of(reportList1, reportList2, reportList3)
+                .flatMap(Collection::stream)
+                .forEach(eventReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.EventReportContract.ID, eventReport.getId());
+                    values.put(MeasurementTables.EventReportContract.SOURCE_ID,
+                            eventReport.getSourceId());
+                    db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
+                });
+
+        Assert.assertEquals(
+                reportList1,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSourceEventReports(
+                                        sourceList.get(0)))
+                        .orElseThrow());
+
+        Assert.assertEquals(
+                reportList2,
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSourceEventReports(
+                                        sourceList.get(1)))
+                        .orElseThrow());
+    }
+
+    private static class ValidSourceParams {
+        static final Long EXPIRY_TIME = 8640000010L;
+        static final Long PRIORITY = 100L;
+        static final Long SOURCE_EVENT_ID = 1L;
+        static final Long SOURCE_EVENT_TIME = 8640000000L;
+        static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
+        static final Uri sAttributionSource = Uri.parse("android-app://com.source");
+        static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
+        static final Uri sReportTo = Uri.parse("https://com.example");
+        static final Source.SourceType sSourceType = Source.SourceType.EVENT;
+    }
+
+    private static class ValidTriggerParams {
+        static final Long DEDUP_KEY = 200L;
+        static final Long PRIORITY = 100L;
+        static final Long TRIGGER_TIME = 8640000000L;
+        static final Long TRIGGER_DATA = 3L;
+        static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
+        static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
+        static final Uri sReportTo = Uri.parse("https://com.example");
+    }
+
 }

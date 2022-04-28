@@ -125,8 +125,14 @@
             </intent-filter>
         </activity>
 
-        <!-- Measurement report upload Job. -->
+        <!-- Measurement main report upload job. -->
         <service android:name="com.android.adservices.service.measurement.ReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement fallback report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.FallbackReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

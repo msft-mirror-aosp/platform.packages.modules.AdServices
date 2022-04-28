@@ -17,9 +17,15 @@
 package com.android.adservices.service.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementCallback;
+import android.adservices.measurement.RegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
 
@@ -27,6 +33,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.measurement.registration.SourceFetcher;
+import com.android.adservices.service.measurement.registration.TriggerFetcher;
 
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
@@ -40,6 +48,100 @@ public final class MeasurementImplTest {
 
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
+    private static final Uri DEFAULT_REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
+    private static final Uri DEFAULT_REFERRER_URI = Uri.parse("https://example.com");
+
+    @Test
+    public void testRegister_sourceTypeSuccess() {
+        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
+        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
+        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
+        when(mockSourceFetcher.fetchSource(any(), any())).thenReturn(true);
+        MeasurementImpl measurement = new MeasurementImpl(
+                mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher);
+        final int result = measurement.register(
+                new RegistrationRequest.Builder()
+                        .setRegistrationUri(DEFAULT_REGISTRATION_URI)
+                        .setReferrerUri(DEFAULT_REFERRER_URI)
+                        .setTopOriginUri(DEFAULT_URI)
+                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .build(),
+                System.currentTimeMillis()
+        );
+        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        verify(mockSourceFetcher, times(1)).fetchSource(any(), any());
+        verify(mockTriggerFetcher, never()).fetchTrigger(ArgumentMatchers.any(), any());
+    }
+
+    @Test
+    public void testRegister_sourceTypeFailure() {
+        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
+        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
+        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
+        when(mockSourceFetcher.fetchSource(any(), any())).thenReturn(false);
+        MeasurementImpl measurement = new MeasurementImpl(
+                mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher);
+        final int result = measurement.register(
+                new RegistrationRequest.Builder()
+                        .setRegistrationUri(DEFAULT_REGISTRATION_URI)
+                        .setReferrerUri(DEFAULT_REFERRER_URI)
+                        .setTopOriginUri(DEFAULT_URI)
+                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .build(),
+                System.currentTimeMillis()
+        );
+        assertEquals(IMeasurementCallback.RESULT_IO_ERROR, result);
+        verify(mockSourceFetcher, times(1)).fetchSource(any(), any());
+        verify(mockTriggerFetcher, never()).fetchTrigger(ArgumentMatchers.any(), any());
+    }
+
+    @Test
+    public void testRegister_triggerTypeSuccess() {
+        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
+        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
+        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
+        when(mockTriggerFetcher.fetchTrigger(any(), any())).thenReturn(true);
+        MeasurementImpl measurement = new MeasurementImpl(
+                mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher);
+        final int result = measurement.register(
+                new RegistrationRequest.Builder()
+                        .setRegistrationUri(DEFAULT_REGISTRATION_URI)
+                        .setReferrerUri(DEFAULT_REFERRER_URI)
+                        .setTopOriginUri(DEFAULT_URI)
+                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .build(),
+                System.currentTimeMillis()
+        );
+        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        verify(mockSourceFetcher, never()).fetchSource(any(), any());
+        verify(mockTriggerFetcher, times(1)).fetchTrigger(ArgumentMatchers.any(), any());
+    }
+
+    @Test
+    public void testRegister_triggerTypeFailure() {
+        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
+        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
+        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
+        when(mockTriggerFetcher.fetchTrigger(any(), any())).thenReturn(false);
+        MeasurementImpl measurement = new MeasurementImpl(
+                mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher);
+        final int result = measurement.register(
+                new RegistrationRequest.Builder()
+                        .setRegistrationUri(DEFAULT_REGISTRATION_URI)
+                        .setReferrerUri(DEFAULT_REFERRER_URI)
+                        .setTopOriginUri(DEFAULT_URI)
+                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .build(),
+                System.currentTimeMillis()
+        );
+        assertEquals(IMeasurementCallback.RESULT_IO_ERROR, result);
+        verify(mockSourceFetcher, never()).fetchSource(any(), any());
+        verify(mockTriggerFetcher, times(1)).fetchTrigger(ArgumentMatchers.any(), any());
+    }
 
     @Test
     public void testDeleteRegistrations_successfulNoOptionalParameters() throws Exception {
@@ -118,7 +220,8 @@ public final class MeasurementImplTest {
     @Test
     public void testDeleteRegistrations_internalError() throws Exception {
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
-        MeasurementImpl measurement = new MeasurementImpl(mockDatastoreManager);
+        MeasurementImpl measurement = new MeasurementImpl(
+                mockDatastoreManager, new SourceFetcher(), new TriggerFetcher());
         Mockito.when(mockDatastoreManager.runInTransaction(ArgumentMatchers.any()))
                 .thenReturn(false);
         final int result = measurement.deleteRegistrations(

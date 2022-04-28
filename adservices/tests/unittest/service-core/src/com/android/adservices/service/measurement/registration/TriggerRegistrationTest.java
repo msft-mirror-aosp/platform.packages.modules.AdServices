@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import android.content.Context;
 import android.net.Uri;
@@ -50,7 +51,7 @@ public final class TriggerRegistrationTest {
         assertEquals("https://bar.com", response.getReportingOrigin().toString());
         assertEquals(1, response.getTriggerData());
         assertEquals(345678, response.getTriggerPriority());
-        assertEquals(2345678, response.getDeduplicationKey());
+        assertEquals(2345678, response.getDeduplicationKey().longValue());
     }
 
     @Test
@@ -65,6 +66,6 @@ public final class TriggerRegistrationTest {
         assertEquals("", response.getReportingOrigin().toString());
         assertEquals(0, response.getTriggerData());
         assertEquals(0, response.getTriggerPriority());
-        assertEquals(0, response.getDeduplicationKey());
+        assertNull(response.getDeduplicationKey());
     }
 }

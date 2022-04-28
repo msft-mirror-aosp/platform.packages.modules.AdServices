@@ -27,7 +27,7 @@ public final class TriggerRegistration {
     private final Uri mReportingOrigin;
     private final long mTriggerData;
     private final long mTriggerPriority;
-    private final long mDeduplicationKey;
+    private final Long mDeduplicationKey;
 
     /**
      * Create a trigger registration.
@@ -37,7 +37,7 @@ public final class TriggerRegistration {
             @NonNull Uri reportingOrigin,
             long triggerData,
             long triggerPriority,
-            long deduplicationKey) {
+            Long deduplicationKey) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mTriggerData = triggerData;
@@ -76,7 +76,7 @@ public final class TriggerRegistration {
     /**
      * De-dup key.
      */
-    public @NonNull long getDeduplicationKey() {
+    public @NonNull Long getDeduplicationKey() {
         return mDeduplicationKey;
     }
 
@@ -88,7 +88,7 @@ public final class TriggerRegistration {
         private Uri mReportingOrigin;
         private long mTriggerData;
         private long mTriggerPriority;
-        private long mDeduplicationKey;
+        private Long mDeduplicationKey;
 
         public Builder() {
             mTopOrigin = Uri.EMPTY;

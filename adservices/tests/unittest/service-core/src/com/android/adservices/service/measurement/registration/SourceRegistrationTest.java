@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+
 import static org.junit.Assert.assertEquals;
 
 import android.content.Context;
@@ -67,7 +69,7 @@ public final class SourceRegistrationTest {
         assertEquals("", response.getReportingOrigin().toString());
         assertEquals("", response.getDestination().toString());
         assertEquals(0, response.getSourceEventId());
-        assertEquals(0, response.getExpiry());
+        assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
     }
 }
