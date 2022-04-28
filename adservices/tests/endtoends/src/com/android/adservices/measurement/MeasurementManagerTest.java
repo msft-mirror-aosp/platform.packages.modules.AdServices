@@ -15,7 +15,6 @@
  */
 package com.android.adservices.measurement;
 
-import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.MeasurementManager;
 import android.content.Context;
 import android.net.Uri;
@@ -25,7 +24,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
@@ -46,12 +45,11 @@ public class MeasurementManagerTest {
         Log.i(TAG, "Calling registerSource()");
         final long start = System.currentTimeMillis();
 
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         mm.registerSource(
                 Uri.parse("https://example.com"), null,
                 CALLBACK_EXECUTOR, future::complete);
-        Integer result = future.get();
-        assertEquals(IMeasurementCallback.RESULT_OK, result.intValue());
+        assertNull(future.get());
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "registerSource() took "
@@ -75,11 +73,10 @@ public class MeasurementManagerTest {
         Log.i(TAG, "Calling registerTrigger()");
         final long start = System.currentTimeMillis();
 
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         mm.registerTrigger(Uri.parse("https://example.com"),
                 CALLBACK_EXECUTOR, future::complete);
-        Integer result = future.get();
-        assertEquals(IMeasurementCallback.RESULT_OK, result.intValue());
+        assertNull(future.get());
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "registerTrigger() took " + duration + " ms: " + label);
@@ -101,13 +98,12 @@ public class MeasurementManagerTest {
         Log.i(TAG, "Calling deleteRegistrations()");
         final long start = System.currentTimeMillis();
 
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         mm.deleteRegistrations(
                 Uri.parse("https://example.com"),
                 Instant.ofEpochMilli(123456789L), Instant.now(),
                 CALLBACK_EXECUTOR, future::complete);
-        Integer result = future.get();
-        assertEquals(IMeasurementCallback.RESULT_OK, result.intValue());
+        assertNull(future.get());
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "deleteRegistrations() took " + duration + " ms: " + label);
