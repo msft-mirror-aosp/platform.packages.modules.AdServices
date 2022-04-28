@@ -16,17 +16,18 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 
 import androidx.room.ColumnInfo;
+
+import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import java.time.Instant;
 import java.util.Objects;
 
 /**
  * This class represents the custom_audience_signals passed into generateBid and scoreAd javascript.
- * It contains fields from the {@link CustomAudience}.
+ * It contains fields from a {@link DBCustomAudience} object.
  */
 public class CustomAudienceSignals {
     @ColumnInfo(name = "owner")
@@ -184,7 +185,7 @@ public class CustomAudienceSignals {
         }
 
         /**
-         * Sets the {@link CustomAudience} name.
+         * Sets the application name.
          *
          * <p>See {@link #getName()} for more information.
          */
@@ -196,7 +197,7 @@ public class CustomAudienceSignals {
         }
 
         /**
-         * Sets the {@link CustomAudience} activation time.
+         * Sets the activation time.
          *
          * <p>See {@link #getActivationTime()} for more information.
          */
@@ -208,7 +209,7 @@ public class CustomAudienceSignals {
         }
 
         /**
-         * Sets the {@link CustomAudience} expiration time.
+         * Sets the expiration time.
          *
          * <p>See {@link #getExpirationTime()} for more information.
          */
