@@ -15,17 +15,17 @@
  */
 package com.android.adservices.service.topics;
 
-import android.adservices.topics.GetTopicsParam;
-import android.adservices.topics.IGetTopicsCallback;
-import android.adservices.topics.ITopicsService;
+import android.adservices.GetTopicsRequest;
+import android.adservices.GetTopicsResponse;
+import android.adservices.IGetTopicsCallback;
+import android.adservices.ITopicsService;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
 
-import java.util.concurrent.Executor;
+import java.util.Arrays;
 
 /**
  * Implementation of {@link ITopicsService}.
@@ -34,47 +34,24 @@ import java.util.concurrent.Executor;
  */
 public class TopicsServiceImpl extends ITopicsService.Stub {
     private final Context mContext;
-    private final TopicsWorker mTopicsWorker;
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
-    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker) {
+    public TopicsServiceImpl(Context context) {
         mContext = context;
-        mTopicsWorker = topicsWorker;
     }
 
     @Override
-    public void getTopics(
-            @NonNull GetTopicsParam topicsParam, @NonNull IGetTopicsCallback callback) {
-        sBackgroundExecutor.execute(
-                () -> {
-                    try {
-                        callback.onResult(
-                                mTopicsWorker.getTopics(
-                                        topicsParam.getAttributionSource().getPackageName(),
-                                        topicsParam.getSdkName()));
-
-                        mTopicsWorker.recordUsage(
-                                topicsParam.getAttributionSource().getPackageName(),
-                                topicsParam.getSdkName());
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
-                });
-    }
-
-    /**
-     * Init the Topics Service.
-     */
-    public void init() {
-        sBackgroundExecutor.execute(() -> {
-            // This is to prevent cold-start latency on getTopics API.
-            // Load cache when the service is created.
-            // The recommended pattern is:
-            // 1) In app startup, wake up the TopicsService.
-            // 2) The TopicsService will load the Topics Cache from DB into memory.
-            // 3) Later, when the app calls Topics API, the returned Topics will be served from
-            // Cache in memory.
-            mTopicsWorker.loadCache();
-        });
+    public void getTopics(@NonNull GetTopicsRequest topicsParams,
+            @NonNull IGetTopicsCallback callback) {
+        // TODO: Implement!
+        try {
+            callback.onResult(
+                    new GetTopicsResponse.Builder()
+                            .setTaxonomyVersions(Arrays.asList(1L, 2L))
+                            .setModelVersions(Arrays.asList(3L, 4L))
+                            .setTopics(Arrays.asList("topic1", "topic2"))
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+        }
     }
 }

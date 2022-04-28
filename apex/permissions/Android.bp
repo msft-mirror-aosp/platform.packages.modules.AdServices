@@ -1,3 +1,4 @@
+//
 // Copyright (C) 2022 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,28 +12,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+//
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
+    default_visibility: ["//packages/modules/AdServices:__subpackages__"],
 }
 
-android_test {
-    name: "AdServicesFrameworkUnitTests",
-    srcs: [
-        "src/**/*.java",
-        ":framework-adservices-sources",
-    ],
-    static_libs: [
-        "androidx.test.runner",
-        "truth-prebuilt",
-        "mockito-target-extended-minus-junit4",
-    ],
-    libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
-    ],
-    min_sdk_version: "Tiramisu", // TODO(b/217941602): update this.
-    target_sdk_version: "current",
-    test_suites: ["general-tests"],
+prebuilt_etc {
+    name: "privapp_allowlist_com.android.adservices.api.xml",
+    sub_dir: "permissions",
+    src: "com.android.adservices.api.xml",
 }

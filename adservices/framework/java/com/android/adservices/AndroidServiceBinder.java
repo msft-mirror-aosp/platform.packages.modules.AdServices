@@ -15,17 +15,13 @@
  */
 package com.android.adservices;
 
-import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
+import static com.android.adservices.AdServicesCommon.ADSERVICES_PACKAGE;
 
-import android.annotation.Nullable;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.os.IBinder;
 
 import com.android.internal.annotations.GuardedBy;
@@ -49,15 +45,11 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     // TODO(b/218519915): have a better timeout handling.
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
 
+    private final Object mLock = new Object();
     private final String mServiceIntentAction;
     private final Function<IBinder, T> mBinderConverter;
     private final Context mContext;
-
-    // A CountDownloadLatch which will be opened when the connection is established or any error
-    // occurs.
-    private CountDownLatch mConnectionCountDownLatch;
-
-    private final Object mLock = new Object();
+    private CountDownLatch mCountDownLatch;
 
     @GuardedBy("mLock")
     private T mService;
@@ -74,62 +66,10 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
     public T getService() {
         synchronized (mLock) {
-            // If we already have a service, just return it.
-            if (mService != null) {
-                // Note there's a chance the service dies right after we return here,
-                // but we can't avoid that.
-                return mService;
-            }
-
-            // If there's no pending bindService(), we need to start one.
-            if (mServiceConnection == null) {
-                // There's no other pending connection, creating one.
-                ComponentName componentName = getServiceComponentName();
-                if (componentName == null) {
-                    LogUtil.e("Failed to find AdServices service");
-                    return null;
-                }
-                final Intent intent = new Intent().setComponent(componentName);
-
-                LogUtil.d("bindService: " + mServiceIntentAction);
-
-                // This latch will open when the connection is established or any error occurs.
-                mConnectionCountDownLatch = new CountDownLatch(1);
-                mServiceConnection = new AdServicesServiceConnection();
-
-                // We use Runnable::run so that the callback is called on a binder thread.
-                // Otherwise we'd use the main thread, which could cause a deadlock.
-                final boolean success =
-                        mContext.bindService(intent, BIND_FLAGS, Runnable::run, mServiceConnection);
-                if (!success) {
-                    LogUtil.e("Failed to bindService: " + intent);
-                    mServiceConnection = null;
-                    return null;
-                } else {
-                    LogUtil.d("bindService() already pending...");
-                }
-            }
-        }
-
-        // Then wait for connection result.
-        // Note: We must not hold the lock while waiting for the connection since the
-        // onServiceConnected callback also needs to acquire the lock. This would cause a deadlock.
-        try {
-            // TODO(b/218519915): Better timeout handling
-            mConnectionCountDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Thread interrupted"); // TODO Handle it better.
-        }
-
-        synchronized (mLock) {
-            if (mService == null) {
-                throw new RuntimeException("Failed to connect to the service");
-            }
-            return mService;
+            return bindServiceLocked();
         }
     }
 
-    // A class to handle the connection to the AdService Services.
     private class AdServicesServiceConnection implements ServiceConnection {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -137,8 +77,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             synchronized (mLock) {
                 mService = mBinderConverter.apply(service);
             }
-            // Connection is established, open the latch.
-            mConnectionCountDownLatch.countDown();
+            mCountDownLatch.countDown();
         }
 
         @Override
@@ -147,7 +86,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             synchronized (mLock) {
                 mService = null;
             }
-            mConnectionCountDownLatch.countDown();
+            mCountDownLatch.countDown();
         }
 
         @Override
@@ -156,7 +95,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             synchronized (mLock) {
                 mService = null;
             }
-            mConnectionCountDownLatch.countDown();
+            mCountDownLatch.countDown();
         }
 
         @Override
@@ -165,33 +104,47 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             synchronized (mLock) {
                 mService = null;
             }
-            mConnectionCountDownLatch.countDown();
+            mCountDownLatch.countDown();
         }
     }
 
-    @Nullable
-    private ComponentName getServiceComponentName() {
-        if (!mServiceIntentAction.equals(ACTION_TOPICS_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_MEASUREMENT_SERVICE)) {
-            LogUtil.e("Bad service intent action: " + mServiceIntentAction);
-            return null;
-        }
-        final Intent intent = new Intent(mServiceIntentAction);
+    @GuardedBy("mLock")
+    private T bindServiceLocked() {
+        final Intent intent = new Intent(ACTION_TOPICS_SERVICE);
+        intent.setPackage(ADSERVICES_PACKAGE);
 
-        final ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(intent,
-                PackageManager.GET_SERVICES);
-        if (resolveInfo == null) {
-            LogUtil.e("Failed to find resolveInfo for adServices service");
-            return null;
+        // If we already have a service, just return it.
+        if (mService != null) {
+            // Note there's a chance the service dies right after we return here,
+            // but we can't avoid that.
+            return mService;
         }
 
-        final ServiceInfo serviceInfo = resolveInfo.serviceInfo;
-        if (serviceInfo == null) {
-            LogUtil.e("Failed to find serviceInfo for adServices service");
+        LogUtil.d("bindService: " + mServiceIntentAction);
+        mCountDownLatch = new CountDownLatch(1);
+        mServiceConnection = new AdServicesServiceConnection();
+
+        // We use Runnable::run so that the callback is called on a binder thread.
+        // Otherwise we'd use the main thread, which could cause a deadlock.
+        final boolean success = mContext.bindService(intent, BIND_FLAGS, Runnable::run,
+                mServiceConnection);
+        if (!success) {
+            LogUtil.e("Failed to bindService: " + intent);
+            mServiceConnection = null;
             return null;
         }
 
-        return new ComponentName(serviceInfo.packageName, serviceInfo.name);
+        // Then wait for connection result.
+        try {
+            // TODO(b/218519915): Better timeout handling
+            mCountDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (mService == null) {
+                throw new RuntimeException("Failed to connect to the service");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Thread interrupted"); // TODO Handle it better.
+        }
+        return mService;
     }
 
     @Override
