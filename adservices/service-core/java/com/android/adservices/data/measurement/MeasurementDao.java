@@ -330,6 +330,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_PRIORITY,
                 eventReport.getTriggerPriority());
+        values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
+                eventReport.getSourceType().toString());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);

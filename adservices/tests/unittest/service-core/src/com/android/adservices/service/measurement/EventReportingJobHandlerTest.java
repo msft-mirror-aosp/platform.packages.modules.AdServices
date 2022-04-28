@@ -53,6 +53,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(0)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mDeliveredEventReport = new EventReport.Builder()
@@ -65,6 +66,7 @@ public class EventReportingJobHandlerTest {
                 .setTriggerData(2)
                 .setTriggerTime(8640000002L)
                 .setStatus(1)
+                .setSourceType(Source.SourceType.NAVIGATION)
                 .build();
 
     private final EventReport mPendingEventReportDeadlineReached1 = new EventReport.Builder()
@@ -78,6 +80,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
             .setReportTime(mTimestampMs - 10000)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mPendingEventReportDeadlineReached2 = new EventReport.Builder()
@@ -91,6 +94,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
             .setReportTime(mTimestampMs)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mPendingEventReportDeadlineNotReached1 = new EventReport.Builder()
@@ -104,6 +108,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
             .setReportTime(mTimestampMs + 200)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mPendingEventReportOutsideWindow = new EventReport.Builder()
@@ -118,6 +123,7 @@ public class EventReportingJobHandlerTest {
             .setStatus(EventReport.Status.PENDING)
             .setReportTime(
                     mTimestampMs - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS - 1)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mPendingEventReportNoDeadline1 = new EventReport.Builder()
@@ -130,6 +136,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mPendingEventReportNoDeadline2 = new EventReport.Builder()
@@ -142,6 +149,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final EventReport mNotPendingEventReportNoDeadline = new EventReport.Builder()
@@ -154,6 +162,7 @@ public class EventReportingJobHandlerTest {
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.DELIVERED)
+            .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
     private final Source mSourceWithAppName1 = new Source.Builder()
@@ -449,6 +458,7 @@ public class EventReportingJobHandlerTest {
         values.put("trigger_time", eventReport.getTriggerTime());
         values.put("status", eventReport.getStatus());
         values.put("report_time", eventReport.getReportTime());
+        values.put("source_type", eventReport.getSourceType().toString());
         return values;
     }
 
@@ -471,6 +481,8 @@ public class EventReportingJobHandlerTest {
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex("trigger_time")))
                 .setTriggerData(cursor.getLong(cursor.getColumnIndex("trigger_data")))
                 .setReportTime(cursor.getLong(cursor.getColumnIndex("report_time")))
+                .setSourceType(Source.SourceType.valueOf(cursor
+                        .getString(cursor.getColumnIndex("source_type"))))
                 .build();
     }
 }
