@@ -26,7 +26,6 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import android.cts.install.lib.host.InstallUtilsHost;
 import android.platform.test.annotations.LargeTest;
 
 import com.android.tradefed.log.LogUtil.CLog;
@@ -64,7 +63,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
     private static final long WAIT_FOR_RECONCILE_MS = 5000;
 
-    private final InstallUtilsHost mHostUtils = new InstallUtilsHost(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
 
@@ -572,7 +570,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Store number of package directories under root path for comparison later
         final String ceSandboxPath = getSdkDataRootPath(0, /*isCeData=*/true);
         String[] children = getDevice().getChildren(ceSandboxPath);
-        final int numberOfChildren = children.length;
 
         try {
             mDeviceLockUtils.rebootToLockedDevice();
