@@ -35,7 +35,6 @@ import com.android.adservices.service.measurement.Trigger;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -59,51 +58,6 @@ public class MeasurementDaoTest {
     private final Uri mAppNoTriggers = Uri.parse("android-app://com.example1.no-triggers");
     private final Uri mInstalledPackage = Uri.parse("android-app://com.example.installed");
 
-    @Before
-    public void before() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        List<Source> sourcesList = new ArrayList<>();
-        sourcesList.add(new Source.Builder()
-                .setId("S1")
-                .setRegistrant(mAppTwoSources)
-                .build());
-        sourcesList.add(new Source.Builder()
-                .setId("S2")
-                .setRegistrant(mAppTwoSources)
-                .build());
-        sourcesList.add(new Source.Builder()
-                .setId("S3")
-                .setRegistrant(mAppOneSource)
-                .build());
-        for (Source source : sourcesList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", source.getId());
-            values.put("registrant", source.getRegistrant().toString());
-            long row = db.insert("msmt_source", null, values);
-            Assert.assertNotEquals("Source insertion failed", -1, row);
-        }
-        List<Trigger> triggersList = new ArrayList<>();
-        triggersList.add(new Trigger.Builder()
-                .setId("T1")
-                .setRegistrant(mAppTwoTriggers)
-                .build());
-        triggersList.add(new Trigger.Builder()
-                .setId("T2")
-                .setRegistrant(mAppTwoTriggers)
-                .build());
-        triggersList.add(new Trigger.Builder()
-                .setId("T3")
-                .setRegistrant(mAppOneTrigger)
-                .build());
-        for (Trigger trigger : triggersList) {
-            ContentValues values = new ContentValues();
-            values.put("_id", trigger.getId());
-            values.put("registrant", trigger.getRegistrant().toString());
-            long row = db.insert("msmt_trigger", null, values);
-            Assert.assertNotEquals("Trigger insertion failed", -1, row);
-        }
-    }
-
     @After
     public void cleanup() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
@@ -113,8 +67,6 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource() {
-        cleanup();
-
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertSource(
                         ValidSourceParams.SOURCE_EVENT_ID,
@@ -346,8 +298,6 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertTrigger() {
-        cleanup();
-
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(
                         ValidTriggerParams.sAttributionDestination,
@@ -536,6 +486,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetNumSourcesPerRegistrant() {
+        setupSourceAndTriggerData();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         dm.runInTransaction(measurementDao -> {
             assertEquals(2, measurementDao
@@ -553,6 +504,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetNumTriggersPerRegistrant() {
+        setupSourceAndTriggerData();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
         dm.runInTransaction(measurementDao -> {
             assertEquals(2, measurementDao
@@ -703,38 +655,6 @@ public class MeasurementDaoTest {
         Assert.assertFalse(getInstallAttributionStatus("IA1", db));
     }
 
-    private Source createSourceForIATest(String id, long currentTime, long priority,
-            int eventTimePastDays, boolean expiredIAWindow) {
-        return new Source.Builder()
-                .setId(id)
-                .setAttributionSource(Uri.parse("android-app://com.example.sample"))
-                .setRegistrant(Uri.parse("android-app://com.example.sample"))
-                .setReportTo(Uri.parse("https://example.com"))
-                .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
-                .setAttributionDestination(mInstalledPackage)
-                .setEventTime(currentTime - TimeUnit.DAYS.toMillis(
-                        eventTimePastDays == -1 ? 10 : eventTimePastDays))
-                .setPriority(priority == -1 ? 100 : priority)
-                .build();
-    }
-
-    private boolean getInstallAttributionStatus(String sourceDbId, SQLiteDatabase db) {
-        Cursor cursor = db.query(MeasurementTables.SourceContract.TABLE,
-                new String[]{ MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED },
-                MeasurementTables.SourceContract.ID + " = ? ", new String[]{ sourceDbId },
-                null, null,
-                null, null);
-        Assert.assertTrue(cursor.moveToFirst());
-        return cursor.getInt(0) == 1;
-    }
-
-    private void removeSources(List<String> dbIds, SQLiteDatabase db) {
-        db.delete(MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.ID + " IN ( ? )",
-                new String[]{String.join(",", dbIds)});
-    }
-
     @Test
     public void testGetSourceEventReports() {
         List<Source> sourceList = new ArrayList<>();
@@ -791,6 +711,82 @@ public class MeasurementDaoTest {
                                 measurementDao -> measurementDao.getSourceEventReports(
                                         sourceList.get(1)))
                         .orElseThrow());
+    }
+
+    private void setupSourceAndTriggerData() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        List<Source> sourcesList = new ArrayList<>();
+        sourcesList.add(new Source.Builder()
+                .setId("S1")
+                .setRegistrant(mAppTwoSources)
+                .build());
+        sourcesList.add(new Source.Builder()
+                .setId("S2")
+                .setRegistrant(mAppTwoSources)
+                .build());
+        sourcesList.add(new Source.Builder()
+                .setId("S3")
+                .setRegistrant(mAppOneSource)
+                .build());
+        for (Source source : sourcesList) {
+            ContentValues values = new ContentValues();
+            values.put("_id", source.getId());
+            values.put("registrant", source.getRegistrant().toString());
+            long row = db.insert("msmt_source", null, values);
+            Assert.assertNotEquals("Source insertion failed", -1, row);
+        }
+        List<Trigger> triggersList = new ArrayList<>();
+        triggersList.add(new Trigger.Builder()
+                .setId("T1")
+                .setRegistrant(mAppTwoTriggers)
+                .build());
+        triggersList.add(new Trigger.Builder()
+                .setId("T2")
+                .setRegistrant(mAppTwoTriggers)
+                .build());
+        triggersList.add(new Trigger.Builder()
+                .setId("T3")
+                .setRegistrant(mAppOneTrigger)
+                .build());
+        for (Trigger trigger : triggersList) {
+            ContentValues values = new ContentValues();
+            values.put("_id", trigger.getId());
+            values.put("registrant", trigger.getRegistrant().toString());
+            long row = db.insert("msmt_trigger", null, values);
+            Assert.assertNotEquals("Trigger insertion failed", -1, row);
+        }
+    }
+
+    private Source createSourceForIATest(String id, long currentTime, long priority,
+            int eventTimePastDays, boolean expiredIAWindow) {
+        return new Source.Builder()
+                .setId(id)
+                .setAttributionSource(Uri.parse("android-app://com.example.sample"))
+                .setRegistrant(Uri.parse("android-app://com.example.sample"))
+                .setReportTo(Uri.parse("https://example.com"))
+                .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
+                .setAttributionDestination(mInstalledPackage)
+                .setEventTime(currentTime - TimeUnit.DAYS.toMillis(
+                        eventTimePastDays == -1 ? 10 : eventTimePastDays))
+                .setPriority(priority == -1 ? 100 : priority)
+                .build();
+    }
+
+    private boolean getInstallAttributionStatus(String sourceDbId, SQLiteDatabase db) {
+        Cursor cursor = db.query(MeasurementTables.SourceContract.TABLE,
+                new String[]{ MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED },
+                MeasurementTables.SourceContract.ID + " = ? ", new String[]{ sourceDbId },
+                null, null,
+                null, null);
+        Assert.assertTrue(cursor.moveToFirst());
+        return cursor.getInt(0) == 1;
+    }
+
+    private void removeSources(List<String> dbIds, SQLiteDatabase db) {
+        db.delete(MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.ID + " IN ( ? )",
+                new String[]{String.join(",", dbIds)});
     }
 
     private static class ValidSourceParams {
