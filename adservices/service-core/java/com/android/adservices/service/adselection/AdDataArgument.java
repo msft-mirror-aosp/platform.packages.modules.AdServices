@@ -30,8 +30,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * A utility class to support the conversion from {@link AdData} to {@link JSScriptArgument} and
- * to parse JS result string into {@link AdData}.
+ * A utility class to support the conversion from {@link AdData} to {@link JSScriptArgument} and to
+ * parse JS result string into {@link AdData}.
  */
 public class AdDataArgument {
     @VisibleForTesting static final String RENDER_URL_FIELD_NAME = "render_url";

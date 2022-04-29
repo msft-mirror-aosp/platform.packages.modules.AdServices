@@ -258,7 +258,8 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(reportScriptResult);
         try {
             Preconditions.checkState(
-                    !reportScriptResult.equals("null"), "Null result returned by report script!");
+                    !reportScriptResult.equals("null"),
+                    "Null string result returned by report script!");
 
             JSONObject jsonResult = new JSONObject(reportScriptResult);
 

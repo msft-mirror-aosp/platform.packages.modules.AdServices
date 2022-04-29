@@ -32,7 +32,7 @@ public class CustomAudienceSignalsFixture {
     public static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
     public static final Instant EXPIRATION_TIME =
             CLOCK.instant().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MILLIS);
-    public static final String USER_BIDDING_SIGNALS = "exampleUserBiddingSignals";
+    public static final String USER_BIDDING_SIGNALS = "{\"user_bidding_signals\":1}";
 
     public static CustomAudienceSignals aCustomAudienceSignals() {
         return new CustomAudienceSignals.Builder()
