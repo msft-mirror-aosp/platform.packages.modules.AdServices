@@ -43,8 +43,10 @@
     <!-- UI strings -->
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
+    <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_switch_title">Privacy Sandbox beta</string>
     <!-- Summary of Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_privacy_sandbox_beta_summary">Toggle Privacy Sandbox beta</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_summary">Toggle Privacy Sandbox beta</string>
     <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_title">Your general interests</string>
     <!-- Summary of the topics preference. [CHAR LIMIT=NONE] -->

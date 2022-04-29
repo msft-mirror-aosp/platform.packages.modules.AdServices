@@ -3,15 +3,18 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="Privacy Sandbox beta">
   <SwitchPreference
+      android:id="@+id/privacy_sandbox_beta_switch"
       android:key="privacy_sandbox_beta_switch"
-      android:title="@string/settingsUI_privacy_sandbox_beta_title"
-      android:summary="@string/settingsUI_privacy_sandbox_beta_summary" />
+      android:summary="@string/settingsUI_privacy_sandbox_beta_switch_summary"
+      android:title="@string/settingsUI_privacy_sandbox_beta_switch_title" />
   <Preference
+      android:id="@+id/topics_preference"
       android:key="topics_preference"
-      android:title="@string/settingsUI_topics_title"
-      android:summary="@string/settingsUI_topics_summary" />
+      android:summary="@string/settingsUI_topics_summary"
+      android:title="@string/settingsUI_topics_title" />
   <Preference
+      android:id="@+id/apps_preference"
       android:key="apps_preference"
-      android:title="@string/settingsUI_apps_title"
-      android:summary="@string/settingsUI_apps_summary" />
+      android:summary="@string/settingsUI_apps_summary"
+      android:title="@string/settingsUI_apps_title" />
 </PreferenceScreen>
