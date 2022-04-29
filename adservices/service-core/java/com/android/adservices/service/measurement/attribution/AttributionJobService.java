@@ -77,7 +77,6 @@ public class AttributionJobService extends JobService {
                 ))
                 .setTriggerContentUpdateDelay(
                         SystemHealthParams.ATTRIBUTION_JOB_TRIGGERING_DELAY_MS)
-                .setRequiresDeviceIdle(true)
                 .build();
         jobScheduler.schedule(job);
     }
