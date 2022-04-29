@@ -20,8 +20,6 @@ import static android.adservices.topics.TopicsManager.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,10 +31,14 @@ import android.content.AttributionSource;
 import android.content.Context;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.ResultCode;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -53,6 +55,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -62,27 +67,35 @@ import java.util.concurrent.TimeUnit;
 public class TopicsServiceImplTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
-    private static final int SOME_UID = 11;
     private static final String SOME_SDK_NAME = "SomeSdkName";
+    private static final int SOME_UID = 11;
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
+    private final AdServicesLogger mAdServicesLogger =
+            Mockito.spy(AdServicesLoggerImpl.getInstance());
+
     private TopicsServiceImpl mTopicsServiceImpl;
     private CountDownLatch mGetTopicsCallbackLatch;
     private CallerMetadata mCallerMetadata;
 
-    @Mock private TopicsWorker mMockTopicsWorker;
-
+    @Mock private EpochManager mMockEpochManager;
+    @Mock private TopicsDao mMockTopicsDao;
+    @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
 
-    private AdServicesLogger mAdServicesLogger =
-            Mockito.spy(AdServicesLoggerImpl.getInstance());
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+
+        CacheManager cacheManager = CacheManager.getInstanceForTest(mMockEpochManager,
+                mMockTopicsDao, mMockFlags);
+        TopicsWorker mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager,
+                cacheManager,
+                mMockFlags);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mTopicsServiceImpl = new TopicsServiceImpl(mContext,
-                mMockTopicsWorker, mAdServicesLogger, mClock);
+                mTopicsWorker, mAdServicesLogger, mClock);
         mCallerMetadata = new CallerMetadata.Builder()
                 .setBinderElapsedTimestamp(100L)
                 .build();
@@ -101,26 +114,44 @@ public class TopicsServiceImplTest {
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
+        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 4L);
+        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 2L,
+                /* modelVersion = */ 5L);
+        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 3L,
+                /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // A Map of <EpochId, Map<Pair<App, Sdk>, Topic>>
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            returnedTopicsFromDb.put(currentEpochId - numEpoch, new HashMap<>());
+            returnedTopicsFromDb.get(currentEpochId - numEpoch)
+                    .put(appSdkKey, topics[numEpoch - 1]);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(
+                /* epochId */ Mockito.eq(currentEpochId),
+                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1)))
+                .thenReturn(returnedTopicsFromDb);
+
         GetTopicsResult getTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setTaxonomyVersions(Arrays.asList(1L, 2L))
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList("topic1", "topic2"))
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList("topic1", "topic2", "topic3"))
                         .build();
 
-        when(mMockTopicsWorker.getTopics(/* app = */ anyString(), /* sdk = */ anyString()))
-                .thenReturn(getTopicsResult);
+        // Call init() to load the cache
+        mTopicsServiceImpl.init();
 
         // To capture result in inner class, we have to declare final.
         final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
         mGetTopicsCallbackLatch = new CountDownLatch(1);
-
-        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(invocation -> {
-            // The method TopicsWorker.recordUsage is called.
-            recordUsageCalledLatch.countDown();
-            return null;
-        }).when(mMockTopicsWorker).recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
 
         mTopicsServiceImpl.getTopics(
                 request,
@@ -140,10 +171,15 @@ public class TopicsServiceImplTest {
 
         assertThat(mGetTopicsCallbackLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mMockTopicsDao).retrieveReturnedTopics(
+                /* epochId */ Mockito.eq(currentEpochId),
+                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1));
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
-        assertThat(recordUsageCalledLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -159,28 +195,33 @@ public class TopicsServiceImplTest {
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(
+                /* epochId */ Mockito.eq(currentEpochId),
+                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1)))
+                .thenReturn(returnedTopicsFromDb);
+
+
         // No topics (empty list) were returned.
         GetTopicsResult getTopicsResult =
                 new GetTopicsResult.Builder()
                         .setResultCode(RESULT_OK)
-                        .setTaxonomyVersions(Arrays.asList())
-                        .setModelVersions(Arrays.asList())
-                        .setTopics(Arrays.asList())
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
                         .build();
 
-        when(mMockTopicsWorker.getTopics(/* app = */ anyString(), /* sdk = */ anyString()))
-                .thenReturn(getTopicsResult);
+        // Call init() to load the cache
+        mTopicsServiceImpl.init();
 
         // To capture result in inner class, we have to declare final.
         final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
         mGetTopicsCallbackLatch = new CountDownLatch(1);
-
-        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(invocation -> {
-            // The method TopicsWorker.recordUsage is called.
-            recordUsageCalledLatch.countDown();
-            return null;
-        }).when(mMockTopicsWorker).recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
 
         mTopicsServiceImpl.getTopics(
                 request,
@@ -200,10 +241,16 @@ public class TopicsServiceImplTest {
 
         assertThat(mGetTopicsCallbackLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mMockTopicsDao).retrieveReturnedTopics(
+                /* epochId */ Mockito.eq(currentEpochId),
+                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1));
+
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
-        assertThat(recordUsageCalledLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -219,29 +266,33 @@ public class TopicsServiceImplTest {
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(
+                /* epochId */ Mockito.eq(currentEpochId),
+                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1)))
+                .thenReturn(returnedTopicsFromDb);
+
+
         // No topics (empty list) were returned.
         GetTopicsResult getTopicsResult =
                 new GetTopicsResult.Builder()
                         .setResultCode(RESULT_OK)
-                        .setTaxonomyVersions(Arrays.asList())
-                        .setModelVersions(Arrays.asList())
-                        .setTopics(Arrays.asList())
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
                         .build();
 
-        when(mMockTopicsWorker.getTopics(/* app = */ anyString(), /* sdk = */ anyString()))
-                .thenReturn(getTopicsResult);
+        // Call init() to load the cache
+        mTopicsServiceImpl.init();
 
         // To capture result in inner class, we have to declare final.
         final GetTopicsResult[] capturedResponseParcel = new GetTopicsResult[1];
-
         mGetTopicsCallbackLatch = new CountDownLatch(1);
-
-        final CountDownLatch recordUsageCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(invocation -> {
-            // The method TopicsWorker.recordUsage is called.
-            recordUsageCalledLatch.countDown();
-            return null;
-        }).when(mMockTopicsWorker).recordUsage(eq(SOME_PACKAGE_NAME), eq(SOME_SDK_NAME));
 
         // Topic impl service use a background executor to run the task,
         // use a countdownLatch and set the countdown in the logging call operation
@@ -270,7 +321,8 @@ public class TopicsServiceImplTest {
 
         // Send client side timestamp, working with the mock information in
         // service side to calculate the latency
-        mTopicsServiceImpl.getTopics(request,
+        mTopicsServiceImpl.getTopics(
+                request,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
@@ -287,10 +339,11 @@ public class TopicsServiceImplTest {
 
         assertThat(mGetTopicsCallbackLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        verify(mMockTopicsDao).retrieveReturnedTopics(
+                /* epochId */ Mockito.eq(currentEpochId),
+                /* numberOfLookBackEpochs */ Mockito.eq(numberOfLookBackEpochs + 1));
         assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
 
-        assertThat(recordUsageCalledLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(logOperationCalledLatch
                 .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
 
@@ -300,5 +353,10 @@ public class TopicsServiceImplTest {
         assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
         assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
+
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
     }
 }

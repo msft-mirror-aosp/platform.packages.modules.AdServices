@@ -13,64 +13,86 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.service.topics;
 
 import static android.adservices.topics.TopicsManager.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.topics.GetTopicsResult;
+import android.util.Pair;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Unit test for {@link TopicsWorker}.
  */
 public class TopicsWorkerTest {
     private TopicsWorker mTopicsWorker;
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
     @Mock private EpochManager mMockEpochManager;
-    @Mock private CacheManager mMockCacheManager;
+    @Mock private TopicsDao mMockTopicsDao;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager, mMockCacheManager,
-                mFlags);
+        CacheManager cacheManager = CacheManager.getInstanceForTest(mMockEpochManager,
+                mMockTopicsDao,
+                mMockFlags);
+        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager, cacheManager,
+                mMockFlags);
     }
 
     @Test
     public void testGetTopics() {
-        List<Topic> topics = new ArrayList<>();
-        topics.add(new Topic("topic1", /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L));
-        topics.add(new Topic("topic2", /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L));
-        topics.add(new Topic("topic3", /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L));
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 4L);
+        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 2L,
+                /* modelVersion = */ 5L);
+        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 3L,
+                /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            returnedTopicsFromDb.put(epochId - numEpoch, new HashMap<>());
+            returnedTopicsFromDb.get(epochId - numEpoch).put(appSdkKey, topics[numEpoch - 1]);
+        }
 
-        when(mMockCacheManager.getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk")))
-                .thenReturn(topics);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(
+                /* epochId */ anyLong(), /* numberOfLookBackEpochs */ anyInt()))
+                .thenReturn(returnedTopicsFromDb);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+        verify(mMockTopicsDao, times(1))
+                .retrieveReturnedTopics(/* epochId */ anyLong(),
+                        /* numberOfLookBackEpochs */ anyInt());
 
         GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
 
@@ -84,98 +106,132 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        verify(mMockCacheManager, only()).getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk"));
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
     public void testGetTopics_emptyCache() {
-        // Empty cache.
-        when(mMockCacheManager.getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk")))
-                .thenReturn(new ArrayList<>());
+        final long epochId = 4L;
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockTopicsDao.retrieveReturnedTopics(/* epochId */ anyLong(),
+                /* numberOfLookBackEpochs */ anyInt()))
+                .thenReturn(returnedTopicsFromDb);
+
+        // Don't load anything in cache to make it empty
+        mTopicsWorker.loadCache();
+        verify(mMockTopicsDao, times(1))
+                .retrieveReturnedTopics(/* epochId */ anyLong(),
+                        /* numberOfLookBackEpochs */ anyInt());
 
         GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk");
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
                         .setResultCode(RESULT_OK)
-                        .setTaxonomyVersions(Arrays.asList())
-                        .setModelVersions(Arrays.asList())
-                        .setTopics(Arrays.asList())
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        verify(mMockCacheManager, only()).getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk"));
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
     public void testGetTopics_appNotInCache() {
-        List<Topic> topics = new ArrayList<>();
-        topics.add(new Topic("topic1", /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L));
-        topics.add(new Topic("topic2", /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L));
-        topics.add(new Topic("topic3", /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L));
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 1;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 4L);
+        Topic[] topics = {topic1};
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            returnedTopicsFromDb.put(epochId - numEpoch, new HashMap<>());
+            returnedTopicsFromDb.get(epochId - numEpoch).put(appSdkKey, topics[numEpoch - 1]);
+        }
 
-        when(mMockCacheManager.getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk")))
-                .thenReturn(topics);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(/* epochId */ anyLong(),
+                /* numberOfLookBackEpochs */ anyInt()))
+                .thenReturn(returnedTopicsFromDb);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+        verify(mMockTopicsDao, times(1))
+                .retrieveReturnedTopics(/* epochId */ anyLong(),
+                        /* numberOfLookBackEpochs */ anyInt());
 
         GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app_not_in_cache", "sdk");
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
                         .setResultCode(RESULT_OK)
-                        .setTaxonomyVersions(Arrays.asList())
-                        .setModelVersions(Arrays.asList())
-                        .setTopics(Arrays.asList())
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        verify(mMockCacheManager, only()).getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app_not_in_cache"), eq("sdk"));
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
     public void testGetTopics_sdkNotInCache() {
-        List<Topic> topics = new ArrayList<>();
-        topics.add(new Topic("topic1", /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L));
-        topics.add(new Topic("topic2", /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L));
-        topics.add(new Topic("topic3", /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L));
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 1;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 4L);
+        Topic[] topics = {topic1};
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            returnedTopicsFromDb.put(epochId - numEpoch, new HashMap<>());
+            returnedTopicsFromDb.get(epochId - numEpoch).put(appSdkKey, topics[numEpoch - 1]);
+        }
 
-        when(mMockCacheManager.getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk")))
-                .thenReturn(topics);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(/* epochId */ anyLong(),
+                /* numberOfLookBackEpochs */ anyInt()))
+                .thenReturn(returnedTopicsFromDb);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+        verify(mMockTopicsDao, times(1))
+                .retrieveReturnedTopics(/* epochId */ anyLong(),
+                        /* numberOfLookBackEpochs */ anyInt());
 
         GetTopicsResult getTopicsResult = mTopicsWorker.getTopics("app", "sdk_not_in_cache");
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
                         .setResultCode(RESULT_OK)
-                        .setTaxonomyVersions(Arrays.asList())
-                        .setModelVersions(Arrays.asList())
-                        .setTopics(Arrays.asList())
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        verify(mMockCacheManager, only()).getTopics(
-                eq(mFlags.getTopicsNumberOfLookBackEpochs()),
-                eq("app"), eq("sdk_not_in_cache"));
+        // loadcache() and getTopics() in CacheManager calls this mock
+        verify(mMockEpochManager, times(2)).getCurrentEpochId();
+        // getTopics in CacheManager and TopicsWorker calls this mock
+        verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -186,14 +242,32 @@ public class TopicsWorkerTest {
 
     @Test
     public void testLoadCache() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 1;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 4L);
+        Topic[] topics = {topic1};
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb = new HashMap<>();
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            returnedTopicsFromDb.put(epochId - numEpoch, new HashMap<>());
+            returnedTopicsFromDb.get(epochId - numEpoch).put(appSdkKey, topics[numEpoch - 1]);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        when(mMockTopicsDao.retrieveReturnedTopics(/* epochId */ anyLong(),
+                /* numberOfLookBackEpochs */ anyInt()))
+                .thenReturn(returnedTopicsFromDb);
+
         mTopicsWorker.loadCache();
-        verify(mMockCacheManager, only()).loadCache();
+        verify(mMockTopicsDao).retrieveReturnedTopics(/* epochId */ anyLong(),
+                        /* numberOfLookBackEpochs */ anyInt());
     }
 
     @Test
     public void testComputeEpoch() {
         mTopicsWorker.computeEpoch();
-        verify(mMockEpochManager, only()).processEpoch();
-        verify(mMockCacheManager, only()).loadCache();
+        verify(mMockEpochManager, times(1)).processEpoch();
     }
 }

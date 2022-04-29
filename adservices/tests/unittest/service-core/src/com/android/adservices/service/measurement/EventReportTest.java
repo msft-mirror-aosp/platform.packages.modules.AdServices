@@ -40,6 +40,7 @@ public final class EventReportTest {
                 .setTriggerDedupKey(3L)
                 .setReportTime(2000L)
                 .setStatus(EventReport.Status.PENDING)
+                .setSourceType(Source.SourceType.NAVIGATION)
                 .build();
     }
 
@@ -56,6 +57,7 @@ public final class EventReportTest {
         assertEquals(Long.valueOf(3), eventReport.getTriggerDedupKey());
         assertEquals(2000L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertEquals(Source.SourceType.NAVIGATION, eventReport.getSourceType());
     }
 
     @Test
@@ -71,5 +73,6 @@ public final class EventReportTest {
         assertNull(eventReport.getTriggerDedupKey());
         assertEquals(0L, eventReport.getReportTime());
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
+        assertNull(eventReport.getSourceType());
     }
 }

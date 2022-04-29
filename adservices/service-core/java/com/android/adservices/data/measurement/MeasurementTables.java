@@ -87,6 +87,7 @@ public final class MeasurementTables {
         String TRIGGER_DEDUP_KEY = "trigger_dedup_key";
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
+        String SOURCE_TYPE = "source_type";
     }
 
     /**
@@ -161,7 +162,8 @@ public final class MeasurementTables {
                     + EventReportContract.TRIGGER_PRIORITY + " INTEGER, "
                     + EventReportContract.TRIGGER_DEDUP_KEY + " INTEGER, "
                     + EventReportContract.TRIGGER_TIME + " INTEGER, "
-                    + EventReportContract.STATUS + " INTEGER "
+                    + EventReportContract.STATUS + " INTEGER, "
+                    + EventReportContract.SOURCE_TYPE + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_ATTRIBUTION_RATE_LIMIT =

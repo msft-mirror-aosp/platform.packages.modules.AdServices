@@ -118,7 +118,8 @@
             "triggerTime": 8640000002,
             "status": 1,
             "reportTime": 8640000002,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           },
           {
             "id": "young1",
@@ -129,7 +130,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": 33203622330000,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []
@@ -147,7 +149,8 @@
             "triggerTime": 8640000002,
             "status": 0,
             "reportTime": 33203622330000,
-            "triggerPriority": 101
+            "triggerPriority": 101,
+            "sourceType": "navigation"
           }
         ],
         "attribution_rate_limits": []

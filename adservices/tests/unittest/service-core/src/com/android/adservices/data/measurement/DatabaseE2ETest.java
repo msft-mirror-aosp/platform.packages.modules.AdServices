@@ -255,6 +255,8 @@ public abstract class DatabaseE2ETest {
                 report.getTriggerDedupKey());
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME, report.getTriggerTime());
         values.put(MeasurementTables.EventReportContract.STATUS, report.getStatus());
+        values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
+                report.getSourceType().toString());
         long row = db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("EventReport insertion failed");
