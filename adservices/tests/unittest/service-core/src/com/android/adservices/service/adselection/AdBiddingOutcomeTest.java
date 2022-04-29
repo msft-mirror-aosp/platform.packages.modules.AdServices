@@ -57,21 +57,13 @@ public class AdBiddingOutcomeTest {
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS)
                     .build();
     private static final CustomAudienceBiddingInfo CUSTOM_AUDIENCE_AUCTION_INFO =
-            new CustomAudienceBiddingInfo(
+            CustomAudienceBiddingInfo.create(
                     BIDDING_LOGIC_URL, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
-
-    @Test
-    public void testAdSelectionBiddingOutcomeConstructor() {
-        AdBiddingOutcome adBiddingOutcome =
-                new AdBiddingOutcome(AD_WITH_BID, CUSTOM_AUDIENCE_AUCTION_INFO);
-        assertEquals(adBiddingOutcome.getAdWithBid(), AD_WITH_BID);
-        assertEquals(adBiddingOutcome.getCustomAudienceBiddingInfo(), CUSTOM_AUDIENCE_AUCTION_INFO);
-    }
 
     @Test
     public void testAdSelectionBiddingOutcomeBuilder() {
         AdBiddingOutcome adBiddingOutcome =
-                new AdBiddingOutcome.Builder()
+                AdBiddingOutcome.builder()
                         .setAdWithBid(AD_WITH_BID)
                         .setCustomAudienceBiddingInfo(CUSTOM_AUDIENCE_AUCTION_INFO)
                         .build();

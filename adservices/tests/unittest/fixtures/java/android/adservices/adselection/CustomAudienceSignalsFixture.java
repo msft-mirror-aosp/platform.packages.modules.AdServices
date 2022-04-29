@@ -35,13 +35,16 @@ public class CustomAudienceSignalsFixture {
     public static final String USER_BIDDING_SIGNALS = "{\"user_bidding_signals\":1}";
 
     public static CustomAudienceSignals aCustomAudienceSignals() {
+        return aCustomAudienceSignalsBuilder().build();
+    }
+
+    public static CustomAudienceSignals.Builder aCustomAudienceSignalsBuilder() {
         return new CustomAudienceSignals.Builder()
                 .setOwner(OWNER)
                 .setBuyer(BUYER)
                 .setName(NAME)
                 .setActivationTime(ACTIVATION_TIME)
                 .setExpirationTime(EXPIRATION_TIME)
-                .setUserBiddingSignals(USER_BIDDING_SIGNALS)
-                .build();
+                .setUserBiddingSignals(USER_BIDDING_SIGNALS);
     }
 }

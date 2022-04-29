@@ -31,7 +31,7 @@ import org.junit.Test;
 public class AdSelectionResponseTest {
     private static final Uri VALID_RENDER_URL =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
-    private static final int TEST_AD_SELECTION_ID = 12345;
+    private static final long TEST_AD_SELECTION_ID = 12345;
 
     @Test
     public void testBuildAdSelectionResponse() {

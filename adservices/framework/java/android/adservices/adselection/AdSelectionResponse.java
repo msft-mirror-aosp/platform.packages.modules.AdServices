@@ -32,12 +32,12 @@ import java.util.Objects;
  * @hide
  */
 public final class AdSelectionResponse implements Parcelable {
-    private static final int UNSET = 0;
+    private static final long UNSET = 0;
 
-    private final int mAdSelectionId;
+    private final long mAdSelectionId;
     @NonNull private final Uri mRenderUrl;
 
-    private AdSelectionResponse(int adSelectionId, @NonNull Uri renderUrl) {
+    private AdSelectionResponse(long adSelectionId, @NonNull Uri renderUrl) {
         Objects.requireNonNull(renderUrl);
 
         mAdSelectionId = adSelectionId;
@@ -47,7 +47,7 @@ public final class AdSelectionResponse implements Parcelable {
     private AdSelectionResponse(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mAdSelectionId = in.readInt();
+        mAdSelectionId = in.readLong();
         mRenderUrl = Uri.CREATOR.createFromParcel(in);
     }
 
@@ -74,7 +74,7 @@ public final class AdSelectionResponse implements Parcelable {
 
     /** Returns the adSelectionId that identifies the AdSelection. */
     @NonNull
-    public int getAdSelectionId() {
+    public long getAdSelectionId() {
         return mAdSelectionId;
     }
 
@@ -102,7 +102,7 @@ public final class AdSelectionResponse implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeInt(mAdSelectionId);
+        dest.writeLong(mAdSelectionId);
         mRenderUrl.writeToParcel(dest, flags);
     }
 
@@ -112,14 +112,14 @@ public final class AdSelectionResponse implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private int mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET;
         @NonNull private Uri mRenderUrl;
 
         public Builder() {}
 
         /** Sets the mAdSelectionId. */
         @NonNull
-        public AdSelectionResponse.Builder setAdSelectionId(int adSelectionId) {
+        public AdSelectionResponse.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }

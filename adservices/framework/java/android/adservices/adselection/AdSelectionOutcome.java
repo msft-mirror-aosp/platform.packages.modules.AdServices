@@ -33,10 +33,10 @@ import java.util.Objects;
 public class AdSelectionOutcome {
     private static final int UNSET = 0;
 
-    private final int mAdSelectionId;
+    private final long mAdSelectionId;
     @NonNull private final Uri mRenderUrl;
 
-    private AdSelectionOutcome(int adSelectionId, @NonNull Uri renderUrl) {
+    private AdSelectionOutcome(long adSelectionId, @NonNull Uri renderUrl) {
         Objects.requireNonNull(renderUrl);
 
         mAdSelectionId = adSelectionId;
@@ -51,7 +51,7 @@ public class AdSelectionOutcome {
 
     /** Returns the adSelectionId that identifies the AdSelection. */
     @NonNull
-    public int getAdSelectionId() {
+    public long getAdSelectionId() {
         return mAdSelectionId;
     }
 
@@ -76,14 +76,14 @@ public class AdSelectionOutcome {
      * @hide
      */
     public static final class Builder {
-        private int mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET;
         @NonNull private Uri mRenderUrl;;
 
         public Builder() {}
 
         /** Sets the mAdSelectionId. */
         @NonNull
-        public AdSelectionOutcome.Builder setAdSelectionId(int adSelectionId) {
+        public AdSelectionOutcome.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }

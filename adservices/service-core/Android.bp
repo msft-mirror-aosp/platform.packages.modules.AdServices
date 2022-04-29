@@ -44,6 +44,8 @@ java_library {
     ],
     plugins: [
         "androidx.room_room-compiler-plugin",
+        "auto_value_plugin",
+        "auto_annotation_plugin"
     ],
     javacflags: [
         "-Aroom.schemaLocation=packages/modules/AdServices/adservices/service-core/schemas",
@@ -54,6 +56,7 @@ java_library {
         "framework-adservices.impl",
         "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
+        "auto_value_annotations"
     ],
     static_libs: [
         // TODO(b/208705888): Renable tflite.
