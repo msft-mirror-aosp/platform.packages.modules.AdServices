@@ -29,6 +29,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 
@@ -139,7 +140,7 @@ public class AdSelectionScriptEngine {
             @NonNull String trustedBiddingSignals,
             @NonNull String contextualSignals,
             @NonNull String userSignals,
-            @NonNull String customAudienceSignals)
+            @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException {
         Objects.requireNonNull(generateBidJS);
         Objects.requireNonNull(ads);
@@ -157,7 +158,8 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(TRUSTED_BIDDING_SIGNALS_ARG_NAME, trustedBiddingSignals))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
                         .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals))
-                        .add(jsonArg(CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
+                        .add(CustomAudienceSignalsArgument.asScriptArgument(
+                                customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
@@ -184,7 +186,7 @@ public class AdSelectionScriptEngine {
             @NonNull String sellerSignals,
             @NonNull String trustedScoringSignals,
             @NonNull String contextualSignals,
-            @NonNull String customAudienceSignals)
+            @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException {
         Objects.requireNonNull(scoreAdJS);
         Objects.requireNonNull(adsWithBid);
@@ -203,7 +205,8 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals))
                         .add(jsonArg(TRUSTED_SCORING_SIGNALS_ARG_NAME, trustedScoringSignals))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
-                        .add(jsonArg(CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
+                        .add(CustomAudienceSignalsArgument.asScriptArgument(
+                                customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adWithBidArguments = new ImmutableList.Builder<>();
