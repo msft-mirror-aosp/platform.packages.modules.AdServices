@@ -15,16 +15,27 @@
  */
 package com.android.adservices.ui.settings;
 
-import android.app.Activity;
+import android.app.ActionBar;
 import android.os.Bundle;
+import androidx.fragment.app.FragmentActivity;
+import com.android.adservices.api.R;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-public class AdServicesSettingsActivity extends Activity {
+public class AdServicesSettingsActivity extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initActionBar();
+        setContentView(R.layout.adservices_settings_main_activity);
+    }
+
+    // TODO(b/230372790): update to another action bar.
+    private void initActionBar() {
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(R.string.settingsUI_privacy_sandbox_beta_title);
     }
 }
