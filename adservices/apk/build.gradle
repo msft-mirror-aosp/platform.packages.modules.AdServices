@@ -35,6 +35,8 @@ android {
     defaultConfig {
         targetSdkVersion 30
         minSdkVersion 30
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
         main {
@@ -43,10 +45,21 @@ android {
             java.setIncludes(new HashSet(['com/android/adservices/ui/**/*.java']))
             res.srcDirs = ['res']
         }
+
+        androidTest {
+            java.srcDirs = ['tests/src']
+        }
     }
     buildToolsVersion '30.0.2'
 }
 
 dependencies {
     implementation 'androidx.preference:preference:1.1.1'
+
+    // test dependencies
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
 }

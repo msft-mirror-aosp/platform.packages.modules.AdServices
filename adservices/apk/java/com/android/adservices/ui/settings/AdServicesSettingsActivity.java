@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package com.android.adservices.ui.settings;
-
 import android.app.ActionBar;
 import android.os.Bundle;
+
 import androidx.fragment.app.FragmentActivity;
+
 import com.android.adservices.api.R;
 
 /**
