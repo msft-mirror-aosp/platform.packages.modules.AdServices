@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="Privacy Sandbox beta">
+  <SwitchPreference
+      android:key="privacy_sandbox_beta_switch"
+      android:title="@string/settingsUI_privacy_sandbox_beta_title"
+      android:summary="@string/settingsUI_privacy_sandbox_beta_summary" />
+  <Preference
+      android:key="topics_preference"
+      android:title="@string/settingsUI_topics_title"
+      android:summary="@string/settingsUI_topics_summary" />
+  <Preference
+      android:key="apps_preference"
+      android:title="@string/settingsUI_apps_title"
+      android:summary="@string/settingsUI_apps_summary" />
+</PreferenceScreen>
