@@ -28,8 +28,13 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.AdServicesExecutors;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Implementation of {@link AdSelectionService}.
@@ -41,16 +46,36 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /**
      * This field will be used once full implementation is ready.
      *
-     * TODO(b/212300065) remove the warning suppression once the service is implemented.
+     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
      */
     @SuppressWarnings("unused")
     @NonNull
-    private final Context mContext;
+    private final AdSelectionEntryDao mAdSelectionEntryDao;
 
-    public AdSelectionServiceImpl(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final ExecutorService mExecutor;
+    @NonNull private final Context mContext;
 
+    @VisibleForTesting
+    AdSelectionServiceImpl(
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull ExecutorService executorService,
+            @NonNull Context context) {
+        Objects.requireNonNull(context, "Context must be provided.");
+        mAdSelectionEntryDao = adSelectionEntryDao;
+        mAdSelectionHttpClient = adSelectionHttpClient;
+        mExecutor = executorService;
         mContext = context;
+    }
+
+    /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
+    public AdSelectionServiceImpl(@NonNull Context context) {
+        this(
+                AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
+                new AdSelectionHttpClient(AdServicesExecutors.getBackgroundExecutor()),
+                AdServicesExecutors.getBackgroundExecutor(),
+                context);
     }
 
     @Override
@@ -77,20 +102,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void reportImpression(
             @NonNull ReportImpressionRequest requestParams,
             @NonNull ReportImpressionCallback callback) {
-        // TODO(b/225988784): Offload work to thread pool
-        // TODO(b/212300065): Implement
+        // TODO(b/225990194): Add end to end test
         Objects.requireNonNull(requestParams);
         Objects.requireNonNull(callback);
 
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw e.rethrowFromSystemServer();
-        }
+        ImpressionReporter reporter =
+                new ImpressionReporter(
+                        mContext, mExecutor, mAdSelectionEntryDao, mAdSelectionHttpClient);
+        reporter.reportImpression(requestParams, callback);
     }
 }

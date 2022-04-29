@@ -19,13 +19,13 @@ package android.adservices.adselection;
 import android.adservices.common.AdData;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-/**
- * This is a static class meant to help with tests that involve creating an AdSelectionConfig.
- */
+/** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
 
     public static final String SELLER = "testSeller";
@@ -51,7 +51,9 @@ public class AdSelectionConfigFixture {
                     "buyer2",
                     "{\"buyer_signals\":2}",
                     "buyer3",
-                    "{\"buyer_signals\":3}");
+                    "{\"buyer_signals\":3}",
+                    "buyer",
+                    "{\"buyer_signals\":0}");
 
     // Contextual Ads Components
     public static final AdWithBid ADS_WITH_BID_1 =
@@ -76,6 +78,22 @@ public class AdSelectionConfigFixture {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
                 .setDecisionLogicUrl(DECISION_LOGIC_URL)
+                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
+                .setSellerSignals(SELLER_SIGNALS)
+                .setPerBuyerSignals(PER_BUYER_SIGNALS)
+                .setContextualAds(CONTEXTUAL_ADS)
+                .build();
+    }
+
+    /**
+     * Creates an AdSelectionConfig object to be used in unit and integration tests
+     * Accepts a Uri decisionLogicUrl to be used instead of the default
+     */
+    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUrl) {
+        return new AdSelectionConfig.Builder()
+                .setSeller(SELLER)
+                .setDecisionLogicUrl(decisionLogicUrl)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
