@@ -121,7 +121,6 @@ public class SourceFetcher {
 
     private boolean fetchSource(
             @NonNull Uri topOrigin,
-            @NonNull Uri referrer,
             @NonNull Uri target,
             @NonNull String sourceInfo,
             boolean initialFetch,
@@ -147,7 +146,6 @@ public class SourceFetcher {
         boolean success = true;
         try {
             urlConnection.setRequestMethod("POST");
-            urlConnection.setRequestProperty("Referer", referrer.toString());
             urlConnection.setRequestProperty("Attribution-Reporting-Source-Info", sourceInfo);
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
@@ -166,7 +164,7 @@ public class SourceFetcher {
             ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
             for (Uri redirect : redirects) {
                 if (!fetchSource(
-                        topOrigin, target, redirect, sourceInfo, false, registrationsOut)) {
+                        topOrigin, redirect, sourceInfo, false, registrationsOut)) {
                     success = false;
                 }
             }
@@ -190,7 +188,6 @@ public class SourceFetcher {
         }
         return fetchSource(
                 request.getTopOriginUri(),
-                request.getReferrerUri(),
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 true, out);

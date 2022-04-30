@@ -49,8 +49,6 @@ public class MeasurementManagerTest {
         CompletableFuture<Integer> future = new CompletableFuture<>();
         mm.registerSource(
                 Uri.parse("https://example.com"), null,
-                Uri.parse("https://foo.com"),
-                Uri.parse("https://bar.com"),
                 CALLBACK_EXECUTOR, future::complete);
         Integer result = future.get();
         assertEquals(IMeasurementCallback.RESULT_OK, result.intValue());
@@ -79,8 +77,6 @@ public class MeasurementManagerTest {
 
         CompletableFuture<Integer> future = new CompletableFuture<>();
         mm.registerTrigger(Uri.parse("https://example.com"),
-                Uri.parse("https://bar.com"),
-                Uri.parse("https://baz.com"),
                 CALLBACK_EXECUTOR, future::complete);
         Integer result = future.get();
         assertEquals(IMeasurementCallback.RESULT_OK, result.intValue());

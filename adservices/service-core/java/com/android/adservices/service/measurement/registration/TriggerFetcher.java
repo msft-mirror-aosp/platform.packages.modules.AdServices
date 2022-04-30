@@ -117,7 +117,6 @@ public class TriggerFetcher {
 
     private boolean fetchTrigger(
             @NonNull Uri topOrigin,
-            @NonNull Uri referrer,
             @NonNull Uri target,
             boolean initialFetch,
             @NonNull List<TriggerRegistration> registrationsOut) {
@@ -142,7 +141,6 @@ public class TriggerFetcher {
         boolean success = true;
         try {
             urlConnection.setRequestMethod("POST");
-            urlConnection.setRequestProperty("Referer", referrer.toString());
             urlConnection.setInstanceFollowRedirects(false);
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
 
@@ -159,7 +157,7 @@ public class TriggerFetcher {
             ArrayList<Uri> redirects = new ArrayList();
             ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
             for (Uri redirect : redirects) {
-                if (!fetchTrigger(topOrigin, target, redirect, false, registrationsOut)) {
+                if (!fetchTrigger(topOrigin, redirect, false, registrationsOut)) {
                     success = false;
                 }
             }
@@ -185,7 +183,6 @@ public class TriggerFetcher {
         }
         return fetchTrigger(
                 request.getTopOriginUri(),
-                request.getReferrerUri(),
                 request.getRegistrationUri(),
                 true, out);
     }

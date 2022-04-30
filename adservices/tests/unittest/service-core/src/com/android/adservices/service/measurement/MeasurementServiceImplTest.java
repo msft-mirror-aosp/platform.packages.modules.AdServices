@@ -141,7 +141,6 @@ public final class MeasurementServiceImplTest {
                 .setAttributionSource(sContext.getAttributionSource())
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
                 .setTopOriginUri(Uri.parse("android-app//com.example"))
-                .setReferrerUri(Uri.parse("android-app//com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .build();
     }

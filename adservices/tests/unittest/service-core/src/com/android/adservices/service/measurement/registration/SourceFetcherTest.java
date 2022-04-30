@@ -70,7 +70,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -101,7 +100,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -115,7 +113,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -131,7 +128,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -152,7 +148,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -182,7 +177,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -213,7 +207,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -244,7 +237,6 @@ public final class SourceFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();

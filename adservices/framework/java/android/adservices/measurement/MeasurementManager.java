@@ -102,21 +102,15 @@ public class MeasurementManager {
     public void registerSource(
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
-            @NonNull Uri topOrigin,
-            @NonNull Uri referrer,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
         Objects.requireNonNull(attributionSource);
-        Objects.requireNonNull(topOrigin);
-        Objects.requireNonNull(referrer);
         register(
                 new RegistrationRequest.Builder()
                 .setRegistrationType(
                     RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(attributionSource)
                 .setInputEvent(inputEvent)
-                .setTopOriginUri(topOrigin)
-                .setReferrerUri(referrer)
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
@@ -131,8 +125,8 @@ public class MeasurementManager {
             @Nullable InputEvent inputEvent) {
         Objects.requireNonNull(attributionSource);
         registerSource(
-                attributionSource, inputEvent, Uri.EMPTY, Uri.EMPTY,
-                null, null);
+                attributionSource, inputEvent,
+                /* executor = */ null, /* callback = */ null);
     }
 
     /**
@@ -140,20 +134,14 @@ public class MeasurementManager {
      */
     public void registerTrigger(
             @NonNull Uri trigger,
-            @NonNull Uri topOrigin,
-            @NonNull Uri referrer,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
         Objects.requireNonNull(trigger);
-        Objects.requireNonNull(topOrigin);
-        Objects.requireNonNull(referrer);
         register(
                 new RegistrationRequest.Builder()
                 .setRegistrationType(
                     RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(trigger)
-                .setTopOriginUri(topOrigin)
-                .setReferrerUri(referrer)
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
@@ -165,7 +153,7 @@ public class MeasurementManager {
      */
     public void registerTrigger(@NonNull Uri trigger) {
         Objects.requireNonNull(trigger);
-        registerTrigger(trigger, Uri.EMPTY, Uri.EMPTY, null, null);
+        registerTrigger(trigger, /* executor = */ null, /* callback = */ null);
     }
 
     /**

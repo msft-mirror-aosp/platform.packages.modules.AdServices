@@ -55,7 +55,6 @@ public final class MeasurementImplTest {
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri DEFAULT_REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
-    private static final Uri DEFAULT_REFERRER_URI = Uri.parse("https://example.com");
     private ContentResolver mContentResolver;
     private ContentProviderClient mMockContentProviderClient;
 
@@ -79,7 +78,6 @@ public final class MeasurementImplTest {
         final int result = measurement.register(
                 new RegistrationRequest.Builder()
                         .setRegistrationUri(DEFAULT_REGISTRATION_URI)
-                        .setReferrerUri(DEFAULT_REFERRER_URI)
                         .setTopOriginUri(DEFAULT_URI)
                         .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -103,7 +101,6 @@ public final class MeasurementImplTest {
         final int result = measurement.register(
                 new RegistrationRequest.Builder()
                         .setRegistrationUri(DEFAULT_REGISTRATION_URI)
-                        .setReferrerUri(DEFAULT_REFERRER_URI)
                         .setTopOriginUri(DEFAULT_URI)
                         .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
                         .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -126,7 +123,6 @@ public final class MeasurementImplTest {
         final int result = measurement.register(
                 new RegistrationRequest.Builder()
                         .setRegistrationUri(DEFAULT_REGISTRATION_URI)
-                        .setReferrerUri(DEFAULT_REFERRER_URI)
                         .setTopOriginUri(DEFAULT_URI)
                         .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
                         .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
@@ -150,7 +146,6 @@ public final class MeasurementImplTest {
         final int result = measurement.register(
                 new RegistrationRequest.Builder()
                         .setRegistrationUri(DEFAULT_REGISTRATION_URI)
-                        .setReferrerUri(DEFAULT_REFERRER_URI)
                         .setTopOriginUri(DEFAULT_URI)
                         .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
                         .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
