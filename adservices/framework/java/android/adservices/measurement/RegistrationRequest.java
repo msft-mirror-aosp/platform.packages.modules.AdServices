@@ -53,7 +53,6 @@ public final class RegistrationRequest implements Parcelable {
     private final @RegistrationType int mRegistrationType;
     private final Uri mRegistrationUri;
     private final Uri mTopOriginUri;
-    private final Uri mReferrerUri;
     private final InputEvent mInputEvent;
     private final AttributionSource mAttributionSource;
 
@@ -64,17 +63,14 @@ public final class RegistrationRequest implements Parcelable {
             @RegistrationType int registrationType,
             @NonNull Uri registrationUri,
             @NonNull Uri topOriginUri,
-            @NonNull Uri referrerUri,
             @Nullable InputEvent inputEvent,
             @NonNull AttributionSource attributionSource) {
         Objects.requireNonNull(registrationUri);
         Objects.requireNonNull(topOriginUri);
-        Objects.requireNonNull(referrerUri);
         Objects.requireNonNull(attributionSource);
         mRegistrationType = registrationType;
         mRegistrationUri = registrationUri;
         mTopOriginUri = topOriginUri;
-        mReferrerUri = referrerUri;
         mInputEvent = inputEvent;
         mAttributionSource = attributionSource;
     }
@@ -86,7 +82,6 @@ public final class RegistrationRequest implements Parcelable {
         mRegistrationType = in.readInt();
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
         mTopOriginUri = Uri.CREATOR.createFromParcel(in);
-        mReferrerUri = Uri.CREATOR.createFromParcel(in);
         mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
         boolean hasInputEvent = in.readBoolean();
         if (hasInputEvent) {
@@ -125,7 +120,6 @@ public final class RegistrationRequest implements Parcelable {
         out.writeInt(mRegistrationType);
         mRegistrationUri.writeToParcel(out, flags);
         mTopOriginUri.writeToParcel(out, flags);
-        mReferrerUri.writeToParcel(out, flags);
         mAttributionSource.writeToParcel(out, flags);
         if (mInputEvent != null) {
             out.writeBoolean(true);
@@ -147,13 +141,6 @@ public final class RegistrationRequest implements Parcelable {
      */
     public @NonNull Uri getTopOriginUri() {
         return mTopOriginUri;
-    }
-
-    /**
-     * Referrer to pass to the registration Uri.
-     */
-    public @NonNull Uri getReferrerUri() {
-        return mReferrerUri;
     }
 
     /**
@@ -184,15 +171,12 @@ public final class RegistrationRequest implements Parcelable {
         private @RegistrationType int mRegistrationType;
         private Uri mRegistrationUri;
         private Uri mTopOriginUri;
-        private Uri mReferrerUri;
         private InputEvent mInputEvent;
         private AttributionSource mAttributionSource;
 
         public Builder() {
             mRegistrationType = INVALID;
             mRegistrationUri = Uri.EMPTY;
-            mTopOriginUri = Uri.EMPTY;
-            mReferrerUri = Uri.EMPTY;
         }
 
         /**
@@ -214,15 +198,6 @@ public final class RegistrationRequest implements Parcelable {
         public @NonNull Builder setTopOriginUri(@NonNull Uri origin) {
             Objects.requireNonNull(origin);
             mTopOriginUri = origin;
-            return this;
-        }
-
-        /**
-         * See {@link RegistrationRequest#getReferrerUri}.
-         */
-        public @NonNull Builder setReferrerUri(@NonNull Uri referrer) {
-            Objects.requireNonNull(referrer);
-            mReferrerUri = referrer;
             return this;
         }
 
@@ -260,9 +235,7 @@ public final class RegistrationRequest implements Parcelable {
             // Check parameters that start in a non-null state don't
             // somehow get changed to an invalid one (this should
             // not be possible), if it happens throw IllegalStateException.
-            if (mRegistrationUri == null
-                    || mTopOriginUri == null
-                    || mReferrerUri == null) {
+            if (mRegistrationUri == null) {
                 throw new IllegalStateException("Unexpected null value");
             }
             // Ensure registrationType has been set,
@@ -278,11 +251,17 @@ public final class RegistrationRequest implements Parcelable {
             if (mAttributionSource == null) {
                 throw new IllegalArgumentException("attributionSource unset");
             }
+
+            // Check if topOrigin has been set.
+            // However, if it's not set, caller package is defaulted
+            if (mTopOriginUri == null) {
+                mTopOriginUri = Uri.parse("android-app://" + mAttributionSource.getPackageName());
+            }
+
             return new RegistrationRequest(
                     mRegistrationType,
                     mRegistrationUri,
                     mTopOriginUri,
-                    mReferrerUri,
                     mInputEvent,
                     mAttributionSource);
         }
