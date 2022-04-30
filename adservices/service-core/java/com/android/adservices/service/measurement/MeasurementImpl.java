@@ -170,7 +170,7 @@ public final class MeasurementImpl {
                             // Only first destination to avoid AdTechs change this
                             /* attributionDestination */ responseBasedRegistrations.get(0)
                                     .getDestination(),
-                            /* reportTo */ getBaseUri(request.getRegistrationUri()),
+                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* sourceEventTime */ sourceEventTime,
                             /* expiryTime */ sourceEventTime
@@ -193,7 +193,7 @@ public final class MeasurementImpl {
             mDatastoreManager.runInTransaction((dao) ->
                     dao.insertTrigger(
                             /* attributionDestination */ request.getTopOriginUri(),
-                            /* reportTo */ getBaseUri(request.getRegistrationUri()),
+                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* triggerTime */ triggerTime,
                             /* triggerData */ registration.getTriggerData(),
