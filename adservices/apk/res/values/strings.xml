@@ -39,4 +39,18 @@
     <string name="permlab_adServicesAccessAppSetId">Access to App Set ID API</string>
     <!-- Description of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_adServicesAccessAppSetId">Allows an application to access App Set ID API.</string>
+
+    <!-- UI strings -->
+    <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
+    <!-- Summary of Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_summary">Toggle Privacy Sandbox beta</string>
+    <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_title">Your general interests</string>
+    <!-- Summary of the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_summary">Manage your general interests</string>
+    <!-- Text for the apps preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_title">Your apps that generate specific interests</string>
+    <!-- Summary of the apps preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_summary">Manage your apps that generate specific interests</string>
 </resources>
