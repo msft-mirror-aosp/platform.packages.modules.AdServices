@@ -68,7 +68,6 @@ public final class TriggerFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -97,7 +96,6 @@ public final class TriggerFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -111,7 +109,6 @@ public final class TriggerFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("bad-schema://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -127,7 +124,6 @@ public final class TriggerFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -148,7 +144,6 @@ public final class TriggerFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
@@ -173,7 +168,6 @@ public final class TriggerFetcherTest {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse("http://foo.com"))
-                .setReferrerUri(Uri.parse("https://bar.com"))
                 .setTopOriginUri(Uri.parse("https://baz.com"))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();

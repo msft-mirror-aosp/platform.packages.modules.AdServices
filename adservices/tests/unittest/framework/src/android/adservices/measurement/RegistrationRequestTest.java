@@ -43,7 +43,6 @@ public final class RegistrationRequestTest {
         return new RegistrationRequest.Builder()
             .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
             .setTopOriginUri(Uri.parse("http://foo.com"))
-            .setReferrerUri(Uri.parse("http://bar.com"))
             .setRegistrationUri(Uri.parse("http://baz.com"))
             .setAttributionSource(sContext.getAttributionSource())
             .build();
@@ -51,7 +50,6 @@ public final class RegistrationRequestTest {
 
     void verifyExampleAttribution(RegistrationRequest request) {
         assertEquals("http://foo.com", request.getTopOriginUri().toString());
-        assertEquals("http://bar.com", request.getReferrerUri().toString());
         assertEquals("http://baz.com", request.getRegistrationUri().toString());
         assertEquals(RegistrationRequest.REGISTER_SOURCE,
                 request.getRegistrationType());
@@ -89,8 +87,8 @@ public final class RegistrationRequestTest {
                 .setRegistrationType(
                         RegistrationRequest.REGISTER_TRIGGER)
                 .build();
-        assertEquals("", request.getTopOriginUri().toString());
-        assertEquals("", request.getReferrerUri().toString());
+        assertEquals("android-app://" + sContext.getAttributionSource().getPackageName(),
+                request.getTopOriginUri().toString());
         assertEquals("", request.getRegistrationUri().toString());
         assertEquals(RegistrationRequest.REGISTER_TRIGGER,
                 request.getRegistrationType());
