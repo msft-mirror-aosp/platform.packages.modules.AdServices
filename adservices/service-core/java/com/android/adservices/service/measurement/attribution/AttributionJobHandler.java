@@ -192,7 +192,9 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        source.getDedupKeys().add(trigger.getDedupKey());
+        if (trigger.getDedupKey() != null) {
+            source.getDedupKeys().add(trigger.getDedupKey());
+        }
         measurementDao.insertAttributionRateLimit(source, trigger);
         measurementDao.updateTriggerStatus(trigger);
         measurementDao.updateSourceDedupKeys(source);

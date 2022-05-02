@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import static java.util.function.Predicate.not;
+
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -89,7 +91,7 @@ class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.SourceContract.DEDUP_KEYS,
                 (concatArray) ->  builder.setDedupKeys(Arrays.stream(concatArray.split(","))
                         .map(String::trim)
-                        .filter(String::isEmpty)
+                        .filter(not(String::isEmpty))
                         .map(Long::parseLong)
                         .collect(Collectors.toList())));
         setIntColumn(cursor, MeasurementTables.SourceContract.STATUS,
