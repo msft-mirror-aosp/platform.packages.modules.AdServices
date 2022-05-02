@@ -167,6 +167,6 @@ public class EventReportingJobHandler {
     public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
         EventReportSender eventReportSender = new EventReportSender();
-        return eventReportSender.sendEventReport(adTechDomain, eventReportPayload);
+        return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 }

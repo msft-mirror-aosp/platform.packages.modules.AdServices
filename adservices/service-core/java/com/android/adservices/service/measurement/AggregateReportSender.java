@@ -22,20 +22,21 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Class to construct the full reporting url specific to event reports.
+ * Class to construct the full reporting url specific to aggregate reports.
  */
-public class EventReportSender extends MeasurementReportSender {
+public class AggregateReportSender extends MeasurementReportSender {
 
-    private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
-            ".well-known/attribution-reporting/report-attribution";
+    private static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-aggregate-attribution";
 
     /**
-     * Creates URL to send the POST request to.
+     * Given a String reportingOrigin, returns the URL Object
+     * of the URL to send the POST request to.
      */
     URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
         Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain,
-                EVENT_ATTRIBUTION_REPORT_URI_PATH);
+                AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
         return new URL(reportingFullUrl.toString());
     }
 }
