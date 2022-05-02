@@ -16,42 +16,53 @@
 
 package com.android.adservices.service.adselection;
 
+
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
+import com.google.auto.value.AutoValue;
+
 import java.util.Objects;
 
 /**
- * Represents the data with respect to CustomAudience that will be passed as part of output of the
- * bidding workflow to the persisting ad selection data workflow. */
- /** TODO(b/230554731): build the CustomAudienceAuctionInfo class with AutoValue. */
-public class CustomAudienceBiddingInfo {
-    @NonNull private final Uri mBiddingLogicUrl;
-    @NonNull private final String mBuyerDecisionLogicJs;
-    @NonNull private final CustomAudienceSignals mCustomAudienceSignals;
+ * Information related to Ad bidding that is used for reporting
+ */
+@AutoValue
+public abstract class CustomAudienceBiddingInfo {
 
-    /** Gets the biddingLogicUrl to fetch javascript. */
-    @NonNull
-    public Uri getBiddingLogicUrl() {
-        return mBiddingLogicUrl;
+    /**
+     * @return Uri that is used for getting Bidding logic
+     */
+    public abstract Uri getBiddingLogicUrl();
+
+    /**
+     * @return logic for buyer decision used in bidding
+     */
+    public abstract String getBuyerDecisionLogicJs();
+
+    /**
+     * @return CA data used for bidding and later reporting
+     */
+    public abstract CustomAudienceSignals getCustomAudienceSignals();
+
+    /**
+     * @return generic builder
+     */
+    static Builder builder() {
+        return new AutoValue_CustomAudienceBiddingInfo.Builder();
     }
 
-    /** Get the javascript fetched via the biddingLogicUrl. */
-    @NonNull
-    public String getBuyerDecisionLogicJs() {
-        return mBuyerDecisionLogicJs;
-    }
-
-    /** Get the {@link CustomAudienceSignals} generated from the {@link DBCustomAudience}. */
-    @NonNull
-    public CustomAudienceSignals getCustomAudienceSignals() {
-        return mCustomAudienceSignals;
-    }
-
-    public CustomAudienceBiddingInfo(
+    /**
+     * Creates an object of CustomAudienceBiddingInfo
+     * @param biddingLogicUrl url that fetches bidding logic
+     * @param buyerDecisionLogicJs JS that helps in making bidding decision
+     * @param customAudienceSignals signals for CA
+     * @return an instance of CustomAudienceBiddingInfo
+     */
+    public static CustomAudienceBiddingInfo create(
             @NonNull Uri biddingLogicUrl,
             @NonNull String buyerDecisionLogicJs,
             @NonNull CustomAudienceSignals customAudienceSignals) {
@@ -59,19 +70,25 @@ public class CustomAudienceBiddingInfo {
         Objects.requireNonNull(buyerDecisionLogicJs);
         Objects.requireNonNull(customAudienceSignals);
 
-        mBiddingLogicUrl = biddingLogicUrl;
-        mBuyerDecisionLogicJs = buyerDecisionLogicJs;
-        mCustomAudienceSignals = customAudienceSignals;
+        return builder().setBiddingLogicUrl(biddingLogicUrl)
+                .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                .setCustomAudienceSignals(customAudienceSignals)
+                .build();
     }
 
-    public CustomAudienceBiddingInfo(
+    /**
+     * Creates an object of CustomAudienceBiddingInfo
+     * @param customAudience CA data
+     * @param buyerDecisionLogicJs JS that helps in making bidding decision
+     * @return an instance of CustomAudienceBiddingInfo
+     */
+    public static CustomAudienceBiddingInfo create(
             @NonNull DBCustomAudience customAudience, @NonNull String buyerDecisionLogicJs) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(buyerDecisionLogicJs);
 
-        mBiddingLogicUrl = customAudience.getBiddingLogicUrl();
-        mBuyerDecisionLogicJs = buyerDecisionLogicJs;
-        mCustomAudienceSignals =
+        Uri biddingLogicUrl = customAudience.getBiddingLogicUrl();
+        CustomAudienceSignals customAudienceSignals =
                 new CustomAudienceSignals(
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
@@ -79,64 +96,18 @@ public class CustomAudienceBiddingInfo {
                         customAudience.getActivationTime(),
                         customAudience.getExpirationTime(),
                         customAudience.getUserBiddingSignals());
+
+        return builder().setBiddingLogicUrl(biddingLogicUrl)
+                .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                .setCustomAudienceSignals(customAudienceSignals)
+                .build();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof CustomAudienceBiddingInfo) {
-            CustomAudienceBiddingInfo customAudienceBiddingInfo = (CustomAudienceBiddingInfo) o;
-            return mBiddingLogicUrl.equals(customAudienceBiddingInfo.mBiddingLogicUrl)
-                    && mBuyerDecisionLogicJs.equals(customAudienceBiddingInfo.mBuyerDecisionLogicJs)
-                    && mCustomAudienceSignals.equals(
-                            customAudienceBiddingInfo.mCustomAudienceSignals);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mBiddingLogicUrl, mBuyerDecisionLogicJs, mCustomAudienceSignals);
-    }
-
-    /** Builder for {@link CustomAudienceBiddingInfo} objects. */
-    public static final class Builder {
-        @NonNull private Uri mBiddingLogicUrl;
-        @NonNull private String mBuyerDecisionLogicJs;
-        @NonNull private CustomAudienceSignals mCustomAudienceSignals;
-
-        /** Sets the bidding_logic_url. */
-        public CustomAudienceBiddingInfo.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
-            this.mBiddingLogicUrl = biddingLogicUrl;
-            return this;
-        }
-
-        /** Sets the buyer_decision_logic_js. */
-        public CustomAudienceBiddingInfo.Builder setBuyerDecisionLogicJs(
-                @NonNull String buyerDecisionLogicJs) {
-            this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
-            return this;
-        }
-
-        /** Sets the custom_audience_signals. */
-        public CustomAudienceBiddingInfo.Builder setCustomAudienceSignals(
-                @NonNull CustomAudienceSignals customAudienceSignals) {
-            this.mCustomAudienceSignals = customAudienceSignals;
-            return this;
-        }
-
-        /**
-         * Build a {@link CustomAudienceBiddingInfo} instance.
-         *
-         * @throws NullPointerException if any NonNull field is unset.
-         */
-        @NonNull
-        public CustomAudienceBiddingInfo build() {
-            Objects.requireNonNull(mBiddingLogicUrl);
-            Objects.requireNonNull(mBuyerDecisionLogicJs);
-            Objects.requireNonNull(mCustomAudienceSignals);
-
-            return new CustomAudienceBiddingInfo(
-                    mBiddingLogicUrl, mBuyerDecisionLogicJs, mCustomAudienceSignals);
-        }
+    @AutoValue.Builder
+    abstract static class Builder {
+        abstract Builder setBiddingLogicUrl(Uri biddingUri);
+        abstract Builder setBuyerDecisionLogicJs(String buyerDecisionLogicJs);
+        abstract Builder setCustomAudienceSignals(CustomAudienceSignals customAudienceSignals);
+        abstract CustomAudienceBiddingInfo build();
     }
 }

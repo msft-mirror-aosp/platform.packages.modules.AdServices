@@ -79,7 +79,7 @@ public class CustomAudienceBiddingInfoTest {
     @Test
     public void testCustomAudienceBiddingInfo() {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                new CustomAudienceBiddingInfo(
+                CustomAudienceBiddingInfo.create(
                         BIDDING_LOGIC_URL, BUYER_DECISION_LOGIC_JS, CUSTOM_AUDIENCE_SIGNALS);
         assertEquals(customAudienceBiddingInfo.getBiddingLogicUrl(), BIDDING_LOGIC_URL);
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
@@ -89,7 +89,7 @@ public class CustomAudienceBiddingInfoTest {
     @Test
     public void testCustomAudienceBiddingInfoFromCA() {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                new CustomAudienceBiddingInfo(CUSTOM_AUDIENCE, BUYER_DECISION_LOGIC_JS);
+                CustomAudienceBiddingInfo.create(CUSTOM_AUDIENCE, BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getBiddingLogicUrl(), BIDDING_LOGIC_URL);
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
@@ -98,7 +98,7 @@ public class CustomAudienceBiddingInfoTest {
     @Test
     public void testCustomAudienceBiddingInfoBuilder() {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
-                new CustomAudienceBiddingInfo.Builder()
+                CustomAudienceBiddingInfo.builder()
                         .setBiddingLogicUrl(BIDDING_LOGIC_URL)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)

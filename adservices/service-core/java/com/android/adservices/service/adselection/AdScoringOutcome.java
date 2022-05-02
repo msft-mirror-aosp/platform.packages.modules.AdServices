@@ -16,40 +16,40 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.adselection.AdWithBid;
-
 import com.google.auto.value.AutoValue;
 
 /**
- * Results from Ad Bidding, combined with the Custom Audience Bidding info
- * to be able to map CA data related to an Ad for reporting
+ * Represents outcome of the scoring, with Ads their score and their Custom Audience information
+ * selection process.
+ *
+ * The ads and their scores are used to decide the winner for Ad Selection. The Custom audience
+ * information is used on reporting
+ *
  */
 @AutoValue
-public abstract class AdBiddingOutcome {
-
+public abstract class AdScoringOutcome {
     /**
-     * @return Ad data object with bid value
+     * @return Ad with score based on seller scoring logic
      */
-    public abstract AdWithBid getAdWithBid();
-
+    public abstract AdWithScore getAdWithScore();
 
     /**
-     * @return CA Bidding info that is used for reporting
+     * @return CA bidding info chained from bidding and used for reporting
      */
     public abstract CustomAudienceBiddingInfo getCustomAudienceBiddingInfo();
 
     /**
-     * @return Generic builder
+     * @return generic builder
      */
     static Builder builder() {
-        return new AutoValue_AdBiddingOutcome.Builder();
+        return new AutoValue_AdScoringOutcome.Builder();
     }
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setAdWithBid(AdWithBid adWithBid);
-        abstract Builder setCustomAudienceBiddingInfo(CustomAudienceBiddingInfo
-                customAudienceBiddingInfo);
-        abstract AdBiddingOutcome build();
+        abstract Builder setAdWithScore(AdWithScore adWithScore);
+        abstract Builder setCustomAudienceBiddingInfo(
+                CustomAudienceBiddingInfo customAudienceBiddingInfo);
+        abstract AdScoringOutcome build();
     }
 }

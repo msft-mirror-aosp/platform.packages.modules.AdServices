@@ -37,6 +37,9 @@ public class AdSelectionConfigFixture {
 
     public static final Uri DECISION_LOGIC_URL = Uri.fromParts(SCHEME, SSP, FRAGMENT);
 
+    public static final String BUYER_1 = "buyer1";
+    public static final String BUYER_2 = "buyer2";
+
     public static final List<String> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList("buyer1", "buyer2", "buyer3");
 
@@ -75,6 +78,14 @@ public class AdSelectionConfigFixture {
 
     /** Creates an AdSelectionConfig object to be used in unit and integration tests */
     public static AdSelectionConfig anAdSelectionConfig() {
+        return anAdSelectionConfigBuilder().build();
+    }
+
+    /**
+     * @return returns a pre-loaded builder, where the internal members of the object can be changed
+     * for the unit tests
+     */
+    public static AdSelectionConfig.Builder anAdSelectionConfigBuilder() {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
                 .setDecisionLogicUrl(DECISION_LOGIC_URL)
@@ -82,8 +93,7 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS)
-                .build();
+                .setContextualAds(CONTEXTUAL_ADS);
     }
 
     /**
