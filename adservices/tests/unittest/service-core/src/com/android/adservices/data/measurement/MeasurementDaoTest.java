@@ -713,6 +713,37 @@ public class MeasurementDaoTest {
                         .orElseThrow());
     }
 
+    @Test
+    public void testUpdateSourceStatus() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+
+        List<Source> sourceList = new ArrayList<>();
+        sourceList.add(new Source.Builder().setId("1").build());
+        sourceList.add(new Source.Builder().setId("2").build());
+        sourceList.add(new Source.Builder().setId("3").build());
+        sourceList.forEach(source -> {
+            ContentValues values = new ContentValues();
+            values.put(MeasurementTables.SourceContract.ID, source.getId());
+            values.put(MeasurementTables.SourceContract.STATUS, 1);
+            db.insert(MeasurementTables.SourceContract.TABLE, null, values);
+        });
+
+        // Multiple Elements
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> measurementDao.updateSourceStatus(
+                                sourceList, Source.Status.IGNORED)
+                ));
+
+        // Single Element
+        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> measurementDao.updateSourceStatus(
+                                sourceList.subList(0, 1), Source.Status.IGNORED)
+                ));
+    }
+
     private void setupSourceAndTriggerData() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
