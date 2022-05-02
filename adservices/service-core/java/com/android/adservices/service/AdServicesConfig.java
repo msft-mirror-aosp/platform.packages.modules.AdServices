@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import java.util.concurrent.TimeUnit;
 
 /**
  * Hard Coded Configs for AdServices.
@@ -52,8 +53,7 @@ public class AdServicesConfig {
     public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
     public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
             24L * 60L * 60L * 1000L; // 24 hours.
-    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS =
-            28L * 24L * 60L * 60L * 1000L; // 28 days.
+    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS = TimeUnit.DAYS.toMillis(30);
 
     /**
      * Returns the max time period (in millis) between each expired-record deletion maintenance job
