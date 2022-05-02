@@ -43,6 +43,9 @@ public final class PhFlags implements Flags {
             "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS =
             "topics_number_of_lookback_epochs";
+    static final String KEY_MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS =
+            "measurement_main_reporting_job_period_ms";
+    static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -123,6 +126,22 @@ public final class PhFlags implements Flags {
                 /* defaultValue = */ MAINTENANCE_JOB_FLEX_MS);
     }
 
+    @Override
+    public long getMeasurementMainReportingJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName = */  KEY_MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS,
+                /* defaultValue = */ MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public String getMeasurementAppName() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName = */  KEY_MEASUREMENT_APP_NAME,
+                /* defaultValue = */ MEASUREMENT_APP_NAME);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -133,5 +152,10 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
+        writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
+        writer.println("\t" + KEY_MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS
+                + " = " + getMeasurementMainReportingJobPeriodMs());
+        writer.println("\t" + KEY_MEASUREMENT_APP_NAME
+                + " = " + getMeasurementAppName());
     }
 }

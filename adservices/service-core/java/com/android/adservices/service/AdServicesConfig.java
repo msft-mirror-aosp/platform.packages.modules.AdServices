@@ -37,14 +37,12 @@ public class AdServicesConfig {
      * Job Id for Measurement Main Reporting Job ({@link ReportingJobService})
      */
     public static final int MEASUREMENT_MAIN_REPORTING_JOB_ID = 3;
-    public static long MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS =
-            4L * 60L * 60L * 1000L; // 4 hours.
 
     /**
      * Returns the max time period (in millis) between each main reporting maintenance job run.
      */
     public static long getMeasurementMainReportingJobPeriodMs() {
-        return MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS;
+        return FlagsFactory.getFlags().getMeasurementMainReportingJobPeriodMs();
     }
 
     /**
