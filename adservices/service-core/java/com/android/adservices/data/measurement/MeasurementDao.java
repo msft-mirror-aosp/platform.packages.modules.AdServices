@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Data Access Object for the Measurement PPAPI module.
@@ -211,9 +212,10 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.STATUS, status);
         long rows = mSQLTransaction.getDatabase()
                 .update(MeasurementTables.SourceContract.TABLE, values,
-                        MeasurementTables.SourceContract.ID + " IN (?)",
-                        new String[]{sources.stream().map(Source::getId)
-                                .collect(Collectors.joining(","))}
+                        MeasurementTables.SourceContract.ID + " IN ("
+                                + Stream.generate(() -> "?").limit(sources.size())
+                                .collect(Collectors.joining(",")) + ")",
+                        sources.stream().map(Source::getId).toArray(String[]::new)
                 );
         if (rows != sources.size()) {
             throw new DatastoreException("Source status update failed.");
