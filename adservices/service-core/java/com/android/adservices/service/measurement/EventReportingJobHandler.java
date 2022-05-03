@@ -140,7 +140,8 @@ public class EventReportingJobHandler {
     /**
      * Creates the JSON payload for the POST request from the EventReport.
      */
-    private JSONObject createReportJsonPayload(EventReport eventReport) throws JSONException {
+    @VisibleForTesting
+    JSONObject createReportJsonPayload(EventReport eventReport) throws JSONException {
         return new EventReportPayload.Builder()
                 .setReportId(eventReport.getId())
                 .setSourceEventId(String.valueOf(eventReport.getSourceId()))
