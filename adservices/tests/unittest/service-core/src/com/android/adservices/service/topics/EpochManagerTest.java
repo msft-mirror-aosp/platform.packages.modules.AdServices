@@ -67,7 +67,14 @@ public final class EpochManagerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
+        // Erase all existing data.
+        DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppClassificationTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.CallerCanLearnTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
     }
 
     @Test
