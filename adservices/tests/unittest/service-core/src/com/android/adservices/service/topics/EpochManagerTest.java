@@ -139,26 +139,29 @@ public final class EpochManagerTest {
     public void testComputeCallersCanLearnMap_nullUsageMapOrNullClassificationMap() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    EpochManager.computeCallersCanLearnMap(
-                            /* appSdksUsageMap = */ null,
-                            /* appClassificationTopicsMap = */ new HashMap<>());
-                });
+                () -> EpochManager.computeCallersCanLearnMap(
+                        /* appSdksUsageMap = */ null,
+                        /* appClassificationTopicsMap = */ new HashMap<>()));
 
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    EpochManager.computeCallersCanLearnMap(
-                            /* appSdksUsageMap = */ new HashMap<>(),
-                            /* appClassificationTopicsMap = */ null);
-                });
+                () -> EpochManager.computeCallersCanLearnMap(
+                        /* appSdksUsageMap = */ new HashMap<>(),
+                        /* appClassificationTopicsMap = */ null));
     }
 
     @Test
     public void testSelectRandomTopic() {
         // Create a new epochManager that we can control the random generator.
-        EpochManager epochManager = EpochManager.getInstanceForTest(mContext,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier);
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        EpochManager epochManager = new EpochManager(
+                topicsDao,
+                dbHelper,
+                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                mMockClassifier,
+                mFlags
+                );
         List<String> topTopics =
                 Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5", "random_topic");
 
@@ -184,30 +187,38 @@ public final class EpochManagerTest {
     @Test
     public void testSelectRandomTopic_invalidSize_throw() {
         // Create a new epochManager that we can control the random generator.
-        EpochManager epochManager = EpochManager.getInstanceForTest(mContext,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier);
-        List<String> topTopics =
-                Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5", "random_topic");
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        EpochManager epochManager = new EpochManager(
+                topicsDao,
+                dbHelper,
+                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                mMockClassifier,
+                mFlags
+        );
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    epochManager.selectRandomTopic(
-                            Arrays.asList("topic1", "topic2", "random_topic"));
-                });
+                () -> epochManager.selectRandomTopic(
+                        Arrays.asList("topic1", "topic2", "random_topic")));
 
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    epochManager.selectRandomTopic(/* topTopics = */ null);
-                });
+                () -> epochManager.selectRandomTopic(/* topTopics = */ null));
     }
 
     @Test
     public void testComputeReturnedAppTopics() {
-        // Create a new EpochManager that we can control the random generator.
-        EpochManager epochManager = EpochManager.getInstanceForTest(mContext,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier);
+        // Create a new epochManager that we can control the random generator.
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        EpochManager epochManager = new EpochManager(
+                topicsDao,
+                dbHelper,
+                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                mMockClassifier,
+                mFlags
+        );
         List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
                 "random_topic");
 
@@ -293,9 +304,16 @@ public final class EpochManagerTest {
 
     @Test
     public void testRecordUsage() {
-        EpochManager epochManager = EpochManager.getInstanceForTest(mContext,
-                new Random(), mMockClassifier);
-        TopicsDao mTopicsDao = TopicsDao.getInstanceForTest(mContext);
+        // Create a new epochManager that we can control the random generator.
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        EpochManager epochManager = new EpochManager(
+                topicsDao,
+                dbHelper,
+                new Random(),
+                mMockClassifier,
+                mFlags
+        );
 
         // Record some usages.
         // App1 called the Topics API directly and its SDKs also call Topics API.
@@ -318,7 +336,7 @@ public final class EpochManagerTest {
 
         // Now read back the usages from DB.
         Map<String, List<String>> appSdksUsageMapFromDb =
-                mTopicsDao.retrieveAppSdksUsageMap(epochManager.getCurrentEpochId());
+                topicsDao.retrieveAppSdksUsageMap(epochManager.getCurrentEpochId());
 
         // Make sure that what we write to db is equal to what we read from db.
         assertThat(appSdksUsageMapFromDb).isEqualTo(expectedAppSdksUsageMap);
@@ -338,9 +356,10 @@ public final class EpochManagerTest {
         //
         // Therefore, as only 1 method in EpochManager or TopicsDao needs to be mocked, use
         // Mockito.Spy instead of a full Mock object.
-        TopicsDao topicsDao = Mockito.spy(TopicsDao.getInstanceForTest(mContext));
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = Mockito.spy(new TopicsDao(dbHelper));
         EpochManager epochManager = Mockito.spy(new EpochManager(topicsDao,
-                DbHelper.getInstanceForTest(mContext),
+                dbHelper,
                 new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;

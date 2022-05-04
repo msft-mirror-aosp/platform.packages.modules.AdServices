@@ -47,7 +47,13 @@ public class TopicsDao {
     @SuppressWarnings("unused")
     private final DbHelper mDbHelper; // Used in tests.
 
-    private TopicsDao(DbHelper dbHelper) {
+    /**
+     * It's only public to unit test.
+     *
+     * @param dbHelper The database to query
+     */
+    @VisibleForTesting
+    public TopicsDao(DbHelper dbHelper) {
         mDbHelper = dbHelper;
     }
 
@@ -57,18 +63,6 @@ public class TopicsDao {
         synchronized (TopicsDao.class) {
             if (sSingleton == null) {
                 sSingleton = new TopicsDao(DbHelper.getInstance(context));
-            }
-            return sSingleton;
-        }
-    }
-
-    /** Returns an instance of the TopicsDao given a context. This is used for testing only. */
-    @VisibleForTesting
-    @NonNull
-    public static TopicsDao getInstanceForTest(@NonNull Context context) {
-        synchronized (TopicsDao.class) {
-            if (sSingleton == null) {
-                sSingleton = new TopicsDao(DbHelper.getInstanceForTest(context));
             }
             return sSingleton;
         }

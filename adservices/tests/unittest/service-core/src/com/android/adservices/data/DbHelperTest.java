@@ -57,7 +57,7 @@ public class DbHelperTest {
                 "select s.tbl_name, p.name from sqlite_master s "
                         + "join pragma_table_info(s.name) p "
                         + "where s.tbl_name = '" + tableName + "'";
-        Cursor cursor = DbHelper.getInstanceForTest(sContext).safeGetReadableDatabase()
+        Cursor cursor = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase()
                 .rawQuery(query, null);
         if (cursor != null) {
             if (cursor.getCount() == columnCount) {
@@ -69,7 +69,7 @@ public class DbHelperTest {
 
     public boolean doesIndexExist(String index) {
         String query = "SELECT * FROM sqlite_master WHERE type='index' and name='" + index + "'";
-        Cursor cursor = DbHelper.getInstanceForTest(sContext).safeGetReadableDatabase()
+        Cursor cursor = DbTestUtil.getDbHelperForTest().safeGetReadableDatabase()
                 .rawQuery(query, null);
         if (cursor != null) {
             return cursor.getCount() > 0;

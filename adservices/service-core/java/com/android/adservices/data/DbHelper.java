@@ -26,6 +26,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.internal.annotations.VisibleForTesting;
 
 /**
  * Helper to manage the PP API database. Designed as a singleton to make sure that all PP API usages
@@ -36,12 +37,15 @@ public final class DbHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "adservices.db";
 
-    // This database instance will be used for testing to avoid interference with the one used for
-    // production above.
-    private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
-
     private static DbHelper sSingleton = null;
 
+    /**
+     * It's only public to unit test.
+     *
+     * @param context the context
+     * @param dbName Name of database to query
+     */
+    @VisibleForTesting
     public DbHelper(@NonNull Context context, @NonNull String dbName) {
         super(context, dbName, null, DATABASE_VERSION);
     }
@@ -55,15 +59,6 @@ public final class DbHelper extends SQLiteOpenHelper {
             }
             return sSingleton;
         }
-    }
-
-    /** Returns an instance of the DbHelper given a context. */
-    @NonNull
-    public static synchronized DbHelper getInstanceForTest(@NonNull Context ctx) {
-        if (sSingleton == null) {
-            sSingleton = new DbHelper(ctx, DATABASE_NAME_FOR_TEST);
-        }
-        return sSingleton;
     }
 
     @Override

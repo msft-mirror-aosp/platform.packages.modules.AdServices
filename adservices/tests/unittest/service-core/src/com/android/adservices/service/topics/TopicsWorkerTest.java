@@ -31,6 +31,7 @@ import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
@@ -66,11 +67,13 @@ public class TopicsWorkerTest {
         // Clean DB before each test
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
 
-        mTopicsDao = TopicsDao.getInstanceForTest(mContext);
-        CacheManager cacheManager = CacheManager.getInstanceForTest(mMockEpochManager,
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        mTopicsDao = new TopicsDao(dbHelper);
+        CacheManager cacheManager = new CacheManager(mMockEpochManager,
                 mTopicsDao,
                 mMockFlags);
-        mTopicsWorker = TopicsWorker.getInstanceForTest(mMockEpochManager, cacheManager,
+        mTopicsWorker = new TopicsWorker(mMockEpochManager,
+                cacheManager,
                 mMockFlags);
     }
 
