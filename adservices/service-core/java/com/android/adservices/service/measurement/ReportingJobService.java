@@ -22,11 +22,15 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 
 import java.util.concurrent.Executor;
 
@@ -55,6 +59,29 @@ public final class ReportingJobService extends JobService {
                             System.currentTimeMillis());
             jobFinished(params, !success);
         });
+
+        String appName = FlagsFactory.getFlags().getMeasurementAppName();
+        if (appName != null && !appName.equals("")) {
+            try {
+                PackageInfo packageInfo =
+                        getApplicationContext().getPackageManager().getPackageInfo(
+                                appName, 0);
+                boolean isTestOnly =
+                        (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
+                if (isTestOnly) {
+                    sBackgroundExecutor.execute(() -> {
+                        boolean success = new EventReportingJobHandler(
+                                DatastoreManagerFactory.getDatastoreManager(
+                                        getApplicationContext()))
+                                .performAllPendingReportsForGivenApp(Uri.parse(appName));
+                        jobFinished(params, success);
+                    });
+                }
+            } catch (Exception e) {
+                LogUtil.e(
+                        "Perform all pending reports for app %s has exception", appName, e);
+            }
+        }
         LogUtil.d("ReportingJobService.onStartJob");
         return false;
     }

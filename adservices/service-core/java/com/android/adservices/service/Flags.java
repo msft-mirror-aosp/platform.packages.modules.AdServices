@@ -101,6 +101,26 @@ public interface Flags extends Dumpable {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
+    /* The default max time period (in millis) between each main reporting maintenance job run. */
+    long MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
+
+    /**
+     * Returns max time period (in millis) between each main reporting maintenance job run.
+     */
+    default long getMeasurementMainReportingJobPeriodMs() {
+        return MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default measurement app name. */
+    String MEASUREMENT_APP_NAME = "";
+
+    /**
+     * Returns the app name.
+     */
+    default String getMeasurementAppName() {
+        return MEASUREMENT_APP_NAME;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 }
