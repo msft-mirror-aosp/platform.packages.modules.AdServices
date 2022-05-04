@@ -23,6 +23,8 @@ import android.util.ArrayMap;
 
 import com.android.adservices.LogUtil;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -35,10 +37,6 @@ import java.util.Map;
  * PrecomputedLoader to load label file and app topics file which is precomputed server side
  */
 public class PrecomputedLoader {
-    private static final String LABELS_FILE_PATH =
-            "classifier/labels_chrome_topics.txt";
-    private static final String TOP_APP_FILE_PATH =
-            "classifier/precomputed_app_list_chrome_topics.csv";
     // Use "\t" as a delimiter to read the precomputed app topics file
     private static final String DELIMITER = "\t";
     // TODO(b/229323531): Implement new encoding method for dynamic topics size
@@ -46,9 +44,16 @@ public class PrecomputedLoader {
     private static final String NONE_TOPIC = "None";
 
     private final AssetManager mAssetManager;
+    private final String mLabelsFilePath;
+    private final String mTopAppsFilePath;
 
-    public PrecomputedLoader(@NonNull Context context) {
+    public PrecomputedLoader(
+            @NonNull Context context,
+            @NonNull String labelsFilePath,
+            @NonNull String topAppsFilePath) {
         mAssetManager = context.getAssets();
+        mLabelsFilePath = labelsFilePath;
+        mTopAppsFilePath = topAppsFilePath;
     }
 
     /**
@@ -59,12 +64,13 @@ public class PrecomputedLoader {
      * @throws IOException An empty list will be return
      */
     @NonNull
-    public List<String> retrieveLabels() {
-        List<String> labels = new ArrayList<>();
+    public ImmutableSet<String> retrieveLabels() {
+        // Initialize a ImmutableSet.Builder to store the label iteratively
+        ImmutableSet.Builder<String> labels = new ImmutableSet.Builder();
         String line;
 
         try (InputStreamReader inputStreamReader =
-                     new InputStreamReader(mAssetManager.open(LABELS_FILE_PATH))) {
+                     new InputStreamReader(mAssetManager.open(mLabelsFilePath))) {
             BufferedReader reader = new BufferedReader(inputStreamReader);
 
             while ((line = reader.readLine()) != null) {
@@ -72,13 +78,13 @@ public class PrecomputedLoader {
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed labels");
-            // When catching IOException -> return empty array list
+            // When catching IOException -> return empty immutable set
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
-            return new ArrayList<>();
+            return ImmutableSet.<String>builder().build();
         }
 
-        return labels;
+        return labels.build();
     }
 
     /**
@@ -94,8 +100,11 @@ public class PrecomputedLoader {
         Map<String, List<String>> appTopicsMap = new ArrayMap<>();
         String line;
 
+        // The immutable set of the topics from labels file
+        ImmutableSet<String> validTopics = retrieveLabels();
+
         try (InputStreamReader inputStreamReader =
-                     new InputStreamReader(mAssetManager.open(TOP_APP_FILE_PATH))) {
+                     new InputStreamReader(mAssetManager.open(mTopAppsFilePath))) {
             BufferedReader reader = new BufferedReader(inputStreamReader);
 
             // Skip first line (columns name)
@@ -107,15 +116,29 @@ public class PrecomputedLoader {
                 //The first column name is app
                 String app = columns[0];
 
-                appTopicsMap.put(app, new ArrayList<>());
+                // This list is used to temporarily store the topics of one app.
+                List<String> appTopics = new ArrayList<>();
+
                 for (int i = 1; i < columns.length; i++) {
+                    String topic = columns[i];
                     // NONE_TOPIC will not be added to the app topics list
-                    if (NONE_TOPIC.equals(columns[i])) {
+                    if (NONE_TOPIC.equals(topic)) {
                         break;
                     }
+
+                    // The topic will not save to the app topics map
+                    // if it is not a valid topic in labels file
+                    if (!validTopics.contains(topic)) {
+                        LogUtil.e("Unable to load topic \"%s\" in app \"%s\", "
+                                + "because it is not a valid topic in labels file.", topic, app);
+                        continue;
+                    }
+
                     // The other columns are topics of the app
-                    appTopicsMap.get(app).add(columns[i]);
+                    appTopics.add(topic);
                 }
+
+                appTopicsMap.put(app, appTopics);
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed app topics list");
