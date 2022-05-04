@@ -28,6 +28,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -81,6 +82,7 @@ class MeasurementDao implements IMeasurementDao {
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
+        LogUtil.d("MeasurementDao: insertTrigger: rowId=" + rowId);
         if (rowId == -1) {
             throw new DatastoreException("Trigger insertion failed.");
         }
@@ -165,6 +167,8 @@ class MeasurementDao implements IMeasurementDao {
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
+        LogUtil.d("MeasurementDao: insertSource: rowId=" + rowId);
+
         if (rowId == -1) {
             throw new DatastoreException("Source insertion failed.");
         }
