@@ -39,6 +39,7 @@ android_test {
     ],
     libs: [
         "android.test.base",
+	"android.test.mock.stubs",
         "framework-adservices.impl",
     ],
     test_suites: [
