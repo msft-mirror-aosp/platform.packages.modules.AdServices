@@ -92,18 +92,6 @@ public class EpochManager {
     }
 
     /**
-     * Returns an instance of the EpochManager given a context. Not using Singleton so that we can
-     * return different instances of EpochManager used for test
-     */
-    @NonNull
-    public static EpochManager getInstanceForTest(@NonNull Context context,
-            @NonNull Random random, @NonNull Classifier classifier) {
-        return new EpochManager(TopicsDao.getInstanceForTest(context),
-                DbHelper.getInstanceForTest(context), random, classifier,
-                FlagsFactory.getFlagsForTest());
-    }
-
-    /**
      * Offline Epoch Processing.
      * For more details, see go/rb-topics-epoch-computation
      */

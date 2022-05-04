@@ -26,6 +26,7 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.MediumTest;
 
+import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 
 import org.junit.Before;
@@ -46,7 +47,8 @@ import java.util.stream.Collectors;
 public final class TopicsDaoTest {
     private static final String TAG = "TopicsDaoTest";
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final TopicsDao mTopicsDao = TopicsDao.getInstanceForTest(mContext);
+    private final DbHelper mDBHelper = DbTestUtil.getDbHelperForTest();
+    private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
 
     @Before
     public void setup() {

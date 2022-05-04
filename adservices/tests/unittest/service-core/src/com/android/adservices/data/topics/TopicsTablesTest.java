@@ -39,7 +39,7 @@ import java.util.Map;
 /** Unit tests for {@link com.android.adservices.data.topics.TopicsTables} */
 public class TopicsTablesTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final DbHelper mDbHelper = DbHelper.getInstanceForTest(mContext);
+    private final DbHelper mDbHelper = DbTestUtil.getDbHelperForTest();
     private final SQLiteDatabase mDb = mDbHelper.safeGetWritableDatabase();
 
     @Before
