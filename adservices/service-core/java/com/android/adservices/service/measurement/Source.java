@@ -158,7 +158,8 @@ public class Source {
                 mExpiryTime + ONE_HOUR_IN_MILLIS;
     }
 
-    private int getReportingWindowCount() {
+    @VisibleForTesting
+    int getReportingWindowCount() {
         // Early Count + expiry
         return getEarlyReportingWindows().size() + 1;
     }
@@ -254,6 +255,11 @@ public class Source {
             }
         }
         return mExpiryTime + ONE_HOUR_IN_MILLIS;
+    }
+
+    @VisibleForTesting
+    void setAttributionMode(@AttributionMode int attributionMode) {
+        mAttributionMode = attributionMode;
     }
 
     /**
