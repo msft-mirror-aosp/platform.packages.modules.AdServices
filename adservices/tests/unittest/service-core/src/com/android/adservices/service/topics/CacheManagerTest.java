@@ -26,6 +26,8 @@ import android.util.Pair;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
@@ -55,7 +57,8 @@ public final class CacheManagerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        mTopicsDao = TopicsDao.getInstanceForTest(mContext);
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        mTopicsDao = new TopicsDao(dbHelper);
     }
 
     @Test

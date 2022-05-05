@@ -22,6 +22,8 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.internal.util.Preconditions;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,13 +48,17 @@ import javax.annotation.concurrent.NotThreadSafe;
 public class Classifier {
 
     private static Classifier sSingleton;
+    private static final String LABELS_FILE_PATH =
+            "classifier/labels_chrome_topics.txt";
+    private static final String TOP_APP_FILE_PATH =
+            "classifier/precomputed_app_list_chrome_topics.csv";
 
     private final PrecomputedLoader mPrecomputedLoader;
     private final Random mRandom;
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
-    private List<String> mLabels = new ArrayList<>();
+    private ImmutableSet<String> mLabels;
     // The app topics map Map<App, List<Topic>>
     private Map<String, List<String>> mAppTopics = new HashMap<>();
 
@@ -70,7 +76,8 @@ public class Classifier {
         synchronized (Classifier.class) {
             if (sSingleton == null) {
                 try {
-                    sSingleton = new Classifier(new PrecomputedLoader(context), new Random());
+                    sSingleton = new Classifier(new PrecomputedLoader(
+                            context, LABELS_FILE_PATH, TOP_APP_FILE_PATH), new Random());
                 } catch (IOException e) {
                     LogUtil.e(e, "Unable to read precomputed labels and app topics list");
                 }
@@ -184,7 +191,9 @@ public class Classifier {
         while (topicsCounter > 0 && returnedTopics.size() < mLabels.size()) {
             // TODO(b/226457861): unit test for this random logic
             int randInt = mRandom.nextInt(mLabels.size());
-            String randTopic = mLabels.get(randInt);
+            // mLabels is an immutable set,
+            // it should be converted to array before picking up one element randomly
+            String randTopic = mLabels.toArray()[randInt].toString();
             if (returnedTopics.contains(randTopic)) {
                 continue;
             }

@@ -362,8 +362,12 @@ public abstract class InternalE2ETest {
             for (Map<String, List<String>> headersMap : responseHeaders) {
                 String sourceStr = headersMap.get("Attribution-Reporting-Register-Source").get(0);
                 JSONObject sourceJson = new JSONObject(sourceStr);
-                long expiry = sourceJson.optLong("expiry", 0);
-                expiryTimes.add(expiry);
+                if (sourceJson.has("expiry")) {
+                    expiryTimes.add(sourceJson.getLong("expiry"));
+                } else {
+                    expiryTimes.add(
+                            PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+                }
             }
         }
 
@@ -375,9 +379,13 @@ public abstract class InternalE2ETest {
         long sourceTime = sourceRegistration.mTimestamp;
         Set<Long> expiryTimes = getExpiryTimesFrom(sourceRegistration);
         for (Long expiry : expiryTimes) {
-            long jobTime = sourceTime + 1000 * (expiry == 0
-                    ? PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS
-                    : expiry) + 3600000L;
+            long validExpiry = expiry;
+            if (expiry > PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
+                validExpiry = PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+            } else if (expiry < PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
+                validExpiry = PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+            }
+            long jobTime = sourceTime + 1000 * validExpiry + 3600000L;
             reportingJobTimes.add(jobTime);
         }
     }

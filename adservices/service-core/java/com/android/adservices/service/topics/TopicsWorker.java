@@ -58,7 +58,8 @@ public class TopicsWorker {
     private final CacheManager mCacheManager;
     private final Flags mFlags;
 
-    private TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager,
+    @VisibleForTesting
+    TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager,
             Flags flags) {
         mEpochManager = epochManager;
         mCacheManager = cacheManager;
@@ -82,17 +83,6 @@ public class TopicsWorker {
             }
         }
         return sTopicsWorker;
-    }
-
-    /**
-     * Gets an instance of TopicsWorker to be used in test only.
-     * Don't use singleton pattern since we want to create different instance per test case.
-     */
-    @VisibleForTesting
-    @NonNull
-    static TopicsWorker getInstanceForTest(@NonNull EpochManager epochManager,
-            @NonNull CacheManager cacheManager, @NonNull Flags flags) {
-        return new TopicsWorker(epochManager, cacheManager, flags);
     }
 
     /**

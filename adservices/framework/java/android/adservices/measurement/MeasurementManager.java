@@ -37,9 +37,9 @@ import java.util.concurrent.Executor;
 /**
  * MeasurementManager.
  *
- * @hide
  */
 public class MeasurementManager {
+    /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
 
     private final Context mContext;
@@ -69,11 +69,12 @@ public class MeasurementManager {
 
     /**
      * Register an attribution source / trigger.
+     * @hide
      */
     public void register(
             @NonNull RegistrationRequest registrationRequest,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(registrationRequest);
         final IMeasurementService service = getService();
 
@@ -85,14 +86,18 @@ public class MeasurementManager {
                         public void onResult(int result) {
                             if (callback != null && executor != null) {
                                 executor.execute(() -> {
-                                    callback.onResult(Integer.valueOf(result));
+                                    callback.onResult(null);
                                 });
                             }
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
-            callback.onError(new AdServicesException("Internal Error!"));
+            if (callback != null && executor != null) {
+                executor.execute(() ->
+                        callback.onError(new AdServicesException("Internal Error"))
+                );
+            }
         }
     }
 
@@ -103,7 +108,7 @@ public class MeasurementManager {
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(attributionSource);
         register(
                 new RegistrationRequest.Builder()
@@ -135,7 +140,7 @@ public class MeasurementManager {
     public void registerTrigger(
             @NonNull Uri trigger,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(trigger);
         register(
                 new RegistrationRequest.Builder()
@@ -158,11 +163,12 @@ public class MeasurementManager {
 
     /**
      * Delete previously registered data.
+     * @hide
      */
     public void deleteRegistrations(
             @NonNull DeletionRequest deletionRequest,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(deletionRequest);
         final IMeasurementService service = getService();
 
@@ -174,26 +180,31 @@ public class MeasurementManager {
                         public void onResult(int result) {
                             if (callback != null && executor != null) {
                                 executor.execute(() -> {
-                                    callback.onResult(Integer.valueOf(result));
+                                    callback.onResult(null);
                                 });
                             }
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
-            callback.onError(new AdServicesException("Internal Error!"));
+            if (callback != null && executor != null) {
+                executor.execute(() ->
+                        callback.onError(new AdServicesException("Internal Error"))
+                );
+            }
         }
     }
 
     /**
      * Delete previous registrations.
+     * @hide
      */
     public void deleteRegistrations(
             @NonNull Uri origin,
             @Nullable Instant start,
             @Nullable Instant end,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Integer, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(origin);
         deleteRegistrations(
                 new DeletionRequest.Builder()

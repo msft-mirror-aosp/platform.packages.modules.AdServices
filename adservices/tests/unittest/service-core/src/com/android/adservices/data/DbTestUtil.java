@@ -23,15 +23,31 @@ import androidx.test.core.app.ApplicationProvider;
 
 public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final DbHelper sDbHelper = DbHelper.getInstanceForTest(sContext);
+    private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
+
+    private static DbHelper sSingleton;
 
     /**  Erases all data from the table rows */
     public static void deleteTable(String tableName) {
-        SQLiteDatabase db = sDbHelper.safeGetWritableDatabase();
+        SQLiteDatabase db = getDbHelperForTest().safeGetWritableDatabase();
         if (db == null) {
             return;
         }
 
         db.delete(tableName, /* whereClause = */ null, /* whereArgs = */ null);
+    }
+
+    /**
+     * Create an instance of database instance for testing.
+     *
+     * @return a test database
+     */
+    public static DbHelper getDbHelperForTest() {
+        synchronized (DbHelper.class) {
+            if (sSingleton == null) {
+                sSingleton = new DbHelper(sContext, DATABASE_NAME_FOR_TEST);
+            }
+            return sSingleton;
+        }
     }
 }
