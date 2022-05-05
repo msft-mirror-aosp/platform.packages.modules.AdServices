@@ -16,24 +16,36 @@
 
 package com.android.adservices.service.consent;
 
-/** Represents a consent given to certain {@link AdServicesApiType}. */
+/** Represents a consent. */
 public class AdServicesApiConsent {
-    private boolean mGiven;
+    /**
+     * Provides given consent as {@link AdServicesApiConsent}.
+     */
+    public static final AdServicesApiConsent GIVEN = new AdServicesApiConsent(true);
+    /**
+     * Provides revoked consent as {@link AdServicesApiConsent}.
+     */
+    public static final AdServicesApiConsent REVOKED = new AdServicesApiConsent(false);
+    private final boolean mGiven;
 
     AdServicesApiConsent(boolean given) {
         this.mGiven = given;
     }
 
+    /**
+     * Provides {@link AdServicesApiConsent}.
+     *
+     * @param isGiven value based on which {@link AdServicesApiConsent} is instantiated.
+     * @return {@link AdServicesApiConsent} instantiated based on provided parameter.
+     */
+    public static AdServicesApiConsent getConsent(Boolean isGiven) {
+        if (isGiven == null) {
+            return REVOKED;
+        }
+        return new AdServicesApiConsent(isGiven);
+    }
+
     public boolean isGiven() {
         return mGiven;
     }
-
-    public static AdServicesApiConsent getGivenConsent() {
-        return new AdServicesApiConsent(true);
-    }
-
-    public static AdServicesApiConsent getRevokedConsent() {
-        return new AdServicesApiConsent(false);
-    }
-
 }
