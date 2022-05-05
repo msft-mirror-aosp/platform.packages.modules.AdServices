@@ -22,20 +22,16 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.os.Parcel;
-
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.adselection.ReportImpressionRequest} */
 @SmallTest
-public final class ReportImpressionRequestTest {
+public class ReportImpressionRequestTest {
     private static final long AUCTION_ID = 123;
 
     @Test
-    public void testWriteToParcel() throws Exception {
-
+    public void testBuildsReportImpressionInput() throws Exception {
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
 
         ReportImpressionRequest request =
@@ -43,14 +39,9 @@ public final class ReportImpressionRequestTest {
                         .setAdSelectionId(AUCTION_ID)
                         .setAdSelectionConfig(testAdSelectionConfig)
                         .build();
-        Parcel p = Parcel.obtain();
-        request.writeToParcel(p, 0);
-        p.setDataPosition(0);
 
-        ReportImpressionRequest fromParcel = ReportImpressionRequest.CREATOR.createFromParcel(p);
-
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(AUCTION_ID);
-        assertThat(fromParcel.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
+        assertThat(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
+        assertThat(request.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
     }
 
     @Test
@@ -60,10 +51,10 @@ public final class ReportImpressionRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                        new ReportImpressionRequest.Builder()
-                                // Not setting AdSelectionId making it null.
-                                .setAdSelectionConfig(testAdSelectionConfig)
-                                .build();
+                    new ReportImpressionRequest.Builder()
+                            // Not setting AdSelectionId making it null.
+                            .setAdSelectionConfig(testAdSelectionConfig)
+                            .build();
                 });
     }
 
@@ -73,10 +64,10 @@ public final class ReportImpressionRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                        new ReportImpressionRequest.Builder()
-                                .setAdSelectionId(AUCTION_ID)
-                                // Not setting AdSelectionConfig making it null.
-                                .build();
+                    new ReportImpressionRequest.Builder()
+                            .setAdSelectionId(AUCTION_ID)
+                            // Not setting AdSelectionConfig making it null.
+                            .build();
                 });
     }
 }
