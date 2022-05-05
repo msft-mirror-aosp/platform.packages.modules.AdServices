@@ -102,7 +102,14 @@ public class MeasurementManager {
     }
 
     /**
-     * Register an attribution source URI.
+     * Register an attribution source (click or view).
+     *
+     * @param attributionSource the platform issues a request to this URI in order to fetch metadata
+     *                         associated with the attribution source.
+     * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
+     *                  event).
+     * @param executor used by callback to dispatch results.
+     * @param callback intended to notify asynchronously the API result.
      */
     public void registerSource(
             @NonNull Uri attributionSource,
@@ -122,8 +129,13 @@ public class MeasurementManager {
     }
 
     /**
-     * Register an attribution source URI.
-     * Shortcut for the common case.
+     * Register an attribution source (click or view).
+     * Shortcut for the common case with no callback.
+     *
+     * @param attributionSource the platform issues a request to this URI in order to fetch metadata
+     *                         associated with the attribution source.
+     * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
+     *                  event).
      */
     public void registerSource(
             @NonNull Uri attributionSource,
@@ -135,7 +147,12 @@ public class MeasurementManager {
     }
 
     /**
-     * Register a trigger URI.
+     * Register a trigger (conversion).
+     *
+     * @param trigger the API issues a request to this URI to fetch metadata associated with the
+     *                trigger.
+     * @param executor used by callback to dispatch results.
+     * @param callback intended to notify asynchronously the API result.
      */
     public void registerTrigger(
             @NonNull Uri trigger,
@@ -153,8 +170,11 @@ public class MeasurementManager {
     }
 
     /**
-     * Register a trigger URI.
-     * Shortcut for the common case.
+     * Register a trigger (conversion).
+     * Shortcut for the common case with no callback.
+     *
+     * @param trigger the API issues a request to this URI to fetch metadata associated with the
+     *                trigger.
      */
     public void registerTrigger(@NonNull Uri trigger) {
         Objects.requireNonNull(trigger);
