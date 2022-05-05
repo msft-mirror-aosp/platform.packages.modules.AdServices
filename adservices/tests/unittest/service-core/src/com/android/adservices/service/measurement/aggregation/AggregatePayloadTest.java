@@ -26,19 +26,19 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-/** Unit tests for {@link AggregateReport} */
+/** Unit tests for {@link AggregatePayload} */
 @SmallTest
-public final class AggregateReportTest {
+public final class AggregatePayloadTest {
 
-    private AggregateReport.AggregationServicePayload createPayload(
+    private AggregatePayload.AggregationServicePayload createPayload(
             List<Integer> payload, String keyId) {
-        return new AggregateReport.AggregationServicePayload.Builder()
-                    .setPayload(payload)
-                    .setKeyId(keyId).build();
+        return new AggregatePayload.AggregationServicePayload.Builder()
+                .setPayload(payload)
+                .setKeyId(keyId).build();
     }
 
-    private AggregateReport createAggregateReport() {
-        return new AggregateReport.Builder()
+    private AggregatePayload createAggregateReport() {
+        return new AggregatePayload.Builder()
                 .setAggregationServicePayload(
                         Arrays.asList(
                                 createPayload(Arrays.asList(1, 2), "1"),
@@ -49,9 +49,10 @@ public final class AggregateReportTest {
 
     @Test
     public void testCreation() throws Exception {
-        AggregateReport aggregateReport = createAggregateReport();
+        AggregatePayload aggregateReport = createAggregateReport();
         assertEquals("share_info", aggregateReport.getSharedInfo());
-        List<AggregateReport.AggregationServicePayload> payloads = aggregateReport.getPayloads();
+        List<AggregatePayload.AggregationServicePayload> payloads =
+                aggregateReport.getPayloads();
         assertEquals(payloads.size(), 2);
         assertEquals("1", payloads.get(0).getKeyId());
         assertEquals("2", payloads.get(1).getKeyId());
@@ -59,7 +60,7 @@ public final class AggregateReportTest {
 
     @Test
     public void testDefaults() throws Exception {
-        AggregateReport aggregateReport = new AggregateReport.Builder().build();
+        AggregatePayload aggregateReport = new AggregatePayload.Builder().build();
         assertEquals(0, aggregateReport.getPayloads().size());
         assertNull(aggregateReport.getSharedInfo());
     }
