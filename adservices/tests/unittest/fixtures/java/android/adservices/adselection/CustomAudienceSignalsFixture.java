@@ -16,7 +16,13 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
+import android.adservices.customaudience.TrustedBiddingDataFixture;
+
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -47,4 +53,23 @@ public class CustomAudienceSignalsFixture {
                 .setExpirationTime(EXPIRATION_TIME)
                 .setUserBiddingSignals(USER_BIDDING_SIGNALS);
     }
+
+    public static final DBCustomAudience CUSTOM_AUDIENCE =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER)
+                    .setBuyer(BUYER)
+                    .setName(NAME)
+                    .setActivationTime(ACTIVATION_TIME)
+                    .setExpirationTime(EXPIRATION_TIME)
+                    .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                    .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                    .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS)
+                    .setTrustedBiddingData(
+                            new DBTrustedBiddingData.Builder()
+                                    .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
+                                    .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                                    .build())
+                    .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
+                    .build();
 }

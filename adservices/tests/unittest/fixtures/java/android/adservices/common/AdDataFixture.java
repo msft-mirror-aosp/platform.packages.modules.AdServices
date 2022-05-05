@@ -25,12 +25,20 @@ import java.util.Arrays;
 public class AdDataFixture {
 
     // AdData
-    private static final Uri VALID_RENDER_URL =
-            new Uri.Builder().path("valid.example.com/testing/hello").build();
+    private static final Uri VALID_RENDER_URL_1 =
+            new Uri.Builder().path("valid.example.com/testing/hello1").build();
+    private static final Uri VALID_RENDER_URL_2 =
+            new Uri.Builder().path("valid.example.com/testing/hello2").build();
+    private static final Uri VALID_RENDER_URL_3 =
+            new Uri.Builder().path("valid.example.com/testing/hello3").build();
+    private static final Uri VALID_RENDER_URL_4 =
+            new Uri.Builder().path("valid.example.com/testing/hello4").build();
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
 
     public static final ArrayList<AdData> VALID_ADS =
             new ArrayList<AdData>(Arrays.asList(
-                    new AdData(VALID_RENDER_URL, VALID_METADATA),
-                    new AdData(VALID_RENDER_URL, VALID_METADATA)));
+                    new AdData(VALID_RENDER_URL_1, VALID_METADATA),
+                    new AdData(VALID_RENDER_URL_2, VALID_METADATA),
+                    new AdData(VALID_RENDER_URL_3, VALID_METADATA),
+                    new AdData(VALID_RENDER_URL_4, VALID_METADATA)));
 }
