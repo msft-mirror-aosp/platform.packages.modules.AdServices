@@ -24,17 +24,13 @@ android_test {
     ],
     static_libs: [
         "androidx.test.runner",
-        "androidx.test.core",
         "truth-prebuilt",
         "mockito-target-extended-minus-junit4",
-        "ub-uiautomator",
-        "adservices-service-core",
     ],
     libs: [
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
-        "framework-adservices",
     ],
     min_sdk_version: "Tiramisu", // TODO(b/217941602): update this.
     target_sdk_version: "current",

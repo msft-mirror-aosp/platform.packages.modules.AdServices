@@ -23,37 +23,24 @@ import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
-import android.os.Bundle;
-
-import java.util.concurrent.Executor;
 
 /**
- * Refers to the context of the SDK loaded in the SDK sandbox process.
+ * A wrapper context that is used by a {@link SandboxedSdkProvider}.
  *
- * <p>It is a wrapper of the client application (which loading SDK to the sandbox) context,
- * to represent the context of the SDK loaded by that application.
- * <p>This context contains methods that an SDK loaded into sdk sandbox can use to interact
- * with the sdk sandbox process, or other SDKs loaded into the same sdk sandbox process.
- *
- * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
- * passed to the {@link SandboxedSdkProvider#initSdk(SandboxedSdkContext,
- * Bundle, Executor, SandboxedSdkProvider.InitSdkCallback)} after SDK is loaded.
- *
- * <p>Note: All APIs defined in this class are not stable and subject to change.
+ * @hide
  */
-public final class SandboxedSdkContext extends ContextWrapper {
+public class SandboxedSdkContext extends ContextWrapper {
 
+    private final Context mBaseContext;
     private final Resources mResources;
     private final AssetManager mAssets;
-    private final String mSdkName;
 
-    public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info,
-            @NonNull String sdkName) {
+    public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info) {
         super(baseContext);
-        mSdkName = sdkName;
+        mBaseContext = baseContext;
         Resources resources = null;
         try {
-            resources = baseContext.getPackageManager().getResourcesForApplication(info);
+            resources = mBaseContext.getPackageManager().getResourcesForApplication(info);
         } catch (Exception ignored) {
         }
 
@@ -66,23 +53,12 @@ public final class SandboxedSdkContext extends ContextWrapper {
         }
     }
 
-    /**
-     * Returns the SDK name defined in the SDK's manifest.
-     * @hide
-     */
-    @NonNull
-    public String getSdkName() {
-        return mSdkName;
-    }
-
-    /** Returns the resources defined in the SDK's .apk file. */
     @Override
     @Nullable
     public Resources getResources() {
         return mResources;
     }
 
-    /** Returns the assets defined in the SDK's .apk file. */
     @Override
     @Nullable
     public AssetManager getAssets() {

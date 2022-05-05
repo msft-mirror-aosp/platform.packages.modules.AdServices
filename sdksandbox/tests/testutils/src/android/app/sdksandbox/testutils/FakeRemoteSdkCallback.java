@@ -17,15 +17,17 @@
 package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.app.sdksandbox.SdkSandboxManager.RemoteSdkCallback;
+import android.app.sdksandbox.IRemoteSdkCallback;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.SurfaceControlViewHost;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class FakeRemoteSdkCallback implements RemoteSdkCallback {
+public class FakeRemoteSdkCallback extends IRemoteSdkCallback.Stub {
     private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
     private final CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
@@ -35,8 +37,11 @@ public class FakeRemoteSdkCallback implements RemoteSdkCallback {
     private int mErrorCode;
     private String mErrorMsg;
 
+    private IBinder mSdkToken;
+
     @Override
-    public void onLoadSdkSuccess(Bundle params) {
+    public void onLoadSdkSuccess(IBinder sdkToken, Bundle params) {
+        mSdkToken = sdkToken;
         mLoadSdkSuccess = true;
         mLoadSdkLatch.countDown();
     }
@@ -69,6 +74,13 @@ public class FakeRemoteSdkCallback implements RemoteSdkCallback {
         return mLoadSdkSuccess;
     }
 
+    public IBinder getSdkToken() {
+        waitForLatch(mLoadSdkLatch);
+        assertWithMessage("Failed to load sdk: " + getLoadSdkErrorMsg())
+            .that(mLoadSdkSuccess).isTrue();
+        return mSdkToken;
+    }
+
     public int getLoadSdkErrorCode() {
         waitForLatch(mLoadSdkLatch);
         assertThat(mLoadSdkSuccess).isFalse();
@@ -80,7 +92,7 @@ public class FakeRemoteSdkCallback implements RemoteSdkCallback {
         return mErrorMsg;
     }
 
-    public boolean isRequestSurfacePackageSuccessful() {
+    public boolean isRequestSurfacePackageSuccessful() throws InterruptedException {
         waitForLatch(mSurfacePackageLatch);
         return mSurfacePackageSuccess;
     }

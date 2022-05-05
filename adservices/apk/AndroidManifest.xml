@@ -20,99 +20,30 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.api">
 
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
-
-    <!-- Permissions required for reading device configs -->
-    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
-
-    <!-- Used for reporting -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-
-    <!-- Allows an application to access AdServices Topics API. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"
-        android:label="@string/permlab_accessAdServicesTopics"
-        android:description="@string/permdesc_accessAdServicesTopics"
-        android:protectionLevel="normal" />
-
-    <!-- Allows an application to access AdServices Attribution APIs. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION"
-        android:label="@string/permlab_accessAdServicesAttribution"
-        android:description="@string/permdesc_accessAdServicesAttribution"
-        android:protectionLevel="normal" />
-
-    <!-- Allows an application to access AdServices Custom Audiences APIs. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCES"
-        android:label="@string/permlab_accessAdServicesCustomAudiences"
-        android:description="@string/permdesc_accessAdServicesCustomAudiences"
-        android:protectionLevel="normal" />
-
-    <!-- Allows AdServices to access API for Ad ID. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID"
-        android:label="@string/permlab_adServicesAccessAdId"
-        android:description="@string/permdesc_adServicesAccessAdId"
-        android:protectionLevel="signature" />
-
-    <!-- Allows AdServices to access API for App set ID. -->
-    <permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID"
-        android:label="@string/permlab_adServicesAccessAppSetId"
-        android:description="@string/permdesc_adServicesAccessAppSetId"
-        android:protectionLevel="signature" />
-
-
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
-    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <application
         android:label="Android AdServices"
-        android:forceQueryable="true">
-        <!-- TODO(b/221123093): Support multi-user. -->
-        <service android:name="com.android.adservices.adselection.AdSelectionService"
-                 android:exported="true"
-                 android:singleUser="true"
-                 android:visibleToInstantApps="false">
-            <intent-filter>
-                <action android:name="android.adservices.adselection.AD_SELECTION_SERVICE"/>
-            </intent-filter>
-        </service>
-
-        <!-- TODO(b/221123093): Support multi-user. -->
-        <service android:name=
-                     "com.android.adservices.customaudience.CustomAudienceManagementService"
-                 android:exported="true"
-                 android:singleUser="true"
-                 android:visibleToInstantApps="false">
-            <intent-filter>
-                <action android:name=
-                            "android.adservices.customaudience.CUSTOM_AUDIENCE_MANAGEMENT_SERVICE"/>
-            </intent-filter>
-        </service>
-
+        android:forceQueryable="true"
+        android:directBootAware="true">
         <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name="com.android.adservices.topics.TopicsService"
-                 android:exported="true"
-                 android:singleUser="true"
-                 android:visibleToInstantApps="false">
-            <intent-filter>
-                <action android:name="android.adservices.TOPICS_SERVICE"/>
-            </intent-filter>
-        </service>
-        <service android:name="com.android.adservices.measurement.MeasurementService"
             android:exported="true"
             android:singleUser="true"
             android:visibleToInstantApps="false"
             >
             <intent-filter>
-                <action android:name="android.adservices.MEASUREMENT_SERVICE" />
+                <action android:name="android.adservices.TOPICS_SERVICE" />
             </intent-filter>
         </service>
 
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
-                 android:permission="android.permission.BIND_JOB_SERVICE">
+            android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Epoch computation Job. -->
         <service android:name="com.android.adservices.service.topics.EpochJobService"
-                 android:permission="android.permission.BIND_JOB_SERVICE">
+            android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
     </application>
 </manifest>

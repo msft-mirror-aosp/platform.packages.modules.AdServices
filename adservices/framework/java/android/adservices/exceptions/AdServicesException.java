@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package android.adservices.exceptions;
+
 import android.annotation.Nullable;
+
 /**
- * Exception thrown by AdServices.
+ * Exception thrown by AdServices
+ *
+ * @hide
  */
 public class AdServicesException extends Exception {
-    public AdServicesException(@Nullable String message, @Nullable Throwable e) {
-        super(message, e);
-    }
+    private final String mMessage;
+
     public AdServicesException(@Nullable String message) {
-        super(message);
+        mMessage = message;
     }
 }

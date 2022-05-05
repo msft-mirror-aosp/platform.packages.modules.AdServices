@@ -22,7 +22,7 @@ import android.view.SurfaceControlViewHost.SurfacePackage;
 
 /** @hide */
 oneway interface IRemoteSdkCallback {
-    void onLoadSdkSuccess(in Bundle params);
+    void onLoadSdkSuccess(IBinder sdkToken, in Bundle params);
     void onLoadSdkFailure(int errorCode, String errorMsg);
     void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params);
     void onSurfacePackageError(int errorCode, String errorMsg);

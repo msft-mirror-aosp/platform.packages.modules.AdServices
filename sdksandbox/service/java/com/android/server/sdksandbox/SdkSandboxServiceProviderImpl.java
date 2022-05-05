@@ -62,6 +62,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
         mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
     }
 
+    // TODO(b/214240264): Write E2E tests for checking binding from different apps
     @Override
     @Nullable
     public void bindService(int appUid, String appPackageName,

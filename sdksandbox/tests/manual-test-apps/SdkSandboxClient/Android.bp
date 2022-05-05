@@ -22,6 +22,9 @@ android_app {
     platform_apis: true,
     srcs: [
         "src/**/sdksandboxclient/*.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.annotation_annotation",
@@ -39,6 +42,9 @@ android_app {
     platform_apis: true,
     srcs: [
         "src/**/sdksandboxclienttwo/*.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.annotation_annotation",

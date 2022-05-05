@@ -18,9 +18,7 @@ package com.android.adservices.service;
 
 import android.annotation.NonNull;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
+import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -31,15 +29,16 @@ import java.util.concurrent.TimeUnit;
  * @hide
  */
 public final class AdServicesExecutors {
-    private static final ListeningExecutorService sBackgroundExecutor =
-            MoreExecutors.listeningDecorator(
-                    new ThreadPoolExecutor(/* corePoolSize = */1,
-                            /* maximumPoolSize */ Runtime.getRuntime().availableProcessors(),
-                            /* keepAliveTime = */ 60L,
-                            TimeUnit.SECONDS, new LinkedBlockingQueue<>()));
+    private static final Executor sBackgroundExecutor =
+            new ThreadPoolExecutor(
+                    /*corePoolSize=*/ 1,
+                    Runtime.getRuntime().availableProcessors(), /*keepAliveTime*/
+                    60L,
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>());
 
     @NonNull
-    public static ListeningExecutorService getBackgroundExecutor() {
+    public static Executor getBackgroundExecutor() {
         return sBackgroundExecutor;
     }
 

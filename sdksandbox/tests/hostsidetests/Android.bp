@@ -37,19 +37,6 @@ java_test_host {
     ],
 }
 
-java_test_host {
-    name: "SdkSandboxShellHostTest",
-    srcs: ["src/**/SdkSandboxShellHostTest.java"],
-    test_config: "SdkSandboxShellHostTest.xml",
-    libs: ["tradefed"],
-    test_suites: ["general-tests"],
-    data: [
-        ":TestCodeProvider",
-        ":SdkSandboxTestApp",
-        ":SdkSandboxTestDebuggableApp"
-    ],
-}
-
 android_test_helper_app {
     name: "SdkSandboxTestApp",
     manifest: "app/SdkSandboxTestAppManifest.xml",
@@ -74,23 +61,6 @@ android_test_helper_app {
     platform_apis: true,
     srcs: [
         "app/src/**/SdkSandboxTestActivity2.java",
-        ":framework-sdksandbox-sources",
-        ":sdksandbox_aidl",
-        ":sdksandbox-sources",
-    ],
-    static_libs: [
-        "androidx.core_core",
-        "SdkSandboxTestUtils",
-    ],
-}
-
-android_test_helper_app {
-    name: "SdkSandboxTestDebuggableApp",
-    manifest: "app/SdkSandboxTestDebuggableAppManifest.xml",
-    defaults: ["platform_app_defaults"],
-    platform_apis: true,
-    srcs: [
-        "app/src/**/SdkSandboxTestDebuggableActivity.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",

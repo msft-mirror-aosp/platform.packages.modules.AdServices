@@ -17,10 +17,12 @@
 package com.android.sdksandboxclienttwo;
 
 import android.app.Activity;
+import android.app.sdksandbox.IRemoteSdkCallback;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.SdkSandboxManager.RemoteSdkCallback;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.view.SurfaceControlViewHost;
 import android.view.SurfaceView;
@@ -28,12 +30,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.sdksandbox.SdkSandboxServiceImpl;
+
 public class MainActivity extends Activity {
-    private static final String SDK_PACKAGE_NAME = "com.android.sdksandboxcode.v1";
 
     private boolean mSdkLoaded = false;
     private SdkSandboxManager mSdkSandboxManager;
 
+    private IBinder mToken;
     private Button mLoadButton;
     private Button mRenderButton;
     private SurfaceView mRenderedView;
@@ -56,14 +60,15 @@ public class MainActivity extends Activity {
     }
 
 
-    private class RemoteSdkCallbackImpl implements RemoteSdkCallback {
+    private class RemoteSdkCallbackImpl extends IRemoteSdkCallback.Stub {
 
         private RemoteSdkCallbackImpl() {
         }
 
         @Override
-        public void onLoadSdkSuccess(Bundle bundle) {
+        public void onLoadSdkSuccess(IBinder token, Bundle bundle) {
             mSdkLoaded = true;
+            mToken = token;
             makeToast("Loaded successfully!");
         }
 
@@ -92,8 +97,13 @@ public class MainActivity extends Activity {
     private void registerLoadSdkProviderButton() {
         mLoadButton.setOnClickListener(v -> {
             Bundle params = new Bundle();
+            params.putString(SdkSandboxServiceImpl.SDK_PROVIDER_KEY,
+                    "com.android.sdksandboxcode.SampleSandboxedSdkProvider");
+            params.putInt(SdkSandboxServiceImpl.WIDTH_KEY, mRenderedView.getWidth());
+            params.putInt(SdkSandboxServiceImpl.HEIGHT_KEY, mRenderedView.getHeight());
             final RemoteSdkCallbackImpl callback = new RemoteSdkCallbackImpl();
-            mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params, Runnable::run, callback);
+            mSdkSandboxManager.loadSdk(
+                    "com.android.sdksandboxcode.v1", params, callback);
         });
     }
 
@@ -102,8 +112,7 @@ public class MainActivity extends Activity {
             if (mSdkLoaded) {
                 new Handler(Looper.getMainLooper()).post(
                         () -> mSdkSandboxManager.requestSurfacePackage(
-                                SDK_PACKAGE_NAME, getDisplay().getDisplayId(),
-                                mRenderedView.getWidth(), mRenderedView.getHeight(), new Bundle()));
+                                mToken, new Binder(), getDisplay().getDisplayId(), new Bundle()));
             } else {
                 makeToast("Sdk is not loaded");
             }

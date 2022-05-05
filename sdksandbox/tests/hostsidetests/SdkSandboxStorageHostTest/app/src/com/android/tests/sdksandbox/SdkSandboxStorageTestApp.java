@@ -25,7 +25,9 @@ import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.Process;
 import android.os.UserHandle;
 
@@ -44,37 +46,40 @@ public class SdkSandboxStorageTestApp {
 
     private static final String CODE_PROVIDER_PACKAGE =
             "com.android.tests.codeprovider.storagetest";
+    private static final String CODE_PROVIDER_KEY = "sdk-provider-class";
+    private static final String CODE_PROVIDER_CLASS =
+            "com.android.tests.codeprovider.storagetest.StorageTestSandboxedSdkProvider";
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
-
-    private static Context sContext;
 
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
-        sContext = ApplicationProvider.getApplicationContext();
-        mSdkSandboxManager = sContext.getSystemService(
+        Context context = ApplicationProvider.getApplicationContext();
+        mSdkSandboxManager = context.getSystemService(
                 SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
     }
 
     // Run a phase of the test inside the code loaded for this app
-    private void runPhaseInsideCode(String phaseName) {
+    private void runPhaseInsideCode(IBinder token, String phaseName) {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(CODE_PROVIDER_PACKAGE, 0, 500, 500, bundle);
+        mSdkSandboxManager.requestSurfacePackage(token, new Binder(), 0, bundle);
     }
 
     @Test
-    public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
+    public void testSdkSandboxDataAppDirectory_SharedStorageIsUsable() throws Exception {
         // First load code
+        Bundle params = new Bundle();
+        params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, callback);
+        IBinder codeToken = callback.getSdkToken();
 
         // Run phase inside the code
-        runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
+        runPhaseInsideCode(codeToken, "testSdkSandboxDataAppDirectory_SharedStorageIsUsable");
 
         // Wait for code to finish handling the request
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
@@ -83,10 +88,11 @@ public class SdkSandboxStorageTestApp {
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
+        Bundle params = new Bundle();
+        params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, new Bundle(), Runnable::run, callback);
-        // Wait for sdk to finish loading
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, callback);
+        IBinder codeToken = callback.getSdkToken();
 
         final StorageStatsManager stats = InstrumentationRegistry.getInstrumentation().getContext()
                                                 .getSystemService(StorageStatsManager.class);
@@ -96,8 +102,7 @@ public class SdkSandboxStorageTestApp {
         // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
-
-        runPhaseInsideCode("testSdkDataIsAttributedToApp");
+        runPhaseInsideCode(codeToken, "testSdkDataIsAttributedToApp");
 
         // Wait for sdk to finish handling the request
         callback.isRequestSurfacePackageSuccessful();
@@ -122,7 +127,7 @@ public class SdkSandboxStorageTestApp {
                            errorMarginSize);
     }
 
-    private static void assertMostlyEquals(long expected, long actual, long delta) {
+    public static void assertMostlyEquals(long expected, long actual, long delta) {
         if (Math.abs(expected - actual) > delta) {
             throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
         }

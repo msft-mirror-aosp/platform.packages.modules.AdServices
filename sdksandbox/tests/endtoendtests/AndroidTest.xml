@@ -15,7 +15,6 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for SdkSandboxManager end to end tests">
-    <option name="test-suite-tag" value="cts" />
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -27,7 +26,13 @@
         <option name="test-file-name" value="CodeProviderWithResources.apk"/>
         <option name="test-file-name" value="SdkSandboxManagerTests.apk"/>
     </target_preparer>
-
+  <!--
+    ~ TODO(b/214506422) Remove commands which handle hidden APIs when APIs are no longer hidden
+  -->
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="settings put global hidden_api_policy 1" />
+        <option name="teardown-command" value="settings delete global hidden_api_policy" />
+    </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false"/>
         <option name="package" value="com.android.tests.sdksandbox.endtoend"/>

@@ -32,7 +32,6 @@ filegroup {
 java_sdk_library {
     name: "framework-adservices",
     srcs: [":framework-adservices-sources"],
-    libs: ["modules-utils-preconditions"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     permitted_packages: [
@@ -44,6 +43,4 @@ java_sdk_library {
         "//packages/modules/AdServices:__subpackages__"
     ],
     apex_available: ["com.android.adservices"],
-    // TODO(b/219953633): Remove.
-    unsafe_ignore_missing_latest_api: true,
 }
