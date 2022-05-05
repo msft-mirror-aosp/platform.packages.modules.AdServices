@@ -21,25 +21,26 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * The aggregate report is the attribution report encrypted by the aggregation service. An aggregate
- * report contains all the information needed for sending the report to its reporting endpoint. All
- * nested information has already been serialized and encrypted as necessary.
+ * The aggregate payload is the aggregate report encrypted by the aggregation service.
+ * An aggregate report contains all the information needed for sending the report to its
+ * reporting endpoint. All nested information has already been serialized and encrypted as
+ * necessary.
  */
-public class AggregateReport {
+public class AggregatePayload {
     private List<AggregationServicePayload> mPayloads;
     private String mSharedInfo;
 
-    private AggregateReport() {
+    private AggregatePayload() {
         mPayloads = new ArrayList<>();
         mSharedInfo = null;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AggregateReport)) {
+        if (!(obj instanceof AggregatePayload)) {
             return false;
         }
-        AggregateReport aggregateReport = (AggregateReport) obj;
+        AggregatePayload aggregateReport = (AggregatePayload) obj;
         return mPayloads.equals(aggregateReport.mPayloads)
                 && Objects.equals(mSharedInfo, aggregateReport.mSharedInfo);
     }
@@ -50,7 +51,7 @@ public class AggregateReport {
     }
 
     /**
-     * All AggregationServicePayload generated in the aggregate report.
+     * All AggregationServicePayload generated in the encrypted aggregate report.
      */
     public List<AggregationServicePayload> getPayloads() {
         return mPayloads;
@@ -64,17 +65,17 @@ public class AggregateReport {
     }
 
     /**
-     * Builder for {@link AggregateReport}
+     * Builder for {@link AggregatePayload}
      */
     public static final class Builder {
-        private final AggregateReport mAggregateReport;
+        private final AggregatePayload mAggregateReport;
 
         public Builder() {
-            mAggregateReport = new AggregateReport();
+            mAggregateReport = new AggregatePayload();
         }
 
         /**
-         * See {@link AggregateReport#getPayloads()} ()}.
+         * See {@link AggregatePayload#getPayloads()} ()}.
          */
         public Builder setAggregationServicePayload(
                 List<AggregationServicePayload> payloads) {
@@ -83,7 +84,7 @@ public class AggregateReport {
         }
 
         /**
-         * See {@link AggregateReport#getSharedInfo()} ()}.
+         * See {@link AggregatePayload#getSharedInfo()} ()}.
          */
         public Builder setSharedInfo(String sharedInfo) {
             mAggregateReport.mSharedInfo = sharedInfo;
@@ -91,28 +92,24 @@ public class AggregateReport {
         }
 
         /**
-         * Build the {@link AggregateReport}.
+         * Build the {@link AggregatePayload}.
          */
-        public AggregateReport build() {
+        public AggregatePayload build() {
             return mAggregateReport;
         }
     }
 
     /**
-     * This payload is constructed using the data in the AttributionReport and then encrypted with
-     * one of `url`'s public keys. The plaintext of the encrypted payload is a serialized CBOR map
-     * structured as follows:
-     *  {
-     *  "operation": "<chosen operation as string>",
-     *  "data": [{
-     *      "bucket": <a 16-byte (i.e. 128-bit) big-endian bytestring>,
-     *      "value": <a 4-byte (i.e. 32-bit) big-endian bytestring>
-     *  }, ...],
-     *  }
-     *  Note that the "data" array may contain multiple contributions.
-     *  For the `kExperimentalPoplar` aggregation mode, the "data" field is
-     *  replaced with:
-     *  "dpf_key": <binary serialization of the DPF key>
+     * Support a list of payloads for future extensibility if multiple helpers
+     * are necessary. Currently only supports a single helper configured
+     * by the browser.
+     *   "aggregation_service_payloads": [
+     *     {
+     *       "payload": "[base64-encoded HPKE encrypted data readable only by the aggregation
+     *       service]",
+     *       "key_id": "[string identifying public key used to encrypt payload]",
+     *     },
+     *   ],
      */
     public static class AggregationServicePayload {
         private List<Integer> mPayload;

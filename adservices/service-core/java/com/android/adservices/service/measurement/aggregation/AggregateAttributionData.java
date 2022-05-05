@@ -29,13 +29,10 @@ public class AggregateAttributionData {
     private List<AggregateHistogramContribution> mContributions;
     @Nullable
     private Long mId;
-    @Nullable
-    private AggregateReport mAssembledReport;
 
     private AggregateAttributionData() {
         mContributions = new ArrayList<>();
         mId = null;
-        mAssembledReport = null;
     }
 
     @Override
@@ -45,13 +42,12 @@ public class AggregateAttributionData {
         }
         AggregateAttributionData aggregateAttributionData = (AggregateAttributionData) obj;
         return Objects.equals(mContributions, aggregateAttributionData.mContributions)
-                && Objects.equals(mId, aggregateAttributionData.mId)
-                && Objects.equals(mAssembledReport, aggregateAttributionData.mAssembledReport);
+                && Objects.equals(mId, aggregateAttributionData.mId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mContributions, mId, mAssembledReport);
+        return Objects.hash(mContributions, mId);
     }
 
     /**
@@ -68,14 +64,6 @@ public class AggregateAttributionData {
     @Nullable
     public Long getId() {
         return mId;
-    }
-
-    /**
-     * The report assembled by the aggregation service. If null, the report has not been assembled.
-     */
-    @Nullable
-    public AggregateReport getAssembledReport() {
-        return mAssembledReport;
     }
 
     /**
@@ -101,14 +89,6 @@ public class AggregateAttributionData {
          */
         public Builder setId(@Nullable Long id) {
             mAggregateAttributionData.mId = id;
-            return this;
-        }
-
-        /**
-         * See {@link AggregateAttributionData#getAssembledReport()}.
-         */
-        public Builder setAssembledReport(@Nullable AggregateReport aggregateReport) {
-            mAggregateAttributionData.mAssembledReport = aggregateReport;
             return this;
         }
 

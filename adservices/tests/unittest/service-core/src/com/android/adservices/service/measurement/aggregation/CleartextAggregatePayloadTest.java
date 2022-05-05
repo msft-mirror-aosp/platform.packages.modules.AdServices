@@ -24,41 +24,45 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link AttributionReport} */
+/** Unit tests for {@link CleartextAggregatePayload} */
 @SmallTest
-public final class AttributionReportTest {
+public final class CleartextAggregatePayloadTest {
 
-    private AttributionReport.AttributionInfo createAttributionInfo() {
-        return new AttributionReport.AttributionInfo.Builder()
-                .setTime(1000L).setDebugkey(null).build();
+    private CleartextAggregatePayload.AttributionInfo createAttributionInfo() {
+        return new CleartextAggregatePayload.AttributionInfo.Builder().setTime(1000L).build();
     }
-    private AttributionReport createAttributionReport() {
-        return new AttributionReport.Builder()
+
+    private CleartextAggregatePayload createAttributionReport() {
+        return new CleartextAggregatePayload.Builder()
                 .setAttributionInfo(createAttributionInfo())
                 .setReportTime(1L)
                 .setExternalReportId(2L)
                 .setAggregateAttributionData(
                         new AggregateAttributionData.Builder().build())
+                .setStatus(CleartextAggregatePayload.Status.PENDING)
                 .build();
     }
 
     @Test
     public void testCreation() throws Exception {
-        AttributionReport attributionReport = createAttributionReport();
+        CleartextAggregatePayload attributionReport = createAttributionReport();
         assertEquals(1L, attributionReport.getReportTime());
         assertEquals(2L, attributionReport.getExternalReportId());
         assertNotNull(attributionReport.getAggregateAttributionData());
-        AttributionReport.AttributionInfo attributionInfo = attributionReport.getAttributionInfo();
+        CleartextAggregatePayload.AttributionInfo attributionInfo =
+                attributionReport.getAttributionInfo();
         assertEquals(1000L, attributionInfo.getTime());
-        assertNull(attributionInfo.getDebugkey());
+        assertEquals(CleartextAggregatePayload.Status.PENDING, attributionReport.getStatus());
     }
 
     @Test
     public void testDefaults() throws Exception {
-        AttributionReport attributionReport = new AttributionReport.Builder().build();
+        CleartextAggregatePayload attributionReport =
+                new CleartextAggregatePayload.Builder().build();
         assertNull(attributionReport.getAttributionInfo());
         assertEquals(0L, attributionReport.getReportTime());
         assertEquals(0L, attributionReport.getExternalReportId());
         assertNull(attributionReport.getAggregateAttributionData());
+        assertEquals(CleartextAggregatePayload.Status.PENDING, attributionReport.getStatus());
     }
 }

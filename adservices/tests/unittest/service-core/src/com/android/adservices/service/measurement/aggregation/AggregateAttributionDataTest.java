@@ -33,8 +33,7 @@ public final class AggregateAttributionDataTest {
     private AggregateAttributionData createExample() {
         return new AggregateAttributionData.Builder()
                 .setContributions(new ArrayList<>())
-                .setId(1L)
-                .setAssembledReport(new AggregateReport.Builder().build()).build();
+                .setId(1L).build();
     }
 
     @Test
@@ -42,7 +41,6 @@ public final class AggregateAttributionDataTest {
         AggregateAttributionData data = createExample();
         assertNotNull(data.getContributions());
         assertEquals(1L, data.getId().longValue());
-        assertNotNull(data.getAssembledReport());
     }
 
     @Test
@@ -50,6 +48,6 @@ public final class AggregateAttributionDataTest {
         AggregateAttributionData data = new AggregateAttributionData.Builder().build();
         assertEquals(0, data.getContributions().size());
         assertNull(data.getId());
-        assertNull(data.getAssembledReport());
     }
 }
+
