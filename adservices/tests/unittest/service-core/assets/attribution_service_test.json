@@ -1,0 +1,1218 @@
+{
+  "testCases": [
+    {
+      "name": "Simple 1-1 matching",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101,
+          "sourceType": "navigation"
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "No matching sources",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d2",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d2",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 1,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      }
+    },
+    {
+      "name": "Priority based source selection",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 200,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 1,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 200,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 2,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTime": 8643600030,
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "triggerPriority": 101,
+          "status": 0,
+          "sourceType": "navigation"
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Event time based source selection",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000002,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000003,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 1,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000002,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 2,
+            "triggerTime": 8640000003,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 2,
+          "attributionDestination": "android-app://com.example.xyz",
+          "reportTime": 8643600030,
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 2,
+          "triggerTime": 8640000003,
+          "triggerPriority": 101,
+          "status": 0,
+          "sourceType": "navigation"
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "destinationSite": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000003,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prioritize Install Attributed Source - Navigation",
+      "description": "2 Source, 1 Trigger. Trigger should match with install-attributed source.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 0,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 1,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 0,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "unused",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "triggerPriority": 101,
+            "status": 0,
+            "reportTime": 8816400000,
+            "sourceType": "navigation"
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "destinationSite": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ignore Install Attributed Source - Navigation",
+      "description": "2 Source, 1 Trigger. Trigger should match with high priority source and ignore install-attributed source due to install-cooldown expiry.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 0,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "attributionTriggerIds": ["T1"],
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "navigation",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 1,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 2,
+            "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "unused",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerData": 2,
+            "triggerTime": 9072000001,
+            "triggerPriority": 101,
+            "status": 0,
+            "reportTime": 9248400001,
+            "sourceType": "navigation"
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "destinationSite": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prioritize Install Attributed Source - Event",
+      "description": "2 Source, 1 Trigger. Trigger should match with install-attributed source.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 0,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 1,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 1,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 0,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 1,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "unused",
+            "sourceId": 2,
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerData": 1,
+            "triggerTime": 8640000002,
+            "triggerPriority": 101,
+            "status": 0,
+            "reportTime": 8816400000,
+            "sourceType": "event"
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "destinationSite": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ignore Install Attributed Source - Event",
+      "description": "2 Source, 1 Trigger. Trigger should match with high priority source and ignore install-attributed source due to install-cooldown expiry.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 0,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 10368000000,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "S2",
+            "eventId": 2,
+            "sourceType": "event",
+            "attributionSource": "android-app://com.example.abc",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000000,
+            "expiryTime": 10368000000,
+            "priority": 50,
+            "status": 1,
+            "installCooldownWindow": 432000000,
+            "installAttributed": true,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 2,
+            "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [
+          {
+            "id": "unused",
+            "sourceId": 1,
+            "attributionDestination": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerData": 0,
+            "triggerTime": 9072000001,
+            "triggerPriority": 101,
+            "status": 0,
+            "reportTime": 10371600000,
+            "sourceType": "event"
+          }
+        ],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "destinationSite": "android-app://com.example.xyz",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 9072000001,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Should truncate trigger data - Event",
+      "description": "1 Source, 1 Trigger. They should match and event report's trigger data should be truncated.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 7,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "event",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 7,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 1,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101,
+          "sourceType": "event"
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Should truncate trigger data - Navigation",
+      "description": "1 Source, 1 Trigger. They should match and event report's trigger data should be truncated.",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 15,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "attributionSource": "https://www.example1.com/s1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "reportTo": "https://www.example3.com/r1",
+            "priority": 101,
+            "status": 2,
+            "triggerData": 15,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 7,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101,
+          "sourceType": "navigation"
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Respect Report Count limit",
+      "description": "1 source, 2 triggers. New trigger shouldn't be attributed as it is same priority.",
+      "input": {
+        "sources": [{
+          "id": "S1",
+          "eventId": 1,
+          "sourceType": "event",
+          "attributionSource": "https://www.example1.com/s1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "eventTime": 8640000001,
+          "expiryTime": 8640000030,
+          "priority": 100,
+          "status": 0,
+          "registrant": "android-app://com.example.abc"
+        }],
+        "triggers": [{
+          "id": "T1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 101,
+          "status": 0,
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "registrant": "android-app://com.example.xyz"
+        }, {
+          "id": "T2",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 101,
+          "status": 0,
+          "triggerData": 2,
+          "triggerTime": 8640000003,
+          "registrant": "android-app://com.example.xyz"
+        }],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [{
+          "id": "S1",
+          "eventId": 1,
+          "sourceType": "event",
+          "attributionSource": "https://www.example1.com/s1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "eventTime": 8640000001,
+          "expiryTime": 8640000030,
+          "priority": 100,
+          "status": 0,
+          "registrant": "android-app://com.example.abc"
+        }],
+        "triggers": [{
+          "id": "T1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 101,
+          "status": 2,
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "registrant": "android-app://com.example.xyz"
+        }, {
+          "id": "T2",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 101,
+          "status": 1,
+          "triggerData": 2,
+          "triggerTime": 8640000003,
+          "registrant": "android-app://com.example.xyz"
+        }],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 0,
+          "triggerTime": 8640000002,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 101,
+          "sourceType": "event"
+        }],
+        "attribution_rate_limits": [{
+          "id": "unused",
+          "sourceSite": "https://www.example1.com",
+          "destinationSite": "https://www.example2.com",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerTime": 8640000002,
+          "registrant": "android-app://com.example.xyz"
+        }]
+      }
+    },
+    {
+      "name": "Replace old report",
+      "description": "1 source, 2 triggers. New trigger should be attributed as it is higher priority.",
+      "input": {
+        "sources": [{
+          "id": "S1",
+          "eventId": 1,
+          "sourceType": "event",
+          "attributionSource": "https://www.example1.com/s1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "eventTime": 8640000001,
+          "expiryTime": 8640000030,
+          "priority": 100,
+          "status": 0,
+          "registrant": "android-app://com.example.abc"
+        }],
+        "triggers": [{
+          "id": "T1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 101,
+          "status": 0,
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "registrant": "android-app://com.example.xyz"
+        }, {
+          "id": "T2",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 102,
+          "status": 0,
+          "triggerData": 1,
+          "triggerTime": 8640000003,
+          "registrant": "android-app://com.example.xyz"
+        }],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [{
+          "id": "S1",
+          "eventId": 1,
+          "sourceType": "event",
+          "attributionSource": "https://www.example1.com/s1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "eventTime": 8640000001,
+          "expiryTime": 8640000030,
+          "priority": 100,
+          "status": 0,
+          "registrant": "android-app://com.example.abc"
+        }],
+        "triggers": [{
+          "id": "T1",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 101,
+          "status": 2,
+          "triggerData": 2,
+          "triggerTime": 8640000002,
+          "registrant": "android-app://com.example.xyz"
+        }, {
+          "id": "T2",
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "priority": 102,
+          "status": 2,
+          "triggerData": 1,
+          "triggerTime": 8640000003,
+          "registrant": "android-app://com.example.xyz"
+        }],
+        "event_reports": [{
+          "id": "unused",
+          "sourceId": 1,
+          "attributionDestination": "https://www.example2.com/d1",
+          "reportTo": "https://www.example3.com/r1",
+          "triggerData": 1,
+          "triggerTime": 8640000003,
+          "status": 0,
+          "reportTime": 8643600030,
+          "triggerPriority": 102,
+          "sourceType": "event"
+        }],
+        "attribution_rate_limits": [
+          {
+            "id": "unused1",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          },
+          {
+            "id": "unused2",
+            "sourceSite": "https://www.example1.com",
+            "destinationSite": "https://www.example2.com",
+            "reportTo": "https://www.example3.com/r1",
+            "triggerTime": 8640000003,
+            "registrant": "android-app://com.example.xyz"
+          }]
+      }
+    }
+  ]
+}

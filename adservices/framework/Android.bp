@@ -32,6 +32,7 @@ filegroup {
 java_sdk_library {
     name: "framework-adservices",
     srcs: [":framework-adservices-sources"],
+    libs: ["modules-utils-preconditions"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     permitted_packages: [

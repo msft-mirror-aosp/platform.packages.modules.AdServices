@@ -2,6 +2,15 @@
   "presubmit": [
     {
       "name": "AdServicesFrameworkUnitTests"
+    },
+    {
+      "name": "AdServicesServiceCoreUnitTests"
+    },
+    {
+      "name": "AdServicesEndToEndTests"
+    },
+    {
+      "name": "CtsAdServicesDeviceTestCases"
     }
   ]
 }

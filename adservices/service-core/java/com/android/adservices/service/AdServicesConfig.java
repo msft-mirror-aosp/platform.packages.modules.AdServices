@@ -16,50 +16,65 @@
 
 package com.android.adservices.service;
 
+import java.util.concurrent.TimeUnit;
+
 /**
- * Configs for AdServices.
- * These configs will be backed by PH Flags.
+ * Hard Coded Configs for AdServices.
+ * For Feature Flags that are backed by PH, please see {@link PhFlags}
  */
 public class AdServicesConfig {
     /**
      * Job Id for idle maintenance job ({@link MaintenanceJobService}).
      */
     public static final int MAINTENANCE_JOB_ID = 1;
-    public static long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
-    public static long MAINTENANCE_JOB_FLEX_MS = 3 * 60 * 1000;  // 3 hours.
-
-    /**
-     * Returns the max time period (in millis) between each idle maintenance job run.
-     */
-    public static long getMaintenanceJobPeriodMs() {
-        return MAINTENANCE_JOB_PERIOD_MS;
-    }
-
-    /**
-     * Returns flex for the Epoch computation job in Millisecond.
-     */
-    public static long getMaintenanceJobFlexMs() {
-        return MAINTENANCE_JOB_FLEX_MS;
-    }
 
     /**
      * Job Id for Topics Epoch Computation Job ({@link EpochJobService})
      */
     public static final int TOPICS_EPOCH_JOB_ID = 2;
-    public static long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
-    public static long TOPICS_EPOCH_JOB_FLEX_MS = 5 * 60 * 1000; // 3 hours.
 
     /**
-     * Returns the max time period (in millis) between each epoch computation job run.
+     * Job Id for Measurement Main Reporting Job ({@link ReportingJobService})
      */
-    public static long getTopicsEpochJobPeriodMs() {
-        return TOPICS_EPOCH_JOB_PERIOD_MS;
+    public static final int MEASUREMENT_MAIN_REPORTING_JOB_ID = 3;
+
+    /**
+     * Returns the max time period (in millis) between each main reporting maintenance job run.
+     */
+    public static long getMeasurementMainReportingJobPeriodMs() {
+        return FlagsFactory.getFlags().getMeasurementMainReportingJobPeriodMs();
     }
 
     /**
-     * Returns flex for the Epoch computation job in Millisecond.
+     * Job Id for Measurement Delete Expired Records Job ({@link DeleteExpiredJobService})
      */
-    public static long getTopicsEpochJobFlexMs() {
-        return TOPICS_EPOCH_JOB_FLEX_MS;
+    public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
+    public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
+            24L * 60L * 60L * 1000L; // 24 hours.
+    public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS = TimeUnit.DAYS.toMillis(30);
+
+    /**
+     * Returns the max time period (in millis) between each expired-record deletion maintenance job
+     * run.
+     */
+    public static long getMeasurementDeleteExpiredJobPeriodMs() {
+        return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Job Id for Measurement Attribution Job
+     * ({@link com.android.adservices.service.measurement.AttributionJobService}).
+     */
+    public static final int MEASUREMENT_ATTRIBUTION_JOB_ID = 5;
+
+    /**
+     * Job Id for Measurement Fallback Reporting Job ({@link FallbackReportingJobService})
+     */
+    public static final int MEASUREMENT_FALLBACK_REPORTING_JOB_ID = 6;
+    public static long MEASUREMENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
+            24L * 60L * 60L * 1000L; // 24 hours.
+
+    public static long getMeasurementFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 }

@@ -47,6 +47,7 @@ import javax.annotation.concurrent.ThreadSafe;
 class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
 
     private static final String TAG = "SdkSandboxManager";
+    private static final String SANDBOX_PROCESS_NAME_SUFFIX = "_sdk_sandbox";
 
     private final Object mLock = new Object();
 
@@ -62,7 +63,6 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
         mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
     }
 
-    // TODO(b/214240264): Write E2E tests for checking binding from different apps
     @Override
     @Nullable
     public void bindService(int appUid, String appPackageName,
@@ -86,10 +86,11 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             SdkSandboxConnection sdkSandboxConnection =
                     new SdkSandboxConnection(serviceConnection);
 
-            final String processName = "sdk_sandbox_" + appUid;
+            String sandboxProcessName = getProcessName(appPackageName)
+                    + SANDBOX_PROCESS_NAME_SUFFIX;
             try {
                 boolean bound = mActivityManagerLocal.bindSdkSandboxService(intent,
-                        serviceConnection, appUid, appPackageName, processName,
+                        serviceConnection, appUid, appPackageName, sandboxProcessName,
                         Context.BIND_AUTO_CREATE);
                 if (!bound) {
                     mContext.unbindService(serviceConnection);
@@ -192,6 +193,16 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     @Nullable
     private SdkSandboxConnection getSdkSandboxConnectionLocked(int appUid) {
         return mAppSdkSandboxConnections.get(appUid);
+    }
+
+    private String getProcessName(String packageName) {
+        try {
+            return mContext.getPackageManager().getApplicationInfo(packageName,
+                    /*flags=*/ 0).processName;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, packageName + " package not found");
+        }
+        return packageName;
     }
 
     private static class SdkSandboxConnection {

@@ -16,13 +16,23 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+genrule {
+    name: "statslog-adservices-java-gen",
+    tools: ["stats-log-api-gen"],
+    cmd: "$(location stats-log-api-gen) --java $(out) --module adservices" +
+         " --javaPackage com.android.adservices.service.stats --javaClass AdServicesStatsLog",
+    out: ["com/android/adservices/service/stats/AdServicesStatsLog.java"],
+}
+
 filegroup {
     name: "adservices-service-core-sources",
     srcs: [
         "java/**/*.java",
     ],
     path: "java",
-    visibility: ["//visibility:private"],
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+    ],
 }
 
 java_library {
@@ -30,16 +40,31 @@ java_library {
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     srcs: [
-        ":adservices-service-core-sources",
+        ":adservices-service-core-sources", ":statslog-adservices-java-gen",
+    ],
+    plugins: [
+        "androidx.room_room-compiler-plugin",
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
+    javacflags: [
+        "-Aroom.schemaLocation=packages/modules/AdServices/adservices/service-core/schemas",
     ],
     libs: [
+        "androidx.room_room-runtime",
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
+        "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
+        "auto_value_annotations"
     ],
     static_libs: [
         // TODO(b/208705888): Renable tflite.
         // "tensorflowlite_java",
+        "androidx.concurrent_concurrent-futures",
+        "androidx.annotation_annotation",
+        "guava",
+        "modules-utils-preconditions",
     ],
     apex_available: ["com.android.adservices"],
 }

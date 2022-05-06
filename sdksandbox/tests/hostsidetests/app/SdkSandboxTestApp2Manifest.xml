@@ -18,7 +18,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.sdksandbox.app2">
 
-    <application>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application android:process="com.android.sdksandbox.processname">
         <activity android:name=".SdkSandboxTestActivity2"
                   android:exported="true">
             <intent-filter>
