@@ -16,6 +16,8 @@
 
 package com.android.adservices.data;
 
+import static com.android.adservices.data.measurement.MeasurementMigrations.migrationScriptVersion2;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -34,7 +36,7 @@ import com.android.internal.annotations.VisibleForTesting;
  */
 public final class DbHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -69,15 +71,16 @@ public final class DbHelper extends SQLiteOpenHelper {
         for (String sql : MeasurementTables.CREATE_STATEMENTS) {
             db.execSQL(sql);
         }
-        for (String sql: MeasurementTables.CREATE_INDICES) {
+        for (String sql : MeasurementTables.CREATE_INDEXES) {
             db.execSQL(sql);
         }
+        onUpgrade(db, 0, DATABASE_VERSION);
     }
 
     @Override
     public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-        // TODO: handle upgrade when we introduce db schema change.
         LogUtil.d("DbHelper.onUpgrade.");
+        migrate(db, migrationScriptVersion2(), oldVersion, /* scriptVersion = */ 2);
     }
 
     /**
@@ -103,6 +106,16 @@ public final class DbHelper extends SQLiteOpenHelper {
         } catch (SQLiteException e) {
             LogUtil.e("Failed to get a writeable database", e);
             return null;
+        }
+    }
+
+    private void migrate(
+            @NonNull SQLiteDatabase db, String[] scripts, int deviceVersion, int scriptVersion) {
+        if (deviceVersion < scriptVersion) {
+            LogUtil.d("Migration executing script version %d", scriptVersion);
+            for (String sql : scripts) {
+                db.execSQL(sql);
+            }
         }
     }
 }

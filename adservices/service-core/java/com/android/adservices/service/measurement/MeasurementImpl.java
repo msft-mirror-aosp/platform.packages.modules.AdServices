@@ -169,11 +169,11 @@ public final class MeasurementImpl {
         for (SourceRegistration registration : responseBasedRegistrations) {
             Source source = new Source.Builder()
                     .setEventId(registration.getSourceEventId())
-                    .setAttributionSource(request.getTopOriginUri())
+                    .setPublisher(request.getTopOriginUri())
                     // Only first destination to avoid AdTechs change this
                     .setAttributionDestination(responseBasedRegistrations.get(0)
                             .getDestination())
-                    .setReportTo(getBaseUri(registration.getReportingOrigin()))
+                    .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                     .setRegistrant(getRegistrant(request.getAttributionSource()))
                     .setSourceType(getSourceType(request))
                     .setPriority(registration.getSourcePriority())
@@ -194,9 +194,9 @@ public final class MeasurementImpl {
             mDatastoreManager.runInTransaction((dao) -> {
                 dao.insertSource(
                         /* sourceEventId */ source.getEventId(),
-                        /* attributionSource */ source.getAttributionSource(),
+                        /* publisher */ source.getPublisher(),
                         /* attributionDestination */ source.getAttributionDestination(),
-                        /* reportTo */ source.getReportTo(),
+                        /* adTechDomain */ source.getAdTechDomain(),
                         /* registrant */ source.getRegistrant(),
                         /* sourceEventTime */ source.getEventTime(),
                         /* expiryTime */ source.getExpiryTime(),
@@ -223,7 +223,7 @@ public final class MeasurementImpl {
                         .setReportTime(fakeReport.getReportingTime())
                         .setTriggerData(fakeReport.getTriggerData())
                         .setAttributionDestination(source.getAttributionDestination())
-                        .setReportTo(source.getReportTo())
+                        .setAdTechDomain(source.getAdTechDomain())
                         .setTriggerTime(0)
                         .setTriggerPriority(0)
                         .setTriggerDedupKey(null)
@@ -246,7 +246,7 @@ public final class MeasurementImpl {
             mDatastoreManager.runInTransaction((dao) ->
                     dao.insertTrigger(
                             /* attributionDestination */ request.getTopOriginUri(),
-                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
+                            /* adTechDomain */ getBaseUri(registration.getReportingOrigin()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* triggerTime */ triggerTime,
                             /* triggerData */ registration.getTriggerData(),
