@@ -36,7 +36,7 @@ import java.util.Map;
 
 
 /**
- * Download and decode Trigger Registation.
+ * Download and decode Trigger registration.
  *
  * @hide
  */
@@ -86,7 +86,7 @@ public class TriggerFetcher {
             try {
                 parseEventTrigger(field.get(0), result);
             } catch (JSONException e) {
-                LogUtil.d("Invalid JSON");
+                LogUtil.d("Invalid JSON %s", e);
                 return false;
             }
             additionalResult = true;
@@ -128,14 +128,14 @@ public class TriggerFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL ", e);
+            LogUtil.d("Malformed registration target URL %s", e);
             return false;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open registation target URL", e);
+            LogUtil.d("Failed to open registration target URL %s", e);
             return false;
         }
         boolean success = true;
@@ -145,12 +145,15 @@ public class TriggerFetcher {
             Map<String, List<String>> headers = urlConnection.getHeaderFields();
 
             int responseCode = urlConnection.getResponseCode();
+            LogUtil.d("Response code = " + responseCode);
+
             if (!ResponseBasedFetcher.isRedirect(responseCode)
                     && !ResponseBasedFetcher.isSuccess(responseCode)) {
                 success = false;
             }
 
             if (!parseTrigger(topOrigin, target, headers, registrationsOut)) {
+                LogUtil.d("Failed while parsing");
                 success = false;
             }
 
@@ -163,7 +166,7 @@ public class TriggerFetcher {
             }
             return success;
         } catch (IOException e) {
-            LogUtil.d("Failed to get registation response", e);
+            LogUtil.d("Failed to get registration response %s", e);
             return false;
         } finally {
             if (urlConnection != null) {
