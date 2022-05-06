@@ -17,14 +17,19 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /** Unit tests for {@link AggregateTriggerData} */
 @SmallTest
@@ -32,6 +37,12 @@ public final class AggregateTriggerDataTest {
 
     @Test
     public void testCreation() throws Exception {
+        Map<String, List<String>> attributionFilterMap = new HashMap<>();
+        attributionFilterMap.put("ctid", Arrays.asList("1", "2"));
+        AggregateFilterData filterData =
+                new AggregateFilterData.Builder()
+                        .setAttributionFilterMap(attributionFilterMap).build();
+
         AggregateTriggerData attributionTriggerData =
                 new AggregateTriggerData.Builder()
                         .setKey(
@@ -39,11 +50,15 @@ public final class AggregateTriggerDataTest {
                                         .setHighBits(0L).setLowBits(5L).build())
                         .setSourceKeys(new HashSet<>(
                                 Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
+                        .setFilter(filterData)
                         .build();
 
         assertEquals(attributionTriggerData.getKey().getHighBits().longValue(), 0L);
         assertEquals(attributionTriggerData.getKey().getLowBits().longValue(), 5L);
         assertEquals(attributionTriggerData.getSourceKeys().size(), 3);
+        assertTrue(attributionTriggerData.getFilter().isPresent());
+        AggregateFilterData data = attributionTriggerData.getFilter().get();
+        assertEquals(2, data.getAttributionFilterMap().get("ctid").size());
     }
 
     @Test
@@ -52,5 +67,7 @@ public final class AggregateTriggerDataTest {
                 new AggregateTriggerData.Builder().build();
         assertNull(attributionTriggerData.getKey());
         assertEquals(attributionTriggerData.getSourceKeys().size(), 0);
+        assertFalse(attributionTriggerData.getFilter().isPresent());
+        assertFalse(attributionTriggerData.getNotFilter().isPresent());
     }
 }

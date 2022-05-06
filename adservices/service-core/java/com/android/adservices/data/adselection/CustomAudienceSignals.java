@@ -149,6 +149,22 @@ public class CustomAudienceSignals {
                 mOwner, mBuyer, mName, mActivationTime, mExpirationTime, mUserBiddingSignals);
     }
 
+    /**
+     * @return a CustomAudienceSignals data object built from a {@link DBCustomAudience} object.
+     */
+    @NonNull
+    public static CustomAudienceSignals buildFromCustomAudience(
+            @NonNull DBCustomAudience customAudience) {
+        return new CustomAudienceSignals.Builder()
+                .setOwner(customAudience.getOwner())
+                .setBuyer(customAudience.getBuyer())
+                .setName(customAudience.getName())
+                .setActivationTime(customAudience.getActivationTime())
+                .setExpirationTime(customAudience.getExpirationTime())
+                .setUserBiddingSignals(customAudience.getUserBiddingSignals())
+                .build();
+    }
+
     /** Builder for @link CustomAudienceSignals} object. */
     public static final class Builder {
         @NonNull private String mOwner;

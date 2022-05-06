@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package android.adservices.adselection;
 
-import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.net.Uri;
+
+import com.android.adservices.service.adselection.AdBiddingOutcome;
+import com.android.adservices.service.adselection.CustomAudienceBiddingInfo;
 
 public class AdBiddingOutcomeFixture {
 

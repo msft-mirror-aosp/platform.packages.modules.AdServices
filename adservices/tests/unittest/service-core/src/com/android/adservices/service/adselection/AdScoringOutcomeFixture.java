@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdBiddingOutcomeFixture;
+
 public class AdScoringOutcomeFixture {
 
     public static AdScoringOutcome.Builder anAdScoringBuilder(String buyerName, Double score) {

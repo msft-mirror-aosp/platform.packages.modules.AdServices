@@ -16,21 +16,33 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import android.annotation.Nullable;
+import android.annotation.IntDef;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Class that contains all the data needed to serialize and send an attribution report. This class
- * can represent multiple different types of reports.
+ * Class that contains all the real data needed after aggregation, it is not encrypted.
  */
-public class AttributionReport {
+public class CleartextAggregatePayload {
     private AttributionInfo mAttributionInfo;
     private long mReportTime;
     private long mExternalReportId;
     private AggregateAttributionData mAggregateAttributionData;
+    private @Status int mStatus;
 
-    private AttributionReport() {
+    @IntDef(value = {
+            Status.PENDING,
+            Status.DELIVERED,
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Status {
+        int PENDING = 0;
+        int DELIVERED = 1;
+    }
+
+    private CleartextAggregatePayload() {
         mAttributionInfo = null;
         mReportTime = 0L;
         mExternalReportId = 0L;
@@ -39,11 +51,12 @@ public class AttributionReport {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AttributionReport)) {
+        if (!(obj instanceof CleartextAggregatePayload)) {
             return false;
         }
-        AttributionReport attributionReport = (AttributionReport) obj;
-        return Objects.equals(mAttributionInfo, attributionReport.mAttributionInfo)
+        CleartextAggregatePayload attributionReport = (CleartextAggregatePayload) obj;
+        return mStatus == attributionReport.mStatus
+                && Objects.equals(mAttributionInfo, attributionReport.mAttributionInfo)
                 && Objects.equals(mReportTime, attributionReport.mReportTime)
                 && Objects.equals(mExternalReportId, attributionReport.mExternalReportId)
                 && Objects.equals(mAggregateAttributionData,
@@ -52,7 +65,7 @@ public class AttributionReport {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAttributionInfo, mReportTime, mExternalReportId,
+        return Objects.hash(mStatus, mAttributionInfo, mReportTime, mExternalReportId,
                 mAggregateAttributionData);
     }
 
@@ -85,17 +98,24 @@ public class AttributionReport {
     }
 
     /**
-     * Builder for {@link AttributionReport}.
+     * Current {@link Status} of the report.
+     */
+    public @Status int getStatus() {
+        return mStatus;
+    }
+
+    /**
+     * Builder for {@link CleartextAggregatePayload}.
      */
     public static final class Builder {
-        private final AttributionReport mAttributionReport;
+        private final CleartextAggregatePayload mAttributionReport;
 
         public Builder() {
-            mAttributionReport = new AttributionReport();
+            mAttributionReport = new CleartextAggregatePayload();
         }
 
         /**
-         * See {@link AttributionReport#getAttributionInfo()}.
+         * See {@link CleartextAggregatePayload#getAttributionInfo()}.
          */
         public Builder setAttributionInfo(AttributionInfo attributionInfo) {
             mAttributionReport.mAttributionInfo = attributionInfo;
@@ -103,7 +123,7 @@ public class AttributionReport {
         }
 
         /**
-         * See {@link AttributionReport#getReportTime()}.
+         * See {@link CleartextAggregatePayload#getReportTime()}.
          */
         public Builder setReportTime(long reportTime) {
             mAttributionReport.mReportTime = reportTime;
@@ -111,7 +131,7 @@ public class AttributionReport {
         }
 
         /**
-         * See {@link AttributionReport#getExternalReportId()}.
+         * See {@link CleartextAggregatePayload#getExternalReportId()}.
          */
         public Builder setExternalReportId(long externalReportId) {
             mAttributionReport.mExternalReportId = externalReportId;
@@ -119,7 +139,7 @@ public class AttributionReport {
         }
 
         /**
-         * See {@link AttributionReport#getAggregateAttributionData()}.
+         * See {@link CleartextAggregatePayload#getAggregateAttributionData()}.
          */
         public Builder setAggregateAttributionData(
                 AggregateAttributionData aggregateAttributionData) {
@@ -128,9 +148,17 @@ public class AttributionReport {
         }
 
         /**
-         * Build the {@link AttributionReport}.
+         * See {@link CleartextAggregatePayload#getStatus()}
          */
-        public AttributionReport build() {
+        public Builder setStatus(@Status int status) {
+            mAttributionReport.mStatus = status;
+            return this;
+        }
+
+        /**
+         * Build the {@link CleartextAggregatePayload}.
+         */
+        public CleartextAggregatePayload build() {
             return mAttributionReport;
         }
     }
@@ -142,12 +170,9 @@ public class AttributionReport {
         // TODO: Add StoredSource object here later.
 
         private long mTime;
-        @Nullable
-        private Long mDebugkey;
 
         private AttributionInfo() {
             mTime = 0L;
-            mDebugkey = 0L;
         }
 
         @Override
@@ -156,13 +181,12 @@ public class AttributionReport {
                 return false;
             }
             AttributionInfo attributionInfo = (AttributionInfo) obj;
-            return Objects.equals(mTime, attributionInfo.mTime)
-                    && Objects.equals(mDebugkey, attributionInfo.mDebugkey);
+            return Objects.equals(mTime, attributionInfo.mTime);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTime, mDebugkey);
+            return Objects.hash(mTime);
         }
 
         /**
@@ -170,14 +194,6 @@ public class AttributionReport {
          */
         public long getTime() {
             return mTime;
-        }
-
-        /**
-         * Debug key for the attribution info.
-         */
-        @Nullable
-        public Long getDebugkey() {
-            return mDebugkey;
         }
 
         /**
@@ -195,14 +211,6 @@ public class AttributionReport {
              */
             public Builder setTime(long time) {
                 mAttributionInfo.mTime = time;
-                return this;
-            }
-
-            /**
-             * See {@link AttributionInfo#getDebugkey()}.
-             */
-            public Builder setDebugkey(@Nullable Long debugkey) {
-                mAttributionInfo.mDebugkey = debugkey;
                 return this;
             }
 
