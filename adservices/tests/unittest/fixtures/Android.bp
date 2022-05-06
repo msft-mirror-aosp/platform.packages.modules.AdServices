@@ -40,6 +40,8 @@ java_library {
     ],
     static_libs: [
         "adservices-service-core",
+        "androidx.test.rules",
+        "mockwebserver",
     ],
     apex_available: ["com.android.adservices"],
 }
