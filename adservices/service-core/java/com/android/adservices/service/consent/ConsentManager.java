@@ -20,6 +20,10 @@ package com.android.adservices.service.consent;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.data.common.BooleanFileDatastore;
+
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -28,10 +32,20 @@ import java.util.Objects;
  * <p> For Beta the consent is given for all {@link AdServicesApiType} or for none. </p>
  */
 public class ConsentManager {
-    private static ConsentManager sConsentManager;
+    public static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
+            "getConsent method failed. Revoked consent is returned as fallback.";
+    private static final String CONSENT_ALREADY_INITIALIZED_KEY = "CONSENT-ALREADY-INITIALIZED";
+    private static final String CONSENT_KEY = "CONSENT";
+    private static final String ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT =
+            "setConsent method failed due to IOException thrown by Datastore.";
+    private static final int STORAGE_VERSION = 1;
+    private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
-    ConsentManager() {
-        init();
+    private static volatile ConsentManager sConsentManager;
+    private BooleanFileDatastore mDatastore;
+
+    ConsentManager(@NonNull Context appContext) throws IOException {
+        init(appContext);
     }
 
     /**
@@ -41,70 +55,89 @@ public class ConsentManager {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManager getInstance() {
+    public static ConsentManager getInstance(@NonNull Context context) throws IOException {
         if (sConsentManager == null) {
-            sConsentManager = new ConsentManager();
+            synchronized (ConsentManager.class) {
+                if (sConsentManager == null) {
+                    sConsentManager = new ConsentManager(context);
+                }
+            }
         }
         return sConsentManager;
     }
 
-    private void init() {
-        //TODO(b/228287844): init db
+    private void init(@NonNull Context context) throws IOException {
+        mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
+        mDatastore.initialize();
+        //TODO(b/231472301): remove it after the logic to determine whether API should be enabled
+        // or not is already implemented
+        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null) {
+            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
+            enable(context);
+        }
     }
 
     /**
-     * Enables all PP API services. It atomically gives consent to Topics, Fledge and Measurements
+     * Enables all PP API services. It gives consent to Topics, Fledge and Measurements
      * services.
      *
-     * @param appContext application context of the caller.
+     * @param context application context of the caller.
      */
-    public void enable(Context appContext) {
-        Objects.requireNonNull(appContext);
+    public void enable(@NonNull Context context) {
+        Objects.requireNonNull(context);
 
-        // Enable all the APIs one by one
-        setConsent(AdServicesApiType.TOPICS, AdServicesApiConsent.getGivenConsent());
-        setConsent(AdServicesApiType.FLEDGE, AdServicesApiConsent.getGivenConsent());
-        setConsent(AdServicesApiType.MEASUREMENTS, AdServicesApiConsent.getGivenConsent());
+        // Enable all the APIs
+        try {
+            setConsent(AdServicesApiConsent.GIVEN);
+        } catch (IOException e) {
+            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
+            throw new RuntimeException(ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT, e);
+        }
     }
 
     /**
-     * Disables all PP API services. It atomically revokes consent to Topics, Fledge and
+     * Disables all PP API services. It revokes consent to Topics, Fledge and
      * Measurements services.
      *
-     * @param appContext application context of the caller.
+     * @param context application context of the caller.
      */
-    public void disable(Context appContext) {
-        Objects.requireNonNull(appContext);
+    public void disable(@NonNull Context context) {
+        Objects.requireNonNull(context);
 
-        // Disable all the APIs one by one
-        setConsent(AdServicesApiType.TOPICS, AdServicesApiConsent.getRevokedConsent());
-        setConsent(AdServicesApiType.FLEDGE, AdServicesApiConsent.getRevokedConsent());
-        setConsent(AdServicesApiType.MEASUREMENTS, AdServicesApiConsent.getRevokedConsent());
+        // Disable all the APIs
+        try {
+            setConsent(AdServicesApiConsent.REVOKED);
+        } catch (IOException e) {
+            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
+            throw new RuntimeException(ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT, e);
+        }
     }
 
     /**
-     * Retrieves the consent for all PP API services. Consent is given if and only if consents to
-     * all PP API services were given.
+     * Retrieves the consent for all PP API services.
      *
-     * @param appContext application context of the caller.
+     * @param context application context of the caller.
      */
-    public AdServicesApiConsent getConsent(Context appContext) {
-        Objects.requireNonNull(appContext);
+    public AdServicesApiConsent getConsent(@NonNull Context context) {
+        Objects.requireNonNull(context);
 
-        if (getConsent(AdServicesApiType.TOPICS).isGiven()
-                && getConsent(AdServicesApiType.FLEDGE).isGiven()
-                && getConsent(AdServicesApiType.MEASUREMENTS).isGiven()) {
-            return AdServicesApiConsent.getGivenConsent();
+        if (getConsent().isGiven()) {
+            return AdServicesApiConsent.GIVEN;
         }
-        return AdServicesApiConsent.getRevokedConsent();
+        return AdServicesApiConsent.REVOKED;
     }
 
-    private AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        //TODO(b/228287844): change it to real values
-        return AdServicesApiConsent.getGivenConsent();
+    private AdServicesApiConsent getConsent() {
+        try {
+            return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
+            return AdServicesApiConsent.REVOKED;
+        }
     }
 
-    private void setConsent(AdServicesApiType apiType, AdServicesApiConsent state) {
-        //TODO(b/228287844): add logic to store consent
+    private void setConsent(AdServicesApiConsent state)
+            throws IOException {
+        mDatastore.put(CONSENT_KEY, state.isGiven());
     }
 }

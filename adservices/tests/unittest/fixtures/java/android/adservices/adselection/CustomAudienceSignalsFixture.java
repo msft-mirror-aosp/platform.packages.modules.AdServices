@@ -16,29 +16,12 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
-import android.adservices.customaudience.TrustedBiddingDataFixture;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
-import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.data.customaudience.DBTrustedBiddingData;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 
 public class CustomAudienceSignalsFixture {
-    public static final String OWNER = "owner";
     public static final String BUYER = "buyer";
-    public static final String NAME = "name";
-    public static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
-    public static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
-    public static final Instant EXPIRATION_TIME =
-            CLOCK.instant().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MILLIS);
-    public static final String USER_BIDDING_SIGNALS = "{\"user_bidding_signals\":1}";
 
     public static CustomAudienceSignals aCustomAudienceSignals() {
         return aCustomAudienceSignalsBuilder().build();
@@ -46,30 +29,11 @@ public class CustomAudienceSignalsFixture {
 
     public static CustomAudienceSignals.Builder aCustomAudienceSignalsBuilder() {
         return new CustomAudienceSignals.Builder()
-                .setOwner(OWNER)
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(BUYER)
-                .setName(NAME)
-                .setActivationTime(ACTIVATION_TIME)
-                .setExpirationTime(EXPIRATION_TIME)
-                .setUserBiddingSignals(USER_BIDDING_SIGNALS);
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
-
-    public static final DBCustomAudience CUSTOM_AUDIENCE =
-            new DBCustomAudience.Builder()
-                    .setOwner(OWNER)
-                    .setBuyer(BUYER)
-                    .setName(NAME)
-                    .setActivationTime(ACTIVATION_TIME)
-                    .setExpirationTime(EXPIRATION_TIME)
-                    .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                    .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                    .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS)
-                    .setTrustedBiddingData(
-                            new DBTrustedBiddingData.Builder()
-                                    .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
-                                    .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
-                                    .build())
-                    .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                    .build();
 }
