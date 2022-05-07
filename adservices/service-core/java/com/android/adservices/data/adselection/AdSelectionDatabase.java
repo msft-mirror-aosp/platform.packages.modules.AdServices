@@ -37,7 +37,7 @@ import java.util.Optional;
 // TODO (b/229660121): Ad unit tests for this class
 @Database(
         exportSchema = false,
-        entities = {DBAdSelection.class, DBBuyerDecisionLogic.class},
+        entities = {DBAdSelection.class, DBBuyerDecisionLogic.class, DBAdSelectionOverride.class},
         version = 1)
 @TypeConverters({AdSelectionDatabase.Converters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
