@@ -352,6 +352,35 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     // TODO(b/221946754): Need to write tests for clearing cache and clearing code cache
+
+    @Test
+    public void testSdkDataPackageDirectory_IsClearedOnFreeCache() throws Exception {
+        // Install the app
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Create cache data to be cleared
+        final List<String> dataPaths = Arrays.asList(
+                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), //CE app data
+                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
+                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
+                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false) // DE sdk data
+        );
+        for (String dataPath : dataPaths) {
+            final String fileToDelete = dataPath + "/cache/deleteme.txt";
+            getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
+            assertThat(getDevice().doesFileExist(fileToDelete)).isTrue();
+        }
+
+        // Clear all other cached data to give ourselves a clean slate
+        getDevice().executeShellCommand("pm trim-caches 4096G");
+
+        // Verify cache directories are empty
+        for (String dataPath : dataPaths) {
+            final String[] cacheChildren = getDevice().getChildren(dataPath + "/cache");
+            assertWithMessage(dataPath + " is not empty").that(cacheChildren).asList().isEmpty();
+        }
+    }
+
     @Test
     public void testSdkDataPackageDirectory_IsDestroyedOnUserDeletion() throws Exception {
         // Create new user
