@@ -18,7 +18,6 @@
           package="com.android.requestsurfacepackagesuccessfullysdkprovider">
 
     <application>
-        android:hasCode="false"
         <sdk-library android:name="com.android.requestSurfacePackageSuccessfullySdkProvider"
                      android:versionMajor="1" />
         <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"
