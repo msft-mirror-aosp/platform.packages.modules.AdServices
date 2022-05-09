@@ -31,6 +31,7 @@ import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
@@ -38,6 +39,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -49,10 +51,9 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URL;
 import java.time.Clock;
 import java.time.Instant;
@@ -87,12 +88,12 @@ public class AdSelectionServiceImplTest {
 
     private final AdSelectionHttpClient mClient = new AdSelectionHttpClient(mExecutorService);
 
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
     @Test
     public void testReportImpressionSuccess() throws Exception {
-        int port = getAvailablePort();
-
-        String sellerReportingUrl = getStringUrl(mSellerReportingPath, port);
-        String buyerReportingUrl = getStringUrl(mBuyerReportingPath, port);
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
@@ -112,12 +113,11 @@ public class AdSelectionServiceImplTest {
                         + "}";
 
         MockWebServer server =
-                setupServer(
+                mMockWebServerRule.startMockWebServer(
                         List.of(
                                 new MockResponse().setBody(sellerDecisionLogicJs),
                                 new MockResponse(),
-                                new MockResponse()),
-                        port);
+                                new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -174,10 +174,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-        int port = getAvailablePort();
-
-        String sellerReportingUrl = getStringUrl(mSellerReportingPath, port);
-        String buyerReportingUrl = getStringUrl(mBuyerReportingPath, port);
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
@@ -197,12 +195,11 @@ public class AdSelectionServiceImplTest {
                         + "}";
 
         MockWebServer server =
-                setupServer(
+                mMockWebServerRule.startMockWebServer(
                         List.of(
                                 new MockResponse().setBody(sellerDecisionLogicJs),
                                 new MockResponse(),
-                                new MockResponse()),
-                        port);
+                                new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -253,10 +250,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-        int port = getAvailablePort();
-
-        String sellerReportingUrl = getStringUrl(mSellerReportingPath, port);
-        String buyerReportingUrl = getStringUrl(mBuyerReportingPath, port);
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String invalidSellerDecisionLogicJsMissingCurlyBracket =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
@@ -276,13 +271,12 @@ public class AdSelectionServiceImplTest {
                         + "}";
 
         MockWebServer server =
-                setupServer(
+                mMockWebServerRule.startMockWebServer(
                         List.of(
                                 new MockResponse()
                                         .setBody(invalidSellerDecisionLogicJsMissingCurlyBracket),
                                 new MockResponse(),
-                                new MockResponse()),
-                        port);
+                                new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -333,10 +327,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-        int port = getAvailablePort();
-
-        String sellerReportingUrl = getStringUrl(mSellerReportingPath, port);
-        String buyerReportingUrl = getStringUrl(mBuyerReportingPath, port);
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
@@ -356,12 +348,11 @@ public class AdSelectionServiceImplTest {
                         + "}";
 
         MockWebServer server =
-                setupServer(
+                mMockWebServerRule.startMockWebServer(
                         List.of(
                                 new MockResponse().setBody(sellerDecisionLogicJs),
                                 new MockResponse(),
-                                new MockResponse()),
-                        port);
+                                new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -412,9 +403,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionContextualAdSuccess() throws Exception {
-        int port = getAvailablePort();
-
-        String sellerReportingUrl = getStringUrl(mSellerReportingPath, port);
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
@@ -426,11 +415,10 @@ public class AdSelectionServiceImplTest {
                         + "}";
 
         MockWebServer server =
-                setupServer(
+                mMockWebServerRule.startMockWebServer(
                         List.of(
                                 new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse()),
-                        port);
+                                new MockResponse()));
 
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
@@ -480,27 +468,6 @@ public class AdSelectionServiceImplTest {
         adSelectionService.reportImpression(requestParams, callback);
         resultLatch.await();
         return callback;
-    }
-
-    private MockWebServer setupServer(List<MockResponse> responses, int port) throws Exception {
-        MockWebServer server = new MockWebServer();
-        for (MockResponse response : responses) {
-            server.enqueue(response);
-        }
-        server.play(port);
-        return server;
-    }
-
-    private String getStringUrl(String path, int port) {
-        return "http://localhost:" + port + path;
-    }
-
-    private int getAvailablePort() throws IOException {
-        ServerSocket serverSocket = new ServerSocket(0);
-        serverSocket.setReuseAddress(true);
-        int port = serverSocket.getLocalPort();
-        serverSocket.close();
-        return port;
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
