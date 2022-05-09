@@ -78,8 +78,8 @@ public final class TopicsDaoTest {
         // Initialize appClassificationTopicsMap and topics
         Map<String, List<String>> appClassificationTopicsMap1 = new HashMap<>();
         Map<String, List<String>> appClassificationTopicsMap2 = new HashMap<>();
-        Topic topic1 = new Topic("topic1", taxonomyVersion, modelVersion);
-        Topic topic2 = new Topic("topic1", taxonomyVersion, modelVersion);
+        Topic topic1 = Topic.create("topic1", taxonomyVersion, modelVersion);
+        Topic topic2 = Topic.create("topic1", taxonomyVersion, modelVersion);
         // to test multiple topics for one app
         appClassificationTopicsMap1.put(app1, Arrays.asList(topic1.getTopic(), topic2.getTopic()));
 
@@ -424,7 +424,8 @@ public final class TopicsDaoTest {
         for (Map.Entry<Pair<String, String>, String>  entry
                 : returnedAppSdkTopics.entrySet()) {
             expectedReturnedAppSdkTopics.put(entry.getKey(),
-                    new Topic(entry.getValue(), /* taxonomyVersion = */ 1L,
+                    Topic.create(entry.getValue(),
+                            /* taxonomyVersion = */ 1L,
                             /* modelVersion = */ 1L));
         }
 
@@ -444,15 +445,15 @@ public final class TopicsDaoTest {
     @Test
     public void testPersistAndRetrieveReturnedAppTopics_multipleEpochs() {
         // We will have 5 topics and setup the returned topics for epoch 3, 2, and 1.
-        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+        Topic topic1 = Topic.create("topic1", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 1L,
+        Topic topic2 = Topic.create("topic2", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 1L,
+        Topic topic3 = Topic.create("topic3", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic4 = new Topic("topic4", /* taxonomyVersion = */ 1L,
+        Topic topic4 = Topic.create("topic4", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic5 = new Topic("topic5", /* taxonomyVersion = */ 1L,
+        Topic topic5 = Topic.create("topic5", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
 
         // Setup for EpochId 1
