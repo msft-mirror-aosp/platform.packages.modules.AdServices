@@ -22,7 +22,7 @@
     <!-- android:debuggable="true is needed. See b/228384531 -->
     <application
         android:debuggable="true"
-        android:usesCleartextTraffic="true"/>
+        android:networkSecurityConfig="@xml/network_security_config"/>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
         android:targetPackage="com.android.adservices.servicecoretest" >
