@@ -62,7 +62,7 @@ public class TriggerFetcher {
         if (inside.has("priority")) {
             result.setTriggerPriority(inside.getLong("priority"));
         }
-        if (inside.has("deduplication_key")) {
+        if (inside.has("deduplication_key") && !inside.isNull("deduplication_key")) {
             result.setDeduplicationKey(inside.getLong("deduplication_key"));
         }
     }
