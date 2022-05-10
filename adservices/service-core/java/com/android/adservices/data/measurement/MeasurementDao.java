@@ -181,12 +181,19 @@ class MeasurementDao implements IMeasurementDao {
                 /*columns=*/null,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? AND "
                         + MeasurementTables.SourceContract.REPORT_TO + " = ? AND "
-                        + MeasurementTables.SourceContract.EXPIRY_TIME + " > ? AND "
+                        // EventTime should be strictly less than TriggerTime as it is highly
+                        // unlikely for matching Source and Trigger to happen at same instant
+                        // in milliseconds.
+                        + MeasurementTables.SourceContract.EVENT_TIME + " < ? AND "
+                        + MeasurementTables.SourceContract.EXPIRY_TIME + " >= ? AND "
                         + MeasurementTables.SourceContract.STATUS + " != ?",
-                new String[]{trigger.getAttributionDestination().toString(),
+                new String[]{
+                        trigger.getAttributionDestination().toString(),
                         trigger.getReportTo().toString(),
                         String.valueOf(trigger.getTriggerTime()),
-                        String.valueOf(Trigger.Status.IGNORED)},
+                        String.valueOf(trigger.getTriggerTime()),
+                        String.valueOf(Source.Status.IGNORED)
+                },
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
             List<Source> sources = new ArrayList<>();
             while (cursor.moveToNext()) {
