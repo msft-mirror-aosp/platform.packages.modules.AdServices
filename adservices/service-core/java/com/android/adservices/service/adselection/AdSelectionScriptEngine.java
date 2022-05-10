@@ -30,6 +30,7 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 
@@ -302,7 +303,7 @@ public class AdSelectionScriptEngine {
                     this::parseAuctionScriptResult,
                     mExecutor);
         } catch (JSONException e) {
-            throw new IllegalArgumentException(
+            throw new JSExecutionException(
                     "Illegal result returned by our internal batch calling function.", e);
         }
     }
@@ -326,7 +327,7 @@ public class AdSelectionScriptEngine {
 
     private AuctionScriptResult parseAuctionScriptResult(String auctionScriptResult) {
         try {
-            if (auctionScriptResult.equals("null")) {
+            if (auctionScriptResult.isEmpty()) {
                 throw new IllegalArgumentException(
                         "The auction script either doesn't contain the required function or the"
                                 + " function returns null");
