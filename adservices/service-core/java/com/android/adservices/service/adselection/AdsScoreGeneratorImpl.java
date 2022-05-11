@@ -23,7 +23,9 @@ import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.google.common.base.Function;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -44,32 +46,65 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull
     private final ListeningExecutorService mListeningExecutorService;
+    @NonNull
+    private final AdSelectionHttpClient mAdSelectionHttpClient;
 
     public AdsScoreGeneratorImpl(@NonNull AdSelectionScriptEngine adSelectionScriptEngine,
-            @NonNull ExecutorService executor) {
+            @NonNull ExecutorService executor,
+            @NonNull AdSelectionHttpClient adSelectionHttpClient) {
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
+        mAdSelectionHttpClient = adSelectionHttpClient;
     }
 
     /**
      * Scoring logic for finding most relevant Ad amongst Remarketing and contextual Ads
+     *
      * @param adBiddingOutcomes Remarketing Ads that have been bid
      * @param adSelectionConfig Inputs with seller and buyer signals
-     *
      * @return {@link AdScoringOutcome} Ads with respective Score based on seller scoring logic
      */
     @Override
     public FluentFuture<List<AdScoringOutcome>> runAdScoring(
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig) throws AdServicesException {
-        final String scoreAdJs = getAdSelectionLogic(adSelectionConfig.getDecisionLogicUrl());
+
+        ListenableFuture<String> scoreAdJs = getAdSelectionLogic(
+                adSelectionConfig.getDecisionLogicUrl());
+
+        AsyncFunction<String, List<Double>> getScoresFromLogic =
+                adScoringLogic -> {
+                    return getAdScores(adScoringLogic, adBiddingOutcomes, adSelectionConfig);
+                };
+
+        ListenableFuture<List<Double>> adScores = Futures.transformAsync(scoreAdJs,
+                getScoresFromLogic,
+                mListeningExecutorService);
+
+        Function<List<Double>, List<AdScoringOutcome>> adsToScore =
+                scores -> {
+                    return mapAdsToScore(adBiddingOutcomes, scores);
+                };
+
+        return FluentFuture.from(adScores)
+                .transform(adsToScore, mListeningExecutorService);
+    }
+
+    private ListenableFuture<String> getAdSelectionLogic(@NonNull final Uri decisionLogicUri) {
+        return mAdSelectionHttpClient.fetchJavascript(decisionLogicUri);
+    }
+
+    private ListenableFuture<List<Double>> getAdScores(
+            @NonNull String scoringLogic,
+            @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
+            @NonNull final AdSelectionConfig adSelectionConfig) throws AdServicesException {
         final String sellerSignals = adSelectionConfig.getSellerSignals();
         final String trustedScoringSignals = adSelectionConfig.getAdSelectionSignals();
         final String contextualSignals = adSelectionConfig.getSeller();
 
         try {
             ListenableFuture<List<Double>> adScores = mAdSelectionScriptEngine.scoreAds(
-                    scoreAdJs,
+                    scoringLogic,
                     adBiddingOutcomes.stream().map(a -> a.getAdWithBid())
                             .collect(Collectors.toList()),
                     adSelectionConfig,
@@ -80,26 +115,10 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                     adBiddingOutcomes.get(0)
                             .getCustomAudienceBiddingInfo().getCustomAudienceSignals()
             );
-
-            Function<List<Double>, List<AdScoringOutcome>> adsToScore =
-                    scores -> {
-                        return mapAdsToScore(adBiddingOutcomes, scores);
-                    };
-
-            return FluentFuture.from(adScores)
-                    .transform(adsToScore, mListeningExecutorService);
-
+            return adScores;
         } catch (JSONException e) {
             throw new AdServicesException("Invalid results obtained from Ad Scoring");
         }
-    }
-
-    private String getAdSelectionLogic(@NonNull final Uri decisionLogicUri) {
-        /*
-        * TODO(b/230436736): Invoke the server to get decision Logic JS
-        * http://shortn/_X5mR5agMTG
-        */
-        return "";
     }
 
     private String getTrustedScoringSignals(

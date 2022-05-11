@@ -171,13 +171,11 @@ public class AdSelectionRunnerTest {
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
@@ -267,13 +265,11 @@ public class AdSelectionRunnerTest {
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         // In this case assuming bidding fails for one of ads and return partial result
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
@@ -340,13 +336,11 @@ public class AdSelectionRunnerTest {
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         // In this case assuming bidding fails and returns null
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(null)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
@@ -383,13 +377,11 @@ public class AdSelectionRunnerTest {
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
@@ -428,13 +420,11 @@ public class AdSelectionRunnerTest {
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
@@ -481,13 +471,11 @@ public class AdSelectionRunnerTest {
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
@@ -557,13 +545,11 @@ public class AdSelectionRunnerTest {
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(
                 FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
         Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
-                "{}",
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}")).thenReturn(

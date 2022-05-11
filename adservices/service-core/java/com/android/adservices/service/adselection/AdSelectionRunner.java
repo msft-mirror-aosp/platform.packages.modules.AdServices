@@ -24,7 +24,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.net.Uri;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -84,8 +83,10 @@ public final class AdSelectionRunner {
         mCustomAudienceDao = AdServicesDatabase.getInstance(context).customAudienceDao();
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
         mExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mAdsScoreGenerator = new AdsScoreGeneratorImpl(new AdSelectionScriptEngine(mContext),
-                mExecutorService);
+        mAdsScoreGenerator = new AdsScoreGeneratorImpl(
+                new AdSelectionScriptEngine(mContext),
+                mExecutorService,
+                new AdSelectionHttpClient(mExecutorService));
         mAdBidGenerator = new AdBidGeneratorImpl(context, mExecutorService);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
     }
@@ -242,16 +243,10 @@ public final class AdSelectionRunner {
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig) {
         return mAdBidGenerator.runAdBiddingPerCA(customAudience,
-                getBuyerDecisionLogic(customAudience.getBiddingLogicUrl()),
                 adSelectionConfig.getAdSelectionSignals(),
                 adSelectionConfig.getPerBuyerSignals().toString(),
                 "{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-    }
-
-    private String getBuyerDecisionLogic(final Uri decisionLogicUri) {
-        // TODO(b/230436736): Invoke the server to get decision Logic JS
-        return "{}";
     }
 
     private ListenableFuture<List<AdScoringOutcome>> runAdScoring(
