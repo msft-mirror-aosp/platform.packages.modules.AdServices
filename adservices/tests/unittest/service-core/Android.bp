@@ -43,6 +43,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
+        "mts-adservices"
     ],
     jni_libs: [
         "libtensorflowlite_jni",

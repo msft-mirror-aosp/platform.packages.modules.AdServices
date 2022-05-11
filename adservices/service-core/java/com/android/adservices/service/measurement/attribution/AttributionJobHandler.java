@@ -169,8 +169,9 @@ class AttributionJobHandler {
             List<EventReport> relevantEventReports = sourceEventReports.stream()
                     .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
                     .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
-                    .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)).collect(
-                            Collectors.toList());
+                    .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)
+                            .thenComparing(EventReport::getTriggerTime, Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
             if (relevantEventReports.isEmpty()) {
                 ignoreTrigger(trigger, measurementDao);
                 return;
