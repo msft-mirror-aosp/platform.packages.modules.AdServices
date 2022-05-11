@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -49,9 +50,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
      * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
      */
     @SuppressWarnings("unused")
-    @NonNull
-    private final AdSelectionEntryDao mAdSelectionEntryDao;
-
+    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
@@ -81,21 +80,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @Override
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
-        // TODO(b/225988784): Offload work to thread pool
-        // TODO(b/221876756): Implement
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
 
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw e.rethrowFromSystemServer();
-        }
+        AdSelectionRunner adSelectionRunner = new AdSelectionRunner(mContext);
+        adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
 
     @Override
@@ -110,5 +99,62 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new ImpressionReporter(
                         mContext, mExecutor, mAdSelectionEntryDao, mAdSelectionHttpClient);
         reporter.reportImpression(requestParams, callback);
+    }
+
+    @Override
+    public void overrideAdSelectionConfigRemoteInfo(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJS,
+            @NonNull AdSelectionOverrideCallback callback) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(decisionLogicJS);
+        Objects.requireNonNull(callback);
+        // TODO(b/231933894): Implement
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                            .setErrorMessage("Not Implemented!")
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    @Override
+    public void removeAdSelectionConfigRemoteInfoOverride(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull AdSelectionOverrideCallback callback) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(callback);
+        // TODO(b/231933894): Implement
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                            .setErrorMessage("Not Implemented!")
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    @Override
+    public void resetAllAdSelectionConfigRemoteOverrides(
+            @NonNull AdSelectionOverrideCallback callback) {
+        Objects.requireNonNull(callback);
+        // TODO(b/231933894): Implement
+        try {
+            callback.onFailure(
+                    new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                            .setErrorMessage("Not Implemented!")
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+            throw e.rethrowFromSystemServer();
+        }
     }
 }

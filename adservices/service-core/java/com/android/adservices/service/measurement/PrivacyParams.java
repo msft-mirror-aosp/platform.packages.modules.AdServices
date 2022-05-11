@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Class for holding privacy related parameters.
+ * All values in this class are temporary and subject to change based on feedback and testing.
  */
 public final class PrivacyParams {
 
@@ -53,7 +54,7 @@ public final class PrivacyParams {
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
      * 28 days.
      */
-    public static final long RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(28);
+    public static final long RATE_LIMIT_WINDOW_MILLISECONDS = TimeUnit.DAYS.toMillis(30);
 
     /**
      * Early reporting window for 'Navigation' {@link Source}.
