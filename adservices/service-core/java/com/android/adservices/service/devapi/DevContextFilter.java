@@ -21,6 +21,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Binder;
 import android.provider.Settings;
 
 import com.android.adservices.LogUtil;
@@ -62,15 +63,29 @@ public class DevContextFilter {
     }
 
     /**
-     * Creates a {@link DevContext} for a given app UID. It is assumed to be called by APIs after
-     * having collected the caller UID in the API thread using {@code Binder.getCallingUid()}.
+     * Creates a {@link DevContext} for the current binder call. It is assumed to be called by APIs
+     * after having collected the caller UID in the API thread..
+     *
+     * @return A dev context specifying if the developer options are enabled for this API call or a
+     *     context with developer options disabled if there is any error retrieving info for the
+     *     calling application.
+     * @throws IllegalStateException if the current thread is not currently executing an incoming
+     *     transaction.
+     */
+    public DevContext createDevContext() throws IllegalStateException {
+        return createDevContext(Binder.getCallingUidOrThrow());
+    }
+
+    /**
+     * Creates a {@link DevContext} for a given app UID.
      *
      * @param callingUid The UID of the caller APP.
      * @return A dev context specifying if the developer options are enabled for this API call or a
      *     context with developer options disabled if there is any error retrieving info for the
      *     calling application.
      */
-    public DevContext createDevContext(int callingUid) {
+    @VisibleForTesting
+    DevContext createDevContext(int callingUid) {
         if (!isDeveloperMode()) {
             return DevContext.createForDevOptionsDisabled();
         }
