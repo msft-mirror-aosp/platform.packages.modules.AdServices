@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -118,6 +119,15 @@ public class SdkSandboxRestrictionsTest {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         ctx.startActivity(intent);
+    }
+
+    /**
+     * Tests that sandbox cannot access hidden API methods via reflection.
+     */
+    @Test
+    public void testNoHiddenApiAccess() {
+        assertThrows(NoSuchMethodException.class,
+                () -> SandboxedSdkContext.class.getDeclaredMethod("getSdkName"));
     }
 
     /**

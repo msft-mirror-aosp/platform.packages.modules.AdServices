@@ -27,7 +27,6 @@
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
-        <option name="hidden-api-checks" value="false" />
         <option name="package" value="com.android.sdksandbox.tests.cts.inprocesstests" />
         <option name="instrumentation-arg"
                 key="thisisignored" value="thisisignored --instrument-sdk-sandbox" />
