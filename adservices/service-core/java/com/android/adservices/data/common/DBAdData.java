@@ -60,9 +60,14 @@ public class DBAdData {
 
     /**
      * Gets the buyer ad metadata used during the ad selection process.
-     *
-     * <p>The metadata is opaque to the Custom Audience and Ad Selection APIs and is represented as
-     * a JSON object string.
+     * <p>
+     * The metadata should be a valid JSON object serialized as a string. Metadata represents
+     * ad-specific bidding information that will be used during ad selection as part of bid
+     * generation and used in buyer JavaScript logic, which is executed in an isolated execution
+     * environment.
+     * <p>
+     * If the metadata is not a valid JSON object that can be consumed by the buyer's JS, the ad
+     * will not be eligible for ad selection.
      */
     @NonNull
     public String getMetadata() {

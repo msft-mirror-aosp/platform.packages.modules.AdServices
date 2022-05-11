@@ -33,12 +33,12 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.AdServicesDatabase;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
@@ -105,7 +105,7 @@ public class AdSelectionRunnerTest {
         mContext = ApplicationProvider.getApplicationContext();
         mExecutorService = Executors.newFixedThreadPool(20);
         mCustomAudienceDao = Room.inMemoryDatabaseBuilder(mContext,
-                        AdServicesDatabase.class)
+                        CustomAudienceDatabase.class)
                 .build()
                 .customAudienceDao();
 

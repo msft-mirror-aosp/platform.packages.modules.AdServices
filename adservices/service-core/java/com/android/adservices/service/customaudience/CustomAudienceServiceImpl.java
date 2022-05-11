@@ -21,8 +21,9 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.ICustomAudienceCallback;
-import android.adservices.customaudience.ICustomAudienceManagementService;
+import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.RemoteException;
 
@@ -33,34 +34,37 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** Implementation of the Custom Audience Management service. */
-public class CustomAudienceManagementServiceImpl extends ICustomAudienceManagementService.Stub {
+/**
+ * Implementation of the Custom Audience service.
+ */
+public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     // TODO(b/221861041): Remove warning suppression; context needed later for
     //  authorization/authentication
     @NonNull
     @SuppressWarnings("unused")
     private final Context mContext;
 
-    @NonNull private final CustomAudienceManagementImpl mCustomAudienceManagement;
+    @NonNull
+    private final CustomAudienceImpl mCustomAudienceImpl;
 
-    @NonNull private final Executor mExecutor;
+    @NonNull
+    private final Executor mExecutor;
 
-    public CustomAudienceManagementServiceImpl(@NonNull Context context) {
-        this(
-                context,
-                CustomAudienceManagementImpl.getInstance(context),
+
+    public CustomAudienceServiceImpl(@NonNull Context context) {
+        this(context, CustomAudienceImpl.getInstance(context),
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
     @VisibleForTesting
-    CustomAudienceManagementServiceImpl(
-            @NonNull Context context,
-            @NonNull CustomAudienceManagementImpl customAudienceManagement,
+    CustomAudienceServiceImpl(@NonNull Context context,
+            @NonNull CustomAudienceImpl customAudienceImpl,
             @NonNull Executor executor) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(customAudienceManagement);
+        Objects.requireNonNull(customAudienceImpl);
+        Objects.requireNonNull(executor);
         mContext = context;
-        mCustomAudienceManagement = customAudienceManagement;
+        mCustomAudienceImpl = customAudienceImpl;
         mExecutor = executor;
     }
 
@@ -75,24 +79,29 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callback);
 
-        mExecutor.execute(
-                () -> {
-                    try {
-                        try {
-                            mCustomAudienceManagement.joinCustomAudience(customAudience);
-                            callback.onSuccess();
-                        } catch (Exception exception) {
-                            callback.onFailure(
-                                    new FledgeErrorResponse.Builder()
-                                            .setStatusCode(
-                                                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                                            .setErrorMessage(exception.getMessage())
-                                            .build());
-                        }
-                    } catch (Exception exception) {
-                        LogUtil.e("Unable to send result to the callback", exception);
-                    }
-                });
+        mExecutor.execute(() -> {
+            try {
+                try {
+                    mCustomAudienceImpl.joinCustomAudience(customAudience);
+                    callback.onSuccess();
+                } catch (NullPointerException | IllegalArgumentException exception) {
+                    // TODO(b/230783716): We may not want catch NPE or IAE for this case.
+                    callback.onFailure(new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT)
+                            .setErrorMessage(exception.getMessage())
+                            .build()
+                    );
+                } catch (Exception exception) {
+                    callback.onFailure(new FledgeErrorResponse.Builder()
+                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                            .setErrorMessage(exception.getMessage())
+                            .build()
+                    );
+                }
+            } catch (Exception exception) {
+                LogUtil.e("Unable to send result to the callback", exception);
+            }
+        });
     }
 
     /**
@@ -101,12 +110,8 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
      * @hide
      */
     @Override
-    public void leaveCustomAudience(
-            @NonNull String owner,
-            @NonNull String buyer,
-            @NonNull String name,
-            @NonNull ICustomAudienceCallback callback) {
-        Objects.requireNonNull(owner);
+    public void leaveCustomAudience(@Nullable String owner, @NonNull String buyer,
+            @NonNull String name, @NonNull ICustomAudienceCallback callback) {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
         Objects.requireNonNull(callback);
@@ -114,7 +119,7 @@ public class CustomAudienceManagementServiceImpl extends ICustomAudienceManageme
         mExecutor.execute(
                 () -> {
                     try {
-                        mCustomAudienceManagement.leaveCustomAudience(owner, buyer, name);
+                        mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
                     } catch (Exception exception) {
                         LogUtil.e("Unexpected error leave custom audience.", exception);
                     }

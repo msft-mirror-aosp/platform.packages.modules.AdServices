@@ -27,7 +27,6 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.AdServicesDatabase;
 import com.android.adservices.data.common.DBAdData;
 
 import org.junit.Before;
@@ -195,7 +194,7 @@ public class CustomAudienceDaoTest {
     @Before
     public void setup() {
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdServicesDatabase.class)
+                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .build()
                         .customAudienceDao();
     }
