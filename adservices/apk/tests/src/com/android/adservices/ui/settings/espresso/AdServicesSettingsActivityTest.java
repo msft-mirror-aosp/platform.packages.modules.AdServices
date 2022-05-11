@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 package com.android.adservices.ui.settings.espresso;
+
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
+import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import android.widget.Switch;
+
+import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.MainViewModel;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,7 +63,7 @@ public class AdServicesSettingsActivityTest {
      *  {@link AdServicesSettingsActivity}.
      */
     @Test
-    public void checkMainFragmentViewIsDisplayed() {
+    public void testMainFragmentContainer_isDisplayed() {
         onView(withId(R.id.fragment_container_view)).check(matches(isDisplayed()));
     }
 
@@ -64,14 +73,34 @@ public class AdServicesSettingsActivityTest {
      *  {@link AdServicesSettingsMainFragment}.
      */
     @Test
-    public void checkFragmentViewsIsDisplayed() {
+    public void testMainFragmentViews_isDisplayed() {
         // R.id.recycler_view refers to the RecyclerView used internally by PreferenceFragmentCompat
         onView(withId(R.id.recycler_view))
-            .check(matches(hasDescendant(withText(R.string.settingsUI_topics_title))));
+                .check(matches(hasDescendant(withText(R.string.settingsUI_topics_title))));
         onView(withId(R.id.recycler_view))
-            .check(matches(hasDescendant(withText(R.string.settingsUI_apps_title))));
+                .check(matches(hasDescendant(withText(R.string.settingsUI_apps_title))));
         onView(withId(R.id.recycler_view))
                 .check(matches(hasDescendant(withText(
                     R.string.settingsUI_privacy_sandbox_beta_title))));
+    }
+
+    /**
+     *  Test if getConsent works in {@link MainViewModel}.
+     */
+    @Test
+    public void test_MainViewModel_getConsent() {
+        onView(withId(R.id.recycler_view))
+                .check(matches(hasDescendant(Matchers.allOf(
+                        withClassName(Matchers.is(Switch.class.getName())),
+                        Matchers.not(isChecked())))));
+        onView(withId(R.id.recycler_view))
+                .perform(RecyclerViewActions.actionOnItem(hasDescendant(withClassName(
+                        Matchers.is(Switch.class.getName()))), click()));
+
+        mRule.getScenario().recreate();
+        onView(withId(R.id.recycler_view))
+                .check(matches(hasDescendant(Matchers.allOf(
+                        withClassName(Matchers.is(Switch.class.getName())),
+                        isChecked()))));
     }
 }

@@ -133,7 +133,7 @@ public class DbState {
                         .thenComparing(Trigger::getPriority));
         mReportList.sort(
                 Comparator.comparing(EventReport::getReportTime)
-                        .thenComparing(EventReport::getSourceId));
+                        .thenComparing(EventReport::getTriggerTime));
         mAttrRateLimitList.sort(
                 Comparator.comparing(AttributionRateLimit::getTriggerTime));
     }
