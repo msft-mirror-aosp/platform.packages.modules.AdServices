@@ -33,6 +33,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
+import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.JSScriptArgument;
 
 import com.google.common.collect.ImmutableList;
@@ -92,7 +93,7 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
-    public void testThrowsIllegalStateExceptionIfFunctionNotFound() throws Exception {
+    public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
 
         AdData advert = new AdData(Uri.parse(mDummyDomain), "{}");
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
@@ -108,7 +109,7 @@ public class ReportImpressionScriptEngineTest {
                                     "helloAdvertWrongName",
                                     args.build());
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test

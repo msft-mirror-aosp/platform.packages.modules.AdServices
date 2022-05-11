@@ -29,22 +29,20 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.internal.annotations.GuardedBy;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Room based PP API database.
- */
+/** Room based PP API database. */
 @Database(
         // Set exportSchema to true to see generated schema file.
         // File location is defined in Android.bp -Aroom.schemaLocation.
         exportSchema = false,
-        entities = {DBCustomAudience.class},
-        version = AdServicesDatabase.DATABASE_VERSION
-)
+        entities = {DBCustomAudience.class, DBCustomAudienceOverride.class},
+        version = AdServicesDatabase.DATABASE_VERSION)
 @TypeConverters({AdServicesDatabase.Converters.class})
 public abstract class AdServicesDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
@@ -61,8 +59,9 @@ public abstract class AdServicesDatabase extends RoomDatabase {
         Objects.requireNonNull(context, "Context must be provided.");
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
-                sSingleton = Room.databaseBuilder(context, AdServicesDatabase.class, DATABASE_NAME)
-                        .build();
+                sSingleton =
+                        Room.databaseBuilder(context, AdServicesDatabase.class, DATABASE_NAME)
+                                .build();
             }
             return sSingleton;
         }
@@ -77,55 +76,39 @@ public abstract class AdServicesDatabase extends RoomDatabase {
 
     /**
      * Room DB type converters.
+     *
      * <p>Register custom type converters here.
      */
     public static class Converters {
 
-        private Converters() {
-        }
+        private Converters() {}
 
-        /**
-         * Serialize {@link Instant} to Long.
-         */
+        /** Serialize {@link Instant} to Long. */
         @TypeConverter
         @Nullable
         public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant)
-                    .map(Instant::toEpochMilli)
-                    .orElse(null);
+            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
         }
 
-        /**
-         * Deserialize {@link Instant} from long.
-         */
+        /** Deserialize {@link Instant} from long. */
         @TypeConverter
         @Nullable
         public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli)
-                    .map(Instant::ofEpochMilli)
-                    .orElse(null);
+            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
         }
 
-        /**
-         * Deserialize {@link Uri} from String.
-         */
+        /** Deserialize {@link Uri} from String. */
         @TypeConverter
         @Nullable
         public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::parse)
-                    .orElse(null);
+            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
         }
 
-        /**
-         * Serialize {@link Uri} to String.
-         */
+        /** Serialize {@link Uri} to String. */
         @TypeConverter
         @Nullable
         public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::toString)
-                    .orElse(null);
+            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
         }
     }
 }
