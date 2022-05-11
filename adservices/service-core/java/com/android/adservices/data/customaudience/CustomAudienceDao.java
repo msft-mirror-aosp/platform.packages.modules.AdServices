@@ -25,6 +25,8 @@ import androidx.room.Query;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.List;
+
 /**
  * Dao interface to access Custom Audience storage.
  *
@@ -114,4 +116,15 @@ public interface CustomAudienceDao {
     /** Clean up all custom audience override data */
     @Query("DELETE FROM custom_audience_overrides")
     void removeAllCustomAudienceOverrides();
+
+    /**
+     * Fetch all the Custom Audience corresponding to the buyers
+     *
+     * @param buyers associated with the Custom Audience
+     * @return All the Custom Audience that represent given buyers
+     */
+    @Query("SELECT * FROM custom_audience where buyer in (:buyers)")
+    @Nullable
+    List<DBCustomAudience> getCustomAudienceByBuyers(List<String> buyers);
+
 }

@@ -41,6 +41,8 @@ public interface AdSelectionEntryDao {
      *
      * @param adSelection is the AdSelection to add to the table ad_selection if the ad_selection_id
      *     not exists.
+     *
+     * TODO(b/230568647) retry adSelectionId generation in case of collision
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     void persistAdSelection(DBAdSelection adSelection);

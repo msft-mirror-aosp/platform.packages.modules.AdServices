@@ -93,7 +93,7 @@ public class SourceFetcher {
             try {
                 parseEventSource(field.get(0), result);
             } catch (JSONException e) {
-                LogUtil.d("Invalid JSON");
+                LogUtil.d("Invalid JSON %s", e);
                 return false;
             }
             additionalResult = true;
@@ -133,14 +133,14 @@ public class SourceFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL ", e);
+            LogUtil.d("Malformed registration target URL %s", e);
             return false;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open registation target URL", e);
+            LogUtil.e("Failed to open registration target URL %s", e);
             return false;
         }
         boolean success = true;
@@ -170,7 +170,7 @@ public class SourceFetcher {
             }
             return success;
         } catch (IOException e) {
-            LogUtil.d("Failed to get registation response", e);
+            LogUtil.e("Failed to get registration response %s", e);
             return false;
         } finally {
             urlConnection.disconnect();
