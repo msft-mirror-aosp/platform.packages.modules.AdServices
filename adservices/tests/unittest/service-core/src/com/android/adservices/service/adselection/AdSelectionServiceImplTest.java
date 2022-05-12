@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -44,7 +45,11 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.devapi.DevContextFilter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.MockResponse;
@@ -53,6 +58,9 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.net.URL;
 import java.time.Clock;
@@ -89,6 +97,11 @@ public class AdSelectionServiceImplTest {
     private final AdSelectionHttpClient mClient = new AdSelectionHttpClient(mExecutorService);
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+
+    // This object access some system APIs
+    @Mock DevContextFilter mDevContextFilter;
 
     @Test
     public void testReportImpressionSuccess() throws Exception {
@@ -151,15 +164,17 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(adSelectionEntryDao, mClient, mExecutorService, CONTEXT);
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
 
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDao, mClient, mDevContextFilter, mExecutorService, CONTEXT);
         ReportImpressionRequest request =
                 new ReportImpressionRequest.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-
         ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
 
         assertTrue(callback.mIsSuccess);
@@ -229,12 +244,16 @@ public class AdSelectionServiceImplTest {
         adSelectionEntryDao.persistAdSelection(dbAdSelection);
         adSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
         URL sellerFetchUrl = server.getUrl(mFetchJavaScriptPath);
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
         AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(adSelectionEntryDao, mClient, mExecutorService, CONTEXT);
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDao, mClient, mDevContextFilter, mExecutorService, CONTEXT);
 
         ReportImpressionRequest request =
                 new ReportImpressionRequest.Builder()
@@ -306,12 +325,16 @@ public class AdSelectionServiceImplTest {
         adSelectionEntryDao.persistAdSelection(dbAdSelection);
         adSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
         URL sellerFetchUrl = server.getUrl(mFetchJavaScriptPath);
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
         AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(adSelectionEntryDao, mClient, mExecutorService, CONTEXT);
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDao, mClient, mDevContextFilter, mExecutorService, CONTEXT);
 
         ReportImpressionRequest request =
                 new ReportImpressionRequest.Builder()
@@ -382,12 +405,16 @@ public class AdSelectionServiceImplTest {
         adSelectionEntryDao.persistAdSelection(dbAdSelection);
         adSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
         URL sellerFetchUrl = server.getUrl(mFetchJavaScriptPath);
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
         AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(adSelectionEntryDao, mClient, mExecutorService, CONTEXT);
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDao, mClient, mDevContextFilter, mExecutorService, CONTEXT);
 
         ReportImpressionRequest request =
                 new ReportImpressionRequest.Builder()
@@ -436,12 +463,16 @@ public class AdSelectionServiceImplTest {
 
         adSelectionEntryDao.persistAdSelection(dbAdSelection);
 
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
         URL sellerFetchUrl = server.getUrl(mFetchJavaScriptPath);
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
         AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(adSelectionEntryDao, mClient, mExecutorService, CONTEXT);
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDao, mClient, mDevContextFilter, mExecutorService, CONTEXT);
 
         ReportImpressionRequest request =
                 new ReportImpressionRequest.Builder()
@@ -457,6 +488,105 @@ public class AdSelectionServiceImplTest {
 
         RecordedRequest reportRequest = server.takeRequest();
         assertEquals(mSellerReportingPath, reportRequest.getPath());
+    }
+
+    @Test
+    public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + sellerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + buyerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                // There is no to fetch JS
+                                new MockResponse(), new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(mContextualSignals)
+                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        AdSelectionEntryDao adSelectionEntryDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                        .build()
+                        .adSelectionEntryDao();
+
+        adSelectionEntryDao.persistAdSelection(dbAdSelection);
+        adSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        URL sellerFetchUrl = server.getUrl(mFetchJavaScriptPath);
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        // Set dev override for this AdSelection
+        String myAppPackageName = "com.google.ppapi.test";
+        DBAdSelectionOverride adSelectionOverride =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(
+                                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
+                                        adSelectionConfig))
+                        .setAppPackageName(myAppPackageName)
+                        .setDecisionLogicJS(sellerDecisionLogicJs)
+                        .build();
+        adSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDao, mClient, mDevContextFilter, mExecutorService, CONTEXT);
+        ReportImpressionRequest request =
+                new ReportImpressionRequest.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+
+        assertTrue(callback.mIsSuccess);
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
     }
 
     private ReportImpressionTestCallback callReportImpression(
