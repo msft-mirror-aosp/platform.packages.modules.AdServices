@@ -32,6 +32,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -54,16 +56,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
+    @NonNull private final DevContextFilter mDevContextFilter;
 
     @VisibleForTesting
     AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdSelectionHttpClient = adSelectionHttpClient;
+        mDevContextFilter = devContextFilter;
         mExecutor = executorService;
         mContext = context;
     }
@@ -73,6 +78,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 new AdSelectionHttpClient(AdServicesExecutors.getBackgroundExecutor()),
+                DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context);
     }
@@ -95,9 +101,15 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(requestParams);
         Objects.requireNonNull(callback);
 
+        DevContext devContext = mDevContextFilter.createDevContext();
+
         ImpressionReporter reporter =
                 new ImpressionReporter(
-                        mContext, mExecutor, mAdSelectionEntryDao, mAdSelectionHttpClient);
+                        mContext,
+                        mExecutor,
+                        mAdSelectionEntryDao,
+                        mAdSelectionHttpClient,
+                        devContext);
         reporter.reportImpression(requestParams, callback);
     }
 
