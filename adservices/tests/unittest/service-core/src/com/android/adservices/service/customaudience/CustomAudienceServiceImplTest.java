@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -29,20 +30,23 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.content.Context;
 import android.os.RemoteException;
 
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.devapi.DevContextFilter;
+
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
-@RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceServiceImplTest {
 
-    private static final Executor DIRECT_EXECUTOR = MoreExecutors.directExecutor();
+    private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilder().build();
@@ -56,9 +60,18 @@ public class CustomAudienceServiceImplTest {
 
     private CustomAudienceServiceImpl mService;
 
+    @Rule
+    public MockitoRule mMockitoRule = MockitoJUnit.rule();
+
+    @Mock
+    DevContextFilter mDevContextFilter;
+
     @Before
     public void setup() {
-        mService = new CustomAudienceServiceImpl(mContext, mCustomAudienceImpl,
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        mService = new CustomAudienceServiceImpl(mContext, mCustomAudienceImpl, mDevContextFilter,
                 DIRECT_EXECUTOR);
     }
 
