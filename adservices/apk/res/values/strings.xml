@@ -25,10 +25,10 @@
     <!-- Description of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE]-->
     <string name="permdesc_accessAdServicesAttribution">Allows an application to access AdServices Attribution APIs.</string>
 
-    <!-- Title of an application permission that lets it access AdServices Custom Audiences API. [CHAR LIMIT=NONE] -->
-    <string name="permlab_accessAdServicesCustomAudiences">access AdServices Custom Audiences API</string>
-    <!-- Description of an application permission that lets it access AdServices Custom Audiences API. [CHAR LIMIT=NONE]-->
-    <string name="permdesc_accessAdServicesCustomAudiences">Allows an application to access AdServices Custom Audiences  API.</string>
+    <!-- Title of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesCustomAudience">access AdServices Custom Audience API</string>
+    <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE]-->
+    <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
 
     <!-- Title of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_adServicesAccessAdId">Access to Ad ID API</string>

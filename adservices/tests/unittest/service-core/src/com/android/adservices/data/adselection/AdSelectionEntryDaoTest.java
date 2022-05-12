@@ -137,6 +137,16 @@ public class AdSelectionEntryDaoTest {
                     .setDecisionLogicJS(DECISION_LOGIC_JS_3)
                     .build();
 
+    private static final String AD_SELECTION_CONFIG_ID_4 = "4";
+    private static final String DECISION_LOGIC_JS_4 =
+            "function test() { return \"hello world_4\"; }";
+    public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_4 =
+            DBAdSelectionOverride.builder()
+                    .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_4)
+                    .setAppPackageName(APP_PACKAGE_NAME_1)
+                    .setDecisionLogicJS(DECISION_LOGIC_JS_4)
+                    .build();
+
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @Before
@@ -189,7 +199,8 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2));
 
-        mAdSelectionEntryDao.removeAdSelectionOverrideById(AD_SELECTION_CONFIG_ID_1);
+        mAdSelectionEntryDao.removeAdSelectionOverrideByIdAndPackageName(
+                AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
@@ -200,9 +211,26 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
+    public void testDoesNotDeleteWithIncorrectPackageName() {
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1));
+
+        mAdSelectionEntryDao.removeAdSelectionOverrideByIdAndPackageName(
+                AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_2);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1));
+    }
+
+    @Test
     public void testDeletesAllAdSelectionOverrides() {
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_4);
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
@@ -210,13 +238,19 @@ public class AdSelectionEntryDaoTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, APP_PACKAGE_NAME_1));
 
-        mAdSelectionEntryDao.removeAllAdSelectionOverrides();
+        mAdSelectionEntryDao.removeAllAdSelectionOverrides(APP_PACKAGE_NAME_1);
 
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1));
         assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, APP_PACKAGE_NAME_1));
+        assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2));
     }
