@@ -40,10 +40,10 @@
         android:description="@string/permdesc_accessAdServicesAttribution"
         android:protectionLevel="normal" />
 
-    <!-- Allows an application to access AdServices Custom Audiences APIs. -->
-    <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCES"
-        android:label="@string/permlab_accessAdServicesCustomAudiences"
-        android:description="@string/permdesc_accessAdServicesCustomAudiences"
+    <!-- Allows an application to access AdServices Custom Audience APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE"
+        android:label="@string/permlab_accessAdServicesCustomAudience"
+        android:description="@string/permdesc_accessAdServicesCustomAudience"
         android:protectionLevel="normal" />
 
     <!-- Allows AdServices to access API for Ad ID. -->
@@ -79,12 +79,12 @@
 
         <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name=
-                     "com.android.adservices.customaudience.CustomAudienceManagementService"
+                     "com.android.adservices.customaudience.CustomAudienceService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
             <intent-filter>
                 <action android:name=
-                            "android.adservices.customaudience.CUSTOM_AUDIENCE_MANAGEMENT_SERVICE"/>
+                            "android.adservices.customaudience.CUSTOM_AUDIENCE_SERVICE"/>
             </intent-filter>
         </service>
 
