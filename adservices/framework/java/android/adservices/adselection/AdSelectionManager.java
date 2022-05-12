@@ -23,6 +23,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.TransactionTooLargeException;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -34,17 +35,10 @@ import java.util.concurrent.Executor;
 /**
  * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
  * as report impressions.
- *
  */
 public class AdSelectionManager {
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
-    /**
-     * This field will be used once full implementation is ready.
-     *
-     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
-     */
-    @SuppressWarnings("unused")
     private final Context mContext;
 
     private final ServiceBinder<AdSelectionService> mServiceBinder;
@@ -75,12 +69,25 @@ public class AdSelectionManager {
     }
 
     /**
-     * This method runs an asynchronous call to get the result of an on-device Ad selection. The
-     * input {@code adSelectionConfig} is provided by the Ads SDK. The receiver either returns an
-     * {@link AdSelectionOutcome} for a successful run, or an {@link AdServicesException} indicates
-     * the error.
-     *
-     * @hide
+     * Runs the ad selection process on device to select a remarketing ad for the caller
+     * application.
+     * <p>
+     * The input {@code adSelectionConfig} is provided by the Ads SDK and the
+     * {@link AdSelectionConfig} object is transferred via a Binder call. For this reason, the
+     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
+     * {@link AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
+     * <p>
+     * The output is passed by the receiver, which either returns an {@link AdSelectionOutcome} for
+     * a successful run, or an {@link AdServicesException} includes the type of the exception thrown
+     * and the corresponding error message.
+     * <p>
+     * If the result of the {@link AdServicesException#getCause} is an {@link
+     * IllegalArgumentException}, it is caused by invalid input argument the API received to run the
+     * ad selection.
+     * <p>
+     * If the result of the {@link AdServicesException#getCause} is an {@link RemoteException} with
+     * error message "Failure of AdSelection services.", it is caused by an internal failure of the
+     * ad selection service.
      */
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig,
