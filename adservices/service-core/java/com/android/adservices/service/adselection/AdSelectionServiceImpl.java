@@ -22,16 +22,13 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.internal.annotations.VisibleForTesting;
@@ -52,7 +49,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
      * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
      */
     @SuppressWarnings("unused")
-    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull
+    private final AdSelectionEntryDao mAdSelectionEntryDao;
+
     @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
@@ -121,17 +120,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
         Objects.requireNonNull(callback);
-        // TODO(b/231933894): Implement
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw e.rethrowFromSystemServer();
-        }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(devContext, mAdSelectionEntryDao, mExecutor);
+
+        overrider.addOverride(adSelectionConfig, decisionLogicJS, callback);
     }
 
     @Override
@@ -140,33 +135,25 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionOverrideCallback callback) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
-        // TODO(b/231933894): Implement
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw e.rethrowFromSystemServer();
-        }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(devContext, mAdSelectionEntryDao, mExecutor);
+
+        overrider.removeOverride(adSelectionConfig, callback);
     }
 
     @Override
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull AdSelectionOverrideCallback callback) {
         Objects.requireNonNull(callback);
-        // TODO(b/231933894): Implement
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw e.rethrowFromSystemServer();
-        }
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(devContext, mAdSelectionEntryDao, mExecutor);
+
+        overrider.removeAllOverrides(callback);
     }
 }
