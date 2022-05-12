@@ -18,6 +18,7 @@ package com.android.adservices.data.adselection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
@@ -229,9 +230,19 @@ public class AdSelectionEntryDaoTest {
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1));
 
         String decisionLogicJS =
-                mAdSelectionEntryDao.getDecisionLogicUrlOverride(AD_SELECTION_CONFIG_ID_1);
+                mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_1, decisionLogicJS);
+    }
+
+    @Test
+    public void testGetAdSelectionOverrideExistsIgnoresOverridesByDifferentApp() {
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_2));
     }
 
     @Test
@@ -243,7 +254,8 @@ public class AdSelectionEntryDaoTest {
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1));
 
         String decisionLogicJS_1 =
-                mAdSelectionEntryDao.getDecisionLogicUrlOverride(AD_SELECTION_CONFIG_ID_1);
+                mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_1, decisionLogicJS_1);
 
@@ -251,7 +263,8 @@ public class AdSelectionEntryDaoTest {
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_3);
 
         String decisionLogicJS_3 =
-                mAdSelectionEntryDao.getDecisionLogicUrlOverride(AD_SELECTION_CONFIG_ID_1);
+                mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_3, decisionLogicJS_3);
     }
@@ -270,14 +283,24 @@ public class AdSelectionEntryDaoTest {
                         AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2));
 
         String decisionLogicJS_1 =
-                mAdSelectionEntryDao.getDecisionLogicUrlOverride(AD_SELECTION_CONFIG_ID_1);
+                mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_1, decisionLogicJS_1);
 
         String decisionLogicJS_2 =
-                mAdSelectionEntryDao.getDecisionLogicUrlOverride(AD_SELECTION_CONFIG_ID_2);
+                mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2);
 
         assertEquals(DECISION_LOGIC_JS_2, decisionLogicJS_2);
+    }
+
+    @Test
+    public void testAdSelectionOverridesDoneByOtherAppsAreIgnored() {
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
+        assertNull(
+                mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_2));
     }
 
     @Test(expected = NullPointerException.class)
