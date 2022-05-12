@@ -41,6 +41,8 @@ public interface AdSelectionEntryDao {
      *
      * @param adSelection is the AdSelection to add to the table ad_selection if the ad_selection_id
      *     not exists.
+     *
+     * TODO(b/230568647) retry adSelectionId generation in case of collision
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     void persistAdSelection(DBAdSelection adSelection);
@@ -143,16 +145,17 @@ public interface AdSelectionEntryDao {
     List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
-     * Get ad selection JS override by its unique key.
+     * Get ad selection JS override by its unique key and the package name of the app that created
+     * the override.
      *
      * @return ad selection override result if exists.
      */
     @Query(
             "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
-                    + " :adSelectionConfigId")
+                    + " :adSelectionConfigId AND app_package_name = :appPackageName")
     @Nullable
     @VisibleForTesting
-    String getDecisionLogicUrlOverride(String adSelectionConfigId);
+    String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
