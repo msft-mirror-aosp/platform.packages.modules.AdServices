@@ -29,22 +29,17 @@ import android.widget.Switch;
 
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
-import com.android.adservices.ui.settings.AdServicesSettingsMainFragment;
-import com.android.adservices.ui.settings.MainViewModel;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  *  Tests for {@link AdServicesSettingsMainFragment}.
  */
-@RunWith(AndroidJUnit4.class)
 public class AdServicesSettingsActivityTest {
 
     /**
@@ -81,7 +76,7 @@ public class AdServicesSettingsActivityTest {
                 .check(matches(hasDescendant(withText(R.string.settingsUI_apps_title))));
         onView(withId(R.id.recycler_view))
                 .check(matches(hasDescendant(withText(
-                    R.string.settingsUI_privacy_sandbox_beta_title))));
+                        R.string.settingsUI_privacy_sandbox_beta_title))));
     }
 
     /**
@@ -92,7 +87,7 @@ public class AdServicesSettingsActivityTest {
         onView(withId(R.id.recycler_view))
                 .check(matches(hasDescendant(Matchers.allOf(
                         withClassName(Matchers.is(Switch.class.getName())),
-                        Matchers.not(isChecked())))));
+                        isChecked()))));
         onView(withId(R.id.recycler_view))
                 .perform(RecyclerViewActions.actionOnItem(hasDescendant(withClassName(
                         Matchers.is(Switch.class.getName()))), click()));
@@ -101,6 +96,6 @@ public class AdServicesSettingsActivityTest {
         onView(withId(R.id.recycler_view))
                 .check(matches(hasDescendant(Matchers.allOf(
                         withClassName(Matchers.is(Switch.class.getName())),
-                        isChecked()))));
+                        Matchers.not(isChecked())))));
     }
 }
