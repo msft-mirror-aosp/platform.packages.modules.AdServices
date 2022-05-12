@@ -70,18 +70,26 @@ public abstract class DBAdSelectionOverride {
     /**
      * @return generic builder
      */
-    static DBAdSelectionOverride.Builder builder() {
+    public static DBAdSelectionOverride.Builder builder() {
         return new AutoValue_DBAdSelectionOverride.Builder();
     }
 
     @AutoValue.Builder
-    abstract static class Builder {
-        abstract DBAdSelectionOverride.Builder setAdSelectionConfigId(String adSelectionConfigId);
+    public abstract static class Builder {
+        /** Sets the ID for the {@link DBAdSelectionOverride} entry. */
+        public abstract DBAdSelectionOverride.Builder setAdSelectionConfigId(
+                String adSelectionConfigId);
 
-        abstract DBAdSelectionOverride.Builder setAppPackageName(String appPackageName);
+        /** Sets the Package Name of the app creating the override. */
+        public abstract DBAdSelectionOverride.Builder setAppPackageName(String appPackageName);
 
-        abstract DBAdSelectionOverride.Builder setDecisionLogicJS(String decisionLogicJS);
+        /** Sets the JS code to use instead of fetching it from a trusted server. */
+        public abstract DBAdSelectionOverride.Builder setDecisionLogicJS(String decisionLogicJS);
 
-        abstract DBAdSelectionOverride build();
+        /**
+         * @return an instance of {@link DBAdSelectionOverride} built with the information in this
+         *     builder.
+         */
+        public abstract DBAdSelectionOverride build();
     }
 }
