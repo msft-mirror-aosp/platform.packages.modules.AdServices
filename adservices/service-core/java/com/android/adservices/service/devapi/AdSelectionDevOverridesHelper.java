@@ -148,7 +148,7 @@ public class AdSelectionDevOverridesHelper {
     }
 
     /**
-     * Removes all overrides that match {@link DevContext#getCallingAppPackageName()}.
+     * Removes all ad selection overrides that match {@link DevContext#getCallingAppPackageName()}.
      *
      * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
      *     for the {@link DevContext}
