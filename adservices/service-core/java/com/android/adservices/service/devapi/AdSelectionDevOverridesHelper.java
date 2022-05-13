@@ -17,11 +17,13 @@
 package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelectionOverride;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -32,6 +34,9 @@ import java.util.Objects;
 /** Helper class to support the runtime retrieval of dev overrides for the AdSelection API. */
 public class AdSelectionDevOverridesHelper {
     private static final HashFunction sHashFunction = Hashing.murmur3_128();
+    private static final String API_NOT_AUTHORIZED_MSG =
+            "This API is not enabled for the given app because either dev options are disabled or"
+                    + " the app is not debuggable.";
 
     private final DevContext mDevContext;
     private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -97,5 +102,62 @@ public class AdSelectionDevOverridesHelper {
         return mAdSelectionEntryDao.getDecisionLogicOverride(
                 calculateAdSelectionConfigId(adSelectionConfig),
                 mDevContext.getCallingAppPackageName());
+    }
+
+    /**
+     * Adds an override of the {@code decisionLogicJS} along with {@link
+     * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
+     *
+     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
+     *     for the {@link DevContext}
+     */
+    public void addDecisionLogicOverride(
+            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJS) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(decisionLogicJS);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+        }
+        mAdSelectionEntryDao.persistAdSelectionOverride(
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
+                        .setAppPackageName(mDevContext.getCallingAppPackageName())
+                        .setDecisionLogicJS(decisionLogicJS)
+                        .build());
+    }
+
+    /**
+     * Removes an override for the given {@link AdSelectionConfig}.
+     *
+     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
+     *     for the {@link DevContext}
+     */
+    public void removeDecisionLogicOverride(@NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        String adSelectionConfigId = calculateAdSelectionConfigId(adSelectionConfig);
+        String appPackageName = mDevContext.getCallingAppPackageName();
+
+        mAdSelectionEntryDao.removeAdSelectionOverrideByIdAndPackageName(
+                adSelectionConfigId, appPackageName);
+    }
+
+    /**
+     * Removes all overrides that match {@link DevContext#getCallingAppPackageName()}.
+     *
+     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
+     *     for the {@link DevContext}
+     */
+    public void removeAllDecisionLogicOverrides() {
+        if (!mDevContext.getDevOptionsEnabled()) {
+            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+        }
+
+        mAdSelectionEntryDao.removeAllAdSelectionOverrides(mDevContext.getCallingAppPackageName());
     }
 }
