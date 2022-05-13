@@ -56,6 +56,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
         sBackgroundExecutor.execute(() -> {
             try {
+                LogUtil.d("MeasurementServiceImpl: register: ");
                 callback.onResult(Integer.valueOf(
                         mMeasurementImpl.register(request, System.currentTimeMillis())));
             } catch (RemoteException e) {
