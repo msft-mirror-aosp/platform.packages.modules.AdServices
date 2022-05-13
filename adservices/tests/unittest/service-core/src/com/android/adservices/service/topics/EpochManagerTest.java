@@ -411,18 +411,18 @@ public final class EpochManagerTest {
                 eq(mFlags.getTopicsNumberOfTopTopics()),
                 eq(mFlags.getTopicsNumberOfRandomTopics()));
 
-        Topic topic1 = new Topic("topic1", /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic2 = new Topic("topic2", /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic3 = new Topic("topic3", /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic4 = new Topic("topic4", /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic5 = new Topic("topic5", /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic6 = new Topic("topic6", /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
+        Topic topic1 = Topic.create("topic1", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic2 = Topic.create("topic2", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic3 = Topic.create("topic3", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic4 = Topic.create("topic4", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic5 = Topic.create("topic5", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
+        Topic topic6 = Topic.create("topic6", /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L);
 
         // Verify AppClassificationTopicsContract
         Map<String, List<Topic>> expectedAppClassificationTopicsMap = new HashMap<>();
