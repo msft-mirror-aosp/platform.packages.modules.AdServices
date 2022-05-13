@@ -16,6 +16,13 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+filegroup {
+    name: "adservicesapk-filegroup",
+    srcs: [
+        "java/**/*.java",
+    ],
+}
+
 android_app_certificate {
     name: "com.android.adservices.api.certificate",
     certificate: "com.android.adservices.api",
