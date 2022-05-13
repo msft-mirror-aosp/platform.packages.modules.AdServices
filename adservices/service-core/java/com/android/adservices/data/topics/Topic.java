@@ -18,6 +18,10 @@ package com.android.adservices.data.topics;
 
 import android.annotation.NonNull;
 
+import com.android.internal.annotations.Immutable;
+
+import com.google.auto.value.AutoValue;
+
 import java.util.Objects;
 
 /**
@@ -25,44 +29,72 @@ import java.util.Objects;
  *
  * @hide
  */
-public class Topic {
-    private final String mTopic;
-    private final long mTaxonomyVersion;
-    private final long mModelVersion;
+@Immutable
+@AutoValue
+public abstract class Topic {
 
-    public Topic(@NonNull String topic, long taxonomyVersion, long modelVersion) {
-        mTopic = topic;
-        mTaxonomyVersion = taxonomyVersion;
-        mModelVersion = modelVersion;
+    /**
+     * @return a String represents the topic details
+     */
+    @NonNull
+    public abstract String getTopic();
+
+    /**
+     * @return the taxonomy version number
+     */
+    @NonNull
+    public abstract long getTaxonomyVersion();
+
+    /**
+     * @return the model version number
+     */
+    @NonNull
+    public abstract long getModelVersion();
+
+    /**
+     * @return generic builder
+     */
+    @NonNull
+    public static Builder builder() {
+        return new AutoValue_Topic.Builder();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Topic))  {
-            return false;
-        }
-        Topic topic = (Topic) o;
-        return mTaxonomyVersion == topic.mTaxonomyVersion && mModelVersion == topic.mModelVersion
-                && mTopic.equals(topic.mTopic);
+    /**
+     * Creates an instance of Topic
+     *
+     * @param topic topic details
+     * @param taxonomyVersion taxonomy version number
+     * @param modelVersion model version number
+     * @return an instance of Topic
+     */
+    @NonNull
+    public static Topic create(
+            @NonNull String topic,
+            long taxonomyVersion,
+            long modelVersion) {
+        Objects.requireNonNull(topic);
+
+        return builder().setTopic(topic)
+                .setTaxonomyVersion(taxonomyVersion)
+                .setModelVersion(modelVersion).build();
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(mTopic, mTaxonomyVersion, mModelVersion);
-    }
+    /**
+     * Builder for {@link Topic}
+     */
+    @AutoValue.Builder
+    public abstract static class Builder {
+        /** Set Topic */
+        public abstract Builder setTopic(@NonNull String topic);
 
-    public String getTopic() {
-        return mTopic;
-    }
+        /** Set Taxonomy Version */
+        public abstract Builder setTaxonomyVersion(@NonNull long taxonomyVersion);
 
-    public long getTaxonomyVersion() {
-        return mTaxonomyVersion;
-    }
+        /** Set Model Version */
+        public abstract Builder setModelVersion(@NonNull long modelVersion);
 
-    public long getModelVersion() {
-        return mModelVersion;
+        /** Build a Topic instance */
+        @NonNull
+        public abstract Topic build();
     }
 }
