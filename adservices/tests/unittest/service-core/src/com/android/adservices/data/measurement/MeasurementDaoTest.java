@@ -55,8 +55,8 @@ import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
 
-    private static final String TAG = "MeasurementDaoTest";
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    private static final String TAG = "MeasurementDaoTest";
     private final Uri mAppTwoSources = Uri.parse("android-app://com.example1.two-sources");
     private final Uri mAppOneSource = Uri.parse("android-app://com.example2.one-source");
     private final Uri mAppNoSources = Uri.parse("android-app://com.example3.no-sources");
@@ -77,17 +77,20 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertSource(
                         ValidSourceParams.SOURCE_EVENT_ID,
-                        ValidSourceParams.sAttributionSource,
-                        ValidSourceParams.sAttributionDestination,
-                        ValidSourceParams.sReportTo,
-                        ValidSourceParams.sRegistrant,
+                        ValidSourceParams.ATTRIBUTION_SOURCE,
+                        ValidSourceParams.ATTRIBUTION_DESTINATION,
+                        ValidSourceParams.REPORT_TO,
+                        ValidSourceParams.REGISTRANT,
                         ValidSourceParams.SOURCE_EVENT_TIME,
                         ValidSourceParams.EXPIRY_TIME,
                         ValidSourceParams.PRIORITY,
-                        ValidSourceParams.sSourceType,
-                        ValidSourceParams.sAttributionMode,
+                        ValidSourceParams.SOURCE_TYPE,
+                        ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                        ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                        ValidSourceParams.ATTRIBUTION_MODE,
                         ValidSourceParams.buildAggregateSource(),
-                        ValidSourceParams.buildAggregateFilterData())
+                        ValidSourceParams.buildAggregateFilterData()
+                )
         );
 
         try (Cursor sourceCursor =
@@ -98,16 +101,20 @@ public class MeasurementDaoTest {
             Source source = SqliteObjectMapper.constructSourceFromCursor(sourceCursor);
             Assert.assertNotNull(source);
             Assert.assertNotNull(source.getId());
-            assertEquals(ValidSourceParams.sAttributionSource, source.getAttributionSource());
-            assertEquals(ValidSourceParams.sAttributionDestination,
+            assertEquals(ValidSourceParams.ATTRIBUTION_SOURCE, source.getAttributionSource());
+            assertEquals(ValidSourceParams.ATTRIBUTION_DESTINATION,
                     source.getAttributionDestination());
-            assertEquals(ValidSourceParams.sReportTo, source.getReportTo());
-            assertEquals(ValidSourceParams.sRegistrant, source.getRegistrant());
+            assertEquals(ValidSourceParams.REPORT_TO, source.getReportTo());
+            assertEquals(ValidSourceParams.REGISTRANT, source.getRegistrant());
             assertEquals(ValidSourceParams.SOURCE_EVENT_TIME.longValue(), source.getEventTime());
             assertEquals(ValidSourceParams.EXPIRY_TIME.longValue(), source.getExpiryTime());
             assertEquals(ValidSourceParams.PRIORITY.longValue(), source.getPriority());
-            assertEquals(ValidSourceParams.sSourceType, source.getSourceType());
-            assertEquals(ValidSourceParams.sAttributionMode, source.getAttributionMode());
+            assertEquals(ValidSourceParams.SOURCE_TYPE, source.getSourceType());
+            assertEquals(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW.longValue(),
+                    source.getInstallAttributionWindow());
+            assertEquals(ValidSourceParams.INSTALL_COOLDOWN_WINDOW.longValue(),
+                    source.getInstallCooldownWindow());
+            assertEquals(ValidSourceParams.ATTRIBUTION_MODE, source.getAttributionMode());
         }
     }
 
@@ -115,15 +122,17 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceEventId() {
         assertInvalidSourceArguments(
                 null,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -133,28 +142,32 @@ public class MeasurementDaoTest {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
                 null,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
                 Uri.parse("com.source"),
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -163,29 +176,33 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentAttributionDestination() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
                 null,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
                 Uri.parse("com.destination"),
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -194,29 +211,33 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentReportTo() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
                 null,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
                 Uri.parse("com.reportTo"),
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -225,29 +246,33 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentRegistrant() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
                 null,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
                 Uri.parse("com.registrant"),
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -256,15 +281,17 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceEventTime() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 null,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -273,15 +300,17 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceExpiryTime() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 null,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -290,15 +319,17 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentPriority() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 null,
-                ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
     }
@@ -307,22 +338,64 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceType() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.sAttributionSource,
-                ValidSourceParams.sAttributionDestination,
-                ValidSourceParams.sReportTo,
-                ValidSourceParams.sRegistrant,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 null,
-                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
                 ValidSourceParams.buildAggregateSource(),
                 ValidSourceParams.buildAggregateFilterData());
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentInstallAttributionWindow() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.SOURCE_TYPE,
+                null,
+                ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                ValidSourceParams.ATTRIBUTION_MODE,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
+    }
+
+    @Test
+    public void testInsertSource_validateArgumentInstallCooldownWindow() {
+        assertInvalidSourceArguments(
+                ValidSourceParams.SOURCE_EVENT_ID,
+                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.SOURCE_EVENT_TIME,
+                ValidSourceParams.EXPIRY_TIME,
+                ValidSourceParams.PRIORITY,
+                ValidSourceParams.SOURCE_TYPE,
+                ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
+                null,
+                ValidSourceParams.ATTRIBUTION_MODE,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData()
+        );
     }
 
     private void assertInvalidSourceArguments(Long sourceEventId, Uri attributionSource,
             Uri attributionDestination, Uri reportTo, Uri registrant, Long sourceEventTime,
             Long expiryTime, Long priority, Source.SourceType sourceType,
+            Long installAttributionWindow, Long installCooldownWindow,
             @Source.AttributionMode int attributionMode, @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
@@ -337,6 +410,8 @@ public class MeasurementDaoTest {
                                 expiryTime,
                                 priority,
                                 sourceType,
+                                installAttributionWindow,
+                                installCooldownWindow,
                                 attributionMode,
                                 aggregateSource,
                                 aggregateFilterData);
@@ -353,9 +428,9 @@ public class MeasurementDaoTest {
     public void testInsertTrigger() {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(
-                        ValidTriggerParams.sAttributionDestination,
-                        ValidTriggerParams.sReportTo,
-                        ValidTriggerParams.sRegistrant,
+                        ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                        ValidTriggerParams.REPORT_TO,
+                        ValidTriggerParams.REGISTRANT,
                         ValidTriggerParams.TRIGGER_TIME,
                         ValidTriggerParams.TRIGGER_DATA,
                         ValidTriggerParams.DEDUP_KEY,
@@ -373,10 +448,10 @@ public class MeasurementDaoTest {
             Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
             Assert.assertNotNull(trigger);
             Assert.assertNotNull(trigger.getId());
-            assertEquals(ValidTriggerParams.sAttributionDestination,
+            assertEquals(ValidTriggerParams.ATTRIBUTION_DESTINATION,
                     trigger.getAttributionDestination());
-            assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
-            assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
+            assertEquals(ValidTriggerParams.REPORT_TO, trigger.getReportTo());
+            assertEquals(ValidTriggerParams.REGISTRANT, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
             assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
                     trigger.getEventTriggerData());
@@ -389,8 +464,8 @@ public class MeasurementDaoTest {
     public void testInsertTrigger_validateArgumentAttributionDestination() {
         assertInvalidTriggerArguments(
                 null,
-                ValidTriggerParams.sReportTo,
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.REGISTRANT,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -400,8 +475,8 @@ public class MeasurementDaoTest {
 
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
-                ValidTriggerParams.sReportTo,
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.REGISTRANT,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -413,9 +488,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentReportTo() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 null,
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.REGISTRANT,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -424,9 +499,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 Uri.parse("com.reportTo"),
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.REGISTRANT,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -438,8 +513,8 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentRegistrant() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
-                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                ValidTriggerParams.REPORT_TO,
                 null,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
@@ -449,8 +524,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
-                ValidTriggerParams.sReportTo,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                ValidTriggerParams.REPORT_TO,
                 Uri.parse("com.registrant"),
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
@@ -463,9 +538,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentTriggerTime() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
-                ValidTriggerParams.sReportTo,
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.REGISTRANT,
                 null,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -477,9 +552,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentTriggerData() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
-                ValidTriggerParams.sReportTo,
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.REGISTRANT,
                 ValidTriggerParams.TRIGGER_TIME,
                 null,
                 ValidTriggerParams.DEDUP_KEY,
@@ -494,9 +569,9 @@ public class MeasurementDaoTest {
 
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(
-                        ValidTriggerParams.sAttributionDestination,
-                        ValidTriggerParams.sReportTo,
-                        ValidTriggerParams.sRegistrant,
+                        ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                        ValidTriggerParams.REPORT_TO,
+                        ValidTriggerParams.REGISTRANT,
                         ValidTriggerParams.TRIGGER_TIME,
                         ValidTriggerParams.TRIGGER_DATA,
                         null,
@@ -514,10 +589,10 @@ public class MeasurementDaoTest {
             Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
             Assert.assertNotNull(trigger);
             Assert.assertNotNull(trigger.getId());
-            assertEquals(ValidTriggerParams.sAttributionDestination,
+            assertEquals(ValidTriggerParams.ATTRIBUTION_DESTINATION,
                     trigger.getAttributionDestination());
-            assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
-            assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
+            assertEquals(ValidTriggerParams.REPORT_TO, trigger.getReportTo());
+            assertEquals(ValidTriggerParams.REGISTRANT, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
             assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
                     trigger.getEventTriggerData());
@@ -529,9 +604,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentPriority() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
-                ValidTriggerParams.sReportTo,
-                ValidTriggerParams.sRegistrant,
+                ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.REGISTRANT,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -868,8 +943,8 @@ public class MeasurementDaoTest {
                 .build();
         List<Source> result1 = runFunc.apply(trigger1MatchSource1And2);
         Assert.assertEquals(2, result1.size());
-        Assert.assertEquals(s1.getId() , result1.get(0).getId());
-        Assert.assertEquals(s2.getId() , result1.get(1).getId());
+        Assert.assertEquals(s1.getId(), result1.get(0).getId());
+        Assert.assertEquals(s2.getId(), result1.get(1).getId());
 
 
         // Trigger Time > s1's eventTime and = s1's expiryTime
@@ -885,8 +960,8 @@ public class MeasurementDaoTest {
 
         List<Source> result2 = runFunc.apply(trigger2MatchSource1And2);
         Assert.assertEquals(2, result2.size());
-        Assert.assertEquals(s1.getId() , result2.get(0).getId());
-        Assert.assertEquals(s2.getId() , result2.get(1).getId());
+        Assert.assertEquals(s1.getId(), result2.get(0).getId());
+        Assert.assertEquals(s2.getId(), result2.get(1).getId());
 
         // Trigger Time > s1's expiryTime
         // Trigger Time > s2's eventTime and < s2's expiryTime
@@ -901,8 +976,8 @@ public class MeasurementDaoTest {
 
         List<Source> result3 = runFunc.apply(trigger3MatchSource2And3);
         Assert.assertEquals(2, result3.size());
-        Assert.assertEquals(s2.getId() , result3.get(0).getId());
-        Assert.assertEquals(s3.getId() , result3.get(1).getId());
+        Assert.assertEquals(s2.getId(), result3.get(0).getId());
+        Assert.assertEquals(s3.getId(), result3.get(1).getId());
 
         // Trigger Time > s1's expiryTime
         // Trigger Time > s2's eventTime and < s2's expiryTime
@@ -917,9 +992,9 @@ public class MeasurementDaoTest {
 
         List<Source> result4 = runFunc.apply(trigger4MatchSource1And2And3);
         Assert.assertEquals(3, result4.size());
-        Assert.assertEquals(s2.getId() , result4.get(0).getId());
-        Assert.assertEquals(s3.getId() , result4.get(1).getId());
-        Assert.assertEquals(s4.getId() , result4.get(2).getId());
+        Assert.assertEquals(s2.getId(), result4.get(0).getId());
+        Assert.assertEquals(s3.getId(), result4.get(1).getId());
+        Assert.assertEquals(s4.getId(), result4.get(2).getId());
     }
 
 
@@ -985,8 +1060,8 @@ public class MeasurementDaoTest {
 
     private boolean getInstallAttributionStatus(String sourceDbId, SQLiteDatabase db) {
         Cursor cursor = db.query(MeasurementTables.SourceContract.TABLE,
-                new String[]{ MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED },
-                MeasurementTables.SourceContract.ID + " = ? ", new String[]{ sourceDbId },
+                new String[]{MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED},
+                MeasurementTables.SourceContract.ID + " = ? ", new String[]{sourceDbId},
                 null, null,
                 null, null);
         Assert.assertTrue(cursor.moveToFirst());
@@ -1004,12 +1079,14 @@ public class MeasurementDaoTest {
         static final Long PRIORITY = 100L;
         static final Long SOURCE_EVENT_ID = 1L;
         static final Long SOURCE_EVENT_TIME = 8640000000L;
-        static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
-        static final Uri sAttributionSource = Uri.parse("android-app://com.source");
-        static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
-        static final Uri sReportTo = Uri.parse("https://com.example");
-        static final Source.SourceType sSourceType = Source.SourceType.EVENT;
-        static final @Source.AttributionMode int sAttributionMode =
+        static final Uri ATTRIBUTION_DESTINATION = Uri.parse("android-app://com.destination");
+        static final Uri ATTRIBUTION_SOURCE = Uri.parse("android-app://com.source");
+        static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
+        static final Uri REPORT_TO = Uri.parse("https://com.example");
+        static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
+        static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
+        static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
+        static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
 
         static String buildAggregateSource() {
@@ -1045,9 +1122,9 @@ public class MeasurementDaoTest {
         static final Long PRIORITY = 100L;
         static final Long TRIGGER_TIME = 8640000000L;
         static final Long TRIGGER_DATA = 3L;
-        static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
-        static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
-        static final Uri sReportTo = Uri.parse("https://com.example");
+        static final Uri ATTRIBUTION_DESTINATION = Uri.parse("android-app://com.destination");
+        static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
+        static final Uri REPORT_TO = Uri.parse("https://com.example");
 
         static String buildAggregateTriggerData() {
             try {

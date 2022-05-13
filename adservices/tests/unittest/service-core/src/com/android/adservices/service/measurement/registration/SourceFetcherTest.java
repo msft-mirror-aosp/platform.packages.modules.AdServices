@@ -107,6 +107,114 @@ public final class SourceFetcherTest {
     }
 
     @Test
+    public void testSourceRequestWithPostInstallAttributes() throws Exception {
+        RegistrationRequest request = new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationUri(Uri.parse("https://foo.com"))
+                .setTopOriginUri(Uri.parse("https://baz.com"))
+                .setAttributionSource(sContext.getAttributionSource())
+                .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + "  \"install_attribution_window\": \"272800\",\n"
+                                + "  \"install_cooldown_window\": \"987654\"\n"
+                                + "}\n")));
+        ArrayList<SourceRegistration> result = new ArrayList();
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals(123, result.get(0).getSourcePriority());
+        assertEquals(456789, result.get(0).getExpiry());
+        assertEquals(987654321, result.get(0).getSourceEventId());
+        assertEquals(272800, result.get(0).getInstallAttributionWindow());
+        assertEquals(987654L, result.get(0).getInstallCooldownWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testSourceRequestWithPostInstallAttributesReceivedAsNull() throws Exception {
+        RegistrationRequest request = new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationUri(Uri.parse("https://foo.com"))
+                .setTopOriginUri(Uri.parse("https://baz.com"))
+                .setAttributionSource(sContext.getAttributionSource())
+                .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                + "  \"install_attribution_window\": null,\n"
+                                + "  \"install_cooldown_window\": null\n"
+                                + "}\n")));
+        ArrayList<SourceRegistration> result = new ArrayList();
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals(123, result.get(0).getSourcePriority());
+        assertEquals(456789, result.get(0).getExpiry());
+        assertEquals(987654321, result.get(0).getSourceEventId());
+        // fallback to default value - 30 days
+        assertEquals(2592000L, result.get(0).getInstallAttributionWindow());
+        // fallback to default value - 0 days
+        assertEquals(0L, result.get(0).getInstallCooldownWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testSourceRequestWithInstallAttributesOutofBounds() throws IOException {
+        RegistrationRequest request = new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationUri(Uri.parse("https://foo.com"))
+                .setTopOriginUri(Uri.parse("https://baz.com"))
+                .setAttributionSource(sContext.getAttributionSource())
+                .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"android-app://com.myapps\",\n"
+                                + "  \"priority\": \"123\",\n"
+                                + "  \"expiry\": \"456789\",\n"
+                                + "  \"source_event_id\": \"987654321\",\n"
+                                // Min value of attribution is 2 days or 172800 seconds
+                                + "  \"install_attribution_window\": \"172700\",\n"
+                                // Max value of cooldown is 30 days or 2592000 seconds
+                                + "  \"install_cooldown_window\": \"9876543210\"\n"
+                                + "}\n")));
+        ArrayList<SourceRegistration> result = new ArrayList();
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals(123, result.get(0).getSourcePriority());
+        assertEquals(456789, result.get(0).getExpiry());
+        assertEquals(987654321, result.get(0).getSourceEventId());
+        // Adjusted to minimum allowed value
+        assertEquals(172800, result.get(0).getInstallAttributionWindow());
+        // Adjusted to maximum allowed value
+        assertEquals(2592000L, result.get(0).getInstallCooldownWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void testBadSourceUrl() throws Exception {
         RegistrationRequest request = buildRequest(
                 /* registrationUri = */ "bad-schema://foo.com", DEFAULT_TOP_ORIGIN);

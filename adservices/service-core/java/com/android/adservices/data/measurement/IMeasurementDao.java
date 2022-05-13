@@ -80,7 +80,9 @@ public interface IMeasurementDao {
     void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
             @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType, @Source.AttributionMode int attributionMode,
+            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
+            @NonNull Long installCooldownWindow,
+            @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) throws DatastoreException;
 

@@ -148,11 +148,14 @@ class MeasurementDao implements IMeasurementDao {
     public void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
             @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType, @Source.AttributionMode int attributionMode,
+            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
+            @NonNull Long installCoolDownWindow,
+            @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource, @Nullable String aggregateFilterData)
             throws DatastoreException {
         validateNonNull(sourceEventId, attributionSource, attributionDestination, reportTo,
-                registrant, sourceEventTime, expiryTime, priority, sourceType);
+                registrant, sourceEventTime, expiryTime, priority, sourceType,
+                installAttributionWindow, installCoolDownWindow);
         validateUri(attributionSource, attributionDestination, reportTo, registrant);
 
         ContentValues values = new ContentValues();
@@ -169,6 +172,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, sourceType.name());
         values.put(MeasurementTables.SourceContract.REGISTRANT, registrant.toString());
+        values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
+                installAttributionWindow);
+        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW, installCoolDownWindow);
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
         values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
