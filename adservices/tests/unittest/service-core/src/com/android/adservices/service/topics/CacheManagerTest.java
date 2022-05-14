@@ -133,15 +133,15 @@ public final class CacheManagerTest {
         verify(mMockEpochManager).getCurrentEpochId();
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
 
-        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+        Topic topic1 = Topic.create("topic1", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 1L,
+        Topic topic2 = Topic.create("topic2", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 1L,
+        Topic topic3 = Topic.create("topic3", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic4 = new Topic("topic4", /* taxonomyVersion = */ 1L,
+        Topic topic4 = Topic.create("topic4", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic5 = new Topic("topic5", /* taxonomyVersion = */ 1L,
+        Topic topic5 = Topic.create("topic5", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
 
         // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
