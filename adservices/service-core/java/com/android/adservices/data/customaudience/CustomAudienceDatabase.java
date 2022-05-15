@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data;
+package com.android.adservices.data.customaudience;
 
 import android.content.Context;
 import android.net.Uri;
@@ -27,40 +27,42 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
-import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.internal.annotations.GuardedBy;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Room based PP API database. */
+/**
+ * Room based database for custom audience.
+ */
 @Database(
         // Set exportSchema to true to see generated schema file.
         // File location is defined in Android.bp -Aroom.schemaLocation.
         exportSchema = false,
         entities = {DBCustomAudience.class, DBCustomAudienceOverride.class},
-        version = AdServicesDatabase.DATABASE_VERSION)
-@TypeConverters({AdServicesDatabase.Converters.class})
-public abstract class AdServicesDatabase extends RoomDatabase {
+        version = CustomAudienceDatabase.DATABASE_VERSION
+)
+@TypeConverters({CustomAudienceDatabase.Converters.class})
+public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
     public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "adservices.db";
+    // TODO(b/230653780): Should we separate the DB.
+    public static final String DATABASE_NAME = "customaudience.db";
 
     @GuardedBy("SINGLETON_LOCK")
-    private static AdServicesDatabase sSingleton;
+    private static CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
+
     /** Returns an instance of the AdServiceDatabase given a context. */
-    public static AdServicesDatabase getInstance(@NonNull Context context) {
+    public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
-                        Room.databaseBuilder(context, AdServicesDatabase.class, DATABASE_NAME)
+                        Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
                                 .build();
             }
             return sSingleton;
@@ -81,7 +83,8 @@ public abstract class AdServicesDatabase extends RoomDatabase {
      */
     public static class Converters {
 
-        private Converters() {}
+        private Converters() {
+        }
 
         /** Serialize {@link Instant} to Long. */
         @TypeConverter

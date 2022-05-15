@@ -22,11 +22,11 @@ import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.net.Uri;
 
 /**
-  * Custom audience management interface.
+  * Custom audience service.
   *
   * @hide
   */
-interface ICustomAudienceManagementService {
+interface ICustomAudienceService {
     /**
      * Adds the user to the given {@link CustomAudience}.
      *

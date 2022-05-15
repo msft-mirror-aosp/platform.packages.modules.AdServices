@@ -126,11 +126,11 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
-        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+        Topic topic1 = Topic.create("topic1", /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 4L);
-        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 2L,
+        Topic topic2 = Topic.create("topic2", /* taxonomyVersion = */ 2L,
                 /* modelVersion = */ 5L);
-        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 3L,
+        Topic topic3 = Topic.create("topic3", /* taxonomyVersion = */ 3L,
                 /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB

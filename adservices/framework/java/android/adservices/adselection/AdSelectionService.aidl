@@ -93,7 +93,7 @@ interface AdSelectionService {
     * data provided.
     *
     * The call will fail with status
-    * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if the API hasn't been enabled
+    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if the API hasn't been enabled
     * by developer options or by an adb command or if the calling
     * application manifest is not setting Android:debuggable to true.
     */
@@ -108,10 +108,9 @@ interface AdSelectionService {
     * AdSelectionConfig
     *
     * The call will fail with status
-    * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if:
+    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if:
     * the API hasn't been enabled by developer options or by an adb command
-    * or if the calling application manifest is not setting Android:debuggable to true
-    * or if appPackage name doesn't match the caller of {@code overrideAdSelectionConfigRemoteInfo}
+    * or if the calling application manifest is not setting Android:debuggable to true.
     */
     void removeAdSelectionConfigRemoteInfoOverride(
         in AdSelectionConfig adSelectionConfig,
@@ -122,10 +121,9 @@ interface AdSelectionService {
     * {@code overrideAdSelectionConfigRemoteInfo} from this application
     *
     * The call will fail with status
-    * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if:
+    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if:
     * the API hasn't been enabled by developer options or by an adb command
-    * or if the calling application manifest is not setting Android:debuggable to true
-    * or if appPackage name doesn't match the caller of {@code overrideAdSelectionConfigRemoteInfo}
+    * or if the calling application manifest is not setting Android:debuggable to true.
     */
     void resetAllAdSelectionConfigRemoteOverrides(
         in AdSelectionOverrideCallback callback);
