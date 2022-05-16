@@ -35,7 +35,7 @@ android_test {
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
-        "framework-adservices",
+        "framework-adservices"
     ],
     min_sdk_version: "Tiramisu", // TODO(b/217941602): update this.
     target_sdk_version: "current",

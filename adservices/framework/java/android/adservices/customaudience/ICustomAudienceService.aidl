@@ -92,7 +92,7 @@ interface ICustomAudienceService {
      *
      * The call will fail silently if the CustomAudience has been created by a different app.
      */
-    void resetCustomAudienceRemoteInfoOverride(
+    void removeCustomAudienceRemoteInfoOverride(
         in String owner,
         in String buyer,
         in String name,

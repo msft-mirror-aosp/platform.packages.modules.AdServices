@@ -267,7 +267,7 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testResetCustomAudienceRemoteInfoOverrideSuccess() throws Exception {
+    public void testRemoveCustomAudienceRemoteInfoOverrideSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -291,7 +291,7 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
 
         CustomAudienceOverrideTestCallback callback =
-                callResetOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
+                callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
 
         assertTrue(callback.mIsSuccess);
         assertFalse(
@@ -300,7 +300,7 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testResetCustomAudienceRemoteInfoOverrideDoesNotDeleteWithIncorrectPackageName()
+    public void testRemoveCustomAudienceRemoteInfoOverrideDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
         String incorrectPackageName = "incorrectPackageName";
 
@@ -327,7 +327,7 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
 
         CustomAudienceOverrideTestCallback callback =
-                callResetOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
+                callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
 
         assertTrue(callback.mIsSuccess);
         assertTrue(
@@ -336,7 +336,7 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
-    public void testResetCustomAudienceRemoteInfoOverrideFailsWithDevOptionsDisabled()
+    public void testRemoveCustomAudienceRemoteInfoOverrideFailsWithDevOptionsDisabled()
             throws Exception {
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
@@ -354,7 +354,7 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
 
         CustomAudienceOverrideTestCallback callback =
-                callResetOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
+                callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
 
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
@@ -530,7 +530,7 @@ public class CustomAudienceServiceEndToEndTest {
         return callback;
     }
 
-    private CustomAudienceOverrideTestCallback callResetOverride(
+    private CustomAudienceOverrideTestCallback callRemoveOverride(
             String owner,
             String buyer,
             String name,
@@ -540,7 +540,7 @@ public class CustomAudienceServiceEndToEndTest {
         CustomAudienceOverrideTestCallback callback =
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
-        customAudienceService.resetCustomAudienceRemoteInfoOverride(owner, buyer, name, callback);
+        customAudienceService.removeCustomAudienceRemoteInfoOverride(owner, buyer, name, callback);
 
         resultLatch.await();
         return callback;
