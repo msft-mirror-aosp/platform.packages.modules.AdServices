@@ -166,7 +166,7 @@ public class DbState {
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
                 .setReportTo(Uri.parse(tJSON.getString("reportTo")))
-                .setTriggerData(tJSON.getLong("triggerData"))
+                .setEventTriggerData(tJSON.getLong("triggerData"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setPriority(tJSON.getLong("priority"))
                 .setStatus(tJSON.getInt("status"))
