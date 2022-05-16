@@ -173,6 +173,37 @@ public final class SourceFetcherTest {
     }
 
     @Test
+    public void testBasicSourceRequestMinimumFieldsAndRestNull() throws Exception {
+        RegistrationRequest request = new RegistrationRequest.Builder()
+                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                .setRegistrationUri(Uri.parse("https://foo.com"))
+                .setTopOriginUri(Uri.parse("https://baz.com"))
+                .setAttributionSource(sContext.getAttributionSource())
+                .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "\"destination\": \"android-app://com.myapps\",\n"
+                                + "\"source_event_id\": \"123\",\n"
+                                + "\"priority\": null,\n"
+                                + "\"expiry\": null\n"
+                                + "}\n")));
+        ArrayList<SourceRegistration> result = new ArrayList();
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals(123, result.get(0).getSourceEventId());
+        assertEquals(0, result.get(0).getSourcePriority());
+        assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                result.get(0).getExpiry());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void testBasicSourceRequestWithExpiryLessThan2Days() throws Exception {
         RegistrationRequest request = new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)

@@ -53,14 +53,23 @@ public class SourceFetcher {
     private static void parseEventSource(
             @NonNull String text,
             SourceRegistration.Builder result) throws JSONException {
-        JSONObject json = new JSONObject(text);
-        result.setSourceEventId(json.getLong("source_event_id"));
-        result.setDestination(Uri.parse(json.getString("destination")));
-        if (json.has("expiry")) {
-            setExpiry(json.getLong("expiry"), result);
+        final JSONObject json = new JSONObject(text);
+        final boolean hasRequiredParams = json.has(EventSourceContract.SOURCE_EVENT_ID)
+                        && json.has(EventSourceContract.DESTINATION);
+        if (!hasRequiredParams) {
+            throw new JSONException(
+                    String.format("Expected both %s and %s",
+                            EventSourceContract.SOURCE_EVENT_ID,
+                            EventSourceContract.DESTINATION));
         }
-        if (json.has("priority")) {
-            result.setSourcePriority(json.getLong("priority"));
+
+        result.setSourceEventId(json.getLong(EventSourceContract.SOURCE_EVENT_ID));
+        result.setDestination(Uri.parse(json.getString(EventSourceContract.DESTINATION)));
+        if (json.has(EventSourceContract.EXPIRY) && !json.isNull(EventSourceContract.EXPIRY)) {
+            setExpiry(json.getLong(EventSourceContract.EXPIRY), result);
+        }
+        if (json.has(EventSourceContract.PRIORITY) && !json.isNull(EventSourceContract.PRIORITY)) {
+            result.setSourcePriority(json.getLong(EventSourceContract.PRIORITY));
         }
     }
 
@@ -191,5 +200,12 @@ public class SourceFetcher {
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 true, out);
+    }
+
+    private interface EventSourceContract {
+        String SOURCE_EVENT_ID = "source_event_id";
+        String DESTINATION = "destination";
+        String EXPIRY = "expiry";
+        String PRIORITY = "priority";
     }
 }
