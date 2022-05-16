@@ -81,11 +81,11 @@ public interface CustomAudienceDao {
      * @return custom audience override result if exists.
      */
     @Query(
-            "SELECT decision_logic FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
+            "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
                     + " :buyer AND name = :name")
     @Nullable
     @VisibleForTesting
-    String getDecisionLogicUrlOverride(
+    String getBiddingLogicUrlOverride(
             @NonNull String owner, @NonNull String buyer, @NonNull String name);
 
     /**
@@ -109,13 +109,16 @@ public interface CustomAudienceDao {
     /** Clean up selected custom audience override data by its primary key */
     @Query(
             "DELETE FROM custom_audience_overrides WHERE owner = :owner AND buyer = :buyer AND name"
-                    + " = :name")
-    void removeCustomAudienceOverrideByPrimaryKey(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+                    + " = :name AND app_package_name = :appPackageName")
+    void removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String appPackageName);
 
     /** Clean up all custom audience override data */
-    @Query("DELETE FROM custom_audience_overrides")
-    void removeAllCustomAudienceOverrides();
+    @Query("DELETE FROM custom_audience_overrides WHERE app_package_name = :appPackageName")
+    void removeAllCustomAudienceOverrides(@NonNull String appPackageName);
 
     /**
      * Fetch all the Custom Audience corresponding to the buyers
@@ -126,5 +129,4 @@ public interface CustomAudienceDao {
     @Query("SELECT * FROM custom_audience where buyer in (:buyers)")
     @Nullable
     List<DBCustomAudience> getCustomAudienceByBuyers(List<String> buyers);
-
 }

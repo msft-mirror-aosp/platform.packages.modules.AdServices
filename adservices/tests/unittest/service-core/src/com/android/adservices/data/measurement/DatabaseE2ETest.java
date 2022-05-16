@@ -81,7 +81,7 @@ public abstract class DatabaseE2ETest {
     public abstract void runActionToTest() throws DatastoreException;
 
     @Test
-    public void runTest() throws DatastoreException {
+    public void runTest() throws DatastoreException, JSONException {
         runActionToTest();
         SQLiteDatabase readerDb = DbHelper.getInstance(sContext).getReadableDatabase();
         DbState dbState = new DbState(readerDb);
@@ -225,7 +225,8 @@ public abstract class DatabaseE2ETest {
                 trigger.getReportTo().toString());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
-        values.put(MeasurementTables.TriggerContract.TRIGGER_DATA, trigger.getTriggerData());
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
+                trigger.getEventTriggerData());
         values.put(MeasurementTables.TriggerContract.PRIORITY, trigger.getPriority());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());

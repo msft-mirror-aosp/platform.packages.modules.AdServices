@@ -26,7 +26,7 @@ public class CustomAudienceOverrideTest {
     private static final String BUYER = "buyer";
     private static final String NAME = "name";
     private static final String APP_PACKAGE_NAME = "appPackageName";
-    private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
+    private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
 
     @Test
@@ -37,7 +37,7 @@ public class CustomAudienceOverrideTest {
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setAppPackageName(APP_PACKAGE_NAME)
-                        .setDecisionLogicJS(DECISION_LOGIC_JS)
+                        .setBiddingLogicJS(BIDDING_LOGIC_JS)
                         .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
                         .build();
 
@@ -45,7 +45,7 @@ public class CustomAudienceOverrideTest {
         assertEquals(dbCustomAudienceOverride.getBuyer(), BUYER);
         assertEquals(dbCustomAudienceOverride.getName(), NAME);
         assertEquals(dbCustomAudienceOverride.getAppPackageName(), APP_PACKAGE_NAME);
-        assertEquals(dbCustomAudienceOverride.getDecisionLogicJS(), DECISION_LOGIC_JS);
+        assertEquals(dbCustomAudienceOverride.getBiddingLogicJS(), BIDDING_LOGIC_JS);
         assertEquals(dbCustomAudienceOverride.getTrustedBiddingData(), TRUSTED_BIDDING_DATA);
     }
 
@@ -58,7 +58,7 @@ public class CustomAudienceOverrideTest {
                             .setBuyer(BUYER)
                             .setName(NAME)
                             .setAppPackageName(APP_PACKAGE_NAME)
-                            .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
                             .build();
                 });
@@ -73,7 +73,7 @@ public class CustomAudienceOverrideTest {
                             .setOwner(OWNER)
                             .setName(NAME)
                             .setAppPackageName(APP_PACKAGE_NAME)
-                            .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
                             .build();
                 });
@@ -88,7 +88,7 @@ public class CustomAudienceOverrideTest {
                             .setOwner(OWNER)
                             .setBuyer(BUYER)
                             .setAppPackageName(APP_PACKAGE_NAME)
-                            .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
                             .build();
                 });
@@ -103,14 +103,14 @@ public class CustomAudienceOverrideTest {
                             .setOwner(OWNER)
                             .setBuyer(BUYER)
                             .setName(NAME)
-                            .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
                             .build();
                 });
     }
 
     @Test
-    public void testThrowsExceptionWithNoDecisionLogicJS() {
+    public void testThrowsExceptionWithNoBiddingLogicJS() {
         assertThrows(
                 IllegalStateException.class,
                 () -> {
@@ -134,7 +134,7 @@ public class CustomAudienceOverrideTest {
                             .setBuyer(BUYER)
                             .setName(NAME)
                             .setAppPackageName(APP_PACKAGE_NAME)
-                            .setDecisionLogicJS(DECISION_LOGIC_JS)
+                            .setBiddingLogicJS(BIDDING_LOGIC_JS)
                             .build();
                 });
     }

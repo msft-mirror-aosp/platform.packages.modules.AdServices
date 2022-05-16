@@ -73,7 +73,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 attributionDestination.toString());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, triggerTime);
-        values.put(MeasurementTables.TriggerContract.TRIGGER_DATA, triggerData);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA, triggerData);
         values.put(MeasurementTables.TriggerContract.DEDUP_KEY, dedupKey);
         values.put(MeasurementTables.TriggerContract.PRIORITY, priority);
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
