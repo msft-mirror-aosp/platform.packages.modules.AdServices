@@ -34,6 +34,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -118,6 +119,14 @@ public class DevContextFilterTest {
                                 .setCallingAppPackageName(applicationContext.getPackageName())
                                 .setDevOptionsEnabled(true)
                                 .build());
+    }
+
+    @Test
+    public void testNoArgCallFailsIfCalledFromNonBinderThread() {
+        Context applicationContext = ApplicationProvider.getApplicationContext();
+        DevContextFilter nonMockedFilter = DevContextFilter.create(applicationContext);
+
+        Assert.assertThrows(IllegalStateException.class, nonMockedFilter::createDevContext);
     }
 
     private void enableDeveloperOptions() {

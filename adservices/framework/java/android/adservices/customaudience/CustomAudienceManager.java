@@ -20,6 +20,7 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -32,13 +33,15 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * Custom Audience management service manager.
+ * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
+ *
+ * <p>Hiding for future implementation and review for public exposure.
  *
  * @hide
  */
-public class CustomAudienceManagementServiceManager {
-    public static final String CUSTOM_AUDIENCE_MANAGEMENT_SERVICE =
-            "custom_audience_management_service";
+public class CustomAudienceManager {
+    public static final String CUSTOM_AUDIENCE_SERVICE =
+            "custom_audience_service";
 
     // TODO(b/221861041): Remove warning suppression; context needed later for
     //  authorization/authentication
@@ -46,25 +49,25 @@ public class CustomAudienceManagementServiceManager {
     @SuppressWarnings("unused")
     private final Context mContext;
     @NonNull
-    private final ServiceBinder<ICustomAudienceManagementService> mServiceBinder;
+    private final ServiceBinder<ICustomAudienceService> mServiceBinder;
 
     /**
-     * Create a service binder CustomAudienceManagementManager
+     * Create a service binder CustomAudienceManager
      *
      * @hide
      */
-    public CustomAudienceManagementServiceManager(@NonNull Context context) {
+    public CustomAudienceManager(@NonNull Context context) {
         Objects.requireNonNull(context);
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(context,
-                        AdServicesCommon.ACTION_CUSTOM_AUDIENCE_MANAGEMENT_SERVICE,
-                        ICustomAudienceManagementService.Stub::asInterface);
+                        AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE,
+                        ICustomAudienceService.Stub::asInterface);
     }
 
     @NonNull
-    private ICustomAudienceManagementService getService() {
-        ICustomAudienceManagementService service = mServiceBinder.getService();
+    private ICustomAudienceService getService() {
+        ICustomAudienceService service = mServiceBinder.getService();
         Objects.requireNonNull(service);
         return service;
     }
@@ -73,7 +76,6 @@ public class CustomAudienceManagementServiceManager {
      * Adds the current user to a custom audience serving targeted ads during the ad selection
      * process.
      */
-    @NonNull
     public void joinCustomAudience(@NonNull CustomAudience customAudience,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
@@ -82,7 +84,7 @@ public class CustomAudienceManagementServiceManager {
         Objects.requireNonNull(receiver);
 
         try {
-            final ICustomAudienceManagementService service = getService();
+            final ICustomAudienceService service = getService();
 
             service.joinCustomAudience(customAudience, new ICustomAudienceCallback.Stub() {
                 @Override
@@ -113,18 +115,16 @@ public class CustomAudienceManagementServiceManager {
      *
      * In case of a non-existent or mis-identified {@link CustomAudience}, no actions are taken.
      */
-    @NonNull
-    public void leaveCustomAudience(@NonNull String owner, @NonNull String buyer,
+    public void leaveCustomAudience(@Nullable String owner, @NonNull String buyer,
             @NonNull String name, @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
-            final ICustomAudienceManagementService service = getService();
+            final ICustomAudienceService service = getService();
 
             service.leaveCustomAudience(owner, buyer, name, new ICustomAudienceCallback.Stub() {
                 @Override

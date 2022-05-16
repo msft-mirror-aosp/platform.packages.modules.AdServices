@@ -39,5 +39,8 @@ android_test {
     ],
     min_sdk_version: "Tiramisu", // TODO(b/217941602): update this.
     target_sdk_version: "current",
-    test_suites: ["general-tests"],
+    test_suites: [
+        "general-tests",
+        "mts-adservices"
+    ],
 }

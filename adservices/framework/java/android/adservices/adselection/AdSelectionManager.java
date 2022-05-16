@@ -42,7 +42,7 @@ public class AdSelectionManager {
     /**
      * This field will be used once full implementation is ready.
      *
-     * TODO(b/212300065) remove the warning suppression once the service is implemented.
+     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
      */
     @SuppressWarnings("unused")
     private final Context mContext;
@@ -74,10 +74,11 @@ public class AdSelectionManager {
         return service;
     }
 
-    /** This method runs an asynchronous call to get the result of an on-device Ad selection.
-     * The input {@code adSelectionConfig} is provided by the Ads SDK.
-     * The receiver either returns an {@link AdSelectionOutcome} for a successful run, or an
-     * {@link AdServicesException} indicates the error.
+    /**
+     * This method runs an asynchronous call to get the result of an on-device Ad selection. The
+     * input {@code adSelectionConfig} is provided by the Ads SDK. The receiver either returns an
+     * {@link AdSelectionOutcome} for a successful run, or an {@link AdServicesException} indicates
+     * the error.
      */
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig,
@@ -96,10 +97,12 @@ public class AdSelectionManager {
                         public void onSuccess(AdSelectionResponse resultParcel) {
                             executor.execute(
                                     () -> {
-                                        receiver.onResult(new AdSelectionOutcome.Builder()
-                                                .setAdSelectionId(resultParcel.getAdSelectionId())
-                                                .setRenderUrl(resultParcel.getRenderUrl())
-                                                .build());
+                                        receiver.onResult(
+                                                new AdSelectionOutcome.Builder()
+                                                        .setAdSelectionId(
+                                                                resultParcel.getAdSelectionId())
+                                                        .setRenderUrl(resultParcel.getRenderUrl())
+                                                        .build());
                                     });
                         }
 
@@ -117,18 +120,17 @@ public class AdSelectionManager {
         }
     }
 
-    /** Report the given impression.
-     * The inputs {@code adSelectionConfig} and {@code adSelectionId} are provided by the Ads SDK.
-     * The receiver either returns a {@code void} for a successful run, or an
-     * {@link AdServicesException} indicates the error.
+    /**
+     * Report the given impression. The {@link ReportImpressionInput} is provided by the Ads SDK.
+     * The receiver either returns a {@code void} for a successful run, or an {@link
+     * AdServicesException} indicates the error.
      */
     @NonNull
     public void reportImpression(
-            int adSelectionId,
-            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull ReportImpressionInput input,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(input);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -136,8 +138,8 @@ public class AdSelectionManager {
             final AdSelectionService service = getService();
             service.reportImpression(
                     new ReportImpressionRequest.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdSelectionConfig(adSelectionConfig)
+                            .setAdSelectionId(input.getAdSelectionId())
+                            .setAdSelectionConfig(input.getAdSelectionConfig())
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override

@@ -18,14 +18,15 @@ package android.adservices.customaudience;
 
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.ICustomAudienceCallback;
+import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.net.Uri;
 
 /**
-  * Custom audience management interface.
+  * Custom audience service.
   *
   * @hide
   */
-interface ICustomAudienceManagementService {
+interface ICustomAudienceService {
     /**
      * Adds the user to the given {@link CustomAudience}.
      *
@@ -57,4 +58,55 @@ interface ICustomAudienceManagementService {
      */
     void leaveCustomAudience(in String owner, in String buyer, in String name,
             in ICustomAudienceCallback callback);
+
+    /**
+     * Configures PP api to avoid fetching the biddingLogicJS and trustedBiddingData from a server and instead
+     * use the content provided in {@code biddingLogicJS} and {@code trustedBiddingData} for the CA
+     * identified by {@code owner}, {@code buyer}, {@code name}
+     *
+     * The call will fail with status
+     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if:
+     * the API hasn't been enabled by developer options or by an adb command
+     * or if the calling application manifest is not setting Android:debuggable to true.
+     * or if the CA hasn't been created by the same app doing invoking this API.
+     *
+     * The call will fail silently if the CustomAudience has been created by a different app.
+     */
+    void overrideCustomAudienceRemoteInfo(
+        in String owner,
+        in String buyer,
+        in String name,
+        in String biddingLogicJS,
+        in String trustedBiddingData,
+        in CustomAudienceOverrideCallback callback);
+
+    /**
+     * Deletes any override created by calling
+     * {@code overrideCustomAudienceRemoteInfo} for the CA identified by
+     * {@code owner} {@code buyer}, {@code name}.
+     *
+     * The call will fail with status
+     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if:
+     * the API hasn't been enabled by developer options or by an adb command
+     * or if the calling application manifest is not setting Android:debuggable to true.
+     *
+     * The call will fail silently if the CustomAudience has been created by a different app.
+     */
+    void resetCustomAudienceRemoteInfoOverride(
+        in String owner,
+        in String buyer,
+        in String name,
+        in CustomAudienceOverrideCallback callback);
+
+    /**
+     * Deletes any override created by calling
+     * {@code overrideCustomAudienceRemoteInfo} from this application.
+     *
+     * The call will fail with status
+     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if the API hasn't been enabled
+     * by developer options or by an adb command and if the calling
+     * application manifest is not setting Android:debuggable to true.
+     */
+    void resetAllCustomAudienceOverrides(
+        in CustomAudienceOverrideCallback callback);
 }
