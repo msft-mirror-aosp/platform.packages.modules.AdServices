@@ -174,12 +174,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     /**
-     * Resets a custom audience override with the given information.
+     * Removes a custom audience override with the given information.
      *
      * @hide
      */
     @Override
-    public void resetCustomAudienceRemoteInfoOverride(
+    public void removeCustomAudienceRemoteInfoOverride(
             @NonNull String owner,
             @NonNull String buyer,
             @NonNull String name,
