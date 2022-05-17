@@ -48,8 +48,7 @@ public class CustomAudienceImpl {
     private final Clock mClock;
 
     @VisibleForTesting
-    CustomAudienceImpl(@NonNull CustomAudienceDao customAudienceDao,
-            @NonNull Clock clock) {
+    CustomAudienceImpl(@NonNull CustomAudienceDao customAudienceDao, @NonNull Clock clock) {
         mCustomAudienceDao = customAudienceDao;
         mClock = clock;
     }
@@ -64,9 +63,10 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(context, "Context must be provided.");
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
-                sSingleton = new CustomAudienceImpl(
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                        Clock.systemUTC());
+                sSingleton =
+                        new CustomAudienceImpl(
+                                CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                                Clock.systemUTC());
             }
             return sSingleton;
         }
@@ -83,21 +83,24 @@ public class CustomAudienceImpl {
 
         // TODO(b/231997523): Add JSON field validation.
         DBCustomAudience dbCustomAudience =
-                DBCustomAudience.fromServiceObject(customAudience, "not.implemented.yet",
-                        currentTime);
+                DBCustomAudience.fromServiceObject(
+                        customAudience, "not.implemented.yet", currentTime);
 
         mCustomAudienceDao.insertOrOverrideCustomAudience(dbCustomAudience);
     }
 
-    /**
-     * Delete a custom audience with given key. No-op if not exist.
-     */
-    public void leaveCustomAudience(@Nullable String owner, @NonNull String buyer,
-            @NonNull String name) {
+    /** Delete a custom audience with given key. No-op if not exist. */
+    public void leaveCustomAudience(
+            @Nullable String owner, @NonNull String buyer, @NonNull String name) {
         Preconditions.checkStringNotEmpty(buyer);
         Preconditions.checkStringNotEmpty(name);
 
         mCustomAudienceDao.deleteCustomAudienceByPrimaryKey(
                 Optional.ofNullable(owner).orElse("not.implemented.yet"), buyer, name);
+    }
+
+    /** Returns DAO to be used in {@link CustomAudienceServiceImpl} */
+    public CustomAudienceDao getCustomAudienceDao() {
+        return mCustomAudienceDao;
     }
 }
