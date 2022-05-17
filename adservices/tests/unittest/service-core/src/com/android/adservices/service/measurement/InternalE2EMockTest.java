@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,7 +27,6 @@ import android.net.Uri;
 import android.test.mock.MockContentResolver;
 
 import com.android.adservices.data.measurement.DatastoreException;
-import com.android.adservices.service.measurement.InternalE2ETest.TestFormatJsonMapping;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,8 +69,10 @@ public class InternalE2EMockTest extends InternalE2ETest {
         super(actions, expectedOutput, name);
         this.mSourceFetcher = Mockito.spy(new SourceFetcher());
         this.mTriggerFetcher = Mockito.spy(new TriggerFetcher());
-        this.mMeasurementImpl = new MeasurementImpl(
-            new MockContentResolver(), sDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        this.mMeasurementImpl = Mockito.spy(new MeasurementImpl(
+            new MockContentResolver(), sDatastoreManager, mSourceFetcher, mTriggerFetcher));
+        // Disable Impression Noise
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
     }
 
     @Override

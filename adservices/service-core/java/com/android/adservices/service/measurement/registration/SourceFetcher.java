@@ -53,14 +53,23 @@ public class SourceFetcher {
     private static void parseEventSource(
             @NonNull String text,
             SourceRegistration.Builder result) throws JSONException {
-        JSONObject json = new JSONObject(text);
-        result.setSourceEventId(json.getLong("source_event_id"));
-        result.setDestination(Uri.parse(json.getString("destination")));
-        if (json.has("expiry")) {
-            setExpiry(json.getLong("expiry"), result);
+        final JSONObject json = new JSONObject(text);
+        final boolean hasRequiredParams = json.has(EventSourceContract.SOURCE_EVENT_ID)
+                        && json.has(EventSourceContract.DESTINATION);
+        if (!hasRequiredParams) {
+            throw new JSONException(
+                    String.format("Expected both %s and %s",
+                            EventSourceContract.SOURCE_EVENT_ID,
+                            EventSourceContract.DESTINATION));
         }
-        if (json.has("priority")) {
-            result.setSourcePriority(json.getLong("priority"));
+
+        result.setSourceEventId(json.getLong(EventSourceContract.SOURCE_EVENT_ID));
+        result.setDestination(Uri.parse(json.getString(EventSourceContract.DESTINATION)));
+        if (json.has(EventSourceContract.EXPIRY) && !json.isNull(EventSourceContract.EXPIRY)) {
+            setExpiry(json.getLong(EventSourceContract.EXPIRY), result);
+        }
+        if (json.has(EventSourceContract.PRIORITY) && !json.isNull(EventSourceContract.PRIORITY)) {
+            result.setSourcePriority(json.getLong(EventSourceContract.PRIORITY));
         }
     }
 
@@ -104,22 +113,17 @@ public class SourceFetcher {
                 LogUtil.d("Expected one aggregate source!");
                 return false;
             }
-            // TODO: Handle aggregates.
-            additionalResult = true;
+            // TODO: Handle aggregates. additionalResult will be false until then.
+            additionalResult = false;
         }
         if (additionalResult) {
-            SourceRegistration adding = result.build();
-            if (addToResults.size() > 1
-                    && !addToResults.get(0).getDestination().equals(adding.getDestination())) {
-                LogUtil.d("Illegal change of destination");
-                return false;
-            }
-            addToResults.add(adding);
+            addToResults.add(result.build());
+            return true;
         }
-        return true;
+        return false;
     }
 
-    private boolean fetchSource(
+    private void fetchSource(
             @NonNull Uri topOrigin,
             @NonNull Uri target,
             @NonNull String sourceInfo,
@@ -127,23 +131,22 @@ public class SourceFetcher {
             @NonNull List<SourceRegistration> registrationsOut) {
         // Require https.
         if (!target.getScheme().equals("https")) {
-            return false;
+            return;
         }
         URL url;
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
             LogUtil.d("Malformed registration target URL %s", e);
-            return false;
+            return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
             LogUtil.e("Failed to open registration target URL %s", e);
-            return false;
+            return;
         }
-        boolean success = true;
         try {
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Attribution-Reporting-Source-Info", sourceInfo);
@@ -153,25 +156,24 @@ public class SourceFetcher {
             int responseCode = urlConnection.getResponseCode();
             if (!ResponseBasedFetcher.isRedirect(responseCode)
                     && !ResponseBasedFetcher.isSuccess(responseCode)) {
-                success = false;
+                return;
             }
 
-            if (!parseSource(topOrigin, target, headers, registrationsOut)) {
-                success = false;
+            final boolean parsed = parseSource(topOrigin, target, headers, registrationsOut);
+            if (!parsed && initialFetch) {
+                LogUtil.d("Failed to parse initial fetch");
+                return;
             }
 
             ArrayList<Uri> redirects = new ArrayList();
             ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
             for (Uri redirect : redirects) {
-                if (!fetchSource(
-                        topOrigin, redirect, sourceInfo, false, registrationsOut)) {
-                    success = false;
-                }
+                fetchSource(
+                        topOrigin, redirect, sourceInfo, false, registrationsOut);
             }
-            return success;
         } catch (IOException e) {
             LogUtil.e("Failed to get registration response %s", e);
-            return false;
+            return;
         } finally {
             urlConnection.disconnect();
         }
@@ -186,10 +188,18 @@ public class SourceFetcher {
                 != RegistrationRequest.REGISTER_SOURCE) {
             throw new IllegalArgumentException("Expected source registration");
         }
-        return fetchSource(
+        fetchSource(
                 request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 true, out);
+        return !out.isEmpty();
+    }
+
+    private interface EventSourceContract {
+        String SOURCE_EVENT_ID = "source_event_id";
+        String DESTINATION = "destination";
+        String EXPIRY = "expiry";
+        String PRIORITY = "priority";
     }
 }

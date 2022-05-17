@@ -809,6 +809,92 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    public void testResetAllAdSelectionConfigRemoteOverridesDoesNotDeleteWithIncorrectPackageName()
+            throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+        String incorrectPackageName = "com.google.ppapi.test.incorrect";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(incorrectPackageName)
+                                .build());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
+
+        AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig adSelectionConfig2 =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder().setSeller("seller_2").build();
+        AdSelectionConfig adSelectionConfig3 =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder().setSeller("seller_3").build();
+
+        String decisionLogicJs = "function test() { return \"hello world\"; }";
+
+        String adSelectionConfigId1 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
+        String adSelectionConfigId2 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig2);
+        String adSelectionConfigId3 =
+                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig3);
+
+        DBAdSelectionOverride dbAdSelectionOverride1 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId1)
+                        .setAppPackageName(myAppPackageName)
+                        .setDecisionLogicJS(decisionLogicJs)
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride2 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId2)
+                        .setAppPackageName(myAppPackageName)
+                        .setDecisionLogicJS(decisionLogicJs)
+                        .build();
+
+        DBAdSelectionOverride dbAdSelectionOverride3 =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(adSelectionConfigId3)
+                        .setAppPackageName(myAppPackageName)
+                        .setDecisionLogicJS(decisionLogicJs)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride3);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, myAppPackageName));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, myAppPackageName));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, myAppPackageName));
+
+        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+
+        assertTrue(callback.mIsSuccess);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId1, myAppPackageName));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId2, myAppPackageName));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        adSelectionConfigId3, myAppPackageName));
+    }
+
+    @Test
     public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
         String myAppPackageName = "com.google.ppapi.test";
 

@@ -155,7 +155,7 @@ public class TopicsDao {
                         TopicsTables.AppClassificationTopicsContract.MODEL_VERSION));
                 String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
                         TopicsTables.AppClassificationTopicsContract.TOPIC));
-                Topic topic = new Topic(topicString, taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(topicString, taxonomyVersion, modelVersion);
 
                 List<Topic> list = appTopicsMap.getOrDefault(app, new ArrayList<>());
                 list.add(topic);
@@ -610,7 +610,7 @@ public class TopicsDao {
                     topicsMap.put(cursorEpochId, new HashMap<>());
                 }
 
-                Topic topic = new Topic(topicString, taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(topicString, taxonomyVersion, modelVersion);
                 topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
