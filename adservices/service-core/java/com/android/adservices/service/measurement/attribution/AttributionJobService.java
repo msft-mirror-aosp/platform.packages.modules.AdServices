@@ -23,6 +23,7 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.AdServicesExecutors;
@@ -41,11 +42,13 @@ public class AttributionJobService extends JobService {
 
     @Override
     public void onCreate() {
+        LogUtil.d("AttributionJobService: onCreate");
         super.onCreate();
     }
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        LogUtil.d("AttributionJobService: onStartJob");
         sBackgroundExecutor.execute(() -> {
             boolean success =
                     new AttributionJobHandler(

@@ -41,9 +41,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
@@ -323,7 +325,8 @@ public class MeasurementDaoTest {
             assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
             assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
-            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(), trigger.getTriggerData());
+            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
+                    trigger.getEventTriggerData());
             assertEquals(ValidTriggerParams.DEDUP_KEY, trigger.getDedupKey());
             assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
         }
@@ -445,7 +448,8 @@ public class MeasurementDaoTest {
             assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
             assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
-            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(), trigger.getTriggerData());
+            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
+                    trigger.getEventTriggerData());
             assertNull(trigger.getDedupKey());
             assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
         }
@@ -743,6 +747,105 @@ public class MeasurementDaoTest {
                                 sourceList.subList(0, 1), Source.Status.IGNORED)
                 ));
     }
+
+    @Test
+    public void testGetMatchingActiveSources() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        Uri reportTo = Uri.parse("https://www.example.xyz");
+        Uri attributionDestination = Uri.parse("android-app://com.example.abc");
+        Source s1 = new Source.Builder().setId("1").setEventTime(10).setExpiryTime(20).build();
+        Source s2 = new Source.Builder().setId("2").setEventTime(10).setExpiryTime(50).build();
+        Source s3 = new Source.Builder().setId("3").setEventTime(20).setExpiryTime(50).build();
+        Source s4 = new Source.Builder().setId("4").setEventTime(30).setExpiryTime(50).build();
+        List<Source> sources = Arrays.asList(s1, s2, s3, s4);
+        sources.forEach(source -> {
+            ContentValues values = new ContentValues();
+            values.put(MeasurementTables.SourceContract.ID, source.getId());
+            values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
+            values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
+            values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+            values.put(MeasurementTables.SourceContract.REPORT_TO, reportTo.toString());
+            values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
+                    attributionDestination.toString());
+            db.insert(MeasurementTables.SourceContract.TABLE, null, values);
+        });
+
+        Function<Trigger, List<Source>> runFunc = trigger -> {
+            List<Source> result = DatastoreManagerFactory.getDatastoreManager(sContext)
+                    .runInTransactionWithResult(
+                            measurementDao -> measurementDao.getMatchingActiveSources(trigger)
+                    ).orElseThrow();
+            result.sort(Comparator.comparing(Source::getId));
+            return result;
+        };
+
+        // Trigger Time > s1's eventTime and < s1's expiryTime
+        // Trigger Time > s2's eventTime and < s2's expiryTime
+        // Trigger Time < s3's eventTime
+        // Trigger Time < s4's eventTime
+        // Expected: Match with s1 and s2
+        Trigger trigger1MatchSource1And2 = new Trigger.Builder()
+                .setTriggerTime(12)
+                .setReportTo(reportTo)
+                .setAttributionDestination(attributionDestination)
+                .build();
+        List<Source> result1 = runFunc.apply(trigger1MatchSource1And2);
+        Assert.assertEquals(2, result1.size());
+        Assert.assertEquals(s1.getId() , result1.get(0).getId());
+        Assert.assertEquals(s2.getId() , result1.get(1).getId());
+
+
+        // Trigger Time > s1's eventTime and = s1's expiryTime
+        // Trigger Time > s2's eventTime and < s2's expiryTime
+        // Trigger Time = s3's eventTime
+        // Trigger Time < s4's eventTime
+        // Expected: Match with s1 and s2
+        Trigger trigger2MatchSource1And2 = new Trigger.Builder()
+                .setTriggerTime(20)
+                .setReportTo(reportTo)
+                .setAttributionDestination(attributionDestination)
+                .build();
+
+        List<Source> result2 = runFunc.apply(trigger2MatchSource1And2);
+        Assert.assertEquals(2, result2.size());
+        Assert.assertEquals(s1.getId() , result2.get(0).getId());
+        Assert.assertEquals(s2.getId() , result2.get(1).getId());
+
+        // Trigger Time > s1's expiryTime
+        // Trigger Time > s2's eventTime and < s2's expiryTime
+        // Trigger Time > s3's eventTime and < s3's expiryTime
+        // Trigger Time < s4's eventTime
+        // Expected: Match with s2 and s3
+        Trigger trigger3MatchSource2And3 = new Trigger.Builder()
+                .setTriggerTime(21)
+                .setReportTo(reportTo)
+                .setAttributionDestination(attributionDestination)
+                .build();
+
+        List<Source> result3 = runFunc.apply(trigger3MatchSource2And3);
+        Assert.assertEquals(2, result3.size());
+        Assert.assertEquals(s2.getId() , result3.get(0).getId());
+        Assert.assertEquals(s3.getId() , result3.get(1).getId());
+
+        // Trigger Time > s1's expiryTime
+        // Trigger Time > s2's eventTime and < s2's expiryTime
+        // Trigger Time > s3's eventTime and < s3's expiryTime
+        // Trigger Time > s4's eventTime and < s4's expiryTime
+        // Expected: Match with s2, s3 and s4
+        Trigger trigger4MatchSource1And2And3 = new Trigger.Builder()
+                .setTriggerTime(31)
+                .setReportTo(reportTo)
+                .setAttributionDestination(attributionDestination)
+                .build();
+
+        List<Source> result4 = runFunc.apply(trigger4MatchSource1And2And3);
+        Assert.assertEquals(3, result4.size());
+        Assert.assertEquals(s2.getId() , result4.get(0).getId());
+        Assert.assertEquals(s3.getId() , result4.get(1).getId());
+        Assert.assertEquals(s4.getId() , result4.get(2).getId());
+    }
+
 
     private void setupSourceAndTriggerData() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();

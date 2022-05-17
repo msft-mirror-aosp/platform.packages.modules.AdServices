@@ -33,7 +33,6 @@ interface AdBidGenerator {
      * remarketing ads and pick a winner from each custom audience with the best bid.
      *
      * @param customAudience provides the ads and related information to run filtering and bidding.
-     * @param buyerDecisionLogicJs is the fetched buyer-side provided javascript.
      * @param adSelectionSignals includes any information the SSP would provide during for bidding.
      * @param buyerSignals contains any information the SDP would provide to the bidding stage.
      * @param contextualSignals Contextual information about the App where the Ad is being shown, Ad
@@ -45,7 +44,6 @@ interface AdBidGenerator {
     @Nullable
     FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
-            @NonNull String buyerDecisionLogicJs,
             @NonNull String adSelectionSignals,
             @NonNull String buyerSignals,
             @NonNull String contextualSignals);

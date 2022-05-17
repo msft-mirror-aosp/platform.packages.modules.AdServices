@@ -80,9 +80,11 @@ public class EventReportingJobHandler {
      * @return always return true to signal to JobScheduler that the task is done.
      */
     synchronized boolean performAllPendingReportsForGivenApp(Uri appName) {
+        LogUtil.d("EventReportingJobHandler: performAllPendingReportsForGivenApp");
         Optional<List<String>> pendingEventReportsForGivenApp = mDatastoreManager
                 .runInTransactionWithResult((dao) ->
                         dao.getPendingEventReportIdsForGivenApp(appName));
+
         if (!pendingEventReportsForGivenApp.isPresent()) {
             // Failure during event report retrieval
             return true;
