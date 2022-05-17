@@ -19,25 +19,25 @@ package com.android.adservices.service.stats;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * AdServicesLogger that log stats to WestWorld
+ * AdServicesLogger that log stats to StatsD
  */
 @ThreadSafe
-public class WestWorldAdServicesLogger implements AdServicesLogger {
-    private static volatile WestWorldAdServicesLogger sWestWorldAdServicesLogger;
+public class StatsdAdServicesLogger implements AdServicesLogger {
+    private static volatile StatsdAdServicesLogger sStatsdAdServicesLogger;
 
-    private WestWorldAdServicesLogger() {
+    private StatsdAdServicesLogger() {
     }
 
     /** Returns an instance of WestWorldAdServicesLogger. */
-    public static WestWorldAdServicesLogger getInstance() {
-        if (sWestWorldAdServicesLogger == null) {
-            synchronized (WestWorldAdServicesLogger.class) {
-                if (sWestWorldAdServicesLogger == null) {
-                    sWestWorldAdServicesLogger = new WestWorldAdServicesLogger();
+    public static StatsdAdServicesLogger getInstance() {
+        if (sStatsdAdServicesLogger == null) {
+            synchronized (StatsdAdServicesLogger.class) {
+                if (sStatsdAdServicesLogger == null) {
+                    sStatsdAdServicesLogger = new StatsdAdServicesLogger();
                 }
             }
         }
-        return sWestWorldAdServicesLogger;
+        return sStatsdAdServicesLogger;
     }
     /**
      * log method for measurement reporting.

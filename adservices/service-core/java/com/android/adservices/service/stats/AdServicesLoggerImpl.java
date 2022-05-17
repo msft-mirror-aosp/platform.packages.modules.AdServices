@@ -42,11 +42,11 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
-        WestWorldAdServicesLogger.getInstance().logMeasurementReports(measurementReportsStats);
+        StatsdAdServicesLogger.getInstance().logMeasurementReports(measurementReportsStats);
     }
 
     @Override
     public void logApiCallStats(ApiCallStats apiCallStats) {
-        WestWorldAdServicesLogger.getInstance().logApiCallStats(apiCallStats);
+        StatsdAdServicesLogger.getInstance().logApiCallStats(apiCallStats);
     }
 }

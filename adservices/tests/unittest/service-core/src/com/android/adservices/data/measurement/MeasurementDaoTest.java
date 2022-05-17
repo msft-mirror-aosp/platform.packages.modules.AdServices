@@ -325,7 +325,8 @@ public class MeasurementDaoTest {
             assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
             assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
-            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(), trigger.getTriggerData());
+            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
+                    trigger.getEventTriggerData());
             assertEquals(ValidTriggerParams.DEDUP_KEY, trigger.getDedupKey());
             assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
         }
@@ -447,7 +448,8 @@ public class MeasurementDaoTest {
             assertEquals(ValidTriggerParams.sReportTo, trigger.getReportTo());
             assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
-            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(), trigger.getTriggerData());
+            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
+                    trigger.getEventTriggerData());
             assertNull(trigger.getDedupKey());
             assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
         }
