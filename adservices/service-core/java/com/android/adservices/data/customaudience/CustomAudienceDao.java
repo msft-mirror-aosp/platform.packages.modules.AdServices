@@ -25,10 +25,12 @@ import androidx.room.Query;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.List;
+
 /**
  * Dao interface to access Custom Audience storage.
  *
- * Annotations will generate Room based SQLite Dao impl.
+ * <p>Annotations will generate Room based SQLite Dao impl.
  */
 @Dao
 public interface CustomAudienceDao {
@@ -41,6 +43,28 @@ public interface CustomAudienceDao {
     void insertOrOverrideCustomAudience(@NonNull DBCustomAudience customAudience);
 
     /**
+     * Add a custom audience override into the table custom_audience_overrides
+     *
+     * @param customAudienceOverride is the CustomAudienceOverride to add to table
+     *     custom_audience_overrides. If a {@link DBCustomAudienceOverride} object with the primary
+     *     key already exists, this will replace the existing object.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void persistCustomAudienceOverride(DBCustomAudienceOverride customAudienceOverride);
+
+    /**
+     * Checks if there is a row in the custom audience override data with the unique key combination
+     * of owner, buyer, and name
+     *
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
+                    + " :buyer AND name = :name LIMIT 1)")
+    boolean doesCustomAudienceOverrideExist(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+
+    /**
      * Get custom audience by its unique key.
      *
      * @return custom audience result if exists.
@@ -48,13 +72,61 @@ public interface CustomAudienceDao {
     @Query("SELECT * FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")
     @Nullable
     @VisibleForTesting
-    DBCustomAudience getCustomAudienceByPrimaryKey(@NonNull String owner, @NonNull String buyer,
-            @NonNull String name);
+    DBCustomAudience getCustomAudienceByPrimaryKey(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name);
 
     /**
-     * Delete the custom audience given owner, buyer, and name.
+     * Get custom audience JS override by its unique key.
+     *
+     * @return custom audience override result if exists.
      */
+    @Query(
+            "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
+                    + " :buyer AND name = :name")
+    @Nullable
+    @VisibleForTesting
+    String getBiddingLogicUrlOverride(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+
+    /**
+     * Get trusted bidding data override by its unique key.
+     *
+     * @return custom audience override result if exists.
+     */
+    @Query(
+            "SELECT trusted_bidding_data FROM custom_audience_overrides WHERE owner = :owner AND"
+                    + " buyer = :buyer AND name = :name")
+    @Nullable
+    @VisibleForTesting
+    String getTrustedBiddingDataOverride(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+
+    /** Delete the custom audience given owner, buyer, and name. */
     @Query("DELETE FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")
-    void deleteCustomAudienceByPrimaryKey(@NonNull String owner, @NonNull String buyer,
-            @NonNull String name);
+    void deleteCustomAudienceByPrimaryKey(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+
+    /** Clean up selected custom audience override data by its primary key */
+    @Query(
+            "DELETE FROM custom_audience_overrides WHERE owner = :owner AND buyer = :buyer AND name"
+                    + " = :name AND app_package_name = :appPackageName")
+    void removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String appPackageName);
+
+    /** Clean up all custom audience override data */
+    @Query("DELETE FROM custom_audience_overrides WHERE app_package_name = :appPackageName")
+    void removeAllCustomAudienceOverrides(@NonNull String appPackageName);
+
+    /**
+     * Fetch all the Custom Audience corresponding to the buyers
+     *
+     * @param buyers associated with the Custom Audience
+     * @return All the Custom Audience that represent given buyers
+     */
+    @Query("SELECT * FROM custom_audience where buyer in (:buyers)")
+    @Nullable
+    List<DBCustomAudience> getCustomAudienceByBuyers(List<String> buyers);
 }

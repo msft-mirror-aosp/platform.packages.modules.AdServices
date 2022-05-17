@@ -49,6 +49,7 @@ public final class ReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        LogUtil.d("ReportingJobService: onStartJob: ");
         sBackgroundExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
@@ -61,6 +62,8 @@ public final class ReportingJobService extends JobService {
         });
 
         String appName = FlagsFactory.getFlags().getMeasurementAppName();
+        LogUtil.d("ReportingJobService: onStartJob: appName=" + appName);
+
         if (appName != null && !appName.equals("")) {
             try {
                 PackageInfo packageInfo =
@@ -68,6 +71,7 @@ public final class ReportingJobService extends JobService {
                                 appName, 0);
                 boolean isTestOnly =
                         (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
+                LogUtil.d("ReportingJobService: onStartJob: isTestOnly=" + isTestOnly);
                 if (isTestOnly) {
                     sBackgroundExecutor.execute(() -> {
                         boolean success = new EventReportingJobHandler(
@@ -80,17 +84,16 @@ public final class ReportingJobService extends JobService {
                 }
             } catch (Exception e) {
                 LogUtil.e(
-                        "Perform all pending reports for app %s has exception", appName, e);
+                        "Perform all pending reports for app %s has exception %s", appName, e);
             }
         }
-        LogUtil.d("ReportingJobService.onStartJob");
-        return false;
+        return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("ReportingJobService.onStopJob");
-        return false;
+        LogUtil.d("ReportingJobService: onStopJob");
+        return true;
     }
 
     /**

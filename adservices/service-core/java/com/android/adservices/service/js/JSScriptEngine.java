@@ -19,21 +19,22 @@ package com.android.adservices.service.js;
 import android.annotation.NonNull;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+
+import androidx.concurrent.futures.CallbackToFutureAdapter;
 
 import com.android.adservices.LogUtil;
-import com.android.internal.annotations.GuardedBy;
+import com.android.adservices.service.exception.JSExecutionException;
 
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import org.chromium.android_webview.js_sandbox.client.AwJsIsolate;
+import org.chromium.android_webview.js_sandbox.client.AwJsSandbox;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -45,53 +46,33 @@ import java.util.stream.Collectors;
  * have every thread using its own instance.
  */
 public class JSScriptEngine {
-    private static final String TAG = "JSScriptEngine";
     public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
-    // This needs to be the same for all the instance of the JSScriptEngine otherwise
-    // the second webview instance initialization happening on a different thread would cause
-    // the app to crash.
-    @GuardedBy("JSScriptEngine.class")
-    private static HandlerThread sWebViewThread;
 
-    @GuardedBy("JSScriptEngine.class")
-    private static Handler sWebViewHandler;
+    private static final String TAG = JSScriptEngine.class.getSimpleName();
 
-    private final Semaphore mJsExecutionLock = new Semaphore(1);
-    // Keeping this instance to enable to destroy the last running instance of the WebView, if any.
-    private final AtomicReference<WebView> mWebView = new AtomicReference<>();
-    private final WebViewClient mWebViewClient;
+    private final Context mContext;
+    private final FluentFuture<AwJsSandbox> mFutureSandbox;
 
     @SuppressLint("SetJavaScriptEnabled")
     public JSScriptEngine(@NonNull Context context) {
-        LogUtil.d("Creating JSScriptEngine");
-        mWebViewClient =
-                new WebViewClient() {
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        LogUtil.v(TAG, "WebView status cleaned up. Releasing lock on JS execution");
-                        mJsExecutionLock.release();
-                    }
-                };
-        runOnWebViewThread(
-                () -> {
-                    LogUtil.d(
-                            "Creating new WebView instance in thread %s",
-                            Thread.currentThread().getName());
-                    WebView wv = new WebView(context);
-                    wv.setWebViewClient(mWebViewClient);
-                    wv.getSettings().setJavaScriptEnabled(true);
-                    mWebView.set(wv);
-                });
-    }
+        this.mContext = context;
 
-    @NonNull
-    private static synchronized Handler getWebViewHandler() {
-        if (sWebViewHandler == null) {
-            sWebViewThread = new HandlerThread("WebViewExecutionThread");
-            sWebViewThread.start();
-            sWebViewHandler = new Handler(sWebViewThread.getLooper());
-        }
-        return sWebViewHandler;
+        mFutureSandbox =
+                FluentFuture.from(
+                        CallbackToFutureAdapter.getFuture(
+                                completer -> {
+                                    AwJsSandbox.newConnectedInstance(
+                                            mContext,
+                                            awJsSandbox -> {
+                                                completer.set(awJsSandbox);
+                                            });
+                                    LogUtil.d("JSScriptEngine created.");
+
+                                    // This value is used only for debug purposes: it will be used
+                                    // in
+                                    // toString() of returned future or error cases.
+                                    return "JSSscriptEngine constructor";
+                                }));
     }
 
     /**
@@ -116,61 +97,52 @@ public class JSScriptEngine {
      *     {@code entryFunctionName}'s invocation
      */
     @NonNull
+    @SuppressLint("SetJavaScriptEnabled")
     public ListenableFuture<String> evaluate(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
-        SettableFuture<String> result = SettableFuture.create();
-        try {
-            LogUtil.v("Trying to acquire lock on JS execution");
-            // Don't acquire the lock in the UI thread since that thread is used to run
-            // the evalateJavascript callback and it would deadlock if any other request is
-            // blocking it.
-            mJsExecutionLock.acquire();
-            runOnWebViewThread(
-                    () -> evaluateOnWebViewThread(jsScript, args, entryFunctionName, result));
-        } catch (InterruptedException e) {
-            result.setException(new IllegalStateException("Unable to acquire lock"));
-        }
-        return result;
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private void evaluateOnWebViewThread(
-            @NonNull String jsScript,
-            @NonNull List<JSScriptArgument> args,
-            @NonNull String entryFunctionName,
-            @NonNull SettableFuture<String> result) {
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
-        Objects.requireNonNull(result);
 
-        // Calling resetWebViewStatus before evaluation didn't work, not sure why.
-        // Moved it after evaluation
         LogUtil.d(TAG, "Evaluating JS script on thread %s", Thread.currentThread().getName());
         String entryPointCall = callEntryPoint(args, entryFunctionName);
 
         String fullScript = jsScript + "\n" + entryPointCall;
         LogUtil.v("Calling WebView for script %s", fullScript);
-        mWebView.get()
-                .evaluateJavascript(
-                        fullScript,
-                        jsResult -> {
-                            LogUtil.v("Done Evaluating JS script result is %s", jsResult);
-                            LogUtil.v("Triggering reset of WebView status");
-                            // The release of the lock is done in the WebViewClient
-                            // The call to mWebView.load(about:blank) is not blocking so the
-                            // unlock of the semaphore needs to be done only when WebView
-                            // confirms to our client that the load operation completed.
-                            mWebView.get().loadUrl("about:blank");
-                            result.set(jsResult);
-                        });
+
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mFutureSandbox.addCallback(
+                            new FutureCallback<AwJsSandbox>() {
+                                @Override
+                                public void onSuccess(AwJsSandbox jsSandbox) {
+                                    AwJsIsolate jsIsolate = jsSandbox.createIsolate();
+                                    ExecutionCallback callback =
+                                            new ExecutionCallback(jsIsolate, completer);
+                                    jsIsolate.evaluateJavascript(fullScript, callback);
+                                }
+
+                                @Override
+                                public void onFailure(Throwable t) {
+                                    String error = "Failed executing JS script";
+                                    completer.setException(new JSExecutionException(error, t));
+                                }
+                            },
+                            MoreExecutors.directExecutor()); // This just starts the JS execution in
+                    // another thread; it's a lightweight task.
+
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "AwJsSandbox.addCallback operation";
+                });
     }
 
     /**
      * @return The JS code for the definition an anonymous function containing the declaration of
-     *     the value of {@code args} and the invocation of the given {@code entryFunctionName}.
+     *     the value of {@code args} and the invocation of the given {@code entryFunctionName}. Ex.
+     *     (function() { const name = "Stefano"; return helloPerson(name); })();
      */
     @NonNull
     private String callEntryPoint(
@@ -188,7 +160,7 @@ public class JSScriptEngine {
         // Call entryFunctionName with the constants just declared as parameters
         resultBuilder.append(
                 String.format(
-                        "return %s(%s);\n",
+                        "return JSON.stringify(%s(%s));\n",
                         entryFunctionName,
                         args.stream()
                                 .map(JSScriptArgument::name)
@@ -198,12 +170,26 @@ public class JSScriptEngine {
         return resultBuilder.toString();
     }
 
-    /**
-     * Interaction with the WebView object need to happen on the same thread used to initialize the
-     * WebView otherwise WebView will cause the process to crash. This thread needs to be a looper
-     * thread with its own handler.
-     */
-    private void runOnWebViewThread(@NonNull Runnable task) {
-        getWebViewHandler().post(task);
+    private static class ExecutionCallback implements AwJsIsolate.ExecutionCallback {
+        private AwJsIsolate mJsIsolate;
+        private CallbackToFutureAdapter.Completer<String> mFuture;
+
+        ExecutionCallback(AwJsIsolate jsIsolate, CallbackToFutureAdapter.Completer<String> future) {
+            this.mJsIsolate = jsIsolate;
+            this.mFuture = future;
+        }
+
+        @Override
+        public void reportResult(String result) {
+            // TODO: trim off these quotes, just keeping it so UTs don't fail.
+            mFuture.set(result);
+            mJsIsolate.close();
+        }
+
+        @Override
+        public void reportError(String error) {
+            mFuture.setException(new JSExecutionException(error));
+            mJsIsolate.close();
+        }
     }
 }

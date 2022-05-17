@@ -79,7 +79,8 @@ public interface IMeasurementDao {
     void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
             @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType) throws DatastoreException;
+            @NonNull Source.SourceType sourceType,
+            @Source.AttributionMode int attributionMode) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.

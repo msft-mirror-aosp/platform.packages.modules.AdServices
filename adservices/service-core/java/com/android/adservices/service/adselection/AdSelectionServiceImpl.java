@@ -18,19 +18,19 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.devapi.AdSelectionOverrider;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -55,16 +55,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
+    @NonNull private final DevContextFilter mDevContextFilter;
 
     @VisibleForTesting
     AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdSelectionHttpClient = adSelectionHttpClient;
+        mDevContextFilter = devContextFilter;
         mExecutor = executorService;
         mContext = context;
     }
@@ -74,6 +77,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 new AdSelectionHttpClient(AdServicesExecutors.getBackgroundExecutor()),
+                DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context);
     }
@@ -81,21 +85,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @Override
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
-        // TODO(b/225988784): Offload work to thread pool
-        // TODO(b/221876756): Implement
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
 
-        try {
-            callback.onFailure(
-                    new FledgeErrorResponse.Builder()
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                            .setErrorMessage("Not Implemented!")
-                            .build());
-        } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
-            throw e.rethrowFromSystemServer();
-        }
+        AdSelectionRunner adSelectionRunner = new AdSelectionRunner(mContext);
+        adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
 
     @Override
@@ -106,9 +100,60 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(requestParams);
         Objects.requireNonNull(callback);
 
+        DevContext devContext = mDevContextFilter.createDevContext();
+
         ImpressionReporter reporter =
                 new ImpressionReporter(
-                        mContext, mExecutor, mAdSelectionEntryDao, mAdSelectionHttpClient);
+                        mContext,
+                        mExecutor,
+                        mAdSelectionEntryDao,
+                        mAdSelectionHttpClient,
+                        devContext);
         reporter.reportImpression(requestParams, callback);
+    }
+
+    @Override
+    public void overrideAdSelectionConfigRemoteInfo(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJS,
+            @NonNull AdSelectionOverrideCallback callback) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(decisionLogicJS);
+        Objects.requireNonNull(callback);
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(devContext, mAdSelectionEntryDao, mExecutor);
+
+        overrider.addOverride(adSelectionConfig, decisionLogicJS, callback);
+    }
+
+    @Override
+    public void removeAdSelectionConfigRemoteInfoOverride(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull AdSelectionOverrideCallback callback) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(callback);
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(devContext, mAdSelectionEntryDao, mExecutor);
+
+        overrider.removeOverride(adSelectionConfig, callback);
+    }
+
+    @Override
+    public void resetAllAdSelectionConfigRemoteOverrides(
+            @NonNull AdSelectionOverrideCallback callback) {
+        Objects.requireNonNull(callback);
+
+        DevContext devContext = mDevContextFilter.createDevContext();
+
+        AdSelectionOverrider overrider =
+                new AdSelectionOverrider(devContext, mAdSelectionEntryDao, mExecutor);
+
+        overrider.removeAllOverrides(callback);
     }
 }
