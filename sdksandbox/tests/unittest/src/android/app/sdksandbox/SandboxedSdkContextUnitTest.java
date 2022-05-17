@@ -49,6 +49,8 @@ public class SandboxedSdkContextUnitTest {
     private static final String TEST_STRING_VALUE = "Test String";
     private static final String TEST_ASSET_FILE = "test-asset.txt";
     private static final String TEST_ASSET_VALUE = "This is a test asset";
+    private static final String SDK_CE_DATA_DIR = "/data/misc_ce/0/sdksandbox/com.foo/sdk@123";
+    private static final String SDK_DE_DATA_DIR = "/data/misc_de/0/sdksandbox/com.foo/sdk@123";
 
     @Before
     public void setUp() throws Exception {
@@ -57,7 +59,8 @@ public class SandboxedSdkContextUnitTest {
                 RESOURCES_PACKAGE,
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
         mSandboxedSdkContext = new SandboxedSdkContext(
-                InstrumentationRegistry.getContext(), info, SDK_NAME);
+                InstrumentationRegistry.getContext(), info, SDK_NAME,
+                SDK_CE_DATA_DIR, SDK_DE_DATA_DIR);
     }
 
     @Test
@@ -78,5 +81,27 @@ public class SandboxedSdkContextUnitTest {
                 assets.open(TEST_ASSET_FILE)));
         String readAsset = reader.readLine();
         assertThat(readAsset).isEqualTo(TEST_ASSET_VALUE);
+    }
+
+    @Test
+    public void testGetDataDir_CredentialEncrypted() throws Exception {
+        assertThat(mSandboxedSdkContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
+
+        Context superClass = mSandboxedSdkContext;
+        assertThat(superClass.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
+
+        Context ceContext = mSandboxedSdkContext.createCredentialProtectedStorageContext();
+        assertThat(ceContext.isCredentialProtectedStorage()).isTrue();
+        assertThat(ceContext.getDataDir().toString()).isEqualTo(SDK_CE_DATA_DIR);
+    }
+
+    @Test
+    public void testGetDataDir_DeviceEncrypted() throws Exception {
+        Context deContext = mSandboxedSdkContext.createDeviceProtectedStorageContext();
+        assertThat(deContext.isDeviceProtectedStorage()).isTrue();
+        assertThat(deContext.getDataDir().toString()).isEqualTo(SDK_DE_DATA_DIR);
+
+        Context superClass = deContext;
+        assertThat(superClass.getDataDir().toString()).isEqualTo(SDK_DE_DATA_DIR);
     }
 }

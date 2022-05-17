@@ -18,6 +18,7 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SystemApi;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
@@ -25,6 +26,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.os.Bundle;
 
+import java.io.File;
 import java.util.concurrent.Executor;
 
 /**
@@ -39,6 +41,9 @@ import java.util.concurrent.Executor;
  * passed to the {@link SandboxedSdkProvider#initSdk(SandboxedSdkContext,
  * Bundle, Executor, SandboxedSdkProvider.InitSdkCallback)} after SDK is loaded.
  *
+ * <p> Each sdk will get their own private storage directory and the file storage API on this
+ * object will utilize those area.
+ *
  * <p>Note: All APIs defined in this class are not stable and subject to change.
  */
 public final class SandboxedSdkContext extends ContextWrapper {
@@ -46,12 +51,16 @@ public final class SandboxedSdkContext extends ContextWrapper {
     private final Resources mResources;
     private final AssetManager mAssets;
     private final String mSdkName;
+    private final ApplicationInfo mSdkProviderInfo;
+    @Nullable private final File mCeDataDir;
+    @Nullable private final File mDeDataDir;
 
     /** @hide */
     public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info,
-            @NonNull String sdkName) {
+            @NonNull String sdkName, @Nullable String sdkCeDataDir, @Nullable String sdkDeDataDir) {
         super(baseContext);
         mSdkName = sdkName;
+        mSdkProviderInfo = info;
         Resources resources = null;
         try {
             resources = baseContext.getPackageManager().getResourcesForApplication(info);
@@ -65,6 +74,41 @@ public final class SandboxedSdkContext extends ContextWrapper {
             mResources = null;
             mAssets = null;
         }
+
+        mCeDataDir = (sdkCeDataDir != null) ? new File(sdkCeDataDir) : null;
+        mDeDataDir = (sdkDeDataDir != null) ? new File(sdkDeDataDir) : null;
+    }
+
+    /**
+     * Return a new Context object for the current SandboxedSdkContext but whose storage
+     * APIs are backed by sdk specific credential-protected storage.
+     *
+     * @see Context#isCredentialProtectedStorage()
+     * @hide
+     */
+    @Override
+    @NonNull
+    @SystemApi
+    public Context createCredentialProtectedStorageContext() {
+        Context newBaseContext = getBaseContext().createCredentialProtectedStorageContext();
+        return new SandboxedSdkContext(newBaseContext, mSdkProviderInfo, mSdkName,
+                (mCeDataDir != null) ? mCeDataDir.toString() : null,
+                (mDeDataDir != null) ? mDeDataDir.toString() : null);
+    }
+
+    /**
+     * Return a new Context object for the current SandboxedSdkContext but whose storage
+     * APIs are backed by sdk specific device-protected storage.
+     *
+     * @see Context#isDeviceProtectedStorage()
+     */
+    @Override
+    @NonNull
+    public Context createDeviceProtectedStorageContext() {
+        Context newBaseContext = getBaseContext().createDeviceProtectedStorageContext();
+        return new SandboxedSdkContext(newBaseContext, mSdkProviderInfo, mSdkName,
+                (mCeDataDir != null) ? mCeDataDir.toString() : null,
+                (mDeDataDir != null) ? mDeDataDir.toString() : null);
     }
 
     /**
@@ -88,5 +132,21 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Nullable
     public AssetManager getAssets() {
         return mAssets;
+    }
+
+    /** Returns sdk-specific internal storage directory. */
+    @Override
+    @Nullable
+    public File getDataDir() {
+        File res = null;
+        if (isCredentialProtectedStorage()) {
+            res = mCeDataDir;
+        } else if (isDeviceProtectedStorage()) {
+            res = mDeDataDir;
+        }
+        if (res == null) {
+            throw new RuntimeException("No data directory found for sdk: " + getSdkName());
+        }
+        return res;
     }
 }
