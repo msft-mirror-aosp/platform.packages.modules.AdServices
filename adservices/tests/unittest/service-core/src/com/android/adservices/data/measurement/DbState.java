@@ -158,6 +158,8 @@ public class DbState {
                 .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow",
                         0))
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
+                .setAttributionMode(sJSON.optInt("attribution_mode",
+                        Source.AttributionMode.TRUTHFULLY))
                 .build();
     }
 
