@@ -48,6 +48,8 @@ public final class MeasurementTables {
         String INSTALL_ATTRIBUTION_WINDOW = "install_attribution_window";
         String INSTALL_COOLDOWN_WINDOW = "install_cooldown_window";
         String IS_INSTALL_ATTRIBUTED = "is_install_attributed";
+        String FILTER_DATA = "filter_data";
+        String AGGREGATE_SOURCE = "aggregate_source";
     }
 
     /**
@@ -59,11 +61,13 @@ public final class MeasurementTables {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String REPORT_TO = "report_to";
         String TRIGGER_TIME = "trigger_time";
-        String TRIGGER_DATA = "trigger_data";
+        String EVENT_TRIGGER_DATA = "event_trigger_data";
         String DEDUP_KEY = "deduplication_key";
         String PRIORITY = "priority";
         String STATUS = "status";
         String REGISTRANT = "registrant";
+        String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
+        String AGGREGATE_VALUES = "aggregate_values";
     }
 
     interface AdTechUrlsContract {
@@ -123,7 +127,9 @@ public final class MeasurementTables {
                     + SourceContract.ATTRIBUTION_MODE + " INTEGER, "
                     + SourceContract.INSTALL_ATTRIBUTION_WINDOW + " INTEGER, "
                     + SourceContract.INSTALL_COOLDOWN_WINDOW + " INTEGER, "
-                    + SourceContract.IS_INSTALL_ATTRIBUTED + " INTEGER "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED + " INTEGER, "
+                    + SourceContract.FILTER_DATA + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_TRIGGER =
@@ -134,11 +140,13 @@ public final class MeasurementTables {
                     + TriggerContract.ATTRIBUTION_DESTINATION + " TEXT, "
                     + TriggerContract.REPORT_TO + " TEXT, "
                     + TriggerContract.TRIGGER_TIME + " INTEGER, "
-                    + TriggerContract.TRIGGER_DATA + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGER_DATA + " INTEGER, "
                     + TriggerContract.PRIORITY + " INTEGER, "
                     + TriggerContract.DEDUP_KEY + " TEXT, "
                     + TriggerContract.STATUS + " INTEGER, "
-                    + TriggerContract.REGISTRANT + " TEXT "
+                    + TriggerContract.REGISTRANT + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_ADTECH_URLS =

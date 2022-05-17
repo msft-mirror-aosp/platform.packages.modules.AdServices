@@ -58,7 +58,7 @@ public abstract class DBCustomAudienceOverride {
     public abstract String getName();
 
     /**
-     * @return App package name, app package name associated with this CustomAudienceId
+     * @return App package name, app package name associated with the caller
      */
     @CopyAnnotations
     @ColumnInfo(name = "app_package_name")
@@ -69,9 +69,9 @@ public abstract class DBCustomAudienceOverride {
      * @return The override javascript result
      */
     @CopyAnnotations
-    @ColumnInfo(name = "decision_logic")
+    @ColumnInfo(name = "bidding_logic")
     @NonNull
-    public abstract String getDecisionLogicJS();
+    public abstract String getBiddingLogicJS();
 
     /**
      * @return The override trusted bidding data result
@@ -89,14 +89,14 @@ public abstract class DBCustomAudienceOverride {
             String buyer,
             String name,
             String appPackageName,
-            String decisionLogicJS,
+            String biddingLogicJS,
             String trustedBiddingData) {
         return builder()
                 .setOwner(owner)
                 .setBuyer(buyer)
                 .setName(name)
                 .setAppPackageName(appPackageName)
-                .setDecisionLogicJS(decisionLogicJS)
+                .setBiddingLogicJS(biddingLogicJS)
                 .setTrustedBiddingData(trustedBiddingData)
                 .build();
     }
@@ -104,24 +104,35 @@ public abstract class DBCustomAudienceOverride {
     /**
      * @return generic builder
      */
-    static DBCustomAudienceOverride.Builder builder() {
+    public static DBCustomAudienceOverride.Builder builder() {
         return new AutoValue_DBCustomAudienceOverride.Builder();
     }
 
     @AutoValue.Builder
-    abstract static class Builder {
-        abstract DBCustomAudienceOverride.Builder setOwner(String owner);
+    public abstract static class Builder {
+        /** Sets the owner of the {@link DBCustomAudienceOverride} entry. */
+        public abstract DBCustomAudienceOverride.Builder setOwner(String owner);
 
-        abstract DBCustomAudienceOverride.Builder setBuyer(String buyer);
+        /** Sets the buyer of the {@link DBCustomAudienceOverride} entry. */
+        public abstract DBCustomAudienceOverride.Builder setBuyer(String buyer);
 
-        abstract DBCustomAudienceOverride.Builder setName(String name);
+        /** Sets the name of the {@link DBCustomAudienceOverride} entry. */
+        public abstract DBCustomAudienceOverride.Builder setName(String name);
 
-        abstract DBCustomAudienceOverride.Builder setAppPackageName(String appPackageName);
+        /** Sets the appPackageName of the {@link DBCustomAudienceOverride} entry. */
+        public abstract DBCustomAudienceOverride.Builder setAppPackageName(String appPackageName);
 
-        abstract DBCustomAudienceOverride.Builder setDecisionLogicJS(String decisionLogicJs);
+        /** Sets the biddingLogicJS of the {@link DBCustomAudienceOverride} entry. */
+        public abstract DBCustomAudienceOverride.Builder setBiddingLogicJS(String biddingLogicJS);
 
-        abstract DBCustomAudienceOverride.Builder setTrustedBiddingData(String trustedBiddingData);
+        /** Sets the trustedBiddingData of the {@link DBCustomAudienceOverride} entry. */
+        public abstract DBCustomAudienceOverride.Builder setTrustedBiddingData(
+                String trustedBiddingData);
 
-        abstract DBCustomAudienceOverride build();
+        /**
+         * @return an instance of {@link DBCustomAudienceOverride} built with the information in
+         *     this builder.
+         */
+        public abstract DBCustomAudienceOverride build();
     }
 }

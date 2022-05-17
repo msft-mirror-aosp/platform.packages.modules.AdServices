@@ -74,13 +74,13 @@ public class AdSelectionOverrider {
                         new FutureCallback<Void>() {
                             @Override
                             public void onSuccess(Void result) {
-                                LogUtil.d("Ad dev override succeeded!");
+                                LogUtil.d("Add dev override succeeded!");
                                 invokeSuccess(callback);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Ad dev override failed!");
+                                LogUtil.e(t, "Add dev override failed!");
                                 notifyFailureToCaller(callback, t);
                             }
                         },
@@ -102,13 +102,13 @@ public class AdSelectionOverrider {
                         new FutureCallback<Void>() {
                             @Override
                             public void onSuccess(Void result) {
-                                LogUtil.d("Removing Ad dev override succeeded!");
+                                LogUtil.d("Removing dev override succeeded!");
                                 invokeSuccess(callback);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Removing Ad dev override failed!");
+                                LogUtil.e(t, "Removing dev override failed!");
                                 notifyFailureToCaller(callback, t);
                             }
                         },
@@ -116,7 +116,7 @@ public class AdSelectionOverrider {
     }
 
     /**
-     * Removes all decision logic override matching the {@code appPackageName}
+     * Removes all ad selection overrides matching the {@code appPackageName}
      *
      * @param callback callback function to be called in case of success or failure
      */
@@ -127,13 +127,13 @@ public class AdSelectionOverrider {
                         new FutureCallback<Void>() {
                             @Override
                             public void onSuccess(Void result) {
-                                LogUtil.d("Removing all Ad dev override succeeded!");
+                                LogUtil.d("Removing all dev overrides succeeded!");
                                 invokeSuccess(callback);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Removing all Ad dev overrides failed!");
+                                LogUtil.e(t, "Removing all dev overrides failed!");
                                 notifyFailureToCaller(callback, t);
                             }
                         },
