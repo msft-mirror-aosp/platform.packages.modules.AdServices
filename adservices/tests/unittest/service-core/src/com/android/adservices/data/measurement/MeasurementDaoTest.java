@@ -26,6 +26,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
@@ -33,6 +34,9 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,6 +45,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -80,8 +85,9 @@ public class MeasurementDaoTest {
                         ValidSourceParams.EXPIRY_TIME,
                         ValidSourceParams.PRIORITY,
                         ValidSourceParams.sSourceType,
-                        ValidSourceParams.sAttributionMode
-                )
+                        ValidSourceParams.sAttributionMode,
+                        ValidSourceParams.buildAggregateSource(),
+                        ValidSourceParams.buildAggregateFilterData())
         );
 
         try (Cursor sourceCursor =
@@ -117,7 +123,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -132,7 +140,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -144,7 +154,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -159,7 +171,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -171,7 +185,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -186,7 +202,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -198,7 +216,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -213,7 +233,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -225,7 +247,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -240,7 +264,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -255,7 +281,9 @@ public class MeasurementDaoTest {
                 null,
                 ValidSourceParams.PRIORITY,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -270,7 +298,9 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 null,
                 ValidSourceParams.sSourceType,
-                ValidSourceParams.sAttributionMode);
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     @Test
@@ -285,14 +315,16 @@ public class MeasurementDaoTest {
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
                 null,
-                ValidSourceParams.sAttributionMode
-        );
+                ValidSourceParams.sAttributionMode,
+                ValidSourceParams.buildAggregateSource(),
+                ValidSourceParams.buildAggregateFilterData());
     }
 
     private void assertInvalidSourceArguments(Long sourceEventId, Uri attributionSource,
             Uri attributionDestination, Uri reportTo, Uri registrant, Long sourceEventTime,
             Long expiryTime, Long priority, Source.SourceType sourceType,
-            @Source.AttributionMode int attributionMode) {
+            @Source.AttributionMode int attributionMode, @Nullable String aggregateSource,
+            @Nullable String aggregateFilterData) {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
                     try {
                         dao.insertSource(
@@ -305,8 +337,9 @@ public class MeasurementDaoTest {
                                 expiryTime,
                                 priority,
                                 sourceType,
-                                attributionMode
-                        );
+                                attributionMode,
+                                aggregateSource,
+                                aggregateFilterData);
                         fail();
                     } catch (DatastoreException e) {
                         // Valid Exception
@@ -326,7 +359,9 @@ public class MeasurementDaoTest {
                         ValidTriggerParams.TRIGGER_TIME,
                         ValidTriggerParams.TRIGGER_DATA,
                         ValidTriggerParams.DEDUP_KEY,
-                        ValidTriggerParams.PRIORITY
+                        ValidTriggerParams.PRIORITY,
+                        ValidTriggerParams.buildAggregateTriggerData(),
+                        ValidTriggerParams.buildAggregateValues()
                 )
         );
 
@@ -359,7 +394,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
@@ -368,7 +405,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
     }
 
     @Test
@@ -380,7 +419,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
                 ValidTriggerParams.sAttributionDestination,
@@ -389,7 +430,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
     }
 
     @Test
@@ -401,7 +444,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
                 ValidTriggerParams.sAttributionDestination,
@@ -410,7 +455,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
     }
 
     @Test
@@ -422,7 +469,9 @@ public class MeasurementDaoTest {
                 null,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
     }
 
     @Test
@@ -434,7 +483,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 null,
                 ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY);
+                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
     }
 
     @Test
@@ -449,7 +500,9 @@ public class MeasurementDaoTest {
                         ValidTriggerParams.TRIGGER_TIME,
                         ValidTriggerParams.TRIGGER_DATA,
                         null,
-                        ValidTriggerParams.PRIORITY
+                        ValidTriggerParams.PRIORITY,
+                        ValidTriggerParams.buildAggregateTriggerData(),
+                        ValidTriggerParams.buildAggregateValues()
                 )
         );
 
@@ -482,11 +535,14 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
-                null);
+                null,
+                ValidTriggerParams.buildAggregateTriggerData(),
+                ValidTriggerParams.buildAggregateValues());
     }
 
     public void assertInvalidTriggerArguments(Uri attributionDestination, Uri reportTo,
-            Uri registrant, Long triggerTime, Long triggerData, Long dedupKey, Long priority) {
+            Uri registrant, Long triggerTime, Long triggerData, Long dedupKey, Long priority,
+            @Nullable String aggregateTriggerData, @Nullable String aggregateValues) {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
                     try {
                         dao.insertTrigger(
@@ -496,7 +552,9 @@ public class MeasurementDaoTest {
                                 triggerTime,
                                 triggerData,
                                 dedupKey,
-                                priority
+                                priority,
+                                aggregateTriggerData,
+                                aggregateValues
                         );
                         fail();
                     } catch (DatastoreException e) {
@@ -953,6 +1011,33 @@ public class MeasurementDaoTest {
         static final Source.SourceType sSourceType = Source.SourceType.EVENT;
         static final @Source.AttributionMode int sAttributionMode =
                 Source.AttributionMode.TRUTHFULLY;
+
+        static String buildAggregateSource() {
+            try {
+                JSONArray aggregatableSource = new JSONArray();
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id", "campaignCounts");
+                jsonObject.put("key_piece", "0x159");
+                aggregatableSource.put(jsonObject);
+                return aggregatableSource.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        static String buildAggregateFilterData() {
+            try {
+                JSONObject filterData = new JSONObject();
+                filterData.put("conversion_subdomain",
+                        new JSONArray(Collections.singletonList("electronics.megastore")));
+                filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+                return filterData.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 
     private static class ValidTriggerParams {
@@ -963,6 +1048,32 @@ public class MeasurementDaoTest {
         static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
         static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
         static final Uri sReportTo = Uri.parse("https://com.example");
+
+        static String buildAggregateTriggerData() {
+            try {
+                JSONArray triggerData = new JSONArray();
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("key_piece", "0xA80");
+                jsonObject.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+                triggerData.put(jsonObject);
+                return triggerData.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        static String buildAggregateValues() {
+            try {
+                JSONObject values = new JSONObject();
+                values.put("campaignCounts", 32768);
+                values.put("geoValue", 1664);
+                return values.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 
 }

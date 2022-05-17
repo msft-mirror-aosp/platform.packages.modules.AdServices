@@ -71,6 +71,10 @@ public class SourceFetcher {
         if (json.has(EventSourceContract.PRIORITY) && !json.isNull(EventSourceContract.PRIORITY)) {
             result.setSourcePriority(json.getLong(EventSourceContract.PRIORITY));
         }
+        // This "filter_data" field is used to generate aggregate report.
+        if (json.has("filter_data") && !json.isNull("filter_data")) {
+            result.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+        }
     }
 
     private static void setExpiry(long expiry, SourceRegistration.Builder result) {
@@ -113,8 +117,9 @@ public class SourceFetcher {
                 LogUtil.d("Expected one aggregate source!");
                 return false;
             }
-            // TODO: Handle aggregates. additionalResult will be false until then.
-            additionalResult = false;
+            // Parse in aggregate source. additionalResult will be false until then.
+            result.setAggregateSource(field.get(0));
+            additionalResult = true;
         }
         if (additionalResult) {
             addToResults.add(result.build());
