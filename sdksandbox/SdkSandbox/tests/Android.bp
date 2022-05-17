@@ -43,5 +43,8 @@ android_test {
         "androidx.test.ext.truth",
         "androidx.test.ext.junit",
     ],
-    test_suites: ["general-tests"],
+    test_suites: [
+        "general-tests",
+        "mts-adservices"
+    ],
 }
