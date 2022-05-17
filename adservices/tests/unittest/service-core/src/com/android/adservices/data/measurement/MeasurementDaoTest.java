@@ -581,10 +581,10 @@ public class MeasurementDaoTest {
 
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA1", currentTimestamp, 100, -1, false),
                 db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA2", currentTimestamp, 50, -1, false),
                 db);
         // Should select id IA1 because it has higher priority
@@ -602,10 +602,10 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
                 db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
                 db);
         // Should select id=IA2 as it is latest
@@ -624,10 +624,10 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA1", currentTimestamp, -1, 10, false),
                 db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
                 db);
         // Should select id=IA1 as it is the only valid choice.
@@ -648,10 +648,10 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA1", currentTimestamp, 10, 10, true),
                 db);
-        DatabaseE2ETest.insertToDb(
+        AbstractDbIntegrationTest.insertToDb(
                 createSourceForIATest("IA2", currentTimestamp, 10, 11, true),
                 db);
         // Should not update any sources.
@@ -670,7 +670,7 @@ public class MeasurementDaoTest {
         Objects.requireNonNull(db);
         Source source = createSourceForIATest("IA1", currentTimestamp, 10, 10, false);
         source.setInstallAttributed(true);
-        DatabaseE2ETest.insertToDb(source, db);
+        AbstractDbIntegrationTest.insertToDb(source, db);
         Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
                 measurementDao -> measurementDao.undoInstallAttribution(mInstalledPackage)));
         // Should set installAttributed = false for id=IA1
