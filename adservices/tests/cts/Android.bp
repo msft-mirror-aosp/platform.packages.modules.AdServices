@@ -37,6 +37,8 @@ android_test {
         "ctstestrunner-axt",
         "cts-wm-util",
         "framework-adservices.impl",
+        "adservices-clients",
+        "adservices-test-fixtures",
         "testng",
     ],
     sdk_version: "module_current",
