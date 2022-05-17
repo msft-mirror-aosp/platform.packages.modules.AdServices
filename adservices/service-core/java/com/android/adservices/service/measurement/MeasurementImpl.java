@@ -41,9 +41,11 @@ import com.android.adservices.service.measurement.registration.TriggerRegistrati
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -107,6 +109,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_SOURCE: {
                     ArrayList<SourceRegistration> results = new ArrayList();
                     boolean success = mSourceFetcher.fetchSource(request, results);
+                    LogUtil.d("MeasurementImpl: register: success=" + success);
                     if (success) {
                         insertSources(request, results, requestTime);
                         return IMeasurementCallback.RESULT_OK;
@@ -118,6 +121,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER: {
                     ArrayList<TriggerRegistration> results = new ArrayList();
                     boolean success = mTriggerFetcher.fetchTrigger(request, results);
+                    LogUtil.d("MeasurementImpl: register: success=" + success);
                     if (success) {
                         insertTriggers(request, results, requestTime);
                         return IMeasurementCallback.RESULT_OK;
@@ -163,21 +167,60 @@ public final class MeasurementImpl {
             ArrayList<SourceRegistration> responseBasedRegistrations,
             long sourceEventTime) {
         for (SourceRegistration registration : responseBasedRegistrations) {
-            mDatastoreManager.runInTransaction((dao) ->
-                    dao.insertSource(
-                            /* sourceEventId */ registration.getSourceEventId(),
-                            /* attributionSource */ request.getTopOriginUri(),
-                            // Only first destination to avoid AdTechs change this
-                            /* attributionDestination */ responseBasedRegistrations.get(0)
-                                    .getDestination(),
-                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
-                            /* registrant */ getRegistrant(request.getAttributionSource()),
-                            /* sourceEventTime */ sourceEventTime,
-                            /* expiryTime */ sourceEventTime
-                                    + TimeUnit.SECONDS.toMillis(registration.getExpiry()),
-                            /* priority */ registration.getSourcePriority(),
-                            /* sourceType */ getSourceType(request)));
+            Source source = new Source.Builder()
+                    .setEventId(registration.getSourceEventId())
+                    .setAttributionSource(request.getTopOriginUri())
+                    // Only first destination to avoid AdTechs change this
+                    .setAttributionDestination(responseBasedRegistrations.get(0)
+                            .getDestination())
+                    .setReportTo(getBaseUri(registration.getReportingOrigin()))
+                    .setRegistrant(getRegistrant(request.getAttributionSource()))
+                    .setSourceType(getSourceType(request))
+                    .setPriority(registration.getSourcePriority())
+                    .setEventTime(sourceEventTime)
+                    .setExpiryTime(sourceEventTime
+                            + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
+                    // Setting as TRUTHFULLY as default value for tests.
+                    // This will be overwritten by getSourceEventReports.
+                    .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                    .build();
+            List<EventReport> eventReports = getSourceEventReports(source);
+            mDatastoreManager.runInTransaction((dao) -> {
+                dao.insertSource(
+                        /* sourceEventId */ source.getEventId(),
+                        /* attributionSource */ source.getAttributionSource(),
+                        /* attributionDestination */ source.getAttributionDestination(),
+                        /* reportTo */ source.getReportTo(),
+                        /* registrant */ source.getRegistrant(),
+                        /* sourceEventTime */ source.getEventTime(),
+                        /* expiryTime */ source.getExpiryTime(),
+                        /* priority */ source.getPriority(),
+                        /* sourceType */ source.getSourceType(),
+                        /* attributionMode */ source.getAttributionMode());
+                for (EventReport report : eventReports) {
+                    dao.insertEventReport(report);
+                }
+            });
         }
+    }
+
+    @VisibleForTesting
+    List<EventReport> getSourceEventReports(Source source) {
+        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReport();
+        return fakeReports.stream().map(fakeReport ->
+                new EventReport.Builder()
+                        .setSourceId(source.getEventId())
+                        .setReportTime(fakeReport.getReportingTime())
+                        .setTriggerData(fakeReport.getTriggerData())
+                        .setAttributionDestination(source.getAttributionDestination())
+                        .setReportTo(source.getReportTo())
+                        .setTriggerTime(0)
+                        .setTriggerPriority(0)
+                        .setTriggerDedupKey(null)
+                        .setSourceType(source.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .build()
+        ).collect(Collectors.toList());
     }
 
     private Source.SourceType getSourceType(RegistrationRequest request) {

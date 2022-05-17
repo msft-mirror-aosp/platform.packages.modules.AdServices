@@ -28,14 +28,18 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.exception.JSExecutionException;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,8 +47,8 @@ import java.util.concurrent.Executors;
 public class JSScriptEngineTest {
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    private final JSScriptEngine mJSScriptEngine = new JSScriptEngine(sContext);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
+    private final JSScriptEngine mJSScriptEngine = new JSScriptEngine(sContext);
 
     @Test
     public void testCanRunSimpleScriptWithNoArgs() throws Exception {
@@ -101,14 +105,17 @@ public class JSScriptEngineTest {
 
     @Test
     public void testCanNotReferToScriptArguments() throws Exception {
-        assertThat(
-                        callJSEngine(
-                                "function helloPerson(person) {  return \"hello \" +"
-                                        + " personOuter.name;  };",
-                                ImmutableList.of(
-                                        recordArg("personOuter", stringArg("name", "Stefano"))),
-                                "helloPerson"))
-                .isEqualTo("null");
+        try {
+            callJSEngine(
+                    "function helloPerson(person) {  return \"hello \" +"
+                            + " personOuter.name;  };",
+                    ImmutableList.of(
+                            recordArg("personOuter", stringArg("name", "Stefano"))),
+                    "helloPerson");
+            Assert.fail("Expected exception");
+        } catch (ExecutionException e) {
+            Assert.assertTrue(e.getCause().getClass() == JSExecutionException.class);
+        }
     }
 
     // During tests, look for logcat messages with tag "chromium" to check if any of your scripts
@@ -116,12 +123,15 @@ public class JSScriptEngineTest {
     // a listener to WebChromeClient.onConsoleMessage to receive them if needed).
     @Test
     public void testWillReturnAStringWithContentNullEvaluatingScriptWithErrors() throws Exception {
-        assertThat(
-                        callJSEngine(
-                                "function test() { return \"hello world\"; }",
-                                ImmutableList.of(),
-                                "undefinedFunction"))
-                .isEqualTo("null");
+        try {
+            callJSEngine(
+                    "function test() { return \"hello world\"; }",
+                    ImmutableList.of(),
+                    "undefinedFunction");
+            Assert.fail();
+        } catch (ExecutionException e) {
+            Assert.assertTrue(e.getCause().getClass() == JSExecutionException.class);
+        }
     }
 
     @Test
