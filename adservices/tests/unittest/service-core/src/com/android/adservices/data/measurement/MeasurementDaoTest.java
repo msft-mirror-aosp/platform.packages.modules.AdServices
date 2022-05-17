@@ -79,7 +79,8 @@ public class MeasurementDaoTest {
                         ValidSourceParams.SOURCE_EVENT_TIME,
                         ValidSourceParams.EXPIRY_TIME,
                         ValidSourceParams.PRIORITY,
-                        ValidSourceParams.sSourceType
+                        ValidSourceParams.sSourceType,
+                        ValidSourceParams.sAttributionMode
                 )
         );
 
@@ -100,6 +101,7 @@ public class MeasurementDaoTest {
             assertEquals(ValidSourceParams.EXPIRY_TIME.longValue(), source.getExpiryTime());
             assertEquals(ValidSourceParams.PRIORITY.longValue(), source.getPriority());
             assertEquals(ValidSourceParams.sSourceType, source.getSourceType());
+            assertEquals(ValidSourceParams.sAttributionMode, source.getAttributionMode());
         }
     }
 
@@ -114,7 +116,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -128,7 +131,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -139,7 +143,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -153,7 +158,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -164,7 +170,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -178,7 +185,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -189,7 +197,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -203,7 +212,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
@@ -214,7 +224,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -228,7 +239,8 @@ public class MeasurementDaoTest {
                 null,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -242,7 +254,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 null,
                 ValidSourceParams.PRIORITY,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -256,7 +269,8 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 null,
-                ValidSourceParams.sSourceType);
+                ValidSourceParams.sSourceType,
+                ValidSourceParams.sAttributionMode);
     }
 
     @Test
@@ -270,12 +284,15 @@ public class MeasurementDaoTest {
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
-                null);
+                null,
+                ValidSourceParams.sAttributionMode
+        );
     }
 
     private void assertInvalidSourceArguments(Long sourceEventId, Uri attributionSource,
             Uri attributionDestination, Uri reportTo, Uri registrant, Long sourceEventTime,
-            Long expiryTime, Long priority, Source.SourceType sourceType) {
+            Long expiryTime, Long priority, Source.SourceType sourceType,
+            @Source.AttributionMode int attributionMode) {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
                     try {
                         dao.insertSource(
@@ -287,7 +304,8 @@ public class MeasurementDaoTest {
                                 sourceEventTime,
                                 expiryTime,
                                 priority,
-                                sourceType
+                                sourceType,
+                                attributionMode
                         );
                         fail();
                     } catch (DatastoreException e) {
@@ -933,6 +951,8 @@ public class MeasurementDaoTest {
         static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
         static final Uri sReportTo = Uri.parse("https://com.example");
         static final Source.SourceType sSourceType = Source.SourceType.EVENT;
+        static final @Source.AttributionMode int sAttributionMode =
+                Source.AttributionMode.TRUTHFULLY;
     }
 
     private static class ValidTriggerParams {
