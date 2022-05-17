@@ -58,7 +58,7 @@ public abstract class DBCustomAudienceOverride {
     public abstract String getName();
 
     /**
-     * @return App package name, app package name associated with this CustomAudienceId
+     * @return App package name, app package name associated with the caller
      */
     @CopyAnnotations
     @ColumnInfo(name = "app_package_name")

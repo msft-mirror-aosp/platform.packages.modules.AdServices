@@ -145,7 +145,8 @@ class MeasurementDao implements IMeasurementDao {
     public void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
             @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType) throws DatastoreException {
+            @NonNull Source.SourceType sourceType,
+            @Source.AttributionMode int attributionMode) throws DatastoreException {
         validateNonNull(sourceEventId, attributionSource, attributionDestination, reportTo,
                 registrant, sourceEventTime, expiryTime, priority, sourceType);
         validateUri(attributionSource, attributionDestination, reportTo, registrant);
@@ -164,6 +165,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, sourceType.name());
         values.put(MeasurementTables.SourceContract.REGISTRANT, registrant.toString());
+        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
