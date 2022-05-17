@@ -19,8 +19,7 @@ package {
 android_test_helper_app {
     name: "LoadSdkSuccessfullySdkProvider",
     defaults: ["platform_app_defaults"],
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     srcs: [
        "src/**/*.java",
     ],
