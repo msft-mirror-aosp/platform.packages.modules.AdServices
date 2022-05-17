@@ -49,3 +49,20 @@ android_app {
     ],
     manifest: "AndroidManifest_Client2.xml",
 }
+
+android_app {
+    name: "SdkSandboxClientWebView",
+    defaults: ["platform_app_defaults"],
+    platform_apis: true,
+    srcs: [
+        "src/**/sdksandboxclient/*.java",
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+        "androidx.core_core",
+    ],
+    resource_dirs: [
+        "res",
+    ],
+    manifest: "AndroidManifest_WebViewClient.xml",
+}
