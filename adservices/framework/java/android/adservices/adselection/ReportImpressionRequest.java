@@ -49,7 +49,7 @@ public final class ReportImpressionRequest implements Parcelable {
                 }
             };
 
-    public ReportImpressionRequest(
+    private ReportImpressionRequest(
             long adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 

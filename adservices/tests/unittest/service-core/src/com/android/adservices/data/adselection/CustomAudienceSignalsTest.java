@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
+
 import org.junit.Test;
 
 public class CustomAudienceSignalsTest {
@@ -49,7 +51,7 @@ public class CustomAudienceSignalsTest {
     public void testBuildFromCustomAudience() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(
-                        CustomAudienceFixture.getDBCustomAudienceBuilder().build());
+                        DBCustomAudienceFixture.getValidBuilder().build());
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
         assertEquals(customAudienceSignals.getBuyer(), CustomAudienceFixture.VALID_BUYER);

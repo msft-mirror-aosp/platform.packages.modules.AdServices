@@ -87,13 +87,13 @@ public final class ReportingJobService extends JobService {
                         "Perform all pending reports for app %s has exception %s", appName, e);
             }
         }
-        return false;
+        return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("ReportingJobService: onStopJob");
-        return false;
+        return true;
     }
 
     /**
