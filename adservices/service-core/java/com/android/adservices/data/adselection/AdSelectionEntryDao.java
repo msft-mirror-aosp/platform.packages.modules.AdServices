@@ -16,10 +16,13 @@
 
 package com.android.adservices.data.adselection;
 
+import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Instant;
 import java.util.List;
@@ -39,6 +42,7 @@ public interface AdSelectionEntryDao {
      * @param adSelection is the AdSelection to add to the table ad_selection if the ad_selection_id
      *     not exists.
      */
+    // TODO(b/230568647): retry adSelectionId generation in case of collision
     @Insert(onConflict = OnConflictStrategy.ABORT)
     void persistAdSelection(DBAdSelection adSelection);
 
@@ -52,6 +56,16 @@ public interface AdSelectionEntryDao {
     void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
 
     /**
+     * Add an ad selection override into the table ad_selection_overrides
+     *
+     * @param adSelectionOverride is the AdSelectionOverride to add to table ad_selection_overrides.
+     *     If a {@link DBAdSelectionOverride} object with the {@code adSelectionConfigId} already
+     *     exists, this will replace the existing object.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
+
+    /**
      * Checks if there is a row in the ad selection data with the unique key ad_selection_id
      *
      * @param adSelectionId which is the key to query the corresponding ad selection data.
@@ -61,6 +75,20 @@ public interface AdSelectionEntryDao {
             "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId LIMIT"
                     + " 1)")
     boolean doesAdSelectionIdExist(long adSelectionId);
+
+    /**
+     * Checks if there is a row in the ad selection override data with the unique key
+     * ad_selection_config_id
+     *
+     * @param adSelectionConfigId which is the key to query the corresponding ad selection override
+     *     data.
+     * @return true if row exists, false otherwise
+     */
+    @Query(
+            "SELECT EXISTS(SELECT 1 FROM ad_selection_overrides WHERE ad_selection_config_id ="
+                    + " :adSelectionConfigId AND app_package_name = :appPackageName LIMIT 1)")
+    boolean doesAdSelectionOverrideExistForPackageName(
+            String adSelectionConfigId, String appPackageName);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -116,6 +144,19 @@ public interface AdSelectionEntryDao {
     List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
+     * Get ad selection JS override by its unique key and the package name of the app that created
+     * the override.
+     *
+     * @return ad selection override result if exists.
+     */
+    @Query(
+            "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
+                    + " :adSelectionConfigId AND app_package_name = :appPackageName")
+    @Nullable
+    @VisibleForTesting
+    String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
+
+    /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
      * creation_timestamp < expirationTime, the ad selection entry will be removed from the
      * ad_selection table.
@@ -135,6 +176,18 @@ public interface AdSelectionEntryDao {
     void removeAdSelectionEntriesByIds(List<Long> adSelectionIds);
 
     /**
+     * Clean up selected ad selection override data by its {@code adSelectionConfigId}
+     *
+     * @param adSelectionConfigId is the {@code adSelectionConfigId} to identify the data entries to
+     *     be removed from the ad_selection_overrides table.
+     */
+    @Query(
+            "DELETE FROM ad_selection_overrides WHERE ad_selection_config_id = :adSelectionConfigId"
+                    + " AND app_package_name = :appPackageName")
+    void removeAdSelectionOverrideByIdAndPackageName(
+            String adSelectionConfigId, String appPackageName);
+
+    /**
      * Clean up buyer_decision_logic entries in batch if the bidding_logic_url no longer exists in
      * the table ad_selection.
      */
@@ -144,4 +197,8 @@ public interface AdSelectionEntryDao {
                     + "FROM ad_selection "
                     + "WHERE bidding_logic_url is NOT NULL)")
     void removeExpiredBuyerDecisionLogic();
+
+    /** Clean up all ad selection override data */
+    @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
+    void removeAllAdSelectionOverrides(String appPackageName);
 }

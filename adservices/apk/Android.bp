@@ -16,6 +16,13 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+filegroup {
+    name: "adservicesapk-filegroup",
+    srcs: [
+        "java/**/*.java",
+    ],
+}
+
 android_app_certificate {
     name: "com.android.adservices.api.certificate",
     certificate: "com.android.adservices.api",
@@ -38,6 +45,8 @@ android_app {
         "adservices-service-core",
         "androidx.preference_preference",
         "androidx.fragment_fragment",
+        // TODO(b/230653497): Try to remove this.
+        "androidx.room_room-runtime",
     ],
     resource_dirs: ["res"],
     // TODO(b/208705888): Renable tflite.

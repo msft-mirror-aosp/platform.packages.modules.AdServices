@@ -28,6 +28,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -72,7 +73,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 attributionDestination.toString());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, triggerTime);
-        values.put(MeasurementTables.TriggerContract.TRIGGER_DATA, triggerData);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA, triggerData);
         values.put(MeasurementTables.TriggerContract.DEDUP_KEY, dedupKey);
         values.put(MeasurementTables.TriggerContract.PRIORITY, priority);
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
@@ -81,6 +82,7 @@ class MeasurementDao implements IMeasurementDao {
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
+        LogUtil.d("MeasurementDao: insertTrigger: rowId=" + rowId);
         if (rowId == -1) {
             throw new DatastoreException("Trigger insertion failed.");
         }
@@ -165,6 +167,8 @@ class MeasurementDao implements IMeasurementDao {
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
+        LogUtil.d("MeasurementDao: insertSource: rowId=" + rowId);
+
         if (rowId == -1) {
             throw new DatastoreException("Source insertion failed.");
         }
@@ -177,12 +181,19 @@ class MeasurementDao implements IMeasurementDao {
                 /*columns=*/null,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? AND "
                         + MeasurementTables.SourceContract.REPORT_TO + " = ? AND "
-                        + MeasurementTables.SourceContract.EXPIRY_TIME + " > ? AND "
+                        // EventTime should be strictly less than TriggerTime as it is highly
+                        // unlikely for matching Source and Trigger to happen at same instant
+                        // in milliseconds.
+                        + MeasurementTables.SourceContract.EVENT_TIME + " < ? AND "
+                        + MeasurementTables.SourceContract.EXPIRY_TIME + " >= ? AND "
                         + MeasurementTables.SourceContract.STATUS + " != ?",
-                new String[]{trigger.getAttributionDestination().toString(),
+                new String[]{
+                        trigger.getAttributionDestination().toString(),
                         trigger.getReportTo().toString(),
                         String.valueOf(trigger.getTriggerTime()),
-                        String.valueOf(Trigger.Status.IGNORED)},
+                        String.valueOf(trigger.getTriggerTime()),
+                        String.valueOf(Source.Status.IGNORED)
+                },
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
             List<Source> sources = new ArrayList<>();
             while (cursor.moveToNext()) {

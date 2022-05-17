@@ -107,6 +107,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_SOURCE: {
                     ArrayList<SourceRegistration> results = new ArrayList();
                     boolean success = mSourceFetcher.fetchSource(request, results);
+                    LogUtil.d("MeasurementImpl: register: success=" + success);
                     if (success) {
                         insertSources(request, results, requestTime);
                         return IMeasurementCallback.RESULT_OK;
@@ -118,6 +119,7 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER: {
                     ArrayList<TriggerRegistration> results = new ArrayList();
                     boolean success = mTriggerFetcher.fetchTrigger(request, results);
+                    LogUtil.d("MeasurementImpl: register: success=" + success);
                     if (success) {
                         insertTriggers(request, results, requestTime);
                         return IMeasurementCallback.RESULT_OK;
