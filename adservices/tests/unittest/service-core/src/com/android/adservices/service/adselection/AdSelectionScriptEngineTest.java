@@ -32,6 +32,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
+import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.JSScriptArgument;
 
 import com.google.common.collect.ImmutableList;
@@ -98,7 +99,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     @Test
-    public void testThrowsIllegalArgumentExceptionIfTheFunctionIsNotFound() throws Exception {
+    public void testThrowsJSExecutionExceptionIfTheFunctionIsNotFound() throws Exception {
         AdData advert = new AdData(Uri.parse("http://www.domain.com/adverts/123"), "{}");
         Exception exception =
                 Assert.assertThrows(
@@ -111,7 +112,7 @@ public class AdSelectionScriptEngineTest {
                                         advert,
                                         ImmutableList.of()));
 
-        assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
+        assertThat(exception.getCause()).isInstanceOf(JSExecutionException.class);
     }
 
     @Test
