@@ -23,7 +23,10 @@ import android.content.pm.PackageManager.NameNotFoundException;
 
 import com.android.adservices.LogUtil;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Util class that query PackageManager to retrieve app information
@@ -31,30 +34,44 @@ import java.util.Objects;
 public class PackageManagerUtil {
 
     private final Context mContext;
-    private final String mPackageName;
     private static final String EMPTY_STRING = "";
 
-    public PackageManagerUtil(@NonNull Context context, @NonNull String packageName) {
-        Objects.requireNonNull(packageName);
+    public PackageManagerUtil(@NonNull Context context) {
         Objects.requireNonNull(context);
         mContext = context;
-        mPackageName = packageName;
     }
 
     /**
-    * This method is used to get App's name and description
-    * and put it into a custom class AppInfo
-    * @return An instance of AppInfo that contains app's name and description information
-    */
+     * This method is used to fetch {@link AppInfo} for the set of package names.
+     *
+     * @param packageNames set of package names.
+     * @return map with package name to its corresponding {@link AppInfo}.
+     */
     @NonNull
-    public AppInfo getAppInformation() {
+    public ImmutableMap<String, AppInfo> getAppInformation(@NonNull Set<String> packageNames) {
+        ImmutableMap.Builder<String, AppInfo> appInfoMap = ImmutableMap.builder();
+        for (String name : packageNames) {
+            appInfoMap.put(name, getAppInformation(name));
+        }
+        return appInfoMap.build();
+    }
+
+    /**
+     * This method is used to get App's name and description and put it into a custom class {@link
+     * AppInfo}.
+     *
+     * @return An instance of {@link AppInfo} that contains app's name and description information.
+     */
+    @NonNull
+    private AppInfo getAppInformation(@NonNull String packageName) {
+        Objects.requireNonNull(packageName);
         // TODO(b/228071368): Implement better error handling for NameNotFoundException
         // and null applicationInfo
         String resultAppName = EMPTY_STRING, resultAppDescription = EMPTY_STRING;
         try {
             PackageManager packageManager = mContext.getPackageManager();
-            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(mPackageName,
-                /* PackageManager.ApplicationInfoFlags = */ 0);
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName,
+                    /* PackageManager.ApplicationInfoFlags = */ 0);
             if (applicationInfo == null) {
                 LogUtil.e("ApplicationInfo get from packageManager is null");
                 return new AppInfo(resultAppName, resultAppDescription);

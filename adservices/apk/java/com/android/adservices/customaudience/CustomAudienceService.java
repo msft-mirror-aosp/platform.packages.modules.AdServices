@@ -20,27 +20,27 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.android.adservices.service.customaudience.CustomAudienceManagementServiceImpl;
+import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 
 import java.util.Objects;
 
-/** Custom Audience Management Service */
-public class CustomAudienceManagementService extends Service {
+/** Custom Audience Service */
+public class CustomAudienceService extends Service {
 
     /** The binder service. This field will only be accessed on the main thread. */
-    private CustomAudienceManagementServiceImpl mCustomAudienceManagementService;
+    private CustomAudienceServiceImpl mCustomAudienceService;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        if (mCustomAudienceManagementService == null) {
-            mCustomAudienceManagementService =
-                    new CustomAudienceManagementServiceImpl(this);
+        if (mCustomAudienceService == null) {
+            mCustomAudienceService =
+                    new CustomAudienceServiceImpl(this);
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return Objects.requireNonNull(mCustomAudienceManagementService);
+        return Objects.requireNonNull(mCustomAudienceService);
     }
 }
