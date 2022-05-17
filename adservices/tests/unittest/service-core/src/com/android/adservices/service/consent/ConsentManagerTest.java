@@ -18,52 +18,24 @@ package com.android.adservices.service.consent;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 
 public class ConsentManagerTest {
-    private static final String CONSENT_KEY = "CONSENT";
-
-    @Mock
-    private BooleanFileDatastore mDatastore;
     private ConsentManager mConsentManager;
 
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
         mConsentManager = ConsentManager.getInstance(ApplicationProvider.getApplicationContext());
     }
 
     @Test
-    public void testConsentIsGivenToAllApiTypes() {
-        when(mDatastore.get(CONSENT_KEY)).thenReturn(true);
-
-        assertTrue(
-                mConsentManager.getConsent(ApplicationProvider.getApplicationContext()).isGiven());
-    }
-
-    @Test
-    public void testConsentIsRevokedToAllApiTypes() {
-        when(mDatastore.get(CONSENT_KEY)).thenReturn(false);
-
-        assertFalse(
-                mConsentManager.getConsent(ApplicationProvider.getApplicationContext()).isGiven());
-    }
-
-    @Test
     public void testConsentIsGivenAfterEnabling() {
-        when(mDatastore.get(CONSENT_KEY)).thenReturn(true);
-
         mConsentManager.enable(ApplicationProvider.getApplicationContext());
 
         assertTrue(
@@ -72,8 +44,6 @@ public class ConsentManagerTest {
 
     @Test
     public void testConsentIsRevokedAfterDisabling() {
-        when(mDatastore.get(CONSENT_KEY)).thenReturn(false);
-
         mConsentManager.disable(ApplicationProvider.getApplicationContext());
 
         assertFalse(

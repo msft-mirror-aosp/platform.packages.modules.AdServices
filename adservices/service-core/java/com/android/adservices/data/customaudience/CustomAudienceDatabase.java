@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data;
+package com.android.adservices.data.customaudience;
 
 import android.content.Context;
 import android.net.Uri;
@@ -27,8 +27,6 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
-import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.internal.annotations.GuardedBy;
 
 import java.time.Instant;
@@ -36,33 +34,36 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Room based PP API database.
+ * Room based database for custom audience.
  */
 @Database(
         // Set exportSchema to true to see generated schema file.
         // File location is defined in Android.bp -Aroom.schemaLocation.
         exportSchema = false,
-        entities = {DBCustomAudience.class},
-        version = AdServicesDatabase.DATABASE_VERSION
+        entities = {DBCustomAudience.class, DBCustomAudienceOverride.class},
+        version = CustomAudienceDatabase.DATABASE_VERSION
 )
-@TypeConverters({AdServicesDatabase.Converters.class})
-public abstract class AdServicesDatabase extends RoomDatabase {
+@TypeConverters({CustomAudienceDatabase.Converters.class})
+public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
     public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "adservices.db";
+    // TODO(b/230653780): Should we separate the DB.
+    public static final String DATABASE_NAME = "customaudience.db";
 
     @GuardedBy("SINGLETON_LOCK")
-    private static AdServicesDatabase sSingleton;
+    private static CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
+
     /** Returns an instance of the AdServiceDatabase given a context. */
-    public static AdServicesDatabase getInstance(@NonNull Context context) {
+    public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
-                sSingleton = Room.databaseBuilder(context, AdServicesDatabase.class, DATABASE_NAME)
-                        .build();
+                sSingleton =
+                        Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                                .build();
             }
             return sSingleton;
         }
@@ -77,6 +78,7 @@ public abstract class AdServicesDatabase extends RoomDatabase {
 
     /**
      * Room DB type converters.
+     *
      * <p>Register custom type converters here.
      */
     public static class Converters {
@@ -84,48 +86,32 @@ public abstract class AdServicesDatabase extends RoomDatabase {
         private Converters() {
         }
 
-        /**
-         * Serialize {@link Instant} to Long.
-         */
+        /** Serialize {@link Instant} to Long. */
         @TypeConverter
         @Nullable
         public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant)
-                    .map(Instant::toEpochMilli)
-                    .orElse(null);
+            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
         }
 
-        /**
-         * Deserialize {@link Instant} from long.
-         */
+        /** Deserialize {@link Instant} from long. */
         @TypeConverter
         @Nullable
         public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli)
-                    .map(Instant::ofEpochMilli)
-                    .orElse(null);
+            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
         }
 
-        /**
-         * Deserialize {@link Uri} from String.
-         */
+        /** Deserialize {@link Uri} from String. */
         @TypeConverter
         @Nullable
         public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::parse)
-                    .orElse(null);
+            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
         }
 
-        /**
-         * Serialize {@link Uri} to String.
-         */
+        /** Serialize {@link Uri} to String. */
         @TypeConverter
         @Nullable
         public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::toString)
-                    .orElse(null);
+            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
         }
     }
 }

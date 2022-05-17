@@ -20,6 +20,7 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.ReportImpressionCallback;
+import android.adservices.adselection.AdSelectionOverrideCallback;
 
 /**
   * This is the Ad Selection Service, which defines the interface used for the Ad selection workflow
@@ -83,4 +84,47 @@ interface AdSelectionService {
     void reportImpression(
         in ReportImpressionRequest request,
         in ReportImpressionCallback callback);
+
+   /**
+    * This method is intended to be called before {@code runAdSelection}
+    * and {@code reportImpression} using the same
+    * {@link AdSelectionConfig} in order to configure
+    * PPAPI to avoid to fetch info from remote servers and use the
+    * data provided.
+    *
+    * The call will fail with status
+    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if the API hasn't been enabled
+    * by developer options or by an adb command or if the calling
+    * application manifest is not setting Android:debuggable to true.
+    */
+    void overrideAdSelectionConfigRemoteInfo(
+        in AdSelectionConfig adSelectionConfig,
+        in String decisionLogicJS,
+        in AdSelectionOverrideCallback callback);
+
+   /**
+    * Deletes any override created by calling
+    * {@code overrideAdSelectionConfigRemoteInfo} for the given
+    * AdSelectionConfig
+    *
+    * The call will fail with status
+    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if:
+    * the API hasn't been enabled by developer options or by an adb command
+    * or if the calling application manifest is not setting Android:debuggable to true.
+    */
+    void removeAdSelectionConfigRemoteInfoOverride(
+        in AdSelectionConfig adSelectionConfig,
+        in AdSelectionOverrideCallback callback);
+
+   /**
+    * Deletes any override created by calling
+    * {@code overrideAdSelectionConfigRemoteInfo} from this application
+    *
+    * The call will fail with status
+    * {@link FledgeErrorResponse#STATUS_UNAUTHORIZED} if:
+    * the API hasn't been enabled by developer options or by an adb command
+    * or if the calling application manifest is not setting Android:debuggable to true.
+    */
+    void resetAllAdSelectionConfigRemoteOverrides(
+        in AdSelectionOverrideCallback callback);
 }

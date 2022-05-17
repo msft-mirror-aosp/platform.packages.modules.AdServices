@@ -141,6 +141,13 @@ class AttributionJobHandler {
                 measurementDao.updateSourceStatus(matchingSources, Source.Status.IGNORED);
             }
 
+            // Do not generate event reports for source which have attributionMode != Truthfully.
+            // TODO: Handle attribution rate limit consideration for non-truthful cases.
+            if (selectedSource.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+                ignoreTrigger(trigger, measurementDao);
+                return;
+            }
+
             if (trigger.getDedupKey() != null
                     && selectedSource.getDedupKeys().contains(trigger.getDedupKey())) {
                 ignoreTrigger(trigger, measurementDao);
@@ -169,8 +176,9 @@ class AttributionJobHandler {
             List<EventReport> relevantEventReports = sourceEventReports.stream()
                     .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
                     .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
-                    .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)).collect(
-                            Collectors.toList());
+                    .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)
+                            .thenComparing(EventReport::getTriggerTime, Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
             if (relevantEventReports.isEmpty()) {
                 ignoreTrigger(trigger, measurementDao);
                 return;

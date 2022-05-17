@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Class for holding system health related parameters.
+ * All values in this class are temporary and subject to change based on feedback and testing.
  */
 public class SystemHealthParams {
     /*
