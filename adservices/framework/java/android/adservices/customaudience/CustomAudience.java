@@ -35,10 +35,6 @@ import java.util.Objects;
  * A custom audience is an abstract grouping of users with similar demonstrated interests.  This
  * class is a collection of some data stored on a device that is necessary to serve advertisements
  * targeting a single custom audience.
- *
- * <p>Hiding for future implementation and review for public exposure.
- *
- * @hide
  */
 public final class CustomAudience implements Parcelable {
 
@@ -143,6 +139,8 @@ public final class CustomAudience implements Parcelable {
     /**
      * Returns a String representing the custom audience's owner application or null to be the
      * calling application.
+     * <p>
+     * The value format must be &lt;App UID&gt;-&lt;package name&gt;.
      */
     @Nullable
     public String getOwner() {
@@ -206,7 +204,7 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * This URL points to a buyer-operated server that hosts updated bidding data and ads metadata
-     * to be used in the on-device ad selection process.
+     * to be used in the on-device ad selection process. The URL must use HTTPS.
      *
      * @return the custom audience's daily update URL
      */
@@ -245,7 +243,7 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * Returns the target URL used to fetch bidding logic when a custom audience participates in the
-     * ad selection process
+     * ad selection process. The URL must use HTTPS.
      */
     @NonNull
     public Uri getBiddingLogicUrl() {
@@ -315,6 +313,7 @@ public final class CustomAudience implements Parcelable {
         @NonNull
         private List<AdData> mAds;
 
+        // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
         }
 
@@ -323,7 +322,8 @@ public final class CustomAudience implements Parcelable {
          * <p>
          * See {@link #getOwner()} for more information.
          *
-         * @param owner application name or leave null to default to the calling app.
+         * @param owner &lt;App UID&gt;-&lt;package name&gt; or leave null to default to the calling
+         *              app.
          */
         @NonNull
         public CustomAudience.Builder setOwner(@Nullable String owner) {
@@ -380,7 +380,7 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the daily update URL.
+         * Sets the daily update URL. The URL must use HTTPS.
          * <p>
          * See {@link #getDailyUpdateUrl()} for more information.
          */
@@ -415,7 +415,8 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the URL to fetch bidding logic from for use in the ad selection process.
+         * Sets the URL to fetch bidding logic from for use in the ad selection process. The URL
+         * must use HTTPS.
          * <p>
          * See {@link #getBiddingLogicUrl()} ()} for more information.
          */
