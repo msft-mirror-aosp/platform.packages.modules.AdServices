@@ -94,6 +94,28 @@ public class ApiCallStats {
         return mResultCode;
     }
 
+    @Override
+    public String toString() {
+        return "ApiCallStats{"
+                + "mCode="
+                + mCode
+                + ", mApiClass="
+                + mApiClass
+                + ", mApiName="
+                + mApiName
+                + ", mAppPackageName='"
+                + mAppPackageName
+                + '\''
+                + ", mSdkPackageName='"
+                + mSdkPackageName
+                + '\''
+                + ", mLatencyMillisecond="
+                + mLatencyMillisecond
+                + ", mResultCode="
+                + mResultCode
+                + '}';
+    }
+
     /** Builder for {@link ApiCallStats}. */
     public static final class Builder {
         private final ApiCallStats mBuilding;

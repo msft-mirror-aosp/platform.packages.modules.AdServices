@@ -41,6 +41,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.Dispatcher;
@@ -102,6 +104,7 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
+    private AdServicesLogger mAdServicesLogger;
 
     @Before
     public void setUp() throws Exception {
@@ -122,6 +125,8 @@ public class AdSelectionE2ETest {
 
         mAdSelectionHttpClient = new AdSelectionHttpClient(mExecutorService);
 
+        mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -130,7 +135,8 @@ public class AdSelectionE2ETest {
                         mAdSelectionHttpClient,
                         mDevContextFilter,
                         mExecutorService,
-                        mContext);
+                        mContext,
+                        mAdServicesLogger);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =

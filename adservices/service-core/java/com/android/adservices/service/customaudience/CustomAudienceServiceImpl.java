@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -32,6 +38,8 @@ import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -46,17 +54,17 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     private final Context mContext;
 
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
-
     @NonNull private final ExecutorService mExecutorService;
-
     @NonNull private final DevContextFilter mDevContextFilter;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
 
     public CustomAudienceServiceImpl(@NonNull Context context) {
         this(
                 context,
                 CustomAudienceImpl.getInstance(context),
                 DevContextFilter.create(context),
-                AdServicesExecutors.getBackgroundExecutor());
+                AdServicesExecutors.getBackgroundExecutor(),
+                AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
@@ -64,14 +72,17 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull Context context,
             @NonNull CustomAudienceImpl customAudienceImpl,
             @NonNull DevContextFilter devContextFilter,
-            @NonNull ExecutorService executorService) {
+            @NonNull ExecutorService executorService,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceImpl);
         Objects.requireNonNull(executorService);
+        Objects.requireNonNull(adServicesLogger);
         mContext = context;
         mCustomAudienceImpl = customAudienceImpl;
         mDevContextFilter = devContextFilter;
         mExecutorService = executorService;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -82,33 +93,49 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @Override
     public void joinCustomAudience(
             @NonNull CustomAudience customAudience, @NonNull ICustomAudienceCallback callback) {
-        Objects.requireNonNull(customAudience);
-        Objects.requireNonNull(callback);
+        try {
+            Objects.requireNonNull(customAudience);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
 
         mExecutorService.execute(
                 () -> {
+                    int resultCode = AdServicesStatusUtils.STATUS_UNSET;
                     try {
                         try {
                             mCustomAudienceImpl.joinCustomAudience(customAudience);
                             callback.onSuccess();
+                            // TODO(b/233681870): Investigate implementation of actual failures in
+                            //  logs/metrics
+                            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                         } catch (NullPointerException | IllegalArgumentException exception) {
                             // TODO(b/230783716): We may not want catch NPE or IAE for this case.
+                            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
                             callback.onFailure(
                                     new FledgeErrorResponse.Builder()
-                                            .setStatusCode(
-                                                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT)
+                                            .setStatusCode(resultCode)
                                             .setErrorMessage(exception.getMessage())
                                             .build());
                         } catch (Exception exception) {
+                            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
                             callback.onFailure(
                                     new FledgeErrorResponse.Builder()
-                                            .setStatusCode(
-                                                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                                            .setStatusCode(resultCode)
                                             .setErrorMessage(exception.getMessage())
                                             .build());
                         }
                     } catch (Exception exception) {
                         LogUtil.e("Unable to send result to the callback", exception);
+                        resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+                    } finally {
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, resultCode);
                     }
                 });
     }
@@ -124,12 +151,21 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull String buyer,
             @NonNull String name,
             @NonNull ICustomAudienceCallback callback) {
-        Objects.requireNonNull(buyer);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(callback);
+        try {
+            Objects.requireNonNull(buyer);
+            Objects.requireNonNull(name);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
 
         mExecutorService.execute(
                 () -> {
+                    int resultCode = AdServicesStatusUtils.STATUS_UNSET;
                     try {
                         mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
                     } catch (Exception exception) {
@@ -137,8 +173,16 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     }
                     try {
                         callback.onSuccess();
+                        // TODO(b/233681870): Investigate implementation of actual failures in
+                        //  logs/metrics
+                        resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                     } catch (Exception exception) {
                         LogUtil.e("Unable to send result to the callback", exception);
+                        resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+                    } finally {
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                resultCode);
                     }
                 });
     }
@@ -156,19 +200,28 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull String biddingLogicJS,
             @NonNull String trustedBiddingData,
             @NonNull CustomAudienceOverrideCallback callback) {
-        Objects.requireNonNull(owner);
-        Objects.requireNonNull(buyer);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(biddingLogicJS);
-        Objects.requireNonNull(trustedBiddingData);
-        Objects.requireNonNull(callback);
+        try {
+            Objects.requireNonNull(owner);
+            Objects.requireNonNull(buyer);
+            Objects.requireNonNull(name);
+            Objects.requireNonNull(biddingLogicJS);
+            Objects.requireNonNull(trustedBiddingData);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+            // Rethrow to fail fast
+            throw exception;
+        }
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
         CustomAudienceOverrider overrider =
-                new CustomAudienceOverrider(devContext, customAudienceDao, mExecutorService);
+                new CustomAudienceOverrider(
+                        devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
         overrider.addOverride(owner, buyer, name, biddingLogicJS, trustedBiddingData, callback);
     }
@@ -184,17 +237,26 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull String buyer,
             @NonNull String name,
             @NonNull CustomAudienceOverrideCallback callback) {
-        Objects.requireNonNull(owner);
-        Objects.requireNonNull(buyer);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(callback);
+        try {
+            Objects.requireNonNull(owner);
+            Objects.requireNonNull(buyer);
+            Objects.requireNonNull(name);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+            // Rethrow to fail fast
+            throw exception;
+        }
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
         CustomAudienceOverrider overrider =
-                new CustomAudienceOverrider(devContext, customAudienceDao, mExecutorService);
+                new CustomAudienceOverrider(
+                        devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
         overrider.removeOverride(owner, buyer, name, callback);
     }
@@ -206,14 +268,23 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      */
     @Override
     public void resetAllCustomAudienceOverrides(@NonNull CustomAudienceOverrideCallback callback) {
-        Objects.requireNonNull(callback);
+        try {
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
+            // Rethrow to fail fast
+            throw exception;
+        }
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
         CustomAudienceOverrider overrider =
-                new CustomAudienceOverrider(devContext, customAudienceDao, mExecutorService);
+                new CustomAudienceOverrider(
+                        devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
         overrider.removeAllOverrides(callback);
     }

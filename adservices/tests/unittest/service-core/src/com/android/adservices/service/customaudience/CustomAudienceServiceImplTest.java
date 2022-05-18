@@ -16,6 +16,15 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -32,6 +41,8 @@ import android.os.RemoteException;
 
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -39,6 +50,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -60,6 +72,7 @@ public class CustomAudienceServiceImplTest {
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     @Mock DevContextFilter mDevContextFilter;
+    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
 
     @Before
     public void setup() {
@@ -68,7 +81,11 @@ public class CustomAudienceServiceImplTest {
 
         mService =
                 new CustomAudienceServiceImpl(
-                        mContext, mCustomAudienceImpl, mDevContextFilter, DIRECT_EXECUTOR);
+                        mContext,
+                        mCustomAudienceImpl,
+                        mDevContextFilter,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerSpy);
     }
 
     @Test
@@ -76,7 +93,18 @@ public class CustomAudienceServiceImplTest {
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
         verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
         verify(mICustomAudienceCallback).onSuccess();
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                STATUS_SUCCESS));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -84,7 +112,19 @@ public class CustomAudienceServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> mService.joinCustomAudience(null, mICustomAudienceCallback));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                STATUS_INVALID_ARGUMENT));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -92,7 +132,19 @@ public class CustomAudienceServiceImplTest {
         assertThrows(
                 NullPointerException.class,
                 () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, null));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                STATUS_INVALID_ARGUMENT));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -105,7 +157,19 @@ public class CustomAudienceServiceImplTest {
 
         verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
         verify(mICustomAudienceCallback).onFailure(any(FledgeErrorResponse.class));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                STATUS_INTERNAL_ERROR));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -117,7 +181,19 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
         verify(mICustomAudienceCallback).onSuccess();
         verify(mICustomAudienceCallback).onFailure(any(FledgeErrorResponse.class));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                        STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                STATUS_INTERNAL_ERROR));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -134,7 +210,18 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_SUCCESS));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -149,7 +236,18 @@ public class CustomAudienceServiceImplTest {
                 .leaveCustomAudience(
                         null, CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_SUCCESS));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -162,7 +260,19 @@ public class CustomAudienceServiceImplTest {
                                 null,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_INVALID_ARGUMENT));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -175,7 +285,19 @@ public class CustomAudienceServiceImplTest {
                                 CustomAudienceFixture.VALID_BUYER,
                                 null,
                                 mICustomAudienceCallback));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_INVALID_ARGUMENT));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -188,7 +310,19 @@ public class CustomAudienceServiceImplTest {
                                 CustomAudienceFixture.VALID_BUYER,
                                 CustomAudienceFixture.VALID_NAME,
                                 null));
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_INVALID_ARGUMENT));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -212,7 +346,18 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_SUCCESS));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 
     @Test
@@ -231,6 +376,18 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
-        verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                        STATUS_UNKNOWN_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                                STATUS_UNKNOWN_ERROR));
+
+        verifyNoMoreInteractions(
+                mCustomAudienceImpl, mICustomAudienceCallback, mContext, mAdServicesLoggerSpy);
     }
 }
