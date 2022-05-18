@@ -57,16 +57,16 @@ public class PrecomputedLoader {
     }
 
     /**
-     * Retrieve a list of string of labels from labels file.
+     * Retrieve a list of topicIDs from labels file.
      *
-     * @return The list of labels from labels.txt
+     * @return The list of topicIDs from labels.txt
      *
      * @throws IOException An empty list will be return
      */
     @NonNull
-    public ImmutableSet<String> retrieveLabels() {
+    public ImmutableSet<Integer> retrieveLabels() {
         // Initialize a ImmutableSet.Builder to store the label iteratively
-        ImmutableSet.Builder<String> labels = new ImmutableSet.Builder();
+        ImmutableSet.Builder<Integer> labels = new ImmutableSet.Builder();
         String line;
 
         try (InputStreamReader inputStreamReader =
@@ -74,34 +74,34 @@ public class PrecomputedLoader {
             BufferedReader reader = new BufferedReader(inputStreamReader);
 
             while ((line = reader.readLine()) != null) {
-                labels.add(line);
+                labels.add(Integer.parseInt(line));
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed labels");
             // When catching IOException -> return empty immutable set
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
-            return ImmutableSet.<String>builder().build();
+            return ImmutableSet.<Integer>builder().build();
         }
 
         return labels.build();
     }
 
     /**
-     * Retrieve the app classification topics from file name here.
+     * Retrieve the app classification topicIDs from file name here.
      *
-     * @return The map from App to the list of its classification topics.
+     * @return The map from App to the list of its classification topicIDs.
      *
      * @throws IOException An empty hash map will be return
      */
     @NonNull
-    public Map<String, List<String>> retrieveAppClassificationTopics() {
+    public Map<String, List<Integer>> retrieveAppClassificationTopics() {
         // appTopicsMap = Map<App, List<Topic>>
-        Map<String, List<String>> appTopicsMap = new ArrayMap<>();
+        Map<String, List<Integer>> appTopicsMap = new ArrayMap<>();
         String line;
 
         // The immutable set of the topics from labels file
-        ImmutableSet<String> validTopics = retrieveLabels();
+        ImmutableSet<Integer> validTopics = retrieveLabels();
 
         try (InputStreamReader inputStreamReader =
                      new InputStreamReader(mAssetManager.open(mTopAppsFilePath))) {
@@ -116,8 +116,8 @@ public class PrecomputedLoader {
                 //The first column name is app
                 String app = columns[0];
 
-                // This list is used to temporarily store the topics of one app.
-                List<String> appTopics = new ArrayList<>();
+                // This list is used to temporarily store the topicIDs of one app.
+                List<Integer> appTopics = new ArrayList<>();
 
                 for (int i = 1; i < columns.length; i++) {
                     String topic = columns[i];
@@ -128,14 +128,14 @@ public class PrecomputedLoader {
 
                     // The topic will not save to the app topics map
                     // if it is not a valid topic in labels file
-                    if (!validTopics.contains(topic)) {
-                        LogUtil.e("Unable to load topic \"%s\" in app \"%s\", "
+                    if (!validTopics.contains(Integer.parseInt(topic))) {
+                        LogUtil.e("Unable to load topicID \"%s\" in app \"%s\", "
                                 + "because it is not a valid topic in labels file.", topic, app);
                         continue;
                     }
 
                     // The other columns are topics of the app
-                    appTopics.add(topic);
+                    appTopics.add(Integer.parseInt(topic));
                 }
 
                 appTopicsMap.put(app, appTopics);
