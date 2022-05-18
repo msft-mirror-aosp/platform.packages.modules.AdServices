@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.js;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import android.annotation.NonNull;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -28,7 +30,6 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.chromium.android_webview.js_sandbox.client.AwJsIsolate;
 import org.chromium.android_webview.js_sandbox.client.AwJsSandbox;
@@ -51,28 +52,44 @@ public class JSScriptEngine {
     private static final String TAG = JSScriptEngine.class.getSimpleName();
 
     private final Context mContext;
-    private final FluentFuture<AwJsSandbox> mFutureSandbox;
+
+    private static final Object sSandboxLock = new Object();
+    private static FluentFuture<AwJsSandbox> sFutureSandbox;
+
+    protected FluentFuture<AwJsSandbox> getFutureSandbox(Context context) {
+        synchronized (sSandboxLock) {
+            if (sFutureSandbox == null) {
+                sFutureSandbox =
+                        FluentFuture.from(
+                                CallbackToFutureAdapter.getFuture(
+                                        completer -> {
+                                            LogUtil.i("Creating AwJsSandbox");
+                                            AwJsSandbox.newConnectedInstance(
+                                                    // This instance will have the same lifetime
+                                                    // of the PPAPI process
+                                                    context.getApplicationContext(),
+                                                    awJsSandbox -> {
+                                                        completer.set(awJsSandbox);
+                                                    });
+                                            LogUtil.i("JSScriptEngine created.");
+
+                                            // This value is used only for debug purposes: it will
+                                            // be used
+                                            // in
+                                            // toString() of returned future or error cases.
+                                            return "JSSscriptEngine constructor";
+                                        }));
+            }
+            return sFutureSandbox;
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
+    @SuppressWarnings("FutureReturnValueIgnored")
     public JSScriptEngine(@NonNull Context context) {
         this.mContext = context;
-
-        mFutureSandbox =
-                FluentFuture.from(
-                        CallbackToFutureAdapter.getFuture(
-                                completer -> {
-                                    AwJsSandbox.newConnectedInstance(
-                                            mContext,
-                                            awJsSandbox -> {
-                                                completer.set(awJsSandbox);
-                                            });
-                                    LogUtil.d("JSScriptEngine created.");
-
-                                    // This value is used only for debug purposes: it will be used
-                                    // in
-                                    // toString() of returned future or error cases.
-                                    return "JSSscriptEngine constructor";
-                                }));
+        // Forcing initialization of WebView
+        getFutureSandbox(mContext);
     }
 
     /**
@@ -110,27 +127,29 @@ public class JSScriptEngine {
         String entryPointCall = callEntryPoint(args, entryFunctionName);
 
         String fullScript = jsScript + "\n" + entryPointCall;
-        LogUtil.v("Calling WebView for script %s", fullScript);
+        LogUtil.d("Calling WebView for script %s", fullScript);
 
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mFutureSandbox.addCallback(
-                            new FutureCallback<AwJsSandbox>() {
-                                @Override
-                                public void onSuccess(AwJsSandbox jsSandbox) {
-                                    AwJsIsolate jsIsolate = jsSandbox.createIsolate();
-                                    ExecutionCallback callback =
-                                            new ExecutionCallback(jsIsolate, completer);
-                                    jsIsolate.evaluateJavascript(fullScript, callback);
-                                }
+                    getFutureSandbox(mContext)
+                            .addCallback(
+                                    new FutureCallback<AwJsSandbox>() {
+                                        @Override
+                                        public void onSuccess(AwJsSandbox jsSandbox) {
+                                            AwJsIsolate jsIsolate = jsSandbox.createIsolate();
+                                            ExecutionCallback callback =
+                                                    new ExecutionCallback(jsIsolate, completer);
+                                            jsIsolate.evaluateJavascript(fullScript, callback);
+                                        }
 
-                                @Override
-                                public void onFailure(Throwable t) {
-                                    String error = "Failed executing JS script";
-                                    completer.setException(new JSExecutionException(error, t));
-                                }
-                            },
-                            MoreExecutors.directExecutor()); // This just starts the JS execution in
+                                        @Override
+                                        public void onFailure(Throwable t) {
+                                            String error = "Failed executing JS script";
+                                            completer.setException(
+                                                    new JSExecutionException(error, t));
+                                        }
+                                    },
+                                    directExecutor()); // This just starts the JS execution in
                     // another thread; it's a lightweight task.
 
                     // This value is used only for debug purposes: it will be used in toString()
