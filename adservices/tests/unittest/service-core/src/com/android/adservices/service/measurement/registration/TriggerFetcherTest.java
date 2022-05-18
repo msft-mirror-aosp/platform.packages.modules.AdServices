@@ -269,6 +269,50 @@ public final class TriggerFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
+    @Test
+    public void testBasicTriggerRequestWithAggregateTriggerData() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Trigger-Data",
+                        List.of("[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                                + "\"filters\":"
+                                + "{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                                + "\"not_filters\":{\"product\":[\"1\"]}},"
+                                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")));
+        ArrayList<TriggerRegistration> result = new ArrayList<>();
+        assertTrue(mFetcher.fetchTrigger(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals(
+                "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                        + "\"filters\":{\"conversion_subdomain\":[\"electronics.megastore\"]},"
+                        + "\"not_filters\":{\"product\":[\"1\"]}},"
+                        + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]",
+                result.get(0).getAggregateTriggerData());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequestWithAggregateValues() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Values",
+                        List.of("{\"campaignCounts\":32768,\"geoValue\":1644}")));
+        ArrayList<TriggerRegistration> result = new ArrayList<>();
+        assertTrue(mFetcher.fetchTrigger(request, result));
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals("{\"campaignCounts\":32768,\"geoValue\":1644}",
+                result.get(0).getAggregateValues());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
     private RegistrationRequest buildRequest(String triggerUri, String topOriginUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)

@@ -58,9 +58,9 @@ public class Classifier {
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
-    private ImmutableSet<String> mLabels;
+    private ImmutableSet<Integer> mLabels;
     // The app topics map Map<App, List<Topic>>
-    private Map<String, List<String>> mAppTopics = new HashMap<>();
+    private Map<String, List<Integer>> mAppTopics = new HashMap<>();
 
     private Classifier(
             @NonNull PrecomputedLoader precomputedLoader,
@@ -94,12 +94,12 @@ public class Classifier {
      * @return {@code appClassificationTopicsMap = Map<App, List<Topic>>}
      */
     @NonNull
-    public Map<String, List<String>> classify(@NonNull Set<String> apps) {
+    public Map<String, List<Integer>> classify(@NonNull Set<String> apps) {
         if (!isLoaded()) {
             load();
         }
 
-        Map<String, List<String>> appsToTopicsClassification = new HashMap<>();
+        Map<String, List<Integer>> appsToTopicsClassification = new HashMap<>();
 
         for (String app : apps) {
             if (app != null && app.length() > 0) {
@@ -125,8 +125,8 @@ public class Classifier {
      * @return A list of topics where Top Topics precede the random topics.
      */
     @NonNull
-    public List<String> getTopTopics(
-            @NonNull Map<String, List<String>> appTopics,
+    public List<Integer> getTopTopics(
+            @NonNull Map<String, List<Integer>> appTopics,
             @NonNull int numberOfTopTopics,
             @NonNull int numberOfRandomTopics) {
         Preconditions.checkArgument(numberOfTopTopics > 0,
@@ -139,23 +139,23 @@ public class Classifier {
         }
 
         // A map from Topics to the count of its occurrences
-        Map<String, Integer> topicsToAppTopicCount = new HashMap<>();
-        for (List<String> appTopic : appTopics.values()) {
-            for (String topic : appTopic) {
+        Map<Integer, Integer> topicsToAppTopicCount = new HashMap<>();
+        for (List<Integer> appTopic : appTopics.values()) {
+            for (Integer topic : appTopic) {
                 topicsToAppTopicCount.put(
                         topic, topicsToAppTopicCount.getOrDefault(topic, 0) + 1);
             }
         }
 
         // Sort the topics by their count
-        List<String> allSortedTopics = topicsToAppTopicCount.entrySet().stream()
+        List<Integer> allSortedTopics = topicsToAppTopicCount.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
         // The number of topics to pad in top topics
         int numberOfRandomPaddingTopics = Math.max(0, numberOfTopTopics - allSortedTopics.size());
-        List<String> topTopics = allSortedTopics.subList(
+        List<Integer> topTopics = allSortedTopics.subList(
                 0, Math.min(numberOfTopTopics, allSortedTopics.size()));
 
         // If the size of topTopics smaller than numberOfTopTopics,
@@ -172,14 +172,14 @@ public class Classifier {
      * @return A list of topics where top topics precede numOfRandomTopics random topics.
      */
     @NonNull
-    private List<String> getRandomTopics(
-            @NonNull List<String> topTopics,
+    private List<Integer> getRandomTopics(
+            @NonNull List<Integer> topTopics,
             @NonNull int numberOfRandomTopics) {
         if (numberOfRandomTopics <= 0) {
             return topTopics;
         }
 
-        List<String> returnedTopics = new ArrayList<>();
+        List<Integer> returnedTopics = new ArrayList<>();
 
         // First add all the top topics
         returnedTopics.addAll(topTopics);
@@ -193,7 +193,7 @@ public class Classifier {
             int randInt = mRandom.nextInt(mLabels.size());
             // mLabels is an immutable set,
             // it should be converted to array before picking up one element randomly
-            String randTopic = mLabels.toArray()[randInt].toString();
+            Integer randTopic = Integer.parseInt(mLabels.toArray()[randInt].toString());
             if (returnedTopics.contains(randTopic)) {
                 continue;
             }

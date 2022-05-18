@@ -32,13 +32,13 @@ import java.util.Collection;
  * Tests for {@link MeasurementDao} browser deletion that affect the database.
  */
 @RunWith(Parameterized.class)
-public class DeleteApiE2ETest extends DatabaseE2ETest {
+public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
     @SuppressWarnings("unused")
-    public DeleteApiE2ETest(
+    public DeleteApiIntegrationTest(
             DbState input, DbState output, JSONObject param, String name) {
         super(input, output);
         mParam = param;
@@ -48,7 +48,7 @@ public class DeleteApiE2ETest extends DatabaseE2ETest {
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_browser_deletion_test.json");
-        return DatabaseE2ETest.getTestCasesFrom(inputStream, (testObj) ->
+        return AbstractDbIntegrationTest.getTestCasesFrom(inputStream, (testObj) ->
                 ((JSONObject) testObj).getJSONObject("param"));
     }
 
