@@ -23,7 +23,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
-import com.android.adservices.service.measurement.attribution.RandomSelector;
+import com.android.adservices.service.measurement.noising.MetadataNoiseUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -234,7 +234,7 @@ public class Trigger {
     public long getRandomizedTriggerData(Source source) {
         Long[] possibleValues = LongStream.range(0, source.getTriggerDataCardinality())
                 .boxed().toArray(Long[]::new);
-        return RandomSelector.selectRandomDataWithProbability(
+        return MetadataNoiseUtil.selectRandomDataWithProbability(
                 source.getTriggerDataNoiseRate(),
                 getTruncatedTriggerData(source),
                 possibleValues);
