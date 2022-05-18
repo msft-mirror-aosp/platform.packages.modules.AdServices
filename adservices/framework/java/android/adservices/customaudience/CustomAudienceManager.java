@@ -20,7 +20,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -34,10 +33,6 @@ import java.util.concurrent.Executor;
 
 /**
  * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
- *
- * <p>Hiding for future implementation and review for public exposure.
- *
- * @hide
  */
 public class CustomAudienceManager {
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
@@ -48,7 +43,8 @@ public class CustomAudienceManager {
     @SuppressWarnings("unused")
     private final Context mContext;
 
-    @NonNull private final ServiceBinder<ICustomAudienceService> mServiceBinder;
+    @NonNull
+    private final ServiceBinder<ICustomAudienceService> mServiceBinder;
 
     /**
      * Create a service binder CustomAudienceManager
@@ -76,13 +72,14 @@ public class CustomAudienceManager {
      * Adds the current user to a custom audience serving targeted ads during the ad selection
      * process.
      */
-    public void joinCustomAudience(
-            @NonNull CustomAudience customAudience,
+    public void joinCustomAudience(@NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(joinCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
+
+        final CustomAudience customAudience = joinCustomAudienceRequest.getCustomAudience();
 
         try {
             final ICustomAudienceService service = getService();
@@ -118,16 +115,16 @@ public class CustomAudienceManager {
      *
      * <p>In case of a non-existent or mis-identified {@link CustomAudience}, no actions are taken.
      */
-    public void leaveCustomAudience(
-            @Nullable String owner,
-            @NonNull String buyer,
-            @NonNull String name,
+    public void leaveCustomAudience(@NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(buyer);
-        Objects.requireNonNull(name);
+        Objects.requireNonNull(leaveCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
+
+        final String owner = leaveCustomAudienceRequest.getOwner();
+        final String buyer = leaveCustomAudienceRequest.getBuyer();
+        final String name = leaveCustomAudienceRequest.getName();
 
         try {
             final ICustomAudienceService service = getService();
@@ -167,6 +164,8 @@ public class CustomAudienceManager {
      * provided in {@link AddCustomAudienceOverrideRequest} instead. The {@link
      * AddCustomAudienceOverrideRequest} is provided by the Ads SDK. The receiver either returns a
      * {@code void} for a successful run, or an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void overrideCustomAudienceRemoteInfo(
@@ -207,11 +206,14 @@ public class CustomAudienceManager {
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
+
     /**
      * Removes an override in th Custom Audience API with associated the data in {@link
      * RemoveCustomAudienceOverrideRequest}. The {@link RemoveCustomAudienceOverrideRequest} is
      * provided by the Ads SDK. The receiver either returns a {@code void} for a successful run, or
      * an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void removeCustomAudienceRemoteInfoOverride(
@@ -254,6 +256,8 @@ public class CustomAudienceManager {
     /**
      * Removes all override data in the Custom Audience API. The receiver either returns a {@code
      * void} for a successful run, or an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void resetAllCustomAudienceOverrides(
