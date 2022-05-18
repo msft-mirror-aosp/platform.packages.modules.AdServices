@@ -279,7 +279,8 @@ public class CustomAudienceDaoTest {
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
 
         String biddingLogicJS =
-                mCustomAudienceDao.getBiddingLogicUrlOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getBiddingLogicUrlOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJS);
     }
@@ -291,7 +292,8 @@ public class CustomAudienceDaoTest {
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
 
         String biddingLogicJs1 =
-                mCustomAudienceDao.getBiddingLogicUrlOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getBiddingLogicUrlOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_1 =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
@@ -303,7 +305,8 @@ public class CustomAudienceDaoTest {
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_3);
 
         String biddingLogicJs3 =
-                mCustomAudienceDao.getBiddingLogicUrlOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getBiddingLogicUrlOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_3 =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
@@ -321,7 +324,8 @@ public class CustomAudienceDaoTest {
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_2, BUYER_2, NAME_2));
 
         String biddingLogicJs1 =
-                mCustomAudienceDao.getBiddingLogicUrlOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getBiddingLogicUrlOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_1 =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
@@ -330,7 +334,8 @@ public class CustomAudienceDaoTest {
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
 
         String biddingLogicJs2 =
-                mCustomAudienceDao.getBiddingLogicUrlOverride(OWNER_2, BUYER_2, NAME_2);
+                mCustomAudienceDao.getBiddingLogicUrlOverride(
+                        OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
         String trustedBiddingData_2 =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_2, BUYER_2, NAME_2);
