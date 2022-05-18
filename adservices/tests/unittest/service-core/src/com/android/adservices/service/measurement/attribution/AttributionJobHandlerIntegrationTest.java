@@ -22,7 +22,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.data.measurement.DatabaseE2ETest;
+import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -41,20 +41,21 @@ import java.io.InputStream;
 import java.util.Collection;
 
 /**
- * E2E tests for {@link AttributionJobHandler}
+ * Integration tests for {@link AttributionJobHandler}
  */
 @RunWith(Parameterized.class)
-public class AttributionJobHandlerE2ETest extends DatabaseE2ETest {
+public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
 
     @Parameterized.Parameters(name = "{2}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open("attribution_service_test.json");
-        return DatabaseE2ETest.getTestCasesFrom(inputStream, /*prepareAdditionalData=*/null);
+        return AbstractDbIntegrationTest.getTestCasesFrom(
+                inputStream, /*prepareAdditionalData=*/null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public AttributionJobHandlerE2ETest(DbState input, DbState output, String name) {
+    public AttributionJobHandlerIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
     }
 
