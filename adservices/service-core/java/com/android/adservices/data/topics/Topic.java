@@ -34,10 +34,10 @@ import java.util.Objects;
 public abstract class Topic {
 
     /**
-     * @return a String represents the topic details
+     * @return an Integer represents the topic details
      */
     @NonNull
-    public abstract String getTopic();
+    public abstract int getTopic();
 
     /**
      * @return the taxonomy version number
@@ -69,7 +69,7 @@ public abstract class Topic {
      */
     @NonNull
     public static Topic create(
-            @NonNull String topic,
+            @NonNull int topic,
             long taxonomyVersion,
             long modelVersion) {
         Objects.requireNonNull(topic);
@@ -85,7 +85,7 @@ public abstract class Topic {
     @AutoValue.Builder
     public abstract static class Builder {
         /** Set Topic */
-        public abstract Builder setTopic(@NonNull String topic);
+        public abstract Builder setTopic(@NonNull int topic);
 
         /** Set Taxonomy Version */
         public abstract Builder setTaxonomyVersion(@NonNull long taxonomyVersion);

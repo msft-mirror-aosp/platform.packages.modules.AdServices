@@ -78,7 +78,7 @@ public class TopicsDao {
      */
     @VisibleForTesting
     public void persistAppClassificationTopics(long epochId, long taxonomyVersion,
-            long modelVersion, @NonNull Map<String, List<String>> appClassificationTopicsMap) {
+            long modelVersion, @NonNull Map<String, List<Integer>> appClassificationTopicsMap) {
         Objects.requireNonNull(appClassificationTopicsMap);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -86,11 +86,11 @@ public class TopicsDao {
             return;
         }
 
-        for (Map.Entry<String, List<String>> entry : appClassificationTopicsMap.entrySet()) {
+        for (Map.Entry<String, List<Integer>> entry : appClassificationTopicsMap.entrySet()) {
             String app = entry.getKey();
 
             // save each topic in the list by app -> topic mapping in the DB
-            for (String topic : entry.getValue()) {
+            for (Integer topic : entry.getValue()) {
                 ContentValues values = new ContentValues();
                 values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, epochId);
                 values.put(TopicsTables.AppClassificationTopicsContract.APP, app);
@@ -155,7 +155,8 @@ public class TopicsDao {
                         TopicsTables.AppClassificationTopicsContract.MODEL_VERSION));
                 String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
                         TopicsTables.AppClassificationTopicsContract.TOPIC));
-                Topic topic = Topic.create(topicString, taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(
+                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
 
                 List<Topic> list = appTopicsMap.getOrDefault(app, new ArrayList<>());
                 list.add(topic);
@@ -173,7 +174,7 @@ public class TopicsDao {
      * @param topTopics the topics list to persist into DB
      */
     @VisibleForTesting
-    public void persistTopTopics(long epochId, @NonNull List<String> topTopics) {
+    public void persistTopTopics(long epochId, @NonNull List<Integer> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
         Objects.requireNonNull(topTopics);
@@ -409,14 +410,14 @@ public class TopicsDao {
      *        about that topic. This is similar to the table Can Learn Topic in the explainer.
      */
     public void persistCallerCanLearnTopics(
-            long epochId, @NonNull Map<String, Set<String>> callerCanLearnMap) {
+            long epochId, @NonNull Map<Integer, Set<String>> callerCanLearnMap) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
         }
 
-        for (Map.Entry<String, Set<String>> entry : callerCanLearnMap.entrySet()) {
-            String topic = entry.getKey();
+        for (Map.Entry<Integer, Set<String>> entry : callerCanLearnMap.entrySet()) {
+            Integer topic = entry.getKey();
             Set<String> callers = entry.getValue();
 
             for (String caller : callers) {
@@ -448,12 +449,12 @@ public class TopicsDao {
      */
     @VisibleForTesting
     @NonNull
-    public Map<String, Set<String>> retrieveCallerCanLearnTopicsMap(
+    public Map<Integer, Set<String>> retrieveCallerCanLearnTopicsMap(
             long epochId, int numberOfLookBackEpochs) {
         Preconditions.checkArgumentPositive(
                 numberOfLookBackEpochs, "numberOfLookBackEpochs must be positive!");
 
-        Map<String, Set<String>> callerCanLearnMap = new HashMap<>();
+        Map<Integer, Set<String>> callerCanLearnMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return callerCanLearnMap;
@@ -495,10 +496,10 @@ public class TopicsDao {
                         cursor.getString(
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.CallerCanLearnTopicsContract.CALLER));
-                String topic =
-                        cursor.getString(
+                Integer topic =
+                        Integer.parseInt(cursor.getString(
                                 cursor.getColumnIndexOrThrow(
-                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
+                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC)));
 
                 if (!callerCanLearnMap.containsKey(topic)) {
                     callerCanLearnMap.put(topic, new HashSet<>());
@@ -522,13 +523,13 @@ public class TopicsDao {
      * returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
      */
     public void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
-            @NonNull Map<Pair<String, String>, String> returnedAppSdkTopics) {
+            @NonNull Map<Pair<String, String>, Integer> returnedAppSdkTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
         }
 
-        for (Map.Entry<Pair<String, String>, String> app : returnedAppSdkTopics.entrySet()) {
+        for (Map.Entry<Pair<String, String>, Integer> app : returnedAppSdkTopics.entrySet()) {
             // Entry: Key = <Pair<App, Sdk>, Value = Topic.
             ContentValues values = new ContentValues();
             values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, epochId);
@@ -610,7 +611,8 @@ public class TopicsDao {
                     topicsMap.put(cursorEpochId, new HashMap<>());
                 }
 
-                Topic topic = Topic.create(topicString, taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(
+                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
                 topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
