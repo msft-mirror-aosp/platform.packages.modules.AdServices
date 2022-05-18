@@ -76,10 +76,10 @@ public final class TopicsDaoTest {
         final String app2 = "app2";
 
         // Initialize appClassificationTopicsMap and topics
-        Map<String, List<String>> appClassificationTopicsMap1 = new HashMap<>();
-        Map<String, List<String>> appClassificationTopicsMap2 = new HashMap<>();
-        Topic topic1 = Topic.create("topic1", taxonomyVersion, modelVersion);
-        Topic topic2 = Topic.create("topic1", taxonomyVersion, modelVersion);
+        Map<String, List<Integer>> appClassificationTopicsMap1 = new HashMap<>();
+        Map<String, List<Integer>> appClassificationTopicsMap2 = new HashMap<>();
+        Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
+        Topic topic2 = Topic.create(/* topic */ 2, taxonomyVersion, modelVersion);
         // to test multiple topics for one app
         appClassificationTopicsMap1.put(app1, Arrays.asList(topic1.getTopic(), topic2.getTopic()));
 
@@ -126,20 +126,19 @@ public final class TopicsDaoTest {
 
     @Test
     public void testGetTopTopicsAndPersistTopics() {
-        List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
-                "random_topic");
+        List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
         List<String> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 1L);
 
         // Make sure that what we write to db is equal to what we read from db.
-        assertThat(topicsFromDb).isEqualTo(topTopics);
+        assertThat(topicsFromDb.stream().map(Integer::parseInt).collect(Collectors.toList()))
+                .isEqualTo(topTopics);
     }
 
     @Test
     public void testGetTopTopicsAndPersistTopics_notFoundEpochId() {
-        List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
-                "random_topic");
+        List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
 
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
@@ -152,7 +151,7 @@ public final class TopicsDaoTest {
     @Test
     public void testGetTopTopicsAndPersistTopics_invalidSize() {
         // Not enough 6 topics.
-        List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "random_topic");
+        List<Integer> topTopics = Arrays.asList(1, 2, 3, /* random_topic */ 6);
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -173,17 +172,20 @@ public final class TopicsDaoTest {
     @Test
     public void testGetTopTopicsAndPersistTopics_multiPersistWithSameEpoch() {
         final long epochId = 1L;
-        List<String> topTopics = Arrays.asList("topic1", "topic2", "topic3", "topic4", "topic5",
-                "random_topic");
+        List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
         mTopicsDao.persistTopTopics(epochId, topTopics);
         // Persist the TopTopics twice with the same epochID
         mTopicsDao.persistTopTopics(epochId, topTopics);
 
         // This assertion is to test above persisting calls with same epoch Id didn't throw
         // any exceptions
-        assertThat(mTopicsDao.retrieveTopTopics(epochId)).isEqualTo(topTopics);
+        assertThat(mTopicsDao.retrieveTopTopics(epochId)
+                .stream().map(Integer::parseInt).collect(Collectors.toList()))
+                .isEqualTo(topTopics);
         // Also check that no incremental epoch id is saved in DB
-        assertThat(mTopicsDao.retrieveTopTopics(epochId + 1)).isEmpty();
+        assertThat(mTopicsDao.retrieveTopTopics(epochId + 1)
+                .stream().map(Integer::parseInt).collect(Collectors.toList()))
+                .isEmpty();
     }
 
     @Test
@@ -358,42 +360,42 @@ public final class TopicsDaoTest {
 
         appSdksUsageMap.put("app5", Arrays.asList("sdk1", "sdk5"));
 
-        Map<String, List<String>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList("topic1", "topic2"));
-        appClassificationTopicsMap.put("app2", Arrays.asList("topic2", "topic3"));
-        appClassificationTopicsMap.put("app3", Arrays.asList("topic4", "topic5"));
-        appClassificationTopicsMap.put("app4", Arrays.asList("topic5", "topic6"));
+        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
+        appClassificationTopicsMap.put("app2", Arrays.asList(2, 3));
+        appClassificationTopicsMap.put("app3", Arrays.asList(4, 5));
+        appClassificationTopicsMap.put("app4", Arrays.asList(5, 6));
 
         // app5 has not classification topics.
         appClassificationTopicsMap.put("app5", Arrays.asList());
 
-        Map<String, Set<String>> callerCanLearnMap = new HashMap<>();
+        Map<Integer, Set<String>> callerCanLearnMap = new HashMap<>();
         // topic1 is a classification topic for app1, so all SDKs in apps1 can learn this topic.
         // In addition, the app1 called the Topics API directly so it can learn topic1 as well.
-        callerCanLearnMap.put("topic1", new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        callerCanLearnMap.put(/* topic */ 1, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
 
         // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
         // this topic.
-        callerCanLearnMap.put(
-                "topic2", new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
+        callerCanLearnMap.put(/* topic */ 2,
+                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
 
         // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
-        callerCanLearnMap.put("topic3", new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
+        callerCanLearnMap.put(/* topic */ 3, new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
 
         // topic4 is a classification topic for app3, so all SDKs in apps3 can learn this topic.
-        callerCanLearnMap.put("topic4", new HashSet<>(Arrays.asList("sdk1", "sdk5")));
+        callerCanLearnMap.put(/* topic */ 4, new HashSet<>(Arrays.asList("sdk1", "sdk5")));
 
         // topic5 is a classification topic for app3 and app4, so any SDKs in apps3 or app4 can
         // learn this topic.
         // app4 called Topics API directly, so it can learn this topic.
-        callerCanLearnMap.put("topic5", new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
+        callerCanLearnMap.put(/* topic */ 5, new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
 
         // app4 called the Topics API directly so it can learn this topic.
-        callerCanLearnMap.put("topic6", new HashSet<>(Arrays.asList("app4")));
+        callerCanLearnMap.put(/* topic */ 6, new HashSet<>(Arrays.asList("app4")));
 
         mTopicsDao.persistCallerCanLearnTopics(/* epochId = */ 3L, callerCanLearnMap);
 
-        Map<String, Set<String>> callerCanLearnMapFromDb =
+        Map<Integer, Set<String>> callerCanLearnMapFromDb =
                 mTopicsDao.retrieveCallerCanLearnTopicsMap(/* epochId = */ 5L,
                         /* howManyEpochs = */ 3);
 
@@ -403,29 +405,28 @@ public final class TopicsDaoTest {
     @Test
     public void testPersistAndRetrieveReturnedAppTopics_oneEpoch() {
         // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
-        Map<Pair<String, String>, String> returnedAppSdkTopics = new HashMap<>();
-        returnedAppSdkTopics.put(Pair.create("app1", ""), "topic1");
-        returnedAppSdkTopics.put(Pair.create("app1", "sdk1"), "topic1");
-        returnedAppSdkTopics.put(Pair.create("app1", "sdk2"), "topic1");
+        Map<Pair<String, String>, Integer> returnedAppSdkTopics = new HashMap<>();
+        returnedAppSdkTopics.put(Pair.create("app1", ""), /* topic */ 1);
+        returnedAppSdkTopics.put(Pair.create("app1", "sdk1"), /* topic */ 1);
+        returnedAppSdkTopics.put(Pair.create("app1", "sdk2"), /* topic */ 1);
 
-        returnedAppSdkTopics.put(Pair.create("app2", "sdk1"), "topic2");
-        returnedAppSdkTopics.put(Pair.create("app2", "sdk3"), "topic2");
-        returnedAppSdkTopics.put(Pair.create("app2", "sdk4"), "topic2");
+        returnedAppSdkTopics.put(Pair.create("app2", "sdk1"), /* topic */ 2);
+        returnedAppSdkTopics.put(Pair.create("app2", "sdk3"), /* topic */ 2);
+        returnedAppSdkTopics.put(Pair.create("app2", "sdk4"), /* topic */ 2);
 
-        returnedAppSdkTopics.put(Pair.create("app3", "sdk1"), "topic3");
+        returnedAppSdkTopics.put(Pair.create("app3", "sdk1"), /* topic */ 3);
 
-        returnedAppSdkTopics.put(Pair.create("app5", "sdk1"), "topic5");
-        returnedAppSdkTopics.put(Pair.create("app5", "sdk5"), "topic5");
+        returnedAppSdkTopics.put(Pair.create("app5", "sdk1"), /* topic */ 5);
+        returnedAppSdkTopics.put(Pair.create("app5", "sdk5"), /* topic */ 5);
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 1L, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L, returnedAppSdkTopics);
 
         Map<Pair<String, String>, Topic> expectedReturnedAppSdkTopics = new HashMap<>();
-        for (Map.Entry<Pair<String, String>, String>  entry
+        for (Map.Entry<Pair<String, String>, Integer>  entry
                 : returnedAppSdkTopics.entrySet()) {
             expectedReturnedAppSdkTopics.put(entry.getKey(),
-                    Topic.create(entry.getValue(),
-                            /* taxonomyVersion = */ 1L,
+                    Topic.create(entry.getValue(), /* taxonomyVersion = */ 1L,
                             /* modelVersion = */ 1L));
         }
 
@@ -445,15 +446,15 @@ public final class TopicsDaoTest {
     @Test
     public void testPersistAndRetrieveReturnedAppTopics_multipleEpochs() {
         // We will have 5 topics and setup the returned topics for epoch 3, 2, and 1.
-        Topic topic1 = Topic.create("topic1", /* taxonomyVersion = */ 1L,
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic2 = Topic.create("topic2", /* taxonomyVersion = */ 1L,
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic3 = Topic.create("topic3", /* taxonomyVersion = */ 1L,
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic4 = Topic.create("topic4", /* taxonomyVersion = */ 1L,
+        Topic topic4 = Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic5 = Topic.create("topic5", /* taxonomyVersion = */ 1L,
+        Topic topic5 = Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
 
         // Setup for EpochId 1
@@ -473,7 +474,7 @@ public final class TopicsDaoTest {
         returnedAppSdkTopicsForEpoch1.put(Pair.create("app5", "sdk5"), topic5);
 
         // Convert the returned Topics with POJO to returned Topics with String.
-        Map<Pair<String, String>, String> returnedTopicsStringForEpoch1 =
+        Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch1 =
                 returnedAppSdkTopicsForEpoch1.entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
@@ -495,7 +496,7 @@ public final class TopicsDaoTest {
         returnedAppSdkTopicsForEpoch2.put(Pair.create("app5", "sdk5"), topic1);
 
         // Convert the returned Topics with POJO to returned Topics with String.
-        Map<Pair<String, String>, String> returnedTopicsStringForEpoch2 =
+        Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch2 =
                 returnedAppSdkTopicsForEpoch2.entrySet()
                         .stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
@@ -506,7 +507,7 @@ public final class TopicsDaoTest {
         // or the device was offline and no epoch computation was done.
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch3 = new HashMap<>();
         // Convert the returned Topics with POJO to returned Topics with String.
-        Map<Pair<String, String>, String> returnedTopicsStringForEpoch3 =
+        Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch3 =
                 returnedAppSdkTopicsForEpoch3.entrySet()
                         .stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,

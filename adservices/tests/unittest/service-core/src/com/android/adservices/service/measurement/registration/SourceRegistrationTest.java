@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import android.content.Context;
 import android.net.Uri;
@@ -39,13 +40,16 @@ public final class SourceRegistrationTest {
 
     private SourceRegistration createExampleResponse() {
         return new SourceRegistration.Builder()
-            .setTopOrigin(Uri.parse("https://foo.com"))
-            .setReportingOrigin(Uri.parse("https://bar.com"))
-            .setDestination(Uri.parse("android-app://baz.com"))
-            .setSourceEventId(1234567)
-            .setExpiry(2345678)
-            .setSourcePriority(345678)
-            .build();
+                .setTopOrigin(Uri.parse("https://foo.com"))
+                .setReportingOrigin(Uri.parse("https://bar.com"))
+                .setDestination(Uri.parse("android-app://baz.com"))
+                .setSourceEventId(1234567)
+                .setExpiry(2345678)
+                .setSourcePriority(345678)
+                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}")
+                .build();
     }
 
     void verifyExampleResponse(SourceRegistration response) {
@@ -55,6 +59,11 @@ public final class SourceRegistrationTest {
         assertEquals(1234567, response.getSourceEventId());
         assertEquals(2345678, response.getExpiry());
         assertEquals(345678, response.getSourcePriority());
+        assertEquals("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]",
+                response.getAggregateSource());
+        assertEquals("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
+                response.getAggregateFilterData());
     }
 
     @Test
@@ -71,5 +80,7 @@ public final class SourceRegistrationTest {
         assertEquals(0, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
+        assertNull(response.getAggregateSource());
+        assertNull(response.getAggregateFilterData());
     }
 }
