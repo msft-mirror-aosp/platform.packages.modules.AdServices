@@ -16,12 +16,7 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test_helper_app {
-    name: "FailingSdkProvider",
-    defaults: ["platform_app_defaults"],
-    certificate: ":sdksandbox-test",
-    srcs: [
-       "src/**/*.java",
-    ],
-    platform_apis: true,
+android_app_certificate {
+    name: "sdksandbox-test",
+    certificate: "sdksandbox-test",
 }

@@ -105,8 +105,7 @@ android_test_helper_app {
     name: "TestCodeProvider",
     manifest: "codeprovider/TestCodeProviderManifest.xml",
     defaults: ["platform_app_defaults"],
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     srcs: [
        "codeprovider/src/**/TestSandboxedSdkProvider.java",
        ":framework-sdksandbox-sources",
@@ -117,8 +116,7 @@ android_test_helper_app {
 android_test_helper_app {
     name: "TestCodeProvider2",
     manifest: "codeprovider/TestCodeProvider2Manifest.xml",
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     defaults: ["platform_app_defaults"],
     srcs: [
        "codeprovider/src/**/TestSandboxedSdkProvider2.java",
