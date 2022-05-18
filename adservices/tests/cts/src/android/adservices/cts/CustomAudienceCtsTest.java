@@ -83,6 +83,21 @@ public class CustomAudienceCtsTest {
     }
 
     @Test
+    public void testJoinCustomAudience_ownerIsNotCallingApp_fail() {
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.joinCustomAudience(
+                                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                                CommonFixture.VALID_BUYER)
+                                                        .setOwner("Invalid_owner")
+                                                        .build())
+                                        .get());
+        assertTrue(exception.getCause() instanceof SecurityException);
+    }
+
+    @Test
     public void testJoinCustomAudience_illegalExpirationTime_fail() {
         CustomAudience customAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
@@ -118,6 +133,20 @@ public class CustomAudienceCtsTest {
                         CommonFixture.VALID_BUYER.getStringForm(),
                         "not_exist_name")
                 .get();
+    }
+
+    @Test
+    public void testLeaveCustomAudience_ownerNotCallingApp_fail() {
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.leaveCustomAudience(
+                                                "Invalid_owner",
+                                                CommonFixture.VALID_BUYER.getStringForm(),
+                                                CustomAudienceFixture.VALID_NAME)
+                                        .get());
+        assertTrue(exception.getCause() instanceof SecurityException);
     }
 
     @Test

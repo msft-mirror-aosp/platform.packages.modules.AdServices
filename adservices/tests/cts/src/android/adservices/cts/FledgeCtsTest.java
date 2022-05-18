@@ -237,7 +237,7 @@ public class FledgeCtsTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer.getStringForm())
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

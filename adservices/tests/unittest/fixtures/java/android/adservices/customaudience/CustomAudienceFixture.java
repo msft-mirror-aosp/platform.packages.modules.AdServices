@@ -37,7 +37,8 @@ public final class CustomAudienceFixture {
             Duration.ofMillis(
                     CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceDefaultExpireInMs());
     public static final long DAY_IN_SECONDS = 60 * 60 * 24;
-    public static final String VALID_OWNER = "testOwnerApplication";
+
+    public static final String VALID_OWNER = CommonFixture.TEST_PACKAGE_NAME;
     public static final String VALID_NAME = "testCustomAudienceName";
 
     public static final Instant VALID_ACTIVATION_TIME =
