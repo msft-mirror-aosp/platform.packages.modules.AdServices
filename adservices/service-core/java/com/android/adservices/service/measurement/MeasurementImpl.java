@@ -180,10 +180,10 @@ public final class MeasurementImpl {
                     .setEventTime(sourceEventTime)
                     .setExpiryTime(sourceEventTime
                             + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
-                    .setInstallAttributionWindow(sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
-                    .setInstallCooldownWindow(sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
+                    .setInstallAttributionWindow(
+                            TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
+                    .setInstallCooldownWindow(
+                            TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
                     // Setting as TRUTHFULLY as default value for tests.
                     // This will be overwritten by getSourceEventReports.
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
