@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import android.net.Uri;
+
 import org.json.JSONException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,23 +30,28 @@ import java.util.Collection;
  * Tests for {@link MeasurementDao} app deletion that affect the database.
  */
 @RunWith(Parameterized.class)
-public class DeleteExpiredE2ETest extends DatabaseE2ETest {
+public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
+    private final Uri mUri;
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
         InputStream inputStream = sContext.getAssets().open(
-                "measurement_delete_expired_test.json");
-        return DatabaseE2ETest.getTestCasesFrom(inputStream, null);
+                "measurement_app_uninstall_deletion_test.json");
+        return AbstractDbIntegrationTest.getTestCasesFrom(inputStream, (testObj) ->
+                Uri.parse(testObj.getString("uri")));
     }
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public DeleteExpiredE2ETest(DbState input, DbState output, String name) {
+    public AppDeletionIntegrationTest(DbState input, DbState output, Uri uri, String name) {
         super(input, output);
+        this.mUri = uri;
     }
 
     public void runActionToTest() {
-        DatastoreManagerFactory.getDatastoreManager(sContext)
-                .runInTransaction(IMeasurementDao::deleteExpiredRecords);
+        DatastoreManagerFactory
+                .getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> dao.deleteAppRecords(mUri));
     }
 }
