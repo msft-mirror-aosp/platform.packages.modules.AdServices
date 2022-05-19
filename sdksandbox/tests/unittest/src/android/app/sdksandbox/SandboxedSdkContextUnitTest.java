@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tests.sdksandbox.endtoend;
+package android.app.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -39,7 +38,7 @@ import java.io.InputStreamReader;
  * Tests {@link SandboxedSdkContext} APIs.
  */
 @RunWith(JUnit4.class)
-public class SandboxedSdkContextTest {
+public class SandboxedSdkContextUnitTest {
 
     private SandboxedSdkContext mSandboxedSdkContext;
     private static final String SDK_NAME = "com.android.codeproviderresources";

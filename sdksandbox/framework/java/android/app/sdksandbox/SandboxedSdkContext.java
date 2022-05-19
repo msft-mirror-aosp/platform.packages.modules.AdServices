@@ -47,6 +47,7 @@ public final class SandboxedSdkContext extends ContextWrapper {
     private final AssetManager mAssets;
     private final String mSdkName;
 
+    /** @hide */
     public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info,
             @NonNull String sdkName) {
         super(baseContext);
