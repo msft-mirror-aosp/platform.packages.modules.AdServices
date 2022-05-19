@@ -25,10 +25,6 @@ import java.util.Objects;
 
 /**
  * Represents data specific to an ad that is necessary for ad selection and rendering.
- *
- * <p>Hiding for future implementation and review for public exposure.
- *
- * @hide
  */
 public final class AdData implements Parcelable {
     @NonNull
@@ -94,7 +90,7 @@ public final class AdData implements Parcelable {
         return 0;
     }
 
-    /** Gets the URL that points to the ad's rendering assets. */
+    /** Gets the URL that points to the ad's rendering assets. The URL must use HTTPS. */
     @NonNull
     public Uri getRenderUrl() {
         return mRenderUrl;
@@ -144,11 +140,12 @@ public final class AdData implements Parcelable {
         @NonNull
         private String mMetadata;
 
+        // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
         }
 
         /**
-         * Sets the URL that points to the ad's rendering assets.
+         * Sets the URL that points to the ad's rendering assets. The URL must use HTTPS.
          * <p>
          * See {@link #getRenderUrl()} for detail.
          */
@@ -161,6 +158,14 @@ public final class AdData implements Parcelable {
 
         /**
          * Sets the buyer ad metadata used during the ad selection process.
+         * <p>
+         * The metadata should be a valid JSON object serialized as a string. Metadata represents
+         * ad-specific bidding information that will be used during ad selection as part of bid
+         * generation and used in buyer JavaScript logic, which is executed in an isolated execution
+         * environment.
+         * <p>
+         * If the metadata is not a valid JSON object that can be consumed by the buyer's JS, the ad
+         * will not be eligible for ad selection.
          * <p>
          * See {@link #getMetadata()} for detail.
          */
@@ -179,7 +184,6 @@ public final class AdData implements Parcelable {
         @NonNull
         public AdData build() {
             Objects.requireNonNull(mRenderUrl);
-            // Note that the list of keys is allowed to be empty, but not null
             // TODO(b/231997523): Add JSON field validation.
             Objects.requireNonNull(mMetadata);
 
