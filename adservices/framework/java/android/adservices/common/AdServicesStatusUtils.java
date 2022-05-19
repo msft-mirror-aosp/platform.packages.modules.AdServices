@@ -16,10 +16,12 @@
 
 package android.adservices.common;
 
+import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
 /**
  * Utility class containing status codes and functions used by various response objects.
  *
@@ -31,50 +33,53 @@ public class AdServicesStatusUtils {
      *
      * @hide
      */
-    @IntDef(prefix = {"STATUS_"}, value = {
-            STATUS_UNSET,
-            STATUS_SUCCESS,
-            STATUS_INTERNAL_ERROR,
-            STATUS_INVALID_ARGUMENT,
-            STATUS_UNKNOWN_ERROR
-    })
+    @IntDef(
+            prefix = {"STATUS_"},
+            value = {
+                STATUS_UNSET,
+                STATUS_SUCCESS,
+                STATUS_INTERNAL_ERROR,
+                STATUS_INVALID_ARGUMENT,
+                STATUS_UNAUTHORIZED,
+                STATUS_UNKNOWN_ERROR
+            })
     @Retention(RetentionPolicy.SOURCE)
-    public @interface StatusCode { }
+    public @interface StatusCode {}
 
     /**
-     * The status code has not been set.
-     * Keep unset status code the lowest value of the status codes.
+     * The status code has not been set. Keep unset status code the lowest value of the status
+     * codes.
      */
     public static final int STATUS_UNSET = -1;
 
-    /**
-     * The call was successful.
-     */
+    /** The call was successful. */
     public static final int STATUS_SUCCESS = 0;
 
     /**
      * An internal error occurred within the API, which the caller cannot address.
      *
-     * This error may be considered similar to {@link IllegalStateException}.
+     * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_INTERNAL_ERROR = 1;
 
     /**
      * The caller supplied invalid arguments to the call.
      *
-     * This error may be considered similar to {@link IllegalArgumentException}.
+     * <p>This error may be considered similar to {@link IllegalArgumentException}.
      */
     public static final int STATUS_INVALID_ARGUMENT = 2;
 
     /**
-     * There was an unknown error.
-     * Keep unknown error the largest status code.
+     * The caller is not authorized to make this call.
+     *
+     * <p>This error may be considered similar to {@link ApiNotAuthorizedException}.
      */
-    public static final int STATUS_UNKNOWN_ERROR = 3;
+    public static final int STATUS_UNAUTHORIZED = 3;
 
-    /**
-     * Returns true for a successful status.
-     */
+    /** There was an unknown error. Keep unknown error the largest status code. */
+    public static final int STATUS_UNKNOWN_ERROR = 4;
+
+    /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
     }

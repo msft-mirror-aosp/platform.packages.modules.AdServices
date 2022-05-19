@@ -19,6 +19,9 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
+
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 
 import org.junit.Test;
 
@@ -26,39 +29,41 @@ public class CustomAudienceSignalsTest {
     @Test
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =
-                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CustomAudienceFixture.VALID_BUYER)
+                        .build();
 
-        assertEquals(customAudienceSignals.getOwner(), CustomAudienceSignalsFixture.OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceSignalsFixture.BUYER);
-        assertEquals(customAudienceSignals.getName(), CustomAudienceSignalsFixture.NAME);
+        assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
+        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
-                CustomAudienceSignalsFixture.ACTIVATION_TIME);
+                CustomAudienceFixture.VALID_ACTIVATION_TIME);
         assertEquals(
                 customAudienceSignals.getExpirationTime(),
-                CustomAudienceSignalsFixture.EXPIRATION_TIME);
+                CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceSignalsFixture.USER_BIDDING_SIGNALS);
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
 
     @Test
     public void testBuildFromCustomAudience() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(
-                        CustomAudienceSignalsFixture.CUSTOM_AUDIENCE);
+                        DBCustomAudienceFixture.getValidBuilder().build());
 
-        assertEquals(customAudienceSignals.getOwner(), CustomAudienceSignalsFixture.OWNER);
-        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceSignalsFixture.BUYER);
-        assertEquals(customAudienceSignals.getName(), CustomAudienceSignalsFixture.NAME);
+        assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
+        assertEquals(customAudienceSignals.getBuyer(), CustomAudienceFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
-                CustomAudienceSignalsFixture.ACTIVATION_TIME);
+                CustomAudienceFixture.VALID_ACTIVATION_TIME);
         assertEquals(
                 customAudienceSignals.getExpirationTime(),
-                CustomAudienceSignalsFixture.EXPIRATION_TIME);
+                CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceSignalsFixture.USER_BIDDING_SIGNALS);
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
 }

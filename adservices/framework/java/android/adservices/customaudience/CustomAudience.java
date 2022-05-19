@@ -35,10 +35,6 @@ import java.util.Objects;
  * A custom audience is an abstract grouping of users with similar demonstrated interests.  This
  * class is a collection of some data stored on a device that is necessary to serve advertisements
  * targeting a single custom audience.
- * <p>
- * Hiding for future implementation and review for public exposure.
- *
- * @hide
  */
 public final class CustomAudience implements Parcelable {
 
@@ -78,27 +74,17 @@ public final class CustomAudience implements Parcelable {
         }
     };
 
-    private CustomAudience(@Nullable String owner, @NonNull String buyer, @NonNull String name,
-            @Nullable Instant activationTime, @Nullable Instant expirationTime,
-            @NonNull Uri dailyUpdateUrl, @Nullable String userBiddingSignals,
-            @Nullable TrustedBiddingData trustedBiddingData, @NonNull Uri biddingLogicUrl,
-            @NonNull List<AdData> ads) {
-        Objects.requireNonNull(buyer);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(dailyUpdateUrl);
-        Objects.requireNonNull(biddingLogicUrl);
-        Objects.requireNonNull(ads);
-
-        mOwner = owner;
-        mBuyer = buyer;
-        mName = name;
-        mActivationTime = activationTime;
-        mExpirationTime = expirationTime;
-        mDailyUpdateUrl = dailyUpdateUrl;
-        mUserBiddingSignals = userBiddingSignals;
-        mTrustedBiddingData = trustedBiddingData;
-        mBiddingLogicUrl = biddingLogicUrl;
-        mAds = ads;
+    private CustomAudience(@NonNull CustomAudience.Builder builder) {
+        mOwner = builder.mOwner;
+        mBuyer = builder.mBuyer;
+        mName = builder.mName;
+        mActivationTime = builder.mActivationTime;
+        mExpirationTime = builder.mExpirationTime;
+        mDailyUpdateUrl = builder.mDailyUpdateUrl;
+        mUserBiddingSignals = builder.mUserBiddingSignals;
+        mTrustedBiddingData = builder.mTrustedBiddingData;
+        mBiddingLogicUrl = builder.mBiddingLogicUrl;
+        mAds = builder.mAds;
     }
 
     private CustomAudience(@NonNull Parcel in) {
@@ -153,6 +139,8 @@ public final class CustomAudience implements Parcelable {
     /**
      * Returns a String representing the custom audience's owner application or null to be the
      * calling application.
+     * <p>
+     * The value format must be &lt;App UID&gt;-&lt;package name&gt;.
      */
     @Nullable
     public String getOwner() {
@@ -186,8 +174,8 @@ public final class CustomAudience implements Parcelable {
      * users may not activate until a threshold of inactivity is reached, at which point the custom
      * audience's ads will participate in the ad selection process, potentially redirecting lapsed
      * users to the original owner application.
-     *
-     * <p>The maximum delay in activation is one year (365 days) from initial creation.
+     * <p>
+     * The maximum delay in activation is one year (365 days) from initial creation.
      *
      * @return the timestamp, truncated to milliseconds, after which the custom audience is active;
      */
@@ -200,10 +188,11 @@ public final class CustomAudience implements Parcelable {
      * Once the expiration time has passed, a custom audience is no longer eligible for daily
      * ad/bidding data updates or participation in the ad selection process.  The custom audience
      * will then be deleted from memory by the next daily update.
-     *
-     * <p>If no expiration time is provided on creation of the {@link CustomAudience}, expiry will
+     * <p>
+     * If no expiration time is provided on creation of the {@link CustomAudience}, expiry will
      * default to 60 days from activation.
-     * <p>The maximum expiry is one year (365 days) from initial activation.
+     * <p>
+     * The maximum expiry is one year (365 days) from initial activation.
      *
      * @return the timestamp, truncated to milliseconds, after which the custom audience should
      * be removed;
@@ -215,7 +204,7 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * This URL points to a buyer-operated server that hosts updated bidding data and ads metadata
-     * to be used in the on-device ad selection process.
+     * to be used in the on-device ad selection process. The URL must use HTTPS.
      *
      * @return the custom audience's daily update URL
      */
@@ -225,11 +214,14 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
-     * User bidding signals are represented as a JSON object, opaque to the custom audience and ad
-     * selection APIs, that is provided as-is directly to the isolated execution environment during
-     * the ad selection process.
+     * User bidding signals are provided by buyers to be consumed by buyer-provided JavaScript
+     * during ad selection in an isolated execution environment. These signals should be
+     * represented as a valid JSON object serialized into a string.
+     * <p>
+     * If the user bidding signals are not a valid JSON object that can be consumed by the
+     * buyer's JS, the custom audience will not be eligible for ad selection.
      *
-     * @return a JSON String representing the opaque user bidding signals for the custom audience
+     * @return a JSON String representing the user bidding signals for the custom audience
      */
     @Nullable
     public String getUserBiddingSignals() {
@@ -238,11 +230,11 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * Trusted bidding data consists of a URL pointing to a trusted server for buyers' bidding data
-     * and a list of keys to query the server with.  Note that the keys are opaque to the custom
+     * and a list of keys to query the server with. Note that the keys are opaque to the custom
      * audience and ad selection APIs.
      *
-     * @return a {@link TrustedBiddingData} object containing the custom audience's semi-opaque
-     * trusted bidding data
+     * @return a {@link TrustedBiddingData} object containing the custom audience's trusted
+     * bidding data
      */
     @Nullable
     public TrustedBiddingData getTrustedBiddingData() {
@@ -251,7 +243,7 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * Returns the target URL used to fetch bidding logic when a custom audience participates in the
-     * ad selection process
+     * ad selection process. The URL must use HTTPS.
      */
     @NonNull
     public Uri getBiddingLogicUrl() {
@@ -321,14 +313,17 @@ public final class CustomAudience implements Parcelable {
         @NonNull
         private List<AdData> mAds;
 
+        // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
         }
 
         /**
          * Sets the owner application.
-         * <p>See {@link #getOwner()} for more information.
+         * <p>
+         * See {@link #getOwner()} for more information.
          *
-         * @param owner application name or leave null to default to the calling app.
+         * @param owner &lt;App UID&gt;-&lt;package name&gt; or leave null to default to the calling
+         *              app.
          */
         @NonNull
         public CustomAudience.Builder setOwner(@Nullable String owner) {
@@ -338,8 +333,8 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the buyer domain URL.
-         *
-         * <p>See {@link #getBuyer()} for more information.
+         * <p>
+         * See {@link #getBuyer()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setBuyer(@NonNull String buyer) {
@@ -350,8 +345,8 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the {@link CustomAudience} object's name.
-         *
-         * <p>See {@link #getName()} for more information.
+         * <p>
+         * See {@link #getName()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setName(@NonNull String name) {
@@ -363,8 +358,8 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the time, truncated to seconds, after which the {@link CustomAudience} will serve
          * ads.
-         *
-         * <p>See {@link #getActivationTime()} for more information.
+         * <p>
+         * See {@link #getActivationTime()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setActivationTime(@Nullable Instant activationTime) {
@@ -375,8 +370,8 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the time, truncated to milliseconds, after which the {@link CustomAudience} should
          * be removed.
-         *
-         * <p>See {@link #getExpirationTime()} for more information.
+         * <p>
+         * See {@link #getExpirationTime()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setExpirationTime(@Nullable Instant expirationTime) {
@@ -385,9 +380,9 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the daily update URL.
-         *
-         * <p>See {@link #getDailyUpdateUrl()} for more information.
+         * Sets the daily update URL. The URL must use HTTPS.
+         * <p>
+         * See {@link #getDailyUpdateUrl()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setDailyUpdateUrl(@NonNull Uri dailyUpdateUrl) {
@@ -398,8 +393,8 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the user bidding signals used in the ad selection process.
-         *
-         * <p>See {@link #getUserBiddingSignals()} for more information.
+         * <p>
+         * See {@link #getUserBiddingSignals()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setUserBiddingSignals(@Nullable String userBiddingSignals) {
@@ -409,8 +404,8 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the trusted bidding data to be queried and used in the ad selection process.
-         *
-         * <p>See {@link #getTrustedBiddingData()} for more information.
+         * <p>
+         * See {@link #getTrustedBiddingData()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setTrustedBiddingData(
@@ -420,8 +415,10 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the URL to fetch bidding logic from for use in the ad selection process.
-         * <p>See {@link #getBiddingLogicUrl()} ()} for more information.
+         * Sets the URL to fetch bidding logic from for use in the ad selection process. The URL
+         * must use HTTPS.
+         * <p>
+         * See {@link #getBiddingLogicUrl()} ()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setBiddingLogicUrl(@NonNull Uri biddingLogicUrl) {
@@ -433,7 +430,8 @@ public final class CustomAudience implements Parcelable {
         /**
          * Sets the initial remarketing ads served by the custom audience.
          * Will be assigned with an empty list if not provided.
-         * <p>See {@link #getAds()} for more information.
+         * <p>
+         * See {@link #getAds()} for more information.
          */
         @NonNull
         public CustomAudience.Builder setAds(@Nullable List<AdData> ads) {
@@ -470,9 +468,9 @@ public final class CustomAudience implements Parcelable {
                 mAds = List.of();
             }
 
-            return new CustomAudience(mOwner, mBuyer, mName, mActivationTime, mExpirationTime,
-                    mDailyUpdateUrl, mUserBiddingSignals, mTrustedBiddingData, mBiddingLogicUrl,
-                    mAds);
+            // TODO(b/231997523): Add JSON field validation for user bidding signals.
+
+            return new CustomAudience(this);
         }
     }
 }

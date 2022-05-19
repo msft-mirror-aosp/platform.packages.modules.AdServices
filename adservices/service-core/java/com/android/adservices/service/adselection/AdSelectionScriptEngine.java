@@ -30,6 +30,7 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
 
@@ -58,7 +59,7 @@ import java.util.stream.Collectors;
  */
 public class AdSelectionScriptEngine {
 
-    private static final String TAG = "AdSelectionScriptEngine";
+    private static final String TAG = AdSelectionScriptEngine.class.getName();
 
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String FUNCTION_NAMES_ARG_NAME = "__rb_functionNames";
@@ -190,7 +191,6 @@ public class AdSelectionScriptEngine {
             throws JSONException {
         Objects.requireNonNull(scoreAdJS);
         Objects.requireNonNull(adsWithBid);
-        Objects.requireNonNull(adsWithBid);
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(sellerSignals);
         Objects.requireNonNull(trustedScoringSignals);
@@ -241,8 +241,7 @@ public class AdSelectionScriptEngine {
                 }
                 return result.build();
             } catch (IllegalArgumentException e) {
-                LogUtil.w(
-                        "Invalid ad with bid returned by a generateBid script %s. Returning"
+                LogUtil.w("Invalid ad with bid returned by a generateBid script %s. Returning"
                                 + " empty list of ad with bids.",
                         e);
                 return ImmutableList.of();
@@ -302,7 +301,7 @@ public class AdSelectionScriptEngine {
                     this::parseAuctionScriptResult,
                     mExecutor);
         } catch (JSONException e) {
-            throw new IllegalArgumentException(
+            throw new JSExecutionException(
                     "Illegal result returned by our internal batch calling function.", e);
         }
     }
@@ -326,7 +325,7 @@ public class AdSelectionScriptEngine {
 
     private AuctionScriptResult parseAuctionScriptResult(String auctionScriptResult) {
         try {
-            if (auctionScriptResult.equals("null")) {
+            if (auctionScriptResult.isEmpty()) {
                 throw new IllegalArgumentException(
                         "The auction script either doesn't contain the required function or the"
                                 + " function returns null");

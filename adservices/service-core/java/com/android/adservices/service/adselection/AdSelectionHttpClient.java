@@ -23,6 +23,7 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -39,6 +40,8 @@ import java.net.URLConnection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * This is an HTTPClient to be used by both the AdSelection API and Report Impression API. The
@@ -72,8 +75,9 @@ public class AdSelectionHttpClient {
     @NonNull
     private URL toUrl(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
+        Preconditions.checkArgument(
+                uri.getScheme().equalsIgnoreCase("https"), "Only HTTPS connections are allowed!");
 
-        // TODO (b/228380865): Check that the scheme matches "https"
         URL url;
         try {
             url = new URL(uri.toString());
@@ -85,10 +89,11 @@ public class AdSelectionHttpClient {
     }
 
     @NonNull
-    private HttpURLConnection setupConnection(@NonNull URL url) throws IOException {
+    private HttpsURLConnection setupConnection(@NonNull URL url) throws IOException {
         Objects.requireNonNull(url);
 
-        HttpURLConnection urlConnection = (HttpURLConnection) openUrl(url);
+        // We validated that the URL is https in toUrl
+        HttpsURLConnection urlConnection = (HttpsURLConnection) openUrl(url);
         urlConnection.setConnectTimeout(mTimeoutMS);
         urlConnection.setReadTimeout(mTimeoutMS);
         // Setting true explicitly to follow redirects
@@ -118,8 +123,7 @@ public class AdSelectionHttpClient {
 
     private String doFetchJavascript(@NonNull Uri uri) throws IOException {
         URL url = toUrl(uri);
-        // TODO (b/228380865): Change to HttpSURLConnection
-        HttpURLConnection urlConnection;
+        HttpsURLConnection urlConnection;
 
         try {
             urlConnection = setupConnection(url);
@@ -182,7 +186,7 @@ public class AdSelectionHttpClient {
     private Void doReportUrl(@NonNull Uri uri) throws IOException {
         URL url = toUrl(uri);
         // TODO (b/228380865): Change to HttpSURLConnection
-        HttpURLConnection urlConnection;
+        HttpsURLConnection urlConnection;
 
         try {
             urlConnection = setupConnection(url);

@@ -26,7 +26,6 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import android.cts.install.lib.host.InstallUtilsHost;
 import android.platform.test.annotations.LargeTest;
 
 import com.android.tradefed.log.LogUtil.CLog;
@@ -64,7 +63,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
     private static final long WAIT_FOR_RECONCILE_MS = 5000;
 
-    private final InstallUtilsHost mHostUtils = new InstallUtilsHost(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
 
@@ -103,8 +101,14 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSelinuxLabel() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        assertSelinuxLabel("/data/misc_ce/0/sdksandbox", "system_data_file");
-        assertSelinuxLabel("/data/misc_de/0/sdksandbox", "system_data_file");
+        assertSelinuxLabel("/data/misc_ce/0/sdksandbox", "sdk_sandbox_system_data_file");
+        assertSelinuxLabel("/data/misc_de/0/sdksandbox", "sdk_sandbox_system_data_file");
+
+        // Check label of /data/misc_{ce,de}/0/sdksandbox/<package-name>
+        assertSelinuxLabel(getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true),
+                "sdk_sandbox_system_data_file");
+        assertSelinuxLabel(getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false),
+                "sdk_sandbox_system_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/shared
         assertSelinuxLabel(getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true),
                 "sdk_sandbox_data_file");
@@ -139,6 +143,23 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             assertThat(getDevice().isDirectory(dePath)).isTrue();
             assertThat(getDevice().isDirectory(cePath)).isTrue();
         }
+    }
+
+    /**
+     * Verify that {@code /data/misc_{ce,de}/<user-id>/sdksandbox} is not accessible by apps
+     */
+    @Test
+    public void testSdkSandboxDataRootDirectory_IsNotAccessibleByApps() throws Exception {
+        // Install the app
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Verify root directory exists for primary user
+        final String cePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        assertThat(getDevice().isDirectory(dePath)).isTrue();
+        assertThat(getDevice().isDirectory(cePath)).isTrue();
+
+        runPhase("testSdkSandboxDataRootDirectory_IsNotAccessibleByApps");
     }
 
     @Test
@@ -353,7 +374,63 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         }
     }
 
-    // TODO(b/221946754): Need to write tests for clearing cache and clearing code cache
+    @Test
+    public void testSdkDataPackageDirectory_IsClearedOnFreeCache() throws Exception {
+        // Install the app
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Create cache data to be cleared
+        final List<String> dataPaths = Arrays.asList(
+                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), //CE app data
+                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
+                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
+                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false) // DE sdk data
+        );
+        for (String dataPath : dataPaths) {
+            final String fileToDelete = dataPath + "/cache/deleteme.txt";
+            getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
+            assertThat(getDevice().doesFileExist(fileToDelete)).isTrue();
+        }
+
+        // Clear all other cached data to give ourselves a clean slate
+        getDevice().executeShellCommand("pm trim-caches 4096G");
+
+        // Verify cache directories are empty
+        for (String dataPath : dataPaths) {
+            final String[] cacheChildren = getDevice().getChildren(dataPath + "/cache");
+            assertWithMessage(dataPath + " is not empty").that(cacheChildren).asList().isEmpty();
+        }
+    }
+
+    @Test
+    public void testSdkDataPackageDirectory_IsClearedOnClearCache() throws Exception {
+        // Install the app
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Create cache data to be cleared
+        final List<String> dataPaths = Arrays.asList(
+                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), //CE app data
+                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
+                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
+                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false) // DE sdk data
+        );
+        for (String dataPath : dataPaths) {
+            final String fileToDelete = dataPath + "/cache/deleteme.txt";
+            getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
+            assertThat(getDevice().doesFileExist(fileToDelete)).isTrue();
+        }
+
+        // Clear the cached data for the test app
+        getDevice()
+                .executeShellCommand("pm clear --user 0 --cache-only com.android.tests.sdksandbox");
+
+        // Verify cache directories are empty
+        for (String dataPath : dataPaths) {
+            final String[] cacheChildren = getDevice().getChildren(dataPath + "/cache");
+            assertWithMessage(dataPath + " is not empty").that(cacheChildren).asList().isEmpty();
+        }
+    }
+
     @Test
     public void testSdkDataPackageDirectory_IsDestroyedOnUserDeletion() throws Exception {
         // Create new user
@@ -572,7 +649,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Store number of package directories under root path for comparison later
         final String ceSandboxPath = getSdkDataRootPath(0, /*isCeData=*/true);
         String[] children = getDevice().getChildren(ceSandboxPath);
-        final int numberOfChildren = children.length;
 
         try {
             mDeviceLockUtils.rebootToLockedDevice();
@@ -626,6 +702,39 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 assertSelinuxLabel(sdkDataPackagePath, "system_data_file");
                 assertSelinuxLabel(sdkDataSharedPath, "sdk_sandbox_data_file");
             }
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    @Test
+    public void testSdkSharedStorage_DifferentVolumeIsUsable() throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Move the app to another volume and check if the sdk can read and write to it.
+        try {
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+            assertSuccess(getDevice().executeShellCommand(
+                    "pm move-package " + TEST_APP_STORAGE_PACKAGE + " " + newVolumeUuid));
+
+            final String sharedCePath = "/mnt/expand/" + newVolumeUuid + "/misc_ce/0/sdksandbox/"
+                    + TEST_APP_STORAGE_PACKAGE + "/shared";
+            assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
+
+            String fileToRead = sharedCePath + "/readme.txt";
+            getDevice().executeShellCommand("echo something to read > " + fileToRead);
+            assertThat(getDevice().doesFileExist(fileToRead)).isTrue();
+
+            runPhase("testSdkDataPackageDirectory_SharedStorageIsUsable");
+
+            // Assert that the sdk was able to create file and directories
+            assertThat(getDevice().isDirectory(sharedCePath + "/dir")).isTrue();
+            assertThat(getDevice().doesFileExist(sharedCePath + "/dir/file")).isTrue();
+            String content = getDevice().executeShellCommand("cat " + sharedCePath + "/dir/file");
+            assertThat(content).isEqualTo("something to read");
+
         } finally {
             mAdoptableUtils.cleanUpVolume();
         }

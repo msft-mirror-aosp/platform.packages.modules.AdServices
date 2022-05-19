@@ -126,17 +126,17 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
-        Topic topic1 = new Topic("topic1", /* taxonomyVersion = */ 1L,
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 4L);
-        Topic topic2 = new Topic("topic2", /* taxonomyVersion = */ 2L,
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L,
                 /* modelVersion = */ 5L);
-        Topic topic3 = new Topic("topic3", /* taxonomyVersion = */ 3L,
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L,
                 /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, String> returnedAppSdkTopicsMap = new HashMap<>();
+            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
             returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
             mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
                     currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
@@ -149,7 +149,7 @@ public class TopicsServiceImplTest {
                 new GetTopicsResult.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList("topic1", "topic2", "topic3"))
+                        .setTopics(Arrays.asList("1", "2", "3"))
                         .build();
 
         // Call init() to load the cache

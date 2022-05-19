@@ -25,10 +25,10 @@
     <!-- Description of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE]-->
     <string name="permdesc_accessAdServicesAttribution">Allows an application to access AdServices Attribution APIs.</string>
 
-    <!-- Title of an application permission that lets it access AdServices Custom Audiences API. [CHAR LIMIT=NONE] -->
-    <string name="permlab_accessAdServicesCustomAudiences">access AdServices Custom Audiences API</string>
-    <!-- Description of an application permission that lets it access AdServices Custom Audiences API. [CHAR LIMIT=NONE]-->
-    <string name="permdesc_accessAdServicesCustomAudiences">Allows an application to access AdServices Custom Audiences  API.</string>
+    <!-- Title of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesCustomAudience">access AdServices Custom Audience API</string>
+    <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE]-->
+    <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
 
     <!-- Title of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_adServicesAccessAdId">Access to Ad ID API</string>
@@ -43,14 +43,22 @@
     <!-- UI strings -->
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
+    <!-- Key for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_switch_key">privacy_sandbox_beta_switch</string>
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_switch_title">Privacy Sandbox beta</string>
     <!-- Summary of Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_switch_summary">Toggle Privacy Sandbox beta</string>
+
+    <!-- Key for the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_key">topics_preference</string>
     <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_title">Your general interests</string>
     <!-- Summary of the topics preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_summary">Manage your general interests</string>
+
+    <!-- Key for the apps preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_key">apps_preference</string>
     <!-- Text for the apps preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_title">Your apps that generate specific interests</string>
     <!-- Summary of the apps preference. [CHAR LIMIT=NONE] -->

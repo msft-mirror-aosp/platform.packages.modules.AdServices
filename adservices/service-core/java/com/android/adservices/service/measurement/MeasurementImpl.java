@@ -41,9 +41,11 @@ import com.android.adservices.service.measurement.registration.TriggerRegistrati
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -165,21 +167,70 @@ public final class MeasurementImpl {
             ArrayList<SourceRegistration> responseBasedRegistrations,
             long sourceEventTime) {
         for (SourceRegistration registration : responseBasedRegistrations) {
-            mDatastoreManager.runInTransaction((dao) ->
-                    dao.insertSource(
-                            /* sourceEventId */ registration.getSourceEventId(),
-                            /* attributionSource */ request.getTopOriginUri(),
-                            // Only first destination to avoid AdTechs change this
-                            /* attributionDestination */ responseBasedRegistrations.get(0)
-                                    .getDestination(),
-                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
-                            /* registrant */ getRegistrant(request.getAttributionSource()),
-                            /* sourceEventTime */ sourceEventTime,
-                            /* expiryTime */ sourceEventTime
-                                    + TimeUnit.SECONDS.toMillis(registration.getExpiry()),
-                            /* priority */ registration.getSourcePriority(),
-                            /* sourceType */ getSourceType(request)));
+            Source source = new Source.Builder()
+                    .setEventId(registration.getSourceEventId())
+                    .setPublisher(request.getTopOriginUri())
+                    // Only first destination to avoid AdTechs change this
+                    .setAttributionDestination(responseBasedRegistrations.get(0)
+                            .getDestination())
+                    .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                    .setRegistrant(getRegistrant(request.getAttributionSource()))
+                    .setSourceType(getSourceType(request))
+                    .setPriority(registration.getSourcePriority())
+                    .setEventTime(sourceEventTime)
+                    .setExpiryTime(sourceEventTime
+                            + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
+                    .setInstallAttributionWindow(sourceEventTime
+                            + TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
+                    .setInstallCooldownWindow(sourceEventTime
+                            + TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
+                    // Setting as TRUTHFULLY as default value for tests.
+                    // This will be overwritten by getSourceEventReports.
+                    .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                    .setAggregateSource(registration.getAggregateSource())
+                    .setAggregateFilterData(registration.getAggregateFilterData())
+                    .build();
+            List<EventReport> eventReports = getSourceEventReports(source);
+            mDatastoreManager.runInTransaction((dao) -> {
+                dao.insertSource(
+                        /* sourceEventId */ source.getEventId(),
+                        /* publisher */ source.getPublisher(),
+                        /* attributionDestination */ source.getAttributionDestination(),
+                        /* adTechDomain */ source.getAdTechDomain(),
+                        /* registrant */ source.getRegistrant(),
+                        /* sourceEventTime */ source.getEventTime(),
+                        /* expiryTime */ source.getExpiryTime(),
+                        /* priority */ source.getPriority(),
+                        /* sourceType */ source.getSourceType(),
+                        source.getInstallAttributionWindow(),
+                        source.getInstallCooldownWindow(),
+                        /* attributionMode */ source.getAttributionMode(),
+                        /* aggregateSource */ source.getAggregateSource(),
+                        /* aggregateFilterData */ source.getAggregateFilterData());
+                for (EventReport report : eventReports) {
+                    dao.insertEventReport(report);
+                }
+            });
         }
+    }
+
+    @VisibleForTesting
+    List<EventReport> getSourceEventReports(Source source) {
+        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReport();
+        return fakeReports.stream().map(fakeReport ->
+                new EventReport.Builder()
+                        .setSourceId(source.getEventId())
+                        .setReportTime(fakeReport.getReportingTime())
+                        .setTriggerData(fakeReport.getTriggerData())
+                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAdTechDomain(source.getAdTechDomain())
+                        .setTriggerTime(0)
+                        .setTriggerPriority(0)
+                        .setTriggerDedupKey(null)
+                        .setSourceType(source.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .build()
+        ).collect(Collectors.toList());
     }
 
     private Source.SourceType getSourceType(RegistrationRequest request) {
@@ -195,12 +246,14 @@ public final class MeasurementImpl {
             mDatastoreManager.runInTransaction((dao) ->
                     dao.insertTrigger(
                             /* attributionDestination */ request.getTopOriginUri(),
-                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
+                            /* adTechDomain */ getBaseUri(registration.getReportingOrigin()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* triggerTime */ triggerTime,
                             /* triggerData */ registration.getTriggerData(),
                             /* dedupKey */ registration.getDeduplicationKey(),
-                            /* priority */ registration.getTriggerPriority()));
+                            /* priority */ registration.getTriggerPriority(),
+                            /* aggregateTriggerData */ registration.getAggregateTriggerData(),
+                            /* aggregateValues */ registration.getAggregateValues()));
         }
         try (ContentProviderClient contentProviderClient =
                      mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {

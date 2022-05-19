@@ -77,7 +77,8 @@ public final class ReportingJobService extends JobService {
                         boolean success = new EventReportingJobHandler(
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()))
-                                .performAllPendingReportsForGivenApp(Uri.parse(appName));
+                                .performAllPendingReportsForGivenApp(
+                                        Uri.parse("android-app://" + appName));
                         jobFinished(params, success);
                     });
                 }
