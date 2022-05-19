@@ -21,7 +21,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
-import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportImpressionInput;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -95,7 +95,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @Override
     public void reportImpression(
-            @NonNull ReportImpressionRequest requestParams,
+            @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         // TODO(b/225990194): Add end to end test
         Objects.requireNonNull(requestParams);
