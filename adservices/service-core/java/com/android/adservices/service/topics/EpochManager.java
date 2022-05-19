@@ -28,6 +28,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.Classifier;
+import com.android.adservices.service.topics.classifier.PrecomputedClassifier;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -70,7 +71,8 @@ public class EpochManager {
 
     @VisibleForTesting
     EpochManager(@NonNull TopicsDao topicsDao, @NonNull DbHelper dbHelper,
-            @NonNull Random random, @NonNull Classifier classifier, Flags flags) {
+            @NonNull Random random, @NonNull Classifier classifier,
+            Flags flags) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
@@ -85,7 +87,7 @@ public class EpochManager {
             if (sSingleton == null) {
                 sSingleton = new EpochManager(TopicsDao.getInstance(context),
                         DbHelper.getInstance(context), new Random(),
-                        Classifier.getInstance(context), FlagsFactory.getFlags());
+                        PrecomputedClassifier.getInstance(context), FlagsFactory.getFlags());
             }
             return sSingleton;
         }
@@ -323,6 +325,6 @@ public class EpochManager {
         // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
         LogUtil.v("Epoch length is  %d", mFlags.getTopicsEpochJobPeriodMs());
         return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
-                /  mFlags.getTopicsEpochJobPeriodMs());
+                / mFlags.getTopicsEpochJobPeriodMs());
     }
 }
