@@ -16,10 +16,10 @@
 
 package com.android.adservices.data.measurement;
 
-import android.annotation.Nullable;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
@@ -43,7 +43,8 @@ public interface IMeasurementDao {
      */
     void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri reportTo,
             @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority) throws DatastoreException;
+            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues) throws DatastoreException;
 
     /**
      * Returns list of ids for all pending {@link Trigger}.
@@ -79,7 +80,11 @@ public interface IMeasurementDao {
     void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
             @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType) throws DatastoreException;
+            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
+            @NonNull Long installCooldownWindow,
+            @Source.AttributionMode int attributionMode,
+            @Nullable String aggregateSource,
+            @Nullable String aggregateFilterData) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.

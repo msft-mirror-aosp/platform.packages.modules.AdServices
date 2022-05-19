@@ -51,19 +51,22 @@ public class TriggerFetcher {
     private static void parseEventTrigger(
             @NonNull String text,
             TriggerRegistration.Builder result) throws JSONException {
-        JSONArray array = new JSONArray(text);
+        final JSONArray array = new JSONArray(text);
         if (array.length() != 1) {
             throw new JSONException("Expected list with 1 item");
         }
-        JSONObject inside = array.getJSONObject(0);
-        if (inside.has("trigger_data")) {
-            result.setTriggerData(inside.getLong("trigger_data"));
+        final JSONObject inside = array.getJSONObject(0);
+        if (inside.has(EventTriggerContract.TRIGGER_DATA)
+                && !inside.isNull(EventTriggerContract.TRIGGER_DATA)) {
+            result.setTriggerData(inside.getLong(EventTriggerContract.TRIGGER_DATA));
         }
-        if (inside.has("priority")) {
-            result.setTriggerPriority(inside.getLong("priority"));
+        if (inside.has(EventTriggerContract.PRIORITY)
+                && !inside.isNull(EventTriggerContract.PRIORITY)) {
+            result.setTriggerPriority(inside.getLong(EventTriggerContract.PRIORITY));
         }
-        if (inside.has("deduplication_key") && !inside.isNull("deduplication_key")) {
-            result.setDeduplicationKey(inside.getLong("deduplication_key"));
+        if (inside.has(EventTriggerContract.DEDUPLICATION_KEY)
+                && !inside.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
+            result.setDeduplicationKey(inside.getLong(EventTriggerContract.DEDUPLICATION_KEY));
         }
     }
 
@@ -97,7 +100,8 @@ public class TriggerFetcher {
                 LogUtil.d("Expected one aggregate trigger data!");
                 return false;
             }
-            // TODO: Handle aggregates.
+            // Parses in aggregate trigger data. additionalResult will be false until then.
+            result.setAggregateTriggerData(field.get(0));
             additionalResult = true;
         }
         field = headers.get("Attribution-Reporting-Register-Aggregatable-Values");
@@ -106,39 +110,40 @@ public class TriggerFetcher {
                 LogUtil.d("Expected one aggregatable values!");
                 return false;
             }
-            // TODO: Handle aggregates.
+            // Parses in aggregate values. additionalResult will be false until then.
+            result.setAggregateValues(field.get(0));
             additionalResult = true;
         }
         if (additionalResult) {
             addToResults.add(result.build());
+            return true;
         }
-        return true;
+        return false;
     }
 
-    private boolean fetchTrigger(
+    private void fetchTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri target,
             boolean initialFetch,
             @NonNull List<TriggerRegistration> registrationsOut) {
         // Require https.
         if (!target.getScheme().equals("https")) {
-            return false;
+            return;
         }
         URL url;
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
             LogUtil.d("Malformed registration target URL %s", e);
-            return false;
+            return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
             LogUtil.d("Failed to open registration target URL %s", e);
-            return false;
+            return;
         }
-        boolean success = true;
         try {
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
@@ -149,25 +154,23 @@ public class TriggerFetcher {
 
             if (!ResponseBasedFetcher.isRedirect(responseCode)
                     && !ResponseBasedFetcher.isSuccess(responseCode)) {
-                success = false;
+                return;
             }
 
-            if (!parseTrigger(topOrigin, target, headers, registrationsOut)) {
-                LogUtil.d("Failed while parsing");
-                success = false;
+            final boolean parsed = parseTrigger(topOrigin, target, headers, registrationsOut);
+            if (!parsed && initialFetch) {
+                LogUtil.d("Failed to parse initial fetch");
+                return;
             }
 
             ArrayList<Uri> redirects = new ArrayList();
             ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
             for (Uri redirect : redirects) {
-                if (!fetchTrigger(topOrigin, redirect, false, registrationsOut)) {
-                    success = false;
-                }
+                fetchTrigger(topOrigin, redirect, false, registrationsOut);
             }
-            return success;
         } catch (IOException e) {
             LogUtil.d("Failed to get registration response %s", e);
-            return false;
+            return;
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -179,14 +182,21 @@ public class TriggerFetcher {
      * Fetch a trigger type registration.
      */
     public boolean fetchTrigger(@NonNull RegistrationRequest request,
-                                @NonNull List<TriggerRegistration> out) {
+            @NonNull List<TriggerRegistration> out) {
         if (request.getRegistrationType()
                 != RegistrationRequest.REGISTER_TRIGGER) {
             throw new IllegalArgumentException("Expected trigger registration");
         }
-        return fetchTrigger(
+        fetchTrigger(
                 request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 true, out);
+        return !out.isEmpty();
+    }
+
+    private interface EventTriggerContract {
+        String TRIGGER_DATA = "trigger_data";
+        String PRIORITY = "priority";
+        String DEDUPLICATION_KEY = "deduplication_key";
     }
 }

@@ -52,7 +52,7 @@ import java.util.List;
  *
  * Consider @RunWith(Parameterized.class)
  */
-public abstract class DatabaseE2ETest {
+public abstract class AbstractDbIntegrationTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     public final DbState mInput;
     public final DbState mOutput;
@@ -70,7 +70,7 @@ public abstract class DatabaseE2ETest {
         emptyTables(db);
     }
 
-    public DatabaseE2ETest(DbState input, DbState output) {
+    public AbstractDbIntegrationTest(DbState input, DbState output) {
         this.mInput = input;
         this.mOutput = output;
     }
@@ -206,6 +206,7 @@ public abstract class DatabaseE2ETest {
                 source.getInstallCooldownWindow());
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 source.isInstallAttributed() ? 1 : 0);
+        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");

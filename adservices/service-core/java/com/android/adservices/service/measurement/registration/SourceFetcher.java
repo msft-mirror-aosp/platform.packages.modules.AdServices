@@ -15,7 +15,11 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_COOLDOWN_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_COOLDOWN_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -43,6 +47,7 @@ import java.util.Map;
  * @hide
  */
 public class SourceFetcher {
+
     /**
      * Provided a testing hook.
      */
@@ -53,25 +58,60 @@ public class SourceFetcher {
     private static void parseEventSource(
             @NonNull String text,
             SourceRegistration.Builder result) throws JSONException {
-        JSONObject json = new JSONObject(text);
-        result.setSourceEventId(json.getLong("source_event_id"));
-        result.setDestination(Uri.parse(json.getString("destination")));
-        if (json.has("expiry")) {
-            setExpiry(json.getLong("expiry"), result);
+        final JSONObject json = new JSONObject(text);
+        final boolean hasRequiredParams = json.has(EventSourceContract.SOURCE_EVENT_ID)
+                        && json.has(EventSourceContract.DESTINATION);
+        if (!hasRequiredParams) {
+            throw new JSONException(
+                    String.format("Expected both %s and %s",
+                            EventSourceContract.SOURCE_EVENT_ID,
+                            EventSourceContract.DESTINATION));
         }
-        if (json.has("priority")) {
-            result.setSourcePriority(json.getLong("priority"));
+
+        result.setSourceEventId(json.getLong(EventSourceContract.SOURCE_EVENT_ID));
+        result.setDestination(Uri.parse(json.getString(EventSourceContract.DESTINATION)));
+        if (json.has(EventSourceContract.EXPIRY) && !json.isNull(EventSourceContract.EXPIRY)) {
+            long expiry = extractValidValue(json.getLong("expiry"),
+                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            result.setExpiry(expiry);
+        }
+        if (json.has(EventSourceContract.PRIORITY) && !json.isNull(EventSourceContract.PRIORITY)) {
+            result.setSourcePriority(json.getLong(EventSourceContract.PRIORITY));
+        }
+
+        if (json.has(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY)
+                && !json.isNull(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
+            long installAttributionWindow =
+                    extractValidValue(
+                            json.getLong(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY),
+                            MIN_INSTALL_ATTRIBUTION_WINDOW,
+                            MAX_INSTALL_ATTRIBUTION_WINDOW);
+            result.setInstallAttributionWindow(installAttributionWindow);
+        }
+        if (json.has(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)
+                && !json.isNull(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)) {
+            long installCooldownWindow =
+                    extractValidValue(json.getLong(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY),
+                            MIN_INSTALL_COOLDOWN_WINDOW,
+                            MAX_INSTALL_COOLDOWN_WINDOW);
+            result.setInstallCooldownWindow(installCooldownWindow);
+        }
+
+        // This "filter_data" field is used to generate aggregate report.
+        if (json.has("filter_data") && !json.isNull("filter_data")) {
+            result.setAggregateFilterData(json.getJSONObject("filter_data").toString());
         }
     }
 
-    private static void setExpiry(long expiry, SourceRegistration.Builder result) {
-        if (expiry < MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
-            result.setExpiry(MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        } else if (expiry > MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
-            result.setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        } else {
-            result.setExpiry(expiry);
+    private static long extractValidValue(long value, long lowerLimit, long upperLimit) {
+        if (value < lowerLimit) {
+            return lowerLimit;
+        } else if (value > upperLimit) {
+            return upperLimit;
         }
+
+        return value;
     }
 
     private static boolean parseSource(
@@ -104,22 +144,18 @@ public class SourceFetcher {
                 LogUtil.d("Expected one aggregate source!");
                 return false;
             }
-            // TODO: Handle aggregates.
+            // Parse in aggregate source. additionalResult will be false until then.
+            result.setAggregateSource(field.get(0));
             additionalResult = true;
         }
         if (additionalResult) {
-            SourceRegistration adding = result.build();
-            if (addToResults.size() > 1
-                    && !addToResults.get(0).getDestination().equals(adding.getDestination())) {
-                LogUtil.d("Illegal change of destination");
-                return false;
-            }
-            addToResults.add(adding);
+            addToResults.add(result.build());
+            return true;
         }
-        return true;
+        return false;
     }
 
-    private boolean fetchSource(
+    private void fetchSource(
             @NonNull Uri topOrigin,
             @NonNull Uri target,
             @NonNull String sourceInfo,
@@ -127,23 +163,22 @@ public class SourceFetcher {
             @NonNull List<SourceRegistration> registrationsOut) {
         // Require https.
         if (!target.getScheme().equals("https")) {
-            return false;
+            return;
         }
         URL url;
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
             LogUtil.d("Malformed registration target URL %s", e);
-            return false;
+            return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
             LogUtil.e("Failed to open registration target URL %s", e);
-            return false;
+            return;
         }
-        boolean success = true;
         try {
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Attribution-Reporting-Source-Info", sourceInfo);
@@ -153,25 +188,24 @@ public class SourceFetcher {
             int responseCode = urlConnection.getResponseCode();
             if (!ResponseBasedFetcher.isRedirect(responseCode)
                     && !ResponseBasedFetcher.isSuccess(responseCode)) {
-                success = false;
+                return;
             }
 
-            if (!parseSource(topOrigin, target, headers, registrationsOut)) {
-                success = false;
+            final boolean parsed = parseSource(topOrigin, target, headers, registrationsOut);
+            if (!parsed && initialFetch) {
+                LogUtil.d("Failed to parse initial fetch");
+                return;
             }
 
             ArrayList<Uri> redirects = new ArrayList();
             ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
             for (Uri redirect : redirects) {
-                if (!fetchSource(
-                        topOrigin, redirect, sourceInfo, false, registrationsOut)) {
-                    success = false;
-                }
+                fetchSource(
+                        topOrigin, redirect, sourceInfo, false, registrationsOut);
             }
-            return success;
         } catch (IOException e) {
             LogUtil.e("Failed to get registration response %s", e);
-            return false;
+            return;
         } finally {
             urlConnection.disconnect();
         }
@@ -186,10 +220,20 @@ public class SourceFetcher {
                 != RegistrationRequest.REGISTER_SOURCE) {
             throw new IllegalArgumentException("Expected source registration");
         }
-        return fetchSource(
+        fetchSource(
                 request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 true, out);
+        return !out.isEmpty();
+    }
+
+    private interface EventSourceContract {
+        String SOURCE_EVENT_ID = "source_event_id";
+        String DESTINATION = "destination";
+        String EXPIRY = "expiry";
+        String PRIORITY = "priority";
+        String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
+        String INSTALL_COOLDOWN_WINDOW_KEY = "install_cooldown_window";
     }
 }
