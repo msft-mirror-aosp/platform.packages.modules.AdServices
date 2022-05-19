@@ -13,6 +13,105 @@ package android.adservices {
 
 }
 
+package android.adservices.common {
+
+  public final class AdData implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public String getMetadata();
+    method @NonNull public android.net.Uri getRenderUrl();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdData> CREATOR;
+  }
+
+  public static final class AdData.Builder {
+    ctor public AdData.Builder();
+    method @NonNull public android.adservices.common.AdData build();
+    method @NonNull public android.adservices.common.AdData.Builder setMetadata(@NonNull String);
+    method @NonNull public android.adservices.common.AdData.Builder setRenderUrl(@NonNull android.net.Uri);
+  }
+
+}
+
+package android.adservices.customaudience {
+
+  public final class CustomAudience implements android.os.Parcelable {
+    method public int describeContents();
+    method @Nullable public java.time.Instant getActivationTime();
+    method @NonNull public java.util.List<android.adservices.common.AdData> getAds();
+    method @NonNull public android.net.Uri getBiddingLogicUrl();
+    method @NonNull public String getBuyer();
+    method @NonNull public android.net.Uri getDailyUpdateUrl();
+    method @Nullable public java.time.Instant getExpirationTime();
+    method @NonNull public String getName();
+    method @Nullable public String getOwner();
+    method @Nullable public android.adservices.customaudience.TrustedBiddingData getTrustedBiddingData();
+    method @Nullable public String getUserBiddingSignals();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.customaudience.CustomAudience> CREATOR;
+  }
+
+  public static final class CustomAudience.Builder {
+    ctor public CustomAudience.Builder();
+    method @NonNull public android.adservices.customaudience.CustomAudience build();
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setActivationTime(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setAds(@Nullable java.util.List<android.adservices.common.AdData>);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBiddingLogicUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBuyer(@NonNull String);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setName(@NonNull String);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setOwner(@Nullable String);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setTrustedBiddingData(@Nullable android.adservices.customaudience.TrustedBiddingData);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setUserBiddingSignals(@Nullable String);
+  }
+
+  public class CustomAudienceManager {
+    method public void joinCustomAudience(@NonNull android.adservices.customaudience.JoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
+    method public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
+    field public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
+  }
+
+  public class JoinCustomAudienceRequest {
+    method @NonNull public android.adservices.customaudience.CustomAudience getCustomAudience();
+  }
+
+  public static final class JoinCustomAudienceRequest.Builder {
+    ctor public JoinCustomAudienceRequest.Builder();
+    method @NonNull public android.adservices.customaudience.JoinCustomAudienceRequest build();
+    method @NonNull public android.adservices.customaudience.JoinCustomAudienceRequest.Builder setCustomAudience(@NonNull android.adservices.customaudience.CustomAudience);
+  }
+
+  public final class LeaveCustomAudienceRequest {
+    method @NonNull public String getBuyer();
+    method @NonNull public String getName();
+    method @Nullable public String getOwner();
+  }
+
+  public static final class LeaveCustomAudienceRequest.Builder {
+    ctor public LeaveCustomAudienceRequest.Builder();
+    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest build();
+    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setBuyer(@NonNull String);
+    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setName(@NonNull String);
+    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setOwner(@Nullable String);
+  }
+
+  public final class TrustedBiddingData implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public java.util.List<java.lang.String> getTrustedBiddingKeys();
+    method @NonNull public android.net.Uri getTrustedBiddingUrl();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.customaudience.TrustedBiddingData> CREATOR;
+  }
+
+  public static final class TrustedBiddingData.Builder {
+    ctor public TrustedBiddingData.Builder();
+    method @NonNull public android.adservices.customaudience.TrustedBiddingData build();
+    method @NonNull public android.adservices.customaudience.TrustedBiddingData.Builder setTrustedBiddingKeys(@NonNull java.util.List<java.lang.String>);
+    method @NonNull public android.adservices.customaudience.TrustedBiddingData.Builder setTrustedBiddingUrl(@NonNull android.net.Uri);
+  }
+
+}
+
 package android.adservices.exceptions {
 
   public class AdServicesException extends java.lang.Exception {

@@ -15,7 +15,11 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_COOLDOWN_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_COOLDOWN_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -43,6 +47,7 @@ import java.util.Map;
  * @hide
  */
 public class SourceFetcher {
+
     /**
      * Provided a testing hook.
      */
@@ -66,21 +71,47 @@ public class SourceFetcher {
         result.setSourceEventId(json.getLong(EventSourceContract.SOURCE_EVENT_ID));
         result.setDestination(Uri.parse(json.getString(EventSourceContract.DESTINATION)));
         if (json.has(EventSourceContract.EXPIRY) && !json.isNull(EventSourceContract.EXPIRY)) {
-            setExpiry(json.getLong(EventSourceContract.EXPIRY), result);
+            long expiry = extractValidValue(json.getLong("expiry"),
+                    MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
+                    MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+            result.setExpiry(expiry);
         }
         if (json.has(EventSourceContract.PRIORITY) && !json.isNull(EventSourceContract.PRIORITY)) {
             result.setSourcePriority(json.getLong(EventSourceContract.PRIORITY));
         }
+
+        if (json.has(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY)
+                && !json.isNull(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
+            long installAttributionWindow =
+                    extractValidValue(
+                            json.getLong(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY),
+                            MIN_INSTALL_ATTRIBUTION_WINDOW,
+                            MAX_INSTALL_ATTRIBUTION_WINDOW);
+            result.setInstallAttributionWindow(installAttributionWindow);
+        }
+        if (json.has(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)
+                && !json.isNull(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)) {
+            long installCooldownWindow =
+                    extractValidValue(json.getLong(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY),
+                            MIN_INSTALL_COOLDOWN_WINDOW,
+                            MAX_INSTALL_COOLDOWN_WINDOW);
+            result.setInstallCooldownWindow(installCooldownWindow);
+        }
+
+        // This "filter_data" field is used to generate aggregate report.
+        if (json.has("filter_data") && !json.isNull("filter_data")) {
+            result.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+        }
     }
 
-    private static void setExpiry(long expiry, SourceRegistration.Builder result) {
-        if (expiry < MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
-            result.setExpiry(MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        } else if (expiry > MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS) {
-            result.setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        } else {
-            result.setExpiry(expiry);
+    private static long extractValidValue(long value, long lowerLimit, long upperLimit) {
+        if (value < lowerLimit) {
+            return lowerLimit;
+        } else if (value > upperLimit) {
+            return upperLimit;
         }
+
+        return value;
     }
 
     private static boolean parseSource(
@@ -113,8 +144,9 @@ public class SourceFetcher {
                 LogUtil.d("Expected one aggregate source!");
                 return false;
             }
-            // TODO: Handle aggregates. additionalResult will be false until then.
-            additionalResult = false;
+            // Parse in aggregate source. additionalResult will be false until then.
+            result.setAggregateSource(field.get(0));
+            additionalResult = true;
         }
         if (additionalResult) {
             addToResults.add(result.build());
@@ -201,5 +233,7 @@ public class SourceFetcher {
         String DESTINATION = "destination";
         String EXPIRY = "expiry";
         String PRIORITY = "priority";
+        String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
+        String INSTALL_COOLDOWN_WINDOW_KEY = "install_cooldown_window";
     }
 }
