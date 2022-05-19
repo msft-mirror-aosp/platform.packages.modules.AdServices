@@ -229,6 +229,7 @@ public final class MeasurementImpl {
                         .setTriggerDedupKey(null)
                         .setSourceType(source.getSourceType())
                         .setStatus(EventReport.Status.PENDING)
+                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build()
         ).collect(Collectors.toList());
     }

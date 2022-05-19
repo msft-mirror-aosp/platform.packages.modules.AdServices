@@ -85,40 +85,25 @@ public final class PrivacyParams {
             new long[]{ TimeUnit.DAYS.toMillis(2) };
 
     /**
-     * {@link Source} attribution state selection randomness probability for 'Event'
+     * {@link Source} Noise probability for 'Event'
      */
-    public static final double EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0000025D;
+    public static final double EVENT_NOISE_PROBABILITY = 0.0000025D;
 
     /**
-     * {@link Source} attribution state selection randomness probability for 'Navigation'
+     * {@link Source} Noise probability for 'Navigation'
      */
-    public static final double NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0024263D;
+    public static final double NAVIGATION_NOISE_PROBABILITY = 0.0024263D;
 
     /**
-     * {@link Source} attribution state selection randomness probability for 'Event' which supports
-     * install attribution.
+     * {@link Source} Noise probability for 'Event' which supports install attribution.
      */
-    public static final double INSTALL_ATTR_EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY =
-            0.0000125D;
+    public static final double INSTALL_ATTR_EVENT_NOISE_PROBABILITY = 0.0000125D;
 
     /**
-     * {@link Source} attribution state selection randomness probability for 'Navigation' which
-     * supports install attribution.
+     * {@link Source} Noise probability for 'Navigation' which supports install attribution.
      */
-    public static final double
-            INSTALL_ATTR_NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY =
-            NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY;
-
-
-    /**
-     * Trigger data noise probability for 'Event' {@link Source} attribution.
-     */
-    public static final double EVENT_RANDOM_TRIGGER_DATA_NOISE = 0.0000025D;
-
-    /**
-     * Trigger data noise probability for 'Navigation' {@link Source} attribution.
-     */
-    public static final double NAVIGATION_RANDOM_TRIGGER_DATA_NOISE = 0.0024263D;
+    public static final double INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
+                NAVIGATION_NOISE_PROBABILITY;
 
     /**
      * Trigger data cardinality for 'Event' {@link Source} attribution.
