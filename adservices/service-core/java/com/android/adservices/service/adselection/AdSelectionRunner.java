@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -119,23 +120,26 @@ public final class AdSelectionRunner {
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
+        try {
+            ListenableFuture<DBAdSelection> dbAdSelectionFuture = orchestrateAdSelection(
+                    adSelectionConfig);
 
-        ListenableFuture<DBAdSelection> dbAdSelectionFuture = orchestrateAdSelection(
-                adSelectionConfig);
+            Futures.addCallback(dbAdSelectionFuture,
+                    new FutureCallback<DBAdSelection>() {
+                        @Override
+                        public void onSuccess(DBAdSelection result) {
+                            notifySuccessToCaller(result, callback);
+                        }
 
-        Futures.addCallback(dbAdSelectionFuture,
-                new FutureCallback<DBAdSelection>() {
-                    @Override
-                    public void onSuccess(DBAdSelection result) {
-                        notifySuccessToCaller(result, callback);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        notifyFailureToCaller(callback, t);
-                    }
-                }, mExecutorService
-        );
+                        @Override
+                        public void onFailure(Throwable t) {
+                            notifyFailureToCaller(callback, t);
+                        }
+                    }, mExecutorService
+            );
+        } catch (Throwable t) {
+            notifyFailureToCaller(callback, t);
+        }
     }
 
     private void notifySuccessToCaller(@NonNull DBAdSelection result,
@@ -189,7 +193,8 @@ public final class AdSelectionRunner {
                     return runAdScoring(bids, adSelectionConfig);
                 };
 
-        ListenableFuture<List<AdScoringOutcome>> scoredAds = Futures.transformAsync(biddingOutcome,
+        ListenableFuture<List<AdScoringOutcome>> scoredAds = Futures.transformAsync(
+                biddingOutcome,
                 mapBidsToScores,
                 mExecutorService);
 
@@ -242,9 +247,14 @@ public final class AdSelectionRunner {
     private ListenableFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig) {
+
+        // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
+        String buyerSignal = Optional
+                .ofNullable(adSelectionConfig.getPerBuyerSignals().get(customAudience.getBuyer()))
+                .orElse("{}");
         return mAdBidGenerator.runAdBiddingPerCA(customAudience,
                 adSelectionConfig.getAdSelectionSignals(),
-                adSelectionConfig.getPerBuyerSignals().get(customAudience.getBuyer()),
+                buyerSignal,
                 "{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }

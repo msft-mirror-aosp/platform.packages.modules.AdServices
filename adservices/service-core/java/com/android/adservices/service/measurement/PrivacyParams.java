@@ -87,12 +87,28 @@ public final class PrivacyParams {
     /**
      * {@link Source} attribution state selection randomness probability for 'Event'
      */
-    public static final double EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0000017D;
+    public static final double EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0000025D;
 
     /**
      * {@link Source} attribution state selection randomness probability for 'Navigation'
      */
-    public static final double NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0024255D;
+    public static final double NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0024263D;
+
+    /**
+     * {@link Source} attribution state selection randomness probability for 'Event' which supports
+     * install attribution.
+     */
+    public static final double INSTALL_ATTR_EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY =
+            0.0000125D;
+
+    /**
+     * {@link Source} attribution state selection randomness probability for 'Navigation' which
+     * supports install attribution.
+     */
+    public static final double
+            INSTALL_ATTR_NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY =
+            NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY;
+
 
     /**
      * Trigger data noise probability for 'Event' {@link Source} attribution.
