@@ -43,6 +43,9 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -671,5 +674,54 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void shouldDoSimpleAttributionGenerateUnencryptedAggregateReport()
+            throws DatastoreException, JSONException {
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        jsonObject1.put("filters", createFilterJSONObject());
+        jsonObject1.put("not_filters", createFilterJSONObject());
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        Trigger trigger = new Trigger.Builder()
+                .setId("triggerId1")
+                .setStatus(Trigger.Status.PENDING)
+                .setDedupKey(1L)
+                .setAggregateTriggerData(triggerDatas.toString())
+                .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                .build();
+
+        Source source = new Source.Builder()
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        verify(mMeasurementDao).insertAggregateReport(any());
+    }
+
+    private JSONObject createFilterJSONObject() throws JSONException {
+        JSONObject filterData = new JSONObject();
+        filterData.put("conversion_subdomain",
+                new JSONArray(Arrays.asList("electronics.megastore")));
+        filterData.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        return filterData;
     }
 }
