@@ -190,11 +190,12 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.ID, source.getId());
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
-                source.getAttributionSource().toString());
+        values.put(MeasurementTables.SourceContract.PUBLISHER,
+                source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                 source.getAttributionDestination().toString());
-        values.put(MeasurementTables.SourceContract.REPORT_TO, source.getReportTo().toString());
+        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
+                source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
@@ -222,8 +223,8 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.ID, trigger.getId());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 trigger.getAttributionDestination().toString());
-        values.put(MeasurementTables.TriggerContract.REPORT_TO,
-                trigger.getReportTo().toString());
+        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                trigger.getAdTechDomain().toString());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
@@ -245,8 +246,8 @@ public abstract class AbstractDbIntegrationTest {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.EventReportContract.ID, report.getId());
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
-        values.put(MeasurementTables.EventReportContract.REPORT_TO,
-                report.getReportTo().toString());
+        values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
+                report.getAdTechDomain().toString());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 report.getAttributionDestination().toString());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
@@ -276,8 +277,8 @@ public abstract class AbstractDbIntegrationTest {
                 attrRateLimit.getSourceSite());
         values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
                 attrRateLimit.getDestinationSite());
-        values.put(MeasurementTables.AttributionRateLimitContract.REPORT_TO,
-                attrRateLimit.getReportTo());
+        values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
+                attrRateLimit.getAdTechDomain());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
                 attrRateLimit.getTriggerTime());
         values.put(MeasurementTables.AttributionRateLimitContract.REGISTRANT,
