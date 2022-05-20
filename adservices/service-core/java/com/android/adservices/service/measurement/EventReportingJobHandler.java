@@ -121,7 +121,8 @@ public class EventReportingJobHandler {
         }
         try {
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(eventReport.getReportTo(), eventReportJsonPayload);
+            int returnCode = makeHttpPostRequest(eventReport.getAdTechDomain(),
+                    eventReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
@@ -163,9 +164,9 @@ public class EventReportingJobHandler {
      * Makes the POST request to the reporting URL.
      */
     @VisibleForTesting
-    public int makeHttpPostRequest(Uri reportToUrl, JSONObject eventReportPayload)
+    public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
         EventReportSender eventReportSender = new EventReportSender();
-        return eventReportSender.sendEventReport(reportToUrl, eventReportPayload);
+        return eventReportSender.sendEventReport(adTechDomain, eventReportPayload);
     }
 }
