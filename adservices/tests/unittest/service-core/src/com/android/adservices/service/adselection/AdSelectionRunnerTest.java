@@ -229,6 +229,72 @@ public class AdSelectionRunnerTest {
     }
 
     @Test
+    public void testRunAdSelectionMissingBuyerSignals() throws AdServicesException {
+
+        // Creating ad selection config with missing Buyer signals to test the fallback
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder
+                .setPerBuyerSignals(Collections.EMPTY_MAP)
+                .build();
+
+        //Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverrideCustomAudience(mDBCustomAudienceForBuyer1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(mDBCustomAudienceForBuyer2);
+
+        // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
+        Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer1,
+                adSelectionConfig.getAdSelectionSignals(),
+                "{}",
+                "{}")).thenReturn(
+                FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)));
+        Mockito.when(mMockAdBidGenerator.runAdBiddingPerCA(mDBCustomAudienceForBuyer2,
+                adSelectionConfig.getAdSelectionSignals(),
+                "{}",
+                "{}")).thenReturn(
+                FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)));
+
+        // Getting ScoringOutcome-ForBuyerX corresponding to each BiddingOutcome-forBuyerX
+        Mockito.when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
+                .thenReturn((FluentFuture.from(Futures.immediateFuture(mAdScoringOutcomeList))));
+
+        DBAdSelection expectedDBAdSelectionResult = new DBAdSelection.Builder()
+                .setAdSelectionId(AD_SELECTION_ID)
+                .setCreationTimestamp(Calendar.getInstance().toInstant())
+                .setWinningAdBid(mAdScoringOutcomeForBuyer2.getAdWithScore()
+                        .getAdWithBid().getBid())
+                .setCustomAudienceSignals(mAdScoringOutcomeForBuyer2.getCustomAudienceBiddingInfo()
+                        .getCustomAudienceSignals())
+                .setWinningAdRenderUrl(mAdScoringOutcomeForBuyer2.getAdWithScore()
+                        .getAdWithBid().getAdData().getRenderUrl())
+                .setBiddingLogicUrl(
+                        mAdScoringOutcomeForBuyer2.getCustomAudienceBiddingInfo()
+                                .getBiddingLogicUrl())
+                .setContextualSignals("{}")
+                .build();
+
+        Mockito.when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
+
+        mAdSelectionRunner = new AdSelectionRunner(mContext,
+                mCustomAudienceDao,
+                mAdSelectionEntryDao,
+                mExecutorService,
+                mMockAdsScoreGenerator,
+                mMockAdBidGenerator,
+                mMockAdSelectionIdGenerator);
+
+        Assert.assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+
+        Assert.assertTrue(resultsCallback.mIsSuccess);
+        Assert.assertEquals(expectedDBAdSelectionResult.getAdSelectionId(),
+                resultsCallback.mAdSelectionResponse.getAdSelectionId());
+        Assert.assertEquals(expectedDBAdSelectionResult.getWinningAdRenderUrl(),
+                resultsCallback.mAdSelectionResponse.getRenderUrl());
+        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+    }
+
+    @Test
     public void testRunAdSelectionNoCAs() {
 
         // Creating ad selection config for happy case with all the buyers in place
@@ -597,6 +663,11 @@ public class AdSelectionRunnerTest {
         return adSelectionTestCallback;
     }
 
+    @After
+    public void tearDown() {
+        mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
+        mExecutorService.shutdown();
+    }
 
     static class AdSelectionTestCallback extends AdSelectionCallback.Stub {
 
@@ -624,11 +695,5 @@ public class AdSelectionRunnerTest {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }
-    }
-
-    @After
-    public void tearDown() {
-        mAdSelectionEntryDao.removeAdSelectionEntriesByIds(Arrays.asList(AD_SELECTION_ID));
-        mExecutorService.shutdown();
     }
 }
