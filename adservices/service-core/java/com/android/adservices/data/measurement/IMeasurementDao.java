@@ -41,7 +41,7 @@ public interface IMeasurementDao {
     /**
      * Add an entry to the Trigger datastore.
      */
-    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri reportTo,
+    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
             @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
             @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues) throws DatastoreException;
@@ -77,8 +77,8 @@ public interface IMeasurementDao {
     /**
      * Add an entry to the Source datastore.
      */
-    void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
-            @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
+    void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
+            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
             @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
             @NonNull Long installCooldownWindow,

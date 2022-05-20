@@ -32,6 +32,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     private static final String APP_PACKAGE = "com.android.sdksandbox.app";
     private static final String APP_2_PACKAGE = "com.android.sdksandbox.app2";
 
+    private static final String APP_SHARED_PACKAGE = "com.android.sdksandbox.shared.app1";
+    private static final String APP_SHARED_ACTIVITY = "SdkSandboxTestSharedActivity";
+    private static final String APP_SHARED_2_PACKAGE = "com.android.sdksandbox.shared.app2";
+
     private static final String APP_ACTIVITY = "SdkSandboxTestActivity";
     private static final String APP_2_ACTIVITY = "SdkSandboxTestActivity2";
 
@@ -173,4 +177,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
     }
 
+    @Test
+    public void testAppsWithSharedUidCanLoadSameSdk() throws Exception {
+        startActivity(APP_SHARED_PACKAGE, APP_SHARED_ACTIVITY);
+        assertThat(runDeviceTests(APP_SHARED_2_PACKAGE,
+                "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
+                "testLoadSdkIsSuccessful")).isTrue();
+    }
 }

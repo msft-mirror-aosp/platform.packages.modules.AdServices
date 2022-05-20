@@ -39,8 +39,7 @@ import java.util.function.Function;
 /**
  * Service binder that connects to a service in the APK.
  *
- * TODO: Make it robust. Currently this class ignores edge cases.
- * TODO: Clean up the log
+ * <p>TODO: Make it robust. Currently this class ignores edge cases. TODO: Clean up the log
  *
  * @hide
  */
@@ -67,8 +66,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @GuardedBy("mLock")
     private ServiceConnection mServiceConnection;
 
-    protected AndroidServiceBinder(Context context, String serviceIntentAction,
-            Function<IBinder, T> converter) {
+    protected AndroidServiceBinder(
+            Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
         mContext = context;
         mBinderConverter = converter;
@@ -184,8 +183,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         }
         final Intent intent = new Intent(mServiceIntentAction);
 
-        final ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(intent,
-                PackageManager.GET_SERVICES);
+        final ResolveInfo resolveInfo =
+                mContext.getPackageManager().resolveService(intent, PackageManager.GET_SERVICES);
         if (resolveInfo == null) {
             LogUtil.e("Failed to find resolveInfo for adServices service");
             return null;

@@ -23,6 +23,6 @@ import android.app.sdksandbox.IRemoteSdkCallback;
 /** @hide */
 interface ISdkSandboxManager {
     void loadSdk(in String callingPackageName, in String sdkName, in Bundle params, in IRemoteSdkCallback callback);
-    void requestSurfacePackage(in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params);
+    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params);
     void sendData(in String sdkName, in Bundle params);
 }
