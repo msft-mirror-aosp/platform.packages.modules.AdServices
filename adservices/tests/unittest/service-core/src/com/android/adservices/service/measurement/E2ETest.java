@@ -19,12 +19,6 @@ package com.android.adservices.service.measurement;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import android.adservices.measurement.IMeasurementCallback;
 import android.content.AttributionSource;
 import android.content.Context;
@@ -38,10 +32,8 @@ import android.view.MotionEvent.PointerProperties;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
@@ -54,12 +46,8 @@ import com.google.common.collect.ImmutableList;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runners.Parameterized;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,19 +72,19 @@ import java.util.concurrent.TimeUnit;
  *
  * Consider @RunWith(Parameterized.class)
  */
-public abstract class InternalE2ETest {
+public abstract class E2ETest {
     // Used to fuzzy-match expected report (not delivery) time
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
-    private static final String TEST_DIR_NAME = "msmt_internal_e2e_tests";
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
             ApplicationProvider.getApplicationContext());
-    private final AttributionJobHandlerWrapper mAttributionHelper;
     private final Collection<Action> mActionsList;
     final ReportObjects mExpectedOutput;
     // Extenders of the class populate in their own ways this container for actual output.
     final ReportObjects mActualOutput;
+    // Class extensions may choose to disable or enable added noise.
+    AttributionJobHandlerWrapper mAttributionHelper;
     MeasurementImpl mMeasurementImpl;
 
     private interface EventReportPayloadKeys {
@@ -132,13 +120,12 @@ public abstract class InternalE2ETest {
         String PAYLOAD_KEY = "payload";
     }
 
-    @Parameterized.Parameters(name = "{2}")
-    public static Collection<Object[]> data() throws IOException, JSONException {
+    static Collection<Object[]> data(String testDirName) throws IOException, JSONException {
         AssetManager assetManager = sContext.getAssets();
         List<InputStream> inputStreams = new ArrayList<InputStream>();
-        String[] testDirectoryList = assetManager.list(TEST_DIR_NAME);
+        String[] testDirectoryList = assetManager.list(testDirName);
         for (int i = 0; i < testDirectoryList.length; i++) {
-            inputStreams.add(assetManager.open(TEST_DIR_NAME + "/" + testDirectoryList[i]));
+            inputStreams.add(assetManager.open(testDirName + "/" + testDirectoryList[i]));
         }
         return getTestCasesFrom(inputStreams, testDirectoryList);
     }
@@ -208,38 +195,22 @@ public abstract class InternalE2ETest {
                 0 /*int flags*/);
     }
 
-    @Before
-    public void before() {
+    static void clearDatabase() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
         emptyTables(db);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
     // unused by this constructor.
-    InternalE2ETest(Collection<Action> actions, ReportObjects expectedOutput, String name)
-            throws DatastoreException {
-        DatastoreManager datastoreManager = spy(sDatastoreManager);
-        // Mocking the randomized trigger data to always return the truth value.
-        IMeasurementDao dao = spy(datastoreManager.getMeasurementDao());
-        when(datastoreManager.getMeasurementDao()).thenReturn(dao);
-        doAnswer((Answer<Trigger>) triggerInvocation -> {
-            Trigger trigger = spy((Trigger) triggerInvocation.callRealMethod());
-            doAnswer((Answer<Long>) triggerDataInvocation ->
-                    trigger.getTruncatedTriggerData(
-                            triggerDataInvocation.getArgument(0)))
-                    .when(trigger)
-                    .getRandomizedTriggerData(any());
-            return trigger;
-        }).when(dao).getTrigger(anyString());
-
-        this.mAttributionHelper = new AttributionJobHandlerWrapper(datastoreManager);
-        this.mActionsList = actions;
-        this.mExpectedOutput = expectedOutput;
-        this.mActualOutput = new ReportObjects();
+    E2ETest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
+        mActionsList = actions;
+        mExpectedOutput = expectedOutput;
+        mActualOutput = new ReportObjects();
     }
 
     @Test
     public void runTest() throws IOException, JSONException {
+        clearDatabase();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
@@ -249,14 +220,9 @@ public abstract class InternalE2ETest {
                 processAction((ReportingJob) action);
             }
         }
+        clearDatabase();
 
         evaluateResults();
-    }
-
-    @After
-    public void after() {
-        SQLiteDatabase db = DbHelper.getInstance(sContext).getWritableDatabase();
-        emptyTables(db);
     }
 
     /**
@@ -323,8 +289,8 @@ public abstract class InternalE2ETest {
         eventReportObjects.sort(
                 // Report time can vary across implementations so cannot be included in the hash;
                 // they should be similarly ordered, however, so we can use them to sort.
-                Comparator.comparing(InternalE2ETest::reportTimeFrom)
-                .thenComparing(InternalE2ETest::hashForEventReportObject));
+                Comparator.comparing(E2ETest::reportTimeFrom)
+                .thenComparing(E2ETest::hashForEventReportObject));
     }
 
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
@@ -454,8 +420,8 @@ public abstract class InternalE2ETest {
                 TestFormatJsonMapping.EVENT_REPORT_OBJECTS_KEY);
         for (int i = 0; i < eventReportObjectsArray.length(); i++) {
             JSONObject obj = eventReportObjectsArray.getJSONObject(i);
-            String reportTo = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
-            eventReportObjects.add(obj.put(TestFormatJsonMapping.REPORT_TO_KEY, reportTo));
+            String adTechDomain = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
+            eventReportObjects.add(obj.put(TestFormatJsonMapping.REPORT_TO_KEY, adTechDomain));
         }
 
         List<JSONObject> aggregateReportObjects = new ArrayList<>();
@@ -479,14 +445,14 @@ public abstract class InternalE2ETest {
         db.delete("msmt_attribution_rate_limit", null, null);
     }
 
-    private void processAction(RegisterSource sourceRegistration) throws IOException {
+    void processAction(RegisterSource sourceRegistration) throws IOException {
         prepareRegistrationServer(sourceRegistration);
         Assert.assertTrue("MeasurementImpl.register source failed",
                 mMeasurementImpl.register(sourceRegistration.mRegistrationRequest,
                     sourceRegistration.mTimestamp) == IMeasurementCallback.RESULT_OK);
     }
 
-    private void processAction(RegisterTrigger triggerRegistration) throws IOException {
+    void processAction(RegisterTrigger triggerRegistration) throws IOException {
         prepareRegistrationServer(triggerRegistration);
         Assert.assertTrue("MeasurementImpl.register trigger failed",
                 mMeasurementImpl.register(triggerRegistration.mRegistrationRequest,
@@ -495,7 +461,7 @@ public abstract class InternalE2ETest {
                 mAttributionHelper.performPendingAttributions());
     }
 
-    private void evaluateResults() throws JSONException {
+    void evaluateResults() throws JSONException {
         sortEventReportObjects(mExpectedOutput.mEventReportObjects);
         sortEventReportObjects(mActualOutput.mEventReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
