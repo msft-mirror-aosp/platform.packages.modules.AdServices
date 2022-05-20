@@ -36,6 +36,7 @@ import android.net.Uri;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -49,6 +50,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -498,7 +501,7 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void testRedirectSameDestination_returnBothSuccessfully() throws Exception {
+    public void testRedirectSameDestination_returnAllSuccessfully() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
@@ -507,59 +510,112 @@ public final class SourceFetcherTest {
         headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
                 + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
                 + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
-                + "\"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
+                + "\"priority\": 999,\n"
                 + "\"expiry\": " + DEFAULT_EXPIRY + ""
                 + "}\n"));
-        headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION));
+        headersFirstRequest.put("Attribution-Reporting-Redirect",
+                List.of(ALT_REGISTRATION, ALT_REGISTRATION));
 
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
         headersSecondRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
                 + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
                 + "\"source_event_id\": \"" + ALT_EVENT_ID + "\",\n"
-                + "\"priority\": \"" + ALT_PRIORITY + "\",\n"
+                + "\"priority\": 888,\n"
                 + "\"expiry\": " + ALT_EXPIRY + ""
                 + "}\n"));
 
+        Map<String, List<String>> headersThirdRequest = new HashMap<>();
+        headersThirdRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
+                + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
+                + "\"source_event_id\": 777,\n"
+                + "\"priority\": 777,\n"
+                + "\"expiry\": 456791"
+                + "}\n"));
+
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
-                headersSecondRequest);
+                headersSecondRequest, headersThirdRequest);
 
         ArrayList<SourceRegistration> result = new ArrayList();
         assertTrue(mFetcher.fetchSource(request, result));
-        assertEquals(2, result.size());
+        assertEquals(3, result.size());
+        result.sort((o1, o2) -> (int) (o2.getSourcePriority() - o1.getSourcePriority()));
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
         assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
-        assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
+        assertEquals(999, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(1).getTopOrigin().toString());
         assertEquals(ALT_REGISTRATION, result.get(1).getReportingOrigin().toString());
         assertEquals(DEFAULT_DESTINATION, result.get(1).getDestination().toString());
         assertEquals(ALT_EVENT_ID, result.get(1).getSourceEventId());
-        assertEquals(ALT_PRIORITY, result.get(1).getSourcePriority());
+        assertEquals(888, result.get(1).getSourcePriority());
         assertEquals(ALT_EXPIRY, result.get(1).getExpiry());
-        verify(mUrlConnection, times(2)).setRequestMethod("POST");
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(2).getTopOrigin().toString());
+        assertEquals(ALT_REGISTRATION, result.get(2).getReportingOrigin().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(2).getDestination().toString());
+        assertEquals(777, result.get(2).getSourceEventId());
+        assertEquals(777, result.get(2).getSourcePriority());
+        assertEquals(456791, result.get(2).getExpiry());
+        verify(mUrlConnection, times(3)).setRequestMethod("POST");
     }
 
     @Test
-    public void testMissingHeaderButWithRedirect() throws Exception {
+    public void testRedirectSameDestinationWithDelay_returnAllSuccessfully() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION)))
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                                + "  \"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
-                                + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
-                                + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
-                                + "}\n")));
+
+        Map<String, List<String>> headersFirstRequest = buildRegisterSourceDefaultHeader(
+                        DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 1, DEFAULT_EXPIRY);
+        headersFirstRequest.put("Attribution-Reporting-Redirect",
+                List.of("https://bar2.com",
+                        "https://bar3.com",
+                        "https://bar4.com",
+                        "https://bar5.com",
+                        "https://bar6.com"));
+
+        Map<String, List<String>> headersSecondRequest = buildRegisterSourceDefaultHeader(
+                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 2, DEFAULT_EXPIRY);
+
+        Map<String, List<String>> headersThirdRequest = buildRegisterSourceDefaultHeader(
+                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 3, DEFAULT_EXPIRY);
+
+        Map<String, List<String>> headersFourthRequest = buildRegisterSourceDefaultHeader(
+                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 4, DEFAULT_EXPIRY);
+
+        Map<String, List<String>> headersFifthRequest = buildRegisterSourceDefaultHeader(
+                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 5, DEFAULT_EXPIRY);
+
+        Map<String, List<String>> headersSixthRequest = buildRegisterSourceDefaultHeader(
+                DEFAULT_DESTINATION, DEFAULT_EVENT_ID, /* priority = */ 6, DEFAULT_EXPIRY);
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest)
+                .thenAnswer(invocation -> {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    return headersSecondRequest;
+                }).thenAnswer(invocation -> {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    return headersThirdRequest;
+                }).thenAnswer(invocation -> {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    return headersFourthRequest;
+                }).thenAnswer(invocation -> {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    return headersFifthRequest;
+                }).thenAnswer(invocation -> {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    return headersSixthRequest;
+                });
 
         ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
-        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        assertTrue(mFetcher.fetchSource(request, result));
+        assertEquals(6, result.size());
+        long expected = 1;
+        for (long priority : result.stream().map(i -> i.getSourcePriority()).sorted()
+                .collect(Collectors.toList())) {
+            Assert.assertEquals(expected++, priority);
+        }
     }
 
     @Test
@@ -593,6 +649,26 @@ public final class SourceFetcherTest {
     }
 
     @Test
+    public void testMissingHeaderButWithRedirect() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(ALT_REGISTRATION)))
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
+                        List.of("{\n"
+                                + "  \"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
+                                + "  \"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
+                                + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
+                                + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
+                                + "}\n")));
+        ArrayList<SourceRegistration> result = new ArrayList();
+        assertFalse(mFetcher.fetchSource(request, result));
+        assertEquals(0, result.size());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+    }
+
+    @Test
     public void testBasicSourceRequestWithAggregateSource() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
@@ -620,5 +696,17 @@ public final class SourceFetcherTest {
                 .setTopOriginUri(Uri.parse(topOrigin))
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
+    }
+
+    private Map<String, List<String>> buildRegisterSourceDefaultHeader(
+            String destination, long eventId, long priority, long expiry) {
+        Map<String, List<String>> headersFirstRequest = new HashMap<>();
+        headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{\n"
+                + "\"destination\": \"" + destination + "\",\n"
+                + "\"source_event_id\": \"" + eventId + "\",\n"
+                + "\"priority\": \"" + priority + "\",\n"
+                + "\"expiry\": " + expiry + ""
+                + "}\n"));
+        return headersFirstRequest;
     }
 }

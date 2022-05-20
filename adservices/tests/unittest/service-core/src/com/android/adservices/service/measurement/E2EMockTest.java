@@ -18,13 +18,11 @@ package com.android.adservices.service.measurement;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
-import android.test.mock.MockContentResolver;
 
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
@@ -37,8 +35,6 @@ import com.android.adservices.service.measurement.registration.TriggerFetcher;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -48,7 +44,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,21 +53,18 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
+ *
+ * Consider @RunWith(Parameterized.class)
  */
-@RunWith(Parameterized.class)
-public class InternalE2EMockTest extends InternalE2ETest {
-    private SourceFetcher mSourceFetcher;
-    private TriggerFetcher mTriggerFetcher;
+public abstract class E2EMockTest extends E2ETest {
+    SourceFetcher mSourceFetcher;
+    TriggerFetcher mTriggerFetcher;
 
-    public InternalE2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
+    E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
             String name) throws DatastoreException {
         super(actions, expectedOutput, name);
-        this.mSourceFetcher = Mockito.spy(new SourceFetcher());
-        this.mTriggerFetcher = Mockito.spy(new TriggerFetcher());
-        this.mMeasurementImpl = Mockito.spy(new MeasurementImpl(
-            new MockContentResolver(), sDatastoreManager, mSourceFetcher, mTriggerFetcher));
-        // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        mSourceFetcher = Mockito.spy(new SourceFetcher());
+        mTriggerFetcher = Mockito.spy(new TriggerFetcher());
     }
 
     @Override
@@ -82,11 +74,7 @@ public class InternalE2EMockTest extends InternalE2ETest {
             when(urlConnection.getResponseCode()).thenReturn(200);
             Mockito.doAnswer(new Answer<Map<String, List<String>>>() {
                 public Map<String, List<String>> answer(InvocationOnMock invocation) {
-                    List<Map<String, List<String>>> responseList =
-                            sourceRegistration.mUriToResponseHeadersMap.get(uri);
-                    Map<String, List<String>> headersMap = responseList.get(0);
-                    responseList.remove(0);
-                    return headersMap;
+                    return sourceRegistration.getNextResponse(uri);
                 }
             }).when(urlConnection).getHeaderFields();
             when(mSourceFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
@@ -101,11 +89,7 @@ public class InternalE2EMockTest extends InternalE2ETest {
             when(urlConnection.getResponseCode()).thenReturn(200);
             Mockito.doAnswer(new Answer<Map<String, List<String>>>() {
                 public Map<String, List<String>> answer(InvocationOnMock invocation) {
-                    List<Map<String, List<String>>> responseList =
-                            triggerRegistration.mUriToResponseHeadersMap.get(uri);
-                    Map<String, List<String>> headersMap = responseList.get(0);
-                    responseList.remove(0);
-                    return headersMap;
+                    return triggerRegistration.getNextResponse(uri);
                 }
             }).when(urlConnection).getHeaderFields();
             when(mTriggerFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
@@ -134,8 +118,15 @@ public class InternalE2EMockTest extends InternalE2ETest {
                 .makeHttpPostRequest(destination.capture(), payload.capture());
 
         // Collect actual reports
-        List<JSONObject> eventReportObjects = getEventReportObjects(
+        processReports(
                 eventReport.getAllValues(), destination.getAllValues(), payload.getAllValues());
+    }
+
+    // Class extensions may need different processing to prepare for result evaluation.
+    void processReports(List<EventReport> eventReports, List<Uri> destinations,
+            List<JSONObject> payloads) throws JSONException {
+        List<JSONObject> eventReportObjects =
+                getEventReportObjects(eventReports, destinations, payloads);
         mActualOutput.mEventReportObjects.addAll(eventReportObjects);
     }
 
