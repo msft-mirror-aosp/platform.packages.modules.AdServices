@@ -32,7 +32,7 @@ public final class EventReportTest {
         return new EventReport.Builder()
                 .setId("1")
                 .setSourceId(21)
-                .setReportTo(Uri.parse("http://foo.com"))
+                .setAdTechDomain(Uri.parse("http://foo.com"))
                 .setAttributionDestination(Uri.parse("http://bar.com"))
                 .setTriggerTime(1000L)
                 .setTriggerData(8L)
@@ -49,7 +49,7 @@ public final class EventReportTest {
         EventReport eventReport = createExample();
         assertEquals("1", eventReport.getId());
         assertEquals(21, eventReport.getSourceId());
-        assertEquals("http://foo.com", eventReport.getReportTo().toString());
+        assertEquals("http://foo.com", eventReport.getAdTechDomain().toString());
         assertEquals("http://bar.com", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(8L, eventReport.getTriggerData());
@@ -65,7 +65,7 @@ public final class EventReportTest {
         EventReport eventReport = new EventReport.Builder().build();
         assertNull(eventReport.getId());
         assertEquals(0L, eventReport.getSourceId());
-        assertNull(eventReport.getReportTo());
+        assertNull(eventReport.getAdTechDomain());
         assertNull(eventReport.getAttributionDestination());
         assertEquals(0L, eventReport.getTriggerTime());
         assertEquals(0L, eventReport.getTriggerData());

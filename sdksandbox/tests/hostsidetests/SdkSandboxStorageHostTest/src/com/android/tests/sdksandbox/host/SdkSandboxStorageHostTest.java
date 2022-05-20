@@ -101,8 +101,14 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSelinuxLabel() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 
-        assertSelinuxLabel("/data/misc_ce/0/sdksandbox", "system_data_file");
-        assertSelinuxLabel("/data/misc_de/0/sdksandbox", "system_data_file");
+        assertSelinuxLabel("/data/misc_ce/0/sdksandbox", "sdk_sandbox_system_data_file");
+        assertSelinuxLabel("/data/misc_de/0/sdksandbox", "sdk_sandbox_system_data_file");
+
+        // Check label of /data/misc_{ce,de}/0/sdksandbox/<package-name>
+        assertSelinuxLabel(getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true),
+                "sdk_sandbox_system_data_file");
+        assertSelinuxLabel(getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false),
+                "sdk_sandbox_system_data_file");
         // Check label of /data/misc_{ce,de}/0/sdksandbox/<app-name>/shared
         assertSelinuxLabel(getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true),
                 "sdk_sandbox_data_file");
@@ -137,6 +143,23 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             assertThat(getDevice().isDirectory(dePath)).isTrue();
             assertThat(getDevice().isDirectory(cePath)).isTrue();
         }
+    }
+
+    /**
+     * Verify that {@code /data/misc_{ce,de}/<user-id>/sdksandbox} is not accessible by apps
+     */
+    @Test
+    public void testSdkSandboxDataRootDirectory_IsNotAccessibleByApps() throws Exception {
+        // Install the app
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Verify root directory exists for primary user
+        final String cePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+        final String dePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+        assertThat(getDevice().isDirectory(dePath)).isTrue();
+        assertThat(getDevice().isDirectory(cePath)).isTrue();
+
+        runPhase("testSdkSandboxDataRootDirectory_IsNotAccessibleByApps");
     }
 
     @Test
@@ -679,6 +702,39 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
                 assertSelinuxLabel(sdkDataPackagePath, "system_data_file");
                 assertSelinuxLabel(sdkDataSharedPath, "sdk_sandbox_data_file");
             }
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    @Test
+    public void testSdkSharedStorage_DifferentVolumeIsUsable() throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Move the app to another volume and check if the sdk can read and write to it.
+        try {
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+            assertSuccess(getDevice().executeShellCommand(
+                    "pm move-package " + TEST_APP_STORAGE_PACKAGE + " " + newVolumeUuid));
+
+            final String sharedCePath = "/mnt/expand/" + newVolumeUuid + "/misc_ce/0/sdksandbox/"
+                    + TEST_APP_STORAGE_PACKAGE + "/shared";
+            assertThat(getDevice().isDirectory(sharedCePath)).isTrue();
+
+            String fileToRead = sharedCePath + "/readme.txt";
+            getDevice().executeShellCommand("echo something to read > " + fileToRead);
+            assertThat(getDevice().doesFileExist(fileToRead)).isTrue();
+
+            runPhase("testSdkDataPackageDirectory_SharedStorageIsUsable");
+
+            // Assert that the sdk was able to create file and directories
+            assertThat(getDevice().isDirectory(sharedCePath + "/dir")).isTrue();
+            assertThat(getDevice().doesFileExist(sharedCePath + "/dir/file")).isTrue();
+            String content = getDevice().executeShellCommand("cat " + sharedCePath + "/dir/file");
+            assertThat(content).isEqualTo("something to read");
+
         } finally {
             mAdoptableUtils.cleanUpVolume();
         }

@@ -52,7 +52,7 @@ public class Trigger {
     private String mId;
     private Long mDedupKey;
     private Uri mAttributionDestination;
-    private Uri mReportTo;
+    private Uri mAdTechDomain;
     private long mTriggerTime;
     private long mPriority;
     private long mEventTriggerData;
@@ -87,7 +87,7 @@ public class Trigger {
         Trigger trigger = (Trigger) obj;
         return  Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
-                && Objects.equals(mReportTo, trigger.mReportTo)
+                && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
                 && mEventTriggerData == trigger.mEventTriggerData
                 && mPriority == trigger.mPriority
@@ -102,7 +102,7 @@ public class Trigger {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionDestination, mReportTo, mTriggerTime,
+        return Objects.hash(mId, mAttributionDestination, mAdTechDomain, mTriggerTime,
                 mEventTriggerData, mPriority, mStatus, mDedupKey, mAggregateTriggerData,
                 mAggregateValues, mAggregatableAttributionTrigger);
     }
@@ -129,10 +129,10 @@ public class Trigger {
     }
 
     /**
-     * Report destination for the generated reports.
+     * AdTech report destination domain for generated reports.
      */
-    public Uri getReportTo() {
-        return mReportTo;
+    public Uri getAdTechDomain() {
+        return mAdTechDomain;
     }
 
     /**
@@ -340,10 +340,10 @@ public class Trigger {
         }
 
         /**
-         * See {@link Trigger#getReportTo()}.
+         * See {@link Trigger#getAdTechDomain()} ()}.
          */
-        public Builder setReportTo(Uri reportTo) {
-            mBuilding.mReportTo = reportTo;
+        public Builder setAdTechDomain(Uri adTechDomain) {
+            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 

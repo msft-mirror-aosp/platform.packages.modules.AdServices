@@ -76,9 +76,9 @@ public class SourceTest {
         aggregateFilterData.put("product", Arrays.asList("1234", "2345"));
         assertEquals(
                 new Source.Builder()
-                        .setReportTo(Uri.parse("https://example.com/rT"))
+                        .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                        .setAttributionSource(Uri.parse("https://example.com/aS"))
+                        .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("1")
                         .setEventId(2L)
                         .setPriority(3L)
@@ -92,9 +92,9 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource.toString())
                         .build(),
                 new Source.Builder()
-                        .setReportTo(Uri.parse("https://example.com/rT"))
+                        .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                        .setAttributionSource(Uri.parse("https://example.com/aS"))
+                        .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("1")
                         .setEventId(2L)
                         .setPriority(3L)
@@ -121,11 +121,11 @@ public class SourceTest {
                 new Source.Builder().setAttributionDestination(Uri.parse("1")).build(),
                 new Source.Builder().setAttributionDestination(Uri.parse("2")).build());
         assertNotEquals(
-                new Source.Builder().setReportTo(Uri.parse("1")).build(),
-                new Source.Builder().setReportTo(Uri.parse("2")).build());
+                new Source.Builder().setAdTechDomain(Uri.parse("1")).build(),
+                new Source.Builder().setAdTechDomain(Uri.parse("2")).build());
         assertNotEquals(
-                new Source.Builder().setAttributionSource(Uri.parse("1")).build(),
-                new Source.Builder().setAttributionSource(Uri.parse("2")).build());
+                new Source.Builder().setPublisher(Uri.parse("1")).build(),
+                new Source.Builder().setPublisher(Uri.parse("2")).build());
         assertNotEquals(
                 new Source.Builder().setPriority(1L).build(),
                 new Source.Builder().setPriority(2L).build());

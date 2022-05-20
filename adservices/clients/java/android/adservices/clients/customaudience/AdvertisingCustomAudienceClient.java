@@ -19,6 +19,8 @@ package android.adservices.clients.customaudience;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceManager;
+import android.adservices.customaudience.JoinCustomAudienceRequest;
+import android.adservices.customaudience.LeaveCustomAudienceRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -65,8 +67,11 @@ public class AdvertisingCustomAudienceClient {
     public ListenableFuture<Void> joinCustomAudience(CustomAudience customAudience) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
+                    JoinCustomAudienceRequest request = new JoinCustomAudienceRequest.Builder()
+                            .setCustomAudience(customAudience)
+                            .build();
                     mCustomAudienceManager.joinCustomAudience(
-                            customAudience,
+                            request,
                             mExecutor,
                             new OutcomeReceiver<Void, AdServicesException>() {
                                 @Override
@@ -91,10 +96,13 @@ public class AdvertisingCustomAudienceClient {
             @NonNull String owner, @NonNull String buyer, @NonNull String name) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
+                    LeaveCustomAudienceRequest request = new LeaveCustomAudienceRequest.Builder()
+                            .setOwner(owner)
+                            .setBuyer(buyer)
+                            .setName(name)
+                            .build();
                     mCustomAudienceManager.leaveCustomAudience(
-                            owner,
-                            buyer,
-                            name,
+                            request,
                             mExecutor,
                             new OutcomeReceiver<Void, AdServicesException>() {
                                 @Override
@@ -204,7 +212,8 @@ public class AdvertisingCustomAudienceClient {
         private Executor mExecutor;
 
         /** Empty-arg constructor with an empty body for Builder */
-        public Builder() {}
+        public Builder() {
+        }
 
         /** Sets the context. */
         @NonNull

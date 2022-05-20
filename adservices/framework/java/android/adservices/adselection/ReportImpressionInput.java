@@ -17,23 +17,37 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
 
 /**
- * Represent input parameters to the reportImpression API.
+ * Represent input params to the reportImpression API.
  *
  * <p>Hiding for future implementation and review for public exposure.
  *
  * @hide
  */
-public class ReportImpressionInput {
+public final class ReportImpressionInput implements Parcelable {
     private static final long UNSET = 0;
 
     private final long mAdSelectionId;
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
+
+    @NonNull
+    public static final Parcelable.Creator<ReportImpressionInput> CREATOR =
+            new Parcelable.Creator<ReportImpressionInput>() {
+                public ReportImpressionInput createFromParcel(Parcel in) {
+                    return new ReportImpressionInput(in);
+                }
+
+                public ReportImpressionInput[] newArray(int size) {
+                    return new ReportImpressionInput[size];
+                }
+            };
 
     private ReportImpressionInput(
             long adSelectionId, @NonNull AdSelectionConfig adSelectionConfig) {
@@ -43,12 +57,38 @@ public class ReportImpressionInput {
         this.mAdSelectionConfig = adSelectionConfig;
     }
 
-    /** Returns the adSelectionId, one of the inputs to {@link ReportImpressionInput} */
+    private ReportImpressionInput(@NonNull Parcel in) {
+        Objects.requireNonNull(in);
+
+        this.mAdSelectionId = in.readLong();
+        this.mAdSelectionConfig = AdSelectionConfig.CREATOR.createFromParcel(in);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        Objects.requireNonNull(dest);
+
+        dest.writeLong(mAdSelectionId);
+        mAdSelectionConfig.writeToParcel(dest, flags);
+    }
+
+    /**
+     * Returns the adSelectionId, one of the inputs to {@link ReportImpressionInput} as noted in
+     * {@link AdSelectionService}.
+     */
     public long getAdSelectionId() {
         return mAdSelectionId;
     }
 
-    /** Returns the adSelectionConfig, one of the inputs to {@link ReportImpressionInput} */
+    /**
+     * Returns the adSelectionConfig, one of the inputs to {@link ReportImpressionInput} as noted
+     * in {@link AdSelectionService}.
+     */
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {
         return mAdSelectionConfig;
