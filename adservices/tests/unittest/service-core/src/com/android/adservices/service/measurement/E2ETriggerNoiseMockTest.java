@@ -67,7 +67,7 @@ public class E2ETriggerNoiseMockTest extends E2EMockTest {
     }
 
     @Override
-    void processReports(List<EventReport> eventReports, List<Uri> destinations,
+    void processEventReports(List<EventReport> eventReports, List<Uri> destinations,
             List<JSONObject> payloads) throws JSONException {
         // Each report-destination × event-ID should have the same count of trigger_data as in the
         // expected output, but the trigger_data value distribution should be different. The test
