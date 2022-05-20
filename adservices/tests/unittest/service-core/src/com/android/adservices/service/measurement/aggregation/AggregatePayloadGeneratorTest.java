@@ -177,12 +177,11 @@ public final class AggregatePayloadGeneratorTest {
                         .setTriggerData(triggerDataList)
                         .setValues(values).build();
 
-        Optional<CleartextAggregatePayload> attributionReport =
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
                 AggregatePayloadGenerator.generateAttributionReport(
                         attributionSource, attributionTrigger);
-        assertTrue(attributionReport.isPresent());
-        List<AggregateHistogramContribution> contributions =
-                attributionReport.get().getAggregateAttributionData().getContributions();
+        assertTrue(aggregateHistogramContributions.isPresent());
+        List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
         assertEquals(contributions.size(), 2);
         assertTrue(contributions.contains(
@@ -249,12 +248,11 @@ public final class AggregatePayloadGeneratorTest {
                         .setTriggerData(triggerDataList)
                         .setValues(values).build();
 
-        Optional<CleartextAggregatePayload> attributionReport =
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
                 AggregatePayloadGenerator.generateAttributionReport(
                         attributionSource, attributionTrigger);
-        assertTrue(attributionReport.isPresent());
-        List<AggregateHistogramContribution> contributions =
-                attributionReport.get().getAggregateAttributionData().getContributions();
+        assertTrue(aggregateHistogramContributions.isPresent());
+        List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
         assertEquals(contributions.size(), 2);
         assertTrue(contributions.contains(
@@ -336,12 +334,11 @@ public final class AggregatePayloadGeneratorTest {
                         .setTriggerData(triggerDataList)
                         .setValues(values).build();
 
-        Optional<CleartextAggregatePayload> attributionReport =
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
                 AggregatePayloadGenerator.generateAttributionReport(
                         attributionSource, attributionTrigger);
-        assertTrue(attributionReport.isPresent());
-        List<AggregateHistogramContribution> contributions =
-                attributionReport.get().getAggregateAttributionData().getContributions();
+        assertTrue(aggregateHistogramContributions.isPresent());
+        List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
 
         assertEquals(contributions.size(), 2);
         assertTrue(contributions.contains(
