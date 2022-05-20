@@ -23,13 +23,14 @@ import android.util.ArrayMap;
 
 import com.android.adservices.LogUtil;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +61,6 @@ public class PrecomputedLoader {
      * Retrieve a list of topicIDs from labels file.
      *
      * @return The list of topicIDs from labels.txt
-     *
      * @throws IOException An empty list will be return
      */
     @NonNull
@@ -91,7 +91,6 @@ public class PrecomputedLoader {
      * Retrieve the app classification topicIDs from file name here.
      *
      * @return The map from App to the list of its classification topicIDs.
-     *
      * @throws IOException An empty hash map will be return
      */
     @NonNull
@@ -138,14 +137,14 @@ public class PrecomputedLoader {
                     appTopics.add(Integer.parseInt(topic));
                 }
 
-                appTopicsMap.put(app, appTopics);
+                appTopicsMap.put(app, ImmutableList.copyOf(appTopics));
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed app topics list");
             // When catching IOException -> return empty hash map
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
-            return new HashMap<>();
+            return ImmutableMap.of();
         }
 
         return appTopicsMap;
