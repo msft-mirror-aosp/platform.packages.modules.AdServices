@@ -145,9 +145,9 @@ public class DbState {
                 .setSourceType(
                         Source.SourceType.valueOf(sJSON.getString("sourceType").toUpperCase(
                                 Locale.ENGLISH)))
-                .setAttributionSource(Uri.parse(sJSON.getString("attributionSource")))
+                .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setAttributionDestination(Uri.parse(sJSON.getString("attributionDestination")))
-                .setReportTo(Uri.parse(sJSON.getString("reportTo")))
+                .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
@@ -167,7 +167,7 @@ public class DbState {
         return new Trigger.Builder()
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
-                .setReportTo(Uri.parse(tJSON.getString("reportTo")))
+                .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
                 .setEventTriggerData(tJSON.getLong("triggerData"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setPriority(tJSON.getLong("priority"))
@@ -182,7 +182,7 @@ public class DbState {
                 .setSourceId(rJSON.getLong("sourceId"))
                 .setAttributionDestination(
                         Uri.parse(rJSON.getString("attributionDestination")))
-                .setReportTo(Uri.parse(rJSON.getString("reportTo")))
+                .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
@@ -200,7 +200,7 @@ public class DbState {
                 .setId(attrJSON.getString("id"))
                 .setSourceSite(attrJSON.getString("sourceSite"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
-                .setReportTo(attrJSON.getString("reportTo"))
+                .setAdTechDomain(attrJSON.getString("adTechDomain"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
                 .build();
@@ -214,8 +214,8 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.SOURCE_SITE)))
                 .setDestinationSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE)))
-                .setReportTo(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionRateLimitContract.REPORT_TO)))
+                .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN)))
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)))
                 .setRegistrant(cursor.getString(cursor.getColumnIndex(

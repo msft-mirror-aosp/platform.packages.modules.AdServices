@@ -426,13 +426,13 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         // Failure
         doThrow(new DatastoreException("Simulating failure")).when(mMeasurementDao)
-                .updateTriggerStatus(any());
+                .updateSourceDedupKeys(any());
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).getTrigger(anyString());
         verify(mMeasurementDao).getMatchingActiveSources(any());
         verify(mMeasurementDao).getAttributionsPerRateLimitWindow(any(), any());
-        verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
+        verify(mMeasurementDao, never()).updateTriggerStatus(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction).rollback();

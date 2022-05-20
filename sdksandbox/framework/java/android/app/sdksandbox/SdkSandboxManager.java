@@ -195,8 +195,8 @@ public final class SdkSandboxManager {
     public void requestSurfacePackage(@NonNull String sdkName,
             int displayId, int width, int height, @NonNull Bundle params) {
         try {
-            mService.requestSurfacePackage(sdkName, new Binder(), displayId,
-                    width, height, params);
+            mService.requestSurfacePackage(mContext.getPackageName(), sdkName, new Binder(),
+                    displayId, width, height, params);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
