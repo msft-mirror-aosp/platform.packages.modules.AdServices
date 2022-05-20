@@ -31,28 +31,27 @@ import java.io.PrintWriter;
 public interface SdkSandboxServiceProvider {
     /**
      * Bind to and establish a connection with SdkSandbox service.
-     * @param appPackageName is the package of the calling app.
-     * @param appUid is the calling app Uid.
+     * @param callingInfo represents the calling app.
      * @param serviceConnection recieves information when service is started and stopped.
      */
-    void bindService(int appUid, String appPackageName, ServiceConnection serviceConnection);
+    void bindService(CallingInfo callingInfo, ServiceConnection serviceConnection);
 
     /**
      * Unbind the SdkSandbox service associated with the app.
      */
-    void unbindService(int appUid);
+    void unbindService(CallingInfo callingInfo);
 
     /**
-     * Return bound {@link ISdkSandboxService} connected for {@code appUid} or otherwise
+     * Return bound {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise
      * {@code null}.
     */
     @Nullable
-    ISdkSandboxService getBoundServiceForApp(int appUid);
+    ISdkSandboxService getBoundServiceForApp(CallingInfo callingInfo);
 
     /**
-     * Set bound SdkSandbox service for {@code appUid}.
+     * Set bound SdkSandbox service for {@code callingInfo}.
      */
-    void setBoundServiceForApp(int appUid, @Nullable ISdkSandboxService service);
+    void setBoundServiceForApp(CallingInfo callingInfo, @Nullable ISdkSandboxService service);
 
     /** Dump debug information for adb shell dumpsys */
     default void dump(PrintWriter writer) {

@@ -77,10 +77,10 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertSource(
                         ValidSourceParams.SOURCE_EVENT_ID,
-                        ValidSourceParams.ATTRIBUTION_SOURCE,
-                        ValidSourceParams.ATTRIBUTION_DESTINATION,
-                        ValidSourceParams.REPORT_TO,
-                        ValidSourceParams.REGISTRANT,
+                        ValidSourceParams.sPublisher,
+                        ValidSourceParams.sAttributionDestination,
+                        ValidSourceParams.sAdTechDomain,
+                        ValidSourceParams.sRegistrant,
                         ValidSourceParams.SOURCE_EVENT_TIME,
                         ValidSourceParams.EXPIRY_TIME,
                         ValidSourceParams.PRIORITY,
@@ -101,11 +101,11 @@ public class MeasurementDaoTest {
             Source source = SqliteObjectMapper.constructSourceFromCursor(sourceCursor);
             Assert.assertNotNull(source);
             Assert.assertNotNull(source.getId());
-            assertEquals(ValidSourceParams.ATTRIBUTION_SOURCE, source.getAttributionSource());
-            assertEquals(ValidSourceParams.ATTRIBUTION_DESTINATION,
+            assertEquals(ValidSourceParams.sPublisher, source.getPublisher());
+            assertEquals(ValidSourceParams.sAttributionDestination,
                     source.getAttributionDestination());
-            assertEquals(ValidSourceParams.REPORT_TO, source.getReportTo());
-            assertEquals(ValidSourceParams.REGISTRANT, source.getRegistrant());
+            assertEquals(ValidSourceParams.sAdTechDomain, source.getAdTechDomain());
+            assertEquals(ValidSourceParams.sRegistrant, source.getRegistrant());
             assertEquals(ValidSourceParams.SOURCE_EVENT_TIME.longValue(), source.getEventTime());
             assertEquals(ValidSourceParams.EXPIRY_TIME.longValue(), source.getExpiryTime());
             assertEquals(ValidSourceParams.PRIORITY.longValue(), source.getPriority());
@@ -122,10 +122,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceEventId() {
         assertInvalidSourceArguments(
                 null,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -138,13 +138,13 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testInsertSource_validateArgumentAttributionSource() {
+    public void testInsertSource_validateArgumentPublisher() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
                 null,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -158,9 +158,9 @@ public class MeasurementDaoTest {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
                 Uri.parse("com.source"),
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -176,10 +176,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentAttributionDestination() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.sPublisher,
                 null,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -192,10 +192,10 @@ public class MeasurementDaoTest {
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
+                ValidSourceParams.sPublisher,
                 Uri.parse("com.destination"),
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -208,13 +208,13 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testInsertSource_validateArgumentReportTo() {
+    public void testInsertSource_validateArgumentAdTechDomain() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
                 null,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -227,10 +227,10 @@ public class MeasurementDaoTest {
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                Uri.parse("com.reportTo"),
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                Uri.parse("com.adTechDomain"),
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -246,9 +246,9 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentRegistrant() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
                 null,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
@@ -262,9 +262,9 @@ public class MeasurementDaoTest {
 
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
                 Uri.parse("com.registrant"),
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
@@ -281,10 +281,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceEventTime() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 null,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -300,10 +300,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceExpiryTime() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 null,
                 ValidSourceParams.PRIORITY,
@@ -319,10 +319,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentPriority() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 null,
@@ -338,10 +338,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentSourceType() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -357,10 +357,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentInstallAttributionWindow() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -376,10 +376,10 @@ public class MeasurementDaoTest {
     public void testInsertSource_validateArgumentInstallCooldownWindow() {
         assertInvalidSourceArguments(
                 ValidSourceParams.SOURCE_EVENT_ID,
-                ValidSourceParams.ATTRIBUTION_SOURCE,
-                ValidSourceParams.ATTRIBUTION_DESTINATION,
-                ValidSourceParams.REPORT_TO,
-                ValidSourceParams.REGISTRANT,
+                ValidSourceParams.sPublisher,
+                ValidSourceParams.sAttributionDestination,
+                ValidSourceParams.sAdTechDomain,
+                ValidSourceParams.sRegistrant,
                 ValidSourceParams.SOURCE_EVENT_TIME,
                 ValidSourceParams.EXPIRY_TIME,
                 ValidSourceParams.PRIORITY,
@@ -392,8 +392,8 @@ public class MeasurementDaoTest {
         );
     }
 
-    private void assertInvalidSourceArguments(Long sourceEventId, Uri attributionSource,
-            Uri attributionDestination, Uri reportTo, Uri registrant, Long sourceEventTime,
+    private void assertInvalidSourceArguments(Long sourceEventId, Uri publisher,
+            Uri attributionDestination, Uri adTechDomain, Uri registrant, Long sourceEventTime,
             Long expiryTime, Long priority, Source.SourceType sourceType,
             Long installAttributionWindow, Long installCooldownWindow,
             @Source.AttributionMode int attributionMode, @Nullable String aggregateSource,
@@ -402,9 +402,9 @@ public class MeasurementDaoTest {
                     try {
                         dao.insertSource(
                                 sourceEventId,
-                                attributionSource,
+                                publisher,
                                 attributionDestination,
-                                reportTo,
+                                adTechDomain,
                                 registrant,
                                 sourceEventTime,
                                 expiryTime,
@@ -428,9 +428,9 @@ public class MeasurementDaoTest {
     public void testInsertTrigger() {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(
-                        ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                        ValidTriggerParams.REPORT_TO,
-                        ValidTriggerParams.REGISTRANT,
+                        ValidTriggerParams.sAttributionDestination,
+                        ValidTriggerParams.sAdTechDomain,
+                        ValidTriggerParams.sRegistrant,
                         ValidTriggerParams.TRIGGER_TIME,
                         ValidTriggerParams.TRIGGER_DATA,
                         ValidTriggerParams.DEDUP_KEY,
@@ -448,10 +448,10 @@ public class MeasurementDaoTest {
             Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
             Assert.assertNotNull(trigger);
             Assert.assertNotNull(trigger.getId());
-            assertEquals(ValidTriggerParams.ATTRIBUTION_DESTINATION,
+            assertEquals(ValidTriggerParams.sAttributionDestination,
                     trigger.getAttributionDestination());
-            assertEquals(ValidTriggerParams.REPORT_TO, trigger.getReportTo());
-            assertEquals(ValidTriggerParams.REGISTRANT, trigger.getRegistrant());
+            assertEquals(ValidTriggerParams.sAdTechDomain, trigger.getAdTechDomain());
+            assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
             assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
                     trigger.getEventTriggerData());
@@ -464,8 +464,8 @@ public class MeasurementDaoTest {
     public void testInsertTrigger_validateArgumentAttributionDestination() {
         assertInvalidTriggerArguments(
                 null,
-                ValidTriggerParams.REPORT_TO,
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sAdTechDomain,
+                ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -475,8 +475,8 @@ public class MeasurementDaoTest {
 
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
-                ValidTriggerParams.REPORT_TO,
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sAdTechDomain,
+                ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -486,11 +486,11 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testInsertTrigger_validateArgumentReportTo() {
+    public void testInsertTrigger_validateArgumentAdTechDomain() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                ValidTriggerParams.sAttributionDestination,
                 null,
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -499,9 +499,9 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                Uri.parse("com.reportTo"),
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sAttributionDestination,
+                Uri.parse("com.adTechDomain"),
+                ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -513,8 +513,8 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentRegistrant() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sAdTechDomain,
                 null,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
@@ -524,8 +524,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.buildAggregateValues());
 
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                ValidTriggerParams.REPORT_TO,
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sAdTechDomain,
                 Uri.parse("com.registrant"),
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
@@ -538,9 +538,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentTriggerTime() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                ValidTriggerParams.REPORT_TO,
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sAdTechDomain,
+                ValidTriggerParams.sRegistrant,
                 null,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -552,9 +552,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentTriggerData() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                ValidTriggerParams.REPORT_TO,
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sAdTechDomain,
+                ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 null,
                 ValidTriggerParams.DEDUP_KEY,
@@ -569,9 +569,9 @@ public class MeasurementDaoTest {
 
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(
-                        ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                        ValidTriggerParams.REPORT_TO,
-                        ValidTriggerParams.REGISTRANT,
+                        ValidTriggerParams.sAttributionDestination,
+                        ValidTriggerParams.sAdTechDomain,
+                        ValidTriggerParams.sRegistrant,
                         ValidTriggerParams.TRIGGER_TIME,
                         ValidTriggerParams.TRIGGER_DATA,
                         null,
@@ -589,10 +589,10 @@ public class MeasurementDaoTest {
             Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
             Assert.assertNotNull(trigger);
             Assert.assertNotNull(trigger.getId());
-            assertEquals(ValidTriggerParams.ATTRIBUTION_DESTINATION,
+            assertEquals(ValidTriggerParams.sAttributionDestination,
                     trigger.getAttributionDestination());
-            assertEquals(ValidTriggerParams.REPORT_TO, trigger.getReportTo());
-            assertEquals(ValidTriggerParams.REGISTRANT, trigger.getRegistrant());
+            assertEquals(ValidTriggerParams.sAdTechDomain, trigger.getAdTechDomain());
+            assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
             assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
                     trigger.getEventTriggerData());
@@ -604,9 +604,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertTrigger_validateArgumentPriority() {
         assertInvalidTriggerArguments(
-                ValidTriggerParams.ATTRIBUTION_DESTINATION,
-                ValidTriggerParams.REPORT_TO,
-                ValidTriggerParams.REGISTRANT,
+                ValidTriggerParams.sAttributionDestination,
+                ValidTriggerParams.sAdTechDomain,
+                ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 ValidTriggerParams.TRIGGER_DATA,
                 ValidTriggerParams.DEDUP_KEY,
@@ -615,14 +615,14 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.buildAggregateValues());
     }
 
-    public void assertInvalidTriggerArguments(Uri attributionDestination, Uri reportTo,
+    public void assertInvalidTriggerArguments(Uri attributionDestination, Uri adTechDomain,
             Uri registrant, Long triggerTime, Long triggerData, Long dedupKey, Long priority,
-            @Nullable String aggregateTriggerData, @Nullable String aggregateValues) {
+            String aggregateTriggerData, String aggregateValues) {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
                     try {
                         dao.insertTrigger(
                                 attributionDestination,
-                                reportTo,
+                                adTechDomain,
                                 registrant,
                                 triggerTime,
                                 triggerData,
@@ -903,7 +903,7 @@ public class MeasurementDaoTest {
     public void testGetMatchingActiveSources() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
-        Uri reportTo = Uri.parse("https://www.example.xyz");
+        Uri adTechDomain = Uri.parse("https://www.example.xyz");
         Uri attributionDestination = Uri.parse("android-app://com.example.abc");
         Source s1 = new Source.Builder().setId("1").setEventTime(10).setExpiryTime(20).build();
         Source s2 = new Source.Builder().setId("2").setEventTime(10).setExpiryTime(50).build();
@@ -916,7 +916,7 @@ public class MeasurementDaoTest {
             values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
             values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
             values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
-            values.put(MeasurementTables.SourceContract.REPORT_TO, reportTo.toString());
+            values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN, adTechDomain.toString());
             values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                     attributionDestination.toString());
             db.insert(MeasurementTables.SourceContract.TABLE, null, values);
@@ -938,7 +938,7 @@ public class MeasurementDaoTest {
         // Expected: Match with s1 and s2
         Trigger trigger1MatchSource1And2 = new Trigger.Builder()
                 .setTriggerTime(12)
-                .setReportTo(reportTo)
+                .setAdTechDomain(adTechDomain)
                 .setAttributionDestination(attributionDestination)
                 .build();
         List<Source> result1 = runFunc.apply(trigger1MatchSource1And2);
@@ -954,7 +954,7 @@ public class MeasurementDaoTest {
         // Expected: Match with s1 and s2
         Trigger trigger2MatchSource1And2 = new Trigger.Builder()
                 .setTriggerTime(20)
-                .setReportTo(reportTo)
+                .setAdTechDomain(adTechDomain)
                 .setAttributionDestination(attributionDestination)
                 .build();
 
@@ -970,7 +970,7 @@ public class MeasurementDaoTest {
         // Expected: Match with s2 and s3
         Trigger trigger3MatchSource2And3 = new Trigger.Builder()
                 .setTriggerTime(21)
-                .setReportTo(reportTo)
+                .setAdTechDomain(adTechDomain)
                 .setAttributionDestination(attributionDestination)
                 .build();
 
@@ -986,7 +986,7 @@ public class MeasurementDaoTest {
         // Expected: Match with s2, s3 and s4
         Trigger trigger4MatchSource1And2And3 = new Trigger.Builder()
                 .setTriggerTime(31)
-                .setReportTo(reportTo)
+                .setAdTechDomain(adTechDomain)
                 .setAttributionDestination(attributionDestination)
                 .build();
 
@@ -1046,9 +1046,9 @@ public class MeasurementDaoTest {
             int eventTimePastDays, boolean expiredIAWindow) {
         return new Source.Builder()
                 .setId(id)
-                .setAttributionSource(Uri.parse("android-app://com.example.sample"))
+                .setPublisher(Uri.parse("android-app://com.example.sample"))
                 .setRegistrant(Uri.parse("android-app://com.example.sample"))
-                .setReportTo(Uri.parse("https://example.com"))
+                .setAdTechDomain(Uri.parse("https://example.com"))
                 .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
                 .setAttributionDestination(mInstalledPackage)
@@ -1079,10 +1079,10 @@ public class MeasurementDaoTest {
         static final Long PRIORITY = 100L;
         static final Long SOURCE_EVENT_ID = 1L;
         static final Long SOURCE_EVENT_TIME = 8640000000L;
-        static final Uri ATTRIBUTION_DESTINATION = Uri.parse("android-app://com.destination");
-        static final Uri ATTRIBUTION_SOURCE = Uri.parse("android-app://com.source");
-        static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
-        static final Uri REPORT_TO = Uri.parse("https://com.example");
+        static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
+        static final Uri sPublisher = Uri.parse("android-app://com.publisher");
+        static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
+        static final Uri sAdTechDomain = Uri.parse("https://com.example");
         static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
         static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
@@ -1122,9 +1122,9 @@ public class MeasurementDaoTest {
         static final Long PRIORITY = 100L;
         static final Long TRIGGER_TIME = 8640000000L;
         static final Long TRIGGER_DATA = 3L;
-        static final Uri ATTRIBUTION_DESTINATION = Uri.parse("android-app://com.destination");
-        static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
-        static final Uri REPORT_TO = Uri.parse("https://com.example");
+        static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
+        static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
+        static final Uri sAdTechDomain = Uri.parse("https://com.example");
 
         static String buildAggregateTriggerData() {
             try {
