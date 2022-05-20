@@ -33,8 +33,7 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
     private final Context mContext;
 
     private int mUserId = UserHandle.CURRENT.getIdentifier();
-    private String mAppPackageName;
-    private int mAppUid;
+    private CallingInfo mCallingInfo;
 
     SdkSandboxShellCommand(SdkSandboxManagerService service, Context context) {
         mService = service;
@@ -85,19 +84,19 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
             mUserId = mContext.getUser().getIdentifier();
         }
 
-        mAppPackageName = getNextArgRequired();
+        String callingPackageName = getNextArgRequired();
         try {
             ApplicationInfo info = mContext.getPackageManager().getApplicationInfoAsUser(
-                    mAppPackageName, /* flags */ 0, UserHandle.of(mUserId));
+                    callingPackageName, /* flags */ 0, UserHandle.of(mUserId));
 
             if ((info.flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0) {
                 throw new IllegalArgumentException(
-                        "Package " + mAppPackageName + " must be debuggable.");
+                        "Package " + callingPackageName + " must be debuggable.");
             }
-            mAppUid = info.uid;
+            mCallingInfo = new CallingInfo(info.uid, callingPackageName);
         } catch (NameNotFoundException e) {
             throw new IllegalArgumentException(
-                    "No such package " + mAppPackageName + " for user " + mUserId);
+                    "No such package " + callingPackageName + " for user " + mUserId);
         }
     }
 
@@ -118,23 +117,23 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
 
     private int runStart() {
         handleSandboxArguments();
-        if (mService.isSdkSandboxServiceRunning(mAppUid)) {
+        if (mService.isSdkSandboxServiceRunning(mCallingInfo)) {
             getErrPrintWriter().println("Error: Sdk sandbox already running for "
-                    + mAppPackageName + " and user " + mUserId);
+                    + mCallingInfo.getPackageName() + " and user " + mUserId);
             return -1;
         }
-        mService.invokeSdkSandboxService(mAppUid, mAppPackageName);
+        mService.invokeSdkSandboxService(mCallingInfo);
         return 0;
     }
 
     private int runStop() {
         handleSandboxArguments();
-        if (!mService.isSdkSandboxServiceRunning(mAppUid)) {
+        if (!mService.isSdkSandboxServiceRunning(mCallingInfo)) {
             getErrPrintWriter().println("Sdk sandbox not running for "
-                    + mAppPackageName + " and user " + mUserId);
+                    + mCallingInfo.getPackageName() + " and user " + mUserId);
             return -1;
         }
-        mService.stopSdkSandboxService(mAppUid, "Shell command 'sdk_sandbox stop' issued");
+        mService.stopSdkSandboxService(mCallingInfo, "Shell command 'sdk_sandbox stop' issued");
         return 0;
     }
 

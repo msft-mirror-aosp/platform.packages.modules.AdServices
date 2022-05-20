@@ -18,7 +18,7 @@ package android.adservices.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 
@@ -69,8 +69,8 @@ interface AdSelectionService {
     *
     * The call will fail with a status of
     * {@link FledgeErrorResponse#STATUS_INVALID_ARGUMENT} if there is no
-    * auction matching the provided {@link ReportImpressionRequest#getAdSelectionId()} or if
-    * the supplied {@link ReportImpressionRequest#getAdSelectionConfig()} is invalid.
+    * auction matching the provided {@link ReportImpressionInput#getAdSelectionId()} or if
+    * the supplied {@link ReportImpressionInput#getAdSelectionConfig()} is invalid.
     * The call will fail with status
     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if an
     * internal server error is encountered.
@@ -82,7 +82,7 @@ interface AdSelectionService {
     * {@hide}
     */
     void reportImpression(
-        in ReportImpressionRequest request,
+        in ReportImpressionInput request,
         in ReportImpressionCallback callback);
 
    /**

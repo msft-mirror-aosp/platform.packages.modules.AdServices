@@ -28,13 +28,10 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.AdServicesExecutors;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
@@ -78,11 +75,14 @@ public final class AdSelectionRunner {
     private final AdSelectionIdGenerator mAdSelectionIdGenerator;
 
 
-    public AdSelectionRunner(@NonNull final Context context) {
+    public AdSelectionRunner(@NonNull final Context context,
+            @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final ExecutorService executorService) {
         mContext = context;
-        mCustomAudienceDao = CustomAudienceDatabase.getInstance(context).customAudienceDao();
-        mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
-        mExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mCustomAudienceDao = customAudienceDao;
+        mAdSelectionEntryDao = adSelectionEntryDao;
+        mExecutorService = executorService;
         mAdsScoreGenerator = new AdsScoreGeneratorImpl(
                 new AdSelectionScriptEngine(mContext),
                 mExecutorService,
@@ -244,7 +244,7 @@ public final class AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig) {
         return mAdBidGenerator.runAdBiddingPerCA(customAudience,
                 adSelectionConfig.getAdSelectionSignals(),
-                adSelectionConfig.getPerBuyerSignals().toString(),
+                adSelectionConfig.getPerBuyerSignals().get(customAudience.getBuyer()),
                 "{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }
