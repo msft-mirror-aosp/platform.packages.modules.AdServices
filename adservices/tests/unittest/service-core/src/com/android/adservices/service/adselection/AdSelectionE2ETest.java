@@ -57,6 +57,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -174,7 +175,7 @@ public class AdSelectionE2ETest {
                 mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
                 bidsForBuyer2);
 
-        //Populating the Custom Audience DB
+        // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
         mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
 
@@ -190,7 +191,23 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionNoCAsFailure() throws Exception {
-        //Do not populate CustomAudience DAO
+        // Do not populate CustomAudience DAO
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        Assert.assertFalse(resultsCallback.mIsSuccess);
+        Assert.assertEquals(FAILURE_RESPONSE,
+                resultsCallback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void testRunAdSelectionNoBuyersFailure() throws Exception {
+        // Do not populate buyers in AdSelectionConfig
+        mAdSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                .setCustomAudienceBuyers(Collections.emptyList())
+                .build();
+
         mMockWebServerRule.startMockWebServer(mDispatcher);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
