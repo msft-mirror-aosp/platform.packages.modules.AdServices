@@ -39,6 +39,12 @@ import java.util.concurrent.Executor;
 public class AdSelectionManager {
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
+    /**
+     * This field will be used once full implementation is ready.
+     *
+     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
+     */
+    @SuppressWarnings("unused")
     private final Context mContext;
 
     private final ServiceBinder<AdSelectionService> mServiceBinder;
