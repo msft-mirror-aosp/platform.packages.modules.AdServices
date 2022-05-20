@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import android.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -27,16 +28,27 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
+import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
+import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
     private final DatastoreManager mDatastoreManager;
+    private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
+    private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
@@ -126,15 +138,60 @@ class AttributionJobHandler {
                 return;
             }
 
+            boolean aggregateReportGenerated =
+                    maybeGenerateAggregateReport(source, trigger, measurementDao);
+
             boolean eventReportGenerated =
                     maybeGenerateEventReport(source, trigger, measurementDao);
 
-            if (eventReportGenerated) {
+            if (eventReportGenerated || aggregateReportGenerated) {
                 attributeTriggerAndIncrementRateLimit(trigger, source, measurementDao);
             } else {
                 ignoreTrigger(trigger, measurementDao);
             }
         });
+    }
+
+    private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        try {
+            Optional<AggregatableAttributionSource> aggregateAttributionSource =
+                    source.parseAggregateSource();
+            Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
+                    trigger.parseAggregateTrigger();
+            if (aggregateAttributionSource.isPresent() && aggregateAttributionTrigger.isPresent()) {
+                Optional<List<AggregateHistogramContribution>> contributions =
+                        AggregatePayloadGenerator.generateAttributionReport(
+                                aggregateAttributionSource.get(),
+                                aggregateAttributionTrigger.get());
+                if (contributions.isPresent()) {
+                    long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
+                            + MIN_TIME_MS);
+                    CleartextAggregatePayload aggregateReport =
+                            new CleartextAggregatePayload.Builder()
+                                    .setSourceSite(source.getRegistrant())
+                                    .setAttributionDestination(source.getAttributionDestination())
+                                    .setSourceRegistrationTime(source.getEventTime())
+                                    .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
+                                    .setReportingOrigin(source.getAdTechDomain())
+                                    .setDebugCleartextPayload(
+                                            CleartextAggregatePayload.generateDebugPayload(
+                                                    contributions.get()))
+                                    .setAggregateAttributionData(
+                                            new AggregateAttributionData.Builder()
+                                                    .setContributions(contributions.get()).build())
+                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
+
+                    measurementDao.insertAggregateReport(aggregateReport);
+                    // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
+                    return true;
+                }
+            }
+        } catch (JSONException e) {
+            LogUtil.e("JSONException when parse aggregate fields in AttributionJobHandler.");
+            return false;
+        }
+        return false;
     }
 
     private Optional<Source> getMatchingSource(Trigger trigger, IMeasurementDao measurementDao)

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 public class FakeRemoteSdkCallback implements RemoteSdkCallback {
     private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
-    private final CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
+    private CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
     private boolean mLoadSdkSuccess;
     private boolean mSurfacePackageSuccess;
@@ -95,6 +95,10 @@ public class FakeRemoteSdkCallback implements RemoteSdkCallback {
         waitForLatch(mSurfacePackageLatch);
         assertThat(mSurfacePackageSuccess).isFalse();
         return mErrorMsg;
+    }
+
+    public void setSurfacePackageLatch(CountDownLatch latch) {
+        mSurfacePackageLatch = latch;
     }
 
     private void waitForLatch(CountDownLatch latch) {
