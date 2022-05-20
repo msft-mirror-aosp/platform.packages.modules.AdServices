@@ -27,6 +27,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.AdServicesExecutors;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +40,9 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 
 /**
@@ -47,6 +51,7 @@ import java.util.Map;
  * @hide
  */
 public class SourceFetcher {
+    private static final ExecutorService sIoExecutor = AdServicesExecutors.getBlockingExecutor();
 
     /**
      * Provided a testing hook.
@@ -149,7 +154,9 @@ public class SourceFetcher {
             additionalResult = true;
         }
         if (additionalResult) {
-            addToResults.add(result.build());
+            synchronized (addToResults) {
+                addToResults.add(result.build());
+            }
             return true;
         }
         return false;
@@ -199,15 +206,36 @@ public class SourceFetcher {
 
             ArrayList<Uri> redirects = new ArrayList();
             ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
-            for (Uri redirect : redirects) {
-                fetchSource(
-                        topOrigin, redirect, sourceInfo, false, registrationsOut);
+            if (!redirects.isEmpty()) {
+                processAsyncRedirects(redirects, topOrigin, sourceInfo, registrationsOut);
             }
         } catch (IOException e) {
             LogUtil.e("Failed to get registration response %s", e);
             return;
         } finally {
             urlConnection.disconnect();
+        }
+    }
+
+    private void processAsyncRedirects(ArrayList<Uri> redirects, Uri topOrigin, String sourceInfo,
+            List<SourceRegistration> registrationsOut) {
+        try {
+            CompletableFuture.allOf(
+                    redirects.stream()
+                            .map(redirect ->
+                                    CompletableFuture
+                                            .runAsync(() ->
+                                                            fetchSource(
+                                                                    topOrigin,
+                                                                    redirect,
+                                                                    sourceInfo,
+                                                                    /* initialFetch = */ false,
+                                                                    registrationsOut),
+                                                    sIoExecutor))
+                            .toArray(CompletableFuture<?>[]::new)
+            ).get();
+        } catch (InterruptedException | ExecutionException e) {
+            LogUtil.e("Failed to process source redirection", e);
         }
     }
 
