@@ -48,8 +48,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(1)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(0)
@@ -61,8 +61,8 @@ public class EventReportingJobHandlerTest {
                 .setSourceId(1)
                 .setAttributionDestination(
                         Uri.parse("https://www.example2.com/d2"))
-                .setReportTo(
-                        Uri.parse("https://www.example2.com/r2"))
+                .setAdTechDomain(
+                        Uri.parse("https://www.example2.com"))
                 .setTriggerData(2)
                 .setTriggerTime(8640000002L)
                 .setStatus(1)
@@ -74,8 +74,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(1)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
@@ -88,8 +88,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(1)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
@@ -102,8 +102,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(1)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
@@ -116,8 +116,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(1)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
@@ -131,8 +131,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(10L)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
@@ -144,8 +144,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(11L)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.PENDING)
@@ -157,8 +157,8 @@ public class EventReportingJobHandlerTest {
             .setSourceId(12L)
             .setAttributionDestination(
                     Uri.parse("https://www.example1.com/d1"))
-            .setReportTo(
-                    Uri.parse("https://www.example1.com/r1"))
+            .setAdTechDomain(
+                    Uri.parse("https://www.example1.com"))
             .setTriggerData(2)
             .setTriggerTime(8640000002L)
             .setStatus(EventReport.Status.DELIVERED)
@@ -453,7 +453,7 @@ public class EventReportingJobHandlerTest {
         values.put("_id", eventReport.getId());
         values.put("source_id", eventReport.getSourceId());
         values.put("attribution_destination", eventReport.getAttributionDestination().toString());
-        values.put("report_to", eventReport.getReportTo().toString());
+        values.put("ad_tech_domain", eventReport.getAdTechDomain().toString());
         values.put("trigger_data", eventReport.getTriggerData());
         values.put("trigger_time", eventReport.getTriggerTime());
         values.put("status", eventReport.getStatus());
@@ -474,7 +474,8 @@ public class EventReportingJobHandlerTest {
         return new EventReport.Builder()
                 .setId(cursor.getString(cursor.getColumnIndex("_id")))
                 .setSourceId(cursor.getLong(cursor.getColumnIndex("source_id")))
-                .setReportTo(Uri.parse(cursor.getString(cursor.getColumnIndex("report_to"))))
+                .setAdTechDomain(Uri.parse(cursor.getString(
+                        cursor.getColumnIndex("ad_tech_domain"))))
                 .setAttributionDestination(Uri.parse(
                         cursor.getString(cursor.getColumnIndex("attribution_destination"))))
                 .setStatus(cursor.getInt(cursor.getColumnIndex("status")))

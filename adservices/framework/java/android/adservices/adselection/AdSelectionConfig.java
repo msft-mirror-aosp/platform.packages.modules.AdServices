@@ -35,7 +35,6 @@ import java.util.Objects;
  * TODO(b/212300065): properly link reportImpression javadoc
  *
  * Hiding for future implementation and review for public exposure.
- * @hide
  */
 public final class AdSelectionConfig implements Parcelable {
     @NonNull
@@ -235,7 +234,7 @@ public final class AdSelectionConfig implements Parcelable {
     /** Builder for {@link AdSelectionConfig} object. */
     public static final class Builder {
         private String mSeller;
-        private Uri mDecisionLogicURL;
+        private Uri mDecisionLogicUri;
         private List<String> mCustomAudienceBuyers;
         private String mAdSelectionSignals;
         private String mSellerSignals;
@@ -264,10 +263,10 @@ public final class AdSelectionConfig implements Parcelable {
          * See {@link #getDecisionLogicUrl()} for more details.
          */
         @NonNull
-        public AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull Uri decisionLogicURL) {
-            Objects.requireNonNull(decisionLogicURL);
+        public AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull Uri decisionLogicUri) {
+            Objects.requireNonNull(decisionLogicUri);
 
-            this.mDecisionLogicURL = decisionLogicURL;
+            this.mDecisionLogicUri = decisionLogicUri;
             return this;
         }
 
@@ -349,7 +348,7 @@ public final class AdSelectionConfig implements Parcelable {
         @NonNull
         public AdSelectionConfig build() {
             Objects.requireNonNull(mSeller);
-            Objects.requireNonNull(mDecisionLogicURL);
+            Objects.requireNonNull(mDecisionLogicUri);
             Objects.requireNonNull(mCustomAudienceBuyers);
             Objects.requireNonNull(mAdSelectionSignals);
             Objects.requireNonNull(mSellerSignals);
@@ -357,7 +356,7 @@ public final class AdSelectionConfig implements Parcelable {
             Objects.requireNonNull(mContextualAds);
             return new AdSelectionConfig(
                     mSeller,
-                    mDecisionLogicURL,
+                    mDecisionLogicUri,
                     mCustomAudienceBuyers,
                     mAdSelectionSignals,
                     mSellerSignals,

@@ -32,7 +32,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
-import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
@@ -49,6 +49,8 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -78,38 +80,37 @@ import java.util.concurrent.Executors;
 public class AdSelectionServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
+    private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    private static final Uri BUYER_BIDDING_LOGIC_URL = Uri.parse("http://www.seller.com");
+    private static final long AD_SELECTION_ID = 1;
+    private static final long INCORRECT_AD_SELECTION_ID = 2;
+    private static final double BID = 5.0;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
-
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
-
-    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
-
-    private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
-
-    private static final Uri BUYER_BIDDING_LOGIC_URL = Uri.parse("http://www.seller.com");
-
-    private static final long AD_SELECTION_ID = 1;
-    private static final long INCORRECT_AD_SELECTION_ID = 2;
-
     private final String mContextualSignals = "{\"contextual_signals\":1}";
-
-    private static final double BID = 5.0;
-
     private final AdSelectionHttpClient mClient = new AdSelectionHttpClient(mExecutorService);
 
+    private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    @Rule
+    public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     // This object access some system APIs
-    @Mock DevContextFilter mDevContextFilter;
+    @Mock
+    DevContextFilter mDevContextFilter;
 
     @Before
     public void setUp() {
+        mCustomAudienceDao = Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                .build()
+                .customAudienceDao();
+
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -177,19 +178,20 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
@@ -260,16 +262,16 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -340,16 +342,16 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -419,16 +421,16 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -476,16 +478,16 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -577,19 +579,19 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
         List<String> notifications =
@@ -609,13 +611,13 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -640,13 +642,13 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -675,13 +677,13 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -720,13 +722,13 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -771,13 +773,13 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(incorrectPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -824,6 +826,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
@@ -905,13 +908,13 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -986,13 +989,13 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService =
-                new AdSelectionServiceImpl(
-                        mAdSelectionEntryDao,
-                        mClient,
-                        mDevContextFilter,
-                        mExecutorService,
-                        CONTEXT);
+        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
+                mAdSelectionEntryDao,
+                mCustomAudienceDao,
+                mClient,
+                mDevContextFilter,
+                mExecutorService,
+                CONTEXT);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -1096,7 +1099,7 @@ public class AdSelectionServiceImplTest {
     }
 
     private ReportImpressionTestCallback callReportImpression(
-            AdSelectionServiceImpl adSelectionService, ReportImpressionRequest requestParams)
+            AdSelectionServiceImpl adSelectionService, ReportImpressionInput requestParams)
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ReportImpressionTestCallback callback = new ReportImpressionTestCallback(resultLatch);

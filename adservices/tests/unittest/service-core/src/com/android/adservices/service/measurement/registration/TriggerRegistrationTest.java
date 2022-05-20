@@ -43,6 +43,11 @@ public final class TriggerRegistrationTest {
             .setTriggerData(1)
             .setTriggerPriority(345678)
             .setDeduplicationKey(2345678)
+                .setAggregateTriggerData(
+                        "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                                + "\"not_filters\":{\"product\":[\"1\"]}},"
+                                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")
+                .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
             .build();
     }
 
@@ -52,6 +57,12 @@ public final class TriggerRegistrationTest {
         assertEquals(1, response.getTriggerData());
         assertEquals(345678, response.getTriggerPriority());
         assertEquals(2345678, response.getDeduplicationKey().longValue());
+        assertEquals("[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                + "\"not_filters\":{\"product\":[\"1\"]}},"
+                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]",
+                response.getAggregateTriggerData());
+        assertEquals("{\"campaignCounts\":32768,\"geoValue\":1644}",
+                response.getAggregateValues());
     }
 
     @Test
@@ -67,5 +78,7 @@ public final class TriggerRegistrationTest {
         assertEquals(0, response.getTriggerData());
         assertEquals(0, response.getTriggerPriority());
         assertNull(response.getDeduplicationKey());
+        assertNull(response.getAggregateTriggerData());
+        assertNull(response.getAggregateValues());
     }
 }
