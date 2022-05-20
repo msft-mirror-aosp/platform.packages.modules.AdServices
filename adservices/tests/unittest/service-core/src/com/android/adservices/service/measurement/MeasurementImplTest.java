@@ -76,6 +76,7 @@ import java.util.concurrent.TimeUnit;
 public final class MeasurementImplTest {
 
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri DEFAULT_REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
     private static final RegistrationRequest SOURCE_REGISTRATION_REQUEST =
@@ -319,9 +320,6 @@ public final class MeasurementImplTest {
     @Test
     public void testSourceRegistration_callsImpressionNoiseCreator() throws DatastoreException {
         long eventTime = System.currentTimeMillis();
-        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
-        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
-        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
         long expiry = TimeUnit.DAYS.toSeconds(20);
         // Creating source for easy comparison
         Source sampleSource = new Source.Builder()
@@ -345,9 +343,9 @@ public final class MeasurementImplTest {
                     .build()
             );
             return true;
-        }).when(mockSourceFetcher).fetchSource(any(), any());
+        }).when(mSourceFetcher).fetchSource(any(), any());
         MeasurementImpl measurement = spy(new MeasurementImpl(
-                mContentResolver, mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher));
+                mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher));
         InputEvent inputEvent = getInputEvent();
         final int result = measurement.register(
                 new RegistrationRequest.Builder()
@@ -421,6 +419,26 @@ public final class MeasurementImplTest {
                     report.getRandomizedTriggerRate(), /* delta= */ 0.00001D);
         }
     }
+
+    @Test
+    public void testInstallAttribution() throws DatastoreException {
+        // Setup
+        long systemTime = System.currentTimeMillis();
+        MeasurementImpl measurement = new MeasurementImpl(
+                mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        // Execution
+        measurement.doInstallAttribution(URI_WITHOUT_APP_SCHEME, systemTime);
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+
+        // Assertion
+        verify(mMeasurementDao).doInstallAttribution(DEFAULT_URI, systemTime);
+    }
+
     private void verifyInsertSource(RegistrationRequest registrationRequest,
             SourceRegistration sourceRegistration,
             long eventTime,

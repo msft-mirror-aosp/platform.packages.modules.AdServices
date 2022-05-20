@@ -74,4 +74,19 @@ public class AdServicesCommonManager {
             mAdServicesCommonServiceBinder.unbindFromService();
         }
     }
+
+    /**
+     * Notify adservices that this app was installed for attribution purposes.
+     * @param packageUri installed package URI.
+     */
+    public void onPackageAdded(@NonNull Uri packageUri) {
+        final IAdServicesCommonService service = getService();
+        try {
+            service.onPackageAdded(packageUri);
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+        } finally {
+            mAdServicesCommonServiceBinder.unbindFromService();
+        }
+    }
 }
