@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import java.util.Arrays;
 import java.util.function.Function;
@@ -152,6 +153,32 @@ class SqliteObjectMapper {
                 builder::setPostbackUrl);
         setTextColumn(cursor, MeasurementTables.AdTechUrlsContract.AD_TECH_ID,
                 builder::setAdtechId);
+        return builder.build();
+    }
+
+    /**
+     * Create {@link CleartextAggregatePayload} object from SQLite datastore.
+     */
+    static CleartextAggregatePayload constructCleartextAggregatePayload(Cursor cursor) {
+        CleartextAggregatePayload.Builder builder = new CleartextAggregatePayload.Builder();
+        setTextColumn(cursor, MeasurementTables.AggregateReport.ID,
+                builder::setId);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.SOURCE_SITE,
+                builder::setSourceSite);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                builder::setAttributionDestination);
+        setLongColumn(cursor, MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+                builder::setSourceRegistrationTime);
+        setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                builder::setScheduledReportTime);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
+                builder::setPrivacyBudgetKey);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.REPORTING_ORIGIN,
+                builder::setReportingOrigin);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                builder::setDebugCleartextPayload);
+        setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
+                builder::setStatus);
         return builder.build();
     }
 
