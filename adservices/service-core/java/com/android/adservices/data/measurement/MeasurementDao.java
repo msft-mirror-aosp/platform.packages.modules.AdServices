@@ -34,6 +34,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 
 import java.time.Instant;
@@ -912,6 +913,53 @@ class MeasurementDao implements IMeasurementDao {
                 values,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ?",
                 new String[]{uri.toString()});
+    }
+
+    @Override
+    public void insertAggregateReport(CleartextAggregatePayload aggregateReport)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateReport.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AggregateReport.SOURCE_SITE,
+                aggregateReport.getSourceSite().toString());
+        values.put(MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                aggregateReport.getAttributionDestination().toString());
+        values.put(MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+                aggregateReport.getSourceRegistrationTime());
+        values.put(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                aggregateReport.getScheduledReportTime());
+        values.put(MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
+                aggregateReport.getPrivacyBudgetKey());
+        values.put(MeasurementTables.AggregateReport.REPORTING_ORIGIN,
+                aggregateReport.getReportingOrigin().toString());
+        values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                aggregateReport.getDebugCleartextPayload());
+        values.put(MeasurementTables.AggregateReport.STATUS,
+                aggregateReport.getStatus());
+        long rowId = mSQLTransaction.getDatabase()
+                .insert(MeasurementTables.AggregateReport.TABLE,
+                        /*nullColumnHack=*/null, values);
+        if (rowId == -1) {
+            throw new DatastoreException("Unencrypted aggregate payload insertion failed.");
+        }
+    }
+
+    @Override
+    public List<CleartextAggregatePayload> getAllCleartextAggregatePayload()
+            throws DatastoreException {
+        List<CleartextAggregatePayload> res = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateReport.TABLE,
+                /*columns=*/null, /*selection=*/ null, /*selectionArgs*/ null,
+                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+            if (cursor == null) {
+                return res;
+            }
+            while (cursor.moveToNext()) {
+                res.add(SqliteObjectMapper.constructCleartextAggregatePayload(cursor));
+            }
+            return res;
+        }
     }
 
     private void validateNonNull(Object... objects) throws DatastoreException {

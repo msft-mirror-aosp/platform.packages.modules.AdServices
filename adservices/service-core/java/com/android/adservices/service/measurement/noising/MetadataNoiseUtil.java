@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.attribution;
+package com.android.adservices.service.measurement.noising;
 
 import java.util.Random;
 
 /**
- * Class for random selection utilities.
+ * Util class for generating metadata noise.
  */
-public class RandomSelector {
+public final class MetadataNoiseUtil {
+
+    private MetadataNoiseUtil() {}
 
     /**
      * Function to select true or randomly pick from possible value based on probability.
      *
-     * @param randomProb     probability to use for selecting a random state.
+     * @param randomProb     probability to use for selecting a random value.
      * @param trueValue      truth value
      * @param possibleValues set of all possible value for the result
      * @return selected value
