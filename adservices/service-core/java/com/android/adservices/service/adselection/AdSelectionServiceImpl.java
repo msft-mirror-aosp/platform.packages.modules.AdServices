@@ -21,12 +21,14 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
-import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportImpressionInput;
 import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -43,15 +45,8 @@ import java.util.concurrent.ExecutorService;
  */
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
-    /**
-     * This field will be used once full implementation is ready.
-     *
-     * <p>TODO(b/212300065) remove the warning suppression once the service is implemented.
-     */
-    @SuppressWarnings("unused")
-    @NonNull
-    private final AdSelectionEntryDao mAdSelectionEntryDao;
-
+    @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
@@ -60,12 +55,14 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @VisibleForTesting
     AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdSelectionHttpClient adSelectionHttpClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mCustomAudienceDao = customAudienceDao;
         mAdSelectionHttpClient = adSelectionHttpClient;
         mDevContextFilter = devContextFilter;
         mExecutor = executorService;
@@ -76,6 +73,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public AdSelectionServiceImpl(@NonNull Context context) {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
+                CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 new AdSelectionHttpClient(AdServicesExecutors.getBackgroundExecutor()),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
@@ -88,13 +86,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
 
-        AdSelectionRunner adSelectionRunner = new AdSelectionRunner(mContext);
+        AdSelectionRunner adSelectionRunner = new AdSelectionRunner(mContext,
+                mCustomAudienceDao,
+                mAdSelectionEntryDao,
+                mExecutor);
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
 
     @Override
     public void reportImpression(
-            @NonNull ReportImpressionRequest requestParams,
+            @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         // TODO(b/225990194): Add end to end test
         Objects.requireNonNull(requestParams);

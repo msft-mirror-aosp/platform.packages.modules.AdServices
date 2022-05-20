@@ -61,13 +61,13 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri reportTo,
+    public void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
             @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
             @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues) throws DatastoreException {
-        validateNonNull(attributionDestination, reportTo, registrant, triggerTime, triggerData,
+        validateNonNull(attributionDestination, adTechDomain, registrant, triggerTime, triggerData,
                 priority);
-        validateUri(attributionDestination, reportTo, registrant);
+        validateUri(attributionDestination, adTechDomain, registrant);
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, UUID.randomUUID().toString());
@@ -78,7 +78,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.DEDUP_KEY, dedupKey);
         values.put(MeasurementTables.TriggerContract.PRIORITY, priority);
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
-        values.put(MeasurementTables.TriggerContract.REPORT_TO, reportTo.toString());
+        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN, adTechDomain.toString());
         values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES, aggregateValues);
@@ -145,27 +145,26 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
-            @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
+    public void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
+            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
             @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
             @NonNull Long installCoolDownWindow,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource, @Nullable String aggregateFilterData)
             throws DatastoreException {
-        validateNonNull(sourceEventId, attributionSource, attributionDestination, reportTo,
+        validateNonNull(sourceEventId, publisher, attributionDestination, adTechDomain,
                 registrant, sourceEventTime, expiryTime, priority, sourceType,
                 installAttributionWindow, installCoolDownWindow);
-        validateUri(attributionSource, attributionDestination, reportTo, registrant);
+        validateUri(publisher, attributionDestination, adTechDomain, registrant);
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.SourceContract.EVENT_ID, sourceEventId);
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
-                attributionSource.toString());
+        values.put(MeasurementTables.SourceContract.PUBLISHER, publisher.toString());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                 attributionDestination.toString());
-        values.put(MeasurementTables.SourceContract.REPORT_TO, reportTo.toString());
+        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN, adTechDomain.toString());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, sourceEventTime);
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, expiryTime);
         values.put(MeasurementTables.SourceContract.PRIORITY, priority);
@@ -194,7 +193,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.SourceContract.TABLE,
                 /*columns=*/null,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? AND "
-                        + MeasurementTables.SourceContract.REPORT_TO + " = ? AND "
+                        + MeasurementTables.SourceContract.AD_TECH_DOMAIN + " = ? AND "
                         // EventTime should be strictly less than TriggerTime as it is highly
                         // unlikely for matching Source and Trigger to happen at same instant
                         // in milliseconds.
@@ -203,7 +202,7 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.SourceContract.STATUS + " != ?",
                 new String[]{
                         trigger.getAttributionDestination().toString(),
-                        trigger.getReportTo().toString(),
+                        trigger.getAdTechDomain().toString(),
                         String.valueOf(trigger.getTriggerTime()),
                         String.valueOf(trigger.getTriggerTime()),
                         String.valueOf(Source.Status.IGNORED)
@@ -349,8 +348,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getTriggerData());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
                 eventReport.getTriggerDedupKey());
-        values.put(MeasurementTables.EventReportContract.REPORT_TO,
-                eventReport.getReportTo().toString());
+        values.put(MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
+                eventReport.getAdTechDomain().toString());
         values.put(MeasurementTables.EventReportContract.STATUS,
                 eventReport.getStatus());
         values.put(MeasurementTables.EventReportContract.REPORT_TIME,
@@ -389,11 +388,11 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.AttributionRateLimitContract.ID,
                 UUID.randomUUID().toString());
         values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
-                BaseUriExtractor.getBaseUri(source.getAttributionSource()).toString());
+                BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
         values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
                 BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()).toString());
-        values.put(MeasurementTables.AttributionRateLimitContract.REPORT_TO,
-                trigger.getReportTo().toString());
+        values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
+                trigger.getAdTechDomain().toString());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
                 trigger.getTriggerTime());
         values.put(MeasurementTables.AttributionRateLimitContract.REGISTRANT,
@@ -416,16 +415,16 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AttributionRateLimitContract.SOURCE_SITE + " = ? AND "
                         + MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE
                         + " = ? AND "
-                        + MeasurementTables.AttributionRateLimitContract.REPORT_TO
+                        + MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN
                         + " = ? AND "
                         + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
                         + " >= ? AND "
                         + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
                         + " <= ? ",
                 new String[]{
-                        BaseUriExtractor.getBaseUri(source.getAttributionSource()).toString(),
+                        BaseUriExtractor.getBaseUri(source.getPublisher()).toString(),
                         BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()).toString(),
-                        trigger.getReportTo().toString(),
+                        trigger.getAdTechDomain().toString(),
                         String.valueOf(trigger.getTriggerTime()
                                 - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
                         String.valueOf(trigger.getTriggerTime())}
@@ -471,8 +470,8 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.SourceContract.EVENT_ID,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                        MeasurementTables.EventReportContract.REPORT_TO,
-                        MeasurementTables.SourceContract.REPORT_TO,
+                        MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
+                        MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                         MeasurementTables.SourceContract.REGISTRANT),
                 new String[]{uriStr});
         // EventReport table
@@ -653,11 +652,11 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private void deleteSourceByRegistrantAndUri(
-            SQLiteDatabase db, Uri registrant, Uri attributionSource) {
+            SQLiteDatabase db, Uri registrant, Uri publisher) {
         db.delete(MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.REGISTRANT + " = ? AND "
-                        + MeasurementTables.SourceContract.ATTRIBUTION_SOURCE + " = ?",
-                new String[]{registrant.toString(), attributionSource.toString()});
+                        + MeasurementTables.SourceContract.PUBLISHER + " = ?",
+                new String[]{registrant.toString(), publisher.toString()});
     }
 
     private void deleteSourceByRegistrantAndRange(
@@ -674,15 +673,15 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private void deleteSourceByRegistrantAndUriAndRange(
-            SQLiteDatabase db, Uri registrant, Uri attributionSource, Instant start, Instant end) {
+            SQLiteDatabase db, Uri registrant, Uri publisher, Instant start, Instant end) {
         db.delete(MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.REGISTRANT + " = ? AND "
-                        + MeasurementTables.SourceContract.ATTRIBUTION_SOURCE + " = ? AND "
+                        + MeasurementTables.SourceContract.PUBLISHER + " = ? AND "
                         + MeasurementTables.SourceContract.EVENT_TIME + " >= ? AND "
                         + MeasurementTables.SourceContract.EVENT_TIME + " <= ?",
                 new String[]{
                         registrant.toString(),
-                        attributionSource.toString(),
+                        publisher.toString(),
                         String.valueOf(start.toEpochMilli()),
                         String.valueOf(end.toEpochMilli())
                 });
@@ -763,7 +762,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
                         MeasurementTables.SourceContract.REGISTRANT,
-                        MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
+                        MeasurementTables.SourceContract.PUBLISHER,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION),
                 new String[]{registrant.toString(), site.toString(), site.toString()});
     }
@@ -814,7 +813,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
                         MeasurementTables.SourceContract.REGISTRANT,
-                        MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
+                        MeasurementTables.SourceContract.PUBLISHER,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                         MeasurementTables.EventReportContract.TRIGGER_TIME),

@@ -27,7 +27,7 @@ class AttributionRateLimit {
     private String mId;
     private String mSourceSite;
     private String mDestinationSite;
-    private String mReportTo;
+    private String mAdTechDomain;
     private long mTriggerTime;
     private String mRegistrant;
 
@@ -40,14 +40,14 @@ class AttributionRateLimit {
         return mTriggerTime == attr.mTriggerTime
                 && Objects.equals(mSourceSite, attr.mSourceSite)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
-                && Objects.equals(mReportTo, attr.mReportTo)
+                && Objects.equals(mAdTechDomain, attr.mAdTechDomain)
                 && Objects.equals(mRegistrant, attr.mRegistrant);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                mId, mSourceSite, mDestinationSite, mReportTo, mTriggerTime, mRegistrant);
+                mId, mSourceSite, mDestinationSite, mAdTechDomain, mTriggerTime, mRegistrant);
     }
 
     public String getId() {
@@ -62,8 +62,8 @@ class AttributionRateLimit {
         return mDestinationSite;
     }
 
-    public String getReportTo() {
-        return mReportTo;
+    public String getAdTechDomain() {
+        return mAdTechDomain;
     }
 
     public long getTriggerTime() {
@@ -99,8 +99,8 @@ class AttributionRateLimit {
             return this;
         }
 
-        public Builder setReportTo(String reportTo) {
-            mBuilding.mReportTo = reportTo;
+        public Builder setAdTechDomain(String adTechDomain) {
+            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
