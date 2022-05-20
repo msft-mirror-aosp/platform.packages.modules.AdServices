@@ -131,6 +131,22 @@ public final class MeasurementTables {
 
     }
 
+    /**
+     * Contract for Unencrypted aggregate payload.
+     */
+    interface AggregateReport {
+        String TABLE = MSMT_TABLE_PREFIX + "aggregate_report";
+        String ID = "_id";
+        String SOURCE_SITE = "source_site";
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SOURCE_REGISTRATION_TIME = "source_registration_time";
+        String SCHEDULED_REPORT_TIME = "scheduled_report_time";
+        String PRIVACY_BUDGET_KEY = "privacy_budget_key";
+        String REPORTING_ORIGIN = "reporting_origin";
+        String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
+        String STATUS = "status";
+    }
+
     public static final String CREATE_TABLE_SOURCE =
             "CREATE TABLE "
                     + SourceContract.TABLE
@@ -205,6 +221,21 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.REGISTRANT + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_AGGREGATE_PAYLOAD =
+            "CREATE TABLE "
+                    + AggregateReport.TABLE
+                    + " ("
+                    + AggregateReport.ID + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateReport.SOURCE_SITE + " TEXT, "
+                    + AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
+                    + AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
+                    + AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
+                    + AggregateReport.PRIVACY_BUDGET_KEY + " TEXT, "
+                    + AggregateReport.REPORTING_ORIGIN + " TEXT, "
+                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
+                    + SourceContract.STATUS + " INTEGER "
+                    + ")";
+
     public static final String[] CREATE_INDEXES = {
             "CREATE INDEX "
                     + INDEX_PREFIX + SourceContract.TABLE + "_ad_rt_et " + "ON "
@@ -243,7 +274,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_TRIGGER,
                             CREATE_TABLE_ADTECH_URLS,
                             CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT));
+                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
+                            CREATE_TABLE_AGGREGATE_PAYLOAD));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

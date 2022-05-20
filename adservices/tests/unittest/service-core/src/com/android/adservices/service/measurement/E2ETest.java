@@ -35,10 +35,12 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.InstallApp;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
+import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 
 import com.google.common.collect.ImmutableList;
@@ -115,6 +117,10 @@ public abstract class E2ETest {
         String TIMESTAMP_KEY = "timestamp";
         String EVENT_REPORT_OBJECTS_KEY = "event_level_results";
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
+        String INSTALLS_KEY = "installs";
+        String UNINSTALLS_KEY = "uninstalls";
+        String INSTALLS_URI_KEY = "uri";
+        String INSTALLS_TIMESTAMP_KEY = "timestamp";
         String REPORT_TIME_KEY = "report_time";
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
@@ -210,7 +216,6 @@ public abstract class E2ETest {
 
     @Test
     public void runTest() throws IOException, JSONException {
-        clearDatabase();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
@@ -218,11 +223,14 @@ public abstract class E2ETest {
                 processAction((RegisterTrigger) action);
             } else if (action instanceof ReportingJob) {
                 processAction((ReportingJob) action);
+            } else if (action instanceof InstallApp) {
+                processAction((InstallApp) action);
+            } else if (action instanceof UninstallApp) {
+                processAction((UninstallApp) action);
             }
         }
-        clearDatabase();
-
         evaluateResults();
+        clearDatabase();
     }
 
     /**
@@ -311,12 +319,60 @@ public abstract class E2ETest {
             ReportObjects actualOutput) {
         return String.format("Actual output does not match expected.\n\n"
                 + "(Note that report IDs are ignored in comparisons since they are not known in"
-                + " advance.)\n\nExpected event report objects: %s\n\n"
-                + "Actual event report objects: %s\n\n"
+                + " advance.)\n\nEvent report objects:\n%s\n\n"
                 + "Expected aggregate report objects: %s\n\n"
                 + "Actual aggregate report objects: %s\n",
-                expectedOutput.mEventReportObjects, actualOutput.mEventReportObjects,
+                prettify(expectedOutput.mEventReportObjects, actualOutput.mEventReportObjects),
                 expectedOutput.mAggregateReportObjects, actualOutput.mAggregateReportObjects);
+    }
+
+    private static String prettify(List<JSONObject> expected, List<JSONObject> actual) {
+        StringBuilder result = new StringBuilder("(Expected ::: Actual)"
+                + "\n------------------------\n");
+        for (int i = 0; i < Math.max(expected.size(), actual.size()); i++) {
+            if (i < expected.size() && i < actual.size()) {
+                result.append(prettifyObjs(expected.get(i), actual.get(i)));
+            } else {
+                if (i < expected.size()) {
+                    result.append(prettifyObj("", expected.get(i)));
+                }
+                if (i < actual.size()) {
+                    result.append(prettifyObj(" ::: ", actual.get(i)));
+                }
+            }
+            result.append("\n------------------------\n");
+        }
+        return result.toString();
+    }
+
+    private static String prettifyObjs(JSONObject obj1, JSONObject obj2) {
+        StringBuilder result = new StringBuilder();
+        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": "
+                + obj1.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + " ::: "
+                + obj2.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + "\n");
+        JSONObject payload1 = obj1.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONObject payload2 = obj2.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        for (String key : EventReportPayloadKeys.STRINGS) {
+            result.append(key + ": " + payload1.optString(key)
+                    + " ::: " + payload2.optString(key) + "\n");
+        }
+        result.append(EventReportPayloadKeys.DOUBLE + ": "
+                + payload1.optDouble(EventReportPayloadKeys.DOUBLE)
+                + " ::: " + payload2.optDouble(EventReportPayloadKeys.DOUBLE));
+        return result.toString();
+    }
+
+    private static String prettifyObj(String pad, JSONObject obj) {
+        StringBuilder result = new StringBuilder();
+        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": " + pad
+                + obj.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + "\n");
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        for (String key : EventReportPayloadKeys.STRINGS) {
+            result.append(key + ": " + pad + payload.optString(key) + "\n");
+        }
+        result.append(EventReportPayloadKeys.DOUBLE + ": " + pad
+                + payload.optDouble(EventReportPayloadKeys.DOUBLE));
+        return result.toString();
     }
 
     private static Set<Long> getExpiryTimesFrom(RegisterSource sourceRegistration)
@@ -404,6 +460,23 @@ public abstract class E2ETest {
                 actions.add(triggerRegistration);
             }
 
+            if (input.has(TestFormatJsonMapping.INSTALLS_KEY)) {
+                JSONArray installsArray = input.getJSONArray(TestFormatJsonMapping.INSTALLS_KEY);
+                for (int j = 0; j < installsArray.length(); j++) {
+                    InstallApp installApp = new InstallApp(installsArray.getJSONObject(j));
+                    actions.add(installApp);
+                }
+            }
+
+            if (input.has(TestFormatJsonMapping.UNINSTALLS_KEY)) {
+                JSONArray uninstallsArray =
+                        input.getJSONArray(TestFormatJsonMapping.UNINSTALLS_KEY);
+                for (int j = 0; j < uninstallsArray.length(); j++) {
+                    UninstallApp uninstallApp = new UninstallApp(uninstallsArray.getJSONObject(j));
+                    actions.add(uninstallApp);
+                }
+            }
+
             actions.sort(Comparator.comparing(Action::getComparable));
 
             ReportObjects expectedOutput = getExpectedOutput(output);
@@ -459,6 +532,22 @@ public abstract class E2ETest {
                     triggerRegistration.mTimestamp) == IMeasurementCallback.RESULT_OK);
         Assert.assertTrue("AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
+    }
+
+    void processAction(InstallApp installApp) {
+        Assert.assertTrue("measurementDao.doInstallAttribution failed",
+                sDatastoreManager.runInTransaction(
+                    measurementDao -> {
+                        measurementDao.doInstallAttribution(installApp.mUri, installApp.mTimestamp);
+                    }));
+    }
+
+    void processAction(UninstallApp uninstallApp) {
+        Assert.assertTrue("measurementDao.undoInstallAttribution failed",
+                sDatastoreManager.runInTransaction(
+                    measurementDao -> {
+                        measurementDao.undoInstallAttribution(uninstallApp.mUri);
+                    }));
     }
 
     void evaluateResults() throws JSONException {

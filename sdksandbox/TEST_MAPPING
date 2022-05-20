@@ -30,6 +30,9 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
+    },
+    {
+      "name": "SdkSandboxRestrictionsHostTest"
     }
   ]
 }
