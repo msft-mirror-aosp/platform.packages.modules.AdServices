@@ -326,11 +326,11 @@ public final class MeasurementImplTest {
         long expiry = TimeUnit.DAYS.toSeconds(20);
         // Creating source for easy comparison
         Source source = new Source.Builder()
-                .setReportTo(BaseUriExtractor.getBaseUri(DEFAULT_REGISTRATION_URI))
+                .setAdTechDomain(BaseUriExtractor.getBaseUri(DEFAULT_REGISTRATION_URI))
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
                 .setEventTime(eventTime)
-                .setAttributionSource(DEFAULT_URI)
+                .setPublisher(DEFAULT_URI)
                 .setRegistrant(DEFAULT_URI)
                 .setAttributionDestination(Uri.parse("android-app://com.example.abc"))
                 .setEventId(123L)
@@ -341,9 +341,9 @@ public final class MeasurementImplTest {
             sourceReg.add(new SourceRegistration.Builder()
                     .setSourceEventId(source.getEventId())
                     .setDestination(source.getAttributionDestination())
-                    .setTopOrigin(source.getAttributionSource())
+                    .setTopOrigin(source.getPublisher())
                     .setExpiry(expiry)
-                    .setReportingOrigin(source.getReportTo())
+                    .setReportingOrigin(source.getAdTechDomain())
                     .build()
             );
             return true;
@@ -391,7 +391,7 @@ public final class MeasurementImplTest {
                 Assert.assertEquals(0, report.getTriggerPriority());
                 Assert.assertEquals(source.getAttributionDestination(),
                         report.getAttributionDestination());
-                Assert.assertEquals(source.getReportTo(), report.getReportTo());
+                Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
                 Assert.assertTrue(report.getTriggerData() < source.getTriggerDataCardinality());
                 Assert.assertNull(report.getTriggerDedupKey());
                 Assert.assertEquals(EventReport.Status.PENDING, report.getStatus());
@@ -420,10 +420,8 @@ public final class MeasurementImplTest {
                 eventTime + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()),
                 sourceRegistration.getSourcePriority(),
                 Source.SourceType.EVENT,
-                eventTime + TimeUnit.SECONDS.toMillis(
-                        sourceRegistration.getInstallAttributionWindow()),
-                eventTime + TimeUnit.SECONDS.toMillis(
-                        sourceRegistration.getInstallCooldownWindow()),
+                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallAttributionWindow()),
+                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallCooldownWindow()),
                 Source.AttributionMode.TRUTHFULLY,
                 sourceRegistration.getAggregateSource(),
                 sourceRegistration.getAggregateFilterData()
