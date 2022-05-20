@@ -135,8 +135,8 @@ public class CacheManager implements Dumpable {
                 writer.println(String.format("Epoch Id: %d \n", epochId));
                 Map<Pair<String, String>, Topic> epochMapping = mCachedTopics.get(epochId);
                 for (Pair<String, String> pair : epochMapping.keySet()) {
-                    String app = pair.first,
-                            sdk = pair.second;
+                    String app = pair.first;
+                    String sdk = pair.second;
                     Topic topic = epochMapping.get(pair);
                     writer.println(String.format("(%s, %s): %s",
                             app, sdk, topic.toString()));
