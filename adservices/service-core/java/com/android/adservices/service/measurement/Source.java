@@ -54,9 +54,9 @@ public class Source {
 
     private String mId;
     private long mEventId;
-    private Uri mAttributionSource;
+    private Uri mPublisher;
     private Uri mAttributionDestination;
-    private Uri mReportTo;
+    private Uri mAdTechDomain;
     private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
@@ -158,7 +158,8 @@ public class Source {
                 mExpiryTime + ONE_HOUR_IN_MILLIS;
     }
 
-    private int getReportingWindowCount() {
+    @VisibleForTesting
+    int getReportingWindowCount() {
         // Early Count + expiry
         return getEarlyReportingWindows().size() + 1;
     }
@@ -212,9 +213,9 @@ public class Source {
         }
         Source source = (Source) obj;
         return Objects.equals(mId, source.mId)
-                && Objects.equals(mAttributionSource, source.mAttributionSource)
+                && Objects.equals(mPublisher, source.mPublisher)
                 && Objects.equals(mAttributionDestination, source.mAttributionDestination)
-                && Objects.equals(mReportTo, source.mReportTo)
+                && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
@@ -232,7 +233,7 @@ public class Source {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionSource, mAttributionDestination, mReportTo, mPriority,
+        return Objects.hash(mId, mPublisher, mAttributionDestination, mAdTechDomain, mPriority,
                 mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys,
                 mAggregateFilterData, mAggregateSource, mAggregatableAttributionSource);
     }
@@ -254,6 +255,11 @@ public class Source {
             }
         }
         return mExpiryTime + ONE_HOUR_IN_MILLIS;
+    }
+
+    @VisibleForTesting
+    void setAttributionMode(@AttributionMode int attributionMode) {
+        mAttributionMode = attributionMode;
     }
 
     /**
@@ -325,17 +331,17 @@ public class Source {
     }
 
     /**
-     * Reporting destination for the generated reports.
+     * AdTech reporting destination domain for generated reports.
      */
-    public Uri getReportTo() {
-        return mReportTo;
+    public Uri getAdTechDomain() {
+        return mAdTechDomain;
     }
 
     /**
      * Uri which registered the {@link Source}.
      */
-    public Uri getAttributionSource() {
-        return mAttributionSource;
+    public Uri getPublisher() {
+        return mPublisher;
     }
 
     /**
@@ -535,10 +541,10 @@ public class Source {
         }
 
         /**
-         * See {@link Source#getAttributionSource()}.
+         * See {@link Source#getPublisher()}.
          */
-        public Builder setAttributionSource(Uri attributionSource) {
-            mBuilding.mAttributionSource = attributionSource;
+        public Builder setPublisher(Uri publisher) {
+            mBuilding.mPublisher = publisher;
             return this;
         }
 
@@ -552,10 +558,10 @@ public class Source {
         }
 
         /**
-         * See {@link Source#getReportTo()}.
+         * See {@link Source#getAdTechDomain()} ()}.
          */
-        public Builder setReportTo(Uri reportTo) {
-            mBuilding.mReportTo = reportTo;
+        public Builder setAdTechDomain(Uri adTechDomain) {
+            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 

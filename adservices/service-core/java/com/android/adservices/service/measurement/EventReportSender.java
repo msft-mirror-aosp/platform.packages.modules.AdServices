@@ -41,10 +41,10 @@ public class EventReportSender {
     /**
      * Sends an event report to the reporting origin.
      */
-    public int sendEventReport(Uri reportingUrl, JSONObject eventReportJson)
+    public int sendEventReport(Uri adTechDomain, JSONObject eventReportJson)
             throws IOException {
         int returnCode;
-        URL reportingFullUrl = createReportingFullUrl(reportingUrl);
+        URL reportingFullUrl = createReportingFullUrl(adTechDomain);
 
         HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
         returnCode = sendEventReportPostRequest(urlConnection, eventReportJson);
@@ -52,12 +52,11 @@ public class EventReportSender {
     }
 
     /**
-     * Given a String reportingOrigin, returns the URL Object
-     * of the URL to send the POST request to.
+     * Creates URL to send the POST request to.
      */
-    private URL createReportingFullUrl(Uri reportingUrl)
+    private URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
-        Uri reportingFullUrl = Uri.withAppendedPath(reportingUrl, ATTRIBUTION_REPORT_URI_PATH);
+        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain, ATTRIBUTION_REPORT_URI_PATH);
         return new URL(reportingFullUrl.toString());
     }
 

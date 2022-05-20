@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -46,54 +46,38 @@ public class PrecomputedLoaderTest {
 
     @Test
     public void checkLoadedLabels() throws IOException {
-        ImmutableSet<String> labels = sPrecomputedLoader.retrieveLabels();
+        ImmutableSet<Integer> labels = sPrecomputedLoader.retrieveLabels();
         // Check size of list
         // The labels.txt contains 350 topics
         assertThat(labels.size()).isEqualTo(349);
 
         // Check some labels
-        assertThat(labels).containsAtLeast(
-                "/Sports/Tennis",
-                "/Arts & Entertainment/Music & Audio/Pop Music",
-                "/Internet & Telecom/Web Hosting",
-                "/Games/Computer & Video Games/Simulation Games");
+        assertThat(labels).containsAtLeast(1693, 1030, 565, 1770);
     }
 
     @Test
     public void checkLoadedAppTopics() throws IOException {
-        Map<String, List<String>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
+        Map<String, List<Integer>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
         // Check size of map
         // The app topics file contains 1000 apps + 11 sample apps + 2 test valid topics' apps.
         assertThat(appTopic.size()).isEqualTo(1013);
 
         // Check whatsApp, chrome and a sample app topics in map
-        List<String> whatsAppTopics =
-                Arrays.asList(
-                        "/Internet & Telecom/Text & Instant Messaging");
+        List<Integer> whatsAppTopics =
+                Arrays.asList(1379);
         assertThat(appTopic.get("com.whatsapp")).isEqualTo(whatsAppTopics);
 
-        List<String> chromeTopics =
-                Arrays.asList(
-                        "/Computers & Electronics/Software/Web Browsers");
+        List<Integer> chromeTopics =
+                Arrays.asList(304);
         assertThat(appTopic.get("com.android.chrome")).isEqualTo(chromeTopics);
 
-        List<String> sampleAppTopics =
-                Arrays.asList(
-                        "/Internet & Telecom/Text & Instant Messaging",
-                        "/Internet & Telecom/Web Apps & Online Tools",
-                        "/Business & Industrial/Defense Industry",
-                        "/News",
-                        "/People & Society");
+        List<Integer> sampleAppTopics =
+                Arrays.asList(1379, 1142, 669, 16, 14);
         assertThat(appTopic.get("com.example.adservices.samples.topics.sampleapp"))
                 .isEqualTo(sampleAppTopics);
 
-        List<String> sampleApp4Topics =
-                Arrays.asList(
-                        "/Online Communities/Social Networks",
-                        "/Computers & Electronics/Software/Photo Software",
-                        "/Reference/Foreign Language Study",
-                        "/Autos & Vehicles/Classic Vehicles",
-                        "/Computers & Electronics/Antivirus & Malware");
+        List<Integer> sampleApp4Topics =
+                Arrays.asList(529, 1739, 1266, 1013, 315);
         assertThat(appTopic.get("com.example.adservices.samples.topics.sampleapp4"))
                 .isEqualTo(sampleApp4Topics);
 
@@ -107,18 +91,13 @@ public class PrecomputedLoaderTest {
         // Verify that the topics from the file are valid:
         // the valid topic is one of the topic in the labels file.
         // The invalid topics will not be loaded in the app topics map.
-        List<String> validTestApp1Topics =
-                Arrays.asList(
-                        "/Internet & Telecom/Text & Instant Messaging",
-                        "/News",
-                        "/People & Society");
+        List<Integer> validTestApp1Topics =
+                Arrays.asList(211, 78, 16);
         assertThat(appTopic.get("com.example.adservices.valid.topics.testapp1"))
                 .isEqualTo(validTestApp1Topics);
 
-        List<String> validTestApp2Topics =
-                Arrays.asList(
-                        "/Arts & Entertainment/Online Video",
-                        "/Computers & Electronics/Consumer Electronics");
+        List<Integer> validTestApp2Topics =
+                Arrays.asList(1209, 1266);
         assertThat(appTopic.get("com.example.adservices.valid.topics.testapp2"))
                 .isEqualTo(validTestApp2Topics);
     }

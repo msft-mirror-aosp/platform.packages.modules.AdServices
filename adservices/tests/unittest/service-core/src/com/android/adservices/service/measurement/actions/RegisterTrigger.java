@@ -16,14 +16,14 @@
 
 package com.android.adservices.service.measurement.actions;
 
-import static com.android.adservices.service.measurement.InternalE2ETest.getAttributionSource;
-import static com.android.adservices.service.measurement.InternalE2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
+import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.content.AttributionSource;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.InternalE2ETest.TestFormatJsonMapping;
+import com.android.adservices.service.measurement.E2ETest.TestFormatJsonMapping;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,5 +64,10 @@ public final class RegisterTrigger implements Action {
 
     public long getComparable() {
         return mTimestamp;
+    }
+
+    public Map<String, List<String>> getNextResponse(String uri) {
+        List<Map<String, List<String>>> responseList = mUriToResponseHeadersMap.get(uri);
+        return responseList.remove(0);
     }
 }
