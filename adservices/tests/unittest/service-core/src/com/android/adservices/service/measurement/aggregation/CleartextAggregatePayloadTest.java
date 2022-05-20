@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import android.net.Uri;
+
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -28,15 +30,16 @@ import org.junit.Test;
 @SmallTest
 public final class CleartextAggregatePayloadTest {
 
-    private CleartextAggregatePayload.AttributionInfo createAttributionInfo() {
-        return new CleartextAggregatePayload.AttributionInfo.Builder().setTime(1000L).build();
-    }
-
     private CleartextAggregatePayload createAttributionReport() {
         return new CleartextAggregatePayload.Builder()
-                .setAttributionInfo(createAttributionInfo())
-                .setReportTime(1L)
-                .setExternalReportId(2L)
+                .setId("1")
+                .setSourceSite(Uri.parse("android-app://com.example.abc"))
+                .setAttributionDestination(Uri.parse("https://example.com/aS"))
+                .setSourceRegistrationTime(5L)
+                .setScheduledReportTime(1L)
+                .setPrivacyBudgetKey("key")
+                .setReportingOrigin(Uri.parse("https://example.com/rT"))
+                .setDebugCleartextPayload(" key: 1369, value: 32768; key: 3461, value: 1664;")
                 .setAggregateAttributionData(
                         new AggregateAttributionData.Builder().build())
                 .setStatus(CleartextAggregatePayload.Status.PENDING)
@@ -46,12 +49,17 @@ public final class CleartextAggregatePayloadTest {
     @Test
     public void testCreation() throws Exception {
         CleartextAggregatePayload attributionReport = createAttributionReport();
-        assertEquals(1L, attributionReport.getReportTime());
-        assertEquals(2L, attributionReport.getExternalReportId());
+        assertEquals("1", attributionReport.getId());
+        assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getSourceSite());
+        assertEquals(Uri.parse("https://example.com/aS"),
+                attributionReport.getAttributionDestination());
+        assertEquals(5L, attributionReport.getSourceRegistrationTime());
+        assertEquals(1L, attributionReport.getScheduledReportTime());
+        assertEquals("key", attributionReport.getPrivacyBudgetKey());
+        assertEquals(Uri.parse("https://example.com/rT"), attributionReport.getReportingOrigin());
+        assertEquals(" key: 1369, value: 32768; key: 3461, value: 1664;",
+                attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
-        CleartextAggregatePayload.AttributionInfo attributionInfo =
-                attributionReport.getAttributionInfo();
-        assertEquals(1000L, attributionInfo.getTime());
         assertEquals(CleartextAggregatePayload.Status.PENDING, attributionReport.getStatus());
     }
 
@@ -59,9 +67,14 @@ public final class CleartextAggregatePayloadTest {
     public void testDefaults() throws Exception {
         CleartextAggregatePayload attributionReport =
                 new CleartextAggregatePayload.Builder().build();
-        assertNull(attributionReport.getAttributionInfo());
-        assertEquals(0L, attributionReport.getReportTime());
-        assertEquals(0L, attributionReport.getExternalReportId());
+        assertNull(attributionReport.getId());
+        assertNull(attributionReport.getSourceSite());
+        assertNull(attributionReport.getAttributionDestination());
+        assertEquals(0L, attributionReport.getSourceRegistrationTime());
+        assertEquals(0L, attributionReport.getScheduledReportTime());
+        assertNull(attributionReport.getPrivacyBudgetKey());
+        assertNull(attributionReport.getReportingOrigin());
+        assertNull(attributionReport.getDebugCleartextPayload());
         assertNull(attributionReport.getAggregateAttributionData());
         assertEquals(CleartextAggregatePayload.Status.PENDING, attributionReport.getStatus());
     }

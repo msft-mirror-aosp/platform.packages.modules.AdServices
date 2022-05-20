@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -45,6 +48,16 @@ public class AggregateHistogramContribution {
     @Override
     public int hashCode() {
         return Objects.hash(mKey, mValue);
+    }
+
+    /**
+     * Creates JSONObject for this histogram contribution.
+     */
+    public JSONObject toJSONObject() throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("bucket", mKey);
+        jsonObject.put("value", mValue);
+        return jsonObject;
     }
 
     /**
