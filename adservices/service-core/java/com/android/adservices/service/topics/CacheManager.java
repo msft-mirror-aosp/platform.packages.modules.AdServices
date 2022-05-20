@@ -18,6 +18,7 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.util.Dumpable;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
@@ -27,6 +28,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +37,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /** A class to manage Topics Cache. */
-public class CacheManager {
+public class CacheManager implements Dumpable {
     private static CacheManager sSingleton;
 
     // Lock for Read and Write on the cached topics map.
@@ -48,6 +50,9 @@ public class CacheManager {
 
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
+
+    // The verbose level for dumpsys usage
+    private static final int VERBOSE = 1;
 
     @VisibleForTesting
     CacheManager(EpochManager epochManager, TopicsDao topicsDao, Flags flags) {
@@ -116,5 +121,27 @@ public class CacheManager {
 
         // TODO(b/223916758): randomly shuffle the topics before returning.
         return topics;
+    }
+
+    @Override
+    public void dump(@NonNull PrintWriter writer, String[] args) {
+        boolean isVerbose = args != null
+                       && args.length >= 1
+                       && Integer.parseInt(args[0].toLowerCase()) == VERBOSE;
+        writer.println("==== CacheManager Dump ====");
+        writer.println(String.format("mCachedTopics size: %d", mCachedTopics.size()));
+        if (isVerbose) {
+            for (Long epochId : mCachedTopics.keySet()) {
+                writer.println(String.format("Epoch Id: %d \n", epochId));
+                Map<Pair<String, String>, Topic> epochMapping = mCachedTopics.get(epochId);
+                for (Pair<String, String> pair : epochMapping.keySet()) {
+                    String app = pair.first,
+                            sdk = pair.second;
+                    Topic topic = epochMapping.get(pair);
+                    writer.println(String.format("(%s, %s): %s",
+                            app, sdk, topic.toString()));
+                }
+            }
+        }
     }
 }
