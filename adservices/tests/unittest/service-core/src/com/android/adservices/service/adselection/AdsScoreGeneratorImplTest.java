@@ -124,7 +124,7 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionConfig,
                         mAdSelectionConfig.getSellerSignals(),
                         "{}",
-                        mAdSelectionConfig.getSeller(),
+                        "{}",
                         mAdBiddingOutcomeList.get(0)
                                 .getCustomAudienceBiddingInfo().getCustomAudienceSignals()))
                 .thenReturn(Futures.immediateFuture(scores));
@@ -140,9 +140,9 @@ public class AdsScoreGeneratorImplTest {
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
 
-        Assert.assertEquals(1L,
+        assertEquals(1L,
                 scoringOutcome.get(0).getAdWithScore().getScore().longValue());
-        Assert.assertEquals(2L,
+        assertEquals(2L,
                 scoringOutcome.get(1).getAdWithScore().getScore().longValue());
     }
 
@@ -164,7 +164,7 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionConfig,
                         mAdSelectionConfig.getSellerSignals(),
                         "{}",
-                        mAdSelectionConfig.getSeller(),
+                        "{}",
                         mAdBiddingOutcomeList.get(0)
                                 .getCustomAudienceBiddingInfo().getCustomAudienceSignals()))
                 .thenThrow(new JSONException("Badly formatted JSON"));

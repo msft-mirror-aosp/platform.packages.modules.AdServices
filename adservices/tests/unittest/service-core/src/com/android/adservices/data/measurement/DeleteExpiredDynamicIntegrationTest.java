@@ -49,9 +49,9 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                 - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS / 2;
 
         Source source = new Source.Builder()
-                .setReportTo(Uri.parse("https://example.com/rT"))
+                .setAdTechDomain(Uri.parse("https://example.com"))
                 .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                .setAttributionSource(Uri.parse("https://example.com/aS"))
+                .setPublisher(Uri.parse("https://example.com/aS"))
                 .setId("non-expired")
                 .setEventId(2L)
                 .setPriority(3L)

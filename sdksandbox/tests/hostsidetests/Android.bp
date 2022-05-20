@@ -25,15 +25,23 @@ java_test_host {
 
 java_test_host {
     name: "SdkSandboxLifecycleHostTest",
-    srcs: ["src/**/SdkSandboxLifecycleHostTest.java"],
+    srcs: [
+        "src/**/SdkSandboxLifecycleHostTest.java",
+        ":CtsHostsideTestsAppSecurityUtil",
+    ],
     test_config: "SdkSandboxLifecycleHostTest.xml",
     libs: ["tradefed"],
     test_suites: ["general-tests"],
+    static_libs: [
+        "cts-install-lib-host",
+    ],
     data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestApp2",
+        ":SdkSandboxTestSharedApp1",
+        ":SdkSandboxTestSharedApp2",
     ],
 }
 
@@ -99,6 +107,42 @@ android_test_helper_app {
         "androidx.core_core",
         "SdkSandboxTestUtils",
     ],
+}
+
+android_test_helper_app {
+    name: "SdkSandboxTestSharedApp1",
+    manifest: "app/SdkSandboxTestSharedApp1Manifest.xml",
+    srcs: [
+        "app/src/**/SdkSandboxTestSharedActivity.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    test_suites: ["general-tests"],
+    static_libs: [
+        "androidx.core_core",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+    ],
+    platform_apis: true,
+}
+
+android_test_helper_app {
+    name: "SdkSandboxTestSharedApp2",
+    manifest: "app/SdkSandboxTestSharedApp2Manifest.xml",
+    srcs: [
+        "app/src/**/SdkSandboxTestSharedApp2.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    test_suites: ["general-tests"],
+    static_libs: [
+        "androidx.core_core",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+    ],
+    platform_apis: true,
 }
 
 android_test_helper_app {
