@@ -54,8 +54,8 @@ class SqliteObjectMapper {
                 builder::setTriggerDedupKey);
         setUriColumn(cursor, MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setUriColumn(cursor, MeasurementTables.EventReportContract.REPORT_TO,
-                builder::setReportTo);
+        setUriColumn(cursor, MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
                 builder::setReportTime);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_TIME,
@@ -76,10 +76,10 @@ class SqliteObjectMapper {
                 builder::setEventId);
         setLongColumn(cursor, MeasurementTables.SourceContract.PRIORITY,
                 builder::setPriority);
-        setUriColumn(cursor, MeasurementTables.SourceContract.REPORT_TO,
-                builder::setReportTo);
-        setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
-                builder::setAttributionSource);
+        setUriColumn(cursor, MeasurementTables.SourceContract.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
+        setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
+                builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
@@ -106,6 +106,10 @@ class SqliteObjectMapper {
                 builder::setInstallCooldownWindow);
         setBooleanColumn(cursor, MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 builder::setInstallAttributed);
+        setTextColumn(cursor, MeasurementTables.SourceContract.FILTER_DATA,
+                builder::setAggregateFilterData);
+        setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
+                builder::setAggregateSource);
         return builder.build();
     }
 
@@ -120,18 +124,22 @@ class SqliteObjectMapper {
                 builder::setPriority);
         setUriColumn(cursor, MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setUriColumn(cursor, MeasurementTables.TriggerContract.REPORT_TO,
-                builder::setReportTo);
+        setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
                 builder::setStatus);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_DATA,
-                builder::setTriggerData);
+        setLongColumn(cursor, MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
+                builder::setEventTriggerData);
         setLongColumn(cursor, MeasurementTables.TriggerContract.DEDUP_KEY,
                 builder::setDedupKey);
         setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_TIME,
                 builder::setTriggerTime);
         setUriColumn(cursor, MeasurementTables.TriggerContract.REGISTRANT,
                 builder::setRegistrant);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                builder::setAggregateTriggerData);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                builder::setAggregateValues);
         return builder.build();
     }
 

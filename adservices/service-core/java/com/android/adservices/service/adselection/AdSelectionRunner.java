@@ -24,18 +24,14 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
-import android.net.Uri;
 import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.AdServicesDatabase;
-import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.service.AdServicesExecutors;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
@@ -79,13 +75,18 @@ public final class AdSelectionRunner {
     private final AdSelectionIdGenerator mAdSelectionIdGenerator;
 
 
-    public AdSelectionRunner(@NonNull final Context context) {
+    public AdSelectionRunner(@NonNull final Context context,
+            @NonNull final CustomAudienceDao customAudienceDao,
+            @NonNull final AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull final ExecutorService executorService) {
         mContext = context;
-        mCustomAudienceDao = AdServicesDatabase.getInstance(context).customAudienceDao();
-        mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
-        mExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mAdsScoreGenerator = new AdsScoreGeneratorImpl(new AdSelectionScriptEngine(mContext),
-                mExecutorService);
+        mCustomAudienceDao = customAudienceDao;
+        mAdSelectionEntryDao = adSelectionEntryDao;
+        mExecutorService = executorService;
+        mAdsScoreGenerator = new AdsScoreGeneratorImpl(
+                new AdSelectionScriptEngine(mContext),
+                mExecutorService,
+                new AdSelectionHttpClient(mExecutorService));
         mAdBidGenerator = new AdBidGeneratorImpl(context, mExecutorService);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
     }
@@ -242,16 +243,10 @@ public final class AdSelectionRunner {
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig) {
         return mAdBidGenerator.runAdBiddingPerCA(customAudience,
-                getBuyerDecisionLogic(customAudience.getBiddingLogicUrl()),
                 adSelectionConfig.getAdSelectionSignals(),
-                adSelectionConfig.getPerBuyerSignals().toString(),
+                adSelectionConfig.getPerBuyerSignals().get(customAudience.getBuyer()),
                 "{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-    }
-
-    private String getBuyerDecisionLogic(final Uri decisionLogicUri) {
-        // TODO(b/230436736): Invoke the server to get decision Logic JS
-        return "{}";
     }
 
     private ListenableFuture<List<AdScoringOutcome>> runAdScoring(

@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +74,24 @@ public class AggregateFilterData {
          */
         public Builder setAttributionFilterMap(Map<String, List<String>> attributionFilterMap) {
             mBuilding.mAttributionFilterMap = attributionFilterMap;
+            return this;
+        }
+
+        /**
+         * Builds AggregateFilterData from JSONObject.
+         */
+        public Builder buildAggregateFilterData(JSONObject jsonObject)
+                throws JSONException {
+            Map<String, List<String>> aggregateFilterData = new HashMap<>();
+            for (String key : jsonObject.keySet()) {
+                JSONArray jsonArray = jsonObject.getJSONArray(key);
+                List<String> filterDataList = new ArrayList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    filterDataList.add(jsonArray.getString(i));
+                }
+                aggregateFilterData.put(key, filterDataList);
+            }
+            mBuilding.mAttributionFilterMap = aggregateFilterData;
             return this;
         }
 

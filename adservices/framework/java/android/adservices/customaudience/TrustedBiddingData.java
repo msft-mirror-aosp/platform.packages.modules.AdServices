@@ -25,10 +25,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents semi-opaque data used during the ad selection process to fetch bidding signals.
- *
- * Hiding for future implementation and review for public exposure.
- * @hide
+ * Represents data used during the ad selection process to fetch buyer bidding signals from a
+ * trusted key/value server. The fetched data is used during the ad selection process and consumed
+ * by buyer JavaScript logic running in an isolated execution environment.
  */
 public final class TrustedBiddingData implements Parcelable {
     @NonNull
@@ -50,12 +49,9 @@ public final class TrustedBiddingData implements Parcelable {
         }
     };
 
-    private TrustedBiddingData(@NonNull Uri trustedBiddingUrl,
-            @NonNull List<String> trustedBiddingKeys) {
-        Objects.requireNonNull(trustedBiddingUrl);
-        Objects.requireNonNull(trustedBiddingKeys);
-        mTrustedBiddingUrl = trustedBiddingUrl;
-        mTrustedBiddingKeys = trustedBiddingKeys;
+    private TrustedBiddingData(@NonNull TrustedBiddingData.Builder builder) {
+        mTrustedBiddingUrl = builder.mTrustedBiddingUrl;
+        mTrustedBiddingKeys = builder.mTrustedBiddingKeys;
     }
 
     private TrustedBiddingData(@NonNull Parcel in) {
@@ -78,7 +74,8 @@ public final class TrustedBiddingData implements Parcelable {
     }
 
     /**
-     * @return the URL pointing to the trusted key-value server holding bidding signals
+     * @return the URL pointing to the trusted key-value server holding bidding signals. The URL
+     * must use HTTPS.
      */
     @NonNull
     public Uri getTrustedBiddingUrl() {
@@ -120,11 +117,13 @@ public final class TrustedBiddingData implements Parcelable {
         @NonNull
         private List<String> mTrustedBiddingKeys;
 
-        public Builder() { }
+        // TODO(b/232883403): We may need to add @NonNUll members as args.
+        public Builder() {
+        }
 
         /**
          * Sets the URL pointing to a trusted key-value server used to fetch bidding signals during
-         * the ad selection process.
+         * the ad selection process. The URL must use HTTPS.
          */
         @NonNull
         public Builder setTrustedBiddingUrl(@NonNull Uri trustedBiddingUrl) {
@@ -135,7 +134,7 @@ public final class TrustedBiddingData implements Parcelable {
 
         /**
          * Sets the list of keys to query the trusted key-value server with.
-         *
+         * <p>
          * This list is permitted to be empty, but it must not be null.
          */
         @NonNull
@@ -156,7 +155,7 @@ public final class TrustedBiddingData implements Parcelable {
             // Note that the list of keys is allowed to be empty, but not null
             Objects.requireNonNull(mTrustedBiddingKeys);
 
-            return new TrustedBiddingData(mTrustedBiddingUrl, mTrustedBiddingKeys);
+            return new TrustedBiddingData(this);
         }
     }
 }

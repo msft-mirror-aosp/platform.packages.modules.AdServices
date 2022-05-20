@@ -28,7 +28,6 @@ import java.util.Objects;
  * {@code runAdSelection} in the {@link AdSelectionManager}.
  * This field is populated in the case of a successful {@code runAdSelection} call.
  *
- * @hide
  */
 public class AdSelectionOutcome {
     private static final int UNSET = 0;

@@ -76,6 +76,5 @@ android_test_helper_app {
        ":framework-sdksandbox-sources",
     ],
     platform_apis: true,
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
 }

@@ -16,20 +16,30 @@
 
 package com.android.adservices.service.adselection;
 
+import static org.junit.Assert.assertEquals;
+
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.exceptions.AdServicesException;
+import android.adservices.http.MockWebServerRule;
+import android.net.Uri;
 
+import com.android.adservices.MockWebServerRuleFactory;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.mockwebserver.MockResponse;
+import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -38,24 +48,26 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class AdsScoreGeneratorImplTest {
 
-    // TODO(b/230436736): Invoke the server to get decision Logic JS
-    public static final String SELLER_SCORING_LOGIC_JS = "";
     private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    @Rule
+    public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    AdSelectionConfig mAdSelectionConfig;
     @Mock
     //TODO(b/231349121): replace mocking script engine result with simple js scripts
-    AdSelectionScriptEngine mMockAdSelectionScriptEngine;
-
-    ListeningExecutorService mListeningExecutorService;
-    ExecutorService mExecutorService;
-
-    AdSelectionConfig mAdSelectionConfig;
+    private AdSelectionScriptEngine mMockAdSelectionScriptEngine;
+    private ListeningExecutorService mListeningExecutorService;
+    private ExecutorService mExecutorService;
+    private AdSelectionHttpClient mWebClient;
+    private String mSellerDecisionLogicJs;
 
     private AdBiddingOutcome mAdBiddingOutcomeBuyer1;
     private AdBiddingOutcome mAdBiddingOutcomeBuyer2;
@@ -64,13 +76,12 @@ public class AdsScoreGeneratorImplTest {
     private AdsScoreGenerator mAdsScoreGenerator;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
         mExecutorService = Executors.newFixedThreadPool(20);
         mListeningExecutorService = MoreExecutors.listeningDecorator(mExecutorService);
-
-        mAdSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfigBuilder().build();
+        mWebClient = new AdSelectionHttpClient(mExecutorService);
 
         mAdBiddingOutcomeBuyer1 = AdBiddingOutcomeFixture
                 .anAdBiddingOutcomeBuilder(BUYER_1, 1.0).build();
@@ -79,21 +90,41 @@ public class AdsScoreGeneratorImplTest {
         mAdBiddingOutcomeList =
                 Arrays.asList(mAdBiddingOutcomeBuyer1, mAdBiddingOutcomeBuyer2);
 
-        mAdsScoreGenerator = new AdsScoreGeneratorImpl(mMockAdSelectionScriptEngine,
-                mListeningExecutorService);
+        mSellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + " /reporting/seller "
+                        + "' } };\n"
+                        + "}";
+
+        mAdsScoreGenerator = new AdsScoreGeneratorImpl(
+                mMockAdSelectionScriptEngine,
+                mListeningExecutorService,
+                mWebClient);
     }
 
     @Test
     public void testRunAdScoringSuccess() throws Exception {
         List<Double> scores = Arrays.asList(1.0, 2.0);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(
+                List.of(new MockResponse().setBody(mSellerDecisionLogicJs))
+        );
 
-        Mockito.when(mMockAdSelectionScriptEngine.scoreAds("",
+        Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
+
+        mAdSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                .setDecisionLogicUrl(decisionLogicUri)
+                .build();
+
+        Mockito.when(mMockAdSelectionScriptEngine.scoreAds(mSellerDecisionLogicJs,
                         mAdBiddingOutcomeList.stream().map(a -> a.getAdWithBid())
                                 .collect(Collectors.toList()),
                         mAdSelectionConfig,
                         mAdSelectionConfig.getSellerSignals(),
                         "{}",
-                        mAdSelectionConfig.getSeller(),
+                        "{}",
                         mAdBiddingOutcomeList.get(0)
                                 .getCustomAudienceBiddingInfo().getCustomAudienceSignals()))
                 .thenReturn(Futures.immediateFuture(scores));
@@ -106,35 +137,52 @@ public class AdsScoreGeneratorImplTest {
                     return scoringResultFuture;
                 });
 
-        Assert.assertEquals(1L,
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
+
+        assertEquals(1L,
                 scoringOutcome.get(0).getAdWithScore().getScore().longValue());
-        Assert.assertEquals(2L,
+        assertEquals(2L,
                 scoringOutcome.get(1).getAdWithScore().getScore().longValue());
     }
 
     @Test
     public void testRunAdScoringJsonException() throws Exception {
+        MockWebServer server = mMockWebServerRule.startMockWebServer(
+                ImmutableList.of(new MockResponse().setBody(mSellerDecisionLogicJs))
+        );
 
-        Mockito.when(mMockAdSelectionScriptEngine.scoreAds("",
+        Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
+
+        mAdSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                .setDecisionLogicUrl(decisionLogicUri)
+                .build();
+
+        Mockito.when(mMockAdSelectionScriptEngine.scoreAds(mSellerDecisionLogicJs,
                         mAdBiddingOutcomeList.stream().map(a -> a.getAdWithBid())
                                 .collect(Collectors.toList()),
                         mAdSelectionConfig,
                         mAdSelectionConfig.getSellerSignals(),
                         "{}",
-                        mAdSelectionConfig.getSeller(),
+                        "{}",
                         mAdBiddingOutcomeList.get(0)
                                 .getCustomAudienceBiddingInfo().getCustomAudienceSignals()))
                 .thenThrow(new JSONException("Badly formatted JSON"));
 
-        AdServicesException adServicesException =
-                Assert.assertThrows(AdServicesException.class,
+        FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
+                mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
+
+        ExecutionException adServicesException =
+                Assert.assertThrows(ExecutionException.class,
                         () -> {
-                            mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList,
-                                    mAdSelectionConfig);
+                            waitForFuture(
+                                    () -> {
+                                        return scoringResultFuture;
+                                    });
                         });
 
-        Assert.assertEquals("Invalid results obtained from Ad Scoring",
-                adServicesException.getMessage());
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
     }
 
     private <T> T waitForFuture(

@@ -15,6 +15,8 @@
  */
 package com.android.adservices;
 
+import static com.android.adservices.AdServicesCommon.ACTION_AD_SELECTION_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
 
@@ -37,8 +39,7 @@ import java.util.function.Function;
 /**
  * Service binder that connects to a service in the APK.
  *
- * TODO: Make it robust. Currently this class ignores edge cases.
- * TODO: Clean up the log
+ * <p>TODO: Make it robust. Currently this class ignores edge cases. TODO: Clean up the log
  *
  * @hide
  */
@@ -65,8 +66,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @GuardedBy("mLock")
     private ServiceConnection mServiceConnection;
 
-    protected AndroidServiceBinder(Context context, String serviceIntentAction,
-            Function<IBinder, T> converter) {
+    protected AndroidServiceBinder(
+            Context context, String serviceIntentAction, Function<IBinder, T> converter) {
         mServiceIntentAction = serviceIntentAction;
         mContext = context;
         mBinderConverter = converter;
@@ -174,14 +175,16 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
     @Nullable
     private ComponentName getServiceComponentName() {
         if (!mServiceIntentAction.equals(ACTION_TOPICS_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_MEASUREMENT_SERVICE)) {
+                && !mServiceIntentAction.equals(ACTION_MEASUREMENT_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_CUSTOM_AUDIENCE_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_AD_SELECTION_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
             return null;
         }
         final Intent intent = new Intent(mServiceIntentAction);
 
-        final ResolveInfo resolveInfo = mContext.getPackageManager().resolveService(intent,
-                PackageManager.GET_SERVICES);
+        final ResolveInfo resolveInfo =
+                mContext.getPackageManager().resolveService(intent, PackageManager.GET_SERVICES);
         if (resolveInfo == null) {
             LogUtil.e("Failed to find resolveInfo for adServices service");
             return null;

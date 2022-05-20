@@ -21,6 +21,8 @@ import android.adservices.common.AdData;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -44,9 +46,15 @@ import java.util.stream.Collectors;
 
 /** This class implements the ad bid generator. */
 public class AdBidGeneratorImpl implements AdBidGenerator {
-    @NonNull private final Context mContext;
-    @NonNull private final Executor mExecutor;
-    @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
+
+    @NonNull
+    private final Context mContext;
+    @NonNull
+    private final Executor mExecutor;
+    @NonNull
+    private final AdSelectionScriptEngine mAdSelectionScriptEngine;
+    @NonNull
+    private final AdSelectionHttpClient mAdSelectionHttpClient;
 
     public AdBidGeneratorImpl(@NonNull Context context, @NonNull ExecutorService executorService) {
         Objects.requireNonNull(context);
@@ -55,32 +63,34 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mContext = context;
         mExecutor = MoreExecutors.listeningDecorator(executorService);
         mAdSelectionScriptEngine = new AdSelectionScriptEngine(mContext);
+        mAdSelectionHttpClient = new AdSelectionHttpClient(executorService);
     }
 
     @VisibleForTesting
     AdBidGeneratorImpl(
             @NonNull Context context,
             @NonNull Executor executor,
-            @NonNull AdSelectionScriptEngine adSelectionScriptEngine) {
+            @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
+            @NonNull AdSelectionHttpClient adSelectionHttpClient) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionScriptEngine);
+        Objects.requireNonNull(adSelectionHttpClient);
 
         mContext = context;
         mExecutor = executor;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
+        mAdSelectionHttpClient = adSelectionHttpClient;
     }
 
     @Override
     @NonNull
     public FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
-            @NonNull String buyerDecisionLogicJs,
             @NonNull String adSelectionSignals,
             @NonNull String buyerSignals,
             @NonNull String contextualSignals) {
         Objects.requireNonNull(customAudience);
-        Objects.requireNonNull(buyerDecisionLogicJs);
         Objects.requireNonNull(adSelectionSignals);
         Objects.requireNonNull(buyerSignals);
         Objects.requireNonNull(contextualSignals);
@@ -104,26 +114,32 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 })
                         .collect(Collectors.toList());
         // TODO(b/221862406): implementation ads filtering logic.
-        return runBidding(
-                        buyerDecisionLogicJs,
-                        ImmutableList.copyOf(ads),
-                        buyerSignals,
-                        trustedBiddingSignals,
-                        contextualSignals,
-                        customAudienceSignals,
-                        userSignals,
-                        adSelectionSignals)
-                .transform(
+
+        return getBuyerDecisionLogic(customAudience.getBiddingLogicUrl())
+                .transformAsync(
+                        decisionLogic -> {
+                            return runBidding(
+                                    decisionLogic,
+                                    ImmutableList.copyOf(ads),
+                                    buyerSignals,
+                                    trustedBiddingSignals,
+                                    contextualSignals,
+                                    customAudienceSignals,
+                                    userSignals,
+                                    adSelectionSignals);
+                        }, mExecutor
+                ).transform(
                         candidate -> {
-                            if (Objects.isNull(candidate) || candidate.getBid() <= 0.0) {
+                            if (Objects.isNull(candidate.first)
+                                    || candidate.first.getBid() <= 0.0) {
                                 return null;
                             }
                             CustomAudienceBiddingInfo customAudienceInfo =
                                     CustomAudienceBiddingInfo.create(
-                                            customAudience, buyerDecisionLogicJs);
+                                            customAudience, candidate.second);
                             AdBiddingOutcome result =
                                     AdBiddingOutcome.builder()
-                                            .setAdWithBid(candidate)
+                                            .setAdWithBid(candidate.first)
                                             .setCustomAudienceBiddingInfo(customAudienceInfo)
                                             .build();
                             return result;
@@ -146,11 +162,16 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return "{}";
     }
 
+    private FluentFuture<String> getBuyerDecisionLogic(final Uri decisionLogicUri) {
+        return FluentFuture.from(
+                mAdSelectionHttpClient.fetchJavascript(decisionLogicUri));
+    }
+
     /**
      * @return user information with respect to the custom audience will be available to
-     *     generateBid(). This could include language, demographic information, information about
-     *     custom audience such as time in list, number of impressions, last N winning impression
-     *     timestamp etc.
+     * generateBid(). This could include language, demographic information, information about
+     * custom audience such as time in list, number of impressions, last N winning impression
+     * timestamp etc.
      */
     @NonNull
     public String buildUserSignals(@Nullable DBCustomAudience customAudience) {
@@ -163,7 +184,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
      */
     @NonNull
     @VisibleForTesting
-    FluentFuture<AdWithBid> runBidding(
+    FluentFuture<Pair<AdWithBid, String>> runBidding(
             @NonNull String buyerDecisionLogicJs,
             @NonNull ImmutableList<AdData> ads,
             @NonNull String buyerSignals,
@@ -185,7 +206,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     customAudienceSignals))
                     .transform(
                             adWithBids -> {
-                                return getBestAdWithBidPerCA(adWithBids);
+                                return new Pair<>(getBestAdWithBidPerCA(adWithBids),
+                                        buyerDecisionLogicJs);
                             },
                             mExecutor);
         } catch (JSONException e) {

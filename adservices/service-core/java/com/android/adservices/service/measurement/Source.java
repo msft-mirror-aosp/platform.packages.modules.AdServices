@@ -19,17 +19,29 @@ package com.android.adservices.service.measurement;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
 import com.android.adservices.service.measurement.attribution.Combinatorics;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -42,9 +54,9 @@ public class Source {
 
     private String mId;
     private long mEventId;
-    private Uri mAttributionSource;
+    private Uri mPublisher;
     private Uri mAttributionDestination;
-    private Uri mReportTo;
+    private Uri mAdTechDomain;
     private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
@@ -56,6 +68,9 @@ public class Source {
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
     private boolean mIsInstallAttributed;
+    private String mAggregateFilterData;
+    private String mAggregateSource;
+    private AggregatableAttributionSource mAggregatableAttributionSource;
 
     @IntDef(value = {
             Status.ACTIVE,
@@ -143,7 +158,8 @@ public class Source {
                 mExpiryTime + ONE_HOUR_IN_MILLIS;
     }
 
-    private int getReportingWindowCount() {
+    @VisibleForTesting
+    int getReportingWindowCount() {
         // Early Count + expiry
         return getEarlyReportingWindows().size() + 1;
     }
@@ -197,9 +213,9 @@ public class Source {
         }
         Source source = (Source) obj;
         return Objects.equals(mId, source.mId)
-                && Objects.equals(mAttributionSource, source.mAttributionSource)
+                && Objects.equals(mPublisher, source.mPublisher)
                 && Objects.equals(mAttributionDestination, source.mAttributionDestination)
-                && Objects.equals(mReportTo, source.mReportTo)
+                && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
@@ -207,13 +223,19 @@ public class Source {
                 && mEventId == source.mEventId
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
-                && Objects.equals(mRegistrant, source.mRegistrant);
+                && Objects.equals(mRegistrant, source.mRegistrant)
+                && mAttributionMode == source.mAttributionMode
+                && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
+                && Objects.equals(mAggregateSource, source.mAggregateSource)
+                && Objects.equals(mAggregatableAttributionSource,
+                source.mAggregatableAttributionSource);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionSource, mAttributionDestination, mReportTo, mPriority,
-                mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys);
+        return Objects.hash(mId, mPublisher, mAttributionDestination, mAdTechDomain, mPriority,
+                mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys,
+                mAggregateFilterData, mAggregateSource, mAggregatableAttributionSource);
     }
 
     /**
@@ -233,6 +255,11 @@ public class Source {
             }
         }
         return mExpiryTime + ONE_HOUR_IN_MILLIS;
+    }
+
+    @VisibleForTesting
+    void setAttributionMode(@AttributionMode int attributionMode) {
+        mAttributionMode = attributionMode;
     }
 
     /**
@@ -304,17 +331,17 @@ public class Source {
     }
 
     /**
-     * Reporting destination for the generated reports.
+     * AdTech reporting destination domain for generated reports.
      */
-    public Uri getReportTo() {
-        return mReportTo;
+    public Uri getAdTechDomain() {
+        return mAdTechDomain;
     }
 
     /**
      * Uri which registered the {@link Source}.
      */
-    public Uri getAttributionSource() {
-        return mAttributionSource;
+    public Uri getPublisher() {
+        return mPublisher;
     }
 
     /**
@@ -395,6 +422,52 @@ public class Source {
     }
 
     /**
+     * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
+     * JSONObject in Attribution-Reporting-Register-Source header.
+     * Example:
+     * Attribution-Reporting-Register-Source: {
+     *   // some other fields.
+     *   "filter_data" : {
+     *    "conversion_subdomain": ["electronics.megastore"],
+     *    "product": ["1234", "2345"],
+     *    "ctid": ["id"],
+     *    ......
+     * }
+     * }
+     */
+    public String getAggregateFilterData() {
+        return mAggregateFilterData;
+    }
+
+    /**
+     * Returns aggregate source string used for aggregation. aggregate source json is a JSONArray.
+     * Example:
+     * [{
+     *   // Generates a "0x159" key piece (low order bits of the key) named
+     *   // "campaignCounts"
+     *   "id": "campaignCounts",
+     *   "key_piece": "0x159", // User saw ad from campaign 345 (out of 511)
+     * },
+     * {
+     *   // Generates a "0x5" key piece (low order bits of the key) named "geoValue"
+     *   "id": "geoValue",
+     *   // Source-side geo region = 5 (US), out of a possible ~100 regions.
+     *   "key_piece": "0x5",
+     * }]
+     */
+    public String getAggregateSource() {
+        return mAggregateSource;
+    }
+
+    /**
+     * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
+     * source string and aggregate filter data string in Source.
+     */
+    public AggregatableAttributionSource getAggregatableAttributionSource() {
+        return mAggregatableAttributionSource;
+    }
+
+    /**
      * Set app install attribution to the {@link Source}.
      */
     public void setInstallAttributed(boolean isInstallAttributed) {
@@ -406,6 +479,40 @@ public class Source {
      */
     public void setStatus(@Status int status) {
         mStatus = status;
+    }
+
+    /**
+     * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
+     * data string in Source.
+     */
+    public Optional<AggregatableAttributionSource> parseAggregateSource()
+            throws JSONException, NumberFormatException {
+        if (this.mAggregateSource == null) {
+            return Optional.empty();
+        }
+        JSONArray jsonArray = new JSONArray(this.mAggregateSource);
+        Map<String, AttributionAggregatableKey> aggregateSourceMap = new HashMap<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            String id = jsonObject.getString("id");
+            String hexString = jsonObject.getString("key_piece");
+            if (hexString.startsWith("0x")) {
+                hexString = hexString.substring(2);
+            }
+            BigInteger bigInteger = new BigInteger(hexString, 16);
+            BigInteger divisor = BigDecimal.valueOf(Math.pow(2, 63)).toBigInteger();
+            aggregateSourceMap.put(id,
+                    new AttributionAggregatableKey.Builder()
+                            .setHighBits(bigInteger.divide(divisor).longValue())
+                            .setLowBits(bigInteger.mod(divisor).longValue())
+                            .build());
+        }
+        return Optional.of(new AggregatableAttributionSource.Builder()
+                .setAggregatableSource(aggregateSourceMap)
+                .setAggregateFilterData(
+                        new AggregateFilterData.Builder().buildAggregateFilterData(
+                                new JSONObject(this.mAggregateFilterData)).build())
+                .build());
     }
 
     /**
@@ -434,10 +541,10 @@ public class Source {
         }
 
         /**
-         * See {@link Source#getAttributionSource()}.
+         * See {@link Source#getPublisher()}.
          */
-        public Builder setAttributionSource(Uri attributionSource) {
-            mBuilding.mAttributionSource = attributionSource;
+        public Builder setPublisher(Uri publisher) {
+            mBuilding.mPublisher = publisher;
             return this;
         }
 
@@ -451,10 +558,10 @@ public class Source {
         }
 
         /**
-         * See {@link Source#getReportTo()}.
+         * See {@link Source#getAdTechDomain()} ()}.
          */
-        public Builder setReportTo(Uri reportTo) {
-            mBuilding.mReportTo = reportTo;
+        public Builder setAdTechDomain(Uri adTechDomain) {
+            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
@@ -543,6 +650,31 @@ public class Source {
          */
         public Builder setInstallAttributed(boolean installAttributed) {
             mBuilding.mIsInstallAttributed = installAttributed;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregateFilterData()}.
+         */
+        public Builder setAggregateFilterData(String aggregateFilterData) {
+            mBuilding.mAggregateFilterData = aggregateFilterData;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregateSource()}
+         */
+        public Builder setAggregateSource(String aggregateSource) {
+            mBuilding.mAggregateSource = aggregateSource;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregatableAttributionSource()}
+         */
+        public Builder setAggregatableAttributionSource(
+                AggregatableAttributionSource aggregatableAttributionSource) {
+            mBuilding.mAggregatableAttributionSource = aggregatableAttributionSource;
             return this;
         }
 
