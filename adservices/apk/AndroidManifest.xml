@@ -105,6 +105,15 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.android.adservices.common.AdServicesCommonService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false"
+             >
+            <intent-filter>
+                <action android:name="android.adservices.AD_SERVICES_COMMON_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <!-- Daily maintenance Job. -->
         <service android:name="com.android.adservices.service.MaintenanceJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
