@@ -274,8 +274,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_TRIGGER,
                             CREATE_TABLE_ADTECH_URLS,
                             CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
-                            CREATE_TABLE_AGGREGATE_PAYLOAD));
+                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {
