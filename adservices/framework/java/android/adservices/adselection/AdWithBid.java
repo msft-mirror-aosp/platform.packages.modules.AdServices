@@ -31,7 +31,6 @@ import java.util.Objects;
  * selection.
  *
  * Hiding for future implementation and review for public exposure.
- * @hide
  */
 public final class AdWithBid implements Parcelable {
     @NonNull

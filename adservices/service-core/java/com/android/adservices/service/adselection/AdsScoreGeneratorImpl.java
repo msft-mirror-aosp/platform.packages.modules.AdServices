@@ -22,6 +22,8 @@ import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.net.Uri;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FluentFuture;
@@ -100,7 +102,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull final AdSelectionConfig adSelectionConfig) throws AdServicesException {
         final String sellerSignals = adSelectionConfig.getSellerSignals();
         final String trustedScoringSignals = adSelectionConfig.getAdSelectionSignals();
-        final String contextualSignals = adSelectionConfig.getSeller();
+        final String contextualSignals = getContextualSignals();
 
         try {
             ListenableFuture<List<Double>> adScores = mAdSelectionScriptEngine.scoreAds(
@@ -119,6 +121,12 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         } catch (JSONException e) {
             throw new AdServicesException("Invalid results obtained from Ad Scoring");
         }
+    }
+
+    @VisibleForTesting
+    String getContextualSignals() {
+        // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
+        return "{}";
     }
 
     private String getTrustedScoringSignals(

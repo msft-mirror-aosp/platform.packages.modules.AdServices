@@ -20,8 +20,7 @@ import android.annotation.NonNull;
 
 import java.util.Objects;
 
-/**
- * This POJO represents the overrideAdSelectionConfigRemoteInfo request
+/** This POJO represents the overrideAdSelectionConfigRemoteInfo request
  *
  * @hide
  */
@@ -35,7 +34,6 @@ public class AddAdSelectionOverrideRequest {
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
     }
-
 
     /**
      * @return AdSelectionConfig, the configuration of the ad selection process.
@@ -62,7 +60,8 @@ public class AddAdSelectionOverrideRequest {
 
         /** Set the override decision logic javascript. */
         @NonNull
-        public AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(String decisionLogicJs) {
+        public AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(
+                @NonNull String decisionLogicJs) {
             Objects.requireNonNull(decisionLogicJs);
 
             this.mDecisionLogicJs = decisionLogicJs;
