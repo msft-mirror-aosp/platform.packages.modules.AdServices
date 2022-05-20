@@ -19,7 +19,7 @@ package {
 android_test_helper_app {
     name: "CodeProviderWithResources",
     defaults: ["platform_app_defaults"],
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     srcs: [
        "src/**/*.java",
     ],

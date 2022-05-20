@@ -32,9 +32,9 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * AdSelection Manager.
+ * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
+ * as report impressions.
  *
- * @hide
  */
 public class AdSelectionManager {
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
@@ -69,7 +69,7 @@ public class AdSelectionManager {
     private AdSelectionService getService() {
         AdSelectionService service = mServiceBinder.getService();
         if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
+            throw new IllegalStateException("Unable to find the ad selection service");
         }
         return service;
     }
@@ -79,10 +79,12 @@ public class AdSelectionManager {
      * input {@code adSelectionConfig} is provided by the Ads SDK. The receiver either returns an
      * {@link AdSelectionOutcome} for a successful run, or an {@link AdServicesException} indicates
      * the error.
+     *
+     * @hide
      */
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull @CallbackExecutor Executor executor,
+            @NonNull Executor executor,
             @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(executor);
@@ -121,25 +123,25 @@ public class AdSelectionManager {
     }
 
     /**
-     * Report the given impression. The {@link ReportImpressionInput} is provided by the Ads SDK.
+     * Report the given impression. The {@link ReportImpressionRequest} is provided by the Ads SDK.
      * The receiver either returns a {@code void} for a successful run, or an {@link
      * AdServicesException} indicates the error.
      */
     @NonNull
     public void reportImpression(
-            @NonNull ReportImpressionInput input,
-            @NonNull @CallbackExecutor Executor executor,
+            @NonNull ReportImpressionRequest request,
+            @NonNull Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(input);
+        Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final AdSelectionService service = getService();
             service.reportImpression(
-                    new ReportImpressionRequest.Builder()
-                            .setAdSelectionId(input.getAdSelectionId())
-                            .setAdSelectionConfig(input.getAdSelectionConfig())
+                    new ReportImpressionInput.Builder()
+                            .setAdSelectionId(request.getAdSelectionId())
+                            .setAdSelectionConfig(request.getAdSelectionConfig())
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override
@@ -169,6 +171,8 @@ public class AdSelectionManager {
      * provided in {@link AddAdSelectionOverrideRequest} instead. The {@link
      * AddAdSelectionOverrideRequest} is provided by the Ads SDK. The receiver either returns a
      * {@code void} for a successful run, or an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void overrideAdSelectionConfigRemoteInfo(
@@ -212,6 +216,8 @@ public class AdSelectionManager {
      * RemoveAdSelectionOverrideRequest}. The {@link RemoveAdSelectionOverrideRequest} is provided
      * by the Ads SDK. The receiver either returns a {@code void} for a successful run, or an {@link
      * AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void removeAdSelectionConfigRemoteInfoOverride(
@@ -252,6 +258,8 @@ public class AdSelectionManager {
     /**
      * Removes all override data in the Ad Selection API. The receiver either returns a {@code void}
      * for a successful run, or an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void resetAllAdSelectionConfigRemoteOverrides(

@@ -34,7 +34,7 @@ import java.util.Collection;
  * set variables that change from test to test (hence the name, "dynamic").
  */
 @RunWith(Parameterized.class)
-public class DeleteExpiredDynamicE2ETest extends DatabaseE2ETest {
+public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTest {
     private final DatastoreManager mDatastoreManager;
 
     @Parameterized.Parameters(name = "{2}")
@@ -42,16 +42,16 @@ public class DeleteExpiredDynamicE2ETest extends DatabaseE2ETest {
         InputStream inputStream = sContext.getAssets().open(
                 "measurement_delete_expired_test.json");
         Collection<Object[]> testCases =
-                DatabaseE2ETest.getTestCasesFrom(inputStream, null);
+                AbstractDbIntegrationTest.getTestCasesFrom(inputStream, null);
 
         // Add a non-expired Source.
         long insideExpiredWindow = System.currentTimeMillis()
                 - MEASUREMENT_DELETE_EXPIRED_WINDOW_MS / 2;
 
         Source source = new Source.Builder()
-                .setReportTo(Uri.parse("https://example.com/rT"))
+                .setAdTechDomain(Uri.parse("https://example.com"))
                 .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                .setAttributionSource(Uri.parse("https://example.com/aS"))
+                .setPublisher(Uri.parse("https://example.com/aS"))
                 .setId("non-expired")
                 .setEventId(2L)
                 .setPriority(3L)
@@ -73,7 +73,7 @@ public class DeleteExpiredDynamicE2ETest extends DatabaseE2ETest {
 
     // The 'name' parameter is needed for the JUnit parameterized
     // test, although it's ostensibly unused by this constructor.
-    public DeleteExpiredDynamicE2ETest(DbState input, DbState output, String name) {
+    public DeleteExpiredDynamicIntegrationTest(DbState input, DbState output, String name) {
         super(input, output);
         this.mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
     }

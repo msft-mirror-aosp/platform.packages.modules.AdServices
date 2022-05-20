@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
  */
 public class AdSelectionScriptEngine {
 
-    private static final String TAG = "AdSelectionScriptEngine";
+    private static final String TAG = AdSelectionScriptEngine.class.getName();
 
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String FUNCTION_NAMES_ARG_NAME = "__rb_functionNames";
@@ -241,8 +241,7 @@ public class AdSelectionScriptEngine {
                 }
                 return result.build();
             } catch (IllegalArgumentException e) {
-                LogUtil.w(
-                        "Invalid ad with bid returned by a generateBid script %s. Returning"
+                LogUtil.w("Invalid ad with bid returned by a generateBid script %s. Returning"
                                 + " empty list of ad with bids.",
                         e);
                 return ImmutableList.of();

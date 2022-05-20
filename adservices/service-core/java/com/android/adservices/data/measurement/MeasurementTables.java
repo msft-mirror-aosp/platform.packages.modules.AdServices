@@ -34,9 +34,7 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "source";
         String ID = "_id";
         String EVENT_ID = "event_id";
-        String ATTRIBUTION_SOURCE = "attribution_source";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
-        String REPORT_TO = "report_to";
         String DEDUP_KEYS = "dedup_keys";
         String EVENT_TIME = "event_time";
         String EXPIRY_TIME = "expiry_time";
@@ -48,8 +46,17 @@ public final class MeasurementTables {
         String INSTALL_ATTRIBUTION_WINDOW = "install_attribution_window";
         String INSTALL_COOLDOWN_WINDOW = "install_cooldown_window";
         String IS_INSTALL_ATTRIBUTED = "is_install_attributed";
+        String PUBLISHER = "publisher";
+        String AD_TECH_DOMAIN = "ad_tech_domain";
         String FILTER_DATA = "filter_data";
         String AGGREGATE_SOURCE = "aggregate_source";
+
+        /** @deprecated replaced by PUBLISHER */
+        @Deprecated
+        String DEPRECATED_ATTRIBUTION_SOURCE = "attribution_source";
+        /** @deprecated replaced by AD_TECH_DOMAIN */
+        @Deprecated
+        String DEPRECATED_REPORT_TO = "report_to";
     }
 
     /**
@@ -59,15 +66,23 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "trigger";
         String ID = "_id";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
-        String REPORT_TO = "report_to";
         String TRIGGER_TIME = "trigger_time";
-        String EVENT_TRIGGER_DATA = "event_trigger_data";
         String DEDUP_KEY = "deduplication_key";
         String PRIORITY = "priority";
         String STATUS = "status";
         String REGISTRANT = "registrant";
+        String AD_TECH_DOMAIN = "ad_tech_domain";
+        String EVENT_TRIGGER_DATA = "event_trigger_data";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
+
+        /** @deprecated replaced by AD_TECH_DOMAIN */
+        @Deprecated
+        String DEPRECATED_REPORT_TO = "report_to";
+
+        /** @deprecated replaced by EVENT_TRIGGER_DATA */
+        @Deprecated
+        String DEPRECATED_TRIGGER_DATA = "trigger_data";
     }
 
     interface AdTechUrlsContract {
@@ -83,7 +98,6 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "event_report";
         String ID = "_id";
         String SOURCE_ID = "source_id";
-        String REPORT_TO = "report_to";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String REPORT_TIME = "report_time";
         String TRIGGER_DATA = "trigger_data";
@@ -92,6 +106,11 @@ public final class MeasurementTables {
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
+        String AD_TECH_DOMAIN = "ad_tech_domain";
+
+        /** @deprecated replaced by AD_TECH_DOMAIN */
+        @Deprecated
+        String DEPRECATED_REPORT_TO = "report_to";
     }
 
     /**
@@ -102,10 +121,30 @@ public final class MeasurementTables {
         String ID = "_id";
         String SOURCE_SITE = "source_site";
         String DESTINATION_SITE = "attribution_destination_site";
-        // TODO: Revisit this column to handle multiple reporting endpoints per AdTech.
-        String REPORT_TO = "report_to";
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
+        String AD_TECH_DOMAIN = "ad_tech_domain";
+
+        /** @deprecated replaced by AD_TECH_DOMAIN */
+        @Deprecated
+        String DEPRECATED_REPORT_TO = "report_to";
+
+    }
+
+    /**
+     * Contract for Unencrypted aggregate payload.
+     */
+    interface AggregateReport {
+        String TABLE = MSMT_TABLE_PREFIX + "aggregate_report";
+        String ID = "_id";
+        String SOURCE_SITE = "source_site";
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SOURCE_REGISTRATION_TIME = "source_registration_time";
+        String SCHEDULED_REPORT_TIME = "scheduled_report_time";
+        String PRIVACY_BUDGET_KEY = "privacy_budget_key";
+        String REPORTING_ORIGIN = "reporting_origin";
+        String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
+        String STATUS = "status";
     }
 
     public static final String CREATE_TABLE_SOURCE =
@@ -114,9 +153,9 @@ public final class MeasurementTables {
                     + " ("
                     + SourceContract.ID + " TEXT PRIMARY KEY NOT NULL, "
                     + SourceContract.EVENT_ID + " INTEGER, "
-                    + SourceContract.ATTRIBUTION_SOURCE + " TEXT, "
+                    + SourceContract.DEPRECATED_ATTRIBUTION_SOURCE + " TEXT, "
                     + SourceContract.ATTRIBUTION_DESTINATION + " TEXT, "
-                    + SourceContract.REPORT_TO + " TEXT, "
+                    + SourceContract.DEPRECATED_REPORT_TO + " TEXT, "
                     + SourceContract.EVENT_TIME + " INTEGER, "
                     + SourceContract.EXPIRY_TIME + " INTEGER, "
                     + SourceContract.PRIORITY + " INTEGER, "
@@ -127,9 +166,7 @@ public final class MeasurementTables {
                     + SourceContract.ATTRIBUTION_MODE + " INTEGER, "
                     + SourceContract.INSTALL_ATTRIBUTION_WINDOW + " INTEGER, "
                     + SourceContract.INSTALL_COOLDOWN_WINDOW + " INTEGER, "
-                    + SourceContract.IS_INSTALL_ATTRIBUTED + " INTEGER, "
-                    + SourceContract.FILTER_DATA + " TEXT, "
-                    + SourceContract.AGGREGATE_SOURCE + " TEXT "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_TRIGGER =
@@ -138,15 +175,13 @@ public final class MeasurementTables {
                     + " ("
                     + TriggerContract.ID + " TEXT PRIMARY KEY NOT NULL, "
                     + TriggerContract.ATTRIBUTION_DESTINATION + " TEXT, "
-                    + TriggerContract.REPORT_TO + " TEXT, "
+                    + TriggerContract.DEPRECATED_REPORT_TO + " TEXT, "
                     + TriggerContract.TRIGGER_TIME + " INTEGER, "
-                    + TriggerContract.EVENT_TRIGGER_DATA + " INTEGER, "
+                    + TriggerContract.DEPRECATED_TRIGGER_DATA + " INTEGER, "
                     + TriggerContract.PRIORITY + " INTEGER, "
                     + TriggerContract.DEDUP_KEY + " TEXT, "
                     + TriggerContract.STATUS + " INTEGER, "
-                    + TriggerContract.REGISTRANT + " TEXT, "
-                    + TriggerContract.AGGREGATE_TRIGGER_DATA + " TEXT, "
-                    + TriggerContract.AGGREGATE_VALUES + " TEXT "
+                    + TriggerContract.REGISTRANT + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_ADTECH_URLS =
@@ -163,7 +198,7 @@ public final class MeasurementTables {
                     + " ("
                     + EventReportContract.ID + " TEXT PRIMARY KEY NOT NULL, "
                     + EventReportContract.SOURCE_ID + " INTEGER, "
-                    + EventReportContract.REPORT_TO + " TEXT, "
+                    + EventReportContract.DEPRECATED_REPORT_TO + " TEXT, "
                     + EventReportContract.ATTRIBUTION_DESTINATION + " TEXT, "
                     + EventReportContract.REPORT_TIME + " INTEGER, "
                     + EventReportContract.TRIGGER_DATA + " INTEGER, "
@@ -181,23 +216,38 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.ID + " TEXT PRIMARY KEY NOT NULL, "
                     + AttributionRateLimitContract.SOURCE_SITE + " TEXT, "
                     + AttributionRateLimitContract.DESTINATION_SITE + " TEXT, "
-                    + AttributionRateLimitContract.REPORT_TO + " TEXT, "
+                    + AttributionRateLimitContract.DEPRECATED_REPORT_TO + " TEXT, "
                     + AttributionRateLimitContract.TRIGGER_TIME + " INTEGER, "
                     + AttributionRateLimitContract.REGISTRANT + " TEXT "
                     + ")";
 
-    public static final String[] CREATE_INDICES = {
+    public static final String CREATE_TABLE_AGGREGATE_PAYLOAD =
+            "CREATE TABLE "
+                    + AggregateReport.TABLE
+                    + " ("
+                    + AggregateReport.ID + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateReport.SOURCE_SITE + " TEXT, "
+                    + AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
+                    + AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
+                    + AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
+                    + AggregateReport.PRIVACY_BUDGET_KEY + " TEXT, "
+                    + AggregateReport.REPORTING_ORIGIN + " TEXT, "
+                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
+                    + SourceContract.STATUS + " INTEGER "
+                    + ")";
+
+    public static final String[] CREATE_INDEXES = {
             "CREATE INDEX "
                     + INDEX_PREFIX + SourceContract.TABLE + "_ad_rt_et " + "ON "
                     + SourceContract.TABLE + "( "
                     + SourceContract.ATTRIBUTION_DESTINATION + ", "
-                    + SourceContract.REPORT_TO + ", "
+                    + SourceContract.DEPRECATED_REPORT_TO + ", "
                     + SourceContract.EXPIRY_TIME + " DESC " + ")",
             "CREATE INDEX "
                     + INDEX_PREFIX + TriggerContract.TABLE + "_ad_rt_tt " + "ON "
                     + TriggerContract.TABLE + "( "
                     + TriggerContract.ATTRIBUTION_DESTINATION + ", "
-                    + TriggerContract.REPORT_TO + ", "
+                    + TriggerContract.DEPRECATED_REPORT_TO + ", "
                     + TriggerContract.TRIGGER_TIME + " ASC)",
             "CREATE INDEX "
                     + INDEX_PREFIX + SourceContract.TABLE + "_et " + "ON "
@@ -212,7 +262,7 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.TABLE + "("
                     + AttributionRateLimitContract.SOURCE_SITE + ", "
                     + AttributionRateLimitContract.DESTINATION_SITE + ", "
-                    + AttributionRateLimitContract.REPORT_TO + ", "
+                    + AttributionRateLimitContract.DEPRECATED_REPORT_TO + ", "
                     + AttributionRateLimitContract.TRIGGER_TIME + ")"
     };
 
@@ -224,7 +274,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_TRIGGER,
                             CREATE_TABLE_ADTECH_URLS,
                             CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT));
+                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
+                            CREATE_TABLE_AGGREGATE_PAYLOAD));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

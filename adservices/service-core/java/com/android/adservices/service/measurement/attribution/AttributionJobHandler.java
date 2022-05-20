@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import android.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -27,16 +28,27 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
+import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
+import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
     private final DatastoreManager mDatastoreManager;
+    private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
+    private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
@@ -114,105 +126,190 @@ class AttributionJobHandler {
             if (trigger.getStatus() != Trigger.Status.PENDING) {
                 return;
             }
-            List<Source> matchingSources = measurementDao.getMatchingActiveSources(trigger);
-
-            if (matchingSources.isEmpty()) {
-                trigger.setStatus(Trigger.Status.IGNORED);
-                measurementDao.updateTriggerStatus(trigger);
+            Optional<Source> sourceOpt = getMatchingSource(trigger, measurementDao);
+            if (sourceOpt.isEmpty()) {
+                ignoreTrigger(trigger, measurementDao);
                 return;
             }
+            Source source = sourceOpt.get();
 
-            // Sort based on isInstallAttributed, Priority and Event Time.
-            matchingSources.sort(
-                    Comparator.comparing(
-                            (Source source) ->
-                                    // Is a valid install-attributed source.
-                                    source.isInstallAttributed()
-                                            && isWithinInstallCooldownWindow(source,
-                                            trigger),
-                                    Comparator.reverseOrder())
-                            .thenComparing(Source::getPriority, Comparator.reverseOrder())
-                            .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
-
-            Source selectedSource = matchingSources.get(0);
-            matchingSources.remove(0);
-            if (!matchingSources.isEmpty()) {
-                matchingSources.forEach((s) -> s.setStatus(Source.Status.IGNORED));
-                measurementDao.updateSourceStatus(matchingSources, Source.Status.IGNORED);
-            }
-
-            // Do not generate event reports for source which have attributionMode != Truthfully.
-            // TODO: Handle attribution rate limit consideration for non-truthful cases.
-            if (selectedSource.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+            if (!hasAttributionQuota(source, trigger, measurementDao)) {
                 ignoreTrigger(trigger, measurementDao);
                 return;
             }
 
-            if (trigger.getDedupKey() != null
-                    && selectedSource.getDedupKeys().contains(trigger.getDedupKey())) {
+            boolean aggregateReportGenerated =
+                    maybeGenerateAggregateReport(source, trigger, measurementDao);
+
+            boolean eventReportGenerated =
+                    maybeGenerateEventReport(source, trigger, measurementDao);
+
+            if (eventReportGenerated || aggregateReportGenerated) {
+                attributeTriggerAndIncrementRateLimit(trigger, source, measurementDao);
+            } else {
                 ignoreTrigger(trigger, measurementDao);
-                return;
             }
-            long attributionCount =
-                    measurementDao.getAttributionsPerRateLimitWindow(selectedSource, trigger);
-
-            if (attributionCount
-                    >= PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW) {
-                ignoreTrigger(trigger, measurementDao);
-                return;
-            }
-
-            EventReport newEventReport = new EventReport.Builder()
-                    .populateFromSourceAndTrigger(selectedSource, trigger).build();
-
-            List<EventReport> sourceEventReports =
-                    measurementDao.getSourceEventReports(selectedSource);
-
-            if (isWithinReportLimit(selectedSource, sourceEventReports.size())) {
-                completeAttribution(trigger, selectedSource, newEventReport, measurementDao);
-                return;
-            }
-
-            List<EventReport> relevantEventReports = sourceEventReports.stream()
-                    .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
-                    .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
-                    .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)
-                            .thenComparing(EventReport::getTriggerTime, Comparator.reverseOrder()))
-                    .collect(Collectors.toList());
-            if (relevantEventReports.isEmpty()) {
-                ignoreTrigger(trigger, measurementDao);
-                return;
-            }
-            EventReport lowestPriorityEventReport = relevantEventReports.get(0);
-            if (lowestPriorityEventReport.getTriggerPriority()
-                    >= newEventReport.getTriggerPriority()) {
-                trigger.setStatus(Trigger.Status.IGNORED);
-                measurementDao.updateTriggerStatus(trigger);
-                return;
-            }
-            selectedSource.getDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
-            measurementDao.deleteEventReport(lowestPriorityEventReport);
-            completeAttribution(trigger, selectedSource, newEventReport, measurementDao);
         });
     }
 
-    private void completeAttribution(Trigger trigger, Source source, EventReport report,
-            IMeasurementDao measurementDao)
+    private boolean maybeGenerateAggregateReport(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        try {
+            Optional<AggregatableAttributionSource> aggregateAttributionSource =
+                    source.parseAggregateSource();
+            Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
+                    trigger.parseAggregateTrigger();
+            if (aggregateAttributionSource.isPresent() && aggregateAttributionTrigger.isPresent()) {
+                Optional<List<AggregateHistogramContribution>> contributions =
+                        AggregatePayloadGenerator.generateAttributionReport(
+                                aggregateAttributionSource.get(),
+                                aggregateAttributionTrigger.get());
+                if (contributions.isPresent()) {
+                    long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
+                            + MIN_TIME_MS);
+                    CleartextAggregatePayload aggregateReport =
+                            new CleartextAggregatePayload.Builder()
+                                    .setSourceSite(source.getRegistrant())
+                                    .setAttributionDestination(source.getAttributionDestination())
+                                    .setSourceRegistrationTime(source.getEventTime())
+                                    .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
+                                    .setReportingOrigin(source.getAdTechDomain())
+                                    .setDebugCleartextPayload(
+                                            CleartextAggregatePayload.generateDebugPayload(
+                                                    contributions.get()))
+                                    .setAggregateAttributionData(
+                                            new AggregateAttributionData.Builder()
+                                                    .setContributions(contributions.get()).build())
+                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
+
+                    measurementDao.insertAggregateReport(aggregateReport);
+                    // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
+                    return true;
+                }
+            }
+        } catch (JSONException e) {
+            LogUtil.e("JSONException when parse aggregate fields in AttributionJobHandler.");
+            return false;
+        }
+        return false;
+    }
+
+    private Optional<Source> getMatchingSource(Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        List<Source> matchingSources = measurementDao.getMatchingActiveSources(trigger);
+
+        if (matchingSources.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // Sort based on isInstallAttributed, Priority and Event Time.
+        matchingSources.sort(
+                Comparator.comparing(
+                        (Source source) ->
+                            // Is a valid install-attributed source.
+                            source.isInstallAttributed()
+                                    && isWithinInstallCooldownWindow(source,
+                                    trigger),
+                            Comparator.reverseOrder())
+                        .thenComparing(Source::getPriority, Comparator.reverseOrder())
+                        .thenComparing(Source::getEventTime, Comparator.reverseOrder()));
+
+        Source selectedSource = matchingSources.get(0);
+        matchingSources.remove(0);
+        if (!matchingSources.isEmpty()) {
+            matchingSources.forEach((s) -> s.setStatus(Source.Status.IGNORED));
+            measurementDao.updateSourceStatus(matchingSources, Source.Status.IGNORED);
+        }
+        return Optional.of(selectedSource);
+    }
+
+    private boolean maybeGenerateEventReport(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        // Do not generate event reports for source which have attributionMode != Truthfully.
+        // TODO: Handle attribution rate limit consideration for non-truthful cases.
+        if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+            return false;
+        }
+        // Check if deduplication key clashes with existing reports.
+        if (trigger.getDedupKey() != null
+                && source.getDedupKeys().contains(trigger.getDedupKey())) {
+            return false;
+        }
+
+        EventReport newEventReport = new EventReport.Builder()
+                .populateFromSourceAndTrigger(source, trigger).build();
+
+        if (!provisionEventReportQuota(source, newEventReport, measurementDao)) {
+            return false;
+        }
+
+        finalizeEventReportCreation(source, trigger, newEventReport, measurementDao);
+        return true;
+    }
+
+    private boolean provisionEventReportQuota(Source source,
+            EventReport newEventReport, IMeasurementDao measurementDao) throws DatastoreException {
+        List<EventReport> sourceEventReports =
+                measurementDao.getSourceEventReports(source);
+
+        if (isWithinReportLimit(source, sourceEventReports.size())) {
+            return true;
+        }
+
+        List<EventReport> relevantEventReports = sourceEventReports.stream()
+                .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
+                .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
+                .sorted(Comparator.comparingLong(EventReport::getTriggerPriority)
+                        .thenComparing(EventReport::getTriggerTime, Comparator.reverseOrder()))
+                .collect(Collectors.toList());
+
+        if (relevantEventReports.isEmpty()) {
+            return false;
+        }
+
+        EventReport lowestPriorityEventReport = relevantEventReports.get(0);
+        if (lowestPriorityEventReport.getTriggerPriority()
+                >= newEventReport.getTriggerPriority()) {
+            return false;
+        }
+
+        if (lowestPriorityEventReport.getTriggerDedupKey() != null) {
+            source.getDedupKeys().remove(lowestPriorityEventReport.getTriggerDedupKey());
+        }
+        measurementDao.deleteEventReport(lowestPriorityEventReport);
+        return true;
+    }
+
+    private void finalizeEventReportCreation(
+            Source source, Trigger trigger, EventReport eventReport, IMeasurementDao measurementDao)
+            throws DatastoreException {
         if (trigger.getDedupKey() != null) {
             source.getDedupKeys().add(trigger.getDedupKey());
         }
-        measurementDao.insertAttributionRateLimit(source, trigger);
-        measurementDao.updateTriggerStatus(trigger);
         measurementDao.updateSourceDedupKeys(source);
-        measurementDao.insertEventReport(report);
+
+        measurementDao.insertEventReport(eventReport);
+    }
+
+    private void attributeTriggerAndIncrementRateLimit(Trigger trigger, Source source,
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
+        trigger.setStatus(Trigger.Status.ATTRIBUTED);
+        measurementDao.updateTriggerStatus(trigger);
+        measurementDao.insertAttributionRateLimit(source, trigger);
     }
 
     private void ignoreTrigger(Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         trigger.setStatus(Trigger.Status.IGNORED);
         measurementDao.updateTriggerStatus(trigger);
+    }
+
+    private boolean hasAttributionQuota(Source source, Trigger trigger,
+            IMeasurementDao measurementDao) throws DatastoreException {
+        long attributionCount =
+                measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+        return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
     private boolean isWithinReportLimit(Source source, int existingReportCount) {
