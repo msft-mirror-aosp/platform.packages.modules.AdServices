@@ -44,7 +44,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mPendingAggregateReportDeadlineReached1 =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("https://source.site"))
+                    .setPublisher(Uri.parse("https://source.site"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR1")
                     .setScheduledReportTime(mScheduledReportTimeMs)
@@ -59,7 +59,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mDeliveredAggregateReport =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("https://source.site"))
+                    .setPublisher(Uri.parse("https://source.site"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR2")
                     .setScheduledReportTime(mScheduledReportTimeMs)
@@ -74,7 +74,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mPendingAggregateReportDeadlineReached2 =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("https://source.site"))
+                    .setPublisher(Uri.parse("https://source.site"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR10")
                     .setScheduledReportTime(mScheduledReportTimeMs - 1000)
@@ -89,7 +89,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mPendingAggregateReportDeadlineNotReached1 =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("https://source.site"))
+                    .setPublisher(Uri.parse("https://source.site"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR11")
                     .setScheduledReportTime(mScheduledReportTimeMs + 20)
@@ -104,7 +104,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mPendingAggregateReportOutsideWindow =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("https://source.site"))
+                    .setPublisher(Uri.parse("https://source.site"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR12")
                     .setScheduledReportTime(mScheduledReportTimeMs
@@ -120,7 +120,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mPendingAggregateReportFromSpecificSource1 =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("android-app://source.app1"))
+                    .setPublisher(Uri.parse("android-app://source.app1"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR100")
                     .setScheduledReportTime(mScheduledReportTimeMs
@@ -136,7 +136,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mPendingAggregateReportFromSpecificSource2 =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("android-app://source.app2"))
+                    .setPublisher(Uri.parse("android-app://source.app2"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR101")
                     .setScheduledReportTime(mScheduledReportTimeMs
@@ -152,7 +152,7 @@ public class AggregateReportingJobHandlerTest {
 
     private final CleartextAggregatePayload mDeliveredAggregateReportFromSpecificSource =
             new CleartextAggregatePayload.Builder()
-                    .setSourceSite(Uri.parse("android-app://source.app1"))
+                    .setPublisher(Uri.parse("android-app://source.app1"))
                     .setAttributionDestination(Uri.parse("https://attribution.destination"))
                     .setId("AR102")
                     .setScheduledReportTime(mScheduledReportTimeMs
@@ -418,14 +418,14 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(CleartextAggregatePayload.Status.DELIVERED,
                 createAggregateReportFromCursor(aggregateReportCursor).getStatus());
         Assert.assertEquals("android-app://source.app1",
-                createAggregateReportFromCursor(aggregateReportCursor).getSourceSite().toString());
+                createAggregateReportFromCursor(aggregateReportCursor).getPublisher().toString());
     }
 
 
     private ContentValues valuesFromReport(CleartextAggregatePayload aggregateReport) {
         ContentValues values = new ContentValues();
         values.put("_id", aggregateReport.getId());
-        values.put("source_site", aggregateReport.getSourceSite().toString());
+        values.put("publisher", aggregateReport.getPublisher().toString());
         values.put("attribution_destination",
                 aggregateReport.getAttributionDestination().toString());
         values.put("source_registration_time", aggregateReport.getSourceRegistrationTime());
@@ -448,8 +448,8 @@ public class AggregateReportingJobHandlerTest {
     private CleartextAggregatePayload createAggregateReportFromCursor(Cursor cursor) {
         return new CleartextAggregatePayload.Builder()
                 .setId(cursor.getString(cursor.getColumnIndex("_id")))
-                .setSourceSite(Uri.parse(
-                        cursor.getString(cursor.getColumnIndex("source_site"))))
+                .setPublisher(Uri.parse(
+                        cursor.getString(cursor.getColumnIndex("publisher"))))
                 .setAttributionDestination(Uri.parse(
                         cursor.getString(cursor.getColumnIndex("attribution_destination"))))
                 .setSourceRegistrationTime(
