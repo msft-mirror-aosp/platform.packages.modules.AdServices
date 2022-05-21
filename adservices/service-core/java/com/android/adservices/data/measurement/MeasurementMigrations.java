@@ -143,7 +143,10 @@ public final class MeasurementMigrations {
         return Stream.of(
                         DROP_INDEXES_VER_2,
                         ALTER_STATEMENTS_VER_2,
-                        CREATE_INDEXES_VER_2
+                        CREATE_INDEXES_VER_2,
+                        new String[] {
+                                MeasurementTables.CREATE_TABLE_AGGREGATE_PAYLOAD
+                        }
                 )
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
