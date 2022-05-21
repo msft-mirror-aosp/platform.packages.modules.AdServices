@@ -138,7 +138,7 @@ public final class MeasurementTables {
     interface AggregateReport {
         String TABLE = MSMT_TABLE_PREFIX + "aggregate_report";
         String ID = "_id";
-        String SOURCE_SITE = "source_site";
+        String PUBLISHER = "publisher";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
@@ -227,7 +227,7 @@ public final class MeasurementTables {
                     + AggregateReport.TABLE
                     + " ("
                     + AggregateReport.ID + " TEXT PRIMARY KEY NOT NULL, "
-                    + AggregateReport.SOURCE_SITE + " TEXT, "
+                    + AggregateReport.PUBLISHER + " TEXT, "
                     + AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
                     + AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
                     + AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "

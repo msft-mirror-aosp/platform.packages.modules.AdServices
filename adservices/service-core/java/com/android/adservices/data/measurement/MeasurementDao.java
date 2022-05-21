@@ -956,8 +956,8 @@ class MeasurementDao implements IMeasurementDao {
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, UUID.randomUUID().toString());
-        values.put(MeasurementTables.AggregateReport.SOURCE_SITE,
-                aggregateReport.getSourceSite().toString());
+        values.put(MeasurementTables.AggregateReport.PUBLISHER,
+                aggregateReport.getPublisher().toString());
         values.put(MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 aggregateReport.getAttributionDestination().toString());
         values.put(MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,

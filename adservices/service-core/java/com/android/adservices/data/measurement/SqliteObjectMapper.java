@@ -165,8 +165,8 @@ class SqliteObjectMapper {
         CleartextAggregatePayload.Builder builder = new CleartextAggregatePayload.Builder();
         setTextColumn(cursor, MeasurementTables.AggregateReport.ID,
                 builder::setId);
-        setUriColumn(cursor, MeasurementTables.AggregateReport.SOURCE_SITE,
-                builder::setSourceSite);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.PUBLISHER,
+                builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
