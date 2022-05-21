@@ -188,6 +188,8 @@ public class DbState {
                 .setReportTime(rJSON.getLong("reportTime"))
                 .setTriggerPriority(rJSON.getLong("triggerPriority"))
                 .setStatus(rJSON.getInt("status"))
+                .setRandomizedTriggerRate(rJSON.optDouble("randomizedTriggerRate",
+                        0.0D))
                 .setSourceType(
                 Source.SourceType.valueOf(rJSON.getString("sourceType").toUpperCase(
                         Locale.ENGLISH)))

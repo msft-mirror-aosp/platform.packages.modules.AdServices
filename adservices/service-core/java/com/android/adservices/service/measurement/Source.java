@@ -193,15 +193,6 @@ public class Source {
     }
 
     /**
-     * @return Random noise rate for {@link Trigger} metadata
-     */
-    public double getTriggerDataNoiseRate() {
-        return mSourceType == Source.SourceType.EVENT
-                ? PrivacyParams.EVENT_RANDOM_TRIGGER_DATA_NOISE :
-                PrivacyParams.NAVIGATION_RANDOM_TRIGGER_DATA_NOISE;
-    }
-
-    /**
      * @return Maximum number of reports allowed
      */
     public int getMaxReportCount() {
@@ -225,12 +216,12 @@ public class Source {
     public double getRandomAttributionProbability() {
         if (isInstallDetectionEnabled()) {
             return mSourceType == SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY :
-                    PrivacyParams.INSTALL_ATTR_NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY;
+                    ? PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY :
+                    PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
         }
         return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY :
-                PrivacyParams.NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY;
+                ? PrivacyParams.EVENT_NOISE_PROBABILITY :
+                PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
     }
 
     private boolean useInstallAttrParams(boolean considerAttrState) {
