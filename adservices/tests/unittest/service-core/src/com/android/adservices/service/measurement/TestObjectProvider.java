@@ -17,18 +17,14 @@
 package com.android.adservices.service.measurement;
 
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import android.annotation.IntDef;
 import android.test.mock.MockContentResolver;
 
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -54,43 +50,8 @@ class TestObjectProvider {
         int NOISY = 2;
     }
 
-    static AttributionJobHandlerWrapper getAttributionJobHandler(@Type int type,
-            DatastoreManager datastoreManager) throws DatastoreException {
-        if (type == Type.DENOISED) {
-            DatastoreManager spyDatastoreManager = spy(datastoreManager);
-            // Mocking the randomized trigger data to always return the truth value.
-            IMeasurementDao dao = spy(spyDatastoreManager.getMeasurementDao());
-            when(spyDatastoreManager.getMeasurementDao()).thenReturn(dao);
-            doAnswer((Answer<Trigger>) triggerInvocation -> {
-                Trigger trigger = spy((Trigger) triggerInvocation.callRealMethod());
-                doAnswer((Answer<Long>) triggerDataInvocation ->
-                        trigger.getTruncatedTriggerData(
-                            triggerDataInvocation.getArgument(0)))
-                        .when(trigger)
-                        .getRandomizedTriggerData(any());
-                return trigger;
-            }).when(dao).getTrigger(anyString());
-
-            return new AttributionJobHandlerWrapper(spyDatastoreManager);
-        } else if (type == Type.NOISY) {
-            DatastoreManager spyDatastoreManager = spy(datastoreManager);
-            // Mocking the randomized trigger data to always return the truth value.
-            IMeasurementDao dao = spy(spyDatastoreManager.getMeasurementDao());
-            when(spyDatastoreManager.getMeasurementDao()).thenReturn(dao);
-            doAnswer((Answer<Trigger>) triggerInvocation -> {
-                Trigger trigger = spy((Trigger) triggerInvocation.callRealMethod());
-                doAnswer((Answer<Long>) triggerDataInvocation ->
-                        // Noise at 100% probability
-                        Math.abs(trigger.getTruncatedTriggerData(
-                            triggerDataInvocation.getArgument(0)) - 1))
-                        .when(trigger)
-                        .getRandomizedTriggerData(any());
-                return trigger;
-            }).when(dao).getTrigger(anyString());
-
-            return new AttributionJobHandlerWrapper(spyDatastoreManager);
-        }
-
+    static AttributionJobHandlerWrapper getAttributionJobHandler(
+            DatastoreManager datastoreManager) {
         return new AttributionJobHandlerWrapper(datastoreManager);
     }
 

@@ -107,6 +107,7 @@ public final class MeasurementTables {
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
         @Deprecated

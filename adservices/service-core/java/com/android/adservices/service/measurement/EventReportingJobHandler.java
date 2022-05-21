@@ -152,10 +152,7 @@ public class EventReportingJobHandler {
                 .setTriggerData(String.valueOf(eventReport.getTriggerData()))
                 .setSourceType(eventReport.getSourceType() == Source.SourceType.NAVIGATION
                         ? "navigation" : "event")
-                .setRandomizedTriggerRate(eventReport.getSourceType()
-                        == Source.SourceType.NAVIGATION
-                        ? PrivacyParams.NAVIGATION_RANDOM_TRIGGER_DATA_NOISE
-                        : PrivacyParams.EVENT_RANDOM_TRIGGER_DATA_NOISE)
+                .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
                 .build()
                 .toJson();
     }
