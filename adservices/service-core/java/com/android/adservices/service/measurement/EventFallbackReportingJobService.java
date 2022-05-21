@@ -35,7 +35,7 @@ import java.util.concurrent.Executor;
  * without a network type requirement).
  * The actual job execution logic is part of {@link EventReportingJobHandler}
  */
-public final class FallbackReportingJobService extends JobService {
+public final class EventFallbackReportingJobService extends JobService {
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
@@ -54,7 +54,8 @@ public final class FallbackReportingJobService extends JobService {
                             System.currentTimeMillis()
                                     - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                             System.currentTimeMillis()
-                                    - AdServicesConfig.getMeasurementMainReportingJobPeriodMs());
+                                    - AdServicesConfig
+                                    .getMeasurementEventMainReportingJobPeriodMs());
             jobFinished(params, !success);
         });
         LogUtil.d("FallbackReportingJobService.onStartJob");
@@ -68,17 +69,17 @@ public final class FallbackReportingJobService extends JobService {
     }
 
     /**
-     * Schedules {@link ReportingJobService}
+     * Schedules {@link EventFallbackReportingJobService}
      */
     public static void schedule(Context context) {
         final JobScheduler jobScheduler = context.getSystemService(
                 JobScheduler.class);
         final JobInfo job = new JobInfo.Builder(AdServicesConfig
-                .MEASUREMENT_FALLBACK_REPORTING_JOB_ID,
-                new ComponentName(context, FallbackReportingJobService.class))
+                .MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
+                new ComponentName(context, EventFallbackReportingJobService.class))
                 .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
-                .setPeriodic(AdServicesConfig.getMeasurementFallbackReportingJobPeriodMs())
+                .setPeriodic(AdServicesConfig.getMeasurementEventFallbackReportingJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling Fallback Reporting job ...");
