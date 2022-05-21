@@ -1,3 +1,4 @@
+//
 // Copyright (C) 2022 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,32 +12,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+//
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
+    default_visibility: ["//packages/modules/AdServices:__subpackages__"],
 }
 
-filegroup {
-    name: "service-adservices-sources",
-    srcs: [
-      "java/**/*.java"
-    ],
-    visibility: [
-        "//packages/modules/AdServices/adservices:__subpackages__",
-    ],
-    path: "java",
-}
-
-java_sdk_library {
-    name: "service-adservices",
-    srcs: [":service-adservices-sources"],
-    sdk_version: "system_server_current",
-    min_sdk_version: "Tiramisu",
-    permitted_packages: ["com.android.server.adservices"],
-    defaults: ["framework-system-server-module-defaults"],
-    visibility: [
-        "//packages/modules/AdServices/tests:__subpackages__",
-    ],
-    apex_available: ["com.android.adservices"],
-    installable: true,
+prebuilt_etc {
+    name: "privapp_allowlist_com.android.adservices.api.xml",
+    sub_dir: "permissions",
+    src: "com.android.adservices.api.xml",
 }
