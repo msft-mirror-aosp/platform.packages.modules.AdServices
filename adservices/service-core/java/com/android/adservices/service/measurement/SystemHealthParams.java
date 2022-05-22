@@ -50,6 +50,12 @@ public class SystemHealthParams {
     public static final long MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS =
             TimeUnit.DAYS.toMillis(28);
 
+    /**
+     * Maximum aggregate report upload retry window.
+     */
+    public static final long MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS =
+            TimeUnit.DAYS.toMillis(28);
+
     private SystemHealthParams() {
     }
 }
