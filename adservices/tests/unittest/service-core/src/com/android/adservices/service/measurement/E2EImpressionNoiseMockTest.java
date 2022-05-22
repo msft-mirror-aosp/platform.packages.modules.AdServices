@@ -59,15 +59,14 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
             String name) throws DatastoreException {
         super(actions, expectedOutput, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(
-                TestObjectProvider.Type.DENOISED, sDatastoreManager);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
         mMeasurementImpl = TestObjectProvider.getMeasurementImpl(TestObjectProvider.Type.NOISY,
                 sDatastoreManager, mSourceFetcher, mTriggerFetcher);
         getExpectedTriggerDataDistributions();
     }
 
     @Override
-    void processReports(List<EventReport> eventReports, List<Uri> destinations,
+    void processEventReports(List<EventReport> eventReports, List<Uri> destinations,
             List<JSONObject> payloads) throws JSONException {
         // Each report-destination × event-ID should have the same count of trigger_data as in the
         // expected output, but the trigger_data value distribution should be different. The test

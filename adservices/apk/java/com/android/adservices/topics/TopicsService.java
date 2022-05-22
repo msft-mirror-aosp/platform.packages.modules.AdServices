@@ -17,13 +17,16 @@ package com.android.adservices.topics;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 
@@ -63,5 +66,12 @@ public class TopicsService extends Service {
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
         FlagsFactory.getFlags().dump(writer, args);
+        if (Build.isDebuggable()) {
+            writer.println("Build is Debuggable, dumping information for TopicsService");
+            EpochManager.getInstance(this).dump(writer, args);
+            CacheManager.getInstance(this).dump(writer, args);
+        } else {
+            writer.println("Build is not Debuggable");
+        }
     }
 }
