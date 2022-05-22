@@ -107,6 +107,7 @@ public final class MeasurementTables {
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
         @Deprecated
@@ -137,7 +138,7 @@ public final class MeasurementTables {
     interface AggregateReport {
         String TABLE = MSMT_TABLE_PREFIX + "aggregate_report";
         String ID = "_id";
-        String SOURCE_SITE = "source_site";
+        String PUBLISHER = "publisher";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
@@ -226,7 +227,7 @@ public final class MeasurementTables {
                     + AggregateReport.TABLE
                     + " ("
                     + AggregateReport.ID + " TEXT PRIMARY KEY NOT NULL, "
-                    + AggregateReport.SOURCE_SITE + " TEXT, "
+                    + AggregateReport.PUBLISHER + " TEXT, "
                     + AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
                     + AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
                     + AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
@@ -274,8 +275,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_TRIGGER,
                             CREATE_TABLE_ADTECH_URLS,
                             CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
-                            CREATE_TABLE_AGGREGATE_PAYLOAD));
+                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

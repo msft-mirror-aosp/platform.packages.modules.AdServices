@@ -63,6 +63,8 @@ class SqliteObjectMapper {
                 builder::setTriggerTime);
         setTextColumn(cursor, MeasurementTables.EventReportContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
+        setDoubleColumn(cursor, MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                builder::setRandomizedTriggerRate);
         return builder.build();
     }
 
@@ -163,8 +165,8 @@ class SqliteObjectMapper {
         CleartextAggregatePayload.Builder builder = new CleartextAggregatePayload.Builder();
         setTextColumn(cursor, MeasurementTables.AggregateReport.ID,
                 builder::setId);
-        setUriColumn(cursor, MeasurementTables.AggregateReport.SOURCE_SITE,
-                builder::setSourceSite);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.PUBLISHER,
+                builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
@@ -190,6 +192,11 @@ class SqliteObjectMapper {
     private static <BuilderType> void setIntColumn(Cursor cursor, String column,
                                                    Function<Integer, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getInt, setter);
+    }
+
+    private static <BuilderType> void setDoubleColumn(Cursor cursor, String column,
+            Function<Double, BuilderType> setter) {
+        setColumnValue(cursor, column, cursor::getDouble, setter);
     }
 
     private static <BuilderType> void setLongColumn(Cursor cursor, String column,
