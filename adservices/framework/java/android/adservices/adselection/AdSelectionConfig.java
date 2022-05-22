@@ -30,12 +30,11 @@ import java.util.Objects;
  * Contains the configuration of the ad selection process.
  *
  * Instances of this class are created by SDKs to be provided as arguments to the
- * {@code runAdSelection} and {@code reportImpression} methods in {@code AdSelectionService}.
- * TODO(b/211030283): properly link runAdSelection javadoc
- * TODO(b/212300065): properly link reportImpression javadoc
- *
- * Hiding for future implementation and review for public exposure.
+ * {@link AdSelectionManager#runAdSelection} and {@link AdSelectionManager#reportImpression} methods
+ * in {@link AdSelectionManager}.
  */
+// TODO(b/233280314): investigate on adSelectionConfig optimization by merging mCustomAudienceBuyers
+//  and mPerBuyerSignals.
 public final class AdSelectionConfig implements Parcelable {
     @NonNull
     private final String mSeller;
@@ -189,8 +188,9 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return an opaque String provided by the SSP representing signals given to the participating
-     * buyers in the ad selection process to generate a bid
+     * @return a valid JSON object serialized as a String, fetched from the
+     * AdSelectionConfig and consumed by the JS logic fetched from the DSP, represents signals
+     * given to the participating buyers in the ad selection and reporting processes.
      */
     @NonNull
     public String getAdSelectionSignals() {
@@ -198,9 +198,10 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return an opaque String used in the ad scoring process that represents any information that
-     * the SSP would have used to tweak the results of the ad selection process (e.g. brand
-     * safety checks, excluded contextual ads)
+     * @return a valid JSON object serialized as a String, provided by the SSP and
+     * consumed by the JS logic fetched from the SSP, represents any information that the SSP used
+     * in the ad scoring process to tweak the results of the ad selection process
+     * (e.g. brand safety checks, excluded contextual ads).
      */
     @NonNull
     public String getSellerSignals() {
@@ -208,9 +209,10 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return a Map of buyers and opaque strings representing any information that each buyer
-     * would provide during ad selection to participants (such as bid floor, ad selection type,
-     * etc.)
+     * @return a Map of buyers and JSON object serialized strings, fetched from the
+     * AdSelectionConfig and consumed by the JS logic fetched from the DSP, representing any
+     * information that each buyer would provide during ad selection to participants
+     * (such as bid floor, ad selection type, etc.)
      */
     @NonNull
     public Map<String, String> getPerBuyerSignals() {
@@ -285,7 +287,7 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the opaque signals provided to buyers during ad selection bid generation.
+         * Sets the signals provided to buyers during ad selection bid generation.
          *
          * See {@link #getAdSelectionSignals()} for more details.
          */
@@ -298,7 +300,7 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Set the opaque signals used to modify ad selection results.
+         * Set the signals used to modify ad selection results.
          *
          * See {@link #getSellerSignals()} for more details.
          */
@@ -311,7 +313,7 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the opaque signals provided by each buyer during ad selection.
+         * Sets the signals provided by each buyer during ad selection.
          *
          * See {@link #getPerBuyerSignals()} for more details.
          */
