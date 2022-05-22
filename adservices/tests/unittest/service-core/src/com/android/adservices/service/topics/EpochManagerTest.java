@@ -44,6 +44,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,7 +66,8 @@ public final class EpochManagerTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
-    @Mock Classifier mMockClassifier;
+    @Mock
+    Classifier mMockClassifier;
 
     @Before
     public void setup() {
@@ -161,10 +166,10 @@ public final class EpochManagerTest {
         EpochManager epochManager = new EpochManager(
                 topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
                 mMockClassifier,
                 mFlags
-                );
+        );
         List<Integer> topTopics =
                 Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
 
@@ -195,7 +200,7 @@ public final class EpochManagerTest {
         EpochManager epochManager = new EpochManager(
                 topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
                 mMockClassifier,
                 mFlags
         );
@@ -218,7 +223,7 @@ public final class EpochManagerTest {
         EpochManager epochManager = new EpochManager(
                 topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
                 mMockClassifier,
                 mFlags
         );
@@ -364,7 +369,7 @@ public final class EpochManagerTest {
         TopicsDao topicsDao = Mockito.spy(new TopicsDao(dbHelper));
         EpochManager epochManager = Mockito.spy(new EpochManager(topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags));
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         when(epochManager.getCurrentEpochId()).thenReturn(epochId);
@@ -504,5 +509,38 @@ public final class EpochManagerTest {
         Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDB = topicsDao
                 .retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1);
         assertThat(returnedTopicsFromDB).isEqualTo(expectedReturnedTopics);
+    }
+
+    @Test
+    public void testDump() throws FileNotFoundException {
+        // Create a new epochManager that we can control the random generator.
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        EpochManager epochManager = new EpochManager(
+                topicsDao,
+                dbHelper,
+                new Random(),
+                mMockClassifier,
+                mFlags
+        );
+
+        PrintWriter printWriter = new PrintWriter(new Writer() {
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+
+            }
+
+            @Override
+            public void flush() throws IOException {
+
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        });
+        String[] args = new String[]{};
+        epochManager.dump(printWriter, args);
     }
 }

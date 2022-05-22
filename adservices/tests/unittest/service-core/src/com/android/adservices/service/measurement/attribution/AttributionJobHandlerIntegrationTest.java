@@ -16,25 +16,15 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
-import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.Trigger;
 
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,22 +50,8 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
     }
 
     @Override
-    public void runActionToTest() throws DatastoreException {
-        DatastoreManager datastoreManager = spy(
-                DatastoreManagerFactory.getDatastoreManager(sContext));
-        // Mocking the randomized trigger data to always return the truth value.
-        IMeasurementDao dao = spy(datastoreManager.getMeasurementDao());
-        when(datastoreManager.getMeasurementDao()).thenReturn(dao);
-        doAnswer((Answer<Trigger>) triggerInvocation -> {
-            Trigger trigger = spy((Trigger) triggerInvocation.callRealMethod());
-            doAnswer((Answer<Long>) triggerDataInvocation ->
-                    trigger.getTruncatedTriggerData(
-                            triggerDataInvocation.getArgument(0)))
-                    .when(trigger)
-                    .getRandomizedTriggerData(any());
-            return trigger;
-        }).when(dao).getTrigger(anyString());
-
+    public void runActionToTest() {
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
         Assert.assertTrue("Attribution failed.",
                 (new AttributionJobHandler(datastoreManager))
                         .performPendingAttributions());

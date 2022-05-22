@@ -23,6 +23,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.TransactionTooLargeException;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -32,9 +33,8 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * AdSelection Manager.
- *
- * @hide
+ * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
+ * as report impressions.
  */
 public class AdSelectionManager {
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
@@ -69,20 +69,35 @@ public class AdSelectionManager {
     private AdSelectionService getService() {
         AdSelectionService service = mServiceBinder.getService();
         if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
+            throw new IllegalStateException("Unable to find the ad selection service");
         }
         return service;
     }
 
     /**
-     * This method runs an asynchronous call to get the result of an on-device Ad selection. The
-     * input {@code adSelectionConfig} is provided by the Ads SDK. The receiver either returns an
-     * {@link AdSelectionOutcome} for a successful run, or an {@link AdServicesException} indicates
-     * the error.
+     * Runs the ad selection process on device to select a remarketing ad for the caller
+     * application.
+     * <p>
+     * The input {@code adSelectionConfig} is provided by the Ads SDK and the
+     * {@link AdSelectionConfig} object is transferred via a Binder call. For this reason, the
+     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
+     * {@link AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
+     * <p>
+     * The output is passed by the receiver, which either returns an {@link AdSelectionOutcome} for
+     * a successful run, or an {@link AdServicesException} includes the type of the exception thrown
+     * and the corresponding error message.
+     * <p>
+     * If the result of the {@link AdServicesException#getCause} is an {@link
+     * IllegalArgumentException}, it is caused by invalid input argument the API received to run the
+     * ad selection.
+     * <p>
+     * If the result of the {@link AdServicesException#getCause} is an {@link RemoteException} with
+     * error message "Failure of AdSelection services.", it is caused by an internal failure of the
+     * ad selection service.
      */
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull @CallbackExecutor Executor executor,
+            @NonNull Executor executor,
             @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(executor);
@@ -121,25 +136,25 @@ public class AdSelectionManager {
     }
 
     /**
-     * Report the given impression. The {@link ReportImpressionInput} is provided by the Ads SDK.
+     * Report the given impression. The {@link ReportImpressionRequest} is provided by the Ads SDK.
      * The receiver either returns a {@code void} for a successful run, or an {@link
      * AdServicesException} indicates the error.
      */
     @NonNull
     public void reportImpression(
-            @NonNull ReportImpressionInput input,
-            @NonNull @CallbackExecutor Executor executor,
+            @NonNull ReportImpressionRequest request,
+            @NonNull Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
-        Objects.requireNonNull(input);
+        Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
         try {
             final AdSelectionService service = getService();
             service.reportImpression(
-                    new ReportImpressionRequest.Builder()
-                            .setAdSelectionId(input.getAdSelectionId())
-                            .setAdSelectionConfig(input.getAdSelectionConfig())
+                    new ReportImpressionInput.Builder()
+                            .setAdSelectionId(request.getAdSelectionId())
+                            .setAdSelectionConfig(request.getAdSelectionConfig())
                             .build(),
                     new ReportImpressionCallback.Stub() {
                         @Override
@@ -169,6 +184,8 @@ public class AdSelectionManager {
      * provided in {@link AddAdSelectionOverrideRequest} instead. The {@link
      * AddAdSelectionOverrideRequest} is provided by the Ads SDK. The receiver either returns a
      * {@code void} for a successful run, or an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void overrideAdSelectionConfigRemoteInfo(
@@ -212,6 +229,8 @@ public class AdSelectionManager {
      * RemoveAdSelectionOverrideRequest}. The {@link RemoveAdSelectionOverrideRequest} is provided
      * by the Ads SDK. The receiver either returns a {@code void} for a successful run, or an {@link
      * AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void removeAdSelectionConfigRemoteInfoOverride(
@@ -252,6 +271,8 @@ public class AdSelectionManager {
     /**
      * Removes all override data in the Ad Selection API. The receiver either returns a {@code void}
      * for a successful run, or an {@link AdServicesException} indicates the error.
+     *
+     * @hide
      */
     @NonNull
     public void resetAllAdSelectionConfigRemoteOverrides(

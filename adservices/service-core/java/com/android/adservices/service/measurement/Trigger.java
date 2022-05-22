@@ -23,7 +23,6 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
-import com.android.adservices.service.measurement.attribution.RandomSelector;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.LongStream;
 
 /**
  * POJO for Trigger.
@@ -223,21 +221,6 @@ public class Trigger {
      */
     public AggregatableAttributionTrigger getAggregatableAttributionTrigger() {
         return mAggregatableAttributionTrigger;
-    }
-
-    /**
-     * Function to get trigger data based on source type(Event/Navigation) with a pre-defined false
-     * data randomness rate.
-     * @param source {@link Source} for choosing source type
-     * @return trigger data using false random rate based on source type
-     */
-    public long getRandomizedTriggerData(Source source) {
-        Long[] possibleValues = LongStream.range(0, source.getTriggerDataCardinality())
-                .boxed().toArray(Long[]::new);
-        return RandomSelector.selectRandomDataWithProbability(
-                source.getTriggerDataNoiseRate(),
-                getTruncatedTriggerData(source),
-                possibleValues);
     }
 
     /**

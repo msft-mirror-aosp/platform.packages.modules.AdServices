@@ -65,6 +65,8 @@ public final class MeasurementImpl {
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
 
+    private static final String ANDROID_APP_SCHEME = "android-app://";
+
     private MeasurementImpl(Context context) {
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
@@ -88,7 +90,7 @@ public final class MeasurementImpl {
      * existing instance will be returned.
      */
     @NonNull
-    static MeasurementImpl getInstance(Context context) {
+    public static MeasurementImpl getInstance(Context context) {
         if (sMeasurementImpl == null) {
             synchronized (MeasurementImpl.class) {
                 if (sMeasurementImpl == null) {
@@ -97,6 +99,24 @@ public final class MeasurementImpl {
             }
         }
         return sMeasurementImpl;
+    }
+
+    /**
+     * Invoked when a package is installed.
+     *
+     * @param packageUri installed package {@link Uri}.
+     * @param eventTime  time when the package was installed.
+     */
+    public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
+        LogUtil.i("Attributing installation for: " + packageUri);
+        Uri appUri = getAppUri(packageUri);
+        mReadWriteLock.readLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.doInstallAttribution(appUri, eventTime));
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
     }
 
     /**
@@ -162,6 +182,25 @@ public final class MeasurementImpl {
         }
     }
 
+    /**
+     * Delete all records from a specific package.
+     */
+    public void deletePackageRecords(Uri packageUri) {
+        Uri appUri = getAppUri(packageUri);
+        LogUtil.i("Deleting records for " + appUri);
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastoreManager.runInTransaction((dao) -> {
+                dao.deleteAppRecords(appUri);
+                dao.undoInstallAttribution(appUri);
+            });
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, "Delete package records received invalid parameters");
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
     private void insertSources(
             @NonNull RegistrationRequest request,
             ArrayList<SourceRegistration> responseBasedRegistrations,
@@ -180,10 +219,10 @@ public final class MeasurementImpl {
                     .setEventTime(sourceEventTime)
                     .setExpiryTime(sourceEventTime
                             + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
-                    .setInstallAttributionWindow(sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
-                    .setInstallCooldownWindow(sourceEventTime
-                            + TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
+                    .setInstallAttributionWindow(
+                            TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
+                    .setInstallCooldownWindow(
+                            TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
                     // Setting as TRUTHFULLY as default value for tests.
                     // This will be overwritten by getSourceEventReports.
                     .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -229,6 +268,7 @@ public final class MeasurementImpl {
                         .setTriggerDedupKey(null)
                         .setSourceType(source.getSourceType())
                         .setStatus(EventReport.Status.PENDING)
+                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build()
         ).collect(Collectors.toList());
     }
@@ -267,6 +307,10 @@ public final class MeasurementImpl {
 
     private Uri getRegistrant(AttributionSource attributionSource) {
         return Uri.parse(
-                "android-app://" + attributionSource.getPackageName());
+                ANDROID_APP_SCHEME + attributionSource.getPackageName());
+    }
+
+    private Uri getAppUri(Uri packageUri) {
+        return Uri.parse(ANDROID_APP_SCHEME + packageUri.getEncodedSchemeSpecificPart());
     }
 }

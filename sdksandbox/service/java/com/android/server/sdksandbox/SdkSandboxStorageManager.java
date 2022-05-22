@@ -61,9 +61,9 @@ class SdkSandboxStorageManager {
         mPackageManagerLocal = LocalManagerRegistry.getManager(PackageManagerLocal.class);
     }
 
-    public void notifyInstrumentationStarted(String packageName, int uid) {
+    public void notifyInstrumentationStarted(CallingInfo callingInfo) {
         synchronized (mLock) {
-            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/true);
+            reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/true);
         }
     }
 
@@ -73,9 +73,9 @@ class SdkSandboxStorageManager {
      * On package added or updated, we need to reconcile sdk subdirectories for the new/updated
      * package.
      */
-    void onPackageAddedOrUpdated(String packageName, int uid) {
+    void onPackageAddedOrUpdated(CallingInfo callingInfo) {
         synchronized (mLock) {
-            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
+            reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
     }
 
@@ -91,14 +91,16 @@ class SdkSandboxStorageManager {
         }
     }
 
-    void prepareSdkDataOnLoad(String packageName, int uid) {
+    void prepareSdkDataOnLoad(CallingInfo callingInfo) {
         synchronized (mLock) {
-            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
+            reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
     }
 
     @GuardedBy("mLock")
-    private void reconcileSdkDataSubDirs(String packageName, int uid, boolean forInstrumentation) {
+    private void reconcileSdkDataSubDirs(CallingInfo callingInfo, boolean forInstrumentation) {
+        final int uid = callingInfo.getUid();
+        final String packageName = callingInfo.getPackageName();
         final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
         final int userId = userHandle.getIdentifier();
         final List<String> sdksUsed = getSdksUsed(userId, packageName);
@@ -264,7 +266,8 @@ class SdkSandboxStorageManager {
                 // Safe to continue since we will retry during loading sdk
                 continue;
             }
-            reconcileSdkDataSubDirs(packageName, uid, /*forInstrumentation=*/false);
+            final CallingInfo callingInfo = new CallingInfo(uid, packageName);
+            reconcileSdkDataSubDirs(callingInfo, /*forInstrumentation=*/false);
         }
     }
 

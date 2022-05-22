@@ -20,7 +20,10 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.Dumpable;
 import android.util.Pair;
+
+import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -28,9 +31,11 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.Classifier;
+import com.android.adservices.service.topics.classifier.PrecomputedClassifier;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,9 +43,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-
 /** A class to manage Epoch computation. */
-public class EpochManager {
+public class EpochManager implements Dumpable {
 
     // We use this origin to compute epoch timestamp.
     // In other words, the first epoch started at
@@ -70,7 +74,8 @@ public class EpochManager {
 
     @VisibleForTesting
     EpochManager(@NonNull TopicsDao topicsDao, @NonNull DbHelper dbHelper,
-            @NonNull Random random, @NonNull Classifier classifier, Flags flags) {
+            @NonNull Random random, @NonNull Classifier classifier,
+            Flags flags) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
@@ -85,7 +90,7 @@ public class EpochManager {
             if (sSingleton == null) {
                 sSingleton = new EpochManager(TopicsDao.getInstance(context),
                         DbHelper.getInstance(context), new Random(),
-                        Classifier.getInstance(context), FlagsFactory.getFlags());
+                        PrecomputedClassifier.getInstance(context), FlagsFactory.getFlags());
             }
             return sSingleton;
         }
@@ -323,6 +328,13 @@ public class EpochManager {
         // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
         LogUtil.v("Epoch length is  %d", mFlags.getTopicsEpochJobPeriodMs());
         return (long) Math.floor((System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
-                /  mFlags.getTopicsEpochJobPeriodMs());
+                / mFlags.getTopicsEpochJobPeriodMs());
+    }
+
+    @Override
+    public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println("==== EpochManager Dump ====");
+        long epochId = getCurrentEpochId();
+        writer.println(String.format("Current epochId is %d", epochId));
     }
 }

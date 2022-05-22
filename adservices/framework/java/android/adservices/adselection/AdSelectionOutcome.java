@@ -23,12 +23,12 @@ import android.net.Uri;
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
+
 /**
  * This class represents a field in the {@code OutcomeReceiver}, which is an input to the
- * {@code runAdSelection} in the {@link AdSelectionManager}.
- * This field is populated in the case of a successful {@code runAdSelection} call.
- *
- * @hide
+ * {@link AdSelectionManager#runAdSelection} in the {@link AdSelectionManager}.
+ * This field is populated in the case of a successful {@link AdSelectionManager#runAdSelection}
+ * call.
  */
 public class AdSelectionOutcome {
     private static final int UNSET = 0;
