@@ -1026,7 +1026,7 @@ class MeasurementDao implements IMeasurementDao {
         List<String> aggregateReports = new ArrayList<>();
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.AggregateReport.TABLE, null,
-                MeasurementTables.AggregateReport.SOURCE_SITE + " = ? AND "
+                MeasurementTables.AggregateReport.PUBLISHER + " = ? AND "
                 + MeasurementTables.AggregateReport.STATUS + " = ? ",
                 new String[]{appName.toString(),
                         String.valueOf(CleartextAggregatePayload.Status.PENDING)},
