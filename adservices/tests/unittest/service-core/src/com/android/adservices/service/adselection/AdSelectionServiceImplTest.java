@@ -98,18 +98,17 @@ public class AdSelectionServiceImplTest {
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
-    @Rule
-    public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     // This object access some system APIs
-    @Mock
-    DevContextFilter mDevContextFilter;
+    @Mock DevContextFilter mDevContextFilter;
 
     @Before
     public void setUp() {
-        mCustomAudienceDao = Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
-                .build()
-                .customAudienceDao();
+        mCustomAudienceDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .build()
+                        .customAudienceDao();
 
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
@@ -178,13 +177,14 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -262,13 +262,14 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -342,13 +343,14 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -421,13 +423,14 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -478,13 +481,14 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(Uri.parse(sellerFetchUrl.toString()));
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -579,13 +583,14 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -611,13 +616,14 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -642,13 +648,14 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -677,13 +684,14 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -722,13 +730,14 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -773,13 +782,14 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(incorrectPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -882,7 +892,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertTrue(callback.mIsSuccess);
 
@@ -908,13 +918,14 @@ public class AdSelectionServiceImplTest {
                                 .setCallingAppPackageName(myAppPackageName)
                                 .build());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -966,7 +977,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertTrue(callback.mIsSuccess);
 
@@ -989,13 +1000,14 @@ public class AdSelectionServiceImplTest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        AdSelectionServiceImpl adSelectionService = new AdSelectionServiceImpl(
-                mAdSelectionEntryDao,
-                mCustomAudienceDao,
-                mClient,
-                mDevContextFilter,
-                mExecutorService,
-                CONTEXT);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -1047,7 +1059,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
@@ -1088,7 +1100,7 @@ public class AdSelectionServiceImplTest {
         return callback;
     }
 
-    private AdSelectionOverrideTestCallback callResetALLOverrides(
+    private AdSelectionOverrideTestCallback callResetAllOverrides(
             AdSelectionServiceImpl adSelectionService) throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);

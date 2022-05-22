@@ -20,9 +20,7 @@ import android.annotation.NonNull;
 
 import java.util.Objects;
 
-/**
- * Class for Api Call Stats.
- */
+/** Class for Api Call Stats. */
 public class ApiCallStats {
     private int mCode;
     private int mApiClass;
@@ -32,8 +30,7 @@ public class ApiCallStats {
     int mLatencyMillisecond;
     int mResultCode;
 
-    public ApiCallStats() {
-    }
+    public ApiCallStats() {}
 
     @Override
     public boolean equals(Object obj) {
@@ -52,8 +49,14 @@ public class ApiCallStats {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mApiClass, mApiName, mAppPackageName, mSdkPackageName,
-                mLatencyMillisecond, mResultCode);
+        return Objects.hash(
+                mCode,
+                mApiClass,
+                mApiName,
+                mAppPackageName,
+                mSdkPackageName,
+                mLatencyMillisecond,
+                mResultCode);
     }
 
     @NonNull
@@ -91,9 +94,7 @@ public class ApiCallStats {
         return mResultCode;
     }
 
-    /**
-     * Builder for {@link ApiCallStats}.
-     */
+    /** Builder for {@link ApiCallStats}. */
     public static final class Builder {
         private final ApiCallStats mBuilding;
 
@@ -101,67 +102,51 @@ public class ApiCallStats {
             mBuilding = new ApiCallStats();
         }
 
-        /**
-         * See {@link ApiCallStats#getCode()} .
-         */
+        /** See {@link ApiCallStats#getCode()} . */
         public @NonNull ApiCallStats.Builder setCode(int code) {
             mBuilding.mCode = code;
             return this;
         }
 
-        /**
-         * See {@link ApiCallStats#getApiClass()} .
-         */
+        /** See {@link ApiCallStats#getApiClass()} . */
         public @NonNull ApiCallStats.Builder setApiClass(int apiClass) {
             mBuilding.mApiClass = apiClass;
             return this;
         }
 
-        /**
-         * See {@link ApiCallStats#getApiName()} .
-         */
+        /** See {@link ApiCallStats#getApiName()} . */
         public @NonNull ApiCallStats.Builder setApiName(int apiName) {
             mBuilding.mApiName = apiName;
             return this;
         }
 
-        /**
-         * See {@link ApiCallStats#getAppPackageName()} .
-         */
+        /** See {@link ApiCallStats#getAppPackageName()} . */
         public @NonNull ApiCallStats.Builder setAppPackageName(@NonNull String appPackageName) {
             Objects.requireNonNull(appPackageName);
             mBuilding.mAppPackageName = appPackageName;
             return this;
         }
 
-        /**
-         * See {@link ApiCallStats#getSdkPackageName()}.
-         */
+        /** See {@link ApiCallStats#getSdkPackageName()}. */
         public @NonNull ApiCallStats.Builder setSdkPackageName(@NonNull String sdkPackageName) {
             Objects.requireNonNull(sdkPackageName);
             mBuilding.mSdkPackageName = sdkPackageName;
             return this;
         }
 
-        /**
-         * See {@link ApiCallStats#getLatencyMillisecond()}.
-         */
+        /** See {@link ApiCallStats#getLatencyMillisecond()}. */
         public @NonNull ApiCallStats.Builder setLatencyMillisecond(int latencyMillisecond) {
             mBuilding.mLatencyMillisecond = latencyMillisecond;
             return this;
         }
 
-        /**
-         * See {@link ApiCallStats#getResultCode()}.
-         */
+        /** See {@link ApiCallStats#getResultCode()}. */
         public @NonNull ApiCallStats.Builder setResultCode(int resultCode) {
             mBuilding.mResultCode = resultCode;
             return this;
         }
 
-        /**
-         * Build the {@link ApiCallStats}.
-         */
+        /** Build the {@link ApiCallStats}. */
         public @NonNull ApiCallStats build() {
             if (mBuilding.mAppPackageName == null || mBuilding.mSdkPackageName == null) {
                 throw new IllegalArgumentException("appPackageName or sdkPackageName is null");

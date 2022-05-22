@@ -51,28 +51,24 @@ public class CustomAudienceServiceImplTest {
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
             CustomAudienceFixture.getValidBuilder().build();
 
-    @Mock
-    private Context mContext;
-    @Mock
-    private CustomAudienceImpl mCustomAudienceImpl;
-    @Mock
-    private ICustomAudienceCallback mICustomAudienceCallback;
+    @Mock private Context mContext;
+    @Mock private CustomAudienceImpl mCustomAudienceImpl;
+    @Mock private ICustomAudienceCallback mICustomAudienceCallback;
 
     private CustomAudienceServiceImpl mService;
 
-    @Rule
-    public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
-    @Mock
-    DevContextFilter mDevContextFilter;
+    @Mock DevContextFilter mDevContextFilter;
 
     @Before
     public void setup() {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
-        mService = new CustomAudienceServiceImpl(mContext, mCustomAudienceImpl, mDevContextFilter,
-                DIRECT_EXECUTOR);
+        mService =
+                new CustomAudienceServiceImpl(
+                        mContext, mCustomAudienceImpl, mDevContextFilter, DIRECT_EXECUTOR);
     }
 
     @Test
@@ -85,22 +81,22 @@ public class CustomAudienceServiceImplTest {
 
     @Test
     public void testJoinCustomAudience_nullInput() {
-        assertThrows(NullPointerException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> mService.joinCustomAudience(null, mICustomAudienceCallback));
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
-
     @Test
     public void testJoinCustomAudience_nullCallback() {
-        assertThrows(NullPointerException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, null));
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
     @Test
-    public void testJoinCustomAudience_errorCreateCustomAudience()
-            throws RemoteException {
+    public void testJoinCustomAudience_errorCreateCustomAudience() throws RemoteException {
         doThrow(RuntimeException.class)
                 .when(mCustomAudienceImpl)
                 .joinCustomAudience(VALID_CUSTOM_AUDIENCE);
@@ -113,11 +109,8 @@ public class CustomAudienceServiceImplTest {
     }
 
     @Test
-    public void testJoinCustomAudience_errorReturnCallback()
-            throws RemoteException {
-        doThrow(RemoteException.class)
-                .when(mICustomAudienceCallback)
-                .onSuccess();
+    public void testJoinCustomAudience_errorReturnCallback() throws RemoteException {
+        doThrow(RemoteException.class).when(mICustomAudienceCallback).onSuccess();
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
 
@@ -127,54 +120,74 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
-
     @Test
     public void testLeaveCustomAudience_runNormally() throws RemoteException {
-        mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
                 CustomAudienceFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
-        verify(mCustomAudienceImpl).leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+        verify(mCustomAudienceImpl)
+                .leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CustomAudienceFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
     @Test
     public void testLeaveCustomAudience_nullOwner() throws RemoteException {
-        mService.leaveCustomAudience(null,
+        mService.leaveCustomAudience(
+                null,
                 CustomAudienceFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
-        verify(mCustomAudienceImpl).leaveCustomAudience(null,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+        verify(mCustomAudienceImpl)
+                .leaveCustomAudience(
+                        null, CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
     @Test
     public void testLeaveCustomAudience_nullBuyer() {
-        assertThrows(NullPointerException.class,
-                () -> mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER, null,
-                        CustomAudienceFixture.VALID_NAME, mICustomAudienceCallback));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mService.leaveCustomAudience(
+                                CustomAudienceFixture.VALID_OWNER,
+                                null,
+                                CustomAudienceFixture.VALID_NAME,
+                                mICustomAudienceCallback));
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
     @Test
     public void testLeaveCustomAudience_nullName() {
-        assertThrows(NullPointerException.class,
-                () -> mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER, null, mICustomAudienceCallback));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mService.leaveCustomAudience(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CustomAudienceFixture.VALID_BUYER,
+                                null,
+                                mICustomAudienceCallback));
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
     @Test
     public void testLeaveCustomAudience_nullCallback() {
-        assertThrows(NullPointerException.class,
-                () -> mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME, null));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mService.leaveCustomAudience(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CustomAudienceFixture.VALID_BUYER,
+                                CustomAudienceFixture.VALID_NAME,
+                                null));
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
@@ -182,31 +195,41 @@ public class CustomAudienceServiceImplTest {
     public void testLeaveCustomAudience_errorCallCustomAudienceImpl() throws RemoteException {
         doThrow(RuntimeException.class)
                 .when(mCustomAudienceImpl)
-                .leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+                .leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CustomAudienceFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_NAME);
 
-        mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME,
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CustomAudienceFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
-        verify(mCustomAudienceImpl).leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+        verify(mCustomAudienceImpl)
+                .leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CustomAudienceFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }
 
     @Test
     public void testLeaveCustomAudience_errorReturnCallback() throws RemoteException {
-        doThrow(RemoteException.class)
-                .when(mICustomAudienceCallback)
-                .onSuccess();
+        doThrow(RemoteException.class).when(mICustomAudienceCallback).onSuccess();
 
-        mService.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME,
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CustomAudienceFixture.VALID_BUYER,
+                CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
-        verify(mCustomAudienceImpl).leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+        verify(mCustomAudienceImpl)
+                .leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CustomAudienceFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
         verifyNoMoreInteractions(mCustomAudienceImpl, mICustomAudienceCallback, mContext);
     }

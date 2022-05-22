@@ -18,15 +18,12 @@ package com.android.adservices.service.stats;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * AdServicesLogger that delegate to the appropriate Logger Implementations.
- */
+/** AdServicesLogger that delegate to the appropriate Logger Implementations. */
 @ThreadSafe
 public class AdServicesLoggerImpl implements AdServicesLogger {
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
 
-    private AdServicesLoggerImpl() {
-    }
+    private AdServicesLoggerImpl() {}
 
     /** Returns an instance of AdServicesLogger. */
     public static AdServicesLoggerImpl getInstance() {

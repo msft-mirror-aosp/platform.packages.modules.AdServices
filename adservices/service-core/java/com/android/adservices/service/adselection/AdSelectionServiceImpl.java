@@ -80,17 +80,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 context);
     }
 
-    //TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
+    // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
 
-        AdSelectionRunner adSelectionRunner = new AdSelectionRunner(mContext,
-                mCustomAudienceDao,
-                mAdSelectionEntryDao,
-                mExecutor);
+        AdSelectionRunner adSelectionRunner =
+                new AdSelectionRunner(
+                        mContext, mCustomAudienceDao, mAdSelectionEntryDao, mExecutor);
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
 

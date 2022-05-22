@@ -18,15 +18,12 @@ package com.android.adservices.service.stats;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * AdServicesLogger that log stats to StatsD
- */
+/** AdServicesLogger that log stats to StatsD */
 @ThreadSafe
 public class StatsdAdServicesLogger implements AdServicesLogger {
     private static volatile StatsdAdServicesLogger sStatsdAdServicesLogger;
 
-    private StatsdAdServicesLogger() {
-    }
+    private StatsdAdServicesLogger() {}
 
     /** Returns an instance of WestWorldAdServicesLogger. */
     public static StatsdAdServicesLogger getInstance() {
@@ -39,21 +36,23 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
         }
         return sStatsdAdServicesLogger;
     }
-    /**
-     * log method for measurement reporting.
-     */
+    /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
-        AdServicesStatsLog.write(measurementReportsStats.getCode(),
-                measurementReportsStats.getType(), measurementReportsStats.getResultCode());
+        AdServicesStatsLog.write(
+                measurementReportsStats.getCode(),
+                measurementReportsStats.getType(),
+                measurementReportsStats.getResultCode());
     }
 
-    /**
-     * log method for API call stats.
-     */
+    /** log method for API call stats. */
     public void logApiCallStats(ApiCallStats apiCallStats) {
-        AdServicesStatsLog.write(apiCallStats.getCode(), apiCallStats.getApiClass(),
-                apiCallStats.getApiName(), apiCallStats.getAppPackageName(),
-                apiCallStats.getSdkPackageName(), apiCallStats.getLatencyMillisecond(),
+        AdServicesStatsLog.write(
+                apiCallStats.getCode(),
+                apiCallStats.getApiClass(),
+                apiCallStats.getApiName(),
+                apiCallStats.getAppPackageName(),
+                apiCallStats.getSdkPackageName(),
+                apiCallStats.getLatencyMillisecond(),
                 apiCallStats.getResultCode());
     }
 }

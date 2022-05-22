@@ -16,17 +16,11 @@
 
 package com.android.adservices.service.stats;
 
-/**
- * Interface for Adservices logger.
- */
+/** Interface for Adservices logger. */
 public interface AdServicesLogger {
-    /**
-     * log method for MeasurementReportsStats.
-     */
+    /** log method for MeasurementReportsStats. */
     void logMeasurementReports(MeasurementReportsStats measurementReportsStats);
 
-    /**
-     * log ApiCallStats which has stats about the API call such as the status.
-     */
+    /** log ApiCallStats which has stats about the API call such as the status. */
     void logApiCallStats(ApiCallStats apiCallStats);
 }
