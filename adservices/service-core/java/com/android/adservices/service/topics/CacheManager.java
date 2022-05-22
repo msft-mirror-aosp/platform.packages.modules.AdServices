@@ -80,7 +80,8 @@ public class CacheManager {
                 mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId(),
                         mFlags.getTopicsNumberOfLookBackEpochs() + 1);
 
-        LogUtil.v("CachedTopics mapping size is  " + cacheFromDb.size());
+        LogUtil.v("CacheManager.loadCache(). CachedTopics mapping size is  "
+                + cacheFromDb.size());
         try {
             mReadWriteLock.writeLock().lock();
             mCachedTopics = cacheFromDb;
