@@ -34,15 +34,22 @@ public class AdServicesConfig {
     public static final int TOPICS_EPOCH_JOB_ID = 2;
 
     /**
-     * Job Id for Measurement Main Reporting Job ({@link ReportingJobService})
+     * Job Id for Measurement Event Main Reporting Job ({@link EventReportingJobService})
      */
-    public static final int MEASUREMENT_MAIN_REPORTING_JOB_ID = 3;
+    public static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID = 3;
+    public static long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
+            TimeUnit.HOURS.toMillis(4);
 
     /**
-     * Returns the max time period (in millis) between each main reporting maintenance job run.
+     * Returns the min time period (in millis) between each event main reporting job run.
      */
+
     public static long getMeasurementMainReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementMainReportingJobPeriodMs();
+    }
+
+    public static long getMeasurementEventMainReportingJobPeriodMs() {
+        return MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
     }
 
     /**
@@ -50,11 +57,11 @@ public class AdServicesConfig {
      */
     public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
     public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS =
-            24L * 60L * 60L * 1000L; // 24 hours.
+            TimeUnit.HOURS.toMillis(24);
     public static long MEASUREMENT_DELETE_EXPIRED_WINDOW_MS = TimeUnit.DAYS.toMillis(30);
 
     /**
-     * Returns the max time period (in millis) between each expired-record deletion maintenance job
+     * Returns the min time period (in millis) between each expired-record deletion maintenance job
      * run.
      */
     public static long getMeasurementDeleteExpiredJobPeriodMs() {
@@ -68,13 +75,45 @@ public class AdServicesConfig {
     public static final int MEASUREMENT_ATTRIBUTION_JOB_ID = 5;
 
     /**
-     * Job Id for Measurement Fallback Reporting Job ({@link FallbackReportingJobService})
+     * Job Id for Measurement Fallback Reporting Job ({@link EventFallbackReportingJobService})
      */
-    public static final int MEASUREMENT_FALLBACK_REPORTING_JOB_ID = 6;
-    public static long MEASUREMENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
-            24L * 60L * 60L * 1000L; // 24 hours.
+    public static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID = 6;
+    public static long MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
+            TimeUnit.HOURS.toMillis(24);
 
-    public static long getMeasurementFallbackReportingJobPeriodMs() {
-        return MEASUREMENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
+    /**
+     * Returns the min time period (in millis) between each event fallback reporting job run.
+     */
+    public static long getMeasurementEventFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Job Id for Measurement Aggregate Main Reporting Job ({@link AggregateReportingJobService})
+     */
+    public static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID = 7;
+    public static long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
+            TimeUnit.HOURS.toMillis(4);
+
+    /**
+     * Returns the min time period (in millis) between each aggregate main reporting job run.
+     */
+    public static long getMeasurementAggregateMainReportingJobPeriodMs() {
+        return MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Job Id for Measurement Aggregate Fallback Reporting Job
+     * ({@link AggregateFallbackReportingJobService})
+     */
+    public static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID = 8;
+    public static long MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
+            TimeUnit.HOURS.toMillis(24);
+
+    /**
+     * Returns the min time period (in millis) between each aggregate fallback reporting job run.
+     */
+    public static long getMeasurementAggregateFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 }
