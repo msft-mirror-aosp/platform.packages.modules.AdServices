@@ -25,7 +25,6 @@ import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -35,6 +34,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -163,7 +163,7 @@ public final class AdSelectionRunner {
                     .setErrorMessage("Encountered failure during Ad Selection")
                     .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
                     .build();
-            Log.e(TAG, "Ad Selection failure: " + t.getMessage());
+            LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             LogUtil.e("Encountered exception during "
@@ -182,8 +182,13 @@ public final class AdSelectionRunner {
             adSelectionConfig) {
 
         List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
+        Preconditions.checkArgument(!buyers.isEmpty(),
+                "The list of the custom audience buyers should not be empty.");
         List<DBCustomAudience> buyerCustomAudience = getBuyerCustomAudience(buyers);
-
+        if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
+            return Futures.immediateFailedFuture(new IllegalStateException(
+                    "No Custom Audience available for the given list of buyers."));
+        }
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome = runAdBidding(
                 buyerCustomAudience,
                 adSelectionConfig);

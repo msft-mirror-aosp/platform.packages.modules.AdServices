@@ -276,37 +276,23 @@ public class SourceTest {
     }
 
     @Test
-    public void testTriggerDataNoiseRate() {
-        Source eventSource = new Source.Builder()
-                .setSourceType(Source.SourceType.EVENT)
-                .build();
-        assertEquals(PrivacyParams.EVENT_RANDOM_TRIGGER_DATA_NOISE,
-                eventSource.getTriggerDataNoiseRate(), DOUBLE_MAX_DELTA);
-        Source navigationSource = new Source.Builder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .build();
-        assertEquals(PrivacyParams.NAVIGATION_RANDOM_TRIGGER_DATA_NOISE,
-                navigationSource.getTriggerDataNoiseRate(), DOUBLE_MAX_DELTA);
-    }
-
-    @Test
     public void testRandomAttributionProbability() {
         Source eventSource = new Source.Builder()
                 .setSourceType(Source.SourceType.EVENT)
                 .build();
-        assertEquals(PrivacyParams.EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY,
+        assertEquals(PrivacyParams.EVENT_NOISE_PROBABILITY,
                 eventSource.getRandomAttributionProbability(), DOUBLE_MAX_DELTA);
         Source navigationSource = new Source.Builder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .build();
-        assertEquals(PrivacyParams.NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY,
+        assertEquals(PrivacyParams.NAVIGATION_NOISE_PROBABILITY,
                 navigationSource.getRandomAttributionProbability(), DOUBLE_MAX_DELTA);
 
         Source eventSourceWithInstallAttribution = new Source.Builder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setInstallCooldownWindow(1)
                 .build();
-        assertEquals(PrivacyParams.INSTALL_ATTR_EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY,
+        assertEquals(PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
                 eventSourceWithInstallAttribution.getRandomAttributionProbability(),
                 DOUBLE_MAX_DELTA);
 
@@ -314,7 +300,7 @@ public class SourceTest {
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setInstallCooldownWindow(1)
                 .build();
-        assertEquals(PrivacyParams.INSTALL_ATTR_NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY,
+        assertEquals(PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
                 navigationSourceWithInstallAttribution.getRandomAttributionProbability(),
                 DOUBLE_MAX_DELTA);
     }

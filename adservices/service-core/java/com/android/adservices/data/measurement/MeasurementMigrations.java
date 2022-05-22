@@ -74,6 +74,9 @@ public final class MeasurementMigrations {
                     EventReportContract.TABLE,
                     EventReportContract.DEPRECATED_REPORT_TO,
                     EventReportContract.AD_TECH_DOMAIN),
+            String.format("ALTER TABLE %1$s ADD %2$s DOUBLE",
+                    EventReportContract.TABLE,
+                    EventReportContract.RANDOMIZED_TRIGGER_RATE),
 
             String.format("ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                     AttributionRateLimitContract.TABLE,
@@ -127,6 +130,7 @@ public final class MeasurementMigrations {
      *
      * Event Report
      * <ul>
+     *     <li>Add : randomized_trigger_rate</li>
      *     <li>Rename : report_to to ad_tech_domain</li>
      * </ul>
      *
@@ -143,7 +147,10 @@ public final class MeasurementMigrations {
         return Stream.of(
                         DROP_INDEXES_VER_2,
                         ALTER_STATEMENTS_VER_2,
-                        CREATE_INDEXES_VER_2
+                        CREATE_INDEXES_VER_2,
+                        new String[] {
+                                MeasurementTables.CREATE_TABLE_AGGREGATE_PAYLOAD
+                        }
                 )
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
