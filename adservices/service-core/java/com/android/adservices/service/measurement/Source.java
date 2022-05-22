@@ -22,7 +22,8 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
-import com.android.adservices.service.measurement.attribution.Combinatorics;
+import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
+import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -44,6 +45,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * POJO for Source.
@@ -119,17 +121,26 @@ public class Source {
             this.mTriggerData = triggerData;
             this.mReportingTime = reportingTime;
         }
+
         public long getReportingTime() {
             return mReportingTime;
         }
+
         public long getTriggerData() {
             return mTriggerData;
         }
     }
 
-    private ImmutableList<Long> getEarlyReportingWindows() {
+    ImpressionNoiseParams getImpressionNoiseParams() {
+        return new ImpressionNoiseParams(
+                getMaxReportCountInternal(/* considerAttrState= */ false),
+                getTriggerDataCardinality(),
+                getReportingWindowCountForNoising());
+    }
+
+    private ImmutableList<Long> getEarlyReportingWindows(boolean considerAttrState) {
         long[] earlyWindows;
-        if (mIsInstallAttributed) {
+        if (useInstallAttrParams(considerAttrState)) {
             earlyWindows = mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                     : PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
@@ -151,17 +162,24 @@ public class Source {
         return ImmutableList.copyOf(windowList);
     }
 
-    private long getReportingTimeByIndex(int windowIndex) {
-        List<Long> windowList = getEarlyReportingWindows();
+    /**
+     * Return reporting time by index for noising based on the index
+     *
+     * @param windowIndex index of the reporting window for which
+     * @return reporting time in milliseconds
+     */
+    @VisibleForTesting
+    public long getReportingTimeForNoising(int windowIndex) {
+        List<Long> windowList = getEarlyReportingWindows(/* considerAttrState= */ false);
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
                 mExpiryTime + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
-    int getReportingWindowCount() {
+    int getReportingWindowCountForNoising() {
         // Early Count + expiry
-        return getEarlyReportingWindows().size() + 1;
+        return getEarlyReportingWindows(/* considerAttrState= */ false).size() + 1;
     }
 
     /**
@@ -175,19 +193,14 @@ public class Source {
     }
 
     /**
-     * @return Random noise rate for {@link Trigger} metadata
-     */
-    public double getTriggerDataNoiseRate() {
-        return mSourceType == Source.SourceType.EVENT
-                ? PrivacyParams.EVENT_RANDOM_TRIGGER_DATA_NOISE :
-                PrivacyParams.NAVIGATION_RANDOM_TRIGGER_DATA_NOISE;
-    }
-
-    /**
      * @return Maximum number of reports allowed
      */
     public int getMaxReportCount() {
-        if (mIsInstallAttributed) {
+        return getMaxReportCountInternal(/* considerAttrState= */ true);
+    }
+
+    private int getMaxReportCountInternal(boolean considerAttrState) {
+        if (useInstallAttrParams(considerAttrState)) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
                     : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
@@ -201,9 +214,25 @@ public class Source {
      * @return Probability of selecting random state for attribution
      */
     public double getRandomAttributionProbability() {
+        if (isInstallDetectionEnabled()) {
+            return mSourceType == SourceType.EVENT
+                    ? PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY :
+                    PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY;
+        }
         return mSourceType == SourceType.EVENT
-                ? PrivacyParams.EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY :
-                PrivacyParams.NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY;
+                ? PrivacyParams.EVENT_NOISE_PROBABILITY :
+                PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
+    }
+
+    private boolean useInstallAttrParams(boolean considerAttrState) {
+        if (considerAttrState) {
+            return mIsInstallAttributed;
+        }
+        return isInstallDetectionEnabled();
+    }
+
+    private boolean isInstallDetectionEnabled() {
+        return mInstallCooldownWindow > 0;
     }
 
     @Override
@@ -248,7 +277,7 @@ public class Source {
         if (triggerTime < mEventTime) {
             return -1;
         }
-        List<Long> reportingWindows = getEarlyReportingWindows();
+        List<Long> reportingWindows = getEarlyReportingWindows(/* considerAttrState= */ true);
         for (Long window: reportingWindows) {
             if (triggerTime < window) {
                 return window + ONE_HOUR_IN_MILLIS;
@@ -274,38 +303,13 @@ public class Source {
             mAttributionMode = AttributionMode.TRUTHFULLY;
             return Collections.emptyList();
         }
-        int triggerDataCardinality = getTriggerDataCardinality();
-        // Get total possible combinations
-        int numCombinations = Combinatorics.getNumberOfStarsAndBarsSequences(
-                /*numStars=*/getMaxReportCount(),
-                /*numBars=*/triggerDataCardinality * getReportingWindowCount());
-        // Choose a sequence index
-        int sequenceIndex = rand.nextInt(numCombinations);
-        List<FakeReport> fakeReports = generateFakeReports(sequenceIndex);
+        ImpressionNoiseParams noiseParams = getImpressionNoiseParams();
+        List<FakeReport> fakeReports = ImpressionNoiseUtil
+                .selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
+                .stream().map(reportConfig -> new FakeReport(reportConfig[0],
+                        getReportingTimeForNoising(reportConfig[1])))
+                .collect(Collectors.toList());
         mAttributionMode = fakeReports.isEmpty() ? AttributionMode.NEVER : AttributionMode.FALSELY;
-        return fakeReports;
-    }
-
-    @VisibleForTesting
-    List<FakeReport> generateFakeReports(int sequenceIndex) {
-        List<FakeReport> fakeReports = new ArrayList<>();
-        int triggerDataCardinality = getTriggerDataCardinality();
-        // Get the configuration for the sequenceIndex
-        int[] starIndices = Combinatorics.getStarIndices(
-                /*numStars=*/getMaxReportCount(),
-                /*sequenceIndex=*/sequenceIndex);
-        int[] barsPrecedingEachStar = Combinatorics.getBarsPrecedingEachStar(starIndices);
-        // Generate fake reports
-        // Stars: number of reports
-        // Bars: (Number of windows) * (Trigger Data Cardinality)
-        for (int numBars : barsPrecedingEachStar) {
-            if (numBars == 0) {
-                continue;
-            }
-            int windowIndex = (numBars - 1) / triggerDataCardinality;
-            int triggerData = (numBars - 1) % triggerDataCardinality;
-            fakeReports.add(new FakeReport(triggerData, getReportingTimeByIndex(windowIndex)));
-        }
         return fakeReports;
     }
 

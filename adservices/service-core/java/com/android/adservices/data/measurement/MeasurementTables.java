@@ -107,6 +107,7 @@ public final class MeasurementTables {
         String STATUS = "status";
         String SOURCE_TYPE = "source_type";
         String AD_TECH_DOMAIN = "ad_tech_domain";
+        String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
         @Deprecated
@@ -129,6 +130,22 @@ public final class MeasurementTables {
         @Deprecated
         String DEPRECATED_REPORT_TO = "report_to";
 
+    }
+
+    /**
+     * Contract for Unencrypted aggregate payload.
+     */
+    interface AggregateReport {
+        String TABLE = MSMT_TABLE_PREFIX + "aggregate_report";
+        String ID = "_id";
+        String PUBLISHER = "publisher";
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SOURCE_REGISTRATION_TIME = "source_registration_time";
+        String SCHEDULED_REPORT_TIME = "scheduled_report_time";
+        String PRIVACY_BUDGET_KEY = "privacy_budget_key";
+        String REPORTING_ORIGIN = "reporting_origin";
+        String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
+        String STATUS = "status";
     }
 
     public static final String CREATE_TABLE_SOURCE =
@@ -203,6 +220,21 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.DEPRECATED_REPORT_TO + " TEXT, "
                     + AttributionRateLimitContract.TRIGGER_TIME + " INTEGER, "
                     + AttributionRateLimitContract.REGISTRANT + " TEXT "
+                    + ")";
+
+    public static final String CREATE_TABLE_AGGREGATE_PAYLOAD =
+            "CREATE TABLE "
+                    + AggregateReport.TABLE
+                    + " ("
+                    + AggregateReport.ID + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateReport.PUBLISHER + " TEXT, "
+                    + AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
+                    + AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
+                    + AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
+                    + AggregateReport.PRIVACY_BUDGET_KEY + " TEXT, "
+                    + AggregateReport.REPORTING_ORIGIN + " TEXT, "
+                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
+                    + SourceContract.STATUS + " INTEGER "
                     + ")";
 
     public static final String[] CREATE_INDEXES = {

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.spy;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,11 +43,6 @@ import java.util.stream.LongStream;
 public class SourceTest {
 
     private static final double DOUBLE_MAX_DELTA = 0.000000001D;
-
-    @FunctionalInterface
-    public interface ThreeArgumentFunc<T1, T2, T3> {
-        void apply(T1 t1, T2 t2, T3 t3);
-    }
 
     @Test
     public void testDefaults() {
@@ -280,31 +276,33 @@ public class SourceTest {
     }
 
     @Test
-    public void testTriggerDataNoiseRate() {
-        Source eventSource = new Source.Builder()
-                .setSourceType(Source.SourceType.EVENT)
-                .build();
-        assertEquals(PrivacyParams.EVENT_RANDOM_TRIGGER_DATA_NOISE,
-                eventSource.getTriggerDataNoiseRate(), DOUBLE_MAX_DELTA);
-        Source navigationSource = new Source.Builder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .build();
-        assertEquals(PrivacyParams.NAVIGATION_RANDOM_TRIGGER_DATA_NOISE,
-                navigationSource.getTriggerDataNoiseRate(), DOUBLE_MAX_DELTA);
-    }
-
-    @Test
     public void testRandomAttributionProbability() {
         Source eventSource = new Source.Builder()
                 .setSourceType(Source.SourceType.EVENT)
                 .build();
-        assertEquals(PrivacyParams.EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY,
+        assertEquals(PrivacyParams.EVENT_NOISE_PROBABILITY,
                 eventSource.getRandomAttributionProbability(), DOUBLE_MAX_DELTA);
         Source navigationSource = new Source.Builder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .build();
-        assertEquals(PrivacyParams.NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY,
+        assertEquals(PrivacyParams.NAVIGATION_NOISE_PROBABILITY,
                 navigationSource.getRandomAttributionProbability(), DOUBLE_MAX_DELTA);
+
+        Source eventSourceWithInstallAttribution = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallCooldownWindow(1)
+                .build();
+        assertEquals(PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
+                eventSourceWithInstallAttribution.getRandomAttributionProbability(),
+                DOUBLE_MAX_DELTA);
+
+        Source navigationSourceWithInstallAttribution = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(1)
+                .build();
+        assertEquals(PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                navigationSourceWithInstallAttribution.getRandomAttributionProbability(),
+                DOUBLE_MAX_DELTA);
     }
 
     @Test
@@ -343,81 +341,341 @@ public class SourceTest {
     }
 
     @Test
-    public void testFakeReportGenerationForSequenceIndex() {
-        ThreeArgumentFunc<Source, List<long[]>, Integer> tester =
-                (source, expectedReports, sequenceIndex) -> {
-                    List<Source.FakeReport> actualReports = source.generateFakeReports(
-                            sequenceIndex);
-                    assertEquals(expectedReports.size(), actualReports.size());
-                    for (int i = 0; i < actualReports.size(); i++) {
-                        Source.FakeReport actual = actualReports.get(i);
-                        long[] expected = expectedReports.get(i);
-                        assertEquals(expected[0], actual.getTriggerData());
-                        assertEquals(expected[1], actual.getReportingTime());
-                    }
-                };
+    public void impressionNoiseParamGeneration() {
         long eventTime = System.currentTimeMillis();
-        long eventSourceExpiry = eventTime + TimeUnit.DAYS.toMillis(20);
-        long eventSourceReportingTime = eventSourceExpiry + TimeUnit.HOURS.toMillis(1);
-        Source eventSource = new Source.Builder()
+        Source eventSource30dExpiry = new Source.Builder()
                 .setSourceType(Source.SourceType.EVENT)
                 .setEventTime(eventTime)
-                .setExpiryTime(eventSourceExpiry)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
-        tester.apply(
-                /*source=*/eventSource,
-                /*expectedReports=*/Collections.emptyList(),
-                /*sequenceIndex=*/0);
-        tester.apply(
-                /*source=*/eventSource,
-                /*expectedReports=*/Collections.singletonList(
-                        new long[]{0, eventSourceReportingTime}),
-                /*sequenceIndex=*/1);
-        tester.apply(
-                /*source=*/eventSource,
-                /*expectedReports=*/Collections.singletonList(
-                        new long[]{1, eventSourceReportingTime}),
-                /*sequenceIndex=*/2);
-        long navigationSourceExpiry = eventTime + TimeUnit.DAYS.toMillis(28);
-        long navigationReport1Time = eventTime + TimeUnit.DAYS.toMillis(2)
-                + TimeUnit.HOURS.toMillis(1);
-        long navigationReport2Time = eventTime + TimeUnit.DAYS.toMillis(7)
-                + TimeUnit.HOURS.toMillis(1);
-        long navigationReport3Time = navigationSourceExpiry + TimeUnit.HOURS.toMillis(1);
-        Source navigationSource = new Source.Builder()
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 1,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 1),
+                eventSource30dExpiry.getImpressionNoiseParams());
+
+        Source eventSource7dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 1,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 1),
+                eventSource7dExpiry.getImpressionNoiseParams());
+
+        Source eventSource2dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 1,
+                        /* triggerDataCardinality= */ 2,
+                        /* reportingWindowCount= */ 1),
+                eventSource2dExpiry.getImpressionNoiseParams());
+
+        Source navigationSource30dExpiry = new Source.Builder()
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setEventTime(eventTime)
-                .setExpiryTime(navigationSourceExpiry)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
                 .build();
-        tester.apply(
-                /*source=*/navigationSource,
-                /*expectedReports=*/Collections.emptyList(),
-                /*sequenceIndex=*/0);
-        tester.apply(
-                /*source=*/navigationSource,
-                /*expectedReports=*/Collections.singletonList(
-                        new long[]{3, navigationReport1Time}),
-                /*sequenceIndex=*/20);
-        tester.apply(
-                /*source=*/navigationSource,
-                /*expectedReports=*/Arrays.asList(
-                        new long[]{4, navigationReport1Time},
-                        new long[]{2, navigationReport1Time}),
-                /*sequenceIndex=*/41);
-        tester.apply(
-                /*source=*/navigationSource,
-                /*expectedReports=*/Arrays.asList(
-                        new long[]{4, navigationReport1Time},
-                        new long[]{4, navigationReport1Time}),
-                /*sequenceIndex=*/50);
-        tester.apply(
-                /*source=*/navigationSource,
-                /*expectedReports=*/Arrays.asList(
-                        new long[]{1, navigationReport3Time},
-                        new long[]{6, navigationReport2Time},
-                        new long[]{7, navigationReport1Time}),
-                /*sequenceIndex=*/1268);
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 3),
+                navigationSource30dExpiry.getImpressionNoiseParams());
+
+        Source navigationSource7dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 2),
+                navigationSource7dExpiry.getImpressionNoiseParams());
+
+        Source navigationSource2dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 1),
+                navigationSource2dExpiry.getImpressionNoiseParams());
     }
+
+    @Test
+    public void impressionNoiseParamGeneration_withInstallAttribution() {
+        long eventTime = System.currentTimeMillis();
+
+        Source eventSource30dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */2,
+                        /* reportingWindowCount= */ 2),
+                eventSource30dExpiry.getImpressionNoiseParams());
+
+        Source eventSource7dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */2,
+                        /* reportingWindowCount= */ 2),
+                eventSource7dExpiry.getImpressionNoiseParams());
+
+        Source eventSource2dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 2,
+                        /* triggerDataCardinality= */2,
+                        /* reportingWindowCount= */ 1),
+                eventSource2dExpiry.getImpressionNoiseParams());
+
+        Source navigationSource30dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(30))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 3),
+                navigationSource30dExpiry.getImpressionNoiseParams());
+
+        Source navigationSource7dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 2),
+                navigationSource7dExpiry.getImpressionNoiseParams());
+
+        Source navigationSource2dExpiry = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
+                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                new ImpressionNoiseParams(
+                        /* reportCount= */ 3,
+                        /* triggerDataCardinality= */ 8,
+                        /* reportingWindowCount= */ 1),
+                navigationSource2dExpiry.getImpressionNoiseParams());
+    }
+
+    @Test
+    public void reportingTimeByIndex_event() {
+        long eventTime = System.currentTimeMillis();
+        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
+
+        // Expected: 1 window at expiry
+        Source eventSource10d = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
+                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
+                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 1));
+
+        // Expected: 1 window at expiry
+        Source eventSource7d = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                eventSource7d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                eventSource7d.getReportingTimeForNoising(/* windowIndex= */ 1));
+
+        // Expected: 1 window at expiry
+        Source eventSource2d = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
+
+    }
+
+    @Test
+    public void reportingTimeByIndex_eventWithInstallAttribution() {
+        long eventTime = System.currentTimeMillis();
+        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
+
+        // Expected: 2 windows at 2d, expiry(10d)
+        Source eventSource10d = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
+                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 1));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
+                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 2));
+
+        // Expected: 1 window at 2d(expiry)
+        Source eventSource2d = new Source.Builder()
+                .setSourceType(Source.SourceType.EVENT)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
+    }
+
+    @Test
+    public void reportingTimeByIndex_navigation() {
+        long eventTime = System.currentTimeMillis();
+        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
+
+        // Expected: 3 windows at 2d, 7d & expiry(20d)
+        Source navigationSource20d = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 1));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(20) + oneHourInMillis,
+                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 2));
+
+        // Expected: 2 windows at 2d & expiry(7d)
+        Source navigationSource7d = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 1));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 2));
+
+        // Expected: 1 window at 2d(expiry)
+        Source navigationSource2d = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
+    }
+
+    @Test
+    public void reportingTimeByIndex_navigationWithInstallAttribution() {
+        long eventTime = System.currentTimeMillis();
+        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
+
+        // Expected: 3 windows at 2d, 7d & expiry(20d)
+        Source navigationSource20d = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 1));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(20) + oneHourInMillis,
+                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 2));
+
+        // Expected: 2 windows at 2d & expiry(7d)
+        Source navigationSource7d = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(7))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 1));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
+                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 2));
+
+        // Expected: 1 window at 2d(expiry)
+        Source navigationSource2d = new Source.Builder()
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(2))
+                .build();
+        assertEquals(
+                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
+        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
+                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
+    }
+
 
     @Test
     public void testParseAggregateSource() throws JSONException {

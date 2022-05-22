@@ -17,18 +17,29 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import android.annotation.IntDef;
+import android.net.Uri;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * Class that contains all the real data needed after aggregation, it is not encrypted.
  */
 public class CleartextAggregatePayload {
-    private AttributionInfo mAttributionInfo;
-    private long mReportTime;
-    private long mExternalReportId;
+    private String mId;
+    private Uri mPublisher;
+    private Uri mAttributionDestination;
+    private long mSourceRegistrationTime;
+    private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
+    private String mPrivacyBudgetKey;
+    private Uri mReportingOrigin;
+    private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
 
@@ -43,10 +54,16 @@ public class CleartextAggregatePayload {
     }
 
     private CleartextAggregatePayload() {
-        mAttributionInfo = null;
-        mReportTime = 0L;
-        mExternalReportId = 0L;
+        mId = null;
+        mPublisher = null;
+        mAttributionDestination = null;
+        mSourceRegistrationTime = 0L;
+        mScheduledReportTime = 0L;
+        mPrivacyBudgetKey = null;
+        mReportingOrigin = null;
+        mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
+        mStatus = CleartextAggregatePayload.Status.PENDING;
     }
 
     @Override
@@ -54,40 +71,81 @@ public class CleartextAggregatePayload {
         if (!(obj instanceof CleartextAggregatePayload)) {
             return false;
         }
-        CleartextAggregatePayload attributionReport = (CleartextAggregatePayload) obj;
-        return mStatus == attributionReport.mStatus
-                && Objects.equals(mAttributionInfo, attributionReport.mAttributionInfo)
-                && Objects.equals(mReportTime, attributionReport.mReportTime)
-                && Objects.equals(mExternalReportId, attributionReport.mExternalReportId)
+        CleartextAggregatePayload aggregatePayload = (CleartextAggregatePayload) obj;
+        return  mId.equals(aggregatePayload.mId)
+                && Objects.equals(mPublisher, aggregatePayload.mPublisher)
+                && Objects.equals(mAttributionDestination, aggregatePayload.mAttributionDestination)
+                && mSourceRegistrationTime == aggregatePayload.mSourceRegistrationTime
+                && mScheduledReportTime == aggregatePayload.mScheduledReportTime
+                && mPrivacyBudgetKey.equals(aggregatePayload.mPrivacyBudgetKey)
+                && Objects.equals(mReportingOrigin, aggregatePayload.mReportingOrigin)
+                && mDebugCleartextPayload.equals(aggregatePayload.mDebugCleartextPayload)
                 && Objects.equals(mAggregateAttributionData,
-                attributionReport.mAggregateAttributionData);
+                aggregatePayload.mAggregateAttributionData)
+                && mStatus == aggregatePayload.mStatus;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mStatus, mAttributionInfo, mReportTime, mExternalReportId,
-                mAggregateAttributionData);
+        return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
+                mScheduledReportTime, mPrivacyBudgetKey, mReportingOrigin, mDebugCleartextPayload,
+                mAggregateAttributionData, mStatus);
     }
 
     /**
-     * Attribution info for the attribution report.
+     * Unique identifier for the {@link CleartextAggregatePayload}.
      */
-    public AttributionInfo getAttributionInfo() {
-        return mAttributionInfo;
+    public String getId() {
+        return mId;
     }
 
     /**
-     * Time this conversion report should be sent for the attribution report.
+     * Uri for publisher of this source, primarily an App.
      */
-    public long getReportTime() {
-        return mReportTime;
+    public Uri getPublisher() {
+        return mPublisher;
     }
 
     /**
-     * External report ID for deduplicating reports received by the reporting origin.
+     * Uri for attribution destination of source.
      */
-    public long getExternalReportId() {
-        return mExternalReportId;
+    public Uri getAttributionDestination() {
+        return mAttributionDestination;
+    }
+
+    /**
+     * Source registration time.
+     */
+    public long getSourceRegistrationTime() {
+        return mSourceRegistrationTime;
+    }
+
+    /**
+     * Scheduled report time for aggregate report .
+     */
+    public long getScheduledReportTime() {
+        return mScheduledReportTime;
+    }
+
+    /**
+     * Privacy budget key for aggregate report.
+     */
+    public String getPrivacyBudgetKey() {
+        return mPrivacyBudgetKey;
+    }
+
+    /**
+     * Uri for report_to of source.
+     */
+    public Uri getReportingOrigin() {
+        return mReportingOrigin;
+    }
+
+    /**
+     * Unencrypted aggregate payload string, convert from List of AggregateHistogramContribution.
+     */
+    public String getDebugCleartextPayload() {
+        return mDebugCleartextPayload;
     }
 
     /**
@@ -105,6 +163,33 @@ public class CleartextAggregatePayload {
     }
 
     /**
+     * Generates String for debugCleartextPayload.
+     * JSON for format :
+     * {
+     *     "operation": "histogram",
+     *     "data": [{
+     *         "bucket": 1369,
+     *         "value": 32768
+     *     },
+     *     {
+     *         "bucket": 3461,
+     *         "value": 1664
+     *     }]
+     * }
+     */
+    public static String generateDebugPayload(
+            List<AggregateHistogramContribution> contributions) throws JSONException {
+        JSONArray jsonArray = new JSONArray();
+        for (AggregateHistogramContribution contribution : contributions) {
+            jsonArray.put(contribution.toJSONObject());
+        }
+        JSONObject debugPayload = new JSONObject();
+        debugPayload.put("operation", "histogram");
+        debugPayload.put("data", jsonArray);
+        return debugPayload.toString();
+    }
+
+    /**
      * Builder for {@link CleartextAggregatePayload}.
      */
     public static final class Builder {
@@ -115,26 +200,66 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getAttributionInfo()}.
+         * See {@link CleartextAggregatePayload#getId()}.
          */
-        public Builder setAttributionInfo(AttributionInfo attributionInfo) {
-            mAttributionReport.mAttributionInfo = attributionInfo;
+        public Builder setId(String id) {
+            mAttributionReport.mId = id;
             return this;
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getReportTime()}.
+         * See {@link CleartextAggregatePayload#getPublisher()}.
          */
-        public Builder setReportTime(long reportTime) {
-            mAttributionReport.mReportTime = reportTime;
+        public Builder setPublisher(Uri publisher) {
+            mAttributionReport.mPublisher = publisher;
             return this;
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getExternalReportId()}.
+         * See {@link CleartextAggregatePayload#getAttributionDestination()}.
          */
-        public Builder setExternalReportId(long externalReportId) {
-            mAttributionReport.mExternalReportId = externalReportId;
+        public Builder setAttributionDestination(Uri attributionDestination) {
+            mAttributionReport.mAttributionDestination = attributionDestination;
+            return this;
+        }
+
+        /**
+         * See {@link CleartextAggregatePayload#getSourceRegistrationTime()}.
+         */
+        public Builder setSourceRegistrationTime(long sourceRegistrationTime) {
+            mAttributionReport.mSourceRegistrationTime = sourceRegistrationTime;
+            return this;
+        }
+
+        /**
+         * See {@link CleartextAggregatePayload#getScheduledReportTime()}.
+         */
+        public Builder setScheduledReportTime(long scheduledReportTime) {
+            mAttributionReport.mScheduledReportTime = scheduledReportTime;
+            return this;
+        }
+
+        /**
+         * See {@link CleartextAggregatePayload#getPrivacyBudgetKey()}.
+         */
+        public Builder setPrivacyBudgetKey(String privacyBudgetKey) {
+            mAttributionReport.mPrivacyBudgetKey = privacyBudgetKey;
+            return this;
+        }
+
+        /**
+         * See {@link CleartextAggregatePayload#getReportingOrigin()}.
+         */
+        public Builder setReportingOrigin(Uri reportingOrigin) {
+            mAttributionReport.mReportingOrigin = reportingOrigin;
+            return this;
+        }
+
+        /**
+         * See {@link CleartextAggregatePayload#getDebugCleartextPayload()}.
+         */
+        public Builder setDebugCleartextPayload(String debugCleartextPayload) {
+            mAttributionReport.mDebugCleartextPayload = debugCleartextPayload;
             return this;
         }
 
@@ -160,66 +285,6 @@ public class CleartextAggregatePayload {
          */
         public CleartextAggregatePayload build() {
             return mAttributionReport;
-        }
-    }
-
-    /**
-     * Attribution info for the attribution report.
-     */
-    public static class AttributionInfo {
-        // TODO: Add StoredSource object here later.
-
-        private long mTime;
-
-        private AttributionInfo() {
-            mTime = 0L;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof AttributionInfo)) {
-                return false;
-            }
-            AttributionInfo attributionInfo = (AttributionInfo) obj;
-            return Objects.equals(mTime, attributionInfo.mTime);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(mTime);
-        }
-
-        /**
-         * Time the trigger occurred for attribution info.
-         */
-        public long getTime() {
-            return mTime;
-        }
-
-        /**
-         * Builder for {@link AttributionInfo}.
-         */
-        public static final class Builder {
-            private final AttributionInfo mAttributionInfo;
-
-            public Builder() {
-                mAttributionInfo = new AttributionInfo();
-            }
-
-            /**
-             * See {@link AttributionInfo#getTime()}.
-             */
-            public Builder setTime(long time) {
-                mAttributionInfo.mTime = time;
-                return this;
-            }
-
-            /**
-             * Build the {@link AttributionInfo}.
-             */
-            public AttributionInfo build() {
-                return mAttributionInfo;
-            }
         }
     }
 }

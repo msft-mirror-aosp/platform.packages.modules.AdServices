@@ -29,16 +29,19 @@ import android.view.InputEvent;
 import android.view.MotionEvent.PointerCoords;
 import android.view.MotionEvent.PointerProperties;
 
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.measurement.actions.Action;
+import com.android.adservices.service.measurement.actions.InstallApp;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
+import com.android.adservices.service.measurement.actions.UninstallApp;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 
 import com.google.common.collect.ImmutableList;
@@ -76,7 +79,7 @@ public abstract class E2ETest {
     // Used to fuzzy-match expected report (not delivery) time
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
 
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+    static final Context sContext = ApplicationProvider.getApplicationContext();
     static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
             ApplicationProvider.getApplicationContext());
     private final Collection<Action> mActionsList;
@@ -97,6 +100,17 @@ public abstract class E2ETest {
         String DOUBLE = "randomized_trigger_rate";
     }
 
+    interface AggregateReportPayloadKeys {
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SOURCE_SITE = "source_site";
+        String HISTOGRAMS = "histograms";
+    }
+
+    interface AggregateHistogramKeys {
+        String BUCKET = "key";
+        String VALUE = "value";
+    }
+
     public interface TestFormatJsonMapping {
         String TEST_INPUT_KEY = "input";
         String TEST_OUTPUT_KEY = "output";
@@ -115,6 +129,10 @@ public abstract class E2ETest {
         String TIMESTAMP_KEY = "timestamp";
         String EVENT_REPORT_OBJECTS_KEY = "event_level_results";
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
+        String INSTALLS_KEY = "installs";
+        String UNINSTALLS_KEY = "uninstalls";
+        String INSTALLS_URI_KEY = "uri";
+        String INSTALLS_TIMESTAMP_KEY = "timestamp";
         String REPORT_TIME_KEY = "report_time";
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
@@ -218,11 +236,14 @@ public abstract class E2ETest {
                 processAction((RegisterTrigger) action);
             } else if (action instanceof ReportingJob) {
                 processAction((ReportingJob) action);
+            } else if (action instanceof InstallApp) {
+                processAction((InstallApp) action);
+            } else if (action instanceof UninstallApp) {
+                processAction((UninstallApp) action);
             }
         }
-        clearDatabase();
-
         evaluateResults();
+        clearDatabase();
     }
 
     /**
@@ -256,11 +277,24 @@ public abstract class E2ETest {
         return Arrays.hashCode(objArray);
     }
 
+    private static int hashForAggregateReportObject(JSONObject obj) {
+        Object[] objArray = new Object[4];
+        // We cannot use report time due to fuzzy matching between actual and expected output.
+        objArray[0] = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[2] = payload.optString(AggregateReportPayloadKeys.SOURCE_SITE, "");
+        // To compare histograms, we already converted them to an ordered string of value pairs.
+        objArray[3] = getComparableHistograms(
+                payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
+        return Arrays.hashCode(objArray);
+    }
+
     private static long reportTimeFrom(JSONObject obj) {
         return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
     }
 
-    private static boolean areEqualEventReportJsons(JSONObject obj1, JSONObject obj2)
+    private static boolean matchReportTimeAndReportTo(JSONObject obj1, JSONObject obj2)
             throws JSONException {
         if (Math.abs(obj1.getLong(TestFormatJsonMapping.REPORT_TIME_KEY)
                 - obj2.getLong(TestFormatJsonMapping.REPORT_TIME_KEY))
@@ -271,6 +305,11 @@ public abstract class E2ETest {
                 obj2.getString(TestFormatJsonMapping.REPORT_TO_KEY))) {
             return false;
         }
+        return true;
+    }
+
+    private static boolean areEqualEventReportJsons(JSONObject obj1, JSONObject obj2)
+            throws JSONException {
         JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         if (payload1.getDouble(EventReportPayloadKeys.DOUBLE)
@@ -282,7 +321,45 @@ public abstract class E2ETest {
                 return false;
             }
         }
-        return true;
+        return matchReportTimeAndReportTo(obj1, obj2);
+    }
+
+    private static boolean areEqualAggregateReportJsons(JSONObject obj1, JSONObject obj2)
+            throws JSONException {
+        JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
+                payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, "").equals(
+                payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, ""))) {
+            return false;
+        }
+        JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
+        JSONArray histograms2 = payload2.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
+        if (!getComparableHistograms(histograms1).equals(getComparableHistograms(histograms2))) {
+            return false;
+        }
+        return matchReportTimeAndReportTo(obj1, obj2);
+    }
+
+    private static String getComparableHistograms(@Nullable JSONArray arr) {
+        if (arr == null) {
+            return "";
+        }
+        try {
+            List<String> tempList = new ArrayList<>();
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject pair = arr.getJSONObject(i);
+                tempList.add(pair.getString(AggregateHistogramKeys.BUCKET) + ","
+                        + pair.getString(AggregateHistogramKeys.VALUE));
+            }
+            Collections.sort(tempList);
+            return String.join(";", tempList);
+        } catch (JSONException ignored) {
+            return "";
+        }
     }
 
     private static void sortEventReportObjects(List<JSONObject> eventReportObjects) {
@@ -291,6 +368,14 @@ public abstract class E2ETest {
                 // they should be similarly ordered, however, so we can use them to sort.
                 Comparator.comparing(E2ETest::reportTimeFrom)
                 .thenComparing(E2ETest::hashForEventReportObject));
+    }
+
+    private static void sortAggregateReportObjects(List<JSONObject> aggregateReportObjects) {
+        aggregateReportObjects.sort(
+                // Report time can vary across implementations so cannot be included in the hash;
+                // they should be similarly ordered, however, so we can use them to sort.
+                Comparator.comparing(E2ETest::reportTimeFrom)
+                .thenComparing(E2ETest::hashForAggregateReportObject));
     }
 
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
@@ -304,6 +389,12 @@ public abstract class E2ETest {
                 return false;
             }
         }
+        for (int i = 0; i < p1.mAggregateReportObjects.size(); i++) {
+            if (!areEqualAggregateReportJsons(p1.mAggregateReportObjects.get(i),
+                    p2.mAggregateReportObjects.get(i))) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -311,12 +402,60 @@ public abstract class E2ETest {
             ReportObjects actualOutput) {
         return String.format("Actual output does not match expected.\n\n"
                 + "(Note that report IDs are ignored in comparisons since they are not known in"
-                + " advance.)\n\nExpected event report objects: %s\n\n"
-                + "Actual event report objects: %s\n\n"
+                + " advance.)\n\nEvent report objects:\n%s\n\n"
                 + "Expected aggregate report objects: %s\n\n"
                 + "Actual aggregate report objects: %s\n",
-                expectedOutput.mEventReportObjects, actualOutput.mEventReportObjects,
+                prettify(expectedOutput.mEventReportObjects, actualOutput.mEventReportObjects),
                 expectedOutput.mAggregateReportObjects, actualOutput.mAggregateReportObjects);
+    }
+
+    private static String prettify(List<JSONObject> expected, List<JSONObject> actual) {
+        StringBuilder result = new StringBuilder("(Expected ::: Actual)"
+                + "\n------------------------\n");
+        for (int i = 0; i < Math.max(expected.size(), actual.size()); i++) {
+            if (i < expected.size() && i < actual.size()) {
+                result.append(prettifyObjs(expected.get(i), actual.get(i)));
+            } else {
+                if (i < expected.size()) {
+                    result.append(prettifyObj("", expected.get(i)));
+                }
+                if (i < actual.size()) {
+                    result.append(prettifyObj(" ::: ", actual.get(i)));
+                }
+            }
+            result.append("\n------------------------\n");
+        }
+        return result.toString();
+    }
+
+    private static String prettifyObjs(JSONObject obj1, JSONObject obj2) {
+        StringBuilder result = new StringBuilder();
+        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": "
+                + obj1.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + " ::: "
+                + obj2.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + "\n");
+        JSONObject payload1 = obj1.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONObject payload2 = obj2.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        for (String key : EventReportPayloadKeys.STRINGS) {
+            result.append(key + ": " + payload1.optString(key)
+                    + " ::: " + payload2.optString(key) + "\n");
+        }
+        result.append(EventReportPayloadKeys.DOUBLE + ": "
+                + payload1.optDouble(EventReportPayloadKeys.DOUBLE)
+                + " ::: " + payload2.optDouble(EventReportPayloadKeys.DOUBLE));
+        return result.toString();
+    }
+
+    private static String prettifyObj(String pad, JSONObject obj) {
+        StringBuilder result = new StringBuilder();
+        result.append(TestFormatJsonMapping.REPORT_TIME_KEY + ": " + pad
+                + obj.optString(TestFormatJsonMapping.REPORT_TIME_KEY) + "\n");
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        for (String key : EventReportPayloadKeys.STRINGS) {
+            result.append(key + ": " + pad + payload.optString(key) + "\n");
+        }
+        result.append(EventReportPayloadKeys.DOUBLE + ": " + pad
+                + payload.optDouble(EventReportPayloadKeys.DOUBLE));
+        return result.toString();
     }
 
     private static Set<Long> getExpiryTimesFrom(RegisterSource sourceRegistration)
@@ -404,6 +543,23 @@ public abstract class E2ETest {
                 actions.add(triggerRegistration);
             }
 
+            if (input.has(TestFormatJsonMapping.INSTALLS_KEY)) {
+                JSONArray installsArray = input.getJSONArray(TestFormatJsonMapping.INSTALLS_KEY);
+                for (int j = 0; j < installsArray.length(); j++) {
+                    InstallApp installApp = new InstallApp(installsArray.getJSONObject(j));
+                    actions.add(installApp);
+                }
+            }
+
+            if (input.has(TestFormatJsonMapping.UNINSTALLS_KEY)) {
+                JSONArray uninstallsArray =
+                        input.getJSONArray(TestFormatJsonMapping.UNINSTALLS_KEY);
+                for (int j = 0; j < uninstallsArray.length(); j++) {
+                    UninstallApp uninstallApp = new UninstallApp(uninstallsArray.getJSONObject(j));
+                    actions.add(uninstallApp);
+                }
+            }
+
             actions.sort(Comparator.comparing(Action::getComparable));
 
             ReportObjects expectedOutput = getExpectedOutput(output);
@@ -443,6 +599,7 @@ public abstract class E2ETest {
         db.delete("msmt_adtech_urls", null, null);
         db.delete("msmt_event_report", null, null);
         db.delete("msmt_attribution_rate_limit", null, null);
+        db.delete("msmt_aggregate_report", null, null);
     }
 
     void processAction(RegisterSource sourceRegistration) throws IOException {
@@ -461,9 +618,27 @@ public abstract class E2ETest {
                 mAttributionHelper.performPendingAttributions());
     }
 
+    void processAction(InstallApp installApp) {
+        Assert.assertTrue("measurementDao.doInstallAttribution failed",
+                sDatastoreManager.runInTransaction(
+                    measurementDao -> {
+                        measurementDao.doInstallAttribution(installApp.mUri, installApp.mTimestamp);
+                    }));
+    }
+
+    void processAction(UninstallApp uninstallApp) {
+        Assert.assertTrue("measurementDao.undoInstallAttribution failed",
+                sDatastoreManager.runInTransaction(
+                    measurementDao -> {
+                        measurementDao.undoInstallAttribution(uninstallApp.mUri);
+                    }));
+    }
+
     void evaluateResults() throws JSONException {
         sortEventReportObjects(mExpectedOutput.mEventReportObjects);
         sortEventReportObjects(mActualOutput.mEventReportObjects);
+        sortAggregateReportObjects(mExpectedOutput.mAggregateReportObjects);
+        sortAggregateReportObjects(mActualOutput.mAggregateReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }
