@@ -246,7 +246,7 @@
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "event",
-          "randomized_trigger_rate": 0.0000025
+          "randomized_trigger_rate": 0.0000125
         }
       },
       {
@@ -257,7 +257,7 @@
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "event",
-          "randomized_trigger_rate": 0.0000025
+          "randomized_trigger_rate": 0.0000125
         }
       },
       {
@@ -268,7 +268,7 @@
           "source_event_id": "6",
           "trigger_data": "1",
           "source_type": "event",
-          "randomized_trigger_rate": 0.0000025
+          "randomized_trigger_rate": 0.0000125
         }
       }
     ],

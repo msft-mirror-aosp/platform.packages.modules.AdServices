@@ -51,8 +51,8 @@ public class AdSelectionClient {
     }
 
     /**
-     * Invokes the {@code runAdSelection} method of {@link AdSelectionManager}, and returns a Void
-     * future
+     * Invokes the {@code runAdSelection} method of {@link AdSelectionManager}, and returns a future
+     * with {@link AdSelectionOutcome} if succeeds, or an {@link AdServicesException} if fails.
      */
     @NonNull
     public ListenableFuture<AdSelectionOutcome> runAdSelection(
@@ -65,7 +65,7 @@ public class AdSelectionClient {
                             new OutcomeReceiver<AdSelectionOutcome, AdServicesException>() {
 
                                 @Override
-                                public void onResult(AdSelectionOutcome result) {
+                                public void onResult(@NonNull AdSelectionOutcome result) {
                                     completer.set(
                                             new AdSelectionOutcome.Builder()
                                                     .setAdSelectionId(result.getAdSelectionId())
@@ -73,6 +73,10 @@ public class AdSelectionClient {
                                                     .build());
                                 }
 
+                                @Override
+                                public void onError(@NonNull AdServicesException error) {
+                                    completer.setException(error);
+                                }
                             });
                     return "Ad Selection";
                 });
