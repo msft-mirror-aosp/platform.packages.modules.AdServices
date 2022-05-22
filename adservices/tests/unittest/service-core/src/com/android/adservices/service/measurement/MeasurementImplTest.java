@@ -22,6 +22,7 @@ import static com.android.adservices.data.measurement.DatastoreManager.ThrowingC
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -61,10 +62,8 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -77,6 +76,7 @@ import java.util.concurrent.TimeUnit;
 public final class MeasurementImplTest {
 
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri DEFAULT_REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
     private static final RegistrationRequest SOURCE_REGISTRATION_REQUEST =
@@ -318,20 +318,16 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testSourceRegistration_impressionNoise() {
+    public void testSourceRegistration_callsImpressionNoiseCreator() throws DatastoreException {
         long eventTime = System.currentTimeMillis();
-        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
-        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
-        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
         long expiry = TimeUnit.DAYS.toSeconds(20);
         // Creating source for easy comparison
-        Source source = new Source.Builder()
+        Source sampleSource = new Source.Builder()
                 .setAdTechDomain(BaseUriExtractor.getBaseUri(DEFAULT_REGISTRATION_URI))
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
                 .setEventTime(eventTime)
                 .setPublisher(DEFAULT_URI)
-                .setRegistrant(DEFAULT_URI)
                 .setAttributionDestination(Uri.parse("android-app://com.example.abc"))
                 .setEventId(123L)
                 .build();
@@ -339,69 +335,108 @@ public final class MeasurementImplTest {
         doAnswer(invocation -> {
             List<SourceRegistration> sourceReg = invocation.getArgument(1);
             sourceReg.add(new SourceRegistration.Builder()
-                    .setSourceEventId(source.getEventId())
-                    .setDestination(source.getAttributionDestination())
-                    .setTopOrigin(source.getPublisher())
+                    .setSourceEventId(sampleSource.getEventId())
+                    .setDestination(sampleSource.getAttributionDestination())
+                    .setTopOrigin(sampleSource.getPublisher())
                     .setExpiry(expiry)
-                    .setReportingOrigin(source.getAdTechDomain())
+                    .setReportingOrigin(sampleSource.getAdTechDomain())
                     .build()
             );
             return true;
-        }).when(mockSourceFetcher).fetchSource(any(), any());
+        }).when(mSourceFetcher).fetchSource(any(), any());
         MeasurementImpl measurement = spy(new MeasurementImpl(
-                mContentResolver, mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher));
-        List<List<EventReport>> capturedValues = new ArrayList<>();
-        // Capturing fake event reports
-        doAnswer((Answer<List<EventReport>>) invocation -> {
-            List<EventReport> res = (List<EventReport>) invocation.callRealMethod();
-            capturedValues.add(res);
-            return res;
-        }).when(measurement).getSourceEventReports(any());
+                mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher));
         InputEvent inputEvent = getInputEvent();
-        // Running the API 2000 times, to test if we generate random tests > 0 times.
-        for (int i = 0; i < 2000; i++) {
-            final int result = measurement.register(
-                    new RegistrationRequest.Builder()
-                            .setRegistrationUri(DEFAULT_REGISTRATION_URI)
-                            .setTopOriginUri(DEFAULT_URI)
-                            .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                            .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                            .setInputEvent(inputEvent)
-                            .build(),
-                    eventTime
-            );
-            assertEquals(IMeasurementCallback.RESULT_OK, result);
-        }
-        int fakeReportGenerationCount = 0;
+        final int result = measurement.register(
+                new RegistrationRequest.Builder()
+                        .setRegistrationUri(DEFAULT_REGISTRATION_URI)
+                        .setTopOriginUri(DEFAULT_URI)
+                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setInputEvent(inputEvent)
+                        .build(),
+                eventTime
+        );
+        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        ArgumentCaptor<Source> sourceArgs = ArgumentCaptor.forClass(Source.class);
+        verify(measurement).getSourceEventReports(sourceArgs.capture());
+        Source capturedSource = sourceArgs.getValue();
+        assertEquals(sampleSource.getSourceType(), capturedSource.getSourceType());
+        assertEquals(sampleSource.getEventId(), capturedSource.getEventId());
+        assertEquals(sampleSource.getEventTime(), capturedSource.getEventTime());
+        assertEquals(sampleSource.getAggregateSource(), capturedSource.getAggregateSource());
+        assertEquals(sampleSource.getAttributionDestination(),
+                capturedSource.getAttributionDestination());
+        assertEquals(sampleSource.getAdTechDomain(), capturedSource.getAdTechDomain());
+        assertEquals(sampleSource.getPublisher(), capturedSource.getPublisher());
+        assertEquals(sampleSource.getPriority(), capturedSource.getPriority());
+
+        // Check Attribution Mode assignment
+        assertNotEquals(Source.AttributionMode.UNASSIGNED, capturedSource.getAttributionMode());
+    }
+
+    @Test
+    public void testGetSourceEventReports() {
+        long eventTime = System.currentTimeMillis();
+        Source source = spy(new Source.Builder()
+                .setEventId(123L)
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
+                .setSourceType(Source.SourceType.NAVIGATION)
+                .setAdTechDomain(BaseUriExtractor.getBaseUri(DEFAULT_REGISTRATION_URI))
+                .setAttributionDestination(DEFAULT_URI)
+                .setPublisher(DEFAULT_URI)
+                .build());
+        when(source.getRandomAttributionProbability()).thenReturn(1.1D);
+        DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
+        SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
+        TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
+        MeasurementImpl measurement = new MeasurementImpl(
+                mContentResolver, mockDatastoreManager, mockSourceFetcher, mockTriggerFetcher);
+        List<EventReport> fakeEventReports =  measurement.getSourceEventReports(source);
+
         // Generate valid report times
         Set<Long> reportingTimes = new HashSet<>();
         reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(1)));
         reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(3)));
         reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(8)));
 
-        for (List<EventReport> fakeReports : capturedValues) {
-            if (!fakeReports.isEmpty()) {
-                fakeReportGenerationCount++;
-            }
-            for (EventReport report : fakeReports) {
-                Assert.assertEquals(source.getEventId(), report.getSourceId());
-                Assert.assertTrue(
-                        reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
-                Assert.assertEquals(0, report.getTriggerTime());
-                Assert.assertEquals(0, report.getTriggerPriority());
-                Assert.assertEquals(source.getAttributionDestination(),
-                        report.getAttributionDestination());
-                Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
-                Assert.assertTrue(report.getTriggerData() < source.getTriggerDataCardinality());
-                Assert.assertNull(report.getTriggerDedupKey());
-                Assert.assertEquals(EventReport.Status.PENDING, report.getStatus());
-                Assert.assertEquals(source.getSourceType(), report.getSourceType());
-
-            }
+        for (EventReport report : fakeEventReports) {
+            Assert.assertEquals(source.getEventId(), report.getSourceId());
+            Assert.assertTrue(
+                    reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
+            Assert.assertEquals(0, report.getTriggerTime());
+            Assert.assertEquals(0, report.getTriggerPriority());
+            Assert.assertEquals(source.getAttributionDestination(),
+                    report.getAttributionDestination());
+            Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+            Assert.assertTrue(report.getTriggerData()
+                    < source.getTriggerDataCardinality());
+            Assert.assertNull(report.getTriggerDedupKey());
+            Assert.assertEquals(EventReport.Status.PENDING, report.getStatus());
+            Assert.assertEquals(source.getSourceType(), report.getSourceType());
+            Assert.assertEquals(source.getRandomAttributionProbability(),
+                    report.getRandomizedTriggerRate(), /* delta= */ 0.00001D);
         }
-        // Verifying that fake event reports were generated n times, n > 0 and n < 2000 times.
-        Assert.assertTrue(0 < fakeReportGenerationCount
-                && 2000 > fakeReportGenerationCount);
+    }
+
+    @Test
+    public void testInstallAttribution() throws DatastoreException {
+        // Setup
+        long systemTime = System.currentTimeMillis();
+        MeasurementImpl measurement = new MeasurementImpl(
+                mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        // Execution
+        measurement.doInstallAttribution(URI_WITHOUT_APP_SCHEME, systemTime);
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+
+        // Assertion
+        verify(mMeasurementDao).doInstallAttribution(DEFAULT_URI, systemTime);
     }
 
     private void verifyInsertSource(RegistrationRequest registrationRequest,

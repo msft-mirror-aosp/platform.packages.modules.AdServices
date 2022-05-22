@@ -74,7 +74,7 @@ public class EventReportSenderTest {
         Mockito.doReturn(httpUrlConnection).when(spyEventReportSender)
                 .createHttpUrlConnection(Mockito.any());
 
-        int responseCode = spyEventReportSender.sendEventReport(reportingOrigin,
+        int responseCode = spyEventReportSender.sendReport(reportingOrigin,
                 eventReportJson);
 
         assertEquals(outputStream.toString(), eventReportJson.toString());

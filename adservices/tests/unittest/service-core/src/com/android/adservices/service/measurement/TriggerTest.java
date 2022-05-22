@@ -141,21 +141,6 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetRandomizedTriggerData() {
-        Source source = new Source.Builder()
-                .setSourceType(Source.SourceType.NAVIGATION).build();
-        Trigger trigger = new Trigger.Builder().setEventTriggerData(2L).build();
-        int randomCount = 0;
-        for (int i = 0; i < 5000; i++) {
-            if (trigger.getEventTriggerData() != trigger.getRandomizedTriggerData(source)) {
-                randomCount++;
-            }
-        }
-        assertNotEquals(0, randomCount);
-        assertNotEquals(5000, randomCount);
-    }
-
-    @Test
     public void getTruncatedTriggerDataNavigation() {
         Source source = new Source.Builder()
                 .setSourceType(Source.SourceType.NAVIGATION).build();
