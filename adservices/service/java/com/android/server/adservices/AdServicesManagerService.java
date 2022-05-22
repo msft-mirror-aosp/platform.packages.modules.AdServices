@@ -25,6 +25,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import com.android.adservices.LogUtil;
 import com.android.server.SystemService;
 
 /**
@@ -82,30 +83,39 @@ public class AdServicesManagerService {
         final IntentFilter packageChangedIntentFilter = new IntentFilter();
 
         packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        // TODO(b/229412239): Add other actions.
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
         packageChangedIntentFilter.addDataScheme("package");
 
         BroadcastReceiver packageChangedIntentReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "Received for intent: " + intent);
+                LogUtil.d("Received for intent: " + intent);
                 switch(intent.getAction()) {
                     case Intent.ACTION_PACKAGE_FULLY_REMOVED:
-                        Uri packageUri = intent.getData();
-                        Log.d(TAG, "Removed package: " + packageUri.toString());
-                        onPackageFullyRemoved(packageUri);
-                    // TODO(b/229412239): Add other actions.
+                        Uri removedPackageUri = intent.getData();
+                        LogUtil.d("Removed package: " + removedPackageUri);
+                        onPackageFullyRemoved(removedPackageUri);
+                        break;
+                    case Intent.ACTION_PACKAGE_ADDED:
+                        Uri addedPackageUri = intent.getData();
+                        LogUtil.d("Added package: " + addedPackageUri);
+                        onPackageAdded(addedPackageUri);
                 }
             }
         };
         mContext.registerReceiver(packageChangedIntentReceiver, packageChangedIntentFilter,
                 null, mHandler);
-        Log.d(TAG, "Package changed Broadcast Receivers registered.");
+        LogUtil.d("Package changed Broadcast Receivers registered.");
     }
 
     private void onPackageFullyRemoved(Uri packageUri) {
         mHandler.post(() -> mContext.getSystemService(AdServicesCommonManager.class)
                 .onPackageFullyRemoved(packageUri));
 
+    }
+
+    private void onPackageAdded(Uri packageUri) {
+        mHandler.post(() -> mContext.getSystemService(AdServicesCommonManager.class)
+                .onPackageAdded(packageUri));
     }
 }

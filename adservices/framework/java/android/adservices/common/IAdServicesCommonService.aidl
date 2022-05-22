@@ -24,4 +24,5 @@ import android.net.Uri;
   */
 interface IAdServicesCommonService {
     oneway void onPackageFullyRemoved(in Uri packageUri);
+    oneway void onPackageAdded(in Uri packageUri);
 }
