@@ -169,7 +169,7 @@ class AttributionJobHandler {
                             + MIN_TIME_MS);
                     CleartextAggregatePayload aggregateReport =
                             new CleartextAggregatePayload.Builder()
-                                    .setSourceSite(source.getRegistrant())
+                                    .setPublisher(source.getRegistrant())
                                     .setAttributionDestination(source.getAttributionDestination())
                                     .setSourceRegistrationTime(source.getEventTime())
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
