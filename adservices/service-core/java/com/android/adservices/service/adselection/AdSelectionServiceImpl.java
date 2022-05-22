@@ -80,6 +80,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 context);
     }
 
+    //TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
     public void runAdSelection(
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {

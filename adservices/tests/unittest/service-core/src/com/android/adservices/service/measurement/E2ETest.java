@@ -29,6 +29,7 @@ import android.view.InputEvent;
 import android.view.MotionEvent.PointerCoords;
 import android.view.MotionEvent.PointerProperties;
 
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
@@ -78,7 +79,7 @@ public abstract class E2ETest {
     // Used to fuzzy-match expected report (not delivery) time
     private static final long REPORT_TIME_EPSILON = TimeUnit.HOURS.toMillis(2);
 
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+    static final Context sContext = ApplicationProvider.getApplicationContext();
     static final DatastoreManager sDatastoreManager = DatastoreManagerFactory.getDatastoreManager(
             ApplicationProvider.getApplicationContext());
     private final Collection<Action> mActionsList;
@@ -97,6 +98,17 @@ public abstract class E2ETest {
                 "trigger_data",
                 "source_type");
         String DOUBLE = "randomized_trigger_rate";
+    }
+
+    interface AggregateReportPayloadKeys {
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String SOURCE_SITE = "source_site";
+        String HISTOGRAMS = "histograms";
+    }
+
+    interface AggregateHistogramKeys {
+        String BUCKET = "key";
+        String VALUE = "value";
     }
 
     public interface TestFormatJsonMapping {
@@ -216,6 +228,7 @@ public abstract class E2ETest {
 
     @Test
     public void runTest() throws IOException, JSONException {
+        clearDatabase();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
@@ -264,11 +277,24 @@ public abstract class E2ETest {
         return Arrays.hashCode(objArray);
     }
 
+    private static int hashForAggregateReportObject(JSONObject obj) {
+        Object[] objArray = new Object[4];
+        // We cannot use report time due to fuzzy matching between actual and expected output.
+        objArray[0] = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
+        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
+        objArray[2] = payload.optString(AggregateReportPayloadKeys.SOURCE_SITE, "");
+        // To compare histograms, we already converted them to an ordered string of value pairs.
+        objArray[3] = getComparableHistograms(
+                payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
+        return Arrays.hashCode(objArray);
+    }
+
     private static long reportTimeFrom(JSONObject obj) {
         return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
     }
 
-    private static boolean areEqualEventReportJsons(JSONObject obj1, JSONObject obj2)
+    private static boolean matchReportTimeAndReportTo(JSONObject obj1, JSONObject obj2)
             throws JSONException {
         if (Math.abs(obj1.getLong(TestFormatJsonMapping.REPORT_TIME_KEY)
                 - obj2.getLong(TestFormatJsonMapping.REPORT_TIME_KEY))
@@ -279,6 +305,11 @@ public abstract class E2ETest {
                 obj2.getString(TestFormatJsonMapping.REPORT_TO_KEY))) {
             return false;
         }
+        return true;
+    }
+
+    private static boolean areEqualEventReportJsons(JSONObject obj1, JSONObject obj2)
+            throws JSONException {
         JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         if (payload1.getDouble(EventReportPayloadKeys.DOUBLE)
@@ -290,7 +321,45 @@ public abstract class E2ETest {
                 return false;
             }
         }
-        return true;
+        return matchReportTimeAndReportTo(obj1, obj2);
+    }
+
+    private static boolean areEqualAggregateReportJsons(JSONObject obj1, JSONObject obj2)
+            throws JSONException {
+        JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
+                payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
+            return false;
+        }
+        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, "").equals(
+                payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, ""))) {
+            return false;
+        }
+        JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
+        JSONArray histograms2 = payload2.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);
+        if (!getComparableHistograms(histograms1).equals(getComparableHistograms(histograms2))) {
+            return false;
+        }
+        return matchReportTimeAndReportTo(obj1, obj2);
+    }
+
+    private static String getComparableHistograms(@Nullable JSONArray arr) {
+        if (arr == null) {
+            return "";
+        }
+        try {
+            List<String> tempList = new ArrayList<>();
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject pair = arr.getJSONObject(i);
+                tempList.add(pair.getString(AggregateHistogramKeys.BUCKET) + ","
+                        + pair.getString(AggregateHistogramKeys.VALUE));
+            }
+            Collections.sort(tempList);
+            return String.join(";", tempList);
+        } catch (JSONException ignored) {
+            return "";
+        }
     }
 
     private static void sortEventReportObjects(List<JSONObject> eventReportObjects) {
@@ -301,6 +370,14 @@ public abstract class E2ETest {
                 .thenComparing(E2ETest::hashForEventReportObject));
     }
 
+    private static void sortAggregateReportObjects(List<JSONObject> aggregateReportObjects) {
+        aggregateReportObjects.sort(
+                // Report time can vary across implementations so cannot be included in the hash;
+                // they should be similarly ordered, however, so we can use them to sort.
+                Comparator.comparing(E2ETest::reportTimeFrom)
+                .thenComparing(E2ETest::hashForAggregateReportObject));
+    }
+
     private static boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
         if (p1.mEventReportObjects.size() != p2.mEventReportObjects.size()
                 || p1.mAggregateReportObjects.size() != p2.mAggregateReportObjects.size()) {
@@ -309,6 +386,12 @@ public abstract class E2ETest {
         for (int i = 0; i < p1.mEventReportObjects.size(); i++) {
             if (!areEqualEventReportJsons(p1.mEventReportObjects.get(i),
                     p2.mEventReportObjects.get(i))) {
+                return false;
+            }
+        }
+        for (int i = 0; i < p1.mAggregateReportObjects.size(); i++) {
+            if (!areEqualAggregateReportJsons(p1.mAggregateReportObjects.get(i),
+                    p2.mAggregateReportObjects.get(i))) {
                 return false;
             }
         }
@@ -516,6 +599,7 @@ public abstract class E2ETest {
         db.delete("msmt_adtech_urls", null, null);
         db.delete("msmt_event_report", null, null);
         db.delete("msmt_attribution_rate_limit", null, null);
+        db.delete("msmt_aggregate_report", null, null);
     }
 
     void processAction(RegisterSource sourceRegistration) throws IOException {
@@ -553,6 +637,8 @@ public abstract class E2ETest {
     void evaluateResults() throws JSONException {
         sortEventReportObjects(mExpectedOutput.mEventReportObjects);
         sortEventReportObjects(mActualOutput.mEventReportObjects);
+        sortAggregateReportObjects(mExpectedOutput.mAggregateReportObjects);
+        sortAggregateReportObjects(mActualOutput.mAggregateReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }
