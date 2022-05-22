@@ -71,7 +71,8 @@
           "status": 0,
           "reportTime": 8643600030,
           "triggerPriority": 101,
-          "sourceType": "navigation"
+          "sourceType": "navigation",
+          "randomizedTriggerRate":  0.0024263
         }],
         "attribution_rate_limits": [
           {
@@ -247,7 +248,8 @@
           "triggerTime": 8640000002,
           "triggerPriority": 101,
           "status": 0,
-          "sourceType": "navigation"
+          "sourceType": "navigation",
+          "randomizedTriggerRate":  0.0024263
         }],
         "attribution_rate_limits": [
           {
@@ -358,7 +360,8 @@
           "triggerTime": 8640000003,
           "triggerPriority": 101,
           "status": 0,
-          "sourceType": "navigation"
+          "sourceType": "navigation",
+          "randomizedTriggerRate":  0.0024263
         }],
         "attribution_rate_limits": [
           {
@@ -475,7 +478,8 @@
             "triggerPriority": 101,
             "status": 0,
             "reportTime": 8816400000,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           }
         ],
         "attribution_rate_limits": [
@@ -594,7 +598,8 @@
             "triggerPriority": 101,
             "status": 0,
             "reportTime": 9248400001,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           }
         ],
         "attribution_rate_limits": [
@@ -712,7 +717,8 @@
             "triggerPriority": 101,
             "status": 0,
             "reportTime": 8816400000,
-            "sourceType": "event"
+            "sourceType": "event",
+            "randomizedTriggerRate":  0.0000125
           }
         ],
         "attribution_rate_limits": [
@@ -830,7 +836,8 @@
             "triggerPriority": 101,
             "status": 0,
             "reportTime": 10371600000,
-            "sourceType": "event"
+            "sourceType": "event",
+            "randomizedTriggerRate":  0.0000025
           }
         ],
         "attribution_rate_limits": [
@@ -917,7 +924,8 @@
           "status": 0,
           "reportTime": 8643600030,
           "triggerPriority": 101,
-          "sourceType": "event"
+          "sourceType": "event",
+          "randomizedTriggerRate":  0.0000025
         }],
         "attribution_rate_limits": [
           {
@@ -1003,7 +1011,8 @@
           "status": 0,
           "reportTime": 8643600030,
           "triggerPriority": 101,
-          "sourceType": "navigation"
+          "sourceType": "navigation",
+          "randomizedTriggerRate":  0.0024263
         }],
         "attribution_rate_limits": [
           {
@@ -1099,7 +1108,8 @@
           "status": 0,
           "reportTime": 8643600030,
           "triggerPriority": 101,
-          "sourceType": "event"
+          "sourceType": "event",
+          "randomizedTriggerRate":  0.0000025
         }],
         "attribution_rate_limits": [{
           "id": "unused",
@@ -1193,7 +1203,8 @@
           "status": 0,
           "reportTime": 8643600030,
           "triggerPriority": 102,
-          "sourceType": "event"
+          "sourceType": "event",
+          "randomizedTriggerRate":  0.0000025
         }],
         "attribution_rate_limits": [
           {
@@ -1347,7 +1358,8 @@
             "status": 0,
             "reportTime": 8643600030,
             "triggerPriority": 102,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           },
           {
             "id": "unused",
@@ -1359,7 +1371,8 @@
             "status": 0,
             "reportTime": 8643600030,
             "triggerPriority": 103,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           },
           {
             "id": "unused",
@@ -1371,7 +1384,8 @@
             "status": 0,
             "reportTime": 8643600030,
             "triggerPriority": 104,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           }
         ],
         "attribution_rate_limits": [
@@ -1543,7 +1557,8 @@
             "status": 0,
             "reportTime": 8643600030,
             "triggerPriority": 101,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           },
           {
             "id": "unused",
@@ -1555,7 +1570,8 @@
             "status": 0,
             "reportTime": 8643600030,
             "triggerPriority": 101,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           },
           {
             "id": "unused",
@@ -1567,7 +1583,8 @@
             "status": 0,
             "reportTime": 8643600030,
             "triggerPriority": 102,
-            "sourceType": "navigation"
+            "sourceType": "navigation",
+            "randomizedTriggerRate":  0.0024263
           }
         ],
         "attribution_rate_limits": [

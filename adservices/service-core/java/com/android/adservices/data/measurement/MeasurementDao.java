@@ -146,6 +146,27 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+            throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateReport.TABLE,
+                null,
+                MeasurementTables.AggregateReport.ID + " = ? ",
+                new String[]{aggregateReportId},
+                null,
+                null,
+                null,
+                null)) {
+            if (cursor.getCount() == 0) {
+                throw new DatastoreException(
+                        "AggregateReport retrieval failed. Id: " + aggregateReportId);
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructCleartextAggregatePayload(cursor);
+        }
+    }
+
+    @Override
     public void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
             @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
@@ -261,6 +282,19 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void markAggregateReportDelivered(String aggregateReportId) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateReport.STATUS,
+                CleartextAggregatePayload.Status.DELIVERED);
+        long rows = mSQLTransaction.getDatabase().update(MeasurementTables.AggregateReport.TABLE,
+                values, MeasurementTables.AggregateReport.ID + " = ? ",
+                new String[]{aggregateReportId});
+        if (rows != 1) {
+            throw new DatastoreException("AggregateReport update failed");
+        }
+    }
+
+    @Override
     @Nullable
     public List<EventReport> getSourceEventReports(Source source) throws DatastoreException {
         List<EventReport> eventReports = new ArrayList<>();
@@ -359,6 +393,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getTriggerPriority());
         values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
                 eventReport.getSourceType().toString());
+        values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                eventReport.getRandomizedTriggerRate());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -920,8 +956,8 @@ class MeasurementDao implements IMeasurementDao {
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, UUID.randomUUID().toString());
-        values.put(MeasurementTables.AggregateReport.SOURCE_SITE,
-                aggregateReport.getSourceSite().toString());
+        values.put(MeasurementTables.AggregateReport.PUBLISHER,
+                aggregateReport.getPublisher().toString());
         values.put(MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 aggregateReport.getAttributionDestination().toString());
         values.put(MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
@@ -959,6 +995,47 @@ class MeasurementDao implements IMeasurementDao {
                 res.add(SqliteObjectMapper.constructCleartextAggregatePayload(cursor));
             }
             return res;
+        }
+    }
+
+
+    @Override
+    public List<String> getPendingAggregateReportIdsInWindow(long windowStartTime,
+            long windowEndTime) throws DatastoreException {
+        List<String> aggregateReports = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateReport.TABLE,
+                /*columns=*/null,
+                MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME + " >= ? AND "
+                        + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME + " <= ? AND "
+                        + MeasurementTables.AggregateReport.STATUS + " = ? ",
+                new String[]{String.valueOf(windowStartTime), String.valueOf(windowEndTime),
+                        String.valueOf(CleartextAggregatePayload.Status.PENDING)},
+                /*groupBy=*/null, /*having=*/null, /*orderBy=*/"RANDOM()", /*limit=*/null)) {
+            while (cursor.moveToNext()) {
+                aggregateReports.add(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.EventReportContract.ID)));
+            }
+            return aggregateReports;
+        }
+    }
+
+    @Override
+    public List<String> getPendingAggregateReportIdsForGivenApp(Uri appName)
+            throws DatastoreException {
+        List<String> aggregateReports = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateReport.TABLE, null,
+                MeasurementTables.AggregateReport.PUBLISHER + " = ? AND "
+                + MeasurementTables.AggregateReport.STATUS + " = ? ",
+                new String[]{appName.toString(),
+                        String.valueOf(CleartextAggregatePayload.Status.PENDING)},
+                null, null, "RANDOM()", null)) {
+            while (cursor.moveToNext()) {
+                aggregateReports.add(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AggregateReport.ID)));
+            }
+            return aggregateReports;
         }
     }
 
