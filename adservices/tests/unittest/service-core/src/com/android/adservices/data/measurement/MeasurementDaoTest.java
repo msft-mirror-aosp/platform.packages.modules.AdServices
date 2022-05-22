@@ -1029,7 +1029,7 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertAggregateReport(
                         new CleartextAggregatePayload.Builder()
-                                .setSourceSite(ValidSourceParams.sRegistrant)
+                                .setPublisher(ValidSourceParams.sRegistrant)
                                 .setAttributionDestination(
                                         ValidSourceParams.sAttributionDestination)
                                 .setSourceRegistrationTime(ValidSourceParams.SOURCE_EVENT_TIME)
@@ -1049,7 +1049,7 @@ public class MeasurementDaoTest {
                     SqliteObjectMapper.constructCleartextAggregatePayload(cursor);
             Assert.assertNotNull(aggregateReport);
             Assert.assertNotNull(aggregateReport.getId());
-            assertEquals(ValidSourceParams.sRegistrant, aggregateReport.getSourceSite());
+            assertEquals(ValidSourceParams.sRegistrant, aggregateReport.getPublisher());
             assertEquals(ValidSourceParams.sAttributionDestination,
                     aggregateReport.getAttributionDestination());
             assertEquals(ValidSourceParams.SOURCE_EVENT_TIME.longValue(),

@@ -37,4 +37,8 @@ public class AdServicesCommon {
     /** Intent action to discover the Measurement service in the APK. */
     public static final String ACTION_MEASUREMENT_SERVICE =
             "android.adservices.MEASUREMENT_SERVICE";
+
+    /** Intent action to discover the AdServicesCommon service in the APK. */
+    public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
+            "android.adservices.AD_SERVICES_COMMON_SERVICE";
 }

@@ -44,6 +44,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -505,5 +509,39 @@ public final class EpochManagerTest {
         Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDB = topicsDao
                 .retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1);
         assertThat(returnedTopicsFromDB).isEqualTo(expectedReturnedTopics);
+    }
+
+    @Test
+    public void testDump() throws FileNotFoundException {
+        // Trigger the dump to verify no crash
+        // Create a new epochManager that we can control the random generator.
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        EpochManager epochManager = new EpochManager(
+                topicsDao,
+                dbHelper,
+                new Random(),
+                mMockClassifier,
+                mFlags
+        );
+
+        PrintWriter printWriter = new PrintWriter(new Writer() {
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+
+            }
+
+            @Override
+            public void flush() throws IOException {
+
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        });
+        String[] args = new String[]{};
+        epochManager.dump(printWriter, args);
     }
 }
