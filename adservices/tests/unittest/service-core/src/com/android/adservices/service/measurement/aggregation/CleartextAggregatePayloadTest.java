@@ -33,7 +33,7 @@ public final class CleartextAggregatePayloadTest {
     private CleartextAggregatePayload createAttributionReport() {
         return new CleartextAggregatePayload.Builder()
                 .setId("1")
-                .setSourceSite(Uri.parse("android-app://com.example.abc"))
+                .setPublisher(Uri.parse("android-app://com.example.abc"))
                 .setAttributionDestination(Uri.parse("https://example.com/aS"))
                 .setSourceRegistrationTime(5L)
                 .setScheduledReportTime(1L)
@@ -50,7 +50,7 @@ public final class CleartextAggregatePayloadTest {
     public void testCreation() throws Exception {
         CleartextAggregatePayload attributionReport = createAttributionReport();
         assertEquals("1", attributionReport.getId());
-        assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getSourceSite());
+        assertEquals(Uri.parse("android-app://com.example.abc"), attributionReport.getPublisher());
         assertEquals(Uri.parse("https://example.com/aS"),
                 attributionReport.getAttributionDestination());
         assertEquals(5L, attributionReport.getSourceRegistrationTime());
@@ -68,7 +68,7 @@ public final class CleartextAggregatePayloadTest {
         CleartextAggregatePayload attributionReport =
                 new CleartextAggregatePayload.Builder().build();
         assertNull(attributionReport.getId());
-        assertNull(attributionReport.getSourceSite());
+        assertNull(attributionReport.getPublisher());
         assertNull(attributionReport.getAttributionDestination());
         assertEquals(0L, attributionReport.getSourceRegistrationTime());
         assertEquals(0L, attributionReport.getScheduledReportTime());

@@ -260,6 +260,8 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.EventReportContract.STATUS, report.getStatus());
         values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
                 report.getSourceType().toString());
+        values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                report.getRandomizedTriggerRate());
         long row = db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("EventReport insertion failed");
