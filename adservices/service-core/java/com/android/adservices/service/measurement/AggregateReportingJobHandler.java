@@ -154,7 +154,7 @@ public class AggregateReportingJobHandler {
             throws JSONException {
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
-                .setSourceSite(aggregateReport.getSourceSite().toString())
+                .setSourceSite(aggregateReport.getPublisher().toString())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
                 .setSourceRegistrationTime(
                         String.valueOf(TimeUnit.MILLISECONDS.toSeconds(

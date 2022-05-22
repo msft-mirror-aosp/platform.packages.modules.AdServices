@@ -102,6 +102,24 @@ public final class MeasurementImpl {
     }
 
     /**
+     * Invoked when a package is installed.
+     *
+     * @param packageUri installed package {@link Uri}.
+     * @param eventTime  time when the package was installed.
+     */
+    public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
+        LogUtil.i("Attributing installation for: " + packageUri);
+        Uri appUri = getAppUri(packageUri);
+        mReadWriteLock.readLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.doInstallAttribution(appUri, eventTime));
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
      * Implement a registration request, returning a result code.
      */
     int register(@NonNull RegistrationRequest request, long requestTime) {
@@ -172,14 +190,17 @@ public final class MeasurementImpl {
         LogUtil.i("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction((dao) ->
-                    dao.deleteAppRecords(appUri));
+            mDatastoreManager.runInTransaction((dao) -> {
+                dao.deleteAppRecords(appUri);
+                dao.undoInstallAttribution(appUri);
+            });
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete package records received invalid parameters");
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
     }
+
     private void insertSources(
             @NonNull RegistrationRequest request,
             ArrayList<SourceRegistration> responseBasedRegistrations,
