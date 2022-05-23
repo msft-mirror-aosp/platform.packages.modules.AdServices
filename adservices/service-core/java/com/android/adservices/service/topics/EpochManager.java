@@ -109,7 +109,7 @@ public class EpochManager implements Dumpable {
         // This cross db and java boundaries multiple times so we need to have a db transaction.
         db.beginTransaction();
         long epochId = getCurrentEpochId();
-        LogUtil.v("Current epochId is %d", epochId);
+        LogUtil.d("EpochManager.processEpoch for the current epochId %d", epochId);
         try {
             // Step 1: Compute the UsageMap from the UsageHistory table.
             // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
@@ -205,7 +205,9 @@ public class EpochManager implements Dumpable {
      */
     public void recordUsageHistory(String app, String sdk) {
         long epochID = getCurrentEpochId();
-        LogUtil.v("Current epochId is %d", epochID);
+        // TODO(b/223159123): Do we need to filter out this log in prod build?
+        LogUtil.v("EpochManager.recordUsageHistory for current EpochId = %d for %s, %s",
+                epochID, app, sdk);
         mTopicsDao.recordUsageHistory(epochID, app, sdk);
         mTopicsDao.recordAppUsageHistory(epochID, app);
     }
@@ -285,6 +287,9 @@ public class EpochManager implements Dumpable {
                 // The app calls Topics API directly. In this case, we set the sdk == empty string.
                 returnedAppSdkTopics.put(
                         Pair.create(app.getKey(), /* empty Sdk */ ""), returnedTopic);
+                // TODO(b/223159123): Do we need to filter out this log in prod build?
+                LogUtil.v("CacheManager.computeReturnedAppSdkTopics. Topic %d is returned for"
+                        + " %s", returnedTopic, app.getKey());
             }
 
             // Then check all SDKs of the app.
@@ -292,6 +297,9 @@ public class EpochManager implements Dumpable {
                 if (callersCanLearnThisTopic.contains(sdk)) {
                     returnedAppSdkTopics.put(
                             Pair.create(app.getKey(), sdk), returnedTopic);
+                    // TODO(b/223159123): Do we need to filter out this log in prod build?
+                    LogUtil.v("CacheManager.computeReturnedAppSdkTopics. Topic %d is returned"
+                            + " for %s, %s", returnedTopic, app.getKey(), sdk);
                 }
             }
         }

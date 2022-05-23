@@ -132,6 +132,17 @@ public final class GetTopicsResult implements Parcelable {
     }
 
     @Override
+    public String toString() {
+        return "GetTopicsResult{"
+                + "mResultCode=" + mResultCode
+                + ", mErrorMessage='" + mErrorMessage
+                + '\'' + ", mTaxonomyVersions=" + mTaxonomyVersions
+                +  ", mModelVersions=" + mModelVersions
+                + ", mTopics=" + mTopics
+                + '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

@@ -513,6 +513,7 @@ public final class EpochManagerTest {
 
     @Test
     public void testDump() throws FileNotFoundException {
+        // Trigger the dump to verify no crash
         // Create a new epochManager that we can control the random generator.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = new TopicsDao(dbHelper);
