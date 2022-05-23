@@ -16,7 +16,7 @@ package {
 }
 
 android_test {
-    name: "AdServicesSettingsUITests",
+    name: "AdServicesApkUnitTests",
     srcs: [
         "src/**/*.java",
         ":adservicesapk-filegroup",
