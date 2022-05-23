@@ -36,6 +36,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -53,6 +54,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -74,10 +77,12 @@ public class AdSelectionRunnerTest {
     private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private static final Long AD_SELECTION_ID = 1234L;
+    private static final Instant MOCKED_AD_SELECTION_CREATION_TS = Instant.ofEpochMilli(12345L);
 
     @Mock private AdsScoreGenerator mMockAdsScoreGenerator;
     @Mock private AdBidGenerator mMockAdBidGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
+    @Mock private Clock mClock;
 
     private Context mContext;
     private ExecutorService mExecutorService;
@@ -137,6 +142,8 @@ public class AdSelectionRunnerTest {
                 AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_2, 3.0).build();
         mAdScoringOutcomeList =
                 Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
+
+        Mockito.when(mClock.instant()).thenReturn(MOCKED_AD_SELECTION_CREATION_TS);
     }
 
     private DBCustomAudience createDBCustomAudience(final String buyer) {
@@ -197,10 +204,9 @@ public class AdSelectionRunnerTest {
         Mockito.when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
                 .thenReturn((FluentFuture.from(Futures.immediateFuture(mAdScoringOutcomeList))));
 
-        DBAdSelection expectedDBAdSelectionResult =
-                new DBAdSelection.Builder()
+        DBAdSelectionEntry expectedAdSelectionResult =
+                new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setCreationTimestamp(Calendar.getInstance().toInstant())
                         .setWinningAdBid(
                                 mAdScoringOutcomeForBuyer2.getAdWithScore().getAdWithBid().getBid())
                         .setCustomAudienceSignals(
@@ -213,11 +219,13 @@ public class AdSelectionRunnerTest {
                                         .getAdWithBid()
                                         .getAdData()
                                         .getRenderUrl())
-                        .setBiddingLogicUrl(
-                                mAdScoringOutcomeForBuyer2
+                        .setBuyerDecisionLogicJs(
+                                mAdBiddingOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
-                                        .getBiddingLogicUrl())
+                                        .getBuyerDecisionLogicJs())
+                        // TODO(b/230569187) add contextual signals once supported in the main logic
                         .setContextualSignals("{}")
+                        .setCreationTimestamp(MOCKED_AD_SELECTION_CREATION_TS)
                         .build();
 
         Mockito.when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
@@ -230,7 +238,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         Assert.assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -239,12 +248,15 @@ public class AdSelectionRunnerTest {
 
         Assert.assertTrue(resultsCallback.mIsSuccess);
         Assert.assertEquals(
-                expectedDBAdSelectionResult.getAdSelectionId(),
+                expectedAdSelectionResult.getAdSelectionId(),
                 resultsCallback.mAdSelectionResponse.getAdSelectionId());
         Assert.assertEquals(
-                expectedDBAdSelectionResult.getWinningAdRenderUrl(),
+                expectedAdSelectionResult.getWinningAdRenderUrl(),
                 resultsCallback.mAdSelectionResponse.getRenderUrl());
         Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+        Assert.assertEquals(
+                expectedAdSelectionResult,
+                mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
     }
 
     @Test
@@ -311,7 +323,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         Assert.assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -349,7 +362,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -409,7 +423,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         Assert.assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -491,7 +506,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -544,7 +560,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -604,7 +621,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -666,7 +684,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         Assert.assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -750,7 +769,8 @@ public class AdSelectionRunnerTest {
                         mExecutorService,
                         mMockAdsScoreGenerator,
                         mMockAdBidGenerator,
-                        mMockAdSelectionIdGenerator);
+                        mMockAdSelectionIdGenerator,
+                        mClock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);

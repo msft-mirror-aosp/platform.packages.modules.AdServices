@@ -25,10 +25,12 @@ import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
+import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.internal.annotations.VisibleForTesting;
@@ -42,8 +44,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,6 +69,7 @@ public final class AdSelectionRunner {
     @NonNull private final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull private final AdBidGenerator mAdBidGenerator;
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
+    @NonNull private final Clock mClock;
 
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -84,6 +87,7 @@ public final class AdSelectionRunner {
                         new AdSelectionHttpClient(mExecutorService));
         mAdBidGenerator = new AdBidGeneratorImpl(context, mExecutorService);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
+        mClock = Clock.systemUTC();
     }
 
     @VisibleForTesting
@@ -94,7 +98,8 @@ public final class AdSelectionRunner {
             @NonNull final ExecutorService executorService,
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdBidGenerator adBidGenerator,
-            @NonNull final AdSelectionIdGenerator adSelectionIdGenerator) {
+            @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
+            @NonNull Clock clock) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -102,6 +107,7 @@ public final class AdSelectionRunner {
         mAdsScoreGenerator = adsScoreGenerator;
         mAdBidGenerator = adBidGenerator;
         mAdSelectionIdGenerator = adSelectionIdGenerator;
+        mClock = clock;
     }
 
     /**
@@ -204,17 +210,17 @@ public final class AdSelectionRunner {
         ListenableFuture<AdScoringOutcome> winningOutcome =
                 Futures.transform(scoredAds, reduceScoresToWinner, mExecutorService);
 
-        Function<AdScoringOutcome, DBAdSelection.Builder> mapWinnerToDBResult =
+        Function<AdScoringOutcome, Pair<DBAdSelection.Builder, String>> mapWinnerToDBResult =
                 scoringWinner -> {
                     return createAdSelectionResult(scoringWinner);
                 };
 
-        ListenableFuture<DBAdSelection.Builder> dbAdSelectionBuilder =
+        ListenableFuture<Pair<DBAdSelection.Builder, String>> dbAdSelectionBuilder =
                 Futures.transform(winningOutcome, mapWinnerToDBResult, mExecutorService);
 
-        AsyncFunction<DBAdSelection.Builder, DBAdSelection> saveResultToPersistence =
-                result -> {
-                    return persistAdSelection(result);
+        AsyncFunction<Pair<DBAdSelection.Builder, String>, DBAdSelection> saveResultToPersistence =
+                adSelectionAndJs -> {
+                    return persistAdSelection(adSelectionAndJs.first, adSelectionAndJs.second);
                 };
 
         return Futures.transformAsync(
@@ -261,7 +267,7 @@ public final class AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
         List<AdBiddingOutcome> validBiddingOutcomes =
-                adBiddingOutcomes.stream().filter(a -> a != null).collect(Collectors.toList());
+                adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
         if (validBiddingOutcomes.isEmpty()) {
             throw new IllegalStateException("No valid bids for scoring");
@@ -287,10 +293,12 @@ public final class AdSelectionRunner {
      * persistence logic
      *
      * @param scoringWinner Winning Ad for overall Ad Selection
-     * @return A Builder for {@link DBAdSelection} populated with necessary data
+     * @return A {@link Pair} with a Builder for {@link DBAdSelection} populated with necessary data
+     *     and a string containing the JS with the decision logic from this buyer.
      */
     @VisibleForTesting
-    DBAdSelection.Builder createAdSelectionResult(@NonNull AdScoringOutcome scoringWinner) {
+    Pair<DBAdSelection.Builder, String> createAdSelectionResult(
+            @NonNull AdScoringOutcome scoringWinner) {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
 
         dbAdSelectionBuilder
@@ -303,11 +311,14 @@ public final class AdSelectionRunner {
                         scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUrl())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-        return dbAdSelectionBuilder;
+        return Pair.create(
+                dbAdSelectionBuilder,
+                scoringWinner.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs());
     }
 
     private ListenableFuture<DBAdSelection> persistAdSelection(
-            @NonNull DBAdSelection.Builder dbAdSelectionBuilder) {
+            @NonNull DBAdSelection.Builder dbAdSelectionBuilder,
+            @NonNull String buyerDecisionLogicJS) {
         ListeningExecutorService listeningExecutorService =
                 MoreExecutors.listeningDecorator(mExecutorService);
 
@@ -317,9 +328,14 @@ public final class AdSelectionRunner {
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
                             .setAdSelectionId(mAdSelectionIdGenerator.generateId())
-                            .setCreationTimestamp(Calendar.getInstance().toInstant());
+                            .setCreationTimestamp(mClock.instant());
                     dbAdSelection = dbAdSelectionBuilder.build();
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+                    mAdSelectionEntryDao.persistBuyerDecisionLogic(
+                            new DBBuyerDecisionLogic.Builder()
+                                    .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
+                                    .setBiddingLogicUrl(dbAdSelection.getBiddingLogicUrl())
+                                    .build());
                     return dbAdSelection;
                 });
     }
