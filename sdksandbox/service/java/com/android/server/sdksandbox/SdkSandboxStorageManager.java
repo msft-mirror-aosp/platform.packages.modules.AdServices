@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -43,7 +44,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Helper class to handle all logics related to sdk data
@@ -138,8 +141,15 @@ class SdkSandboxStorageManager {
                 return;
             }
         }
-        final String deSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                userId, packageName, /*isCeData=*/false);
+        String volumeUuid = null;
+        try {
+            volumeUuid = getVolumeUuidForPackage(userId, packageName);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to find package " + packageName + " error: " + e.getMessage());
+            return;
+        }
+        final String deSdkDataPackagePath =
+                getSdkDataPackageDirectory(volumeUuid, userId, packageName, /*isCeData=*/ false);
         final ArrayMap<String, String> existingDeSubdirMap = getSubDirs(deSdkDataPackagePath);
         final List<String> subDirNames = new ArrayList<>();
         subDirNames.add("shared");
@@ -160,8 +170,8 @@ class SdkSandboxStorageManager {
         expectedSubDirNames.add("shared");
         final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
         if (um.isUserUnlockingOrUnlocked(userHandle)) {
-            final String ceSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                    userId, packageName, /*isCeData=*/true);
+            final String ceSdkDataPackagePath =
+                    getSdkDataPackageDirectory(volumeUuid, userId, packageName, /*isCeData=*/ true);
             final Set<String> ceSdkDirsBeforeReconcilePrefix =
                     getSubDirs(ceSdkDataPackagePath).keySet();
             final Set<String> deSdkDirsBeforeReconcilePrefix = existingDeSubdirMap.keySet();
@@ -175,9 +185,16 @@ class SdkSandboxStorageManager {
         }
         if (doesCeNeedReconcile || doesDeNeedReconcile) {
             try {
-                //TODO(b/224719352): Pass actual seinfo from here
-                mPackageManagerLocal.reconcileSdkData(/*volumeUuid=*/null, packageName, subDirNames,
-                        userId, appId, /*previousAppId=*/-1, /*seInfo=*/"default", flags);
+                // TODO(b/224719352): Pass actual seinfo from here
+                mPackageManagerLocal.reconcileSdkData(
+                        volumeUuid,
+                        packageName,
+                        subDirNames,
+                        userId,
+                        appId,
+                        /*previousAppId=*/ -1,
+                        /*seInfo=*/ "default",
+                        flags);
             } catch (Exception e) {
                 // We will retry when sdk gets loaded
                 Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
@@ -415,6 +432,51 @@ class SdkSandboxStorageManager {
         public boolean usesSdk(String packageName) {
             return mPackagesWithSdks.containsKey(packageName);
         }
+    }
+
+    // TODO(b/234023859): We will remove this class once the required APIs get unhidden
+    // The class below has been copied from StorageManager's convert logic
+    private static class StorageUuuidConverter {
+        private static final String FAT_UUID_PREFIX = "fafafafa-fafa-5afa-8afa-fafa";
+        private static final UUID UUID_DEFAULT =
+                UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        private static final String UUID_SYSTEM = "system";
+        private static final UUID UUID_SYSTEM_ =
+                UUID.fromString("5d258386-e60d-59e3-826d-0089cdd42cc0");
+        private static final String UUID_PRIVATE_INTERNAL = null;
+        private static final String UUID_PRIMARY_PHYSICAL = "primary_physical";
+        private static final UUID UUID_PRIMARY_PHYSICAL_ =
+                UUID.fromString("0f95a519-dae7-5abf-9519-fbd6209e05fd");
+
+        private static @Nullable String convertToVolumeUuid(@NonNull UUID storageUuid) {
+            if (UUID_DEFAULT.equals(storageUuid)) {
+                return UUID_PRIVATE_INTERNAL;
+            } else if (UUID_PRIMARY_PHYSICAL_.equals(storageUuid)) {
+                return UUID_PRIMARY_PHYSICAL;
+            } else if (UUID_SYSTEM_.equals(storageUuid)) {
+                return UUID_SYSTEM;
+            } else {
+                String uuidString = storageUuid.toString();
+                // This prefix match will exclude fsUuids from private volumes because
+                // (a) linux fsUuids are generally Version 4 (random) UUIDs so the prefix
+                // will contain 4xxx instead of 5xxx and (b) we've already matched against
+                // known namespace (Version 5) UUIDs above.
+                if (uuidString.startsWith(FAT_UUID_PREFIX)) {
+                    String fatStr =
+                            uuidString.substring(FAT_UUID_PREFIX.length()).toUpperCase(Locale.US);
+                    return fatStr.substring(0, 4) + "-" + fatStr.substring(4);
+                }
+
+                return storageUuid.toString();
+            }
+        }
+    }
+
+    private @Nullable String getVolumeUuidForPackage(int userId, String packageName)
+            throws PackageManager.NameNotFoundException {
+        PackageManager pm = getPackageManager(userId);
+        ApplicationInfo info = pm.getApplicationInfo(packageName, /*flags=*/ 0);
+        return StorageUuuidConverter.convertToVolumeUuid(info.storageUuid);
     }
 
     /**
