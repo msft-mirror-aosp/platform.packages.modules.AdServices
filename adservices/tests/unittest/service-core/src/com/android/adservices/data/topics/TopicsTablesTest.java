@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.topics;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -27,8 +29,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +52,7 @@ public class TopicsTablesTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
 
     @Test
@@ -82,16 +83,16 @@ public class TopicsTablesTest {
         };
 
         String selection = TopicsTables.UsageHistoryContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
         try (
-            Cursor cursor =
-                    mDb.query(/* distinct = */true,
-                            TopicsTables.AppClassificationTopicsContract.TABLE, projection,
-                            selection,
-                            selectionArgs, null, null,
-                            null, null)
-        )  {
+                Cursor cursor =
+                        mDb.query(/* distinct = */true,
+                                TopicsTables.AppClassificationTopicsContract.TABLE, projection,
+                                selection,
+                                selectionArgs, null, null,
+                                null, null)
+        ) {
             assertThat(cursor.moveToNext()).isTrue();
             assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
                     TopicsTables.AppClassificationTopicsContract.APP))).isEqualTo(app);
@@ -177,7 +178,7 @@ public class TopicsTablesTest {
         };
 
         String selection = TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
         try (
                 Cursor cursor =
@@ -186,7 +187,7 @@ public class TopicsTablesTest {
                                 selection,
                                 selectionArgs, null, null,
                                 null, null)
-        )  {
+        ) {
             assertThat(cursor.moveToNext()).isTrue();
             assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
                     TopicsTables.CallerCanLearnTopicsContract.CALLER))).isEqualTo(caller);
@@ -260,7 +261,7 @@ public class TopicsTablesTest {
         };
 
         String selection = TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
         try (
                 Cursor cursor =
@@ -269,7 +270,7 @@ public class TopicsTablesTest {
                                 selection,
                                 selectionArgs, null, null,
                                 null, null)
-        )  {
+        ) {
             assertThat(cursor.moveToNext()).isTrue();
             assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
                     TopicsTables.TopTopicsContract.TOPIC1))).isEqualTo(topic1);
@@ -373,7 +374,7 @@ public class TopicsTablesTest {
         };
 
         String selection = TopicsTables.ReturnedTopicContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
         try (
                 Cursor cursor =
@@ -382,7 +383,7 @@ public class TopicsTablesTest {
                                 selection,
                                 selectionArgs, null, null,
                                 null, null)
-        )  {
+        ) {
             assertThat(cursor.moveToNext()).isTrue();
             assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
                     TopicsTables.ReturnedTopicContract.APP))).isEqualTo(app);
@@ -478,7 +479,7 @@ public class TopicsTablesTest {
         };
 
         String selection = TopicsTables.UsageHistoryContract.EPOCH_ID + " = ?";
-        String[] selectionArgs = { String.valueOf(epochId) };
+        String[] selectionArgs = {String.valueOf(epochId)};
 
         try (
                 Cursor cursor =
@@ -487,7 +488,7 @@ public class TopicsTablesTest {
                                 selection,
                                 selectionArgs, null, null,
                                 null, null)
-        )  {
+        ) {
             assertThat(cursor.moveToNext()).isTrue();
             assertThat(cursor.getString(cursor.getColumnIndexOrThrow(
                     TopicsTables.UsageHistoryContract.APP))).isEqualTo(app);
@@ -559,8 +560,8 @@ public class TopicsTablesTest {
         };
 
         String selection = TopicsTables.AppUsageHistoryContract.EPOCH_ID + " = ?";
-        String[] selectionArgs1 = { String.valueOf(epochId1) },
-                selectionArgs2 = { String.valueOf(epochId2) };
+        String[] selectionArgs1 = {String.valueOf(epochId1)},
+                selectionArgs2 = {String.valueOf(epochId2)};
 
         // Test Epoch 1
         Map<String, Integer> expectedAppUsageMap1 = new HashMap<>();
@@ -574,7 +575,7 @@ public class TopicsTablesTest {
                                 selection,
                                 selectionArgs1, null, null,
                                 null, null)
-        )  {
+        ) {
             while (cursor.moveToNext()) {
                 String app = cursor.getString(cursor.getColumnIndexOrThrow(
                         TopicsTables.AppUsageHistoryContract.APP));
@@ -594,7 +595,7 @@ public class TopicsTablesTest {
                                 selection,
                                 selectionArgs2, null, null,
                                 null, null)
-        )  {
+        ) {
             while (cursor.moveToNext()) {
                 String app = cursor.getString(cursor.getColumnIndexOrThrow(
                         TopicsTables.AppUsageHistoryContract.APP));
@@ -624,5 +625,47 @@ public class TopicsTablesTest {
                 TopicsTables.AppUsageHistoryContract.TABLE, null, values))
                 .isEqualTo(-1);
         values.put(TopicsTables.AppUsageHistoryContract.APP, app);
+    }
+
+    @Test
+    public void testPersistAndGetBlockedTopicsContract() {
+        final long topic = 1L;
+        final long taxonomyVersion = 1L;
+        final int modelVersion = 1;
+        ContentValues values = new ContentValues();
+        values.put(TopicsTables.BlockedTopicsContract.TOPIC, topic);
+        values.put(TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION, taxonomyVersion);
+        values.put(TopicsTables.BlockedTopicsContract.MODEL_VERSION, modelVersion);
+
+        try {
+            mDb.insert(TopicsTables.BlockedTopicsContract.TABLE, null, values);
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to make DB transaction");
+        }
+
+        String[] projection = {
+                TopicsTables.BlockedTopicsContract.TOPIC,
+                TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION,
+                TopicsTables.BlockedTopicsContract.MODEL_VERSION,
+        };
+
+        try (
+                Cursor cursor =
+                        mDb.query(/* distinct = */true,
+                                TopicsTables.BlockedTopicsContract.TABLE, projection,
+                                null,
+                                null, null, null,
+                                null, null)
+        ) {
+            assertThat(cursor.moveToNext()).isTrue();
+            assertThat(cursor.getInt(cursor.getColumnIndexOrThrow(
+                    TopicsTables.BlockedTopicsContract.TOPIC))).isEqualTo(topic);
+            assertThat(cursor.getInt(cursor.getColumnIndexOrThrow(
+                    TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION))).isEqualTo(
+                    taxonomyVersion);
+            assertThat(cursor.getInt(cursor.getColumnIndexOrThrow(
+                    TopicsTables.BlockedTopicsContract.MODEL_VERSION))).isEqualTo(modelVersion);
+            assertThat(cursor.moveToNext()).isFalse();
+        }
     }
 }

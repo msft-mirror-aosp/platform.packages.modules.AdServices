@@ -214,6 +214,29 @@ public final class TopicsTables {
                     + AppUsageHistoryContract.APP + " TEXT NOT NULL"
                     + ")";
 
+    /**
+     * Table to store all blocked {@link Topic}s. Blocked topics are controlled by user.
+     */
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public interface BlockedTopicsContract {
+        String TABLE = TOPICS_TABLE_PREFIX + "blocked";
+        String ID = "_id";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
+        String TOPIC = "topic";
+    }
+
+    // Create Statement for the blocked topics table.
+    private static final String CREATE_TABLE_BLOCKED_TOPICS =
+            "CREATE TABLE "
+                    + BlockedTopicsContract.TABLE
+                    + "("
+                    + BlockedTopicsContract.ID + " INTEGER PRIMARY KEY, "
+                    + BlockedTopicsContract.TAXONOMY_VERSION + " INTEGER NOT NULL, "
+                    + BlockedTopicsContract.MODEL_VERSION + " INTEGER NOT NULL, "
+                    + BlockedTopicsContract.TOPIC + " INTEGER NOT NULL"
+                    + ")";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -224,7 +247,8 @@ public final class TopicsTables {
                             CREATE_TABLE_RETURNED_TOPIC,
                             CREATE_TABLE_USAGE_HISTORY,
                             CREATE_TABLE_APP_USAGE_HISTORY,
-                            CREATE_TABLE_CALLER_CAN_LEARN_TOPICS));
+                            CREATE_TABLE_CALLER_CAN_LEARN_TOPICS,
+                            CREATE_TABLE_BLOCKED_TOPICS));
 
     // Private constructor to prevent instantiation.
     private TopicsTables() {
