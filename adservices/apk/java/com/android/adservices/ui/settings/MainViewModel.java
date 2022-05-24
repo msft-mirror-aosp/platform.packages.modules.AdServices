@@ -16,7 +16,6 @@
 package com.android.adservices.ui.settings;
 
 import android.app.Application;
-import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -64,11 +63,10 @@ public class MainViewModel extends AndroidViewModel {
             mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
         }
         mAdServicesConsent.postValue(newConsent);
-        Context context = getApplication().getApplicationContext();
         if (newConsent) {
-            mConsentManager.enable(context);
+            mConsentManager.enable();
         } else {
-            mConsentManager.disable(context);
+            mConsentManager.disable();
         }
     }
 
@@ -78,6 +76,6 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     private boolean getConsentFromConsentManager() {
-        return mConsentManager.getConsent(getApplication().getApplicationContext()).isGiven();
+        return mConsentManager.getConsent().isGiven();
     }
 }
