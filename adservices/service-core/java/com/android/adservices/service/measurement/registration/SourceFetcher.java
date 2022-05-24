@@ -16,10 +16,10 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_COOLDOWN_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_COOLDOWN_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -94,12 +94,13 @@ public class SourceFetcher {
                             MAX_INSTALL_ATTRIBUTION_WINDOW);
             result.setInstallAttributionWindow(installAttributionWindow);
         }
-        if (json.has(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)
-                && !json.isNull(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)) {
+        if (json.has(EventSourceContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)
+                && !json.isNull(EventSourceContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)) {
             long installCooldownWindow =
-                    extractValidValue(json.getLong(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY),
-                            MIN_INSTALL_COOLDOWN_WINDOW,
-                            MAX_INSTALL_COOLDOWN_WINDOW);
+                    extractValidValue(
+                            json.getLong(EventSourceContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY),
+                            MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                            MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
             result.setInstallCooldownWindow(installCooldownWindow);
         }
 
@@ -262,6 +263,6 @@ public class SourceFetcher {
         String EXPIRY = "expiry";
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
-        String INSTALL_COOLDOWN_WINDOW_KEY = "install_cooldown_window";
+        String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
     }
 }
