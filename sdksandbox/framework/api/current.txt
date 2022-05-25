@@ -2,7 +2,6 @@
 package android.app.sdksandbox {
 
   public final class SandboxedSdkContext extends android.content.ContextWrapper {
-    ctor public SandboxedSdkContext(@NonNull android.content.Context, @NonNull android.content.pm.ApplicationInfo, @NonNull String);
   }
 
   public abstract class SandboxedSdkProvider {
