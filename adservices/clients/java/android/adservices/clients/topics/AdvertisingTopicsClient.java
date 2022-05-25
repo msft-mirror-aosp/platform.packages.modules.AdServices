@@ -29,7 +29,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /** AdvertisingTopicsClient. Add more java doc here. */
 // TODO: This should be in JetPack code.
@@ -129,7 +128,7 @@ public class AdvertisingTopicsClient {
         /** Builds a {@link AdvertisingTopicsClient} instance */
         public @NonNull AdvertisingTopicsClient build() {
             if (mExecutor == null) {
-                mExecutor = Executors.newCachedThreadPool();
+                throw new NullPointerException("Executor is not set");
             }
             return new AdvertisingTopicsClient(mContext, mExecutor, mSdkName);
         }
