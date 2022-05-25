@@ -215,7 +215,7 @@ package android.adservices.topics {
   public class GetTopicsResponse {
     method @NonNull public java.util.List<java.lang.Long> getModelVersions();
     method @NonNull public java.util.List<java.lang.Long> getTaxonomyVersions();
-    method @NonNull public java.util.List<java.lang.String> getTopics();
+    method @NonNull public java.util.List<java.lang.Integer> getTopics();
   }
 
   public static final class GetTopicsResponse.Builder {
@@ -223,7 +223,7 @@ package android.adservices.topics {
     method @NonNull public android.adservices.topics.GetTopicsResponse build();
     method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setModelVersions(@NonNull java.util.List<java.lang.Long>);
     method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTaxonomyVersions(@NonNull java.util.List<java.lang.Long>);
-    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTopics(@NonNull java.util.List<java.lang.String>);
+    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTopics(@NonNull java.util.List<java.lang.Integer>);
   }
 
   public class TopicsManager {
