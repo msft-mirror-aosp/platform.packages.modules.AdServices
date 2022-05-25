@@ -48,6 +48,11 @@ import com.android.modules.utils.testing.TestableDeviceConfig;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
 @SmallTest
 public class PhFlagsTest {
@@ -226,5 +231,29 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAppName()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testDump() throws FileNotFoundException {
+        // Trigger the dump to verify no crash
+        PrintWriter printWriter = new PrintWriter(new Writer() {
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+
+            }
+
+            @Override
+            public void flush() throws IOException {
+
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        });
+        String[] args = new String[]{};
+        Flags phFlags = FlagsFactory.getFlags();
+        phFlags.dump(printWriter, args);
     }
 }
