@@ -45,6 +45,8 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -98,7 +100,8 @@ public class CustomAudienceServiceEndToEndTest {
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     // This object access some system APIs
-    @Mock DevContextFilter mDevContextFilter;
+    @Mock private DevContextFilter mDevContextFilter;
+    private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
 
     @Before
     public void setup() {
@@ -115,7 +118,8 @@ public class CustomAudienceServiceEndToEndTest {
                         new CustomAudienceImpl(
                                 mCustomAudienceDao, CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI),
                         mDevContextFilter,
-                        MoreExecutors.newDirectExecutorService());
+                        MoreExecutors.newDirectExecutorService(),
+                        mAdServicesLogger);
     }
 
     @Test

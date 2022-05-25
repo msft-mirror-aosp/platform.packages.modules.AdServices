@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings.espresso;
+package com.android.adservices.ui.settings;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -31,7 +31,6 @@ import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -40,7 +39,7 @@ import org.junit.Test;
 /**
  *  Tests for {@link AdServicesSettingsMainFragment}.
  */
-public class AdServicesSettingsActivityTest {
+public class SettingsActivityTest {
 
     /**
      * {@link ActivityScenarioRule} is a JUnit {@link Rule @Rule}
@@ -80,7 +79,7 @@ public class AdServicesSettingsActivityTest {
     }
 
     /**
-     *  Test if getConsent works in {@link MainViewModel}.
+     *  Test if {@link MainViewModel} works if Activity is recreated (simulates rotate phone).
      */
     @Test
     public void test_MainViewModel_getConsent() {

@@ -11,44 +11,37 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 android_test {
-    name: "SdkSandboxManagerTests",
+    name: "AdServicesApkUnitTests",
     srcs: [
         "src/**/*.java",
+        ":adservicesapk-filegroup",
     ],
+    defaults: ["modules-utils-testable-device-config-defaults"],
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     static_libs: [
-        "androidx.test.runner",
+        "adservices-service-core",
+        "adservices-assets-lib",
+        "androidx.fragment_fragment",
+        "androidx.preference_preference",
+        "androidx.test.espresso.contrib",
+        "androidx.test.ext.junit",
+        "androidx.test.rules",
+        "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
-        "SdkSandboxTestUtils",
     ],
     libs: [
         "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.mock.stubs",
+        "framework-adservices.impl",
     ],
-    data: [
-      ":LoadSdkSuccessfullySdkProvider",
-      ":RetryLoadSameSdkShouldFailSdkProvider",
-      ":LoadSdkWithInternalErrorSdkProvider",
-      ":RequestSurfacePackageSuccessfullySdkProvider",
-      ":RequestSurfacePackageWithInternalErrorSdkProvider",
-      ":CodeProviderWithResources",
-    ],
-    min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
-    // Currently this test module is failing, which results in low test coverage
-    // The reason is the target test coverage system runs on is different as what this test
-    // configures. Add below line to address the issue.
-    // See b/233124651 for details.
-    compile_multilib: "both",
     test_suites: [
-        "cts",
-        "mts-adservices",
         "general-tests",
     ],
+    instrumentation_for: "AdServicesApk",
 }
