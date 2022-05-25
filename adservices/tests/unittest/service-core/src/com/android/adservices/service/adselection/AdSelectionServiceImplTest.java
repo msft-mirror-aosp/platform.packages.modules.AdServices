@@ -19,7 +19,6 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -31,6 +30,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -753,11 +753,10 @@ public class AdSelectionServiceImplTest {
 
         String decisionLogicJs = "function test() { return \"hello world\"; }";
 
-        AdSelectionOverrideTestCallback callback =
-                callAddOverride(adSelectionService, adSelectionConfig, decisionLogicJs);
+        assertThrows(
+                IllegalStateException.class,
+                () -> callAddOverride(adSelectionService, adSelectionConfig, decisionLogicJs));
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
@@ -765,11 +764,11 @@ public class AdSelectionServiceImplTest {
                         myAppPackageName));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_UNAUTHORIZED);
+                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_OVERRIDE, STATUS_UNAUTHORIZED));
+                                SHORT_API_NAME_OVERRIDE, STATUS_INTERNAL_ERROR));
     }
 
     @Test
@@ -867,21 +866,19 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback =
-                callRemoveOverride(adSelectionService, adSelectionConfig);
-
-        assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
+        assertThrows(
+                IllegalStateException.class,
+                () -> callRemoveOverride(adSelectionService, adSelectionConfig));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, myAppPackageName));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_UNAUTHORIZED);
+                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_UNAUTHORIZED));
+                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_INTERNAL_ERROR));
     }
 
     @Test
@@ -1199,10 +1196,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
-
-        assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
+        assertThrows(IllegalStateException.class, () -> callResetAllOverrides(adSelectionService));
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
@@ -1215,11 +1209,11 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId3, myAppPackageName));
 
         verify(mAdServicesLoggerSpy)
-                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_UNAUTHORIZED);
+                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_UNAUTHORIZED));
+                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR));
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(

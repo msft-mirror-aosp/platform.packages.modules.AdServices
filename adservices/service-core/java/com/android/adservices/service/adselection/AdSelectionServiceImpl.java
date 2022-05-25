@@ -61,6 +61,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
+    private static final String API_NOT_AUTHORIZED_MSG =
+            "This API is not enabled for the given app because either dev options are disabled or"
+                    + " the app is not debuggable.";
+
     @VisibleForTesting
     AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
@@ -166,6 +170,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
@@ -193,6 +204,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
@@ -217,6 +234,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         }
 
         DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
