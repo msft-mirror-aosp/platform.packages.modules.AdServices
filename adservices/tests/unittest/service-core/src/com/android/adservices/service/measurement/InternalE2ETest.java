@@ -454,8 +454,8 @@ public abstract class InternalE2ETest {
                 TestFormatJsonMapping.EVENT_REPORT_OBJECTS_KEY);
         for (int i = 0; i < eventReportObjectsArray.length(); i++) {
             JSONObject obj = eventReportObjectsArray.getJSONObject(i);
-            String reportTo = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
-            eventReportObjects.add(obj.put(TestFormatJsonMapping.REPORT_TO_KEY, reportTo));
+            String adTechDomain = obj.getString(TestFormatJsonMapping.REPORT_TO_KEY);
+            eventReportObjects.add(obj.put(TestFormatJsonMapping.REPORT_TO_KEY, adTechDomain));
         }
 
         List<JSONObject> aggregateReportObjects = new ArrayList<>();
