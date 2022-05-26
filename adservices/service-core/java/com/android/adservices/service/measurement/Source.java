@@ -223,6 +223,7 @@ public class Source {
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
+                && mAttributionMode == source.mAttributionMode
                 && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && Objects.equals(mAggregatableAttributionSource,
