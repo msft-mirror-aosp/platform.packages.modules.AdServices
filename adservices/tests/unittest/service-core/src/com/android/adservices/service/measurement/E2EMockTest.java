@@ -22,8 +22,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 
+import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -33,6 +37,7 @@ import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
@@ -118,12 +123,14 @@ public abstract class E2EMockTest extends E2ETest {
                 .makeHttpPostRequest(destination.capture(), payload.capture());
 
         // Collect actual reports
-        processReports(
+        processEventReports(
                 eventReport.getAllValues(), destination.getAllValues(), payload.getAllValues());
+
+        processAggregateReports(getAggregateReportsFromDatastore());
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
-    void processReports(List<EventReport> eventReports, List<Uri> destinations,
+    void processEventReports(List<EventReport> eventReports, List<Uri> destinations,
             List<JSONObject> payloads) throws JSONException {
         List<JSONObject> eventReportObjects =
                 getEventReportObjects(eventReports, destinations, payloads);
@@ -141,5 +148,68 @@ public abstract class E2EMockTest extends E2ETest {
             result.add(new JSONObject(map));
         }
         return result;
+    }
+
+    // Class extensions may need different processing to prepare for result evaluation.
+    void processAggregateReports(List<JSONObject> aggregateReports) {
+        mActualOutput.mAggregateReportObjects.addAll(aggregateReports);
+    }
+
+    private static List<JSONObject> getAggregateReportsFromDatastore() {
+        List<JSONObject> result = new ArrayList<>();
+        try {
+            SQLiteDatabase db = DbHelper.getInstance(sContext).getReadableDatabase();
+            Cursor cursor = db.query(
+                    "msmt_aggregate_report",
+                    new String[] {
+                        "source_site",
+                        "attribution_destination",
+                        "scheduled_report_time",
+                        "reporting_origin",
+                        "debug_cleartext_payload"},
+                        null, null, null, null, null, null);
+            while (cursor.moveToNext()) {
+                result.add(getAggregateReportObjectFromCursor(cursor));
+            }
+            return result;
+        } catch (SQLiteException | JSONException ignored) {
+            return result;
+        }
+    }
+
+    private static JSONObject getAggregateReportObjectFromCursor(Cursor cursor)
+            throws JSONException {
+        String payloadStr = cursor.getString(cursor.getColumnIndex("debug_cleartext_payload"));
+        String sourceSite = cursor.getString(cursor.getColumnIndex("source_site"));
+        String attributionDestination =
+                cursor.getString(cursor.getColumnIndex("attribution_destination"));
+        JSONObject payload =
+                getAggregatablePayloadForTest(payloadStr, sourceSite, attributionDestination);
+        Map<String, Object> map = new HashMap<>();
+        map.put(TestFormatJsonMapping.REPORT_TIME_KEY,
+                cursor.getLong(cursor.getColumnIndex("scheduled_report_time")));
+        map.put(TestFormatJsonMapping.REPORT_TO_KEY,
+                cursor.getString(cursor.getColumnIndex("reporting_origin")));
+        map.put(TestFormatJsonMapping.PAYLOAD_KEY, payload);
+        return new JSONObject(map);
+    }
+
+    private static JSONObject getAggregatablePayloadForTest(String payloadStr, String sourceSite,
+            String attributionDestination) throws JSONException {
+        JSONObject payloadJson = new JSONObject(payloadStr);
+        List<JSONObject> histograms = new ArrayList<>();
+        JSONArray dataArr = payloadJson.getJSONArray("data");
+        for (int i = 0; i < dataArr.length(); i++) {
+            JSONObject pair = dataArr.getJSONObject(i);
+            JSONObject mapped = new JSONObject()
+                    .put(AggregateHistogramKeys.BUCKET, pair.getString("bucket"))
+                    .put(AggregateHistogramKeys.VALUE, pair.getInt("value"));
+            histograms.add(mapped);
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, attributionDestination);
+        map.put(AggregateReportPayloadKeys.SOURCE_SITE, sourceSite);
+        map.put(AggregateReportPayloadKeys.HISTOGRAMS, histograms);
+        return new JSONObject(map);
     }
 }
