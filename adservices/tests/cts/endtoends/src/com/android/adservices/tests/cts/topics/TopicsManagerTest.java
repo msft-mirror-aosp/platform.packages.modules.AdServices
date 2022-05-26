@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.adservices.tests.cts.topics;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -26,9 +27,11 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -41,18 +44,35 @@ public class TopicsManagerTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 2000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
+    // Use 0 percent for random topic in the test so that we can verify the returned topic.
+    private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
+    private static final int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
+    @Before
+    public void setup() throws InterruptedException {
+        killPpApiProcess();
+        // We need to skip 3 epochs so that if there is any usage from other test runs, it will
+        // not be used for epoch retrieval.
+        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+    }
 
     @Test
     public void testTopicsManager() throws Exception {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
+        // We need to turn off random topic so that we can verify the returned topic.
+        overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
+        // Sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -60,24 +80,51 @@ public class TopicsManagerTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        // Call the Topics API.
-        GetTopicsResponse unusedSdk1Result = advertisingTopicsClient1.getTopics().get();
+        // At beginning, Sdk1 receives no topic.
+        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        assertThat(sdk1Result.getTaxonomyVersions()).isEmpty();
+        assertThat(sdk1Result.getModelVersions()).isEmpty();
+        assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Wait to the next epoch. We will not need to do this after we implement the fix in
         // go/rb-topics-epoch-scheduling
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
         // Now force the Epoch Computation Job.
-        forceRunJob();
+        forceEpochComputationJob();
 
         // Since the sdk1 called the Topics API in the previous Epoch, it should receive some topic.
-        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTaxonomyVersions()).isNotEmpty();
         assertThat(sdk1Result.getModelVersions()).isNotEmpty();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // Reset back the original value.
+        // We only have 1 test app which has 5 classification topics: "1740", "529", "911", "14",
+        // "590".
+        // These 5 classification topics will become top 5 topics of the epoch since there is
+        // no other apps calling Topics API.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk1Result.getTopics()).hasSize(1);
+        String topic = sdk1Result.getTopics().get(0);
+
+        // topic is one of the 5 classification topics of the Test App.
+        assertThat(topic).isIn(Arrays.asList("1740", "529", "911", "14", "590"));
+
+        // Sdk 2 did not call getTopics API. So it should not receive any topic.
+        AdvertisingTopicsClient advertisingTopicsClient2 = new AdvertisingTopicsClient.Builder()
+                .setContext(sContext)
+                .setSdkName("sdk2")
+                .setExecutor(CALLBACK_EXECUTOR)
+                .build();
+
+        GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
+        assertThat(sdk2Result2.getTaxonomyVersions()).isEmpty();
+        assertThat(sdk2Result2.getModelVersions()).isEmpty();
+        assertThat(sdk2Result2.getTopics()).isEmpty();
+
+        // Reset back the original values.
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
+        overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -86,8 +133,19 @@ public class TopicsManagerTest {
                 + overrideEpochPeriod);
     }
 
-    /** Forces JobScheduler to run the job */
-    private void forceRunJob() throws Exception {
+    // Override the Percentage For Random Topic in the test.
+    private void overridePercentageForRandomTopic(long overridePercentage) {
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.topics_percentage_for_random_topics "
+                + overridePercentage);
+    }
+
+    private void killPpApiProcess() {
+        ShellUtils.runShellCommand("su 0 killall -9 com.google.android.adservices.api");
+    }
+
+    /** Forces JobScheduler to run the Epoch Computation job */
+    private void forceEpochComputationJob() throws Exception {
         ShellUtils.runShellCommand("cmd jobscheduler run -f"
                 + " " + SERVICE_APK_NAME + " " + EPOCH_JOB_ID);
     }
