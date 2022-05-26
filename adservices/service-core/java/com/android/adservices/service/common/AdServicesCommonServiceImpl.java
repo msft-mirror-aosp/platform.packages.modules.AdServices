@@ -35,6 +35,7 @@ import java.util.concurrent.Executor;
  */
 public class AdServicesCommonServiceImpl extends
         IAdServicesCommonService.Stub {
+    private static final String TAG = "AdServicesCommonServiceImpl";
     private final MeasurementImpl mMeasurementImpl;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
@@ -48,10 +49,25 @@ public class AdServicesCommonServiceImpl extends
         measurementOnPackageFullyRemoved(packageUri);
     }
 
+    @Override
+    public void onPackageAdded(@NonNull Uri packageUri) {
+        Objects.requireNonNull(packageUri);
+        measurementOnPackageAdded(packageUri);
+    }
+
     private void measurementOnPackageFullyRemoved(@NonNull Uri packageUri) {
-        LogUtil.d("Deleting package measurement records for package: " + packageUri.toString());
+        LogUtil.d(
+                "Deleting package measurement records for package: " + packageUri.toString());
         sBackgroundExecutor.execute(() -> {
             mMeasurementImpl.deletePackageRecords(packageUri);
+        });
+    }
+
+    private void measurementOnPackageAdded(Uri packageUri) {
+        LogUtil.d(
+                "Adding package install attribution records for package: " + packageUri.toString());
+        sBackgroundExecutor.execute(() -> {
+            mMeasurementImpl.doInstallAttribution(packageUri, System.currentTimeMillis());
         });
     }
 }
