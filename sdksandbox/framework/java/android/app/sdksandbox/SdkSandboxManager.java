@@ -104,6 +104,21 @@ public final class SdkSandboxManager {
     public @interface RequestSurfacePackageErrorCode {}
 
     /**
+     * Internal error while performing {@link SdkSandboxManager#sendData(String, Bundle, Executor,
+     * SendDataCallback)}.
+     *
+     * <p>This indicates a generic internal error happened while requesting to send data to an SDK.
+     */
+    public static final int SEND_DATA_INTERNAL_ERROR = 800;
+
+    /** @hide */
+    @IntDef(
+            prefix = "SEND_DATA_",
+            value = {SEND_DATA_INTERNAL_ERROR})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface SendDataErrorCode {}
+
+    /**
      * SDK Sandbox is disabled.
      *
      * <p>{@link SdkSandboxManager} APIs are hidden. Attempts at calling them will result in
@@ -223,15 +238,29 @@ public final class SdkSandboxManager {
     }
 
     /**
-     * Sends a bundle of {@code params} to SDK.
+     * Sends a bundle of {@code data} to SDK.
+     *
+     * <p>After the client application receives a signal about a successful SDK loading by {@link
+     * LoadSdkCallback#onLoadSdkSuccess(Bundle)}, it is then able to asynchronously
+     * request to send any data to the SDK in the sandbox. if the SDK is not loaded,
+     * {@link SecurityException} is thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
-     *     SdkSandboxManager#loadSdk(String, Bundle,Executor, LoadSdkCallback)}
-     * @hide
+     *     SdkSandboxManager#loadSdk(String, Bundle, Executor, LoadSdkCallback)}
+     * @param data the data to be sent to the SDK represented in the form of a {@link Bundle}
+     * @param callbackExecutor the {@link Executor} on which to invoke the callback
+     * @param callback the {@link SendDataCallback} which will receive events from loading and
+     *     interacting with SDKs. The SDK may also send back data through
+     *     {@link SendDataCallback#onSendDataSuccess(Bundle)}
      */
-    public void sendData(@NonNull String sdkName, @NonNull Bundle params) {
+    public void sendData(
+            @NonNull String sdkName,
+            @NonNull Bundle data,
+            @NonNull @CallbackExecutor Executor callbackExecutor,
+            @NonNull SendDataCallback callback) {
+        SendDataCallbackProxy callbackProxy = new SendDataCallbackProxy(callbackExecutor, callback);
         try {
-            mService.sendData(sdkName, params);
+            mService.sendData(mContext.getPackageName(), sdkName, data, callbackProxy);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -292,6 +321,25 @@ public final class SdkSandboxManager {
                 @NonNull String errorMsg);
     }
 
+    /**
+     * A callback for tracking sending of data to an SDK.
+     */
+    public interface SendDataCallback {
+        /**
+         * This notifies the client application that sending data to the SDK has completed
+         * successfully.
+         */
+        void onSendDataSuccess(@NonNull Bundle params);
+
+        /**
+         * This notifies the client application that sending data to an SDK has failed.
+         *
+         * @param errorCode int code for the error
+         * @param errorMsg a String description of the error
+         */
+        void onSendDataError(@SendDataErrorCode int errorCode, @NonNull String errorMsg);
+    }
+
     /** @hide */
     private static class LoadSdkCallbackProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
@@ -335,6 +383,27 @@ public final class SdkSandboxManager {
         @Override
         public void onSurfacePackageError(int errorCode, String errorMsg) {
             mExecutor.execute(() -> mCallback.onSurfacePackageError(errorCode, errorMsg));
+        }
+    }
+
+    /** @hide */
+    private static class SendDataCallbackProxy extends ISendDataCallback.Stub {
+        private final Executor mExecutor;
+        private final SendDataCallback mCallback;
+
+        SendDataCallbackProxy(Executor executor, SendDataCallback callback) {
+            mExecutor = executor;
+            mCallback = callback;
+        }
+
+        @Override
+        public void onSendDataSuccess(Bundle params) {
+            mExecutor.execute(() -> mCallback.onSendDataSuccess(params));
+        }
+
+        @Override
+        public void onSendDataError(int errorCode, String errorMsg) {
+            mExecutor.execute(() -> mCallback.onSendDataError(errorCode, errorMsg));
         }
     }
 }

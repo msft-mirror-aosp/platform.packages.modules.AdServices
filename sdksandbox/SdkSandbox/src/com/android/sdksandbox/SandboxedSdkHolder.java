@@ -129,6 +129,23 @@ class SandboxedSdkHolder {
         }
     }
 
+    private void sendDataReceivedSuccess(Bundle params, IDataReceivedCallback callback) {
+        try {
+            callback.onDataReceivedSuccess(params);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Could not send onDataReceivedSuccess: " + e);
+        }
+    }
+
+    private void sendDataReceivedError(String errorMessage, IDataReceivedCallback callback) {
+        try {
+            callback.onDataReceivedError(
+                    IDataReceivedCallback.DATA_RECEIVED_INTERNAL_ERROR, errorMessage);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Could not send onDataReceivedError: " + e);
+        }
+    }
+
     private int allocateSurfacePackageId(SurfaceControlViewHost.SurfacePackage surfacePackage) {
         synchronized (mSurfacePackages) {
             for (int i = 0; i < 32; i++) {
@@ -187,6 +204,23 @@ class SandboxedSdkHolder {
                 sendSurfacePackageError(
                         "Error thrown while getting surface package: " + e, callback);
             }
+        }
+
+        @Override
+        public void onDataReceived(Bundle data, IDataReceivedCallback callback) {
+            mSdk.onDataReceived(
+                    data,
+                    new SandboxedSdkProvider.DataReceivedCallback() {
+                        @Override
+                        public void onDataReceivedSuccess(Bundle params) {
+                            sendDataReceivedSuccess(params, callback);
+                        }
+
+                        @Override
+                        public void onDataReceivedError(String errorMessage) {
+                            sendDataReceivedError(errorMessage, callback);
+                        }
+                    });
         }
     }
 }

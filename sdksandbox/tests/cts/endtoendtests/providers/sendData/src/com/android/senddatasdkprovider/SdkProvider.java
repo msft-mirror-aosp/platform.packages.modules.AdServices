@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.sdksandboxcode_1;
+package com.android.senddatasdkprovider;
 
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
@@ -24,11 +24,15 @@ import android.view.View;
 
 import java.util.concurrent.Executor;
 
-public class FailingSdkProvider extends SandboxedSdkProvider {
+public class SdkProvider extends SandboxedSdkProvider {
+
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
-        callback.onInitSdkError("Failed to initialize.");
+    public void initSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            InitSdkCallback callback) {
+        executor.execute(() -> callback.onInitSdkFinished(null));
     }
 
     @Override
@@ -37,5 +41,13 @@ public class FailingSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {
+        if (data.getChar("Success") == 'S') {
+            Bundle returnData = new Bundle();
+            returnData.putChar("Completed", 'C');
+            callback.onDataReceivedSuccess(returnData);
+        } else {
+            callback.onDataReceivedError("Unable to process data.");
+        }
+    }
 }
