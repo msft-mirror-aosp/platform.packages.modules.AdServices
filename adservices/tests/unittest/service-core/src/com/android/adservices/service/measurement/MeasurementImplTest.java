@@ -420,10 +420,8 @@ public final class MeasurementImplTest {
                 eventTime + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()),
                 sourceRegistration.getSourcePriority(),
                 Source.SourceType.EVENT,
-                eventTime + TimeUnit.SECONDS.toMillis(
-                        sourceRegistration.getInstallAttributionWindow()),
-                eventTime + TimeUnit.SECONDS.toMillis(
-                        sourceRegistration.getInstallCooldownWindow()),
+                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallAttributionWindow()),
+                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallCooldownWindow()),
                 Source.AttributionMode.TRUTHFULLY,
                 sourceRegistration.getAggregateSource(),
                 sourceRegistration.getAggregateFilterData()
