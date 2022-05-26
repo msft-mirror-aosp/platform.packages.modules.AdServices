@@ -162,7 +162,7 @@ public abstract class E2EMockTest extends E2ETest {
             Cursor cursor = db.query(
                     "msmt_aggregate_report",
                     new String[] {
-                        "source_site",
+                        "publisher",
                         "attribution_destination",
                         "scheduled_report_time",
                         "reporting_origin",
@@ -180,7 +180,7 @@ public abstract class E2EMockTest extends E2ETest {
     private static JSONObject getAggregateReportObjectFromCursor(Cursor cursor)
             throws JSONException {
         String payloadStr = cursor.getString(cursor.getColumnIndex("debug_cleartext_payload"));
-        String sourceSite = cursor.getString(cursor.getColumnIndex("source_site"));
+        String sourceSite = cursor.getString(cursor.getColumnIndex("publisher"));
         String attributionDestination =
                 cursor.getString(cursor.getColumnIndex("attribution_destination"));
         JSONObject payload =

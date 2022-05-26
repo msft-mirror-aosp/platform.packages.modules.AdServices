@@ -33,7 +33,7 @@ import java.util.Objects;
  */
 public class CleartextAggregatePayload {
     private String mId;
-    private Uri mSourceSite;
+    private Uri mPublisher;
     private Uri mAttributionDestination;
     private long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
@@ -55,7 +55,7 @@ public class CleartextAggregatePayload {
 
     private CleartextAggregatePayload() {
         mId = null;
-        mSourceSite = null;
+        mPublisher = null;
         mAttributionDestination = null;
         mSourceRegistrationTime = 0L;
         mScheduledReportTime = 0L;
@@ -73,7 +73,7 @@ public class CleartextAggregatePayload {
         }
         CleartextAggregatePayload aggregatePayload = (CleartextAggregatePayload) obj;
         return  mId.equals(aggregatePayload.mId)
-                && Objects.equals(mSourceSite, aggregatePayload.mSourceSite)
+                && Objects.equals(mPublisher, aggregatePayload.mPublisher)
                 && Objects.equals(mAttributionDestination, aggregatePayload.mAttributionDestination)
                 && mSourceRegistrationTime == aggregatePayload.mSourceRegistrationTime
                 && mScheduledReportTime == aggregatePayload.mScheduledReportTime
@@ -87,7 +87,7 @@ public class CleartextAggregatePayload {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mSourceSite, mAttributionDestination, mSourceRegistrationTime,
+        return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
                 mScheduledReportTime, mPrivacyBudgetKey, mReportingOrigin, mDebugCleartextPayload,
                 mAggregateAttributionData, mStatus);
     }
@@ -100,10 +100,10 @@ public class CleartextAggregatePayload {
     }
 
     /**
-     * Uri for registrant of this source, primarily an App.
+     * Uri for publisher of this source, primarily an App.
      */
-    public Uri getSourceSite() {
-        return mSourceSite;
+    public Uri getPublisher() {
+        return mPublisher;
     }
 
     /**
@@ -208,10 +208,10 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getSourceSite()}.
+         * See {@link CleartextAggregatePayload#getPublisher()}.
          */
-        public Builder setSourceSite(Uri sourceSite) {
-            mAttributionReport.mSourceSite = sourceSite;
+        public Builder setPublisher(Uri publisher) {
+            mAttributionReport.mPublisher = publisher;
             return this;
         }
 
