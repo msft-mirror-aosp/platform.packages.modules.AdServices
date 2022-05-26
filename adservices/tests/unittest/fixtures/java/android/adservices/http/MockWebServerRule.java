@@ -19,6 +19,7 @@ package android.adservices.http;
 import android.content.Context;
 import android.net.Uri;
 
+import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
@@ -105,6 +106,20 @@ public class MockWebServerRule implements TestRule {
         return mMockWebServer;
     }
 
+    public MockWebServer startMockWebServer(Dispatcher dispatcher) throws Exception {
+        if (mPort == UNINITIALIZED) {
+            reserveServerListeningPort();
+        }
+
+        mMockWebServer = new MockWebServer();
+        if (useHttps()) {
+            mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
+        }
+        mMockWebServer.setDispatcher(dispatcher);
+
+        mMockWebServer.play(mPort);
+        return mMockWebServer;
+    }
     /**
      * @return the mock web server for this rull and {@code null} if it hasn't been started yet by
      *     calling {@link #startMockWebServer(List)}.

@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 /** This class implements the ad bid generator. */
 public class AdBidGeneratorImpl implements AdBidGenerator {
+
     @NonNull
     private final Context mContext;
     @NonNull
