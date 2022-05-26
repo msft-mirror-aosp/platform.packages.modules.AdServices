@@ -62,7 +62,8 @@ public final class EpochManagerTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
-    @Mock Classifier mMockClassifier;
+    @Mock
+    Classifier mMockClassifier;
 
     @Before
     public void setup() {
@@ -161,10 +162,10 @@ public final class EpochManagerTest {
         EpochManager epochManager = new EpochManager(
                 topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
                 mMockClassifier,
                 mFlags
-                );
+        );
         List<Integer> topTopics =
                 Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
 
@@ -195,7 +196,7 @@ public final class EpochManagerTest {
         EpochManager epochManager = new EpochManager(
                 topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
                 mMockClassifier,
                 mFlags
         );
@@ -218,7 +219,7 @@ public final class EpochManagerTest {
         EpochManager epochManager = new EpochManager(
                 topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
                 mMockClassifier,
                 mFlags
         );
@@ -364,7 +365,7 @@ public final class EpochManagerTest {
         TopicsDao topicsDao = Mockito.spy(new TopicsDao(dbHelper));
         EpochManager epochManager = Mockito.spy(new EpochManager(topicsDao,
                 dbHelper,
-                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags));
+                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         when(epochManager.getCurrentEpochId()).thenReturn(epochId);

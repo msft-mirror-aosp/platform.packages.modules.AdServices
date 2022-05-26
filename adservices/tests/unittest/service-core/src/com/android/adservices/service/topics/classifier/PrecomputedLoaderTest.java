@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableSet;
 
