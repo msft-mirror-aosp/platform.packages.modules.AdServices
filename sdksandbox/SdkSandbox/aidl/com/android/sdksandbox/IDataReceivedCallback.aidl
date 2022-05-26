@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@
 package com.android.sdksandbox;
 
 import android.os.Bundle;
-import android.os.IBinder;
-
-import com.android.sdksandbox.IDataReceivedCallback;
-import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 
 /** @hide */
-oneway interface ISdkSandboxManagerToSdkSandboxCallback {
-    void onSurfacePackageRequested(in IBinder hostToken, int displayId, in int width, in int height, in Bundle extraParams, IRequestSurfacePackageFromSdkCallback callback);
-    void onDataReceived(in Bundle data, IDataReceivedCallback callback);
-}
+oneway interface IDataReceivedCallback {
+    const int DATA_RECEIVED_INTERNAL_ERROR = 1;
 
+    void onDataReceivedSuccess(in Bundle params);
+    void onDataReceivedError(int errorCode, String errorMsg);
+}

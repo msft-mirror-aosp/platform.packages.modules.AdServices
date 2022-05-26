@@ -68,8 +68,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     /* Sends an error if the expected resource/asset does not match the read value. */
     private void sendError(InitSdkCallback callback, String expected, String actual) {

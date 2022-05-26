@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThrows;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
+import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
@@ -46,6 +47,7 @@ import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.sdksandbox.IDataReceivedCallback;
 import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
@@ -283,7 +285,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                         500,
                                         new Bundle(),
                                         new FakeRequestSurfacePackageCallbackBinder()));
-        assertThat(thrown).hasMessageThat().contains("Sdk " + sdkName + "is not loaded");
+        assertThat(thrown).hasMessageThat().contains("Sdk " + sdkName + " is not loaded");
     }
 
     @Test
@@ -348,7 +350,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                         new Bundle(),
                                         new FakeRequestSurfacePackageCallbackBinder()));
         assertThat(thrown).hasMessageThat()
-                .contains("Sdk " + SDK_NAME + "is not loaded");
+                .contains("Sdk " + SDK_NAME + " is not loaded");
     }
 
     @Test
@@ -367,6 +369,31 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(surfacePackageCallback.getSurfacePackageErrorMsg()).contains("bad surface");
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
+    }
+
+    @Test
+    public void testSendData_SdkNotLoaded() throws Exception {
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.sendData(
+                                        TEST_PACKAGE,
+                                        SDK_NAME,
+                                        new Bundle(),
+                                        new ISendDataCallback.Stub() {
+                                            @Override
+                                            public void onSendDataSuccess(Bundle params)
+                                                    throws RemoteException {
+
+                                            }
+                                            @Override
+                                            public void onSendDataError(int i, String s)
+                                                    throws RemoteException {
+
+                                            }
+                                        }));
+        assertThat(thrown).hasMessageThat().contains("Sdk " + SDK_NAME + " is not loaded");
     }
 
     @Test(expected = SecurityException.class)
@@ -655,6 +682,9 @@ public class SdkSandboxManagerServiceUnitTest {
                     IRequestSurfacePackageFromSdkCallback iRequestSurfacePackageFromSdkCallback) {
                 mSurfacePackageRequested = true;
             }
+
+            @Override
+            public void onDataReceived(Bundle data, IDataReceivedCallback callback) {}
         }
     }
 }
