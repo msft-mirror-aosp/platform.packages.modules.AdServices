@@ -71,7 +71,10 @@ public interface Flags extends Dumpable {
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
-    /** Returns the percentage that we will return a random topic from the Taxonomy. */
+    /**
+     * Returns the number of epochs to look back when deciding if a caller has observed a topic
+     * before.
+     */
     default int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
