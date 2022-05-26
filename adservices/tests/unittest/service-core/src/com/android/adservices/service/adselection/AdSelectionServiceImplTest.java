@@ -32,7 +32,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
-import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
@@ -186,12 +186,12 @@ public class AdSelectionServiceImplTest {
                 mExecutorService,
                 CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
@@ -270,8 +270,8 @@ public class AdSelectionServiceImplTest {
                 mExecutorService,
                 CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -350,8 +350,8 @@ public class AdSelectionServiceImplTest {
                 mExecutorService,
                 CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -429,8 +429,8 @@ public class AdSelectionServiceImplTest {
                 mExecutorService,
                 CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -486,8 +486,8 @@ public class AdSelectionServiceImplTest {
                 mExecutorService,
                 CONTEXT);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -586,13 +586,12 @@ public class AdSelectionServiceImplTest {
                 mDevContextFilter,
                 mExecutorService,
                 CONTEXT);
-
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
         List<String> notifications =
@@ -1100,7 +1099,7 @@ public class AdSelectionServiceImplTest {
     }
 
     private ReportImpressionTestCallback callReportImpression(
-            AdSelectionServiceImpl adSelectionService, ReportImpressionRequest requestParams)
+            AdSelectionServiceImpl adSelectionService, ReportImpressionInput requestParams)
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ReportImpressionTestCallback callback = new ReportImpressionTestCallback(resultLatch);
