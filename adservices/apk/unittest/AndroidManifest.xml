@@ -18,25 +18,12 @@
 <manifest
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        package="com.android.adservices.tests.ui">
+        package="com.android.adservices.apk.unit.tests">
 
-    <application
-            android:debuggable="true"
-            android:label="AdServices UI Test Cases"
-            tools:replace="android:label">
-        <!-- Activity for Adservices Settings UI -->
-        <activity
-                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
-                android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+    <application android:debuggable="true" />
 
     <instrumentation
             android:name="androidx.test.runner.AndroidJUnitRunner"
             android:label="AdServices UI Test Cases"
-            android:targetPackage="com.android.adservices.tests.ui" />
+            android:targetPackage="com.android.adservices.apk.unit.tests" />
 </manifest>
