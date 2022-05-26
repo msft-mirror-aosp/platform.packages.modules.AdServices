@@ -18,6 +18,8 @@ package com.android.server.sdksandbox;
 
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
+import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
@@ -197,6 +199,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         enforceCallingPackageBelongsToUid(callingInfo);
         enforceCallerHasNetworkAccess(callingPackageName);
 
+        //TODO(b/232924025): Sdk data should be prepared once per sandbox instantiation
         mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
         final long token = Binder.clearCallingIdentity();
         try {
@@ -455,9 +458,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void loadSdkForService(CallingInfo callingInfo, IBinder sdkToken,
             SdkProviderInfo sdkProviderInfo, Bundle params, AppAndRemoteSdkLink link,
             ISdkSandboxService service) {
+
+        // Gather sdk storage information
+        SdkDataDirInfo sdkDataInfo = mSdkSandboxStorageManager.getSdkDataDirInfo(
+                callingInfo, sdkProviderInfo.getSdkName());
         try {
             service.loadSdk(sdkToken, sdkProviderInfo.getApplicationInfo(),
                     sdkProviderInfo.getSdkName(), sdkProviderInfo.getSdkProviderClassName(),
+                    sdkDataInfo.getCeDataDir(), sdkDataInfo.getDeDataDir(),
                     params, link);
 
             onSdkLoaded(callingInfo, sdkProviderInfo.getApplicationInfo().uid);
