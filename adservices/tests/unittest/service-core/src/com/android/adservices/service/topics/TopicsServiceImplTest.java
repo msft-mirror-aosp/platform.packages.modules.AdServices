@@ -149,7 +149,7 @@ public class TopicsServiceImplTest {
                 new GetTopicsResult.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList("1", "2", "3"))
+                        .setTopics(Arrays.asList(1, 2, 3))
                         .build();
 
         // Call init() to load the cache
