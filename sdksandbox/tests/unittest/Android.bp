@@ -60,6 +60,9 @@ android_test {
       ":SampleServiceApp",
       ":CodeProviderWithResources",
     ],
+    // Add below line to address ATM post commit test module error
+    // See b/233124651 for details.
+    compile_multilib: "both",
 }
 
 android_test {
