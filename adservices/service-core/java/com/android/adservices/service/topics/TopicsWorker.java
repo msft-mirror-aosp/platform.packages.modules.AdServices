@@ -106,7 +106,7 @@ public class TopicsWorker {
             for (Topic topic : topics) {
                 taxonomyVersions.add(topic.getTaxonomyVersion());
                 modelVersions.add(topic.getModelVersion());
-                topicStrings.add(topic.getTopic());
+                topicStrings.add(String.valueOf(topic.getTopic()));
             }
 
             return new GetTopicsResult.Builder()
