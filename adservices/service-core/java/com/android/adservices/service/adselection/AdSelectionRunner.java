@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
+
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionResponse;
@@ -33,6 +35,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Function;
@@ -70,16 +73,19 @@ public final class AdSelectionRunner {
     @NonNull private final AdBidGenerator mAdBidGenerator;
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull private final Clock mClock;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
 
     public AdSelectionRunner(
             @NonNull final Context context,
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull final ExecutorService executorService) {
+            @NonNull final ExecutorService executorService,
+            @NonNull final AdServicesLogger adServicesLogger) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mExecutorService = executorService;
+        mAdServicesLogger = adServicesLogger;
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(mContext),
@@ -99,7 +105,8 @@ public final class AdSelectionRunner {
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdBidGenerator adBidGenerator,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
-            @NonNull Clock clock) {
+            @NonNull Clock clock,
+            @NonNull final AdServicesLogger adServicesLogger) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -108,6 +115,7 @@ public final class AdSelectionRunner {
         mAdBidGenerator = adBidGenerator;
         mAdSelectionIdGenerator = adSelectionIdGenerator;
         mClock = clock;
+        mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -146,29 +154,43 @@ public final class AdSelectionRunner {
 
     private void notifySuccessToCaller(
             @NonNull DBAdSelection result, @NonNull AdSelectionCallback callback) {
+        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
                             .setAdSelectionId(result.getAdSelectionId())
                             .setRenderUrl(result.getWinningAdRenderUrl())
                             .build());
+            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
             LogUtil.e("Encountered exception during " + "notifying AdSelection callback", e);
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } finally {
+            // TODO(b/233681870): Investigate implementation of actual failures in
+            //  logs/metrics
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
         }
     }
 
     private void notifyFailureToCaller(
             @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
+        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
                             .setErrorMessage("Encountered failure during Ad Selection")
-                            .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
+                            .setStatusCode(resultCode)
                             .build();
             LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             LogUtil.e("Encountered exception during " + "notifying AdSelection callback", e);
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
         }
     }
 
