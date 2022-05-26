@@ -103,19 +103,19 @@ public class TopicsWorker {
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
-            List<String> topicStrings = new ArrayList<>(topics.size());
+            List<Integer> topicIds = new ArrayList<>(topics.size());
 
             for (Topic topic : topics) {
                 taxonomyVersions.add(topic.getTaxonomyVersion());
                 modelVersions.add(topic.getModelVersion());
-                topicStrings.add(String.valueOf(topic.getTopic()));
+                topicIds.add(topic.getTopic());
             }
 
             GetTopicsResult result = new GetTopicsResult.Builder()
                     .setResultCode(RESULT_OK)
                     .setTaxonomyVersions(taxonomyVersions)
                     .setModelVersions(modelVersions)
-                    .setTopics(topicStrings)
+                    .setTopics(topicIds)
                     .build();
             LogUtil.v("The result of TopicsWorker.getTopics for %s, %s is %s", app, sdk,
                     result.toString());
