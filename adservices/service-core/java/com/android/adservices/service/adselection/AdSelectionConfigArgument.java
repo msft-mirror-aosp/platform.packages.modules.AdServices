@@ -41,7 +41,7 @@ public class AdSelectionConfigArgument {
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String SELLER_FIELD_NAME = "seller";
     public static final String DECISION_LOGIC_URL_FIELD_NAME = "decision_logic_url";
-    public static final String CUSTOM_AUDIENCE_BYERS_FIELD_NAME = "custom_audience_byers";
+    public static final String CUSTOM_AUDIENCE_BUYERS_FIELD_NAME = "custom_audience_buyers";
     public static final String AUCTION_SIGNALS_FIELD_NAME = "auction_signals";
     public static final String SELLER_SIGNALS_FIELD_NAME = "seller_signals";
     public static final String PER_BUYER_SIGNALS_FIELD_NAME = "per_buyer_signals";
@@ -75,7 +75,7 @@ public class AdSelectionConfigArgument {
                         DECISION_LOGIC_URL_FIELD_NAME,
                         adSelectionConfig.getDecisionLogicUrl().toString()),
                 stringArrayArg(
-                        CUSTOM_AUDIENCE_BYERS_FIELD_NAME,
+                        CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                         adSelectionConfig.getCustomAudienceBuyers()),
                 jsonArg(AUCTION_SIGNALS_FIELD_NAME, adSelectionConfig.getAdSelectionSignals()),
                 jsonArg(SELLER_SIGNALS_FIELD_NAME, adSelectionConfig.getSellerSignals()),
