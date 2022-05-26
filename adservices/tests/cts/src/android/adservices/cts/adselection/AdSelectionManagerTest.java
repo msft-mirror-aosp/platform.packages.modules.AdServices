@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.exceptions.AdServicesException;
@@ -35,6 +36,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -66,6 +68,31 @@ public class AdSelectionManagerTest {
 
         ListenableFuture<Void> result =
                 adSelectionClient.reportImpression(input);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> {
+                            result.get(10, TimeUnit.SECONDS);
+                        });
+        assertThat(exception.getCause()).isInstanceOf(AdServicesException.class);
+    }
+
+    @Test
+    public void testFailsWithInvalidAdSelectionConfigNoBuyers() throws Exception {
+        LogUtil.i("Calling Ad Selection");
+        AdSelectionConfig adSelectionConfigNoBuyers =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(new ArrayList<String>())
+                        .build();
+        AdSelectionClient adSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ListenableFuture<AdSelectionOutcome> result =
+                adSelectionClient.runAdSelection(adSelectionConfigNoBuyers);
 
         Exception exception =
                 assertThrows(
