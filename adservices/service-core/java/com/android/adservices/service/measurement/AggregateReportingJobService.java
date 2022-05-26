@@ -35,10 +35,10 @@ import com.android.adservices.service.FlagsFactory;
 import java.util.concurrent.Executor;
 
 /**
- * Main service for scheduling reporting jobs.
- * The actual job execution logic is part of {@link EventReportingJobHandler}
+ * Main service for scheduling aggregate reporting jobs.
+ * The actial job execution logic is part of {@link AggregateReportingJobHandler}
  */
-public final class ReportingJobService extends JobService {
+public final class AggregateReportingJobService extends JobService {
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
@@ -49,32 +49,29 @@ public final class ReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        LogUtil.d("ReportingJobService: onStartJob: ");
         sBackgroundExecutor.execute(() -> {
-            boolean success = new EventReportingJobHandler(
+            boolean success = new AggregateReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))
                     .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis()
-                                    - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                            System.currentTimeMillis() - SystemHealthParams
+                                    .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                             System.currentTimeMillis());
             jobFinished(params, !success);
         });
 
         String appName = FlagsFactory.getFlags().getMeasurementAppName();
-        LogUtil.d("ReportingJobService: onStartJob: appName=" + appName);
-
+        LogUtil.d("AggregateReportingJobService: onStartJob: appName=" + appName);
         if (appName != null && !appName.equals("")) {
             try {
-                PackageInfo packageInfo =
-                        getApplicationContext().getPackageManager().getPackageInfo(
-                                appName, 0);
+                PackageInfo packageInfo = getApplicationContext()
+                        .getPackageManager().getPackageInfo(appName, 0);
                 boolean isTestOnly =
                         (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
-                LogUtil.d("ReportingJobService: onStartJob: isTestOnly=" + isTestOnly);
+                LogUtil.d("AggregateReportingJobService: onStartJob: isTestOnly=" + isTestOnly);
                 if (isTestOnly) {
                     sBackgroundExecutor.execute(() -> {
-                        boolean success = new EventReportingJobHandler(
+                        boolean success = new AggregateReportingJobHandler(
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()))
                                 .performAllPendingReportsForGivenApp(
@@ -87,29 +84,31 @@ public final class ReportingJobService extends JobService {
                         "Perform all pending reports for app %s has exception %s", appName, e);
             }
         }
-        return true;
+        LogUtil.d("AggregateReportingJobService.onStartJob");
+        return false;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("ReportingJobService: onStopJob");
-        return true;
+        LogUtil.d("AggregateReportingJobService.onStopJob");
+        return false;
     }
 
     /**
-     * Schedules {@link ReportingJobService}
+     * Schedules {@link AggregateReportingJobService}
      */
     public static void schedule(Context context) {
         final JobScheduler jobScheduler = context.getSystemService(
                 JobScheduler.class);
-        final JobInfo job = new JobInfo.Builder(AdServicesConfig.MEASUREMENT_MAIN_REPORTING_JOB_ID,
-                new ComponentName(context, ReportingJobService.class))
+        final JobInfo job = new JobInfo.Builder(
+                AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
+                new ComponentName(context, AggregateReportingJobService.class))
                 .setRequiresDeviceIdle(true)
                 .setRequiresBatteryNotLow(true)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPeriodic(AdServicesConfig.getMeasurementMainReportingJobPeriodMs())
+                .setPeriodic(AdServicesConfig.getMeasurementAggregateMainReportingJobPeriodMs())
                 .build();
         jobScheduler.schedule(job);
-        LogUtil.d("Scheduling Reporting job ...");
+        LogUtil.d("Scheduling Aggregate Main Reporting job ...");
     }
 }

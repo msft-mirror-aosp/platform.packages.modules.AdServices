@@ -134,14 +134,26 @@
             </intent-filter>
         </activity>
 
-        <!-- Measurement main report upload job. -->
-        <service android:name="com.android.adservices.service.measurement.ReportingJobService"
+        <!-- Measurement event main report upload job. -->
+        <service android:name="com.android.adservices.service.measurement.EventReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
-        <!-- Measurement fallback report upload job. -->
+        <!-- Measurement event fallback report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.FallbackReportingJobService"
+                     "com.android.adservices.service.measurement.EventFallbackReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement aggregate main report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.AggregateReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement aggregate fallback report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.AggregateFallbackReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
