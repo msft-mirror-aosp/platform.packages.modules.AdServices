@@ -63,6 +63,8 @@ class SqliteObjectMapper {
                 builder::setTriggerTime);
         setTextColumn(cursor, MeasurementTables.EventReportContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
+        setDoubleColumn(cursor, MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                builder::setRandomizedTriggerRate);
         return builder.build();
     }
 
@@ -190,6 +192,11 @@ class SqliteObjectMapper {
     private static <BuilderType> void setIntColumn(Cursor cursor, String column,
                                                    Function<Integer, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getInt, setter);
+    }
+
+    private static <BuilderType> void setDoubleColumn(Cursor cursor, String column,
+            Function<Double, BuilderType> setter) {
+        setColumnValue(cursor, column, cursor::getDouble, setter);
     }
 
     private static <BuilderType> void setLongColumn(Cursor cursor, String column,

@@ -359,6 +359,8 @@ class MeasurementDao implements IMeasurementDao {
                 eventReport.getTriggerPriority());
         values.put(MeasurementTables.EventReportContract.SOURCE_TYPE,
                 eventReport.getSourceType().toString());
+        values.put(MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                eventReport.getRandomizedTriggerRate());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.EventReportContract.TABLE,
                         /*nullColumnHack=*/null, values);
