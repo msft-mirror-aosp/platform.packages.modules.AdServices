@@ -62,6 +62,7 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
 
     @Test
@@ -423,7 +424,7 @@ public final class TopicsDaoTest {
                 /* modelVersion = */ 1L, returnedAppSdkTopics);
 
         Map<Pair<String, String>, Topic> expectedReturnedAppSdkTopics = new HashMap<>();
-        for (Map.Entry<Pair<String, String>, Integer>  entry
+        for (Map.Entry<Pair<String, String>, Integer> entry
                 : returnedAppSdkTopics.entrySet()) {
             expectedReturnedAppSdkTopics.put(entry.getKey(),
                     Topic.create(entry.getValue(), /* taxonomyVersion = */ 1L,
@@ -476,9 +477,9 @@ public final class TopicsDaoTest {
         // Convert the returned Topics with POJO to returned Topics with String.
         Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch1 =
                 returnedAppSdkTopicsForEpoch1.entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().getTopic()));
+                        .stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue().getTopic()));
 
         // Setup for EpochId 2
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch2 = new HashMap<>();
@@ -531,7 +532,7 @@ public final class TopicsDaoTest {
         // Since the epochId 3 is empty, the results are always empty.
         Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb =
                 mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
-                /* numberOfLookBackEpochs = */ 1);
+                        /* numberOfLookBackEpochs = */ 1);
         assertThat(returnedTopicsFromDb).isEmpty();
 
         // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
@@ -550,5 +551,41 @@ public final class TopicsDaoTest {
         expectedReturnedTopics.put(1L, returnedAppSdkTopicsForEpoch1);
         expectedReturnedTopics.put(2L, returnedAppSdkTopicsForEpoch2);
         assertThat(returnedTopicsFromDb).isEqualTo(expectedReturnedTopics);
+    }
+
+    @Test
+    public void testRecordBlockedTopicAndRetrieveBlockedTopics() {
+        final int topicId = 1;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        Topic topicToBlock = Topic.create(topicId, taxonomyVersion, modelVersion);
+        mTopicsDao.recordBlockedTopic(topicToBlock);
+
+        List<Topic> blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(blockedTopics).hasSize(1);
+        assertThat(blockedTopics).containsExactly(topicToBlock);
+    }
+
+    @Test
+    public void testRecordBlockedTopicAndRemoveBlockedTopic() {
+        final int topicId = 1;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        Topic topicToBlock = Topic.create(topicId, taxonomyVersion, modelVersion);
+        mTopicsDao.recordBlockedTopic(topicToBlock);
+
+        List<Topic> blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(blockedTopics).hasSize(1);
+        assertThat(blockedTopics).containsExactly(topicToBlock);
+
+        mTopicsDao.removeBlockedTopic(topicToBlock);
+        blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
+
+        // Make sure that blocked topics table is empty.
+        assertThat(blockedTopics).isEmpty();
     }
 }
