@@ -313,6 +313,40 @@ public final class TriggerFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
+    @Test
+    public void testReportingFilters() throws IOException {
+        // Setup
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Filters",
+                                List.of(
+                                        "{\n"
+                                                + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                                                + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                                                + "}")));
+
+        // Execution
+        ArrayList<TriggerRegistration> result = new ArrayList<>();
+        boolean success = mFetcher.fetchTrigger(request, result);
+
+        // Assertion
+        assertTrue(success);
+        assertEquals(1, result.size());
+        assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
+        assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
+        assertEquals(
+                "{\n"
+                        + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                        + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                        + "}",
+                result.get(0).getFilters());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
     private RegistrationRequest buildRequest(String triggerUri, String topOriginUri) {
         return new RegistrationRequest.Builder()
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)

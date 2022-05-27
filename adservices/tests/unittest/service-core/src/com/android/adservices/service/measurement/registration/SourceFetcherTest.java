@@ -154,15 +154,18 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + "  \"install_attribution_window\": null,\n"
-                                + "  \"install_cooldown_window\": null\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "  \"install_attribution_window\": null,\n"
+                                            + "  \"post_install_exclusivity_window\": null\n"
+                                            + "}\n")));
         ArrayList<SourceRegistration> result = new ArrayList();
         assertTrue(mFetcher.fetchSource(request, result));
         assertEquals(1, result.size());
