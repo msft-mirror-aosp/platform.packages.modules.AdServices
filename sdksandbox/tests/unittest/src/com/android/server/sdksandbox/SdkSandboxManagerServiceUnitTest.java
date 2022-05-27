@@ -372,7 +372,8 @@ public class SdkSandboxManagerServiceUnitTest {
         ApplicationInfo info = pm.getApplicationInfo(SDK_PROVIDER_RESOURCES_PACKAGE,
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
         assertThat(info).isNotNull();
-        SandboxedSdkContext sandboxedSdkContext = new SandboxedSdkContext(context, info, SDK_NAME);
+        SandboxedSdkContext sandboxedSdkContext = new SandboxedSdkContext(context, info, SDK_NAME,
+                null, null);
         Resources resources = sandboxedSdkContext.getResources();
 
         int integerId = resources.getIdentifier("test_integer", "integer",
@@ -579,8 +580,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
         @Override
         public void loadSdk(IBinder codeToken, ApplicationInfo info, String sdkName,
-                String sdkProviderClass, Bundle params,
-                ISdkSandboxToSdkSandboxManagerCallback callback) {
+                String sdkProviderClass, String ceDataDir, String deDataDir,
+                Bundle params, ISdkSandboxToSdkSandboxManagerCallback callback) {
             mSdkSandboxToManagerCallback = callback;
         }
 

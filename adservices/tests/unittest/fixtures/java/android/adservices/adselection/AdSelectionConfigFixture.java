@@ -43,6 +43,8 @@ public class AdSelectionConfigFixture {
     public static final List<String> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList("buyer1", "buyer2", "buyer3");
 
+    public static final String EMPTY_SIGNALS = "{}";
+
     public static final String AD_SELECTION_SIGNALS = "{\"ad_selection_signals\":1}";
 
     public static final String SELLER_SIGNALS = "{\"test_seller_signals\":1}";

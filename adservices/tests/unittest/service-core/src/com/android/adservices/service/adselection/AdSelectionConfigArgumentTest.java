@@ -68,7 +68,7 @@ public class AdSelectionConfigArgumentTest {
                                         AdSelectionConfigArgument.DECISION_LOGIC_URL_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getDecisionLogicUrl().toString()),
                                 stringArrayArg(
-                                        AdSelectionConfigArgument.CUSTOM_AUDIENCE_BYERS_FIELD_NAME,
+                                        AdSelectionConfigArgument.CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getCustomAudienceBuyers()),
                                 jsonArg(
                                         AdSelectionConfigArgument.AUCTION_SIGNALS_FIELD_NAME,

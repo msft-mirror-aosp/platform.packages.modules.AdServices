@@ -80,10 +80,13 @@ public final class PhFlags implements Flags {
 
     @Override
     public int getTopicsPercentageForRandomTopic() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                /* defaultValue = */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return SystemProperties.getInt(
+                getSystemPropertyName(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
+                /* defaultValue =*/ DeviceConfig.getInt(DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName = */  KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                        /* defaultValue = */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
     }
 
     @Override
