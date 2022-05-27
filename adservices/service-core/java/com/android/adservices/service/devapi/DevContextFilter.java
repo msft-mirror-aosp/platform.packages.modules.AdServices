@@ -85,7 +85,7 @@ public class DevContextFilter {
      *     calling application.
      */
     @VisibleForTesting
-    DevContext createDevContext(int callingUid) {
+    public DevContext createDevContext(int callingUid) {
         if (!isDeveloperMode()) {
             return DevContext.createForDevOptionsDisabled();
         }
