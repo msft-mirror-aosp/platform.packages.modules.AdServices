@@ -17,6 +17,7 @@ package com.example.adservices.samples.topics.sampleapp;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.os.Bundle;
 import android.util.Log;
