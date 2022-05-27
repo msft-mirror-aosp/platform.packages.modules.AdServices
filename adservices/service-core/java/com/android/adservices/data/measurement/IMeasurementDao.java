@@ -16,15 +16,16 @@
 
 package com.android.adservices.data.measurement;
 
-import android.annotation.Nullable;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import java.time.Instant;
 import java.util.List;
@@ -41,9 +42,10 @@ public interface IMeasurementDao {
     /**
      * Add an entry to the Trigger datastore.
      */
-    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri reportTo,
+    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
             @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority) throws DatastoreException;
+            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues) throws DatastoreException;
 
     /**
      * Returns list of ids for all pending {@link Trigger}.
@@ -76,10 +78,14 @@ public interface IMeasurementDao {
     /**
      * Add an entry to the Source datastore.
      */
-    void insertSource(@NonNull Long sourceEventId, @NonNull Uri attributionSource,
-            @NonNull Uri attributionDestination, @NonNull Uri reportTo, @NonNull Uri registrant,
+    void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
+            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType) throws DatastoreException;
+            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
+            @NonNull Long installCooldownWindow,
+            @Source.AttributionMode int attributionMode,
+            @Nullable String aggregateSource,
+            @Nullable String aggregateFilterData) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
@@ -122,11 +128,27 @@ public interface IMeasurementDao {
     EventReport getEventReport(String eventReportId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link CleartextAggregatePayload}
+     * @param aggregateReportId Id of the request Aggregate Report
+     * @return the request Aggregate Report; Null in case of SQL failure
+     */
+    @Nullable
+    CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+            throws DatastoreException;
+
+    /**
      * Change the status of an event report to DELIVERED
      *
      * @param eventReportId the id of the event report to be updated
      */
     void markEventReportDelivered(String eventReportId) throws DatastoreException;
+
+    /**
+     * Change the status of an aggregate report to DELIVERED
+     *
+     * @param aggregateReportId the id of the event report to be updated
+     */
+    void markAggregateReportDelivered(String aggregateReportId) throws DatastoreException;
 
     /**
      * Saves the {@link EventReport} to datastore.
@@ -233,4 +255,26 @@ public interface IMeasurementDao {
      * @param uri            package identifier
      */
     void undoInstallAttribution(Uri uri) throws DatastoreException;
+
+    /**
+     * Save unencrypted aggregate payload to database.
+     */
+    void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;
+
+    /**
+     * Get CleartextAggregatePayload using unique Id.
+     */
+    List<CleartextAggregatePayload> getAllCleartextAggregatePayload() throws DatastoreException;
+
+    /**
+     * Returns list of all aggregate reports that have a scheduled reporting time in the given
+     * window.
+     */
+    List<String> getPendingAggregateReportIdsInWindow(long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Returns list of all pending aggregate reports for a given app right away.
+     */
+    List<String> getPendingAggregateReportIdsForGivenApp(Uri appName) throws DatastoreException;
 }

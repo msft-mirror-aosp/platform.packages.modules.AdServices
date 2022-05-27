@@ -85,24 +85,25 @@ public final class PrivacyParams {
             new long[]{ TimeUnit.DAYS.toMillis(2) };
 
     /**
-     * {@link Source} attribution state selection randomness probability for 'Event'
+     * {@link Source} Noise probability for 'Event'
      */
-    public static final double EVENT_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0000017D;
+    public static final double EVENT_NOISE_PROBABILITY = 0.0000025D;
 
     /**
-     * {@link Source} attribution state selection randomness probability for 'Navigation'
+     * {@link Source} Noise probability for 'Navigation'
      */
-    public static final double NAVIGATION_RANDOM_ATTRIBUTION_STATE_PROBABILITY = 0.0024255D;
+    public static final double NAVIGATION_NOISE_PROBABILITY = 0.0024263D;
 
     /**
-     * Trigger data noise probability for 'Event' {@link Source} attribution.
+     * {@link Source} Noise probability for 'Event' which supports install attribution.
      */
-    public static final double EVENT_RANDOM_TRIGGER_DATA_NOISE = 0.0000025D;
+    public static final double INSTALL_ATTR_EVENT_NOISE_PROBABILITY = 0.0000125D;
 
     /**
-     * Trigger data noise probability for 'Navigation' {@link Source} attribution.
+     * {@link Source} Noise probability for 'Navigation' which supports install attribution.
      */
-    public static final double NAVIGATION_RANDOM_TRIGGER_DATA_NOISE = 0.0024263D;
+    public static final double INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY =
+                NAVIGATION_NOISE_PROBABILITY;
 
     /**
      * Trigger data cardinality for 'Event' {@link Source} attribution.
@@ -126,6 +127,26 @@ public final class PrivacyParams {
      */
     public static final long MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS =
             TimeUnit.DAYS.toSeconds(30);
+
+    /**
+     * Minimum limit of duration to determine attribution for a verified installation.
+     */
+    public static final long MIN_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(2);
+
+    /**
+     * Maximum limit of duration to determine attribution for a verified installation.
+     */
+    public static final long MAX_INSTALL_ATTRIBUTION_WINDOW = TimeUnit.DAYS.toSeconds(30);
+
+    /**
+     * Default and minimum value for cooldown period of source which led to installation.
+     */
+    public static final long MIN_POST_INSTALL_EXCLUSIVITY_WINDOW = 0;
+
+    /**
+     * Maximum acceptable install cooldown period.
+     */
+    public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
     private PrivacyParams() {
     }

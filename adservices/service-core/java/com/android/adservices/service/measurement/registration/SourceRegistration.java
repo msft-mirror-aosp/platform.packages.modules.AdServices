@@ -15,7 +15,9 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -31,6 +33,10 @@ public final class SourceRegistration {
     private final long mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
+    private final long mInstallAttributionWindow;
+    private final long mInstallCooldownWindow;
+    private final String mAggregateSource;
+    private final String mAggregateFilterData;
 
     /**
      * Create a new source registration.
@@ -41,13 +47,21 @@ public final class SourceRegistration {
             @NonNull Uri destination,
             long sourceEventId,
             long expiry,
-            long sourcePriority) {
+            long sourcePriority,
+            long installAttributionWindow,
+            long installCooldownWindow,
+            String aggregateSource,
+            String aggregateFilterData) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mDestination = destination;
         mSourceEventId = sourceEventId;
         mExpiry = expiry;
         mSourcePriority = sourcePriority;
+        mInstallAttributionWindow = installAttributionWindow;
+        mInstallCooldownWindow = installCooldownWindow;
+        mAggregateSource = aggregateSource;
+        mAggregateFilterData = aggregateFilterData;
     }
 
     /**
@@ -93,6 +107,34 @@ public final class SourceRegistration {
     }
 
     /**
+     * Install attribution window.
+     */
+    public long getInstallAttributionWindow() {
+        return mInstallAttributionWindow;
+    }
+
+    /**
+     * Install cooldown window.
+     */
+    public long getInstallCooldownWindow() {
+        return mInstallCooldownWindow;
+    }
+
+    /**
+     * Aggregate source used to generate aggregate report.
+     */
+    public String getAggregateSource() {
+        return mAggregateSource;
+    }
+
+    /**
+     * Aggregate filter data used to generate aggregate report.
+     */
+    public String getAggregateFilterData() {
+        return mAggregateFilterData;
+    }
+
+    /**
      * A builder for {@link SourceRegistration}.
      */
     public static final class Builder {
@@ -102,12 +144,18 @@ public final class SourceRegistration {
         private long mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
+        private long mInstallAttributionWindow;
+        private long mInstallCooldownWindow;
+        private String mAggregateSource;
+        private String mAggregateFilterData;
 
         public Builder() {
             mTopOrigin = Uri.EMPTY;
             mReportingOrigin = Uri.EMPTY;
             mDestination = Uri.EMPTY;
             mExpiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+            mInstallAttributionWindow = MAX_INSTALL_ATTRIBUTION_WINDOW;
+            mInstallCooldownWindow = MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
         }
 
         /**
@@ -159,13 +207,45 @@ public final class SourceRegistration {
         }
 
         /**
+         * See {@link SourceRegistration#getInstallAttributionWindow()}.
+         */
+        public @NonNull Builder setInstallAttributionWindow(long installAttributionWindow) {
+            mInstallAttributionWindow = installAttributionWindow;
+            return this;
+        }
+
+        /**
+         * See {@link SourceRegistration#getInstallCooldownWindow()}.
+         */
+        public @NonNull Builder setInstallCooldownWindow(long installCooldownWindow) {
+            mInstallCooldownWindow = installCooldownWindow;
+            return this;
+        }
+
+        /**
+         * See {@link SourceRegistration#getAggregateSource()}.
+         */
+        public Builder setAggregateSource(String aggregateSource) {
+            mAggregateSource = aggregateSource;
+            return this;
+        }
+
+        /**
+         * See {@link SourceRegistration#getAggregateFilterData()}.
+         */
+        public Builder setAggregateFilterData(String aggregateFilterData) {
+            mAggregateFilterData = aggregateFilterData;
+            return this;
+        }
+
+        /**
          * Build the SourceRegistration.
          */
         public @NonNull SourceRegistration build() {
             if (mTopOrigin == null
                     || mReportingOrigin == null
                     || mDestination == null) {
-                throw new IllegalArgumentException("uinitialized fields");
+                throw new IllegalArgumentException("uninitialized fields");
             }
             return new SourceRegistration(
                     mTopOrigin,
@@ -173,7 +253,11 @@ public final class SourceRegistration {
                     mDestination,
                     mSourceEventId,
                     mExpiry,
-                    mSourcePriority);
+                    mSourcePriority,
+                    mInstallAttributionWindow,
+                    mInstallCooldownWindow,
+                    mAggregateSource,
+                    mAggregateFilterData);
         }
     }
 }

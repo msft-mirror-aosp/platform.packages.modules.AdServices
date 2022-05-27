@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import java.util.Arrays;
 import java.util.function.Function;
@@ -54,14 +55,16 @@ class SqliteObjectMapper {
                 builder::setTriggerDedupKey);
         setUriColumn(cursor, MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setUriColumn(cursor, MeasurementTables.EventReportContract.REPORT_TO,
-                builder::setReportTo);
+        setUriColumn(cursor, MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
                 builder::setReportTime);
         setLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_TIME,
                 builder::setTriggerTime);
         setTextColumn(cursor, MeasurementTables.EventReportContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
+        setDoubleColumn(cursor, MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                builder::setRandomizedTriggerRate);
         return builder.build();
     }
 
@@ -76,10 +79,10 @@ class SqliteObjectMapper {
                 builder::setEventId);
         setLongColumn(cursor, MeasurementTables.SourceContract.PRIORITY,
                 builder::setPriority);
-        setUriColumn(cursor, MeasurementTables.SourceContract.REPORT_TO,
-                builder::setReportTo);
-        setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_SOURCE,
-                builder::setAttributionSource);
+        setUriColumn(cursor, MeasurementTables.SourceContract.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
+        setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
+                builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
@@ -124,8 +127,8 @@ class SqliteObjectMapper {
                 builder::setPriority);
         setUriColumn(cursor, MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
-        setUriColumn(cursor, MeasurementTables.TriggerContract.REPORT_TO,
-                builder::setReportTo);
+        setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                builder::setAdTechDomain);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
                 builder::setStatus);
         setLongColumn(cursor, MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
@@ -155,6 +158,32 @@ class SqliteObjectMapper {
         return builder.build();
     }
 
+    /**
+     * Create {@link CleartextAggregatePayload} object from SQLite datastore.
+     */
+    static CleartextAggregatePayload constructCleartextAggregatePayload(Cursor cursor) {
+        CleartextAggregatePayload.Builder builder = new CleartextAggregatePayload.Builder();
+        setTextColumn(cursor, MeasurementTables.AggregateReport.ID,
+                builder::setId);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.PUBLISHER,
+                builder::setPublisher);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                builder::setAttributionDestination);
+        setLongColumn(cursor, MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+                builder::setSourceRegistrationTime);
+        setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                builder::setScheduledReportTime);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
+                builder::setPrivacyBudgetKey);
+        setUriColumn(cursor, MeasurementTables.AggregateReport.REPORTING_ORIGIN,
+                builder::setReportingOrigin);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                builder::setDebugCleartextPayload);
+        setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
+                builder::setStatus);
+        return builder.build();
+    }
+
     private static <BuilderType> void setUriColumn(Cursor cursor, String column, Function<Uri,
             BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getString, (x) -> setter.apply(Uri.parse(x)));
@@ -163,6 +192,11 @@ class SqliteObjectMapper {
     private static <BuilderType> void setIntColumn(Cursor cursor, String column,
                                                    Function<Integer, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getInt, setter);
+    }
+
+    private static <BuilderType> void setDoubleColumn(Cursor cursor, String column,
+            Function<Double, BuilderType> setter) {
+        setColumnValue(cursor, column, cursor::getDouble, setter);
     }
 
     private static <BuilderType> void setLongColumn(Cursor cursor, String column,

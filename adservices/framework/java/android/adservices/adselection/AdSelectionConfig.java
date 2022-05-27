@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +31,11 @@ import java.util.Objects;
  * Contains the configuration of the ad selection process.
  *
  * Instances of this class are created by SDKs to be provided as arguments to the
- * {@code runAdSelection} and {@code reportImpression} methods in {@code AdSelectionService}.
- * TODO(b/211030283): properly link runAdSelection javadoc
- * TODO(b/212300065): properly link reportImpression javadoc
- *
- * Hiding for future implementation and review for public exposure.
- * @hide
+ * {@link AdSelectionManager#runAdSelection} and {@link AdSelectionManager#reportImpression} methods
+ * in {@link AdSelectionManager}.
  */
+// TODO(b/233280314): investigate on adSelectionConfig optimization by merging mCustomAudienceBuyers
+//  and mPerBuyerSignals.
 public final class AdSelectionConfig implements Parcelable {
     @NonNull
     private final String mSeller;
@@ -190,8 +189,9 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return an opaque String provided by the SSP representing signals given to the participating
-     * buyers in the ad selection process to generate a bid
+     * @return a valid JSON object serialized as a String, fetched from the
+     * AdSelectionConfig and consumed by the JS logic fetched from the DSP, represents signals
+     * given to the participating buyers in the ad selection and reporting processes.
      */
     @NonNull
     public String getAdSelectionSignals() {
@@ -199,9 +199,10 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return an opaque String used in the ad scoring process that represents any information that
-     * the SSP would have used to tweak the results of the ad selection process (e.g. brand
-     * safety checks, excluded contextual ads)
+     * @return a valid JSON object serialized as a String, provided by the SSP and
+     * consumed by the JS logic fetched from the SSP, represents any information that the SSP used
+     * in the ad scoring process to tweak the results of the ad selection process
+     * (e.g. brand safety checks, excluded contextual ads).
      */
     @NonNull
     public String getSellerSignals() {
@@ -209,9 +210,10 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
-     * @return a Map of buyers and opaque strings representing any information that each buyer
-     * would provide during ad selection to participants (such as bid floor, ad selection type,
-     * etc.)
+     * @return a Map of buyers and JSON object serialized strings, fetched from the
+     * AdSelectionConfig and consumed by the JS logic fetched from the DSP, representing any
+     * information that each buyer would provide during ad selection to participants
+     * (such as bid floor, ad selection type, etc.)
      */
     @NonNull
     public Map<String, String> getPerBuyerSignals() {
@@ -235,12 +237,12 @@ public final class AdSelectionConfig implements Parcelable {
     /** Builder for {@link AdSelectionConfig} object. */
     public static final class Builder {
         private String mSeller;
-        private Uri mDecisionLogicURL;
+        private Uri mDecisionLogicUri;
         private List<String> mCustomAudienceBuyers;
-        private String mAdSelectionSignals;
-        private String mSellerSignals;
-        private Map<String, String> mPerBuyerSignals;
-        private List<AdWithBid> mContextualAds;
+        private String mAdSelectionSignals = "{}";
+        private String mSellerSignals = "{}";
+        private Map<String, String> mPerBuyerSignals = Collections.emptyMap();
+        private List<AdWithBid> mContextualAds = Collections.emptyList();
 
         public Builder() {
         }
@@ -264,10 +266,10 @@ public final class AdSelectionConfig implements Parcelable {
          * See {@link #getDecisionLogicUrl()} for more details.
          */
         @NonNull
-        public AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull Uri decisionLogicURL) {
-            Objects.requireNonNull(decisionLogicURL);
+        public AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull Uri decisionLogicUri) {
+            Objects.requireNonNull(decisionLogicUri);
 
-            this.mDecisionLogicURL = decisionLogicURL;
+            this.mDecisionLogicUri = decisionLogicUri;
             return this;
         }
 
@@ -286,9 +288,11 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the opaque signals provided to buyers during ad selection bid generation.
+         * Sets the signals provided to buyers during ad selection bid generation.
          *
-         * See {@link #getAdSelectionSignals()} for more details.
+         * <p>If not set, defaults to an empty JSON object serialized as a String.
+         *
+         * <p>See {@link #getAdSelectionSignals()} for more details.
          */
         @NonNull
         public AdSelectionConfig.Builder setAdSelectionSignals(@NonNull String adSelectionSignals) {
@@ -299,9 +303,11 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Set the opaque signals used to modify ad selection results.
+         * Set the signals used to modify ad selection results.
          *
-         * See {@link #getSellerSignals()} for more details.
+         * <p>If not set, defaults to an empty JSON object serialized as a String.
+         *
+         * <p>See {@link #getSellerSignals()} for more details.
          */
         @NonNull
         public AdSelectionConfig.Builder setSellerSignals(@NonNull String sellerSignals) {
@@ -312,9 +318,11 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the opaque signals provided by each buyer during ad selection.
+         * Sets the signals provided by each buyer during ad selection.
          *
-         * See {@link #getPerBuyerSignals()} for more details.
+         * <p>If not set, defaults to an empty map.
+         *
+         * <p>See {@link #getPerBuyerSignals()} for more details.
          */
         @NonNull
         public AdSelectionConfig.Builder setPerBuyerSignals(
@@ -327,11 +335,13 @@ public final class AdSelectionConfig implements Parcelable {
 
         /**
          * Sets the list of contextual ads and bids that will participate in the ad selection
-         * process.  Contextual ads and ad information that should be excluded from the ad selection
+         * process. Contextual ads and ad information that should be excluded from the ad selection
          * and still be visible to the ad selection JS logic should instead be embedded in seller
          * signals.
          *
-         * See {@link #getContextualAds()} for more details.
+         * <p>If not set, defaults to an empty list.
+         *
+         * <p>See {@link #getContextualAds()} for more details.
          */
         @NonNull
         public AdSelectionConfig.Builder setContextualAds(@NonNull List<AdWithBid> contextualAds) {
@@ -344,12 +354,12 @@ public final class AdSelectionConfig implements Parcelable {
         /**
          * Builds an {@link AdSelectionConfig} instance.
          *
-         * @throws NullPointerException if any params are null
+         * @throws NullPointerException if any required params are null
          */
         @NonNull
         public AdSelectionConfig build() {
             Objects.requireNonNull(mSeller);
-            Objects.requireNonNull(mDecisionLogicURL);
+            Objects.requireNonNull(mDecisionLogicUri);
             Objects.requireNonNull(mCustomAudienceBuyers);
             Objects.requireNonNull(mAdSelectionSignals);
             Objects.requireNonNull(mSellerSignals);
@@ -357,7 +367,7 @@ public final class AdSelectionConfig implements Parcelable {
             Objects.requireNonNull(mContextualAds);
             return new AdSelectionConfig(
                     mSeller,
-                    mDecisionLogicURL,
+                    mDecisionLogicUri,
                     mCustomAudienceBuyers,
                     mAdSelectionSignals,
                     mSellerSignals,

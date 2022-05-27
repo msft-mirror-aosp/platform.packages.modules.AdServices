@@ -37,6 +37,10 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -86,39 +90,39 @@ public final class CacheManagerTest {
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(3);
 
         // EpochId 1
-        Map<Pair<String, String>, String> returnedAppSdkTopicsMap1 = new HashMap<>();
-        returnedAppSdkTopicsMap1.put(Pair.create("app1", ""), "topic1");
-        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk1"), "topic1");
-        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk2"), "topic1");
+        Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap1 = new HashMap<>();
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", ""), /* topic */ 1);
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk1"), /* topic */ 1);
+        returnedAppSdkTopicsMap1.put(Pair.create("app1", "sdk2"), /* topic */ 1);
 
-        returnedAppSdkTopicsMap1.put(Pair.create("app2", "sdk1"), "topic2");
-        returnedAppSdkTopicsMap1.put(Pair.create("app2", "sdk3"), "topic2");
-        returnedAppSdkTopicsMap1.put(Pair.create("app2", "sdk4"), "topic2");
+        returnedAppSdkTopicsMap1.put(Pair.create("app2", "sdk1"), /* topic */ 2);
+        returnedAppSdkTopicsMap1.put(Pair.create("app2", "sdk3"), /* topic */ 2);
+        returnedAppSdkTopicsMap1.put(Pair.create("app2", "sdk4"), /* topic */ 2);
 
-        returnedAppSdkTopicsMap1.put(Pair.create("app3", "sdk1"), "topic3");
+        returnedAppSdkTopicsMap1.put(Pair.create("app3", "sdk1"), /* topic */ 3);
 
-        returnedAppSdkTopicsMap1.put(Pair.create("app5", "sdk1"), "topic5");
-        returnedAppSdkTopicsMap1.put(Pair.create("app5", "sdk5"), "topic5");
+        returnedAppSdkTopicsMap1.put(Pair.create("app5", "sdk1"), /* topic */ 5);
+        returnedAppSdkTopicsMap1.put(Pair.create("app5", "sdk5"), /* topic */ 5);
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 1L,
                 /* taxonomyVersion */ 1L,
                 /* modelVersion */ 1L, returnedAppSdkTopicsMap1);
 
         // EpochId 2
-        Map<Pair<String, String>, String> returnedAppSdkTopicsMap2 = new HashMap<>();
+        Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap2 = new HashMap<>();
 
-        returnedAppSdkTopicsMap2.put(Pair.create("app1", ""), "topic2");
-        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk1"), "topic2");
-        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk2"), "topic2");
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", ""), /* topic */ 2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk1"), /* topic */ 2);
+        returnedAppSdkTopicsMap2.put(Pair.create("app1", "sdk2"), /* topic */ 2);
 
-        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk1"), "topic3");
-        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk3"), "topic3");
-        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk4"), "topic3");
+        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk1"), /* topic */ 3);
+        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk3"), /* topic */ 3);
+        returnedAppSdkTopicsMap2.put(Pair.create("app2", "sdk4"), /* topic */ 3);
 
-        returnedAppSdkTopicsMap2.put(Pair.create("app3", "sdk1"), "topic4");
+        returnedAppSdkTopicsMap2.put(Pair.create("app3", "sdk1"), /* topic */ 4);
 
-        returnedAppSdkTopicsMap2.put(Pair.create("app5", "sdk1"), "topic1");
-        returnedAppSdkTopicsMap2.put(Pair.create("app5", "sdk5"), "topic1");
+        returnedAppSdkTopicsMap2.put(Pair.create("app5", "sdk1"), /* topic */ 1);
+        returnedAppSdkTopicsMap2.put(Pair.create("app5", "sdk5"), /* topic */ 1);
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L,
                 /* taxonomyVersion */ 1L,
@@ -133,15 +137,15 @@ public final class CacheManagerTest {
         verify(mMockEpochManager).getCurrentEpochId();
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
 
-        Topic topic1 = Topic.create("topic1", /* taxonomyVersion = */ 1L,
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic2 = Topic.create("topic2", /* taxonomyVersion = */ 1L,
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic3 = Topic.create("topic3", /* taxonomyVersion = */ 1L,
+        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic4 = Topic.create("topic4", /* taxonomyVersion = */ 1L,
+        Topic topic4 = Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
-        Topic topic5 = Topic.create("topic5", /* taxonomyVersion = */ 1L,
+        Topic topic5 = Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L,
                 /* modelVersion = */ 1L);
 
         // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
@@ -221,5 +225,30 @@ public final class CacheManagerTest {
                 "app", "sdk");
 
         assertThat(topics).isEmpty();
+    }
+
+    @Test
+    public void testDump() throws FileNotFoundException {
+        // Trigger the dump to verify no crash
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+
+        PrintWriter printWriter = new PrintWriter(new Writer() {
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+
+            }
+
+            @Override
+            public void flush() throws IOException {
+
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        });
+        String[] args = new String[]{};
+        cacheManager.dump(printWriter, args);
     }
 }

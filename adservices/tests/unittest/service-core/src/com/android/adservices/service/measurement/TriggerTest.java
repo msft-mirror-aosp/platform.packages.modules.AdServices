@@ -53,7 +53,7 @@ public class TriggerTest {
 
         assertEquals(
                 new Trigger.Builder()
-                        .setReportTo(Uri.parse("https://example.com/rT"))
+                        .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
                         .setId("1")
                         .setEventTriggerData(1L)
@@ -66,7 +66,7 @@ public class TriggerTest {
                         .setAggregateValues(values.toString())
                         .build(),
                 new Trigger.Builder()
-                        .setReportTo(Uri.parse("https://example.com/rT"))
+                        .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
                         .setId("1")
                         .setEventTriggerData(1L)
@@ -89,8 +89,8 @@ public class TriggerTest {
                 new Trigger.Builder().setAttributionDestination(Uri.parse("1")).build(),
                 new Trigger.Builder().setAttributionDestination(Uri.parse("2")).build());
         assertNotEquals(
-                new Trigger.Builder().setReportTo(Uri.parse("1")).build(),
-                new Trigger.Builder().setReportTo(Uri.parse("2")).build());
+                new Trigger.Builder().setAdTechDomain(Uri.parse("1")).build(),
+                new Trigger.Builder().setAdTechDomain(Uri.parse("2")).build());
         assertNotEquals(
                 new Trigger.Builder().setPriority(1L).build(),
                 new Trigger.Builder().setPriority(2L).build());
@@ -138,21 +138,6 @@ public class TriggerTest {
         values2.put("geoValue", 1664);
         assertNotEquals(new Trigger.Builder().setAggregateValues(values1.toString()).build(),
                 new Trigger.Builder().setAggregateValues(values2.toString()).build());
-    }
-
-    @Test
-    public void testGetRandomizedTriggerData() {
-        Source source = new Source.Builder()
-                .setSourceType(Source.SourceType.NAVIGATION).build();
-        Trigger trigger = new Trigger.Builder().setEventTriggerData(2L).build();
-        int randomCount = 0;
-        for (int i = 0; i < 5000; i++) {
-            if (trigger.getEventTriggerData() != trigger.getRandomizedTriggerData(source)) {
-                randomCount++;
-            }
-        }
-        assertNotEquals(0, randomCount);
-        assertNotEquals(5000, randomCount);
     }
 
     @Test

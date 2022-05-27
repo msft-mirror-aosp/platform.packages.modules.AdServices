@@ -23,6 +23,7 @@ import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -94,6 +95,7 @@ public class TopicsWorker {
      */
     @NonNull
     public GetTopicsResult getTopics(@NonNull String app, @NonNull String sdk) {
+        LogUtil.v("TopicsWorker.getTopics for %s, %s", app, sdk);
         mReadWriteLock.readLock().lock();
         try {
             List<Topic> topics = mCacheManager.getTopics(
@@ -101,20 +103,23 @@ public class TopicsWorker {
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
-            List<String> topicStrings = new ArrayList<>(topics.size());
+            List<Integer> topicIds = new ArrayList<>(topics.size());
 
             for (Topic topic : topics) {
                 taxonomyVersions.add(topic.getTaxonomyVersion());
                 modelVersions.add(topic.getModelVersion());
-                topicStrings.add(topic.getTopic());
+                topicIds.add(topic.getTopic());
             }
 
-            return new GetTopicsResult.Builder()
+            GetTopicsResult result = new GetTopicsResult.Builder()
                     .setResultCode(RESULT_OK)
                     .setTaxonomyVersions(taxonomyVersions)
                     .setModelVersions(modelVersions)
-                    .setTopics(topicStrings)
+                    .setTopics(topicIds)
                     .build();
+            LogUtil.v("The result of TopicsWorker.getTopics for %s, %s is %s", app, sdk,
+                    result.toString());
+            return result;
         } finally {
             mReadWriteLock.readLock().unlock();
         }

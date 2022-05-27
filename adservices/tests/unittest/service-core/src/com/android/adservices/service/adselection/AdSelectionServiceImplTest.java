@@ -18,13 +18,23 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -32,7 +42,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
-import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
@@ -49,9 +59,13 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.MockResponse;
@@ -62,8 +76,10 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.mockito.stubbing.Answer;
 
 import java.net.URL;
 import java.time.Clock;
@@ -78,27 +94,20 @@ import java.util.concurrent.Executors;
 public class AdSelectionServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
+    private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    private static final Uri BUYER_BIDDING_LOGIC_URL = Uri.parse("http://www.seller.com");
+    private static final long AD_SELECTION_ID = 1;
+    private static final long INCORRECT_AD_SELECTION_ID = 2;
+    private static final double BID = 5.0;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
-
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
-
-    private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
-
-    private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
-
-    private static final Uri BUYER_BIDDING_LOGIC_URL = Uri.parse("http://www.seller.com");
-
-    private static final long AD_SELECTION_ID = 1;
-    private static final long INCORRECT_AD_SELECTION_ID = 2;
-
     private final String mContextualSignals = "{\"contextual_signals\":1}";
-
-    private static final double BID = 5.0;
-
     private final AdSelectionHttpClient mClient = new AdSelectionHttpClient(mExecutorService);
 
+    private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -108,8 +117,23 @@ public class AdSelectionServiceImplTest {
     // This object access some system APIs
     @Mock DevContextFilter mDevContextFilter;
 
+    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+
+    // Auto-generated variable names are too long for lint check
+    private static final int SHORT_API_NAME_OVERRIDE =
+            AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
+    private static final int SHORT_API_NAME_REMOVE_OVERRIDE =
+            AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
+    private static final int SHORT_API_NAME_RESET_ALL_OVERRIDES =
+            AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+
     @Before
     public void setUp() {
+        mCustomAudienceDao =
+                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .build()
+                        .customAudienceDao();
+
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -180,16 +204,19 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
@@ -199,6 +226,15 @@ public class AdSelectionServiceImplTest {
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_SUCCESS));
     }
 
     @Test
@@ -263,13 +299,15 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -278,6 +316,16 @@ public class AdSelectionServiceImplTest {
 
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INVALID_ARGUMENT);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INVALID_ARGUMENT));
     }
 
     @Test
@@ -343,13 +391,15 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -358,6 +408,15 @@ public class AdSelectionServiceImplTest {
 
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INTERNAL_ERROR));
     }
 
     @Test
@@ -422,13 +481,15 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -437,6 +498,15 @@ public class AdSelectionServiceImplTest {
 
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INTERNAL_ERROR));
     }
 
     @Test
@@ -479,13 +549,15 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
@@ -498,6 +570,15 @@ public class AdSelectionServiceImplTest {
 
         RecordedRequest reportRequest = server.takeRequest();
         assertEquals(mSellerReportingPath, reportRequest.getPath());
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_SUCCESS));
     }
 
     @Test
@@ -580,22 +661,33 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
-        ReportImpressionRequest request =
-                new ReportImpressionRequest.Builder()
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
 
         assertTrue(callback.mIsSuccess);
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
 
         assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_SUCCESS));
     }
 
     @Test
@@ -612,10 +704,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -630,6 +724,11 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
                         myAppPackageName));
+
+        verify(mAdServicesLoggerSpy).logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(SHORT_API_NAME_OVERRIDE, STATUS_SUCCESS));
     }
 
     @Test
@@ -643,10 +742,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -662,6 +763,13 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
                         myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_OVERRIDE, STATUS_UNAUTHORIZED);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_OVERRIDE, STATUS_UNAUTHORIZED));
     }
 
     @Test
@@ -678,10 +786,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -710,6 +820,13 @@ public class AdSelectionServiceImplTest {
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS));
     }
 
     @Test
@@ -723,10 +840,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -756,6 +875,13 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_UNAUTHORIZED);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_UNAUTHORIZED));
     }
 
     @Test
@@ -774,10 +900,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -806,6 +934,13 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_REMOVE_OVERRIDE, STATUS_SUCCESS));
     }
 
     @Test
@@ -824,10 +959,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -879,7 +1016,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertTrue(callback.mIsSuccess);
 
@@ -892,6 +1029,13 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS));
     }
 
     @Test
@@ -908,10 +1052,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -963,7 +1109,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertTrue(callback.mIsSuccess);
 
@@ -976,6 +1122,13 @@ public class AdSelectionServiceImplTest {
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_SUCCESS));
     }
 
     @Test
@@ -989,10 +1142,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
                         mExecutorService,
-                        CONTEXT);
+                        CONTEXT,
+                        mAdServicesLoggerSpy);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -1044,7 +1199,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        AdSelectionOverrideTestCallback callback = callResetALLOverrides(adSelectionService);
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
@@ -1058,6 +1213,13 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_UNAUTHORIZED);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_UNAUTHORIZED));
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
@@ -1065,8 +1227,17 @@ public class AdSelectionServiceImplTest {
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS)
             throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
                 adSelectionConfig, decisionLogicJS, callback);
@@ -1077,18 +1248,36 @@ public class AdSelectionServiceImplTest {
     private AdSelectionOverrideTestCallback callRemoveOverride(
             AdSelectionServiceImpl adSelectionService, AdSelectionConfig adSelectionConfig)
             throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
         adSelectionService.removeAdSelectionConfigRemoteInfoOverride(adSelectionConfig, callback);
         resultLatch.await();
         return callback;
     }
 
-    private AdSelectionOverrideTestCallback callResetALLOverrides(
+    private AdSelectionOverrideTestCallback callResetAllOverrides(
             AdSelectionServiceImpl adSelectionService) throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
         adSelectionService.resetAllAdSelectionConfigRemoteOverrides(callback);
         resultLatch.await();
@@ -1096,10 +1285,19 @@ public class AdSelectionServiceImplTest {
     }
 
     private ReportImpressionTestCallback callReportImpression(
-            AdSelectionServiceImpl adSelectionService, ReportImpressionRequest requestParams)
+            AdSelectionServiceImpl adSelectionService, ReportImpressionInput requestParams)
             throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
+        // Counted down in 1) callback and 2) logApiCall
+        CountDownLatch resultLatch = new CountDownLatch(2);
         ReportImpressionTestCallback callback = new ReportImpressionTestCallback(resultLatch);
+
+        // Wait for the logging call, which happens after the callback
+        Answer<Void> countDownAnswer =
+                unused -> {
+                    resultLatch.countDown();
+                    return null;
+                };
+        doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
         adSelectionService.reportImpression(requestParams, callback);
         resultLatch.await();

@@ -121,7 +121,8 @@ public class EventReportingJobHandler {
         }
         try {
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(eventReport.getReportTo(), eventReportJsonPayload);
+            int returnCode = makeHttpPostRequest(eventReport.getAdTechDomain(),
+                    eventReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
@@ -151,10 +152,7 @@ public class EventReportingJobHandler {
                 .setTriggerData(String.valueOf(eventReport.getTriggerData()))
                 .setSourceType(eventReport.getSourceType() == Source.SourceType.NAVIGATION
                         ? "navigation" : "event")
-                .setRandomizedTriggerRate(eventReport.getSourceType()
-                        == Source.SourceType.NAVIGATION
-                        ? PrivacyParams.NAVIGATION_RANDOM_TRIGGER_DATA_NOISE
-                        : PrivacyParams.EVENT_RANDOM_TRIGGER_DATA_NOISE)
+                .setRandomizedTriggerRate(eventReport.getRandomizedTriggerRate())
                 .build()
                 .toJson();
     }
@@ -163,9 +161,9 @@ public class EventReportingJobHandler {
      * Makes the POST request to the reporting URL.
      */
     @VisibleForTesting
-    public int makeHttpPostRequest(Uri reportToUrl, JSONObject eventReportPayload)
+    public int makeHttpPostRequest(Uri adTechDomain, JSONObject eventReportPayload)
             throws IOException {
         EventReportSender eventReportSender = new EventReportSender();
-        return eventReportSender.sendEventReport(reportToUrl, eventReportPayload);
+        return eventReportSender.sendReport(adTechDomain, eventReportPayload);
     }
 }

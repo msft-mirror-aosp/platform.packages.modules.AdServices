@@ -24,15 +24,19 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 /** Unit tests for {@link EventReport} */
 @SmallTest
 public final class EventReportTest {
+
+    private static final double DOUBLE_MAX_DELTA = 0.0000001D;
 
     private EventReport createExample() {
         return new EventReport.Builder()
                 .setId("1")
                 .setSourceId(21)
-                .setReportTo(Uri.parse("http://foo.com"))
+                .setAdTechDomain(Uri.parse("http://foo.com"))
                 .setAttributionDestination(Uri.parse("http://bar.com"))
                 .setTriggerTime(1000L)
                 .setTriggerData(8L)
@@ -49,7 +53,7 @@ public final class EventReportTest {
         EventReport eventReport = createExample();
         assertEquals("1", eventReport.getId());
         assertEquals(21, eventReport.getSourceId());
-        assertEquals("http://foo.com", eventReport.getReportTo().toString());
+        assertEquals("http://foo.com", eventReport.getAdTechDomain().toString());
         assertEquals("http://bar.com", eventReport.getAttributionDestination().toString());
         assertEquals(1000L, eventReport.getTriggerTime());
         assertEquals(8L, eventReport.getTriggerData());
@@ -65,7 +69,7 @@ public final class EventReportTest {
         EventReport eventReport = new EventReport.Builder().build();
         assertNull(eventReport.getId());
         assertEquals(0L, eventReport.getSourceId());
-        assertNull(eventReport.getReportTo());
+        assertNull(eventReport.getAdTechDomain());
         assertNull(eventReport.getAttributionDestination());
         assertEquals(0L, eventReport.getTriggerTime());
         assertEquals(0L, eventReport.getTriggerData());
@@ -75,4 +79,119 @@ public final class EventReportTest {
         assertEquals(EventReport.Status.PENDING, eventReport.getStatus());
         assertNull(eventReport.getSourceType());
     }
+
+    private Source createSourceForTest(long eventTime, Source.SourceType sourceType,
+            boolean isInstallAttributable) {
+        return new Source.Builder()
+                .setEventId(10)
+                .setSourceType(sourceType)
+                .setInstallCooldownWindow(isInstallAttributable ? 100 : 0)
+                .setEventTime(eventTime)
+                .setAdTechDomain(Uri.parse("https://example-adtech1.com"))
+                .setAttributionDestination(Uri.parse("android-app://example1.app"))
+                .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
+                .build();
+    }
+
+    private Trigger createTriggerForTest(long eventTime) {
+        return new Trigger.Builder()
+                .setTriggerTime(eventTime)
+                .setPriority(1)
+                .setAdTechDomain(Uri.parse("https://example-adtech2.com"))
+                .setAttributionDestination(Uri.parse("android-app://example2.app"))
+                .setEventTriggerData(4)
+                .build();
+    }
+
+    @Test
+    public void testPopulateFromSourceAndTrigger_event() {
+        long baseTime = System.currentTimeMillis();
+        Source source = createSourceForTest(baseTime, Source.SourceType.EVENT, false);
+        Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
+
+        EventReport report = new EventReport.Builder()
+                .populateFromSourceAndTrigger(source, trigger).build();
+
+        assertEquals(trigger.getPriority(), report.getTriggerPriority());
+        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
+        // Truncated data 4 % 2 = 0
+        assertEquals(0, report.getTriggerData());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(source.getReportingTime(trigger.getTriggerTime()), report.getReportTime());
+        assertEquals(source.getSourceType(), report.getSourceType());
+        assertEquals(PrivacyParams.EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(),
+                DOUBLE_MAX_DELTA);
+    }
+
+    @Test
+    public void testPopulateFromSourceAndTrigger_eventWithInstallAttribution() {
+        long baseTime = System.currentTimeMillis();
+        Source source = createSourceForTest(baseTime, Source.SourceType.EVENT, true);
+        Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
+
+        EventReport report = new EventReport.Builder()
+                .populateFromSourceAndTrigger(source, trigger).build();
+
+        assertEquals(trigger.getPriority(), report.getTriggerPriority());
+        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
+        assertEquals(trigger.getTruncatedTriggerData(source), report.getTriggerData());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(source.getReportingTime(trigger.getTriggerTime()), report.getReportTime());
+        assertEquals(source.getSourceType(), report.getSourceType());
+        assertEquals(PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
+                report.getRandomizedTriggerRate(),
+                DOUBLE_MAX_DELTA);
+    }
+
+    @Test
+    public void testPopulateFromSourceAndTrigger_navigation() {
+        long baseTime = System.currentTimeMillis();
+        Source source = createSourceForTest(baseTime, Source.SourceType.NAVIGATION, false);
+        Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
+
+        EventReport report = new EventReport.Builder()
+                .populateFromSourceAndTrigger(source, trigger).build();
+
+        assertEquals(trigger.getPriority(), report.getTriggerPriority());
+        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
+        assertEquals(trigger.getTruncatedTriggerData(source), report.getTriggerData());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(source.getReportingTime(trigger.getTriggerTime()), report.getReportTime());
+        assertEquals(source.getSourceType(), report.getSourceType());
+        assertEquals(PrivacyParams.NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(),
+                DOUBLE_MAX_DELTA);
+    }
+
+    @Test
+    public void testPopulateFromSourceAndTrigger_navigationWithInstallAttribution() {
+        long baseTime = System.currentTimeMillis();
+        Source source = createSourceForTest(baseTime, Source.SourceType.NAVIGATION, true);
+        Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
+
+        EventReport report = new EventReport.Builder()
+                .populateFromSourceAndTrigger(source, trigger).build();
+
+        assertEquals(trigger.getPriority(), report.getTriggerPriority());
+        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
+        assertEquals(trigger.getTruncatedTriggerData(source), report.getTriggerData());
+        assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
+        assertEquals(source.getEventId(), report.getSourceId());
+        assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
+        assertEquals(source.getAttributionDestination(), report.getAttributionDestination());
+        assertEquals(source.getReportingTime(trigger.getTriggerTime()), report.getReportTime());
+        assertEquals(source.getSourceType(), report.getSourceType());
+        assertEquals(PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                report.getRandomizedTriggerRate(),
+                DOUBLE_MAX_DELTA);
+    }
+
 }

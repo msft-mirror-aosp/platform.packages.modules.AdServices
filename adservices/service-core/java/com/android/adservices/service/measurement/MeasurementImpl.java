@@ -41,9 +41,11 @@ import com.android.adservices.service.measurement.registration.TriggerRegistrati
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -62,6 +64,8 @@ public final class MeasurementImpl {
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
     private final ContentResolver mContentResolver;
+
+    private static final String ANDROID_APP_SCHEME = "android-app://";
 
     private MeasurementImpl(Context context) {
         mContentResolver = context.getContentResolver();
@@ -86,7 +90,7 @@ public final class MeasurementImpl {
      * existing instance will be returned.
      */
     @NonNull
-    static MeasurementImpl getInstance(Context context) {
+    public static MeasurementImpl getInstance(Context context) {
         if (sMeasurementImpl == null) {
             synchronized (MeasurementImpl.class) {
                 if (sMeasurementImpl == null) {
@@ -95,6 +99,24 @@ public final class MeasurementImpl {
             }
         }
         return sMeasurementImpl;
+    }
+
+    /**
+     * Invoked when a package is installed.
+     *
+     * @param packageUri installed package {@link Uri}.
+     * @param eventTime  time when the package was installed.
+     */
+    public void doInstallAttribution(@NonNull Uri packageUri, long eventTime) {
+        LogUtil.i("Attributing installation for: " + packageUri);
+        Uri appUri = getAppUri(packageUri);
+        mReadWriteLock.readLock().lock();
+        try {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.doInstallAttribution(appUri, eventTime));
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
     }
 
     /**
@@ -160,26 +182,95 @@ public final class MeasurementImpl {
         }
     }
 
+    /**
+     * Delete all records from a specific package.
+     */
+    public void deletePackageRecords(Uri packageUri) {
+        Uri appUri = getAppUri(packageUri);
+        LogUtil.i("Deleting records for " + appUri);
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastoreManager.runInTransaction((dao) -> {
+                dao.deleteAppRecords(appUri);
+                dao.undoInstallAttribution(appUri);
+            });
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, "Delete package records received invalid parameters");
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
     private void insertSources(
             @NonNull RegistrationRequest request,
             ArrayList<SourceRegistration> responseBasedRegistrations,
             long sourceEventTime) {
         for (SourceRegistration registration : responseBasedRegistrations) {
-            mDatastoreManager.runInTransaction((dao) ->
-                    dao.insertSource(
-                            /* sourceEventId */ registration.getSourceEventId(),
-                            /* attributionSource */ request.getTopOriginUri(),
-                            // Only first destination to avoid AdTechs change this
-                            /* attributionDestination */ responseBasedRegistrations.get(0)
-                                    .getDestination(),
-                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
-                            /* registrant */ getRegistrant(request.getAttributionSource()),
-                            /* sourceEventTime */ sourceEventTime,
-                            /* expiryTime */ sourceEventTime
-                                    + TimeUnit.SECONDS.toMillis(registration.getExpiry()),
-                            /* priority */ registration.getSourcePriority(),
-                            /* sourceType */ getSourceType(request)));
+            Source source = new Source.Builder()
+                    .setEventId(registration.getSourceEventId())
+                    .setPublisher(request.getTopOriginUri())
+                    // Only first destination to avoid AdTechs change this
+                    .setAttributionDestination(responseBasedRegistrations.get(0)
+                            .getDestination())
+                    .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                    .setRegistrant(getRegistrant(request.getAttributionSource()))
+                    .setSourceType(getSourceType(request))
+                    .setPriority(registration.getSourcePriority())
+                    .setEventTime(sourceEventTime)
+                    .setExpiryTime(sourceEventTime
+                            + TimeUnit.SECONDS.toMillis(registration.getExpiry()))
+                    .setInstallAttributionWindow(
+                            TimeUnit.SECONDS.toMillis(registration.getInstallAttributionWindow()))
+                    .setInstallCooldownWindow(
+                            TimeUnit.SECONDS.toMillis(registration.getInstallCooldownWindow()))
+                    // Setting as TRUTHFULLY as default value for tests.
+                    // This will be overwritten by getSourceEventReports.
+                    .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                    .setAggregateSource(registration.getAggregateSource())
+                    .setAggregateFilterData(registration.getAggregateFilterData())
+                    .build();
+            List<EventReport> eventReports = getSourceEventReports(source);
+            mDatastoreManager.runInTransaction((dao) -> {
+                dao.insertSource(
+                        /* sourceEventId */ source.getEventId(),
+                        /* publisher */ source.getPublisher(),
+                        /* attributionDestination */ source.getAttributionDestination(),
+                        /* adTechDomain */ source.getAdTechDomain(),
+                        /* registrant */ source.getRegistrant(),
+                        /* sourceEventTime */ source.getEventTime(),
+                        /* expiryTime */ source.getExpiryTime(),
+                        /* priority */ source.getPriority(),
+                        /* sourceType */ source.getSourceType(),
+                        source.getInstallAttributionWindow(),
+                        source.getInstallCooldownWindow(),
+                        /* attributionMode */ source.getAttributionMode(),
+                        /* aggregateSource */ source.getAggregateSource(),
+                        /* aggregateFilterData */ source.getAggregateFilterData());
+                for (EventReport report : eventReports) {
+                    dao.insertEventReport(report);
+                }
+            });
         }
+    }
+
+    @VisibleForTesting
+    List<EventReport> getSourceEventReports(Source source) {
+        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReport();
+        return fakeReports.stream().map(fakeReport ->
+                new EventReport.Builder()
+                        .setSourceId(source.getEventId())
+                        .setReportTime(fakeReport.getReportingTime())
+                        .setTriggerData(fakeReport.getTriggerData())
+                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAdTechDomain(source.getAdTechDomain())
+                        .setTriggerTime(0)
+                        .setTriggerPriority(0)
+                        .setTriggerDedupKey(null)
+                        .setSourceType(source.getSourceType())
+                        .setStatus(EventReport.Status.PENDING)
+                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
+                        .build()
+        ).collect(Collectors.toList());
     }
 
     private Source.SourceType getSourceType(RegistrationRequest request) {
@@ -195,12 +286,14 @@ public final class MeasurementImpl {
             mDatastoreManager.runInTransaction((dao) ->
                     dao.insertTrigger(
                             /* attributionDestination */ request.getTopOriginUri(),
-                            /* reportTo */ getBaseUri(registration.getReportingOrigin()),
+                            /* adTechDomain */ getBaseUri(registration.getReportingOrigin()),
                             /* registrant */ getRegistrant(request.getAttributionSource()),
                             /* triggerTime */ triggerTime,
                             /* triggerData */ registration.getTriggerData(),
                             /* dedupKey */ registration.getDeduplicationKey(),
-                            /* priority */ registration.getTriggerPriority()));
+                            /* priority */ registration.getTriggerPriority(),
+                            /* aggregateTriggerData */ registration.getAggregateTriggerData(),
+                            /* aggregateValues */ registration.getAggregateValues()));
         }
         try (ContentProviderClient contentProviderClient =
                      mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {
@@ -214,6 +307,10 @@ public final class MeasurementImpl {
 
     private Uri getRegistrant(AttributionSource attributionSource) {
         return Uri.parse(
-                "android-app://" + attributionSource.getPackageName());
+                ANDROID_APP_SCHEME + attributionSource.getPackageName());
+    }
+
+    private Uri getAppUri(Uri packageUri) {
+        return Uri.parse(ANDROID_APP_SCHEME + packageUri.getEncodedSchemeSpecificPart());
     }
 }

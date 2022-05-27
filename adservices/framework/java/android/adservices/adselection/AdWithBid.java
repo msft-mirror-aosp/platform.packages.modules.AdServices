@@ -29,9 +29,6 @@ import java.util.Objects;
  *
  * The ads and their bids are fed into an ad scoring process which will inform the final ad
  * selection.
- *
- * Hiding for future implementation and review for public exposure.
- * @hide
  */
 public final class AdWithBid implements Parcelable {
     @NonNull

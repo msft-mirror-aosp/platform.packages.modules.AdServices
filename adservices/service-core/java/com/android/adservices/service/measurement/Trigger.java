@@ -23,7 +23,6 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
-import com.android.adservices.service.measurement.attribution.RandomSelector;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.LongStream;
 
 /**
  * POJO for Trigger.
@@ -52,7 +50,7 @@ public class Trigger {
     private String mId;
     private Long mDedupKey;
     private Uri mAttributionDestination;
-    private Uri mReportTo;
+    private Uri mAdTechDomain;
     private long mTriggerTime;
     private long mPriority;
     private long mEventTriggerData;
@@ -87,7 +85,7 @@ public class Trigger {
         Trigger trigger = (Trigger) obj;
         return  Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
-                && Objects.equals(mReportTo, trigger.mReportTo)
+                && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
                 && mEventTriggerData == trigger.mEventTriggerData
                 && mPriority == trigger.mPriority
@@ -102,7 +100,7 @@ public class Trigger {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionDestination, mReportTo, mTriggerTime,
+        return Objects.hash(mId, mAttributionDestination, mAdTechDomain, mTriggerTime,
                 mEventTriggerData, mPriority, mStatus, mDedupKey, mAggregateTriggerData,
                 mAggregateValues, mAggregatableAttributionTrigger);
     }
@@ -129,10 +127,10 @@ public class Trigger {
     }
 
     /**
-     * Report destination for the generated reports.
+     * AdTech report destination domain for generated reports.
      */
-    public Uri getReportTo() {
-        return mReportTo;
+    public Uri getAdTechDomain() {
+        return mAdTechDomain;
     }
 
     /**
@@ -223,21 +221,6 @@ public class Trigger {
      */
     public AggregatableAttributionTrigger getAggregatableAttributionTrigger() {
         return mAggregatableAttributionTrigger;
-    }
-
-    /**
-     * Function to get trigger data based on source type(Event/Navigation) with a pre-defined false
-     * data randomness rate.
-     * @param source {@link Source} for choosing source type
-     * @return trigger data using false random rate based on source type
-     */
-    public long getRandomizedTriggerData(Source source) {
-        Long[] possibleValues = LongStream.range(0, source.getTriggerDataCardinality())
-                .boxed().toArray(Long[]::new);
-        return RandomSelector.selectRandomDataWithProbability(
-                source.getTriggerDataNoiseRate(),
-                getTruncatedTriggerData(source),
-                possibleValues);
     }
 
     /**
@@ -340,10 +323,10 @@ public class Trigger {
         }
 
         /**
-         * See {@link Trigger#getReportTo()}.
+         * See {@link Trigger#getAdTechDomain()} ()}.
          */
-        public Builder setReportTo(Uri reportTo) {
-            mBuilding.mReportTo = reportTo;
+        public Builder setAdTechDomain(Uri adTechDomain) {
+            mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 

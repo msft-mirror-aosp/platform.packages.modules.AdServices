@@ -14,7 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for Ad Services Service-core unit test cases">
+<configuration description="Config for Ad Services Settings App test cases">
     <option name="test-tag" value="AdServicesSettingsUITests" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
@@ -24,7 +24,6 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
         <option name="package" value="com.android.adservices.tests.ui"/>
-        <option name="runner" value="androidx.test.runner.AndroidJUnitRunner" />
     </test>
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">

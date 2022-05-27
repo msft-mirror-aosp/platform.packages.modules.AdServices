@@ -18,78 +18,24 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
-import com.android.internal.annotations.VisibleForTesting;
-
-import org.json.JSONObject;
-
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Class to send event level report by making a non-credentialed secure HTTP
- * POST request to the reporting origin.
+ * Class to construct the full reporting url specific to event reports.
  */
-public class EventReportSender {
+public class EventReportSender extends MeasurementReportSender {
 
-    private static final String ATTRIBUTION_REPORT_URI_PATH =
+    private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             ".well-known/attribution-reporting/report-attribution";
 
     /**
-     * Sends an event report to the reporting origin.
+     * Creates URL to send the POST request to.
      */
-    public int sendEventReport(Uri reportingUrl, JSONObject eventReportJson)
-            throws IOException {
-        int returnCode;
-        URL reportingFullUrl = createReportingFullUrl(reportingUrl);
-
-        HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
-        returnCode = sendEventReportPostRequest(urlConnection, eventReportJson);
-        return returnCode;
-    }
-
-    /**
-     * Given a String reportingOrigin, returns the URL Object
-     * of the URL to send the POST request to.
-     */
-    private URL createReportingFullUrl(Uri reportingUrl)
+    URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
-        Uri reportingFullUrl = Uri.withAppendedPath(reportingUrl, ATTRIBUTION_REPORT_URI_PATH);
+        Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain,
+                EVENT_ATTRIBUTION_REPORT_URI_PATH);
         return new URL(reportingFullUrl.toString());
-    }
-
-    /**
-     * Opens the HTTPUrlConnection from the URL object.
-     */
-    @VisibleForTesting
-    public HttpURLConnection createHttpUrlConnection(URL reportingOriginURL) throws IOException {
-        return (HttpURLConnection) reportingOriginURL.openConnection();
-    }
-
-    /**
-     * Posts the eventReportJson to the HttpUrlConnection.
-     */
-    private int sendEventReportPostRequest(HttpURLConnection urlConnection,
-            JSONObject eventReportJson) throws IOException {
-        int code;
-        try {
-            urlConnection.setRequestMethod("POST");
-            urlConnection.setDoOutput(true);
-            urlConnection.setRequestProperty("Content-Type", "application/json");
-            urlConnection.setRequestProperty("Origin", "null");
-
-            OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-            out.write(eventReportJson.toString().getBytes());
-            out.flush();
-            out.close();
-
-            code = urlConnection.getResponseCode();
-        } finally {
-            urlConnection.disconnect();
-        }
-        return code;
     }
 }

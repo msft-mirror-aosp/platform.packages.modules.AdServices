@@ -7,6 +7,9 @@
       "name": "SdkSandboxManagerServiceUnitTests"
     },
     {
+      "name": "SdkSandboxFrameworkUnitTests"
+    },
+    {
       "name": "SdkSandboxTests"
     },
     {
@@ -30,6 +33,9 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
+    },
+    {
+      "name": "SdkSandboxRestrictionsHostTest"
     }
   ]
 }
