@@ -153,10 +153,11 @@ public class TopicsDao {
                         TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION));
                 long modelVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
                         TopicsTables.AppClassificationTopicsContract.MODEL_VERSION));
-                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppClassificationTopicsContract.TOPIC));
-                Topic topic = Topic.create(
-                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppClassificationTopicsContract.TOPIC));
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
 
                 List<Topic> list = appTopicsMap.getOrDefault(app, new ArrayList<>());
                 list.add(topic);
@@ -241,36 +242,30 @@ public class TopicsDao {
                         null       // The sort order
                 )) {
             if (cursor.moveToNext()) {
-                Integer topic1 =
-                        Integer.parseInt(
-                                cursor.getString(
-                                        cursor.getColumnIndexOrThrow(
-                                                TopicsTables.TopTopicsContract.TOPIC1)));
-                Integer topic2 =
-                        Integer.parseInt(
-                                cursor.getString(
-                                        cursor.getColumnIndexOrThrow(
-                                                TopicsTables.TopTopicsContract.TOPIC2)));
-                Integer topic3 =
-                        Integer.parseInt(
-                                cursor.getString(
-                                        cursor.getColumnIndexOrThrow(
-                                                TopicsTables.TopTopicsContract.TOPIC3)));
-                Integer topic4 =
-                        Integer.parseInt(
-                                cursor.getString(
-                                        cursor.getColumnIndexOrThrow(
-                                                TopicsTables.TopTopicsContract.TOPIC4)));
-                Integer topic5 =
-                        Integer.parseInt(
-                                cursor.getString(
-                                        cursor.getColumnIndexOrThrow(
-                                                TopicsTables.TopTopicsContract.TOPIC5)));
-                Integer randomTopic =
-                        Integer.parseInt(
-                                cursor.getString(
-                                        cursor.getColumnIndexOrThrow(
-                                                TopicsTables.TopTopicsContract.RANDOM_TOPIC)));
+                int topic1 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC1));
+                int topic2 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC2));
+                int topic3 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC3));
+                int topic4 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC4));
+                int topic5 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC5));
+                int randomTopic =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.RANDOM_TOPIC));
                 return Arrays.asList(topic1, topic2, topic3, topic4, topic5, randomTopic);
             }
         }
@@ -516,10 +511,10 @@ public class TopicsDao {
                         cursor.getString(
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.CallerCanLearnTopicsContract.CALLER));
-                Integer topic =
-                        Integer.parseInt(cursor.getString(
+                int topic =
+                        cursor.getInt(
                                 cursor.getColumnIndexOrThrow(
-                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC)));
+                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
 
                 if (!callerCanLearnMap.containsKey(topic)) {
                     callerCanLearnMap.put(topic, new HashSet<>());
@@ -624,16 +619,17 @@ public class TopicsDao {
                         TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
                 long modelVersion = cursor.getInt(cursor.getColumnIndexOrThrow(
                         TopicsTables.ReturnedTopicContract.MODEL_VERSION));
-                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.TOPIC));
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.TOPIC));
 
                 // Building Map<EpochId, Map<Pair<AppId, AdTechId>, Topic>
                 if (!topicsMap.containsKey(cursorEpochId)) {
                     topicsMap.put(cursorEpochId, new HashMap<>());
                 }
 
-                Topic topic = Topic.create(
-                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
                 topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
