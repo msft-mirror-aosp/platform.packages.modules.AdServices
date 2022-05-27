@@ -92,12 +92,36 @@ public interface Flags extends Dumpable {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
-    /* The default max time period (in millis) between each main reporting maintenance job run. */
-    long MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
+    /* The default min time period (in millis) between each event main reporting job run. */
+    long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
-    /** Returns max time period (in millis) between each main reporting maintenance job run. */
-    default long getMeasurementMainReportingJobPeriodMs() {
-        return MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS;
+    /** Returns min time period (in millis) between each event main reporting job run. */
+    default long getMeasurementEventMainReportingJobPeriodMs() {
+        return MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default min time period (in millis) between each event fallback reporting job run. */
+    long MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours.
+
+    /** Returns min time period (in millis) between each event fallback reporting job run. */
+    default long getMeasurementEventFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default min time period (in millis) between each aggregate main reporting job run. */
+    long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
+
+    /** Returns min time period (in millis) between each aggregate main reporting job run. */
+    default long getMeasurementAggregateMainReportingJobPeriodMs() {
+        return MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default min time period (in millis) between each aggregate fallback reporting job run. */
+    long MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours.
+
+    /** Returns min time period (in millis) between each aggregate fallback job run. */
+    default long getMeasurementAggregateFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
     /* The default measurement app name. */
