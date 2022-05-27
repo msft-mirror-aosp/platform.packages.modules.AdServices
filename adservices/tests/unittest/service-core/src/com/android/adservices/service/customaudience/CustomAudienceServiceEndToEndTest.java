@@ -16,11 +16,10 @@
 
 package com.android.adservices.service.customaudience;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -254,17 +253,17 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testOverrideCustomAudienceRemoteInfoFailsWithDevOptionsDisabled() throws Exception {
 
-        CustomAudienceOverrideTestCallback callback =
-                callAddOverride(
-                        MY_APP_PACKAGE_NAME,
-                        BUYER_1,
-                        NAME_1,
-                        BIDDING_LOGIC_JS,
-                        TRUSTED_BIDDING_DATA,
-                        mService);
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        callAddOverride(
+                                MY_APP_PACKAGE_NAME,
+                                BUYER_1,
+                                NAME_1,
+                                BIDDING_LOGIC_JS,
+                                TRUSTED_BIDDING_DATA,
+                                mService));
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -357,11 +356,10 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
 
-        CustomAudienceOverrideTestCallback callback =
-                callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
+        assertThrows(
+                IllegalStateException.class,
+                () -> callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService));
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -503,10 +501,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
 
-        CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
-
-        assertFalse(callback.mIsSuccess);
-        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_UNAUTHORIZED);
+        assertThrows(IllegalStateException.class, () -> callResetAllOverrides(mService));
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(

@@ -58,6 +58,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
+    private static final String API_NOT_AUTHORIZED_MSG =
+            "This API is not enabled for the given app because either dev options are disabled or"
+                    + " the app is not debuggable.";
+
     public CustomAudienceServiceImpl(@NonNull Context context) {
         this(
                 context,
@@ -217,6 +221,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
         CustomAudienceOverrider overrider =
@@ -252,6 +263,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
         CustomAudienceOverrider overrider =
@@ -279,6 +297,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         DevContext devContext = mDevContextFilter.createDevContext();
+
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
 
