@@ -62,10 +62,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
-            @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues) throws DatastoreException {
+    public void insertTrigger(
+            @NonNull Uri attributionDestination,
+            @NonNull Uri adTechDomain,
+            @NonNull Uri registrant,
+            @NonNull Long triggerTime,
+            @NonNull Long triggerData,
+            @Nullable Long dedupKey,
+            @NonNull Long priority,
+            @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues,
+            @Nullable String filters)
+            throws DatastoreException {
         validateNonNull(attributionDestination, adTechDomain, registrant, triggerTime, triggerData,
                 priority);
         validateUri(attributionDestination, adTechDomain, registrant);
@@ -83,6 +91,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES, aggregateValues);
+        values.put(MeasurementTables.TriggerContract.FILTERS, filters);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
