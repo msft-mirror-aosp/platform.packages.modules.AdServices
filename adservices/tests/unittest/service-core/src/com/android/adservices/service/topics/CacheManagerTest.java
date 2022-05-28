@@ -30,6 +30,7 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
+import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 
 import org.junit.Before;
@@ -61,6 +62,10 @@ public final class CacheManagerTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+
+        // Clean DB before each test
+        DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
