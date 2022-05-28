@@ -46,9 +46,12 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + TaxonomyContract.TABLE
                     + "("
-                    + TaxonomyContract.ID + " INTEGER PRIMARY KEY, "
-                    + TaxonomyContract.VERSION + " TEXT, "
-                    + TaxonomyContract.TOPIC + " TEXT"
+                    + TaxonomyContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + TaxonomyContract.VERSION
+                    + " INTEGER NOT NULL, "
+                    + TaxonomyContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -72,12 +75,18 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + AppClassificationTopicsContract.TABLE
                     + "("
-                    + AppClassificationTopicsContract.ID + " INTEGER PRIMARY KEY, "
-                    + AppClassificationTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + AppClassificationTopicsContract.APP + " TEXT NOT NULL, "
-                    + AppClassificationTopicsContract.TAXONOMY_VERSION + " INTEGER NOT NULL, "
-                    + AppClassificationTopicsContract.MODEL_VERSION + " INTEGER NOT NULL, "
-                    + AppClassificationTopicsContract.TOPIC + " TEXT NOT NULL"
+                    + AppClassificationTopicsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + AppClassificationTopicsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + AppClassificationTopicsContract.APP
+                    + " TEXT NOT NULL, "
+                    + AppClassificationTopicsContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + AppClassificationTopicsContract.MODEL_VERSION
+                    + " INTEGER NOT NULL, "
+                    + AppClassificationTopicsContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -100,10 +109,14 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + CallerCanLearnTopicsContract.TABLE
                     + "("
-                    + CallerCanLearnTopicsContract.ID + " INTEGER PRIMARY KEY, "
-                    + CallerCanLearnTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + CallerCanLearnTopicsContract.CALLER + " TEXT NOT NULL, "
-                    + CallerCanLearnTopicsContract.TOPIC + " TEXT NOT NULL"
+                    + CallerCanLearnTopicsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + CallerCanLearnTopicsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + CallerCanLearnTopicsContract.CALLER
+                    + " TEXT NOT NULL, "
+                    + CallerCanLearnTopicsContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     // TODO(b/223446202): Make this table to configurable numbers of top topics.
@@ -130,14 +143,22 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + TopTopicsContract.TABLE
                     + "("
-                    + TopTopicsContract.ID + " INTEGER PRIMARY KEY, "
-                    + TopTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + TopTopicsContract.TOPIC1 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC2 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC3 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC4 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC5 + " TEXT NOT NULL, "
-                    + TopTopicsContract.RANDOM_TOPIC + " TEXT NOT NULL"
+                    + TopTopicsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + TopTopicsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC1
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC2
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC3
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC4
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC5
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.RANDOM_TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -161,13 +182,20 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + ReturnedTopicContract.TABLE
                     + "("
-                    + ReturnedTopicContract.ID + " INTEGER PRIMARY KEY, "
-                    + ReturnedTopicContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + ReturnedTopicContract.APP + " TEXT NOT NULL, "
-                    + ReturnedTopicContract.SDK + " TEXT NOT NULL, "
-                    + ReturnedTopicContract.TAXONOMY_VERSION + " INTEGER NOT NULL, "
-                    + ReturnedTopicContract.MODEL_VERSION + " INTEGER NOT NULL, "
-                    + ReturnedTopicContract.TOPIC + " TEXT NOT NULL"
+                    + ReturnedTopicContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + ReturnedTopicContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.APP
+                    + " TEXT NOT NULL, "
+                    + ReturnedTopicContract.SDK
+                    + " TEXT NOT NULL, "
+                    + ReturnedTopicContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.MODEL_VERSION
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -214,6 +242,29 @@ public final class TopicsTables {
                     + AppUsageHistoryContract.APP + " TEXT NOT NULL"
                     + ")";
 
+    /**
+     * Table to store all blocked {@link Topic}s. Blocked topics are controlled by user.
+     */
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    public interface BlockedTopicsContract {
+        String TABLE = TOPICS_TABLE_PREFIX + "blocked";
+        String ID = "_id";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
+        String TOPIC = "topic";
+    }
+
+    // Create Statement for the blocked topics table.
+    private static final String CREATE_TABLE_BLOCKED_TOPICS =
+            "CREATE TABLE "
+                    + BlockedTopicsContract.TABLE
+                    + "("
+                    + BlockedTopicsContract.ID + " INTEGER PRIMARY KEY, "
+                    + BlockedTopicsContract.TAXONOMY_VERSION + " INTEGER NOT NULL, "
+                    + BlockedTopicsContract.MODEL_VERSION + " INTEGER NOT NULL, "
+                    + BlockedTopicsContract.TOPIC + " INTEGER NOT NULL"
+                    + ")";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -224,7 +275,8 @@ public final class TopicsTables {
                             CREATE_TABLE_RETURNED_TOPIC,
                             CREATE_TABLE_USAGE_HISTORY,
                             CREATE_TABLE_APP_USAGE_HISTORY,
-                            CREATE_TABLE_CALLER_CAN_LEARN_TOPICS));
+                            CREATE_TABLE_CALLER_CAN_LEARN_TOPICS,
+                            CREATE_TABLE_BLOCKED_TOPICS));
 
     // Private constructor to prevent instantiation.
     private TopicsTables() {

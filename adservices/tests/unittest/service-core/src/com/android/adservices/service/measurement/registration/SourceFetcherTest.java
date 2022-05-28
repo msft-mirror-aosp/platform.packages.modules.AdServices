@@ -127,7 +127,7 @@ public final class SourceFetcherTest {
                                 + "  \"expiry\": \"456789\",\n"
                                 + "  \"source_event_id\": \"987654321\",\n"
                                 + "  \"install_attribution_window\": \"272800\",\n"
-                                + "  \"install_cooldown_window\": \"987654\"\n"
+                                + "  \"post_install_exclusivity_window\": \"987654\"\n"
                                 + "}\n")));
         ArrayList<SourceRegistration> result = new ArrayList();
         assertTrue(mFetcher.fetchSource(request, result));
@@ -154,15 +154,18 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Source",
-                        List.of("{\n"
-                                + "  \"destination\": \"android-app://com.myapps\",\n"
-                                + "  \"priority\": \"123\",\n"
-                                + "  \"expiry\": \"456789\",\n"
-                                + "  \"source_event_id\": \"987654321\",\n"
-                                + "  \"install_attribution_window\": null,\n"
-                                + "  \"install_cooldown_window\": null\n"
-                                + "}\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\",\n"
+                                            + "  \"install_attribution_window\": null,\n"
+                                            + "  \"post_install_exclusivity_window\": null\n"
+                                            + "}\n")));
         ArrayList<SourceRegistration> result = new ArrayList();
         assertTrue(mFetcher.fetchSource(request, result));
         assertEquals(1, result.size());
@@ -199,7 +202,7 @@ public final class SourceFetcherTest {
                                 // Min value of attribution is 2 days or 172800 seconds
                                 + "  \"install_attribution_window\": \"172700\",\n"
                                 // Max value of cooldown is 30 days or 2592000 seconds
-                                + "  \"install_cooldown_window\": \"9876543210\"\n"
+                                + "  \"post_install_exclusivity_window\": \"9876543210\"\n"
                                 + "}\n")));
         ArrayList<SourceRegistration> result = new ArrayList();
         assertTrue(mFetcher.fetchSource(request, result));

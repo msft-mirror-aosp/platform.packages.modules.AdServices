@@ -33,6 +33,17 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class TriggerTest {
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+            "{\n"
+                    + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
+
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING_X =
+            "{\n"
+                    + "  \"key_1x\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2x\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
 
     @Test
     public void testEqualsPass() throws JSONException {
@@ -64,6 +75,7 @@ public class TriggerTest {
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
+                        .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .build(),
                 new Trigger.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -77,6 +89,7 @@ public class TriggerTest {
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
+                        .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .build());
     }
 
@@ -138,6 +151,9 @@ public class TriggerTest {
         values2.put("geoValue", 1664);
         assertNotEquals(new Trigger.Builder().setAggregateValues(values1.toString()).build(),
                 new Trigger.Builder().setAggregateValues(values2.toString()).build());
+        assertNotEquals(
+                new Trigger.Builder().setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
+                new Trigger.Builder().setFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
     }
 
     @Test

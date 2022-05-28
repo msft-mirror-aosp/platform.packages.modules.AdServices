@@ -75,6 +75,7 @@ public final class MeasurementTables {
         String EVENT_TRIGGER_DATA = "event_trigger_data";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
+        String FILTERS = "filters";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
         @Deprecated

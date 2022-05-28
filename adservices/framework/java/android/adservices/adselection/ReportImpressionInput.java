@@ -26,10 +26,6 @@ import java.util.Objects;
 
 /**
  * Represent input params to the reportImpression API.
- *
- * <p>Hiding for future implementation and review for public exposure.
- *
- * @hide
  */
 public final class ReportImpressionInput implements Parcelable {
     private static final long UNSET = 0;
@@ -79,15 +75,15 @@ public final class ReportImpressionInput implements Parcelable {
 
     /**
      * Returns the adSelectionId, one of the inputs to {@link ReportImpressionInput} as noted in
-     * {@link AdSelectionService}.
+     * {@code AdSelectionService}.
      */
     public long getAdSelectionId() {
         return mAdSelectionId;
     }
 
     /**
-     * Returns the adSelectionConfig, one of the inputs to {@link ReportImpressionInput} as noted
-     * in {@link AdSelectionService}.
+     * Returns the adSelectionConfig, one of the inputs to {@link ReportImpressionInput} as noted in
+     * {@code AdSelectionService}.
      */
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {

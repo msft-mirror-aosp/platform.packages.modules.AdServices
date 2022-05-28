@@ -26,6 +26,7 @@ import com.android.tradefed.util.CommandStatus;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -72,6 +73,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         getDevice().disableAdbRoot();
     }
 
+    @Ignore("b/233748133")
     @Test
     public void testStartAndStopSdkSandboxSucceedsForDebuggableApp() throws Exception {
         CommandResult output = getDevice().executeShellV2Command(
