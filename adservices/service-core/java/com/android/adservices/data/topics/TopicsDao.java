@@ -153,10 +153,11 @@ public class TopicsDao {
                         TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION));
                 long modelVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
                         TopicsTables.AppClassificationTopicsContract.MODEL_VERSION));
-                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppClassificationTopicsContract.TOPIC));
-                Topic topic = Topic.create(
-                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppClassificationTopicsContract.TOPIC));
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
 
                 List<Topic> list = appTopicsMap.getOrDefault(app, new ArrayList<>());
                 list.add(topic);
@@ -212,7 +213,7 @@ public class TopicsDao {
      */
     @VisibleForTesting
     @NonNull
-    public List<String> retrieveTopTopics(long epochId) {
+    public List<Integer> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return new ArrayList<>();
@@ -241,18 +242,30 @@ public class TopicsDao {
                         null       // The sort order
                 )) {
             if (cursor.moveToNext()) {
-                String topic1 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC1));
-                String topic2 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC2));
-                String topic3 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC3));
-                String topic4 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC4));
-                String topic5 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC5));
-                String randomTopic = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.RANDOM_TOPIC));
+                int topic1 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC1));
+                int topic2 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC2));
+                int topic3 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC3));
+                int topic4 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC4));
+                int topic5 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC5));
+                int randomTopic =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.RANDOM_TOPIC));
                 return Arrays.asList(topic1, topic2, topic3, topic4, topic5, randomTopic);
             }
         }
@@ -498,10 +511,10 @@ public class TopicsDao {
                         cursor.getString(
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.CallerCanLearnTopicsContract.CALLER));
-                Integer topic =
-                        Integer.parseInt(cursor.getString(
+                int topic =
+                        cursor.getInt(
                                 cursor.getColumnIndexOrThrow(
-                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC)));
+                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
 
                 if (!callerCanLearnMap.containsKey(topic)) {
                     callerCanLearnMap.put(topic, new HashSet<>());
@@ -606,16 +619,17 @@ public class TopicsDao {
                         TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
                 long modelVersion = cursor.getInt(cursor.getColumnIndexOrThrow(
                         TopicsTables.ReturnedTopicContract.MODEL_VERSION));
-                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.TOPIC));
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.TOPIC));
 
                 // Building Map<EpochId, Map<Pair<AppId, AdTechId>, Topic>
                 if (!topicsMap.containsKey(cursorEpochId)) {
                     topicsMap.put(cursorEpochId, new HashMap<>());
                 }
 
-                Topic topic = Topic.create(
-                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
                 topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
@@ -696,25 +710,31 @@ public class TopicsDao {
             return blockedTopics;
         }
 
-        try (
-                Cursor cursor = db.query(
+        try (Cursor cursor =
+                db.query(
                         /* distinct = */ true,
-                        TopicsTables.BlockedTopicsContract.TABLE,   // The table to query
-                        null,     // Get all columns (null for all)
-                        null,     // Select all columns (null for all)
-                        null,  // Select all columns (null for all)
-                        null,     // Don't group the rows
-                        null,      // Don't filter by row groups
-                        null,     // don't sort
-                        null        // don't limit
-                )) {
+                        TopicsTables.BlockedTopicsContract.TABLE, // The table to query
+                        null, // Get all columns (null for all)
+                        null, // Select all columns (null for all)
+                        null, // Select all columns (null for all)
+                        null, // Don't group the rows
+                        null, // Don't filter by row groups
+                        null, // don't sort
+                        null // don't limit
+                        )) {
             while (cursor.moveToNext()) {
-                long taxonomyVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION));
-                long modelVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.BlockedTopicsContract.MODEL_VERSION));
-                int topicInt = cursor.getInt(cursor.getColumnIndexOrThrow(
-                        TopicsTables.BlockedTopicsContract.TOPIC));
+                long taxonomyVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION));
+                long modelVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.BlockedTopicsContract.MODEL_VERSION));
+                int topicInt =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.BlockedTopicsContract.TOPIC));
                 Topic topic = Topic.create(topicInt, taxonomyVersion, modelVersion);
 
                 blockedTopics.add(topic);
@@ -722,5 +742,30 @@ public class TopicsDao {
         }
 
         return blockedTopics;
+    }
+
+    /**
+     * Delete from epoch-related tables for data older than/equal to certain epoch in DB.
+     *
+     * @param tableName the table to delete data from
+     * @param epochColumnName epoch Column name for given table
+     * @param epochToDeleteFrom the epoch to delete starting from (inclusive)
+     */
+    public void deleteDataOfOldEpochs(
+            @NonNull String tableName, @NonNull String epochColumnName, long epochToDeleteFrom) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        // Delete epochId before epochToDeleteFrom (including epochToDeleteFrom)
+        String deletion = " " + epochColumnName + " <= ?";
+        String[] deletionArgs = {String.valueOf(epochToDeleteFrom)};
+
+        try {
+            db.delete(tableName, deletion, deletionArgs);
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to delete old epochs' data.");
+        }
     }
 }

@@ -17,7 +17,6 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import androidx.test.filters.SmallTest;
@@ -37,92 +36,6 @@ import java.util.Optional;
 /** Unit tests for {@link AggregatePayloadGenerator} */
 @SmallTest
 public final class AggregatePayloadGeneratorTest {
-
-    @Test
-    public void testIsFilterMatchReturnTrue() {
-        Map<String, List<String>> sourceFilterMap = new HashMap<>();
-        sourceFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
-        sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(sourceFilterMap).build();
-
-        Map<String, List<String>> triggerFilterMap = new HashMap<>();
-        triggerFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        triggerFilterMap.put("product", Arrays.asList("1234", "2345"));
-        triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        AggregateFilterData triggerFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(triggerFilterMap).build();
-
-        assertTrue(
-                AggregatePayloadGenerator.isFilterMatch(sourceFilter, triggerFilter, true));
-    }
-
-    @Test
-    public void testIsFilterMatchReturnFalse() {
-        Map<String, List<String>> sourceFilterMap = new HashMap<>();
-        sourceFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
-        sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(sourceFilterMap).build();
-
-        Map<String, List<String>> triggerFilterMap = new HashMap<>();
-        triggerFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        triggerFilterMap.put("product", Arrays.asList("1", "2"));  // doesn't match.
-        triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        AggregateFilterData triggerFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(triggerFilterMap).build();
-
-        assertFalse(
-                AggregatePayloadGenerator.isFilterMatch(sourceFilter, triggerFilter, true));
-    }
-
-    @Test
-    public void testIsNotFilterMatchReturnTrue() {
-        Map<String, List<String>> sourceFilterMap = new HashMap<>();
-        sourceFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
-        sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(sourceFilterMap).build();
-
-        Map<String, List<String>> triggerFilterMap = new HashMap<>();
-        triggerFilterMap.put("conversion_subdomain", Collections.singletonList("electronics"));
-        triggerFilterMap.put("product", Arrays.asList("1", "2"));  // doesn't match.
-        triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        AggregateFilterData triggerFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(triggerFilterMap).build();
-        assertTrue(AggregatePayloadGenerator.isFilterMatch(
-                sourceFilter, triggerFilter, false));
-    }
-
-    @Test
-    public void testIsNotFilterMatchReturnFalse() {
-        Map<String, List<String>> sourceFilterMap = new HashMap<>();
-        sourceFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
-        sourceFilterMap.put("ctid", Collections.singletonList("id"));
-        AggregateFilterData sourceFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(sourceFilterMap).build();
-
-        Map<String, List<String>> triggerFilterMap = new HashMap<>();
-        triggerFilterMap.put("conversion_subdomain",
-                Collections.singletonList("electronics.megastore"));
-        triggerFilterMap.put("product", Arrays.asList("1234", "2345"));
-        triggerFilterMap.put("id", Arrays.asList("1", "2"));
-        AggregateFilterData triggerFilter =  new AggregateFilterData.Builder()
-                .setAttributionFilterMap(triggerFilterMap).build();
-
-        assertFalse(
-                AggregatePayloadGenerator.isFilterMatch(sourceFilter, triggerFilter, false));
-    }
 
     @Test
     public void testGenerateAttributionReportTwoContributionsSuccessfully() {

@@ -17,12 +17,18 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.os.OutcomeReceiver;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
-/** This POJO represents the overrideAdSelectionConfigRemoteInfo request
+/**
+ * This POJO represents the {@link
+ * AdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest, Executor,
+ * OutcomeReceiver)} request
  *
- * @hide
+ * <p>It contains two fields, a {@link AdSelectionConfig} which will serve as the identifier for the
+ * specific override, and a {@code String} decisionLogicJs field representing the override value
  */
 public class AddAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;

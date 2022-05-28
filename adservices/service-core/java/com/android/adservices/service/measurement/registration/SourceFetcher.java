@@ -104,9 +104,11 @@ public class SourceFetcher {
             result.setInstallCooldownWindow(installCooldownWindow);
         }
 
-        // This "filter_data" field is used to generate aggregate report.
-        if (json.has("filter_data") && !json.isNull("filter_data")) {
-            result.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+        // This "filter_data" field is used to generate reports.
+        if (json.has(EventSourceContract.FILTER_DATA)
+                && !json.isNull(EventSourceContract.FILTER_DATA)) {
+            result.setAggregateFilterData(
+                    json.getJSONObject(EventSourceContract.FILTER_DATA).toString());
         }
     }
 
@@ -264,5 +266,6 @@ public class SourceFetcher {
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
         String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
+        String FILTER_DATA = "filter_data";
     }
 }
