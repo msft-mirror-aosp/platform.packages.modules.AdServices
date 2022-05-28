@@ -39,13 +39,19 @@ public interface IMeasurementDao {
      */
     void setTransaction(ITransaction transaction);
 
-    /**
-     * Add an entry to the Trigger datastore.
-     */
-    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
-            @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues) throws DatastoreException;
+    /** Add an entry to the Trigger datastore. */
+    void insertTrigger(
+            @NonNull Uri attributionDestination,
+            @NonNull Uri adTechDomain,
+            @NonNull Uri registrant,
+            @NonNull Long triggerTime,
+            @NonNull Long triggerData,
+            @Nullable Long dedupKey,
+            @NonNull Long priority,
+            @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues,
+            @Nullable String filters)
+            throws DatastoreException;
 
     /**
      * Returns list of ids for all pending {@link Trigger}.

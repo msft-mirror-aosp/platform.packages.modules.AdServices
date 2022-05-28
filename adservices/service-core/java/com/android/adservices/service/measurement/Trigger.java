@@ -59,6 +59,7 @@ public class Trigger {
     private String mAggregateTriggerData;
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
+    private String mFilters;
 
     @IntDef(value = {
             Status.PENDING,
@@ -67,11 +68,11 @@ public class Trigger {
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
+
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
     }
-
     private Trigger() {
         mDedupKey = null;
         mStatus = Status.PENDING;
@@ -83,7 +84,7 @@ public class Trigger {
             return false;
         }
         Trigger trigger = (Trigger) obj;
-        return  Objects.equals(mId, trigger.getId())
+        return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
@@ -94,15 +95,26 @@ public class Trigger {
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
-                && Objects.equals(mAggregatableAttributionTrigger,
-                trigger.mAggregatableAttributionTrigger);
+                && Objects.equals(
+                        mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
+                && Objects.equals(mFilters, trigger.mFilters);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionDestination, mAdTechDomain, mTriggerTime,
-                mEventTriggerData, mPriority, mStatus, mDedupKey, mAggregateTriggerData,
-                mAggregateValues, mAggregatableAttributionTrigger);
+        return Objects.hash(
+                mId,
+                mAttributionDestination,
+                mAdTechDomain,
+                mTriggerTime,
+                mEventTriggerData,
+                mPriority,
+                mStatus,
+                mDedupKey,
+                mAggregateTriggerData,
+                mAggregateValues,
+                mAggregatableAttributionTrigger,
+                mFilters);
     }
 
     /**
@@ -221,6 +233,17 @@ public class Trigger {
      */
     public AggregatableAttributionTrigger getAggregatableAttributionTrigger() {
         return mAggregatableAttributionTrigger;
+    }
+
+    /**
+     * Returns top level filters. The value is in json format.
+     *
+     * <p>Will be used for deciding if the trigger can be attributed to the source. If the source
+     * fails the filtering against these filters then no reports(event/aggregate) are generated.
+     * example: { "key1" : ["value11", "value12"], "key2" : ["value21", "value22"] }
+     */
+    public String getFilters() {
+        return mFilters;
     }
 
     /**
@@ -383,6 +406,12 @@ public class Trigger {
          */
         public Builder setAggregateValues(String aggregateValues) {
             mBuilding.mAggregateValues = aggregateValues;
+            return this;
+        }
+
+        /** See {@link Trigger#getFilters()} */
+        public Builder setFilters(String filters) {
+            mBuilding.mFilters = filters;
             return this;
         }
 

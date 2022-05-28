@@ -53,6 +53,7 @@ import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.registration.TriggerRegistration;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,8 +63,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -79,10 +82,16 @@ public final class MeasurementImplTest {
     private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri DEFAULT_REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
+    private static final String ANDROID_APP_SCHEME = "android-app://";
     private static final RegistrationRequest SOURCE_REGISTRATION_REQUEST =
             createRegistrationRequest(RegistrationRequest.REGISTER_SOURCE);
     private static final RegistrationRequest TRIGGER_REGISTRATION_REQUEST =
             createRegistrationRequest(RegistrationRequest.REGISTER_TRIGGER);
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+            "{\n"
+                    + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
 
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_1 =
             new com.android.adservices.service.measurement.registration.SourceRegistration
@@ -108,6 +117,21 @@ public final class MeasurementImplTest {
                     .setInstallCooldownWindow(7418398274L)//
                     .setReportingOrigin(Uri.parse("https://com.example2"))//
                     .setTopOrigin(Uri.parse("android-app://com.source2"))
+                    .build();
+
+    private static final TriggerRegistration VALID_TRIGGER_REGISTRATION =
+            new TriggerRegistration.Builder()
+                    .setTopOrigin(Uri.parse("https://foo.com"))
+                    .setReportingOrigin(Uri.parse("https://bar.com"))
+                    .setTriggerData(1)
+                    .setTriggerPriority(345678)
+                    .setDeduplicationKey(2345678)
+                    .setAggregateTriggerData(
+                            "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                                    + "\"not_filters\":{\"product\":[\"1\"]}},"
+                                    + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")
+                    .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                    .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                     .build();
 
     @Mock
@@ -204,16 +228,49 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testRegister_registrationTypeTrigger_triggerFetchSuccess() throws RemoteException {
+    public void testRegister_registrationTypeTrigger_triggerFetchSuccess() throws Exception {
+        // Setup
         when(mTriggerFetcher.fetchTrigger(any(), any())).thenReturn(true);
         MeasurementImpl measurement = new MeasurementImpl(
                 mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
-        final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
-                System.currentTimeMillis());
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        final long triggerTime = System.currentTimeMillis();
+        List<TriggerRegistration> triggerRegistrations = new ArrayList<>();
+        Answer<Boolean> populateTriggerRegistrations =
+                invocation -> {
+                    List<TriggerRegistration> triggerRegs = invocation.getArgument(1);
+                    triggerRegs.add(VALID_TRIGGER_REGISTRATION);
+                    return true;
+                };
+        doAnswer(populateTriggerRegistrations)
+                .when(mTriggerFetcher)
+                .fetchTrigger(TRIGGER_REGISTRATION_REQUEST, triggerRegistrations);
+
+        // Execution
+        final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST, triggerTime);
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+
+        // Assertions
         assertEquals(IMeasurementCallback.RESULT_OK, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any(), any());
-        verify(mTriggerFetcher, times(1)).fetchTrigger(ArgumentMatchers.any(), any());
+        verify(mTriggerFetcher, times(1)).fetchTrigger(any(), any());
+        verify(mMeasurementDao)
+                .insertTrigger(
+                        DEFAULT_URI,
+                        VALID_TRIGGER_REGISTRATION.getReportingOrigin(),
+                        Uri.parse(
+                                ANDROID_APP_SCHEME
+                                        + DEFAULT_CONTEXT.getAttributionSource().getPackageName()),
+                        triggerTime,
+                        VALID_TRIGGER_REGISTRATION.getTriggerData(),
+                        VALID_TRIGGER_REGISTRATION.getDeduplicationKey(),
+                        VALID_TRIGGER_REGISTRATION.getTriggerPriority(),
+                        VALID_TRIGGER_REGISTRATION.getAggregateTriggerData(),
+                        VALID_TRIGGER_REGISTRATION.getAggregateValues(),
+                        VALID_TRIGGER_REGISTRATION.getFilters());
     }
 
     @Test

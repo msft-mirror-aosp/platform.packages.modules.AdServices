@@ -85,7 +85,8 @@ public class CacheManager implements Dumpable {
                 mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId(),
                         mFlags.getTopicsNumberOfLookBackEpochs() + 1);
 
-        LogUtil.v("CachedTopics mapping size is  " + cacheFromDb.size());
+        LogUtil.v("CacheManager.loadCache(). CachedTopics mapping size is  "
+                + cacheFromDb.size());
         try {
             mReadWriteLock.writeLock().lock();
             mCachedTopics = cacheFromDb;
@@ -135,8 +136,8 @@ public class CacheManager implements Dumpable {
                 writer.println(String.format("Epoch Id: %d \n", epochId));
                 Map<Pair<String, String>, Topic> epochMapping = mCachedTopics.get(epochId);
                 for (Pair<String, String> pair : epochMapping.keySet()) {
-                    String app = pair.first,
-                            sdk = pair.second;
+                    String app = pair.first;
+                    String sdk = pair.second;
                     Topic topic = epochMapping.get(pair);
                     writer.println(String.format("(%s, %s): %s",
                             app, sdk, topic.toString()));

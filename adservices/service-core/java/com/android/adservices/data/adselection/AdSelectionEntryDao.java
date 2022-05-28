@@ -47,12 +47,11 @@ public interface AdSelectionEntryDao {
     void persistAdSelection(DBAdSelection adSelection);
 
     /**
-     * Add a buyer decision logic entry into the table buyer_decision_logic.
+     * Write a buyer decision logic entry into the table buyer_decision_logic.
      *
-     * @param buyerDecisionLogic is the BuyerDecisionLogic to add to table buyer_decision_logic if
-     *     not exists.
+     * @param buyerDecisionLogic is the BuyerDecisionLogic to write to table buyer_decision_logic.
      */
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
 
     /**

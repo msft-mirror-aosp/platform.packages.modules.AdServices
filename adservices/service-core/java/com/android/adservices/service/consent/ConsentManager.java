@@ -40,6 +40,7 @@ public class ConsentManager {
             "setConsent method failed due to IOException thrown by Datastore.";
     private static final int STORAGE_VERSION = 1;
     private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
+    public static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
 
     private static volatile ConsentManager sConsentManager;
     private BooleanFileDatastore mDatastore;
@@ -69,10 +70,17 @@ public class ConsentManager {
     private void init(@NonNull Context context) throws IOException {
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mDatastore.initialize();
-        //TODO(b/231472301): remove it after the logic to determine whether API should be enabled
-        // or not is already implemented
         if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null) {
             mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
+            initConsent(context);
+        }
+    }
+
+    private void initConsent(Context context) {
+        // The existence of this feature means that device should be treated as EU device.
+        if (context.getPackageManager().hasSystemFeature(EEA_DEVICE)) {
+            disable(context);
+        } else {
             enable(context);
         }
     }

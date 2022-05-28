@@ -47,7 +47,17 @@ android {
         }
 
         androidTest {
-            java.srcDirs = ['tests/src']
+            java.srcDirs = [
+                'tests/src',
+                'unittest/src',
+                '../../../../../external/mockito/src/main/java',
+                '../../../../../external/dexmaker/dexmaker-mockito-inline-extended/src/main/java',
+            ]
+            java.setIncludes(new HashSet([
+                'com/android/adservices/ui/**/*.java',
+                'org/mockito/*.java',
+                'com/android/dx/mockito/inline/extended/*.java',
+            ]))
         }
     }
     buildToolsVersion '30.0.2'

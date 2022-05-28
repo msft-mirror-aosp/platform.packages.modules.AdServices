@@ -229,6 +229,7 @@ public final class CacheManagerTest {
 
     @Test
     public void testDump() throws FileNotFoundException {
+        // Trigger the dump to verify no crash
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
 
         PrintWriter printWriter = new PrintWriter(new Writer() {

@@ -47,7 +47,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Unit test for {@link TopicsWorker}.
@@ -112,7 +111,7 @@ public class TopicsWorkerTest {
                         .setResultCode(RESULT_OK)
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList("1", "2", "3"))
+                        .setTopics(Arrays.asList(1, 2, 3))
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
