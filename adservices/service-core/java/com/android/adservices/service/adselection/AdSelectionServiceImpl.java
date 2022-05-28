@@ -112,13 +112,17 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
+        DevContext devContext = mDevContextFilter.createDevContext();
+
         AdSelectionRunner adSelectionRunner =
                 new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutor,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        devContext);
+
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
 
