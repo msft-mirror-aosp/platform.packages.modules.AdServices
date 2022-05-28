@@ -46,6 +46,7 @@ public class EpochJobServiceTest {
     // unit test. In this test, only verify whether specific method is initiated.
     @Mock EpochManager mMockEpochManager;
     @Mock CacheManager mMockCacheManager;
+    @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock JobParameters mMockJobParameters;
 
     @Before
@@ -57,11 +58,12 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob() throws InterruptedException {
-        final TopicsWorker topicsWorker = new TopicsWorker(
-                mMockEpochManager,
-                mMockCacheManager,
-                FlagsFactory.getFlagsForTest()
-        );
+        final TopicsWorker topicsWorker =
+                new TopicsWorker(
+                        mMockEpochManager,
+                        mMockCacheManager,
+                        mBlockedTopicsManager,
+                        FlagsFactory.getFlagsForTest());
         // Add a countDownLatch to ensure background thread gets executed
         CountDownLatch countDownLatch = new CountDownLatch(1);
 

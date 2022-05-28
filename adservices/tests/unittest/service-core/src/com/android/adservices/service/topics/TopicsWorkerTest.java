@@ -38,6 +38,8 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -65,11 +67,14 @@ public class TopicsWorkerTest {
 
         // Clean DB before each test
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
-        mTopicsWorker = new TopicsWorker(mMockEpochManager, cacheManager, mMockFlags);
+        BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
+        mTopicsWorker =
+                new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
     }
 
     @Test
@@ -249,5 +254,169 @@ public class TopicsWorkerTest {
     public void testComputeEpoch() {
         mTopicsWorker.computeEpoch();
         verify(mMockEpochManager, times(1)).processEpoch();
+    }
+
+    @Test
+    public void testGetKnownTopicsWithConsent_oneTopicBlocked() {
+        final long lastEpoch = 3;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into Db
+        // populate topics for different epochs to get realistic state of the Db for testing
+        // blocked topics.
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(lastEpoch);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        Topic blockedTopic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        mTopicsDao.recordBlockedTopic(blockedTopic1);
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> knownTopicsWithConsent = mTopicsWorker.getKnownTopicsWithConsent();
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        // there is only one blocked topic.
+        assertThat(topicsWithRevokedConsent).hasSize(1);
+        assertThat(topicsWithRevokedConsent).containsExactly(blockedTopic1);
+        // out of 3 existing topics, 2 of them are not blocked.
+        assertThat(knownTopicsWithConsent).hasSize(2);
+        assertThat(knownTopicsWithConsent).containsExactly(topic2, topic3);
+    }
+
+    @Test
+    public void testGetKnownTopicsWithConsent_allTopicsBlocked() {
+        final long lastEpoch = 3;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(lastEpoch);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        // block all topics
+        mTopicsDao.recordBlockedTopic(topic1);
+        mTopicsDao.recordBlockedTopic(topic2);
+        mTopicsDao.recordBlockedTopic(topic3);
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> knownTopicsWithConsent = mTopicsWorker.getKnownTopicsWithConsent();
+
+        assertThat(knownTopicsWithConsent).isEmpty();
+    }
+
+    @Test
+    public void testTopicsWithRevokedConsent() {
+        Topic blockedTopic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic blockedTopic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic blockedTopic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] blockedTopics = {blockedTopic1, blockedTopic2, blockedTopic3};
+        // block all blockedTopics
+        mTopicsDao.recordBlockedTopic(blockedTopic1);
+        mTopicsDao.recordBlockedTopic(blockedTopic2);
+        mTopicsDao.recordBlockedTopic(blockedTopic3);
+
+        // persist one not blocked topic.
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+        returnedAppSdkTopicsMap.put(appSdkKey, topic1);
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 1, returnedAppSdkTopicsMap);
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).hasSize(blockedTopics.length);
+        assertThat(topicsWithRevokedConsent).containsExactly(blockedTopics);
+    }
+
+    @Test
+    public void testTopicsWithRevokedConsent_noTopicsBlocked() {
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into DB
+        // populate topics for different epochs to get realistic state of the Db for testing
+        // blocked topics.
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).isEmpty();
+    }
+
+    @Test
+    public void testRevokeConsent() {
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        mTopicsWorker.loadCache();
+        mTopicsWorker.revokeConsentForTopic(topic1);
+
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).hasSize(1);
+        assertThat(topicsWithRevokedConsent).containsExactly(topic1);
+
+        // TODO(b/234214293): add checks on getTopics method.
+    }
+
+    @Test
+    public void testRevokeAndRestoreConsent() {
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        mTopicsWorker.loadCache();
+
+        // Revoke consent for topic1
+        mTopicsWorker.revokeConsentForTopic(topic1);
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).hasSize(1);
+        assertThat(topicsWithRevokedConsent).containsExactly(topic1);
+
+        // Restore consent for topic1
+        mTopicsWorker.restoreConsentForTopic(topic1);
+        topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).isEmpty();
+
+        // TODO(b/234214293): add checks on getTopics method.
     }
 }

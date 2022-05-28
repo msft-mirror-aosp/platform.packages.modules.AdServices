@@ -149,6 +149,7 @@ public class CacheManager implements Dumpable {
         }
 
         Collections.shuffle(topics, random);
+        // TODO(b/234214293): filter out blocked topics.
         return topics;
     }
 
@@ -184,6 +185,21 @@ public class CacheManager implements Dumpable {
         }
         topics.removeAll(mCachedBlockedTopics);
         return ImmutableList.copyOf(topics);
+    }
+
+    /**
+     * Gets a list of all cached topics that were blocked by the user.
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getTopicsWithRevokedConsent() {
+        mReadWriteLock.readLock().lock();
+        try {
+            return ImmutableList.copyOf(mCachedBlockedTopics);
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
     }
 
     @Override
