@@ -21,7 +21,7 @@
     <string name="permlab_accessAdServicesAttribution" msgid="4498132091418336093">"acceder ás AdServices Attribution API"</string>
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Permite que unha aplicación acceda ás AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"acceder a AdServices Custom Audience API"</string>
-    <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Permite que unha aplicación acceda a AdServices Custom Audiences API."</string>
+    <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Permite que unha aplicación acceda a AdServices Custom Audience API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"acceder a Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite que unha aplicación acceda a Ad ID API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"acceder a App Set ID API"</string>
