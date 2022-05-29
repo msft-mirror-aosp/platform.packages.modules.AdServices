@@ -113,6 +113,13 @@ public class AdServicesConfig {
     }
 
     /**
+     * Returns the URL for fetching public encryption keys for aggregatable reports.
+     */
+    public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
+    }
+
+    /**
      * Job ID for FLEDGE Background Fetch Job ({@link
      * com.android.adservices.service.customaudience.BackgroundFetchJobService})
      */

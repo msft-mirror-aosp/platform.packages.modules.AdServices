@@ -27,6 +27,7 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import org.json.JSONArray;
@@ -99,6 +100,8 @@ public abstract class AbstractDbIntegrationTest {
         Assert.assertTrue(
                 "AggregateReport mismatch",
                 areEqual(mOutput.mAggregateReportList, dbState.mAggregateReportList));
+        Assert.assertTrue("AggregateEncryptionKey mismatch",
+                areEqual(mOutput.mAggregateEncryptionKeyList, dbState.mAggregateEncryptionKeyList));
     }
 
     /**
@@ -167,6 +170,7 @@ public abstract class AbstractDbIntegrationTest {
         db.delete(MeasurementTables.EventReportContract.TABLE, null, null);
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE, null, null);
         db.delete(MeasurementTables.AggregateReport.TABLE, null, null);
+        db.delete(MeasurementTables.AggregateEncryptionKey.TABLE, null, null);
     }
 
     /**
@@ -187,6 +191,9 @@ public abstract class AbstractDbIntegrationTest {
         }
         for (CleartextAggregatePayload aggregateReport : input.mAggregateReportList) {
             insertToDb(aggregateReport, db);
+        }
+        for (AggregateEncryptionKey key : input.mAggregateEncryptionKeyList) {
+            insertToDb(key, db);
         }
     }
 
@@ -327,6 +334,25 @@ public abstract class AbstractDbIntegrationTest {
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");
+        }
+    }
+
+    /**
+     * Inserts an AggregateEncryptionKey record into the given database.
+     */
+    private static void insertToDb(AggregateEncryptionKey aggregateEncryptionKey, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateEncryptionKey.ID, aggregateEncryptionKey.getId());
+        values.put(MeasurementTables.AggregateEncryptionKey.KEY_ID,
+                aggregateEncryptionKey.getKeyId());
+        values.put(MeasurementTables.AggregateEncryptionKey.PUBLIC_KEY,
+                aggregateEncryptionKey.getPublicKey());
+        values.put(MeasurementTables.AggregateEncryptionKey.EXPIRY,
+                aggregateEncryptionKey.getExpiry());
+        long row = db.insert(MeasurementTables.AggregateEncryptionKey.TABLE, null, values);
+        if (row == -1) {
+            throw new SQLiteException("AggregateEncryptionKey insertion failed.");
         }
     }
 }
