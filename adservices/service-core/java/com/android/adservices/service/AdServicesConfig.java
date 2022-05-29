@@ -44,12 +44,8 @@ public class AdServicesConfig {
      * Returns the min time period (in millis) between each event main reporting job run.
      */
 
-    public static long getMeasurementMainReportingJobPeriodMs() {
-        return FlagsFactory.getFlags().getMeasurementMainReportingJobPeriodMs();
-    }
-
     public static long getMeasurementEventMainReportingJobPeriodMs() {
-        return MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+        return FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs();
     }
 
     /**
@@ -85,7 +81,7 @@ public class AdServicesConfig {
      * Returns the min time period (in millis) between each event fallback reporting job run.
      */
     public static long getMeasurementEventFallbackReportingJobPeriodMs() {
-        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
+        return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
     }
 
     /**
@@ -99,7 +95,7 @@ public class AdServicesConfig {
      * Returns the min time period (in millis) between each aggregate main reporting job run.
      */
     public static long getMeasurementAggregateMainReportingJobPeriodMs() {
-        return MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
+        return FlagsFactory.getFlags().getMeasurementAggregateMainReportingJobPeriodMs();
     }
 
     /**
@@ -114,6 +110,6 @@ public class AdServicesConfig {
      * Returns the min time period (in millis) between each aggregate fallback reporting job run.
      */
     public static long getMeasurementAggregateFallbackReportingJobPeriodMs() {
-        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
+        return FlagsFactory.getFlags().getMeasurementAggregateFallbackReportingJobPeriodMs();
     }
 }

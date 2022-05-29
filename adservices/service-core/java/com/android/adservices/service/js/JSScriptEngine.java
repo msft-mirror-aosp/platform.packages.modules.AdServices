@@ -139,7 +139,14 @@ public class JSScriptEngine {
                                             AwJsIsolate jsIsolate = jsSandbox.createIsolate();
                                             ExecutionCallback callback =
                                                     new ExecutionCallback(jsIsolate, completer);
-                                            jsIsolate.evaluateJavascript(fullScript, callback);
+                                            try {
+                                                jsIsolate.evaluateJavascript(fullScript, callback);
+                                            } catch (RuntimeException e) {
+
+                                                callback.reportError(
+                                                        "Exception while evaluating JS in WebView: "
+                                                                + e);
+                                            }
                                         }
 
                                         @Override

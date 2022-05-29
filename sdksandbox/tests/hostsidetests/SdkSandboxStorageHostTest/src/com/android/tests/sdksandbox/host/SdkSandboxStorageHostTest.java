@@ -674,6 +674,31 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Verify that per-sdk storage exist
+        final String perSdkStorage = getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE,
+                SDK_NAME, true);
+        assertThat(getDevice().isDirectory(perSdkStorage)).isTrue();
+
+        // Write a file in the storage that code needs to read and write it back
+        // in another file
+        String fileToRead = perSdkStorage + "/readme.txt";
+        getDevice().executeShellCommand("echo something to read > " + fileToRead);
+        assertThat(getDevice().doesFileExist(fileToRead)).isTrue();
+
+        runPhase("testSdkDataSubDirectory_PerSdkStorageIsUsable");
+
+        // Assert that code was able to create file and directories
+        assertWithMessage("Failed to create directory in per-sdk storage").that(
+                getDevice().isDirectory(perSdkStorage + "/dir")).isTrue();
+        assertThat(getDevice().doesFileExist(perSdkStorage + "/dir/file")).isTrue();
+        String content = getDevice().executeShellCommand("cat " + perSdkStorage + "/dir/file");
+        assertThat(content).isEqualTo("something to read");
+    }
+
+    @Test
     public void testSdkData_CanBeMovedToDifferentVolume() throws Exception {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 

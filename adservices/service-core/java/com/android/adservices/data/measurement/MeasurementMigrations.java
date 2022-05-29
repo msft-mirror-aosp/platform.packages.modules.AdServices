@@ -84,6 +84,11 @@ public final class MeasurementMigrations {
                     AttributionRateLimitContract.AD_TECH_DOMAIN),
     };
 
+    private static final String[] ALTER_STATEMENTS_VER_3 = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT", TriggerContract.TABLE, TriggerContract.FILTERS)
+    };
+
     private static final String[] CREATE_INDEXES_VER_2 = {
             "CREATE INDEX "
                     + INDEX_PREFIX + SourceContract.TABLE + "_ad_rt_et " + "ON "
@@ -154,5 +159,20 @@ public final class MeasurementMigrations {
                 )
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
+    }
+
+    /**
+     * Consolidated migration scripts that will execute on the following tables:
+     *
+     * <p>Trigger
+     *
+     * <ul>
+     *   <li>Add : filters
+     * </ul>
+     *
+     * @return consolidated scripts to migrate to version 3
+     */
+    public static String[] migrationScriptVersion3() {
+        return ALTER_STATEMENTS_VER_3;
     }
 }

@@ -7,6 +7,9 @@
       "name": "SdkSandboxManagerServiceUnitTests"
     },
     {
+      "name": "SdkSandboxFrameworkUnitTests"
+    },
+    {
       "name": "SdkSandboxTests"
     },
     {
