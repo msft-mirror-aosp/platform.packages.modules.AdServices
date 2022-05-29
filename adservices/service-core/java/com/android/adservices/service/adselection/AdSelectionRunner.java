@@ -35,6 +35,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -63,8 +64,6 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
-    private static final String TAG = AdSelectionRunner.class.getName();
-
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -80,7 +79,8 @@ public final class AdSelectionRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService executorService,
-            @NonNull final AdServicesLogger adServicesLogger) {
+            @NonNull final AdServicesLogger adServicesLogger,
+            @NonNull final DevContext devContext) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -90,8 +90,11 @@ public final class AdSelectionRunner {
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(mContext),
                         mExecutorService,
-                        new AdSelectionHttpClient(mExecutorService));
-        mAdBidGenerator = new AdBidGeneratorImpl(context, mExecutorService);
+                        new AdSelectionHttpClient(mExecutorService),
+                        devContext,
+                        mAdSelectionEntryDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(context, executorService, devContext, mCustomAudienceDao);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
     }
@@ -280,7 +283,11 @@ public final class AdSelectionRunner {
                                         .get(customAudience.getBuyer()))
                         .orElse("{}");
         return mAdBidGenerator.runAdBiddingPerCA(
-                customAudience, adSelectionConfig.getAdSelectionSignals(), buyerSignal, "{}");
+                customAudience,
+                adSelectionConfig.getAdSelectionSignals(),
+                buyerSignal,
+                "{}",
+                adSelectionConfig);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }
 
