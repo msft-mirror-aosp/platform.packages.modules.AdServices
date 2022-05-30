@@ -52,6 +52,10 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS =
+            "fledge_background_fetch_job_period_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS =
+            "fledge_background_fetch_job_flex_ms";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -68,20 +72,24 @@ public final class PhFlags implements Flags {
     public long getTopicsEpochJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getLong(getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
-                /* defaultValue =*/ DeviceConfig.getLong(DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName = */  KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                        /* defaultValue = */ TOPICS_EPOCH_JOB_PERIOD_MS));
+        return SystemProperties.getLong(
+                getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
+                /* defaultValue */ DeviceConfig.getLong(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+                        /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS));
     }
 
     @Override
     public long getTopicsEpochJobFlexMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getLong(getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
-                /* defaultValue = */ DeviceConfig.getLong(DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName = */  KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                        /* defaultValue = */ TOPICS_EPOCH_JOB_FLEX_MS));
+        return SystemProperties.getLong(
+                getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
+                /* defaultValue */ DeviceConfig.getLong(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                        /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
     }
 
     @Override
@@ -90,49 +98,55 @@ public final class PhFlags implements Flags {
         // hard-coded value.
         return SystemProperties.getInt(
                 getSystemPropertyName(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
-                /* defaultValue =*/ DeviceConfig.getInt(DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName = */  KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                        /* defaultValue = */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
+                /* defaultValue */ DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                        /* defaultValue */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
     }
 
     @Override
     public int getTopicsNumberOfTopTopics() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
-                /* defaultValue = */ TOPICS_NUMBER_OF_TOP_TOPICS);
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
+                /* defaultValue */ TOPICS_NUMBER_OF_TOP_TOPICS);
     }
 
     @Override
     public int getTopicsNumberOfRandomTopics() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
-                /* defaultValue = */ TOPICS_NUMBER_OF_RANDOM_TOPICS);
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
+                /* defaultValue */ TOPICS_NUMBER_OF_RANDOM_TOPICS);
     }
 
     @Override
     public int getTopicsNumberOfLookBackEpochs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
-                /* defaultValue = */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
+                /* defaultValue */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
     }
 
     @Override
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getLong(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_MAINTENANCE_JOB_PERIOD_MS,
-                /* defaultValue = */ MAINTENANCE_JOB_PERIOD_MS);
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAINTENANCE_JOB_PERIOD_MS,
+                /* defaultValue */ MAINTENANCE_JOB_PERIOD_MS);
     }
 
     @Override
     public long getMaintenanceJobFlexMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getLong(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_MAINTENANCE_JOB_FLEX_MS,
-                /* defaultValue = */ MAINTENANCE_JOB_FLEX_MS);
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MAINTENANCE_JOB_FLEX_MS,
+                /* defaultValue */ MAINTENANCE_JOB_FLEX_MS);
     }
 
     @Override
@@ -140,8 +154,8 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */ KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS,
-                /* defaultValue = */ MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS);
+                /* flagName */ KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS);
     }
 
     @Override
@@ -149,8 +163,8 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
-                /* defaultValue = */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
+                /* flagName */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
 
     @Override
@@ -158,8 +172,8 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */ KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS,
-                /* defaultValue = */ MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS);
+                /* flagName */ KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS);
     }
 
     @Override
@@ -167,16 +181,35 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */ KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS,
-                /* defaultValue = */ MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
+                /* flagName */ KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
 
     @Override
     public String getMeasurementAppName() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getString(DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName = */  KEY_MEASUREMENT_APP_NAME,
-                /* defaultValue = */ MEASUREMENT_APP_NAME);
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_APP_NAME,
+                /* defaultValue */ MEASUREMENT_APP_NAME);
+    }
+
+    @Override
+    public long getFledgeBackgroundFetchJobPeriodMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public long getFledgeBackgroundFetchJobFlexMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS);
     }
 
     @VisibleForTesting
@@ -212,5 +245,17 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println("\t" + KEY_MEASUREMENT_APP_NAME
                 + " = " + getMeasurementAppName());
+
+        writer.println("==== AdServices PH Flags Dump FLEDGE ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS
+                        + " = "
+                        + getFledgeBackgroundFetchJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS
+                        + " = "
+                        + getFledgeBackgroundFetchJobFlexMs());
     }
 }
