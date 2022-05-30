@@ -18,7 +18,6 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SystemApi;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
@@ -80,15 +79,14 @@ public final class SandboxedSdkContext extends ContextWrapper {
     }
 
     /**
-     * Return a new Context object for the current SandboxedSdkContext but whose storage
-     * APIs are backed by sdk specific credential-protected storage.
+     * Return a new Context object for the current SandboxedSdkContext but whose storage APIs are
+     * backed by sdk specific credential-protected storage.
      *
      * @see Context#isCredentialProtectedStorage()
      * @hide
      */
     @Override
     @NonNull
-    @SystemApi
     public Context createCredentialProtectedStorageContext() {
         Context newBaseContext = getBaseContext().createCredentialProtectedStorageContext();
         return new SandboxedSdkContext(newBaseContext, mSdkProviderInfo, mSdkName,
