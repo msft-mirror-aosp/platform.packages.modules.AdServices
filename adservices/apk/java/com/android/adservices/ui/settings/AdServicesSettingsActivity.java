@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 package com.android.adservices.ui.settings;
+
 import android.app.ActionBar;
 import android.os.Bundle;
 
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 
@@ -25,12 +28,14 @@ import com.android.adservices.api.R;
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
 public class AdServicesSettingsActivity extends FragmentActivity {
+    private ActionDelegate mActionDelegate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initActionBar();
         setContentView(R.layout.adservices_settings_main_activity);
+        initActionBar();
+        initActionDelegate();
     }
 
     // TODO(b/230372790): update to another action bar.
@@ -38,5 +43,13 @@ public class AdServicesSettingsActivity extends FragmentActivity {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(R.string.settingsUI_privacy_sandbox_beta_title);
+    }
+
+    private void initActionDelegate() {
+        mActionDelegate = new ActionDelegate(
+                getSupportFragmentManager(),
+                new ViewModelProvider(this).get(MainViewModel.class),
+                new ViewModelProvider(this).get(TopicsViewModel.class));
+        mActionDelegate.initMainFragment();
     }
 }
