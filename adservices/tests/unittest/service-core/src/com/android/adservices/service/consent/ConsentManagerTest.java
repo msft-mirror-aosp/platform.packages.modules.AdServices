@@ -18,35 +18,59 @@ package com.android.adservices.service.consent;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.SmallTest;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 
+@SmallTest
 public class ConsentManagerTest {
+    private static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
+
     private ConsentManager mConsentManager;
+    @Mock private PackageManager mPackageManager;
 
     @Before
     public void setup() throws IOException {
+        MockitoAnnotations.initMocks(this);
+
         mConsentManager = ConsentManager.getInstance(ApplicationProvider.getApplicationContext());
     }
 
     @Test
     public void testConsentIsGivenAfterEnabling() {
-        mConsentManager.enable(ApplicationProvider.getApplicationContext());
+        mConsentManager.enable();
 
-        assertTrue(
-                mConsentManager.getConsent(ApplicationProvider.getApplicationContext()).isGiven());
+        assertTrue(mConsentManager.getConsent().isGiven());
     }
 
     @Test
     public void testConsentIsRevokedAfterDisabling() {
-        mConsentManager.disable(ApplicationProvider.getApplicationContext());
+        mConsentManager.disable();
 
-        assertFalse(
-                mConsentManager.getConsent(ApplicationProvider.getApplicationContext()).isGiven());
+        assertFalse(mConsentManager.getConsent().isGiven());
+    }
+
+    @Test
+    public void testConsentIsEnabledForEuConfig() {
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+
+        assertFalse(mConsentManager.getInitialConsent(mPackageManager));
+    }
+
+    @Test
+    public void testConsentIsEnabledForNonEuConfig() {
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(false);
+
+        assertTrue(mConsentManager.getInitialConsent(mPackageManager));
     }
 }
