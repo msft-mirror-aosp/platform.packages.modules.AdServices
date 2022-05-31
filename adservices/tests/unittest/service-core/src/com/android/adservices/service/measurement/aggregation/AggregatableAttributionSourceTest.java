@@ -22,6 +22,7 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,11 +32,9 @@ public final class AggregatableAttributionSourceTest {
 
     @Test
     public void testCreation() throws Exception {
-        Map<String, AttributionAggregatableKey> aggregatableSource = new HashMap<>();
-        aggregatableSource.put("campaignCounts",
-                new AttributionAggregatableKey.Builder().setHighBits(0L).setLowBits(159L).build());
-        aggregatableSource.put("geoValue",
-                new AttributionAggregatableKey.Builder().setHighBits(0L).setLowBits(5L).build());
+        Map<String, BigInteger> aggregatableSource = new HashMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(159L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
 
         AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()
@@ -43,13 +42,8 @@ public final class AggregatableAttributionSourceTest {
 
         assertEquals(attributionSource.getAggregatableSource().size(), 2);
         assertEquals(attributionSource.getAggregatableSource().get("campaignCounts")
-                .getHighBits().longValue(), 0L);
-        assertEquals(attributionSource.getAggregatableSource().get("campaignCounts")
-                .getLowBits().longValue(), 159L);
-        assertEquals(attributionSource.getAggregatableSource().get("geoValue")
-                .getHighBits().longValue(), 0L);
-        assertEquals(attributionSource.getAggregatableSource().get("geoValue")
-                .getLowBits().longValue(), 5L);
+                .longValue(), 159L);
+        assertEquals(attributionSource.getAggregatableSource().get("geoValue").longValue(), 5L);
     }
 
     @Test
