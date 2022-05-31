@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -25,7 +26,7 @@ import java.util.Objects;
  */
 public class AggregatableAttributionSource {
 
-    private Map<String, AttributionAggregatableKey> mAggregatableSource;
+    private Map<String, BigInteger> mAggregatableSource;
     private AggregateFilterData mAggregateFilterData;
 
     private AggregatableAttributionSource() {
@@ -52,7 +53,7 @@ public class AggregatableAttributionSource {
      * Returns aggregatable_source map with key represents the name field in JSON, value represents
      * the id field in JSON.
      */
-    public Map<String, AttributionAggregatableKey> getAggregatableSource() {
+    public Map<String, BigInteger> getAggregatableSource() {
         return mAggregatableSource;
     }
 
@@ -77,7 +78,7 @@ public class AggregatableAttributionSource {
          * See {@link AggregatableAttributionSource#getAggregatableSource()}.
          */
         public Builder setAggregatableSource(
-                Map<String, AttributionAggregatableKey> aggregatableSource) {
+                Map<String, BigInteger> aggregatableSource) {
             mBuilding.mAggregatableSource = aggregatableSource;
             return this;
         }

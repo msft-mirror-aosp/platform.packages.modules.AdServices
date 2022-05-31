@@ -21,7 +21,6 @@ import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
-import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -34,7 +33,6 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -495,7 +493,7 @@ public class Source {
             return Optional.empty();
         }
         JSONArray jsonArray = new JSONArray(this.mAggregateSource);
-        Map<String, AttributionAggregatableKey> aggregateSourceMap = new HashMap<>();
+        Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             String id = jsonObject.getString("id");
@@ -504,12 +502,7 @@ public class Source {
                 hexString = hexString.substring(2);
             }
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            BigInteger divisor = BigDecimal.valueOf(Math.pow(2, 63)).toBigInteger();
-            aggregateSourceMap.put(id,
-                    new AttributionAggregatableKey.Builder()
-                            .setHighBits(bigInteger.divide(divisor).longValue())
-                            .setLowBits(bigInteger.mod(divisor).longValue())
-                            .build());
+            aggregateSourceMap.put(id, bigInteger);
         }
         return Optional.of(new AggregatableAttributionSource.Builder()
                 .setAggregatableSource(aggregateSourceMap)
