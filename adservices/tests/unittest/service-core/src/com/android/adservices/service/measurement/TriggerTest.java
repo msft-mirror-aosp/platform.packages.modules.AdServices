@@ -220,10 +220,7 @@ public class TriggerTest {
         AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
         assertEquals(aggregateTrigger.getTriggerData().size(), 2);
         assertEquals(aggregateTrigger.getTriggerData().get(0).getSourceKeys().size(), 1);
-        assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().getHighBits().longValue(),
-                0L);
-        assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().getLowBits().longValue(),
-                1024L);
+        assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().longValue(), 1024L);
         assertTrue(aggregateTrigger.getTriggerData().get(0)
                 .getSourceKeys().contains("campaignCounts"));
         assertTrue(aggregateTrigger.getTriggerData().get(0).getFilter().isPresent());
@@ -233,10 +230,7 @@ public class TriggerTest {
         assertEquals(aggregateTrigger.getTriggerData().get(0).getNotFilter()
                 .get().getAttributionFilterMap().size(), 2);
 
-        assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().getHighBits().longValue(),
-                0L);
-        assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().getLowBits().longValue(),
-                2688L);
+        assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().longValue(), 2688L);
         assertEquals(aggregateTrigger.getTriggerData().get(1).getSourceKeys().size(), 2);
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("geoValue"));
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("noMatch"));
