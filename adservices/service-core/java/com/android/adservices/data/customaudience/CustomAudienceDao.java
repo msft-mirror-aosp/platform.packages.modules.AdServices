@@ -82,11 +82,14 @@ public interface CustomAudienceDao {
      */
     @Query(
             "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
-                    + " :buyer AND name = :name")
+                    + " :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
     @VisibleForTesting
     String getBiddingLogicUrlOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String appPackageName);
 
     /**
      * Get trusted bidding data override by its unique key.

@@ -29,6 +29,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -84,6 +86,18 @@ public class TopicsWorker {
             }
         }
         return sTopicsWorker;
+    }
+
+    /**
+     * Gets a list of all topics that could be returned to the user in the last
+     * numberOfLookBackEpochs epochs. Does not include the current epoch, so range is
+     * [currentEpochId - numberOfLookBackEpochs, currentEpochId - 1].
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        return mCacheManager.getKnownTopicsWithConsent();
     }
 
     /**
