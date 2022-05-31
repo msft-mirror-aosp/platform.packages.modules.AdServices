@@ -702,14 +702,8 @@ public class SourceTest {
         AggregatableAttributionSource aggregateSource = aggregatableAttributionSource.get();
         assertEquals(aggregateSource.getAggregatableSource().size(), 2);
         assertEquals(aggregateSource.getAggregatableSource()
-                .get("campaignCounts").getHighBits().longValue(), 0L);
-        assertEquals(aggregateSource.getAggregatableSource()
-                .get("campaignCounts").getLowBits().longValue(), 345L);
-        assertEquals(aggregateSource.getAggregatableSource()
-                .get("geoValue").getHighBits().longValue(), 0L);
-        assertEquals(aggregateSource.getAggregatableSource()
-                .get("geoValue").getLowBits().longValue(), 5L);
-        assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(),
-                2);
+                .get("campaignCounts").longValue(), 345L);
+        assertEquals(aggregateSource.getAggregatableSource().get("geoValue").longValue(), 5L);
+        assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(), 2);
     }
 }

@@ -22,7 +22,6 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +29,6 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -274,7 +272,6 @@ public class Trigger {
                 hexString = hexString.substring(2);
             }
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            BigInteger divisor = BigDecimal.valueOf(Math.pow(2, 63)).toBigInteger();
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();
             for (int j = 0; j < sourceKeys.length(); j++) {
@@ -282,10 +279,7 @@ public class Trigger {
             }
             AggregateTriggerData.Builder builder =
                     new AggregateTriggerData.Builder()
-                            .setKey(new AttributionAggregatableKey.Builder()
-                                    .setHighBits(bigInteger.divide(divisor).longValue())
-                                    .setLowBits(bigInteger.mod(divisor).longValue())
-                                    .build())
+                            .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
                 AggregateFilterData filters = new AggregateFilterData.Builder()

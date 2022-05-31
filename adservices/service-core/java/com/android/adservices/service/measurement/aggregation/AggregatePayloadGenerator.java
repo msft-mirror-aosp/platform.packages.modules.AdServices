@@ -47,7 +47,7 @@ public class AggregatePayloadGenerator {
             AggregatableAttributionTrigger attributionTrigger) {
         AggregateFilterData sourceFilterData = attributionSource.getAggregateFilterData();
         Map<String, BigInteger> aggregateKeys = new HashMap<>();
-        Map<String, AttributionAggregatableKey> aggregateSourceMap =
+        Map<String, BigInteger> aggregateSourceMap =
                 attributionSource.getAggregatableSource();
         for (String sourceKey : aggregateSourceMap.keySet()) {
             for (AggregateTriggerData triggerData : attributionTrigger.getTriggerData()) {
@@ -65,20 +65,15 @@ public class AggregatePayloadGenerator {
                     continue;
                 }
                 if (triggerData.getSourceKeys().contains(sourceKey)) {
-                    AttributionAggregatableKey currentKey = aggregateSourceMap.get(sourceKey);
-                    AttributionAggregatableKey triggerKey = triggerData.getKey();
+                    BigInteger currentKey = aggregateSourceMap.get(sourceKey);
+                    BigInteger triggerKey = triggerData.getKey();
                     BigInteger currentInt;
                     if (aggregateKeys.containsKey(sourceKey)) {
                         currentInt = aggregateKeys.get(sourceKey);
                     } else {
-                        currentInt = BigInteger.valueOf(
-                                (long) (Math.pow(2, 63) * currentKey.getHighBits()
-                                        + currentKey.getLowBits()));
+                        currentInt = currentKey;
                     }
-                    BigInteger triggerInt = BigInteger.valueOf(
-                            (long) (Math.pow(2, 63) * triggerKey.getHighBits()
-                                    + triggerKey.getLowBits()));
-                    aggregateKeys.put(sourceKey, currentInt.add(triggerInt));
+                    aggregateKeys.put(sourceKey, currentInt.or(triggerKey));
                 }
             }
         }
