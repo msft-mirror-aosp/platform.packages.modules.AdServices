@@ -253,7 +253,7 @@ public final class AdSelectionRunner {
     }
 
     private List<DBCustomAudience> getBuyerCustomAudience(@NonNull final List<String> buyers) {
-        return mCustomAudienceDao.getCustomAudienceByBuyers(buyers);
+        return mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
     }
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
