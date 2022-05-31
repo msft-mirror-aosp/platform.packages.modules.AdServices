@@ -87,7 +87,7 @@ public interface Flags extends Dumpable {
         return MAINTENANCE_JOB_PERIOD_MS;
     }
 
-    /* The default flex for Maintenaine Job. */
+    /* The default flex for Maintenance Job. */
     long MAINTENANCE_JOB_FLEX_MS = 3 * 60 * 60 * 1000; // 3 hours.
 
     /** Returns flex for the Daily Maintenance job in Millisecond. */
@@ -133,6 +133,25 @@ public interface Flags extends Dumpable {
     /** Returns the app name. */
     default String getMeasurementAppName() {
         return MEASUREMENT_APP_NAME;
+    }
+
+    long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
+    long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
+
+    /**
+     * Returns the best effort max time (in milliseconds) between each FLEDGE Background Fetch job
+     * run.
+     */
+    default long getFledgeBackgroundFetchJobPeriodMs() {
+        return FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Returns the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     * Background Fetch job.
+     */
+    default long getFledgeBackgroundFetchJobFlexMs() {
+        return FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
     }
 
     /** Dump some debug info for the flags */
