@@ -13,10 +13,13 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-
-<androidx.fragment.app.FragmentContainerView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fragment_container_view"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:name="com.android.adservices.ui.settings.AdServicesSettingsMainFragment" />
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:title="@string/settingsUI_topics_fragment_title"
+        android:id="@+id/topics_preference_screen">
+    <Preference
+            android:id="@+id/blocked_topics_preference"
+            android:key="blocked_topics"
+            android:summary="@string/settingsUI_topics_summary"
+            android:title="@string/settingsUI_blocked_topics_title" />
+</PreferenceScreen>

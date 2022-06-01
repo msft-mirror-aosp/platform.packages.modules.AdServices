@@ -63,4 +63,10 @@
     <string name="settingsUI_apps_title">Your apps that generate specific interests</string>
     <!-- Summary of the apps preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_summary">Manage your apps that generate specific interests</string>
+
+    <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_fragment_title">Manage your general interests for ads</string>
+
+    <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_blocked_topics_title">Manage your general interests for ads</string>
 </resources>
