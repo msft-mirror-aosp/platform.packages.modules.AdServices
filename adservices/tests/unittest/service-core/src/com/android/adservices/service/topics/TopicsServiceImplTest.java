@@ -136,10 +136,9 @@ public class TopicsServiceImplTest {
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
