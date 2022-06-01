@@ -34,6 +34,7 @@ import java.util.Objects;
 public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
     public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
             "getConsent method failed. Will not change consent value in view model.";
+    public static final String TOPICS_PREFERENCE_BUTTON_KEY = "topics_preference";
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
