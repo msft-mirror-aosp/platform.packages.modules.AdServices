@@ -20,10 +20,10 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,11 +60,11 @@ public class PrecomputedClassifier implements Classifier {
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
-    private ImmutableSet<Integer> mLabels;
+    private ImmutableList<Integer> mLabels;
     // The app topics map Map<App, List<Topic>>
     private Map<String, List<Integer>> mAppTopics = new HashMap<>();
 
-    private PrecomputedClassifier(
+    PrecomputedClassifier(
             @NonNull PrecomputedLoader precomputedLoader,
             @NonNull Random random) throws IOException {
         mPrecomputedLoader = precomputedLoader;
@@ -72,7 +72,7 @@ public class PrecomputedClassifier implements Classifier {
         mLoaded = false;
     }
 
-    /** Returns an instance of the Classifier given a context. */
+    /** Returns an instance of the PrecomputedClassifier given a context. */
     @NonNull
     public static PrecomputedClassifier getInstance(@NonNull Context context) {
         synchronized (PrecomputedClassifier.class) {
@@ -130,6 +130,12 @@ public class PrecomputedClassifier implements Classifier {
             }
         }
 
+        // If there are no topic in the appTopics list, an empty topic list will be returned
+        if (topicsToAppTopicCount.isEmpty()) {
+            LogUtil.w("Unable to retrieve any topics from device.");
+            return new ArrayList<>();
+        }
+
         // Sort the topics by their count
         List<Integer> allSortedTopics = topicsToAppTopicCount.entrySet().stream()
                 .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
@@ -166,11 +172,8 @@ public class PrecomputedClassifier implements Classifier {
 
         // Then add random topics
         while (topicsCounter > 0 && returnedTopics.size() < mLabels.size()) {
-            // TODO(b/226457861): unit test for this random logic
-            int randInt = mRandom.nextInt(mLabels.size());
-            // mLabels is an immutable set,
-            // it should be converted to array before picking up one element randomly
-            Integer randTopic = Integer.parseInt(mLabels.toArray()[randInt].toString());
+            // Pick up a random topic from labels list and check if it is a duplicate
+            int randTopic = mLabels.get(mRandom.nextInt(mLabels.size()));
             if (returnedTopics.contains(randTopic)) {
                 continue;
             }
