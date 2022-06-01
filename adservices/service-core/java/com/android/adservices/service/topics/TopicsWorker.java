@@ -29,6 +29,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -87,6 +89,18 @@ public class TopicsWorker {
     }
 
     /**
+     * Gets a list of all topics that could be returned to the user in the last
+     * numberOfLookBackEpochs epochs. Does not include the current epoch, so range is
+     * [currentEpochId - numberOfLookBackEpochs, currentEpochId - 1].
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        return mCacheManager.getKnownTopicsWithConsent();
+    }
+
+    /**
      * Get topics for the specified app and sdk.
      *
      * @param app the app
@@ -103,19 +117,19 @@ public class TopicsWorker {
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
-            List<String> topicStrings = new ArrayList<>(topics.size());
+            List<Integer> topicIds = new ArrayList<>(topics.size());
 
             for (Topic topic : topics) {
                 taxonomyVersions.add(topic.getTaxonomyVersion());
                 modelVersions.add(topic.getModelVersion());
-                topicStrings.add(String.valueOf(topic.getTopic()));
+                topicIds.add(topic.getTopic());
             }
 
             GetTopicsResult result = new GetTopicsResult.Builder()
                     .setResultCode(RESULT_OK)
                     .setTaxonomyVersions(taxonomyVersions)
                     .setModelVersions(modelVersions)
-                    .setTopics(topicStrings)
+                    .setTopics(topicIds)
                     .build();
             LogUtil.v("The result of TopicsWorker.getTopics for %s, %s is %s", app, sdk,
                     result.toString());

@@ -17,6 +17,7 @@ package com.example.adservices.samples.topics.sampleapp;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.os.Bundle;
 import android.util.Log;
@@ -97,10 +98,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private String getTopics(List<String> arr) {
+    private String getTopics(List<Integer> arr) {
         StringBuilder sb = new StringBuilder();
         int index = 1;
-        for (String topic : arr) {
+        for (int topic : arr) {
             sb.append(index++).append(". ").append(topic).append(NEWLINE);
         }
         return sb.toString();

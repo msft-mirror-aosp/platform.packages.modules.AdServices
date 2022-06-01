@@ -82,11 +82,14 @@ public interface CustomAudienceDao {
      */
     @Query(
             "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
-                    + " :buyer AND name = :name")
+                    + " :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
     @VisibleForTesting
     String getBiddingLogicUrlOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String appPackageName);
 
     /**
      * Get trusted bidding data override by its unique key.
@@ -126,7 +129,11 @@ public interface CustomAudienceDao {
      * @param buyers associated with the Custom Audience
      * @return All the Custom Audience that represent given buyers
      */
-    @Query("SELECT * FROM custom_audience where buyer in (:buyers)")
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE buyer in (:buyers) "
+                    + "AND activation_time <= (strftime('%s', 'now') * 1000) "
+                    + "AND (strftime('%s', 'now') * 1000) < expiration_time")
     @Nullable
-    List<DBCustomAudience> getCustomAudienceByBuyers(List<String> buyers);
+    List<DBCustomAudience> getActiveCustomAudienceByBuyers(List<String> buyers);
 }

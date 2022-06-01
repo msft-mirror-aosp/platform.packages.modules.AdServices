@@ -17,6 +17,7 @@
 package com.android.adservices.data;
 
 import static com.android.adservices.data.measurement.MeasurementMigrations.migrationScriptVersion2;
+import static com.android.adservices.data.measurement.MeasurementMigrations.migrationScriptVersion3;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -36,7 +37,7 @@ import com.android.internal.annotations.VisibleForTesting;
  */
 public final class DbHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
@@ -81,6 +82,7 @@ public final class DbHelper extends SQLiteOpenHelper {
     public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         LogUtil.d("DbHelper.onUpgrade.");
         migrate(db, migrationScriptVersion2(), oldVersion, /* scriptVersion = */ 2);
+        migrate(db, migrationScriptVersion3(), oldVersion, /* scriptVersion = */ 3);
     }
 
     /**

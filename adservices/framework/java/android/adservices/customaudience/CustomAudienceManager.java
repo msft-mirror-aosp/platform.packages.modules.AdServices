@@ -162,10 +162,14 @@ public class CustomAudienceManager {
     /**
      * Overrides the Custom Audience API to avoid fetching data from remote servers and use the data
      * provided in {@link AddCustomAudienceOverrideRequest} instead. The {@link
-     * AddCustomAudienceOverrideRequest} is provided by the Ads SDK. The receiver either returns a
-     * {@code void} for a successful run, or an {@link AdServicesException} indicates the error.
+     * AddCustomAudienceOverrideRequest} is provided by the Ads SDK.
      *
-     * @hide
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
+     *     AdServicesException} indicates the error.
      */
     @NonNull
     public void overrideCustomAudienceRemoteInfo(
@@ -182,7 +186,7 @@ public class CustomAudienceManager {
                     request.getOwner(),
                     request.getBuyer(),
                     request.getName(),
-                    request.getBiddingLogicJS(),
+                    request.getBiddingLogicJs(),
                     request.getTrustedBiddingData(),
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
@@ -209,11 +213,15 @@ public class CustomAudienceManager {
 
     /**
      * Removes an override in th Custom Audience API with associated the data in {@link
-     * RemoveCustomAudienceOverrideRequest}. The {@link RemoveCustomAudienceOverrideRequest} is
-     * provided by the Ads SDK. The receiver either returns a {@code void} for a successful run, or
-     * an {@link AdServicesException} indicates the error.
+     * RemoveCustomAudienceOverrideRequest}.
      *
-     * @hide
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     *     <p>The {@link RemoveCustomAudienceOverrideRequest} is provided by the Ads SDK. The
+     *     receiver either returns a {@code void} for a successful run, or an {@link
+     *     AdServicesException} indicates the error.
      */
     @NonNull
     public void removeCustomAudienceRemoteInfoOverride(
@@ -254,10 +262,14 @@ public class CustomAudienceManager {
     }
 
     /**
-     * Removes all override data in the Custom Audience API. The receiver either returns a {@code
-     * void} for a successful run, or an {@link AdServicesException} indicates the error.
+     * Removes all override data in the Custom Audience API.
      *
-     * @hide
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
+     *     AdServicesException} indicates the error.
      */
     @NonNull
     public void resetAllCustomAudienceOverrides(

@@ -20,8 +20,6 @@ import android.annotation.Nullable;
 
 /**
  * Exception thrown by AdServices in the case the caller is not authorized to call a specific API.
- *
- * @hide
  */
 public class ApiNotAuthorizedException extends RuntimeException {
     public ApiNotAuthorizedException(@Nullable String message, @Nullable Throwable e) {

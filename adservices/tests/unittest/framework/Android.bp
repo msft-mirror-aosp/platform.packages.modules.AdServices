@@ -37,10 +37,11 @@ android_test {
         "android.test.runner",
         "framework-adservices"
     ],
-    min_sdk_version: "Tiramisu", // TODO(b/217941602): update this.
+    min_sdk_version: "Tiramisu",
     target_sdk_version: "current",
     test_suites: [
         "general-tests",
         "mts-adservices"
     ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

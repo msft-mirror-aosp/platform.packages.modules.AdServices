@@ -143,6 +143,7 @@ class SqliteObjectMapper {
                 builder::setAggregateTriggerData);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
         return builder.build();
     }
 

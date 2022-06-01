@@ -62,6 +62,7 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
 
     @Test
@@ -89,10 +90,10 @@ public final class TopicsDaoTest {
         // to test different epochs for same app
         appClassificationTopicsMap2.put(app1, Collections.singletonList(topic1.getTopic()));
 
-        mTopicsDao.persistAppClassificationTopics(epochId1, taxonomyVersion, modelVersion,
-                appClassificationTopicsMap1);
-        mTopicsDao.persistAppClassificationTopics(epochId2, taxonomyVersion, modelVersion,
-                appClassificationTopicsMap2);
+        mTopicsDao.persistAppClassificationTopics(
+                epochId1, taxonomyVersion, modelVersion, appClassificationTopicsMap1);
+        mTopicsDao.persistAppClassificationTopics(
+                epochId2, taxonomyVersion, modelVersion, appClassificationTopicsMap2);
 
         // MapEpoch1: app1 -> topic1, topic2; app2 -> topic1
         // MapEpoch2: app1 -> topic1
@@ -102,10 +103,10 @@ public final class TopicsDaoTest {
         expectedTopicsMap1.put(app2, Collections.singletonList(topic1));
         expectedTopicsMap2.put(app1, Collections.singletonList(topic1));
 
-        Map<String, List<Topic>> topicsMapFromDb1 = mTopicsDao
-                .retrieveAppClassificationTopics(epochId1);
-        Map<String, List<Topic>> topicsMapFromDb2 = mTopicsDao
-                .retrieveAppClassificationTopics(epochId2);
+        Map<String, List<Topic>> topicsMapFromDb1 =
+                mTopicsDao.retrieveAppClassificationTopics(epochId1);
+        Map<String, List<Topic>> topicsMapFromDb2 =
+                mTopicsDao.retrieveAppClassificationTopics(epochId2);
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
         assertThat(topicsMapFromDb2).isEqualTo(expectedTopicsMap2);
 
@@ -118,10 +119,12 @@ public final class TopicsDaoTest {
     public void testPersistAppClassificationTopics_nullTopicsMap() {
         assertThrows(
                 NullPointerException.class,
-                () -> mTopicsDao.persistAppClassificationTopics(/* epochId */ 1L,
-                        /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
-                        /* appClassificationMap */ null)
-        );
+                () ->
+                        mTopicsDao.persistAppClassificationTopics(
+                                /* epochId */ 1L,
+                                /* taxonomyVersion = */ 1L,
+                                /* modelVersion = */ 1L,
+                                /* appClassificationMap */ null));
     }
 
     @Test
@@ -129,11 +132,10 @@ public final class TopicsDaoTest {
         List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
-        List<String> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 1L);
+        List<Integer> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 1L);
 
         // Make sure that what we write to db is equal to what we read from db.
-        assertThat(topicsFromDb.stream().map(Integer::parseInt).collect(Collectors.toList()))
-                .isEqualTo(topTopics);
+        assertThat(topicsFromDb).isEqualTo(topTopics);
     }
 
     @Test
@@ -143,7 +145,7 @@ public final class TopicsDaoTest {
         mTopicsDao.persistTopTopics(/* epochId = */ 1L, topTopics);
 
         // Try to fetch TopTopics for a different epoch. It should find anything.
-        List<String> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 2L);
+        List<Integer> topicsFromDb = mTopicsDao.retrieveTopTopics(/* epochId = */ 2L);
 
         assertThat(topicsFromDb).isEmpty();
     }
@@ -179,13 +181,9 @@ public final class TopicsDaoTest {
 
         // This assertion is to test above persisting calls with same epoch Id didn't throw
         // any exceptions
-        assertThat(mTopicsDao.retrieveTopTopics(epochId)
-                .stream().map(Integer::parseInt).collect(Collectors.toList()))
-                .isEqualTo(topTopics);
+        assertThat(mTopicsDao.retrieveTopTopics(epochId)).isEqualTo(topTopics);
         // Also check that no incremental epoch id is saved in DB
-        assertThat(mTopicsDao.retrieveTopTopics(epochId + 1)
-                .stream().map(Integer::parseInt).collect(Collectors.toList()))
-                .isEmpty();
+        assertThat(mTopicsDao.retrieveTopTopics(epochId + 1)).isEmpty();
     }
 
     @Test
@@ -319,8 +317,7 @@ public final class TopicsDaoTest {
         mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app3");
 
         // Now read back the usages from DB.
-        Map<String, Integer> appUsageMapFromDb =
-                mTopicsDao.retrieveAppUsageMap(/* epochId = */ 2L);
+        Map<String, Integer> appUsageMapFromDb = mTopicsDao.retrieveAppUsageMap(/* epochId = */ 2L);
 
         // Make sure that what we write to db is equal to what we read from db.
         assertThat(appUsageMapFromDb).isEmpty();
@@ -376,7 +373,8 @@ public final class TopicsDaoTest {
 
         // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
         // this topic.
-        callerCanLearnMap.put(/* topic */ 2,
+        callerCanLearnMap.put(
+                /* topic */ 2,
                 new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
 
         // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
@@ -396,8 +394,8 @@ public final class TopicsDaoTest {
         mTopicsDao.persistCallerCanLearnTopics(/* epochId = */ 3L, callerCanLearnMap);
 
         Map<Integer, Set<String>> callerCanLearnMapFromDb =
-                mTopicsDao.retrieveCallerCanLearnTopicsMap(/* epochId = */ 5L,
-                        /* howManyEpochs = */ 3);
+                mTopicsDao.retrieveCallerCanLearnTopicsMap(
+                        /* epochId = */ 5L, /* howManyEpochs = */ 3);
 
         assertThat(callerCanLearnMap).isEqualTo(callerCanLearnMapFromDb);
     }
@@ -419,21 +417,24 @@ public final class TopicsDaoTest {
         returnedAppSdkTopics.put(Pair.create("app5", "sdk1"), /* topic */ 5);
         returnedAppSdkTopics.put(Pair.create("app5", "sdk5"), /* topic */ 5);
 
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 1L, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 1L, returnedAppSdkTopics);
+        mTopicsDao.persistReturnedAppTopicsMap(
+                /* epochId = */ 1L,
+                /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L,
+                returnedAppSdkTopics);
 
         Map<Pair<String, String>, Topic> expectedReturnedAppSdkTopics = new HashMap<>();
-        for (Map.Entry<Pair<String, String>, Integer>  entry
-                : returnedAppSdkTopics.entrySet()) {
-            expectedReturnedAppSdkTopics.put(entry.getKey(),
-                    Topic.create(entry.getValue(), /* taxonomyVersion = */ 1L,
-                            /* modelVersion = */ 1L));
+        for (Map.Entry<Pair<String, String>, Integer> entry : returnedAppSdkTopics.entrySet()) {
+            expectedReturnedAppSdkTopics.put(
+                    entry.getKey(),
+                    Topic.create(
+                            entry.getValue(), /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L));
         }
 
         // Map<EpochId, Map<Pair<App, Sdk>, Topic>
         Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb =
-                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 1L,
-                        /* numberOfLookBackEpochs = */ 1);
+                mTopicsDao.retrieveReturnedTopics(
+                        /* epochId = */ 1L, /* numberOfLookBackEpochs = */ 1);
 
         // There is 1 epoch.
         assertThat(returnedTopicsFromDb).hasSize(1);
@@ -446,16 +447,16 @@ public final class TopicsDaoTest {
     @Test
     public void testPersistAndRetrieveReturnedAppTopics_multipleEpochs() {
         // We will have 5 topics and setup the returned topics for epoch 3, 2, and 1.
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 1L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 1L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 1L);
-        Topic topic4 = Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 1L);
-        Topic topic5 = Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 1L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic4 =
+                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic5 =
+                Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
 
         // Setup for EpochId 1
         // Map<Pair<App, Sdk>, Topic>
@@ -475,10 +476,8 @@ public final class TopicsDaoTest {
 
         // Convert the returned Topics with POJO to returned Topics with String.
         Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch1 =
-                returnedAppSdkTopicsForEpoch1.entrySet()
-                .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> e.getValue().getTopic()));
+                returnedAppSdkTopicsForEpoch1.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getTopic()));
 
         // Setup for EpochId 2
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch2 = new HashMap<>();
@@ -497,10 +496,8 @@ public final class TopicsDaoTest {
 
         // Convert the returned Topics with POJO to returned Topics with String.
         Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch2 =
-                returnedAppSdkTopicsForEpoch2.entrySet()
-                        .stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().getTopic()));
+                returnedAppSdkTopicsForEpoch2.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getTopic()));
 
         // Setup for EpochId 3
         // epochId == 3 does not have any topics. This could happen if the epoch computation failed
@@ -508,47 +505,114 @@ public final class TopicsDaoTest {
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch3 = new HashMap<>();
         // Convert the returned Topics with POJO to returned Topics with String.
         Map<Pair<String, String>, Integer> returnedTopicsStringForEpoch3 =
-                returnedAppSdkTopicsForEpoch3.entrySet()
-                        .stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue().getTopic()));
+                returnedAppSdkTopicsForEpoch3.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getTopic()));
 
         // Now persist the returned topics for 3 epochs
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 1L,
-                /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+        mTopicsDao.persistReturnedAppTopicsMap(
+                /* epochId = */ 1L,
+                /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L,
                 returnedTopicsStringForEpoch1);
 
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 2L,
-                /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+        mTopicsDao.persistReturnedAppTopicsMap(
+                /* epochId = */ 2L,
+                /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L,
                 returnedTopicsStringForEpoch2);
 
-        mTopicsDao.persistReturnedAppTopicsMap(/* epochId = */ 3L,
-                /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L,
+        mTopicsDao.persistReturnedAppTopicsMap(
+                /* epochId = */ 3L,
+                /* taxonomyVersion = */ 1L,
+                /* modelVersion = */ 1L,
                 returnedTopicsStringForEpoch3);
 
         // Now retrieve from DB and verify the result for reach epoch.
         // Now look at epochId == 3 only by setting numberOfLookBackEpochs == 1.
         // Since the epochId 3 is empty, the results are always empty.
         Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDb =
-                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
-                /* numberOfLookBackEpochs = */ 1);
+                mTopicsDao.retrieveReturnedTopics(
+                        /* epochId = */ 3L, /* numberOfLookBackEpochs = */ 1);
         assertThat(returnedTopicsFromDb).isEmpty();
 
         // Now look at epochId in {3, 2} only by setting numberOfLookBackEpochs = 2.
         returnedTopicsFromDb =
-                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
-                        /* numberOfLookBackEpochs = */ 2);
+                mTopicsDao.retrieveReturnedTopics(
+                        /* epochId = */ 3L, /* numberOfLookBackEpochs = */ 2);
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopics = new HashMap<>();
         expectedReturnedTopics.put(2L, returnedAppSdkTopicsForEpoch2);
         assertThat(returnedTopicsFromDb).isEqualTo(expectedReturnedTopics);
 
         // Now look at epochId in {3, 2, 1} only by setting numberOfLookBackEpochs = 3.
         returnedTopicsFromDb =
-                mTopicsDao.retrieveReturnedTopics(/* epochId = */ 3L,
-                        /* numberOfLookBackEpochs = */ 3);
+                mTopicsDao.retrieveReturnedTopics(
+                        /* epochId = */ 3L, /* numberOfLookBackEpochs = */ 3);
         expectedReturnedTopics = new HashMap<>();
         expectedReturnedTopics.put(1L, returnedAppSdkTopicsForEpoch1);
         expectedReturnedTopics.put(2L, returnedAppSdkTopicsForEpoch2);
         assertThat(returnedTopicsFromDb).isEqualTo(expectedReturnedTopics);
+    }
+
+    @Test
+    public void testRecordBlockedTopicAndRetrieveBlockedTopics() {
+        final int topicId = 1;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        Topic topicToBlock = Topic.create(topicId, taxonomyVersion, modelVersion);
+        mTopicsDao.recordBlockedTopic(topicToBlock);
+
+        List<Topic> blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(blockedTopics).hasSize(1);
+        assertThat(blockedTopics).containsExactly(topicToBlock);
+    }
+
+    @Test
+    public void testRecordBlockedTopicAndRemoveBlockedTopic() {
+        final int topicId = 1;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        Topic topicToBlock = Topic.create(topicId, taxonomyVersion, modelVersion);
+        mTopicsDao.recordBlockedTopic(topicToBlock);
+
+        List<Topic> blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(blockedTopics).hasSize(1);
+        assertThat(blockedTopics).containsExactly(topicToBlock);
+
+        mTopicsDao.removeBlockedTopic(topicToBlock);
+        blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
+
+        // Make sure that blocked topics table is empty.
+        assertThat(blockedTopics).isEmpty();
+    }
+
+    @Test
+    public void testEraseDataOfOldEpochs() {
+        final long epochToDeleteFrom = 1L;
+        final long currentEpoch = 4L;
+
+        List<Integer> topTopics_epoch_1 = Arrays.asList(11, 12, 13, 14, 15, 16);
+        List<Integer> topTopics_epoch_2 = Arrays.asList(21, 22, 23, 24, 25, 26);
+        List<Integer> topTopics_epoch_3 = Arrays.asList(31, 32, 33, 34, 35, 36);
+        List<Integer> topTopics_epoch_4 = Arrays.asList(41, 42, 43, 44, 45, 46);
+
+        mTopicsDao.persistTopTopics(/* epoch ID */ 4L, topTopics_epoch_4);
+        mTopicsDao.persistTopTopics(/* epoch ID */ 3L, topTopics_epoch_3);
+        mTopicsDao.persistTopTopics(/* epoch ID */ 2L, topTopics_epoch_2);
+        mTopicsDao.persistTopTopics(/* epoch ID */ 1L, topTopics_epoch_1);
+
+        mTopicsDao.deleteDataOfOldEpochs(
+                TopicsTables.TopTopicsContract.TABLE,
+                TopicsTables.TopTopicsContract.EPOCH_ID,
+                epochToDeleteFrom);
+
+        // Epoch 2/3/4 should still exist in DB, while epoch 1 has been erased
+        assertThat(mTopicsDao.retrieveTopTopics(currentEpoch)).isEqualTo(topTopics_epoch_4);
+        assertThat(mTopicsDao.retrieveTopTopics(currentEpoch - 1)).isEqualTo(topTopics_epoch_3);
+        assertThat(mTopicsDao.retrieveTopTopics(currentEpoch - 2)).isEqualTo(topTopics_epoch_2);
+        assertThat(mTopicsDao.retrieveTopTopics(currentEpoch - 3)).isEmpty();
     }
 }

@@ -15,10 +15,13 @@
  */
 package com.android.adservices.ui.settings;
 
-import android.content.Context;
+import android.app.Application;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.android.adservices.service.consent.ConsentManager;
 
@@ -29,26 +32,67 @@ import java.io.IOException;
  * for serving consent to the main view, and interacting with the {@link ConsentManager} that
  * persists the user consent data in a storage.
  */
-public class MainViewModel extends ViewModel {
+public class MainViewModel extends AndroidViewModel {
+    private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();
     private MutableLiveData<Boolean> mAdServicesConsent;
+    private ConsentManager mConsentManager;
+
+    /** UI event triggered by view model */
+    public enum MainViewModelUiEvent {
+        DISPLAY_TOPICS_FRAGMENT
+    }
+
+    public MainViewModel(@NonNull Application application) throws IOException {
+        super(application);
+        setConsentManager(ConsentManager.getInstance(application));
+    }
 
     /**
      * Provides {@link AdServicesApiConsent} displayed in {@link AdServicesSettingsMainFragment}
      * as a Switch value.
      *
-     * @param context the context of {@link AdServicesSettingsActivity}
      * @return {@link mAdServicesConsent} indicates if user has consented to PP API usage.
      */
-    public MutableLiveData<Boolean> getConsent(Context context) throws IOException {
+    public MutableLiveData<Boolean> getConsent() {
         if (mAdServicesConsent == null) {
-            mAdServicesConsent = new MutableLiveData<>();
-            loadConsent(context);
+            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
         }
         return mAdServicesConsent;
     }
 
-    private void loadConsent(Context context) throws IOException {
-        Boolean consentGiven = ConsentManager.getInstance(context).getConsent(context).isGiven();
-        mAdServicesConsent.setValue(consentGiven);
+    /**
+     * Sets the user consent for PP APIs.
+     *
+     * @param newConsent the new value that user consent should be set to for PP APIs.
+     */
+    public void setConsent(Boolean newConsent) throws IOException {
+        if (mAdServicesConsent == null) {
+            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
+        }
+        mAdServicesConsent.postValue(newConsent);
+        if (newConsent) {
+            mConsentManager.enable();
+        } else {
+            mConsentManager.disable();
+        }
+    }
+
+    /** Returns an observable but immutable event enum representing an view action on UI. */
+    public LiveData<MainViewModelUiEvent> getUiEvents() {
+        return mEventTrigger;
+    }
+
+    /** Triggers {@link AdServicesSettingsTopicsFragment}. */
+    public void topicsButtonClickHandler() {
+        mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_TOPICS_FRAGMENT);
+    }
+
+    @VisibleForTesting
+    void setConsentManager(ConsentManager consentManager) {
+        mConsentManager = consentManager;
+    }
+
+    private boolean getConsentFromConsentManager() {
+        return mConsentManager.getConsent().isGiven();
     }
 }
