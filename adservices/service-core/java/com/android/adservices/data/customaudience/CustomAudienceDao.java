@@ -129,7 +129,11 @@ public interface CustomAudienceDao {
      * @param buyers associated with the Custom Audience
      * @return All the Custom Audience that represent given buyers
      */
-    @Query("SELECT * FROM custom_audience where buyer in (:buyers)")
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE buyer in (:buyers) "
+                    + "AND activation_time <= (strftime('%s', 'now') * 1000) "
+                    + "AND (strftime('%s', 'now') * 1000) < expiration_time")
     @Nullable
-    List<DBCustomAudience> getCustomAudienceByBuyers(List<String> buyers);
+    List<DBCustomAudience> getActiveCustomAudienceByBuyers(List<String> buyers);
 }
