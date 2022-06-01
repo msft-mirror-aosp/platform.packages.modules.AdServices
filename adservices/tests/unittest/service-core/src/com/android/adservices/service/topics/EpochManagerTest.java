@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -571,5 +572,85 @@ public final class EpochManagerTest {
         });
         String[] args = new String[] {};
         epochManager.dump(printWriter, args);
+    }
+
+    @Test
+    public void testComputeEpoch_emptyTopTopics() {
+        // Create a new EpochManager that we can control the random generator.
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = Mockito.spy(new TopicsDao(dbHelper));
+        // Mock EpochManager for getCurrentEpochId()
+        EpochManager epochManager =
+                Mockito.spy(
+                        new EpochManager(
+                                topicsDao, dbHelper, new Random(), mMockClassifier, mFlags));
+
+        // To mimic the scenario that there was no usage in last epoch.
+        // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
+        final long epochId = 2L;
+        when(epochManager.getCurrentEpochId()).thenReturn(epochId);
+
+        // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
+        // LinkedHashMap so that the order of iteration is defined.
+        Map<String, List<String>> appSdksUsageMap = new LinkedHashMap<>();
+        // app1 called Topics API directly. In addition, 2 of its sdk1 an sdk2 called the Topics
+        // API.
+        appSdksUsageMap.put("app1", Arrays.asList("", "sdk1", "sdk2"));
+
+        // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
+        when(topicsDao.retrieveAppSdksUsageMap(epochId)).thenReturn(appSdksUsageMap);
+
+        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
+        when(mMockClassifier.classify(eq(appSdksUsageMap.keySet())))
+                .thenReturn(appClassificationTopicsMap);
+
+        // Mock Classifier to return empty top topic list
+        when(mMockClassifier.getTopTopics(
+                        eq(appClassificationTopicsMap),
+                        eq(mFlags.getTopicsNumberOfTopTopics()),
+                        eq(mFlags.getTopicsNumberOfRandomTopics())))
+                .thenReturn(Collections.emptyList());
+
+        epochManager.processEpoch();
+
+        verify(epochManager).getCurrentEpochId();
+        verify(topicsDao).retrieveAppSdksUsageMap(eq(epochId));
+        verify(mMockClassifier).classify(eq(appSdksUsageMap.keySet()));
+        verify(mMockClassifier)
+                .getTopTopics(
+                        eq(appClassificationTopicsMap),
+                        eq(mFlags.getTopicsNumberOfTopTopics()),
+                        eq(mFlags.getTopicsNumberOfRandomTopics()));
+
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+
+        // Verify AppClassificationTopics table is still persisted
+        Map<String, List<Topic>> expectedAppClassificationTopicsMap = new HashMap<>();
+        expectedAppClassificationTopicsMap.put("app1", Arrays.asList(topic1, topic2));
+        Map<String, List<Topic>> appClassificationTopicsMapFromDB =
+                topicsDao.retrieveAppClassificationTopics(epochId);
+        assertThat(appClassificationTopicsMapFromDB).isEqualTo(expectedAppClassificationTopicsMap);
+
+        // Verify CallerCanLearnTopics table is still persisted
+        Map<Integer, Set<String>> expectedCallersCanLearnMap = new HashMap<>();
+        expectedCallersCanLearnMap.put(
+                /* topic */ 1, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        expectedCallersCanLearnMap.put(
+                /* topic */ 2, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        Map<Integer, Set<String>> callersCanLearnMapFromDB =
+                topicsDao.retrieveCallerCanLearnTopicsMap(epochId, /* numberOfLookBackEpochs */ 2);
+        assertThat(callersCanLearnMapFromDB).isEqualTo(expectedCallersCanLearnMap);
+
+        // Look back till epoch id = 1, which has no usage.
+        // In current epoch id 2, top topics return an empty list, which aborts the
+        // processing of epoch computation. So returned topics list is empty for epoch id = 2.
+        // In last epoch id 1, there is no usage so returned topics list is also empty.
+        // Therefore, to verify that no top topic has been persisted into database and return topic
+        // list is empty for 2 epochs
+        assertThat(topicsDao.retrieveTopTopics(epochId)).isEmpty();
+        assertThat(topicsDao.retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 2))
+                .isEmpty();
     }
 }
