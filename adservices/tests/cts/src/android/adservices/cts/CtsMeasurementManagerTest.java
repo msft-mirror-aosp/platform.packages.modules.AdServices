@@ -17,7 +17,8 @@
 package android.adservices.cts;
 
 import android.adservices.exceptions.AdServicesException;
-import android.adservices.measurement.MeasurementApiUtil;
+import android.adservices.exceptions.MeasurementException;
+import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
@@ -36,6 +37,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -50,6 +52,7 @@ public class CtsMeasurementManagerTest {
     private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
+    private static final String ORIGIN_PACKAGE = "android-app://com.site.toBeDeleted";
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     @Test
@@ -60,22 +63,21 @@ public class CtsMeasurementManagerTest {
         CompletableFuture<Void> future = new CompletableFuture<>();
         OutcomeReceiver<Void, AdServicesException> callback =
                 new OutcomeReceiver<Void, AdServicesException>() {
-            @Override
-            public void onResult(@NonNull Void result) {
-                future.complete(result);
-            }
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
 
-            @Override
-            public void onError(AdServicesException error) {
-                Assert.fail();
-            }
-        };
+                    @Override
+                    public void onError(AdServicesException error) {
+                        Assert.fail();
+                    }
+                };
         manager.registerSource(
                 /* attributionSource = */ Uri.parse(INVALID_SERVER_ADDRESS),
                 /* inputEvent = */ null,
                 /* executor = */ mExecutorService,
-                /* callback = */ callback
-        );
+                /* callback = */ callback);
 
         Assert.assertNull(future.get());
     }
@@ -105,33 +107,6 @@ public class CtsMeasurementManagerTest {
         );
 
         Assert.assertNull(future.get());
-    }
-
-    @Test
-    public void testGetMeasurementApiStatus_NoErrors() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-
-        CompletableFuture<Integer> future = new CompletableFuture<>();
-        OutcomeReceiver<Integer, AdServicesException> callback =
-                new OutcomeReceiver<Integer, AdServicesException>() {
-                    @Override
-                    public void onResult(@NonNull Integer result) {
-                        future.complete(result);
-                    }
-
-                    @Override
-                    public void onError(AdServicesException error) {
-                        Assert.fail();
-                    }
-                };
-        manager.getMeasurementApiStatus(
-                /* executor = */ mExecutorService,
-                /* callback = */ callback
-        );
-
-        Assert.assertEquals(Integer.valueOf(
-                MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
     }
 
     @Test
@@ -246,5 +221,138 @@ public class CtsMeasurementManagerTest {
                         .build(),
                 mExecutorService,
                 /* callback */ null);
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
+            throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+        DeletionRequest request = new DeletionRequest.Builder().build();
+        manager.deleteRegistrations(request, mExecutorService, callback);
+        Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withOrigin_withNoRange_withCallback_NoErrors()
+            throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+        DeletionRequest request =
+                new DeletionRequest.Builder().setOriginUri(Uri.parse(ORIGIN_PACKAGE)).build();
+        manager.deleteRegistrations(request, mExecutorService, callback);
+        Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withNoOrigin_withRange_withCallback_NoErrors()
+            throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setStart(Instant.ofEpochMilli(0))
+                        .setEnd(Instant.now())
+                        .build();
+        manager.deleteRegistrations(request, mExecutorService, callback);
+        Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withOrigin_withRange_withCallback_NoErrors()
+            throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setOriginUri(Uri.parse(ORIGIN_PACKAGE))
+                        .setStart(Instant.ofEpochMilli(0))
+                        .setEnd(Instant.now())
+                        .build();
+        manager.deleteRegistrations(request, mExecutorService, callback);
+        Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
+            throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        future.complete(null);
+                        Assert.assertEquals(
+                                ((MeasurementException) error).getResultCode(),
+                                MeasurementManager.RESULT_INVALID_ARGUMENT);
+                    }
+                };
+        DeletionRequest request = new DeletionRequest.Builder().setEnd(Instant.now()).build();
+        manager.deleteRegistrations(request, mExecutorService, callback);
+        Assert.assertNull(future.get());
     }
 }

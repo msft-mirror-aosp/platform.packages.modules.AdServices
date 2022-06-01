@@ -288,13 +288,28 @@ package android.adservices.exceptions {
 
 package android.adservices.measurement {
 
+  public class DeletionRequest {
+    method @Nullable public java.time.Instant getEnd();
+    method @Nullable public android.net.Uri getOriginUri();
+    method @Nullable public java.time.Instant getStart();
+  }
+
+  public static final class DeletionRequest.Builder {
+    ctor public DeletionRequest.Builder();
+    method @NonNull public android.adservices.measurement.DeletionRequest build();
+    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setEnd(@Nullable java.time.Instant);
+    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setOriginUri(@Nullable android.net.Uri);
+    method @NonNull public android.adservices.measurement.DeletionRequest.Builder setStart(@Nullable java.time.Instant);
+  }
+
   public class MeasurementApiUtil {
     field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
     field public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
   }
 
   public class MeasurementManager {
-    method public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,android.adservices.exceptions.AdServicesException>);
+    method public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,java.lang.Exception>);
+    method public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
     method public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
     method public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
     method public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Void,java.lang.Exception>);
