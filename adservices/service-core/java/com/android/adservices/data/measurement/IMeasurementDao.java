@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import java.time.Instant;
@@ -263,7 +264,13 @@ public interface IMeasurementDao {
     void undoInstallAttribution(Uri uri) throws DatastoreException;
 
     /**
-     * Save unencrypted aggregate payload to database.
+     * Save aggregate encryption key to datastore.
+     */
+    void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
+            throws DatastoreException;
+
+    /**
+     * Save unencrypted aggregate payload to datastore.
      */
     void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;
 
