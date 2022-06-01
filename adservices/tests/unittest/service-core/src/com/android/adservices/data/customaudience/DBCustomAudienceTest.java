@@ -22,11 +22,19 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
+import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
+import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
 
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class DBCustomAudienceTest {
     private static final String CALLING_APP_NAME = "not.impled.yet";
@@ -163,5 +171,106 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CALLING_APP_NAME,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
+    }
+
+    @Test
+    public void testCopyWithNullUpdatableDataThrowsException() {
+        DBCustomAudience customAudience = DBCustomAudienceFixture.getValidBuilder().build();
+
+        assertThrows(NullPointerException.class, () -> customAudience.copyWithUpdatableData(null));
+    }
+
+    @Test
+    public void testCopyWithUnsuccessfulUpdatableDataDoesNotChange() {
+        Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+        DBCustomAudience originalCustomAudience =
+                DBCustomAudienceFixture.getValidBuilder()
+                        .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                DBTrustedBiddingDataFixture.getValidBuilder().build())
+                        .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
+                        .build();
+
+        Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
+        CustomAudienceUpdatableData updatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
+                        .setAttemptedUpdateTime(attemptedUpdateTime)
+                        .build();
+
+        DBCustomAudience updatedCustomAudience =
+                originalCustomAudience.copyWithUpdatableData(updatableData);
+
+        assertEquals(originalCustomAudience, updatedCustomAudience);
+    }
+
+    @Test
+    public void testCopyWithSuccessfulEmptyUpdatableDataOnlyUpdatesTime() {
+        Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+        DBCustomAudience originalCustomAudience =
+                DBCustomAudienceFixture.getValidBuilder()
+                        .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                DBTrustedBiddingDataFixture.getValidBuilder().build())
+                        .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
+                        .build();
+
+        Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
+        CustomAudienceUpdatableData updatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse()
+                        .setAttemptedUpdateTime(attemptedUpdateTime)
+                        .build();
+
+        DBCustomAudience expectedCustomAudience =
+                new DBCustomAudience.Builder(originalCustomAudience)
+                        .setLastAdsAndBiddingDataUpdatedTime(attemptedUpdateTime)
+                        .build();
+
+        DBCustomAudience updatedCustomAudience =
+                originalCustomAudience.copyWithUpdatableData(updatableData);
+
+        assertEquals(expectedCustomAudience, updatedCustomAudience);
+    }
+
+    @Test
+    public void testCopyWithSuccessfulFullUpdatableDataUpdatesAll() {
+        Instant originalUpdateTime = CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
+        DBCustomAudience originalCustomAudience =
+                DBCustomAudienceFixture.getValidBuilder()
+                        .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                DBTrustedBiddingDataFixture.getValidBuilder().build())
+                        .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
+                        .build();
+
+        Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
+        String updatedUserBiddingSignals = "{'new':1}";
+        DBTrustedBiddingData updatedTrustedBiddingData =
+                DBTrustedBiddingDataFixture.getValidBuilder()
+                        .setKeys(Arrays.asList("new", "updated"))
+                        .build();
+        List<DBAdData> updatedAds = Collections.emptyList();
+        CustomAudienceUpdatableData updatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse()
+                        .setAttemptedUpdateTime(attemptedUpdateTime)
+                        .setUserBiddingSignals(updatedUserBiddingSignals)
+                        .setTrustedBiddingData(updatedTrustedBiddingData)
+                        .setAds(updatedAds)
+                        .build();
+
+        DBCustomAudience expectedCustomAudience =
+                new DBCustomAudience.Builder(originalCustomAudience)
+                        .setLastAdsAndBiddingDataUpdatedTime(attemptedUpdateTime)
+                        .setUserBiddingSignals(updatedUserBiddingSignals)
+                        .setTrustedBiddingData(updatedTrustedBiddingData)
+                        .setAds(updatedAds)
+                        .build();
+
+        DBCustomAudience updatedCustomAudience =
+                originalCustomAudience.copyWithUpdatableData(updatableData);
+
+        assertEquals(expectedCustomAudience, updatedCustomAudience);
     }
 }
