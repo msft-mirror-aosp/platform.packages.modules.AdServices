@@ -25,7 +25,6 @@ import com.android.adservices.LogUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -61,12 +60,13 @@ public class PrecomputedLoader {
      * Retrieve a list of topicIDs from labels file.
      *
      * @return The list of topicIDs from labels.txt
+     *
      * @throws IOException An empty list will be return
      */
     @NonNull
-    public ImmutableSet<Integer> retrieveLabels() {
-        // Initialize a ImmutableSet.Builder to store the label iteratively
-        ImmutableSet.Builder<Integer> labels = new ImmutableSet.Builder();
+    public ImmutableList<Integer> retrieveLabels() {
+        // Initialize a ImmutableList.Builder to store the label iteratively
+        ImmutableList.Builder<Integer> labels = new ImmutableList.Builder();
         String line;
 
         try (InputStreamReader inputStreamReader =
@@ -78,10 +78,10 @@ public class PrecomputedLoader {
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed labels");
-            // When catching IOException -> return empty immutable set
+            // When catching IOException -> return empty immutable list
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
-            return ImmutableSet.<Integer>builder().build();
+            return ImmutableList.of();
         }
 
         return labels.build();
@@ -91,6 +91,7 @@ public class PrecomputedLoader {
      * Retrieve the app classification topicIDs from file name here.
      *
      * @return The map from App to the list of its classification topicIDs.
+     *
      * @throws IOException An empty hash map will be return
      */
     @NonNull
@@ -100,7 +101,7 @@ public class PrecomputedLoader {
         String line;
 
         // The immutable set of the topics from labels file
-        ImmutableSet<Integer> validTopics = retrieveLabels();
+        ImmutableList<Integer> validTopics = retrieveLabels();
 
         try (InputStreamReader inputStreamReader =
                      new InputStreamReader(mAssetManager.open(mTopAppsFilePath))) {

@@ -554,9 +554,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private String resolveAdServicesPackage() {
         PackageManager pm = mContext.getPackageManager();
         Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
-        List<ResolveInfo> resolveInfos = pm.queryIntentServicesAsUser(serviceIntent,
-                PackageManager.GET_SERVICES | PackageManager.MATCH_SYSTEM_ONLY,
-                UserHandle.SYSTEM);
+        List<ResolveInfo> resolveInfos =
+                pm.queryIntentServicesAsUser(
+                        serviceIntent,
+                        PackageManager.GET_SERVICES
+                                | PackageManager.MATCH_SYSTEM_ONLY
+                                | PackageManager.MATCH_DIRECT_BOOT_AWARE
+                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
+                        UserHandle.SYSTEM);
         if (resolveInfos == null || resolveInfos.size() == 0) {
             Log.e(TAG, "AdServices package could not be resolved");
         } else if (resolveInfos.size() > 1) {
