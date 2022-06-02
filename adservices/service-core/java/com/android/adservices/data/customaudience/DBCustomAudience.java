@@ -74,6 +74,7 @@ public class DBCustomAudience {
     @NonNull
     private final Instant mExpirationTime;
 
+    // TODO(b/234429221): Investigage and decide if should add an index on the activation_time.
     @ColumnInfo(name = "activation_time")
     @NonNull
     private final Instant mActivationTime;

@@ -184,6 +184,15 @@ public class EpochManager implements Dumpable {
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
             List<Integer> topTopics = computeTopTopics(appClassificationTopicsMap);
+            // Abort the computation if empty list of top topics is returned from classifier.
+            // This could happen if there is no usage of the Topics API in the last epoch.
+            if (topTopics.isEmpty()) {
+                LogUtil.w(
+                        "Empty list of top topics is returned from classifier. Aborting the"
+                                + " computation!");
+                db.setTransactionSuccessful();
+                return;
+            }
             LogUtil.v("topTopics are  %s", topTopics.toString());
 
             // Then save Top Topics into DB
