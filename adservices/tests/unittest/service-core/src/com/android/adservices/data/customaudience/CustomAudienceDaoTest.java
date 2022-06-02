@@ -75,6 +75,10 @@ public class CustomAudienceDaoTest {
             CLOCK.instant().plus(Duration.ofDays(3)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant LAST_UPDATED_TIME_1 =
             CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant LAST_UPDATED_TIME_36_HRS =
+            CLOCK.instant().minus(Duration.ofHours(36)).truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant LAST_UPDATED_TIME_72_HRS =
+            CLOCK.instant().minus(Duration.ofHours(72)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant CREATION_TIME_2 =
             CLOCK.instant().plus(Duration.ofMinutes(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant ACTIVATION_TIME_2 =
@@ -205,6 +209,37 @@ public class CustomAudienceDaoTest {
                     .setTrustedBiddingData(null)
                     .build();
 
+    private static final DBCustomAudience CUSTOM_AUDIENCE_UPDATED =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setName(NAME_1)
+                    .setActivationTime(ACTIVATION_TIME_MINUS_ONE_HOUR)
+                    .setCreationTime(CREATION_TIME_MINUS_THREE_DAYS)
+                    .setExpirationTime(EXPIRATION_TIME_1)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_36_HRS)
+                    .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
+                    .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                    .setAds(List.of(ADS_1))
+                    .setTrustedBiddingData(null)
+                    .build();
+
+    private static final DBCustomAudience CUSTOM_AUDIENCE_OUTDATED =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER_2)
+                    .setBuyer(BUYER_2)
+                    .setName(NAME_2)
+                    .setActivationTime(ACTIVATION_TIME_MINUS_ONE_HOUR)
+                    .setCreationTime(CREATION_TIME_MINUS_THREE_DAYS)
+                    .setExpirationTime(EXPIRATION_TIME_1)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_72_HRS)
+                    .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
+                    .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                    .setAds(List.of(ADS_1))
+                    .setTrustedBiddingData(null)
+                    .build();
     private static final String APP_PACKAGE_NAME_1 = "appPackageName1";
     private static final String BIDDING_LOGIC_JS_1 =
             "function test() { return \"hello world_1\"; }";
@@ -402,7 +437,7 @@ public class CustomAudienceDaoTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testPersistCustomAudienveOverride() {
+    public void testPersistCustomAudienceOverride() {
         mCustomAudienceDao.persistCustomAudienceOverride(null);
     }
 
@@ -476,7 +511,7 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
-    public void testGetCustomAudienceByBuyersInactiveCAs() {
+    public void testGetActiveCustomAudienceByBuyersInactiveCAs() {
         List<String> buyers = Arrays.asList(BUYER_1);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_INACTIVE);
         assertEquals(
@@ -486,11 +521,21 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
-    public void testGetCustomAudienceByBuyersActivatedCAOverrides() {
+    public void testGetActiveCustomAudienceByBuyersActivatedCAs() {
         List<String> buyers = Arrays.asList(BUYER_1, BUYER_2);
         List<DBCustomAudience> expectedCAs = Arrays.asList(CUSTOM_AUDIENCE_ACTIVE);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_ACTIVE);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_EXPIRED);
+        List<DBCustomAudience> result = mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
+        assertThat(result).containsExactlyElementsIn(expectedCAs);
+    }
+
+    @Test
+    public void testGetActiveCustomAudienceByBuyersUpdatedCAs() {
+        List<String> buyers = Arrays.asList(BUYER_1, BUYER_2);
+        List<DBCustomAudience> expectedCAs = Arrays.asList(CUSTOM_AUDIENCE_UPDATED);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_UPDATED);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_OUTDATED);
         List<DBCustomAudience> result = mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
         assertThat(result).containsExactlyElementsIn(expectedCAs);
     }
