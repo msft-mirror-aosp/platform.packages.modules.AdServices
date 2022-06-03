@@ -20,7 +20,6 @@ android_test {
     name: "AdServicesFrameworkUnitTests",
     srcs: [
         "src/**/*.java",
-        ":framework-adservices-sources",
     ],
     static_libs: [
         "androidx.test.runner",
@@ -35,8 +34,10 @@ android_test {
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
-        "framework-adservices"
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl"
     ],
+    sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     target_sdk_version: "current",
     test_suites: [
