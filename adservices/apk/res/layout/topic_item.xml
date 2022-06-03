@@ -13,13 +13,18 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<PreferenceScreen
+<RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:title="@string/settingsUI_topics_fragment_title"
-        android:id="@+id/topics_preference_screen">
-    <Preference
-            android:id="@+id/blocked_topics_preference"
-            android:key="blocked_topics"
-            android:summary="@string/settingsUI_topics_summary"
-            android:title="@string/settingsUI_blocked_topics_title" />
-</PreferenceScreen>
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <TextView
+            android:id="@+id/topic_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dip"
+            android:paddingBottom="10dip"
+            android:textColor="@android:color/secondary_text_light"
+            android:textSize="20sp"
+            tools:text="Testing Text" />
+</RelativeLayout>

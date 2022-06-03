@@ -16,15 +16,34 @@
 package com.android.adservices.ui.settings;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-import androidx.preference.PreferenceFragmentCompat;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 
 /** Fragment for the topics view of the AdServices Settings App. */
-public class AdServicesSettingsTopicsFragment extends PreferenceFragmentCompat {
+public class AdServicesSettingsTopicsFragment extends Fragment {
     @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.topics_preferences, rootKey);
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.topics_fragment, container, false);
+
+        TopicsViewModel viewModel = new ViewModelProvider(this).get(TopicsViewModel.class);
+        initTopicsList(rootView, viewModel);
+
+        return rootView;
+    }
+
+    private void initTopicsList(View rootView, TopicsViewModel viewModel) {
+        RecyclerView recyclerView = rootView.findViewById(R.id.topics_list);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        TopicsViewAdapter adapter = new TopicsViewAdapter(viewModel);
+        recyclerView.setAdapter(adapter);
     }
 }
