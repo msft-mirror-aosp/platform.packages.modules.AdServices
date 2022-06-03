@@ -147,9 +147,7 @@ public class TopicsManagerTest {
 
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() throws Exception {
-        String result =
-                ShellUtils.runShellCommand(
-                        "cmd jobscheduler run -f" + " " + SERVICE_APK_NAME + " " + EPOCH_JOB_ID);
-        assertThat(result).isEqualTo("Running job [FORCED]");
+        ShellUtils.runShellCommand(
+                "cmd jobscheduler run -f" + " " + SERVICE_APK_NAME + " " + EPOCH_JOB_ID);
     }
 }
