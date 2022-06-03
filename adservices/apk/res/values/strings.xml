@@ -67,6 +67,9 @@
     <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_fragment_title">Manage your general interests for ads</string>
 
+    <!-- Text for the button to block a topic. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_block_topic_title">Block</string>
+
     <!-- Text for the button to open blocked topics fragment. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_blocked_topics_title">Interests you\'ve blocked</string>
 
