@@ -137,7 +137,10 @@ public interface CustomAudienceDao {
                     + "AND activation_time <= (strftime('%s', 'now') * 1000) "
                     + "AND (strftime('%s', 'now') * 1000) < expiration_time "
                     + "AND (last_ads_and_bidding_data_updated_time + 48 * 3600000) "
-                    + ">= (strftime('%s', 'now') * 1000)")
+                    + ">= (strftime('%s', 'now') * 1000) "
+                    + "AND user_bidding_signals IS NOT NULL "
+                    + "AND trusted_bidding_data_url IS NOT NULL "
+                    + "AND ads IS NOT NULL ")
     @Nullable
     List<DBCustomAudience> getActiveCustomAudienceByBuyers(List<String> buyers);
 }
