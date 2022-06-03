@@ -41,8 +41,16 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['java','../service-core/java']
-            java.setIncludes(new HashSet(['com/android/adservices/ui/**/*.java','com/android/adservices/service/consent/*.java']))
+            java.srcDirs = [
+                    'java',
+                    '../service-core/java',
+                    '../../../../../external/guava/guava/src',
+            ]
+            java.setIncludes(new HashSet([
+                    'com/android/adservices/ui/**/*.java',
+                    'com/android/adservices/service/consent/*.java',
+                    'com/google/common/collect/*.java',
+            ]))
             res.srcDirs = ['res']
         }
 
