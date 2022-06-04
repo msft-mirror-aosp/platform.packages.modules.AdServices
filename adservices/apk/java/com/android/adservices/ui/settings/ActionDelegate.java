@@ -114,7 +114,7 @@ public class ActionDelegate {
                             }
                             // TODO(b/229721429): handle UI events.
                             switch (event) {
-                                case DISPLAY_SOMETHING_1:
+                                case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
                                     break;
                             }
                         });
