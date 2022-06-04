@@ -36,4 +36,8 @@
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"പ്രത്യേക താൽപ്പര്യങ്ങൾ സൃഷ്‌ടിക്കുന്ന നിങ്ങളുടെ ആപ്പുകൾ"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"പ്രത്യേക താൽപ്പര്യങ്ങൾ സൃഷ്‌ടിക്കുന്ന നിങ്ങളുടെ ആപ്പുകൾ മാനേജ് ചെയ്യുക"</string>
+    <!-- no translation found for settingsUI_topics_fragment_title (4413069330318399420) -->
+    <skip />
+    <!-- no translation found for settingsUI_blocked_topics_title (4432306285378205285) -->
+    <skip />
 </resources>

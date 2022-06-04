@@ -20,7 +20,6 @@ android_test {
     name: "CtsAdServicesEndToEndTests",
     srcs: [
         "src/**/*.java",
-        ":framework-adservices-sources",
     ],
     static_libs: [
         "adservices-clients",
@@ -34,11 +33,14 @@ android_test {
     ],
     libs: [
         "android.test.base",
-        ],
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl",
+    ],
     test_suites: [
         "cts",
         "general-tests",
         "mts-adservices"
     ],
+    sdk_version: "module_current",
     test_mainline_modules: ["com.google.android.adservices.apex"],
 }
