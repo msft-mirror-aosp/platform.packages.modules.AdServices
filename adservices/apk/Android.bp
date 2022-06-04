@@ -45,6 +45,7 @@ android_app {
         "adservices-service-core",
         "androidx.preference_preference",
         "androidx.fragment_fragment",
+        "androidx.recyclerview_recyclerview",
         // TODO(b/230653497): Try to remove this.
         "androidx.room_room-runtime",
     ],

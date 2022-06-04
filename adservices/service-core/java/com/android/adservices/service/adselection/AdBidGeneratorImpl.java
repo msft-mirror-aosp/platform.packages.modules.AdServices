@@ -109,7 +109,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(adSelectionConfig);
 
-        if (Objects.isNull(customAudience.getAds()) || customAudience.getAds().isEmpty()) {
+        if (customAudience.getAds().isEmpty()) {
             return FluentFuture.from(Futures.immediateFuture(null));
         }
 

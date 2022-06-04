@@ -33,10 +33,10 @@ public class DbHelperTest {
 
     @Test
     public void testOnCreate() {
-        assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 3));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 4));
         assertTrue(doesTableExistAndColumnCountMatch("topics_app_classification_topics", 6));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 4));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 8));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 6));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 10));
         assertTrue(doesTableExistAndColumnCountMatch("topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch("topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch("topics_app_usage_history", 3));
