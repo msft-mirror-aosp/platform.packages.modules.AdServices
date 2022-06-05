@@ -16,11 +16,11 @@
 package com.android.adservices.ui.settings;
 
 import android.app.Application;
-import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.service.consent.ConsentManager;
@@ -33,8 +33,14 @@ import java.io.IOException;
  * persists the user consent data in a storage.
  */
 public class MainViewModel extends AndroidViewModel {
+    private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();
     private MutableLiveData<Boolean> mAdServicesConsent;
     private ConsentManager mConsentManager;
+
+    /** UI event triggered by view model */
+    public enum MainViewModelUiEvent {
+        DISPLAY_TOPICS_FRAGMENT
+    }
 
     public MainViewModel(@NonNull Application application) throws IOException {
         super(application);
@@ -64,12 +70,21 @@ public class MainViewModel extends AndroidViewModel {
             mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
         }
         mAdServicesConsent.postValue(newConsent);
-        Context context = getApplication().getApplicationContext();
         if (newConsent) {
-            mConsentManager.enable(context);
+            mConsentManager.enable();
         } else {
-            mConsentManager.disable(context);
+            mConsentManager.disable();
         }
+    }
+
+    /** Returns an observable but immutable event enum representing an view action on UI. */
+    public LiveData<MainViewModelUiEvent> getUiEvents() {
+        return mEventTrigger;
+    }
+
+    /** Triggers {@link AdServicesSettingsTopicsFragment}. */
+    public void topicsButtonClickHandler() {
+        mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_TOPICS_FRAGMENT);
     }
 
     @VisibleForTesting
@@ -78,6 +93,6 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     private boolean getConsentFromConsentManager() {
-        return mConsentManager.getConsent(getApplication().getApplicationContext()).isGiven();
+        return mConsentManager.getConsent().isGiven();
     }
 }

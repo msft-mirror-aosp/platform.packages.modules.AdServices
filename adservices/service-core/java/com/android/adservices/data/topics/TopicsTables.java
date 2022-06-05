@@ -37,7 +37,8 @@ public final class TopicsTables {
     public interface TaxonomyContract {
         String TABLE = TOPICS_TABLE_PREFIX + "taxonomy";
         String ID = "_id";
-        String VERSION = "version";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
         String TOPIC = "topic";
     }
 
@@ -48,7 +49,9 @@ public final class TopicsTables {
                     + "("
                     + TaxonomyContract.ID
                     + " INTEGER PRIMARY KEY, "
-                    + TaxonomyContract.VERSION
+                    + TaxonomyContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + TaxonomyContract.MODEL_VERSION
                     + " INTEGER NOT NULL, "
                     + TaxonomyContract.TOPIC
                     + " INTEGER NOT NULL"
@@ -102,6 +105,8 @@ public final class TopicsTables {
         String EPOCH_ID = "epoch_id";
         String CALLER = "caller";
         String TOPIC = "topic";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
     }
 
     // Create Statement for the Caller Learned Topic table.
@@ -116,6 +121,10 @@ public final class TopicsTables {
                     + CallerCanLearnTopicsContract.CALLER
                     + " TEXT NOT NULL, "
                     + CallerCanLearnTopicsContract.TOPIC
+                    + " INTEGER NOT NULL, "
+                    + CallerCanLearnTopicsContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + CallerCanLearnTopicsContract.MODEL_VERSION
                     + " INTEGER NOT NULL"
                     + ")";
 
@@ -136,6 +145,8 @@ public final class TopicsTables {
         String TOPIC4 = "topic4";
         String TOPIC5 = "topic5";
         String RANDOM_TOPIC = "random_topic";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
     }
 
     // Table Create Statement for the Top Topics table
@@ -158,6 +169,10 @@ public final class TopicsTables {
                     + TopTopicsContract.TOPIC5
                     + " INTEGER NOT NULL, "
                     + TopTopicsContract.RANDOM_TOPIC
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.MODEL_VERSION
                     + " INTEGER NOT NULL"
                     + ")";
 

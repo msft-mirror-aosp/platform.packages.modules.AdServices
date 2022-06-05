@@ -1,4 +1,10 @@
 {
+   "mainline-presubmit": [
+    {
+      // Install com.google.android.adservices.apex and run SdkSandboxManagerServiceUnitTests.
+      "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]"
+    }
+  ],
   "presubmit": [
     {
       "name": "CtsSdkSandboxInprocessTests"
