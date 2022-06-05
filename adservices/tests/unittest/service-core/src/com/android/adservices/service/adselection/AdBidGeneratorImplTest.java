@@ -65,6 +65,7 @@ import org.mockito.junit.MockitoRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -95,8 +96,8 @@ public class AdBidGeneratorImplTest {
     private static final String EMPTY_TRUSTED_BIDDING_SIGNALS = "{}";
     private static final String EMPTY_USER_SIGNALS = "{}";
     private static final ArrayList<AdData> ADS = AdDataFixture.VALID_ADS;
-    private static final DBCustomAudience CUSTOM_AUDIENCE_WITHOUT_ADS =
-            DBCustomAudienceFixture.getValidBuilder().setAds(null).build();
+    private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_EMPTY_ADS =
+            DBCustomAudienceFixture.getValidBuilder().setAds(Collections.emptyList()).build();
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -445,7 +446,7 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdBiddingPerCANoAds() throws Exception {
+    public void testRunAdBiddingPerCAEmptyAds() throws Exception {
         mServer =
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody(mBuyerDecisionLogicJs)));
@@ -462,7 +463,7 @@ public class AdBidGeneratorImplTest {
 
         FluentFuture<AdBiddingOutcome> result =
                 mAdBidGenerator.runAdBiddingPerCA(
-                        CUSTOM_AUDIENCE_WITHOUT_ADS,
+                        CUSTOM_AUDIENCE_WITH_EMPTY_ADS,
                         EMPTY_AD_SELECTION_SIGNALS,
                         EMPTY_BUYER_SIGNALS,
                         EMPTY_CONTEXTUAL_SIGNALS,
