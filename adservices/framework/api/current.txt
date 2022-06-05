@@ -54,6 +54,13 @@ package android.adservices.adselection {
     method @NonNull public android.net.Uri getRenderUrl();
   }
 
+  public static final class AdSelectionOutcome.Builder {
+    ctor public AdSelectionOutcome.Builder();
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome build();
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setAdSelectionId(long);
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUrl(@NonNull android.net.Uri);
+  }
+
   public final class AdWithBid implements android.os.Parcelable {
     ctor public AdWithBid(@NonNull android.adservices.common.AdData, double);
     method public int describeContents();
