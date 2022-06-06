@@ -36,4 +36,9 @@
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"ନିର୍ଦ୍ଦିଷ୍ଟ ଆଗ୍ରହ ସୃଷ୍ଟି କରୁଥିବା ଆପଣଙ୍କ ଆପ୍ସ"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"ନିର୍ଦ୍ଦିଷ୍ଟ ଆଗ୍ରହ ସୃଷ୍ଟି କରୁଥିବା ଆପଣଙ୍କ ଆପ୍ସକୁ ପରିଚାଳନା କରନ୍ତୁ"</string>
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"ବିଜ୍ଞାପନ ପାଇଁ ଆପଣଙ୍କ ସାଧାରଣ ଆଗ୍ରହଗୁଡ଼ିକୁ ପରିଚାଳନା କରନ୍ତୁ"</string>
+    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
+    <skip />
 </resources>
