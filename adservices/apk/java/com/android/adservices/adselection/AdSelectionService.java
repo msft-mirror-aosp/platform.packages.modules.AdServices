@@ -43,4 +43,11 @@ public class AdSelectionService extends Service {
     public IBinder onBind(Intent intent) {
         return Objects.requireNonNull(mAdSelectionService);
     }
+
+    @Override
+    public void onDestroy() {
+        if (mAdSelectionService != null) {
+            mAdSelectionService.destroy();
+        }
+    }
 }
