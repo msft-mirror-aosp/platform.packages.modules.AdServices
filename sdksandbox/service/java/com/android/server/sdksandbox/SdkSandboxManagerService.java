@@ -355,7 +355,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onUserUnlocking(int userId) {
         Log.i(TAG, "onUserUnlocking " + userId);
-        mHandler.post(() -> mSdkSandboxStorageManager.onUserUnlocking(userId));
+        // using postDelayed to wait for other volumes to mount
+        mHandler.postDelayed(() -> mSdkSandboxStorageManager.onUserUnlocking(userId), 20000);
     }
 
     @Override
