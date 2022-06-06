@@ -25,4 +25,6 @@ public class ResultCode {
     public static final int RESULT_OK = 0;
     /** Result code for fail. */
     public static final int RESULT_INTERNAL_ERROR = 1;
+    /** Result code for unauthorized API call. */
+    public static final int RESULT_UNAUTHORIZED_CALL = 2;
 }
