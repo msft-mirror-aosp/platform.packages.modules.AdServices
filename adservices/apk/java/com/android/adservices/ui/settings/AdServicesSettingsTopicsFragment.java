@@ -34,7 +34,8 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.topics_fragment, container, false);
 
-        TopicsViewModel viewModel = new ViewModelProvider(this).get(TopicsViewModel.class);
+        TopicsViewModel viewModel =
+                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
         initTopicsList(rootView, viewModel);
 
         return rootView;
