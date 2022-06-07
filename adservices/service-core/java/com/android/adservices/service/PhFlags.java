@@ -211,6 +211,9 @@ public final class PhFlags implements Flags {
     static final String KEY_WEB_CONTEXT_REGISTRATION_CLIENT_ALLOW_LIST =
             "web_context_registration_client_allow_list";
 
+    // Maximum possible percentage for percentage variables
+    static final int MAX_PERCENTAGE = 100;
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -223,63 +226,97 @@ public final class PhFlags implements Flags {
     public long getTopicsEpochJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getLong(
-                getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
-                /* defaultValue */ DeviceConfig.getLong(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
-                        /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS));
+        long topicsEpochJobPeriodMs =
+                SystemProperties.getLong(
+                        getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
+                        /* defaultValue */ DeviceConfig.getLong(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+                                /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS));
+        if (topicsEpochJobPeriodMs <= 0) {
+            throw new IllegalArgumentException("topicsEpochJobPeriodMs should > 0");
+        }
+        return topicsEpochJobPeriodMs;
     }
 
     @Override
     public long getTopicsEpochJobFlexMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getLong(
-                getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
-                /* defaultValue */ DeviceConfig.getLong(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                        /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
+        long topicsEpochJobFlexMs =
+                SystemProperties.getLong(
+                        getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
+                        /* defaultValue */ DeviceConfig.getLong(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                                /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
+        if (topicsEpochJobFlexMs <= 0) {
+            throw new IllegalArgumentException("topicsEpochJobFlexMs should > 0");
+        }
+        return topicsEpochJobFlexMs;
     }
 
     @Override
     public int getTopicsPercentageForRandomTopic() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
-        return SystemProperties.getInt(
-                getSystemPropertyName(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
-                /* defaultValue */ DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
-                        /* defaultValue */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
+        int topicsPercentageForRandomTopic =
+                SystemProperties.getInt(
+                        getSystemPropertyName(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
+                        /* defaultValue */ DeviceConfig.getInt(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                                /* defaultValue */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
+        if (topicsPercentageForRandomTopic < 0 || topicsPercentageForRandomTopic > MAX_PERCENTAGE) {
+            throw new IllegalArgumentException(
+                    "topicsPercentageForRandomTopic should be between 0 and 100");
+        }
+        return topicsPercentageForRandomTopic;
     }
 
     @Override
     public int getTopicsNumberOfTopTopics() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
-                /* defaultValue */ TOPICS_NUMBER_OF_TOP_TOPICS);
+        int topicsNumberOfTopTopics =
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
+                        /* defaultValue */ TOPICS_NUMBER_OF_TOP_TOPICS);
+        if (topicsNumberOfTopTopics < 0) {
+            throw new IllegalArgumentException("topicsNumberOfTopTopics should >= 0");
+        }
+
+        return topicsNumberOfTopTopics;
     }
 
     @Override
     public int getTopicsNumberOfRandomTopics() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
-                /* defaultValue */ TOPICS_NUMBER_OF_RANDOM_TOPICS);
+        int topicsNumberOfTopTopics =
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
+                        /* defaultValue */ TOPICS_NUMBER_OF_RANDOM_TOPICS);
+        if (topicsNumberOfTopTopics < 0) {
+            throw new IllegalArgumentException("topicsNumberOfTopTopics should >= 0");
+        }
+
+        return topicsNumberOfTopTopics;
     }
 
     @Override
     public int getTopicsNumberOfLookBackEpochs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
-                /* defaultValue */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
+        int topicsNumberOfLookBackEpochs =
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
+                        /* defaultValue */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
+        if (topicsNumberOfLookBackEpochs < 1) {
+            throw new IllegalArgumentException("topicsNumberOfLookBackEpochs should  >= 1");
+        }
+
+        return topicsNumberOfLookBackEpochs;
     }
 
     @Override
@@ -298,24 +335,38 @@ public final class PhFlags implements Flags {
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
-        return SystemProperties.getLong(
-                getSystemPropertyName(KEY_MAINTENANCE_JOB_PERIOD_MS),
-                /* defaultValue */ DeviceConfig.getLong(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_MAINTENANCE_JOB_PERIOD_MS,
-                        /* defaultValue */ MAINTENANCE_JOB_PERIOD_MS));
+        long maintenanceJobPeriodMs =
+                SystemProperties.getLong(
+                        getSystemPropertyName(KEY_MAINTENANCE_JOB_PERIOD_MS),
+                        /* defaultValue */ DeviceConfig.getLong(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MAINTENANCE_JOB_PERIOD_MS,
+                                /* defaultValue */ MAINTENANCE_JOB_PERIOD_MS));
+        if (maintenanceJobPeriodMs < 0) {
+            throw new IllegalArgumentException("maintenanceJobPeriodMs should  >= 0");
+        }
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return maintenanceJobPeriodMs;
     }
 
     @Override
     public long getMaintenanceJobFlexMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
-        return SystemProperties.getLong(
-                getSystemPropertyName(KEY_MAINTENANCE_JOB_FLEX_MS),
-                /* defaultValue */ DeviceConfig.getLong(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_MAINTENANCE_JOB_FLEX_MS,
-                        /* defaultValue */ MAINTENANCE_JOB_FLEX_MS));
+        long maintenanceJobFlexMs =
+                SystemProperties.getLong(
+                        getSystemPropertyName(KEY_MAINTENANCE_JOB_FLEX_MS),
+                        /* defaultValue */ DeviceConfig.getLong(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MAINTENANCE_JOB_FLEX_MS,
+                                /* defaultValue */ MAINTENANCE_JOB_FLEX_MS));
+
+        if (maintenanceJobFlexMs <= 0) {
+            throw new IllegalArgumentException("maintenanceJobFlexMs should  > 0");
+        }
+
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return maintenanceJobFlexMs;
     }
 
     @Override
@@ -1040,10 +1091,16 @@ public final class PhFlags implements Flags {
             return SDK_REQUEST_PERMITS_PER_SECOND;
         }
 
-        return DeviceConfig.getFloat(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
-                /* defaultValue */ SDK_REQUEST_PERMITS_PER_SECOND);
+        float sdkRequestPermitsPerSecond =
+                DeviceConfig.getFloat(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                        /* defaultValue */ SDK_REQUEST_PERMITS_PER_SECOND);
+
+        if (sdkRequestPermitsPerSecond <= 0) {
+            throw new IllegalArgumentException("sdkRequestPermitsPerSecond should > 0");
+        }
+        return sdkRequestPermitsPerSecond;
     }
 
     @Override
@@ -1057,10 +1114,17 @@ public final class PhFlags implements Flags {
 
     @Override
     public int getNumberOfEpochsToKeepInHistory() {
-        return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
-                /* defaultValue */ NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
+        int numberOfEpochsToKeepInHistory =
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
+                        /* defaultValue */ NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
+
+        if (numberOfEpochsToKeepInHistory < 1) {
+            throw new IllegalArgumentException("numberOfEpochsToKeepInHistory should  >= 0");
+        }
+
+        return numberOfEpochsToKeepInHistory;
     }
 
     @Override
