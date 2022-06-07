@@ -29,6 +29,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.SystemHealthParams;
 
 import org.json.JSONException;
@@ -168,17 +169,17 @@ public class EventReportingJobHandlerTest {
             .setSourceType(Source.SourceType.NAVIGATION)
             .build();
 
-    private final Source mSourceWithAppName1 = new Source.Builder()
+    private final Source mSourceWithAppName1 = SourceFixture.getValidSourceBuilder()
             .setId("1000")
             .setEventId(10L)
             .setRegistrant(Uri.parse("android-app://com.example.abc")).build();
 
-    private final Source mSourceWithAppName2 = new Source.Builder()
+    private final Source mSourceWithAppName2 = SourceFixture.getValidSourceBuilder()
             .setId("1001")
             .setEventId(11L)
             .setRegistrant(Uri.parse("android-app://com.example.xyz")).build();
 
-    private final Source mSourceWithAppName3 = new Source.Builder()
+    private final Source mSourceWithAppName3 = SourceFixture.getValidSourceBuilder()
             .setId("1002")
             .setEventId(12L)
             .setRegistrant(Uri.parse("android-app://com.example.abc")).build();

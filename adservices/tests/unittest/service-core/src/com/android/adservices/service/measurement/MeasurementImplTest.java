@@ -276,18 +276,18 @@ public final class MeasurementImplTest {
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any(), any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any(), any());
-        verify(mMeasurementDao)
-                .insertTrigger(
-                        DEFAULT_URI,
-                        VALID_TRIGGER_REGISTRATION.getReportingOrigin(),
-                        Uri.parse(
-                                ANDROID_APP_SCHEME
-                                        + DEFAULT_CONTEXT.getAttributionSource().getPackageName()),
-                        triggerTime,
-                        EVENT_TRIGGERS,
-                        VALID_TRIGGER_REGISTRATION.getAggregateTriggerData(),
-                        VALID_TRIGGER_REGISTRATION.getAggregateValues(),
-                        VALID_TRIGGER_REGISTRATION.getFilters());
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(DEFAULT_URI)
+                .setAdTechDomain(VALID_TRIGGER_REGISTRATION.getReportingOrigin())
+                .setRegistrant(Uri.parse(ANDROID_APP_SCHEME
+                        + DEFAULT_CONTEXT.getAttributionSource().getPackageName()))
+                .setTriggerTime(triggerTime)
+                .setEventTriggers(EVENT_TRIGGERS)
+                .setAggregateTriggerData(VALID_TRIGGER_REGISTRATION.getAggregateTriggerData())
+                .setAggregateValues(VALID_TRIGGER_REGISTRATION.getAggregateValues())
+                .setFilters(VALID_TRIGGER_REGISTRATION.getFilters())
+                .build();
+        verify(mMeasurementDao).insertTrigger(trigger);
     }
 
     @Test
@@ -396,7 +396,7 @@ public final class MeasurementImplTest {
         long eventTime = System.currentTimeMillis();
         long expiry = TimeUnit.DAYS.toSeconds(20);
         // Creating source for easy comparison
-        Source sampleSource = new Source.Builder()
+        Source sampleSource = SourceFixture.getValidSourceBuilder()
                 .setAdTechDomain(BaseUriExtractor.getBaseUri(DEFAULT_REGISTRATION_URI))
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
@@ -452,7 +452,7 @@ public final class MeasurementImplTest {
     @Test
     public void testGetSourceEventReports() {
         long eventTime = System.currentTimeMillis();
-        Source source = spy(new Source.Builder()
+        Source source = spy(SourceFixture.getValidSourceBuilder()
                 .setEventId(123L)
                 .setEventTime(eventTime)
                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
@@ -518,22 +518,26 @@ public final class MeasurementImplTest {
             long eventTime,
             Uri firstSourceDestination)
             throws DatastoreException {
-        verify(mMeasurementDao).insertSource(
-                sourceRegistration.getSourceEventId(),
-                registrationRequest.getTopOriginUri(),
-                firstSourceDestination,
-                sourceRegistration.getReportingOrigin(),
-                Uri.parse("android-app://"
-                        + registrationRequest.getAttributionSource().getPackageName()),
-                eventTime,
-                eventTime + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()),
-                sourceRegistration.getSourcePriority(),
-                Source.SourceType.EVENT,
-                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallAttributionWindow()),
-                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallCooldownWindow()),
-                Source.AttributionMode.TRUTHFULLY,
-                sourceRegistration.getAggregateSource(),
-                sourceRegistration.getAggregateFilterData()
-        );
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setEventId(sourceRegistration.getSourceEventId())
+                .setPublisher(registrationRequest.getTopOriginUri())
+                .setAttributionDestination(firstSourceDestination)
+                .setAdTechDomain(sourceRegistration.getReportingOrigin())
+                .setRegistrant(Uri.parse("android-app://"
+                        + registrationRequest.getAttributionSource().getPackageName()))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime
+                        + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()))
+                .setPriority(sourceRegistration.getSourcePriority())
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallAttributionWindow(
+                        TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallAttributionWindow()))
+                .setInstallCooldownWindow(
+                        TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallCooldownWindow()))
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setAggregateSource(sourceRegistration.getAggregateSource())
+                .setAggregateFilterData(sourceRegistration.getAggregateFilterData())
+                .build();
+        verify(mMeasurementDao).insertSource(source);
     }
 }
