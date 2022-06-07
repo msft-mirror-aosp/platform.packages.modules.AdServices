@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics.classifier;
 
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -60,38 +61,17 @@ public class PrecomputedLoader {
      * Retrieve a list of topicIDs from labels file.
      *
      * @return The list of topicIDs from labels.txt
-     *
      * @throws IOException An empty list will be return
      */
     @NonNull
-    public ImmutableList<Integer> retrieveLabels() {
-        // Initialize a ImmutableList.Builder to store the label iteratively
-        ImmutableList.Builder<Integer> labels = new ImmutableList.Builder();
-        String line;
-
-        try (InputStreamReader inputStreamReader =
-                     new InputStreamReader(mAssetManager.open(mLabelsFilePath))) {
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-
-            while ((line = reader.readLine()) != null) {
-                labels.add(Integer.parseInt(line));
-            }
-        } catch (IOException e) {
-            LogUtil.e(e, "Unable to read precomputed labels");
-            // When catching IOException -> return empty immutable list
-            // TODO(b/226944089): A strategy to handle exceptions
-            //  in Classifier and PrecomputedLoader
-            return ImmutableList.of();
-        }
-
-        return labels.build();
+    ImmutableList<Integer> retrieveLabels() {
+        return CommonClassifierHelper.retrieveLabels(mAssetManager, mLabelsFilePath);
     }
 
     /**
      * Retrieve the app classification topicIDs from file name here.
      *
      * @return The map from App to the list of its classification topicIDs.
-     *
      * @throws IOException An empty hash map will be return
      */
     @NonNull
@@ -101,7 +81,8 @@ public class PrecomputedLoader {
         String line;
 
         // The immutable set of the topics from labels file
-        ImmutableList<Integer> validTopics = retrieveLabels();
+        ImmutableList<Integer> validTopics =
+                CommonClassifierHelper.retrieveLabels(mAssetManager, mLabelsFilePath);
 
         try (InputStreamReader inputStreamReader =
                      new InputStreamReader(mAssetManager.open(mTopAppsFilePath))) {
