@@ -683,8 +683,6 @@ public class AttributionJobHandlerTest {
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
         jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
-        jsonObject1.put("filters", createFilterJSONObject());
-        jsonObject1.put("not_filters", createFilterJSONObject());
         JSONObject jsonObject2 = new JSONObject();
         jsonObject2.put("key_piece", "0xA80");
         jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
@@ -714,7 +712,51 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceAggregateContributions(sourceArg.capture());
         verify(mMeasurementDao).insertAggregateReport(any());
+        Assert.assertEquals(sourceArg.getValue().getAggregateContributions(), 32768 + 1644);
+    }
+
+    @Test
+    public void shouldNotGenerateAggregateReportWhenExceedingAggregateContributionsLimit()
+            throws DatastoreException, JSONException {
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        Trigger trigger = new Trigger.Builder()
+                .setId("triggerId1")
+                .setStatus(Trigger.Status.PENDING)
+                .setDedupKey(1L)
+                .setAggregateTriggerData(triggerDatas.toString())
+                .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                .build();
+
+        Source source = new Source.Builder()
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                .setAggregateContributions(65536 - 32768 - 1644 + 1)
+                .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
+        attributionService.performPendingAttributions();
+        verify(mMeasurementDao, never()).updateSourceAggregateContributions(any());
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
     }
 
     @Test

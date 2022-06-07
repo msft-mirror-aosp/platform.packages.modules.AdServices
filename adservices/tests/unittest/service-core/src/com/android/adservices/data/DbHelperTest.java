@@ -40,7 +40,7 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch("topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch("topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch("topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_source", 18));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_source", 19));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_trigger", 12));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_adtech_urls", 2));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_event_report", 12));

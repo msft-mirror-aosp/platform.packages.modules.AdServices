@@ -118,6 +118,13 @@ public interface IMeasurementDao {
     void updateSourceDedupKeys(Source source) throws DatastoreException;
 
     /**
+     * Updates the value of aggregate contributions for the corresponding {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateContributions(Source source) throws DatastoreException;
+
+    /**
      * Returns list of all the reports associated with the {@link Source}.
      *
      * @param source for querying reports

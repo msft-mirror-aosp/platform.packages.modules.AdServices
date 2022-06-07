@@ -114,6 +114,8 @@ class SqliteObjectMapper {
                 builder::setAggregateFilterData);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
+        setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                builder::setAggregateContributions);
         return builder.build();
     }
 
