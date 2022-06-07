@@ -45,11 +45,14 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch("msmt_adtech_urls", 2));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_event_report", 12));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_attribution_rate_limit", 6));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_aggregate_report", 9));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_aggregate_encryption_key", 4));
         assertTrue(doesIndexExist("idx_msmt_source_ad_rt_et"));
         assertTrue(doesIndexExist("idx_msmt_trigger_ad_rt_tt"));
         assertTrue(doesIndexExist("idx_msmt_source_et"));
         assertTrue(doesIndexExist("idx_msmt_trigger_tt"));
         assertTrue(doesIndexExist("idx_msmt_attribution_rate_limit_ss_ds_tt"));
+        assertTrue(doesIndexExist("idx_msmt_aggregate_encryption_key_et"));
     }
 
     public boolean doesTableExistAndColumnCountMatch(String tableName, int columnCount) {
