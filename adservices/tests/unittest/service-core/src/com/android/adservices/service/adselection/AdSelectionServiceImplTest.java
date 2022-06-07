@@ -64,8 +64,10 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.MockResponse;
@@ -76,6 +78,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -115,7 +118,7 @@ public class AdSelectionServiceImplTest {
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
     // This object access some system APIs
-    @Mock DevContextFilter mDevContextFilter;
+    @Mock public DevContextFilter mDevContextFilter;
 
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
 
@@ -1214,6 +1217,30 @@ public class AdSelectionServiceImplTest {
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
                                 SHORT_API_NAME_RESET_ALL_OVERRIDES, STATUS_INTERNAL_ERROR));
+    }
+
+    @Test
+    public void testCloseJSScriptEngineConnectionAtShutDown() {
+        MockitoSession staticMockitoSession =
+                ExtendedMockito.mockitoSession().mockStatic(JSScriptEngine.class).startMocking();
+
+        try {
+            AdSelectionServiceImpl adSelectionService =
+                    new AdSelectionServiceImpl(
+                            mAdSelectionEntryDao,
+                            mCustomAudienceDao,
+                            mClient,
+                            mDevContextFilter,
+                            mExecutorService,
+                            CONTEXT,
+                            mAdServicesLoggerSpy);
+
+            adSelectionService.destroy();
+
+            ExtendedMockito.verify(JSScriptEngine::shutdown);
+        } finally {
+            staticMockitoSession.finishMocking();
+        }
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
