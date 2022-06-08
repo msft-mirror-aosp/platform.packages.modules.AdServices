@@ -62,6 +62,7 @@ android_app {
 android_library {
     name: "adservices-assets-lib",
     sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     asset_dirs: [
         "assets",
     ],
