@@ -29,8 +29,10 @@ import android.adservices.topics.GetTopicsResult;
 import android.adservices.topics.IGetTopicsCallback;
 import android.content.AttributionSource;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.test.mock.MockContext;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -47,6 +49,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -81,7 +84,9 @@ public class TopicsServiceImplTest {
     private TopicsServiceImpl mTopicsServiceImpl;
     private CountDownLatch mGetTopicsCallbackLatch;
     private CallerMetadata mCallerMetadata;
+    private TopicsWorker mTopicsWorker;
     private TopicsDao mTopicsDao;
+    private GetTopicsParam mRequest;
 
     @Mock private EpochManager mMockEpochManager;
     @Mock private Flags mMockFlags;
@@ -99,30 +104,60 @@ public class TopicsServiceImplTest {
         CacheManager cacheManager = new CacheManager(mMockEpochManager,
                 mTopicsDao,
                 mMockFlags);
-        TopicsWorker mTopicsWorker = new TopicsWorker(mMockEpochManager,
-                cacheManager,
-                mMockFlags);
+        mTopicsWorker = new TopicsWorker(mMockEpochManager, cacheManager, mMockFlags);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mTopicsServiceImpl = new TopicsServiceImpl(mContext,
                 mTopicsWorker, mAdServicesLogger, mClock);
         mCallerMetadata = new CallerMetadata.Builder()
                 .setBinderElapsedTimestamp(100L)
                 .build();
-    }
-
-    @Test
-    public void getTopics() throws InterruptedException {
         AttributionSource source =
                 new AttributionSource.Builder(SOME_UID)
                         .setPackageName(SOME_PACKAGE_NAME)
                         .setAttributionTag(SOME_ATTRIBUTION_TAG)
                         .build();
-        GetTopicsParam request =
+        mRequest =
                 new GetTopicsParam.Builder()
                         .setAttributionSource(source)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
+    }
 
+    @Test
+    public void checkNoPermission() {
+        MockContext context =
+                new MockContext() {
+                    @Override
+                    public int checkCallingOrSelfPermission(String permission) {
+                        return PackageManager.PERMISSION_DENIED;
+                    }
+                };
+
+        TopicsServiceImpl topicsService =
+                new TopicsServiceImpl(context, mTopicsWorker, mAdServicesLogger, mClock);
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+    }
+
+    @Test
+    public void getTopics() throws InterruptedException {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
@@ -136,10 +171,9 @@ public class TopicsServiceImplTest {
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
@@ -149,7 +183,7 @@ public class TopicsServiceImplTest {
                 new GetTopicsResult.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList("1", "2", "3"))
+                        .setTopics(Arrays.asList(1, 2, 3))
                         .build();
 
         // Call init() to load the cache
@@ -160,13 +194,18 @@ public class TopicsServiceImplTest {
         mGetTopicsCallbackLatch = new CountDownLatch(1);
 
         mTopicsServiceImpl.getTopics(
-                request,
+                mRequest,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
                     public void onResult(GetTopicsResult responseParcel) throws RemoteException {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
                     }
 
                     @Override
@@ -187,17 +226,6 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_emptyTopicsReturned() throws InterruptedException {
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(SOME_PACKAGE_NAME)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
-        GetTopicsParam request =
-                new GetTopicsParam.Builder()
-                        .setAttributionSource(source)
-                        .setSdkName(SOME_SDK_NAME)
-                        .build();
-
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
@@ -221,13 +249,18 @@ public class TopicsServiceImplTest {
         mGetTopicsCallbackLatch = new CountDownLatch(1);
 
         mTopicsServiceImpl.getTopics(
-                request,
+                mRequest,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
                     public void onResult(GetTopicsResult responseParcel) throws RemoteException {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
                     }
 
                     @Override
@@ -249,17 +282,6 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testGetTopics_LatencyCalculateVerify() throws InterruptedException {
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(SOME_PACKAGE_NAME)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
-        GetTopicsParam request =
-                new GetTopicsParam.Builder()
-                        .setAttributionSource(source)
-                        .setSdkName(SOME_SDK_NAME)
-                        .build();
-
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
@@ -310,13 +332,18 @@ public class TopicsServiceImplTest {
         // Send client side timestamp, working with the mock information in
         // service side to calculate the latency
         mTopicsServiceImpl.getTopics(
-                request,
+                mRequest,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
                     public void onResult(GetTopicsResult responseParcel) throws RemoteException {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        Assert.fail();
                     }
 
                     @Override

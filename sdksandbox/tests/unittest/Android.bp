@@ -16,24 +16,39 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_test {
-    name: "SdkSandboxManagerServiceUnitTests",
-    srcs: [
-        "src/**/*.java",
-        ":framework-sdksandbox-sources",
+java_defaults {
+    name: "SdkSandboxUnitTestsDefault",
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "current",
+    test_suites: [
+        "mts-adservices",
+        "general-tests"
     ],
     static_libs: [
-        "service-sdksandbox.impl",
         "androidx.test.runner",
-        "mockito-target-extended-minus-junit4",
-        "SdkSandboxTestUtils",
-        "services.core",
         "truth-prebuilt",
     ],
     libs: [
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
+    ],
+}
+
+android_test {
+    name: "SdkSandboxManagerServiceUnitTests",
+    srcs: [
+        "src/com/android/server/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
+    ],
+    defaults: ["SdkSandboxUnitTestsDefault"],
+    manifest: "SdkSandboxManagerServiceManifest.xml",
+    test_config: "SdkSandboxManagerServiceTest.xml",
+    static_libs: [
+        "service-sdksandbox.impl",
+        "mockito-target-extended-minus-junit4",
+        "SdkSandboxTestUtils",
+        "services.core",
     ],
     jni_libs: [
         // Required for ExtendedMockito
@@ -45,10 +60,24 @@ android_test {
       ":SampleServiceApp",
       ":CodeProviderWithResources",
     ],
-    min_sdk_version: "Tiramisu",
-    target_sdk_version: "current",
-    test_suites: [
-        "mts-adservices",
-        "general-tests"
+    // Add below line to address ATM post commit test module error
+    // See b/233124651 for details.
+    compile_multilib: "both",
+}
+
+android_test {
+    name: "SdkSandboxFrameworkUnitTests",
+    srcs: [
+        "src/android/app/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
+    ],
+    defaults: ["SdkSandboxUnitTestsDefault"],
+    manifest: "SdkSandboxFrameworkManifest.xml",
+    test_config: "SdkSandboxFrameworkTest.xml",
+    static_libs: [
+        "framework-sdksandbox.impl",
+    ],
+    data: [
+      ":CodeProviderWithResources",
     ],
 }

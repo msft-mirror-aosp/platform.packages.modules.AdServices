@@ -17,13 +17,19 @@
 package android.adservices.customaudience;
 
 import android.annotation.NonNull;
+import android.os.OutcomeReceiver;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the overrideCustomAudienceRemoteInfo request
+ * This POJO represents the {@link
+ * CustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
+ * Executor, OutcomeReceiver)} request
  *
- * @hide
+ * <p>It contains 3 fields {@code owner}, {@code buyer}, and {@code name} which will serve as the
+ * identifier for the specific two override fields, {@code biddingLogicJs} and {@code
+ * trustedBiddingData}
  */
 public class AddCustomAudienceOverrideRequest {
     @NonNull private final String mOwner;
@@ -33,11 +39,11 @@ public class AddCustomAudienceOverrideRequest {
     @NonNull private final String mTrustedBiddingData;
 
     public AddCustomAudienceOverrideRequest(
-            String owner,
-            String buyer,
-            String name,
-            String biddingLogicJs,
-            String trustedBiddingData) {
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String biddingLogicJs,
+            @NonNull String trustedBiddingData) {
         mOwner = owner;
         mBuyer = buyer;
         mName = name;
@@ -69,11 +75,9 @@ public class AddCustomAudienceOverrideRequest {
         return mName;
     }
 
-    /**
-     * @return The override javascript result
-     */
+    /** @return The override javascript result */
     @NonNull
-    public String getBiddingLogicJS() {
+    public String getBiddingLogicJs() {
         return mBiddingLogicJs;
     }
 

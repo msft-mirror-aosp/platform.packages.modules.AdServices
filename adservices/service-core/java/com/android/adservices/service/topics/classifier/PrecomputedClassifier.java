@@ -20,20 +20,15 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -56,30 +51,27 @@ public class PrecomputedClassifier implements Classifier {
             "classifier/precomputed_app_list_chrome_topics.csv";
 
     private final PrecomputedLoader mPrecomputedLoader;
-    private final Random mRandom;
 
     // Used to mark whether the assets are loaded
     private boolean mLoaded;
-    private ImmutableSet<Integer> mLabels;
+    private ImmutableList<Integer> mLabels;
     // The app topics map Map<App, List<Topic>>
     private Map<String, List<Integer>> mAppTopics = new HashMap<>();
 
-    private PrecomputedClassifier(
-            @NonNull PrecomputedLoader precomputedLoader,
-            @NonNull Random random) throws IOException {
+    PrecomputedClassifier(@NonNull PrecomputedLoader precomputedLoader) throws IOException {
         mPrecomputedLoader = precomputedLoader;
-        mRandom = random;
         mLoaded = false;
     }
 
-    /** Returns an instance of the Classifier given a context. */
+    /** Returns an instance of the PrecomputedClassifier given a context. */
     @NonNull
     public static PrecomputedClassifier getInstance(@NonNull Context context) {
         synchronized (PrecomputedClassifier.class) {
             if (sSingleton == null) {
                 try {
-                    sSingleton = new PrecomputedClassifier(new PrecomputedLoader(
-                            context, LABELS_FILE_PATH, TOP_APP_FILE_PATH), new Random());
+                    PrecomputedLoader precomputedLoader =
+                            new PrecomputedLoader(context, LABELS_FILE_PATH, TOP_APP_FILE_PATH);
+                    sSingleton = new PrecomputedClassifier(precomputedLoader);
                 } catch (IOException e) {
                     LogUtil.e(e, "Unable to read precomputed labels and app topics list");
                 }
@@ -112,74 +104,13 @@ public class PrecomputedClassifier implements Classifier {
             @NonNull Map<String, List<Integer>> appTopics,
             @NonNull int numberOfTopTopics,
             @NonNull int numberOfRandomTopics) {
-        Preconditions.checkArgument(numberOfTopTopics > 0,
-                "numberOfTopTopics should larger than 0");
-        Preconditions.checkArgument(numberOfRandomTopics > 0,
-                "numberOfRandomTopics should larger than 0");
-
+        // Load assets if not loaded already.
         if (!isLoaded()) {
             load();
         }
 
-        // A map from Topics to the count of its occurrences
-        Map<Integer, Integer> topicsToAppTopicCount = new HashMap<>();
-        for (List<Integer> appTopic : appTopics.values()) {
-            for (Integer topic : appTopic) {
-                topicsToAppTopicCount.put(
-                        topic, topicsToAppTopicCount.getOrDefault(topic, 0) + 1);
-            }
-        }
-
-        // Sort the topics by their count
-        List<Integer> allSortedTopics = topicsToAppTopicCount.entrySet().stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-
-        // The number of topics to pad in top topics
-        int numberOfRandomPaddingTopics = Math.max(0, numberOfTopTopics - allSortedTopics.size());
-        List<Integer> topTopics = allSortedTopics.subList(
-                0, Math.min(numberOfTopTopics, allSortedTopics.size()));
-
-        // If the size of topTopics smaller than numberOfTopTopics,
-        // the top topics list will be padded by numberOfRandomPaddingTopics random topics.
-        return getRandomTopics(topTopics,
-                numberOfRandomTopics + numberOfRandomPaddingTopics);
-    }
-
-    // This helper function will populate numOfRandomTopics random topics in the topTopics list.
-    @NonNull
-    private List<Integer> getRandomTopics(
-            @NonNull List<Integer> topTopics,
-            @NonNull int numberOfRandomTopics) {
-        if (numberOfRandomTopics <= 0) {
-            return topTopics;
-        }
-
-        List<Integer> returnedTopics = new ArrayList<>();
-
-        // First add all the top topics
-        returnedTopics.addAll(topTopics);
-
-        // Counter of how many random topics need to add
-        int topicsCounter = numberOfRandomTopics;
-
-        // Then add random topics
-        while (topicsCounter > 0 && returnedTopics.size() < mLabels.size()) {
-            // TODO(b/226457861): unit test for this random logic
-            int randInt = mRandom.nextInt(mLabels.size());
-            // mLabels is an immutable set,
-            // it should be converted to array before picking up one element randomly
-            Integer randTopic = Integer.parseInt(mLabels.toArray()[randInt].toString());
-            if (returnedTopics.contains(randTopic)) {
-                continue;
-            }
-
-            returnedTopics.add(randTopic);
-            topicsCounter--;
-        }
-
-        return returnedTopics;
+        return CommonClassifierHelper.getTopTopics(
+                appTopics, mLabels, new Random(), numberOfTopTopics, numberOfRandomTopics);
     }
 
     // Load labels and app topics.

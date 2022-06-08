@@ -25,7 +25,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
+        classpath 'com.android.tools.build:gradle:7.0.4'
     }
 }
 apply plugin: 'com.android.application'
@@ -41,13 +41,31 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['java','../service-core/java']
-            java.setIncludes(new HashSet(['com/android/adservices/ui/**/*.java','com/android/adservices/service/consent/*.java']))
+            java.srcDirs = [
+                    'java',
+                    '../service-core/java',
+                    '../../../../../external/guava/guava/src',
+            ]
+            java.setIncludes(new HashSet([
+                    'com/android/adservices/ui/**/*.java',
+                    'com/android/adservices/service/consent/*.java',
+                    'com/google/common/collect/*.java',
+            ]))
             res.srcDirs = ['res']
         }
 
         androidTest {
-            java.srcDirs = ['tests/src']
+            java.srcDirs = [
+                'tests/src',
+                'unittest/src',
+                '../../../../../external/mockito/src/main/java',
+                '../../../../../external/dexmaker/dexmaker-mockito-inline-extended/src/main/java',
+            ]
+            java.setIncludes(new HashSet([
+                'com/android/adservices/ui/**/*.java',
+                'org/mockito/*.java',
+                'com/android/dx/mockito/inline/extended/*.java',
+            ]))
         }
     }
     buildToolsVersion '30.0.2'

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics.classifier;
 
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -25,7 +26,6 @@ import com.android.adservices.LogUtil;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -64,27 +64,8 @@ public class PrecomputedLoader {
      * @throws IOException An empty list will be return
      */
     @NonNull
-    public ImmutableSet<Integer> retrieveLabels() {
-        // Initialize a ImmutableSet.Builder to store the label iteratively
-        ImmutableSet.Builder<Integer> labels = new ImmutableSet.Builder();
-        String line;
-
-        try (InputStreamReader inputStreamReader =
-                     new InputStreamReader(mAssetManager.open(mLabelsFilePath))) {
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-
-            while ((line = reader.readLine()) != null) {
-                labels.add(Integer.parseInt(line));
-            }
-        } catch (IOException e) {
-            LogUtil.e(e, "Unable to read precomputed labels");
-            // When catching IOException -> return empty immutable set
-            // TODO(b/226944089): A strategy to handle exceptions
-            //  in Classifier and PrecomputedLoader
-            return ImmutableSet.<Integer>builder().build();
-        }
-
-        return labels.build();
+    ImmutableList<Integer> retrieveLabels() {
+        return CommonClassifierHelper.retrieveLabels(mAssetManager, mLabelsFilePath);
     }
 
     /**
@@ -100,7 +81,8 @@ public class PrecomputedLoader {
         String line;
 
         // The immutable set of the topics from labels file
-        ImmutableSet<Integer> validTopics = retrieveLabels();
+        ImmutableList<Integer> validTopics =
+                CommonClassifierHelper.retrieveLabels(mAssetManager, mLabelsFilePath);
 
         try (InputStreamReader inputStreamReader =
                      new InputStreamReader(mAssetManager.open(mTopAppsFilePath))) {
