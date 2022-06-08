@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.cts.adselection;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -101,23 +101,6 @@ public class AdSelectionManagerTest {
     }
 
     @Test
-    public void testAddOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        AddAdSelectionOverrideRequest request =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
-
-        ListenableFuture<Void> result =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
-
-        // Asserting no exception since there is no returned value
-        result.get(10, TimeUnit.SECONDS);
-    }
-
-    @Test
     public void testAddOverrideFailsWithDebugModeDisabled() throws Exception {
         Assume.assumeFalse(mIsDebugMode);
 
@@ -140,50 +123,6 @@ public class AdSelectionManagerTest {
     }
 
     @Test
-    public void testRemoveNotExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        RemoveAdSelectionOverrideRequest request =
-                new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
-
-        ListenableFuture<Void> result =
-                mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
-
-        // Asserting no exception since there is no returned value
-        result.get(10, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void testRemoveExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        AddAdSelectionOverrideRequest addRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
-
-        ListenableFuture<Void> addResult =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(addRequest);
-
-        // Asserting no exception since there is no returned value
-        addResult.get(10, TimeUnit.SECONDS);
-
-        RemoveAdSelectionOverrideRequest removeRequest =
-                new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
-
-        ListenableFuture<Void> removeResult =
-                mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(removeRequest);
-
-        // Asserting no exception since there is no returned value
-        removeResult.get(10, TimeUnit.SECONDS);
-    }
-
-    @Test
     public void testRemoveOverrideFailsWithDebugModeDisabled() throws Exception {
         Assume.assumeFalse(mIsDebugMode);
 
@@ -202,23 +141,6 @@ public class AdSelectionManagerTest {
                             result.get(10, TimeUnit.SECONDS);
                         });
         assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    public void testResetAllOverridesSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        AdSelectionClient adSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ListenableFuture<Void> result =
-                adSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
-
-        // Asserting no exception since there is no returned value
-        result.get(10, TimeUnit.SECONDS);
     }
 
     @Test
