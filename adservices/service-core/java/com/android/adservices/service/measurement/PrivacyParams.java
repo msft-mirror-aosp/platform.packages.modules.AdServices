@@ -141,12 +141,12 @@ public final class PrivacyParams {
     /**
      * Default and minimum value for cooldown period of source which led to installation.
      */
-    public static final long MIN_INSTALL_COOLDOWN_WINDOW = 0;
+    public static final long MIN_POST_INSTALL_EXCLUSIVITY_WINDOW = 0;
 
     /**
-     * There is no upper limit to install cooldown period, so set it to max value.
+     * Maximum acceptable install cooldown period.
      */
-    public static final long MAX_INSTALL_COOLDOWN_WINDOW = TimeUnit.DAYS.toSeconds(30);
+    public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
     private PrivacyParams() {
     }

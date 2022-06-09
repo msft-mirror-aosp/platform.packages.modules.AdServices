@@ -17,6 +17,7 @@ package com.example.adservices.samples.topics.sampleapp;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.os.Bundle;
 import android.util.Log;
@@ -62,45 +63,66 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerGetTopicsButton() {
-        mTopicsClientButton.setOnClickListener(v -> {
-            mResultTextView.setText("");
-            for (String sdkName : mSdkNameList) {
-                mAdvertisingTopicsClient = new AdvertisingTopicsClient.Builder()
-                    .setContext(this)
-                    .setSdkName(sdkName)
-                    .setExecutor(CALLBACK_EXECUTOR)
-                    .build();
-                ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
-                        mAdvertisingTopicsClient.getTopics();
+        mTopicsClientButton.setOnClickListener(
+                v -> {
+                    mResultTextView.setText("");
+                    for (String sdkName : mSdkNameList) {
+                        mAdvertisingTopicsClient =
+                                new AdvertisingTopicsClient.Builder()
+                                        .setContext(this)
+                                        .setSdkName(sdkName)
+                                        .setExecutor(CALLBACK_EXECUTOR)
+                                        .build();
+                        ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
+                                mAdvertisingTopicsClient.getTopics();
 
-                Futures.addCallback(
-                        getTopicsResponseFuture,
-                        new FutureCallback<GetTopicsResponse>() {
-                            @Override
-                            public void onSuccess(GetTopicsResponse result) {
-                                Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
-                                String topics = getTopics(result.getTopics());
-                                mResultTextView.append(sdkName + "'s topics: "
-                                        + NEWLINE + topics + NEWLINE);
-                                Log.d(TAG, sdkName + "'s topics: " + NEWLINE + topics + NEWLINE);
-                            }
+                        Futures.addCallback(
+                                getTopicsResponseFuture,
+                                new FutureCallback<GetTopicsResponse>() {
+                                    @Override
+                                    public void onSuccess(GetTopicsResponse result) {
+                                        Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
+                                        String topics = getTopics(result.getTopics());
+                                        mResultTextView.append(
+                                                sdkName
+                                                        + "'s topics: "
+                                                        + NEWLINE
+                                                        + topics
+                                                        + NEWLINE);
+                                        Log.d(
+                                                TAG,
+                                                sdkName
+                                                        + "'s topics: "
+                                                        + NEWLINE
+                                                        + topics
+                                                        + NEWLINE);
+                                    }
 
-                            @Override
-                            public void onFailure(Throwable t) {
-                                Log.e(TAG, "Failed to getTopics for sdk " + sdkName);
-                                mResultTextView.append("Failed to getTopics for sdk "
-                                        + sdkName + NEWLINE);
-                            }
-                        },
-                        directExecutor());
-            }
-        });
+                                    @Override
+                                    public void onFailure(Throwable t) {
+                                        Log.e(
+                                                TAG,
+                                                "Failed to getTopics for sdk "
+                                                        + sdkName
+                                                        + ": "
+                                                        + t.getMessage());
+                                        mResultTextView.append(
+                                                "Failed to getTopics for sdk "
+                                                        + sdkName
+                                                        + ": "
+                                                        + t.getMessage()
+                                                        + NEWLINE);
+                                    }
+                                },
+                                directExecutor());
+                    }
+                });
     }
 
-    private String getTopics(List<String> arr) {
+    private String getTopics(List<Integer> arr) {
         StringBuilder sb = new StringBuilder();
         int index = 1;
-        for (String topic : arr) {
+        for (int topic : arr) {
             sb.append(index++).append(". ").append(topic).append(NEWLINE);
         }
         return sb.toString();

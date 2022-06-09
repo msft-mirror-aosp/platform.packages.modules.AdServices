@@ -26,11 +26,11 @@ import java.util.Objects;
 public class GetTopicsResponse {
     private final List<Long> mTaxonomyVersions;
     private final List<Long> mModelVersions;
-    private final List<String> mTopics;
+    private final List<Integer> mTopics;
     private GetTopicsResponse(
             @NonNull List<Long> taxonomyVersions,
             @NonNull List<Long> modelVersions,
-            @NonNull List<String> topics) {
+            @NonNull List<Integer> topics) {
         mTaxonomyVersions = taxonomyVersions;
         mModelVersions = modelVersions;
         mTopics = topics;
@@ -47,10 +47,13 @@ public class GetTopicsResponse {
     public List<Long> getModelVersions() {
         return mModelVersions;
     }
+
+    /** Get the Topics. */
     @NonNull
-    public List<String> getTopics() {
+    public List<Integer> getTopics() {
         return mTopics;
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -64,6 +67,7 @@ public class GetTopicsResponse {
                 && mModelVersions.equals(that.mModelVersions)
                 && mTopics.equals(that.mTopics);
     }
+
     @Override
     public int hashCode() {
         return Objects.hash(mTaxonomyVersions, mModelVersions, mTopics);
@@ -76,7 +80,7 @@ public class GetTopicsResponse {
     public static final class Builder {
         private List<Long> mTaxonomyVersions = new ArrayList<>();
         private List<Long> mModelVersions = new ArrayList<>();
-        private List<String> mTopics = new ArrayList<>();
+        private List<Integer> mTopics = new ArrayList<>();
         public Builder() {}
 
         /** Set the Taxonomy Version. */
@@ -92,7 +96,7 @@ public class GetTopicsResponse {
         }
 
         /** Set the list of the returned Topics */
-        public @NonNull Builder setTopics(@NonNull List<String> topics) {
+        public @NonNull Builder setTopics(@NonNull List<Integer> topics) {
             mTopics = topics;
             return this;
         }

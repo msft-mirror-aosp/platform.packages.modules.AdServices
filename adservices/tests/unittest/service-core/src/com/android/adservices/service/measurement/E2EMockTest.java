@@ -22,12 +22,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -114,19 +110,36 @@ public abstract class E2EMockTest extends E2ETest {
                 reportingJob.mTimestamp
                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                     reportingJob.mTimestamp);
-        ArgumentCaptor<Uri> destination = ArgumentCaptor.forClass(Uri.class);
+        ArgumentCaptor<Uri> eventDestination = ArgumentCaptor.forClass(Uri.class);
         ArgumentCaptor<EventReport> eventReport = ArgumentCaptor.forClass(EventReport.class);
         verify(eventReportingJobHandler, atLeast(0))
                 .createReportJsonPayload(eventReport.capture());
-        ArgumentCaptor<JSONObject> payload = ArgumentCaptor.forClass(JSONObject.class);
+        ArgumentCaptor<JSONObject> eventPayload = ArgumentCaptor.forClass(JSONObject.class);
         verify(eventReportingJobHandler, atLeast(0))
-                .makeHttpPostRequest(destination.capture(), payload.capture());
+                .makeHttpPostRequest(eventDestination.capture(), eventPayload.capture());
+
+        // Set up aggregate reporting job handler spy
+        AggregateReportingJobHandler aggregateReportingJobHandler =
+                Mockito.spy(new AggregateReportingJobHandler(sDatastoreManager));
+        Mockito.doReturn(200).when(aggregateReportingJobHandler)
+                .makeHttpPostRequest(any(), any());
+
+        // Perform aggregate reports and capture arguments
+        aggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                reportingJob.mTimestamp
+                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                    reportingJob.mTimestamp);
+        ArgumentCaptor<Uri> aggregateDestination = ArgumentCaptor.forClass(Uri.class);
+        ArgumentCaptor<JSONObject> aggregatePayload = ArgumentCaptor.forClass(JSONObject.class);
+        verify(aggregateReportingJobHandler, atLeast(0))
+                .makeHttpPostRequest(aggregateDestination.capture(), aggregatePayload.capture());
 
         // Collect actual reports
-        processEventReports(
-                eventReport.getAllValues(), destination.getAllValues(), payload.getAllValues());
+        processEventReports(eventReport.getAllValues(), eventDestination.getAllValues(),
+                eventPayload.getAllValues());
 
-        processAggregateReports(getAggregateReportsFromDatastore());
+        processAggregateReports(aggregateDestination.getAllValues(),
+                aggregatePayload.getAllValues());
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
@@ -151,65 +164,47 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
-    void processAggregateReports(List<JSONObject> aggregateReports) {
-        mActualOutput.mAggregateReportObjects.addAll(aggregateReports);
-    }
-
-    private static List<JSONObject> getAggregateReportsFromDatastore() {
-        List<JSONObject> result = new ArrayList<>();
-        try {
-            SQLiteDatabase db = DbHelper.getInstance(sContext).getReadableDatabase();
-            Cursor cursor = db.query(
-                    "msmt_aggregate_report",
-                    new String[] {
-                        "publisher",
-                        "attribution_destination",
-                        "scheduled_report_time",
-                        "reporting_origin",
-                        "debug_cleartext_payload"},
-                        null, null, null, null, null, null);
-            while (cursor.moveToNext()) {
-                result.add(getAggregateReportObjectFromCursor(cursor));
-            }
-            return result;
-        } catch (SQLiteException | JSONException ignored) {
-            return result;
-        }
-    }
-
-    private static JSONObject getAggregateReportObjectFromCursor(Cursor cursor)
+    void processAggregateReports(List<Uri> destinations, List<JSONObject> payloads)
             throws JSONException {
-        String payloadStr = cursor.getString(cursor.getColumnIndex("debug_cleartext_payload"));
-        String sourceSite = cursor.getString(cursor.getColumnIndex("publisher"));
-        String attributionDestination =
-                cursor.getString(cursor.getColumnIndex("attribution_destination"));
-        JSONObject payload =
-                getAggregatablePayloadForTest(payloadStr, sourceSite, attributionDestination);
-        Map<String, Object> map = new HashMap<>();
-        map.put(TestFormatJsonMapping.REPORT_TIME_KEY,
-                cursor.getLong(cursor.getColumnIndex("scheduled_report_time")));
-        map.put(TestFormatJsonMapping.REPORT_TO_KEY,
-                cursor.getString(cursor.getColumnIndex("reporting_origin")));
-        map.put(TestFormatJsonMapping.PAYLOAD_KEY, payload);
-        return new JSONObject(map);
+        List<JSONObject> aggregateReportObjects = getAggregateReportObjects(destinations, payloads);
+        mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
-    private static JSONObject getAggregatablePayloadForTest(String payloadStr, String sourceSite,
-            String attributionDestination) throws JSONException {
-        JSONObject payloadJson = new JSONObject(payloadStr);
-        List<JSONObject> histograms = new ArrayList<>();
-        JSONArray dataArr = payloadJson.getJSONArray("data");
-        for (int i = 0; i < dataArr.length(); i++) {
-            JSONObject pair = dataArr.getJSONObject(i);
-            JSONObject mapped = new JSONObject()
-                    .put(AggregateHistogramKeys.BUCKET, pair.getString("bucket"))
-                    .put(AggregateHistogramKeys.VALUE, pair.getInt("value"));
-            histograms.add(mapped);
+    private List<JSONObject> getAggregateReportObjects(List<Uri> destinations,
+            List<JSONObject> payloads) throws JSONException {
+        List<JSONObject> result = new ArrayList<>();
+        for (int i = 0; i < destinations.size(); i++) {
+            JSONObject sharedInfo = new JSONObject(payloads.get(i).getString("shared_info"));
+            result.add(new JSONObject()
+                    .put(TestFormatJsonMapping.REPORT_TIME_KEY,
+                            sharedInfo.getLong("scheduled_report_time") * 1000)
+                    .put(TestFormatJsonMapping.REPORT_TO_KEY, destinations.get(i).toString())
+                    .put(TestFormatJsonMapping.PAYLOAD_KEY,
+                            getAggregatablePayloadForTest(payloads.get(i))));
         }
-        Map<String, Object> map = new HashMap<>();
-        map.put(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, attributionDestination);
-        map.put(AggregateReportPayloadKeys.SOURCE_SITE, sourceSite);
-        map.put(AggregateReportPayloadKeys.HISTOGRAMS, histograms);
-        return new JSONObject(map);
+        return result;
+    }
+
+    private static JSONObject getAggregatablePayloadForTest(JSONObject data) throws JSONException {
+        String payloadJson = data.getJSONArray("aggregation_service_payloads")
+                .getJSONObject(0)
+                .getString("debug_cleartext_payload");
+        JSONArray histograms = new JSONObject(payloadJson).getJSONArray("data");
+        return new JSONObject()
+                .put(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
+                        data.getString("attribution_destination"))
+                .put(AggregateReportPayloadKeys.SOURCE_SITE, data.getString("source_site"))
+                .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(histograms));
+    }
+
+    private static JSONArray getAggregateHistograms(JSONArray histograms) throws JSONException {
+        List<JSONObject> result = new ArrayList<>();
+        for (int i = 0; i < histograms.length(); i++) {
+            JSONObject obj = histograms.getJSONObject(i);
+            result.add(new JSONObject()
+                    .put(AggregateHistogramKeys.BUCKET, obj.getString("bucket"))
+                    .put(AggregateHistogramKeys.VALUE, obj.getInt("value")));
+        }
+        return new JSONArray(result);
     }
 }

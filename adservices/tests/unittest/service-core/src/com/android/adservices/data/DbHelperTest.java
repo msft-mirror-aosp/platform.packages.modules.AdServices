@@ -33,23 +33,26 @@ public class DbHelperTest {
 
     @Test
     public void testOnCreate() {
-        assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 3));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_taxonomy", 4));
         assertTrue(doesTableExistAndColumnCountMatch("topics_app_classification_topics", 6));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 4));
-        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 8));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_caller_can_learn_topic", 6));
+        assertTrue(doesTableExistAndColumnCountMatch("topics_top_topics", 10));
         assertTrue(doesTableExistAndColumnCountMatch("topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch("topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch("topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_source", 18));
-        assertTrue(doesTableExistAndColumnCountMatch("msmt_trigger", 11));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_trigger", 12));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_adtech_urls", 2));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_event_report", 12));
         assertTrue(doesTableExistAndColumnCountMatch("msmt_attribution_rate_limit", 6));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_aggregate_report", 9));
+        assertTrue(doesTableExistAndColumnCountMatch("msmt_aggregate_encryption_key", 4));
         assertTrue(doesIndexExist("idx_msmt_source_ad_rt_et"));
         assertTrue(doesIndexExist("idx_msmt_trigger_ad_rt_tt"));
         assertTrue(doesIndexExist("idx_msmt_source_et"));
         assertTrue(doesIndexExist("idx_msmt_trigger_tt"));
         assertTrue(doesIndexExist("idx_msmt_attribution_rate_limit_ss_ds_tt"));
+        assertTrue(doesIndexExist("idx_msmt_aggregate_encryption_key_et"));
     }
 
     public boolean doesTableExistAndColumnCountMatch(String tableName, int columnCount) {

@@ -47,7 +47,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Unit test for {@link TopicsWorker}.
@@ -93,10 +92,9 @@ public class TopicsWorkerTest {
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
@@ -112,7 +110,7 @@ public class TopicsWorkerTest {
                         .setResultCode(RESULT_OK)
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList("1", "2", "3"))
+                        .setTopics(Arrays.asList(1, 2, 3))
                         .build();
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
@@ -161,10 +159,9 @@ public class TopicsWorkerTest {
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
@@ -202,10 +199,9 @@ public class TopicsWorkerTest {
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);

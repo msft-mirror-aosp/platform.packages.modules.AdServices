@@ -78,6 +78,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private MockitoSession mStaticMockSession = null;
     private Context mSpyContext;
 
+    private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
     private static final String SDK_PROVIDER_PACKAGE = "com.android.codeprovider_1";
     private static final String SDK_PROVIDER_RESOURCES_PACKAGE =
@@ -366,13 +367,14 @@ public class SdkSandboxManagerServiceUnitTest {
 
     /* Tests resources defined in CodeProviderWithResources may be read. */
     @Test
-    public void testCodeContextResourcesAndAssetsAndSdkName() throws Exception {
+    public void testCodeContextResourcesAndAssets() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         PackageManager pm = context.getPackageManager();
         ApplicationInfo info = pm.getApplicationInfo(SDK_PROVIDER_RESOURCES_PACKAGE,
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
         assertThat(info).isNotNull();
-        SandboxedSdkContext sandboxedSdkContext = new SandboxedSdkContext(context, info, SDK_NAME);
+        SandboxedSdkContext sandboxedSdkContext =
+                new SandboxedSdkContext(context, CLIENT_PACKAGE_NAME, info, SDK_NAME, null, null);
         Resources resources = sandboxedSdkContext.getResources();
 
         int integerId = resources.getIdentifier("test_integer", "integer",
@@ -389,9 +391,6 @@ public class SdkSandboxManagerServiceUnitTest {
         BufferedReader reader = new BufferedReader(
                 new InputStreamReader(assetManager.open("test-asset.txt")));
         assertThat(reader.readLine()).isEqualTo("This is a test asset");
-
-        String sdkName = sandboxedSdkContext.getSdkName();
-        assertThat(sdkName).isEqualTo(SDK_NAME);
     }
 
     /** Tests that only allowed intents may be sent from the sdk sandbox. */
@@ -578,8 +577,15 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         @Override
-        public void loadSdk(IBinder codeToken, ApplicationInfo info, String sdkName,
-                String sdkProviderClass, Bundle params,
+        public void loadSdk(
+                String callingPackageName,
+                IBinder codeToken,
+                ApplicationInfo info,
+                String sdkName,
+                String sdkProviderClass,
+                String ceDataDir,
+                String deDataDir,
+                Bundle params,
                 ISdkSandboxToSdkSandboxManagerCallback callback) {
             mSdkSandboxToManagerCallback = callback;
         }
