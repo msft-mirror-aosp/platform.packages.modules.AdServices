@@ -28,9 +28,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -50,6 +53,8 @@ public class CacheManager implements Dumpable {
 
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
+    // HashSet<BlockedTopic>
+    private HashSet<Topic> mCachedBlockedTopics;
 
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
@@ -80,15 +85,24 @@ public class CacheManager implements Dumpable {
      */
     public void loadCache() {
         // Retrieve the cache from DB.
+        long currentEpoch = mEpochManager.getCurrentEpochId();
+        int lookbackEpochs = mFlags.getTopicsNumberOfLookBackEpochs();
         // Map<EpochId, Map<Pair<App, Sdk>, Topic>
         Map<Long, Map<Pair<String, String>, Topic>> cacheFromDb =
-                mTopicsDao.retrieveReturnedTopics(mEpochManager.getCurrentEpochId(),
-                        mFlags.getTopicsNumberOfLookBackEpochs() + 1);
+                mTopicsDao.retrieveReturnedTopics(currentEpoch, lookbackEpochs + 1);
+        // HashSet<BlockedTopic>
+        HashSet<Topic> blockedTopicsCacheFromDb =
+                new HashSet<>(mTopicsDao.retrieveAllBlockedTopics());
 
-        LogUtil.v("CachedTopics mapping size is  " + cacheFromDb.size());
+        LogUtil.v(
+                "CacheManager.loadCache(). CachedTopics mapping size is "
+                        + cacheFromDb.size()
+                        + ", CachedBlockedTopics mapping size is "
+                        + blockedTopicsCacheFromDb.size());
         try {
             mReadWriteLock.writeLock().lock();
             mCachedTopics = cacheFromDb;
+            mCachedBlockedTopics = blockedTopicsCacheFromDb;
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -121,6 +135,27 @@ public class CacheManager implements Dumpable {
 
         // TODO(b/223916758): randomly shuffle the topics before returning.
         return topics;
+    }
+
+    /**
+     * Gets a list of all topics that could be returned to the user in the last
+     * numberOfLookBackEpochs epochs. Does not include the current epoch, so range is
+     * [currentEpochId - numberOfLookBackEpochs, currentEpochId - 1].
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        // We will need to look at the 3 historical epochs starting from last epoch.
+        long epochId = mEpochManager.getCurrentEpochId() - 1;
+        HashSet<Topic> topics = new HashSet<>();
+        for (int numEpoch = 0; numEpoch < mFlags.getTopicsNumberOfLookBackEpochs(); numEpoch++) {
+            if (mCachedTopics.containsKey(epochId - numEpoch)) {
+                topics.addAll(mCachedTopics.get(epochId - numEpoch).values());
+            }
+        }
+        topics.removeAll(mCachedBlockedTopics);
+        return ImmutableList.copyOf(topics);
     }
 
     @Override

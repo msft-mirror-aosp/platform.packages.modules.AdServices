@@ -182,10 +182,14 @@ public class AdSelectionManager {
     /**
      * Overrides the AdSelection API to avoid fetching data from remote servers and use the data
      * provided in {@link AddAdSelectionOverrideRequest} instead. The {@link
-     * AddAdSelectionOverrideRequest} is provided by the Ads SDK. The receiver either returns a
-     * {@code void} for a successful run, or an {@link AdServicesException} indicates the error.
+     * AddAdSelectionOverrideRequest} is provided by the Ads SDK.
      *
-     * @hide
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
+     *     AdServicesException} indicates the error.
      */
     @NonNull
     public void overrideAdSelectionConfigRemoteInfo(
@@ -227,10 +231,14 @@ public class AdSelectionManager {
     /**
      * Removes an override in th Ad Selection API with associated the data in {@link
      * RemoveAdSelectionOverrideRequest}. The {@link RemoveAdSelectionOverrideRequest} is provided
-     * by the Ads SDK. The receiver either returns a {@code void} for a successful run, or an {@link
-     * AdServicesException} indicates the error.
+     * by the Ads SDK.
      *
-     * @hide
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
+     *     AdServicesException} indicates the error.
      */
     @NonNull
     public void removeAdSelectionConfigRemoteInfoOverride(
@@ -269,10 +277,14 @@ public class AdSelectionManager {
     }
 
     /**
-     * Removes all override data in the Ad Selection API. The receiver either returns a {@code void}
-     * for a successful run, or an {@link AdServicesException} indicates the error.
+     * Removes all override data in the Ad Selection API.
      *
-     * @hide
+     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
+     * apps in debug mode with developer options enabled.
+     *
+     * @throws IllegalStateException if this API is not enabled for the caller
+     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
+     *     AdServicesException} indicates the error.
      */
     @NonNull
     public void resetAllAdSelectionConfigRemoteOverrides(

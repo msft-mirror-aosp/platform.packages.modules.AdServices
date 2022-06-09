@@ -34,6 +34,7 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
@@ -59,6 +60,7 @@ import java.util.stream.Stream;
 
 public class MeasurementDaoTest {
 
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "MeasurementDaoTest";
     private static final String PAYLOAD =
             "{\"operation\":\"histogram\","
@@ -66,14 +68,14 @@ public class MeasurementDaoTest {
                     + "{\"bucket\":3461,\"value\":1664}]}";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    private final Uri mAppTwoSources = Uri.parse("android-app://com.example1.two-sources");
-    private final Uri mAppOneSource = Uri.parse("android-app://com.example2.one-source");
-    private final Uri mAppNoSources = Uri.parse("android-app://com.example3.no-sources");
-    private final Uri mAppTwoTriggers = Uri.parse("android-app://com.example1.two-triggers");
-    private final Uri mAppOneTrigger = Uri.parse("android-app://com.example1.one-trigger");
-    private final Uri mAppNoTriggers = Uri.parse("android-app://com.example1.no-triggers");
-    private final Uri mInstalledPackage = Uri.parse("android-app://com.example.installed");
+    private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
+    private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
+    private static final Uri APP_NO_SOURCE = Uri.parse("android-app://com.example3.no-sources");
+    private static final Uri APP_TWO_TRIGGERS =
+            Uri.parse("android-app://com.example1.two-triggers");
+    private static final Uri APP_ONE_TRIGGER = Uri.parse("android-app://com.example1.one-trigger");
+    private static final Uri APP_NO_TRIGGERS = Uri.parse("android-app://com.example1.no-triggers");
+    private static final Uri INSTALLED_PACKAGE = Uri.parse("android-app://com.example.installed");
 
     @After
     public void cleanup() {
@@ -436,19 +438,20 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertTrigger() {
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
-                dao.insertTrigger(
-                        ValidTriggerParams.sAttributionDestination,
-                        ValidTriggerParams.sAdTechDomain,
-                        ValidTriggerParams.sRegistrant,
-                        ValidTriggerParams.TRIGGER_TIME,
-                        ValidTriggerParams.TRIGGER_DATA,
-                        ValidTriggerParams.DEDUP_KEY,
-                        ValidTriggerParams.PRIORITY,
-                        ValidTriggerParams.buildAggregateTriggerData(),
-                        ValidTriggerParams.buildAggregateValues()
-                )
-        );
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) ->
+                                dao.insertTrigger(
+                                        ValidTriggerParams.sAttributionDestination,
+                                        ValidTriggerParams.sAdTechDomain,
+                                        ValidTriggerParams.sRegistrant,
+                                        ValidTriggerParams.TRIGGER_TIME,
+                                        ValidTriggerParams.TRIGGER_DATA,
+                                        ValidTriggerParams.DEDUP_KEY,
+                                        ValidTriggerParams.PRIORITY,
+                                        ValidTriggerParams.buildAggregateTriggerData(),
+                                        ValidTriggerParams.buildAggregateValues(),
+                                        ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING));
 
         try (Cursor sourceCursor =
                      DbHelper.getInstance(sContext).getReadableDatabase()
@@ -481,7 +484,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
 
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
@@ -492,7 +496,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
     @Test
@@ -506,7 +511,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
 
         assertInvalidTriggerArguments(
                 ValidTriggerParams.sAttributionDestination,
@@ -517,7 +523,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
     @Test
@@ -531,7 +538,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
 
         assertInvalidTriggerArguments(
                 ValidTriggerParams.sAttributionDestination,
@@ -542,7 +550,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
     @Test
@@ -556,7 +565,8 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
     @Test
@@ -570,26 +580,28 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
     @Test
     public void testInsertTrigger_validateArgumentDedupKey() {
         cleanup();
 
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
-                dao.insertTrigger(
-                        ValidTriggerParams.sAttributionDestination,
-                        ValidTriggerParams.sAdTechDomain,
-                        ValidTriggerParams.sRegistrant,
-                        ValidTriggerParams.TRIGGER_TIME,
-                        ValidTriggerParams.TRIGGER_DATA,
-                        null,
-                        ValidTriggerParams.PRIORITY,
-                        ValidTriggerParams.buildAggregateTriggerData(),
-                        ValidTriggerParams.buildAggregateValues()
-                )
-        );
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) ->
+                                dao.insertTrigger(
+                                        ValidTriggerParams.sAttributionDestination,
+                                        ValidTriggerParams.sAdTechDomain,
+                                        ValidTriggerParams.sRegistrant,
+                                        ValidTriggerParams.TRIGGER_TIME,
+                                        ValidTriggerParams.TRIGGER_DATA,
+                                        null,
+                                        ValidTriggerParams.PRIORITY,
+                                        ValidTriggerParams.buildAggregateTriggerData(),
+                                        ValidTriggerParams.buildAggregateValues(),
+                                        ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING));
 
         try (Cursor sourceCursor =
                      DbHelper.getInstance(sContext).getReadableDatabase()
@@ -622,67 +634,77 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.DEDUP_KEY,
                 null,
                 ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues());
+                ValidTriggerParams.buildAggregateValues(),
+                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
-    public void assertInvalidTriggerArguments(Uri attributionDestination, Uri adTechDomain,
-            Uri registrant, Long triggerTime, Long triggerData, Long dedupKey, Long priority,
-            String aggregateTriggerData, String aggregateValues) {
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
-                    try {
-                        dao.insertTrigger(
-                                attributionDestination,
-                                adTechDomain,
-                                registrant,
-                                triggerTime,
-                                triggerData,
-                                dedupKey,
-                                priority,
-                                aggregateTriggerData,
-                                aggregateValues
-                        );
-                        fail();
-                    } catch (DatastoreException e) {
-                        // Valid Exception
-                    }
-                }
-        );
+    public void assertInvalidTriggerArguments(
+            Uri attributionDestination,
+            Uri adTechDomain,
+            Uri registrant,
+            Long triggerTime,
+            Long triggerData,
+            Long dedupKey,
+            Long priority,
+            String aggregateTriggerData,
+            String aggregateValues,
+            String filters) {
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            try {
+                                dao.insertTrigger(
+                                        attributionDestination,
+                                        adTechDomain,
+                                        registrant,
+                                        triggerTime,
+                                        triggerData,
+                                        dedupKey,
+                                        priority,
+                                        aggregateTriggerData,
+                                        aggregateValues,
+                                        filters);
+                                fail();
+                            } catch (DatastoreException e) {
+                                // Valid Exception
+                            }
+                        });
     }
 
     @Test
     public void testGetNumSourcesPerRegistrant() {
         setupSourceAndTriggerData();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(measurementDao -> {
-            assertEquals(2, measurementDao
-                    .getNumSourcesPerRegistrant(mAppTwoSources));
-        });
-        dm.runInTransaction(measurementDao -> {
-            assertEquals(1, measurementDao
-                    .getNumSourcesPerRegistrant(mAppOneSource));
-        });
-        dm.runInTransaction(measurementDao -> {
-            assertEquals(0, measurementDao
-                    .getNumSourcesPerRegistrant(mAppNoSources));
-        });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(2, measurementDao.getNumSourcesPerRegistrant(APP_TWO_SOURCES));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(1, measurementDao.getNumSourcesPerRegistrant(APP_ONE_SOURCE));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(0, measurementDao.getNumSourcesPerRegistrant(APP_NO_SOURCE));
+                });
     }
 
     @Test
     public void testGetNumTriggersPerRegistrant() {
         setupSourceAndTriggerData();
         DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(measurementDao -> {
-            assertEquals(2, measurementDao
-                    .getNumTriggersPerRegistrant(mAppTwoTriggers));
-        });
-        dm.runInTransaction(measurementDao -> {
-            assertEquals(1, measurementDao
-                    .getNumTriggersPerRegistrant(mAppOneTrigger));
-        });
-        dm.runInTransaction(measurementDao -> {
-            assertEquals(0, measurementDao
-                    .getNumTriggersPerRegistrant(mAppNoTriggers));
-        });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(2, measurementDao.getNumTriggersPerRegistrant(APP_TWO_TRIGGERS));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(1, measurementDao.getNumTriggersPerRegistrant(APP_ONE_TRIGGER));
+                });
+        dm.runInTransaction(
+                measurementDao -> {
+                    assertEquals(0, measurementDao.getNumTriggersPerRegistrant(APP_NO_TRIGGERS));
+                });
     }
 
     @Test(expected = NullPointerException.class)
@@ -696,26 +718,41 @@ public class MeasurementDaoTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeNoStartDate() {
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
-            dao.deleteMeasurementData(
-                    mAppOneSource, null /* origin */, null /* start */, Instant.now());
-        });
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    APP_ONE_SOURCE,
+                                    null /* origin */,
+                                    null /* start */,
+                                    Instant.now());
+                        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeNoEndDate() {
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
-            dao.deleteMeasurementData(
-                    mAppOneSource, null /* origin */, Instant.now(), null /* end */);
-        });
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    APP_ONE_SOURCE,
+                                    null /* origin */,
+                                    Instant.now(),
+                                    null /* end */);
+                        });
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testDeleteMeasurementData_invalidRangeStartAfterEndDate() {
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
-            dao.deleteMeasurementData(
-                    mAppOneSource, null /* origin */, Instant.now().plusMillis(1), Instant.now());
-        });
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    APP_ONE_SOURCE,
+                                    null /* origin */,
+                                    Instant.now().plusMillis(1),
+                                    Instant.now());
+                        });
     }
 
     @Test
@@ -731,10 +768,13 @@ public class MeasurementDaoTest {
                 createSourceForIATest("IA2", currentTimestamp, 50, -1, false),
                 db);
         // Should select id IA1 because it has higher priority
-        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
-                measurementDao -> {
-                    measurementDao.doInstallAttribution(mInstalledPackage, currentTimestamp);
-                }));
+        Assert.assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    measurementDao.doInstallAttribution(
+                                            INSTALLED_PACKAGE, currentTimestamp);
+                                }));
         Assert.assertTrue(getInstallAttributionStatus("IA1", db));
         Assert.assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -752,10 +792,13 @@ public class MeasurementDaoTest {
                 createSourceForIATest("IA2", currentTimestamp, -1, 5, false),
                 db);
         // Should select id=IA2 as it is latest
-        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
-                measurementDao -> {
-                    measurementDao.doInstallAttribution(mInstalledPackage, currentTimestamp);
-                }));
+        Assert.assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    measurementDao.doInstallAttribution(
+                                            INSTALLED_PACKAGE, currentTimestamp);
+                                }));
         Assert.assertFalse(getInstallAttributionStatus("IA1", db));
         Assert.assertTrue(getInstallAttributionStatus("IA2", db));
 
@@ -775,11 +818,14 @@ public class MeasurementDaoTest {
                 db);
         // Should select id=IA1 as it is the only valid choice.
         // id=IA2 is newer than the evenTimestamp of install event.
-        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
-                measurementDao -> {
-                    measurementDao.doInstallAttribution(mInstalledPackage,
-                            currentTimestamp - TimeUnit.DAYS.toMillis(7));
-                }));
+        Assert.assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao -> {
+                                    measurementDao.doInstallAttribution(
+                                            INSTALLED_PACKAGE,
+                                            currentTimestamp - TimeUnit.DAYS.toMillis(7));
+                                }));
         Assert.assertTrue(getInstallAttributionStatus("IA1", db));
         Assert.assertFalse(getInstallAttributionStatus("IA2", db));
 
@@ -798,9 +844,12 @@ public class MeasurementDaoTest {
                 createSourceForIATest("IA2", currentTimestamp, 10, 11, true),
                 db);
         // Should not update any sources.
-        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
-                measurementDao -> measurementDao.doInstallAttribution(mInstalledPackage,
-                        currentTimestamp)));
+        Assert.assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.doInstallAttribution(
+                                                INSTALLED_PACKAGE, currentTimestamp)));
         Assert.assertFalse(getInstallAttributionStatus("IA1", db));
         Assert.assertFalse(getInstallAttributionStatus("IA2", db));
         removeSources(Arrays.asList("IA1", "IA2"), db);
@@ -814,8 +863,11 @@ public class MeasurementDaoTest {
         Source source = createSourceForIATest("IA1", currentTimestamp, 10, 10, false);
         source.setInstallAttributed(true);
         AbstractDbIntegrationTest.insertToDb(source, db);
-        Assert.assertTrue(DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction(
-                measurementDao -> measurementDao.undoInstallAttribution(mInstalledPackage)));
+        Assert.assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.undoInstallAttribution(INSTALLED_PACKAGE)));
         // Should set installAttributed = false for id=IA1
         Assert.assertFalse(getInstallAttributionStatus("IA1", db));
     }
@@ -1008,6 +1060,34 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testInsertAggregateEncryptionKey() {
+        String keyId = "38b1d571-f924-4dc0-abe1-e2bac9b6a6be";
+        String publicKey = "/amqBgfDOvHAIuatDyoHxhfHaMoYA4BDxZxwtWBRQhc=";
+        long expiry = 1653620135831L;
+
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
+                dao.insertAggregateEncryptionKey(
+                        new AggregateEncryptionKey.Builder()
+                                .setKeyId(keyId)
+                                .setPublicKey(publicKey)
+                                .setExpiry(expiry).build())
+        );
+
+        try (Cursor cursor = DbHelper.getInstance(sContext).getReadableDatabase()
+                .query(MeasurementTables.AggregateEncryptionKey.TABLE,
+                    null, null, null, null, null, null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            AggregateEncryptionKey aggregateEncryptionKey =
+                    SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(cursor);
+            Assert.assertNotNull(aggregateEncryptionKey);
+            Assert.assertNotNull(aggregateEncryptionKey.getId());
+            assertEquals(keyId, aggregateEncryptionKey.getKeyId());
+            assertEquals(publicKey, aggregateEncryptionKey.getPublicKey());
+            assertEquals(expiry, aggregateEncryptionKey.getExpiry());
+        }
+    }
+
+    @Test
     public void testInsertUnencryptedAggregatePayload() {
         long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS)) + MIN_TIME_MS);
         List<AggregateHistogramContribution> contributions = new ArrayList<>();
@@ -1065,18 +1145,9 @@ public class MeasurementDaoTest {
     private void setupSourceAndTriggerData() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Source> sourcesList = new ArrayList<>();
-        sourcesList.add(new Source.Builder()
-                .setId("S1")
-                .setRegistrant(mAppTwoSources)
-                .build());
-        sourcesList.add(new Source.Builder()
-                .setId("S2")
-                .setRegistrant(mAppTwoSources)
-                .build());
-        sourcesList.add(new Source.Builder()
-                .setId("S3")
-                .setRegistrant(mAppOneSource)
-                .build());
+        sourcesList.add(new Source.Builder().setId("S1").setRegistrant(APP_TWO_SOURCES).build());
+        sourcesList.add(new Source.Builder().setId("S2").setRegistrant(APP_TWO_SOURCES).build());
+        sourcesList.add(new Source.Builder().setId("S3").setRegistrant(APP_ONE_SOURCE).build());
         for (Source source : sourcesList) {
             ContentValues values = new ContentValues();
             values.put("_id", source.getId());
@@ -1085,18 +1156,9 @@ public class MeasurementDaoTest {
             Assert.assertNotEquals("Source insertion failed", -1, row);
         }
         List<Trigger> triggersList = new ArrayList<>();
-        triggersList.add(new Trigger.Builder()
-                .setId("T1")
-                .setRegistrant(mAppTwoTriggers)
-                .build());
-        triggersList.add(new Trigger.Builder()
-                .setId("T2")
-                .setRegistrant(mAppTwoTriggers)
-                .build());
-        triggersList.add(new Trigger.Builder()
-                .setId("T3")
-                .setRegistrant(mAppOneTrigger)
-                .build());
+        triggersList.add(new Trigger.Builder().setId("T1").setRegistrant(APP_TWO_TRIGGERS).build());
+        triggersList.add(new Trigger.Builder().setId("T2").setRegistrant(APP_TWO_TRIGGERS).build());
+        triggersList.add(new Trigger.Builder().setId("T3").setRegistrant(APP_ONE_TRIGGER).build());
         for (Trigger trigger : triggersList) {
             ContentValues values = new ContentValues();
             values.put("_id", trigger.getId());
@@ -1115,9 +1177,11 @@ public class MeasurementDaoTest {
                 .setAdTechDomain(Uri.parse("https://example.com"))
                 .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
-                .setAttributionDestination(mInstalledPackage)
-                .setEventTime(currentTime - TimeUnit.DAYS.toMillis(
-                        eventTimePastDays == -1 ? 10 : eventTimePastDays))
+                .setAttributionDestination(INSTALLED_PACKAGE)
+                .setEventTime(
+                        currentTime
+                                - TimeUnit.DAYS.toMillis(
+                                        eventTimePastDays == -1 ? 10 : eventTimePastDays))
                 .setPriority(priority == -1 ? 100 : priority)
                 .build();
     }
@@ -1189,6 +1253,11 @@ public class MeasurementDaoTest {
         static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
         static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
         static final Uri sAdTechDomain = Uri.parse("https://com.example");
+        private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+                "{\n"
+                        + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                        + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                        + "}\n";
 
         static String buildAggregateTriggerData() {
             try {

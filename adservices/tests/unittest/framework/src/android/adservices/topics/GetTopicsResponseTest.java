@@ -68,7 +68,7 @@ public final class GetTopicsResponseTest {
                     new GetTopicsResponse.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L))
                         .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList("topic1", "topic2"))
+                        .setTopics(Arrays.asList(1, 2))
                         .build();
             });
 
@@ -79,7 +79,7 @@ public final class GetTopicsResponseTest {
                     new GetTopicsResponse.Builder()
                         // Not setting TaxonomyVersions implies empty.
                         .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList("topic1", "topic2"))
+                        .setTopics(Arrays.asList(1, 2))
                         .build();
             });
 
@@ -90,7 +90,7 @@ public final class GetTopicsResponseTest {
                     new GetTopicsResponse.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L, 2L))
                         .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList("topic1"))
+                        .setTopics(Arrays.asList(1))
                         .build();
             });
     }
