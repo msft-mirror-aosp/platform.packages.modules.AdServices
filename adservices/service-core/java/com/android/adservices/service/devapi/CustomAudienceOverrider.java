@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.devapi;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
@@ -25,6 +29,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -39,6 +44,7 @@ public class CustomAudienceOverrider {
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
 
     /**
      * Creates an instance of {@link CustomAudienceOverrider} with the given {@link DevContext},
@@ -47,15 +53,18 @@ public class CustomAudienceOverrider {
     public CustomAudienceOverrider(
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull ExecutorService executorService) {
+            @NonNull ExecutorService executorService,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(executorService);
+        Objects.requireNonNull(adServicesLogger);
 
         this.mCustomAudienceDao = customAudienceDao;
         this.mListeningExecutorService = MoreExecutors.listeningDecorator(executorService);
         this.mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
+        this.mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -72,6 +81,8 @@ public class CustomAudienceOverrider {
             @NonNull String biddingLogicJS,
             @NonNull String trustedBiddingData,
             @NonNull CustomAudienceOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 
         callAddOverride(owner, buyer, name, biddingLogicJS, trustedBiddingData)
                 .addCallback(
@@ -79,13 +90,13 @@ public class CustomAudienceOverrider {
                             @Override
                             public void onSuccess(Void result) {
                                 LogUtil.d("Add dev override succeeded!");
-                                invokeSuccess(callback);
+                                invokeSuccess(callback, shortApiName);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Add dev override failed!");
-                                notifyFailureToCaller(callback, t);
+                                notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
                         mListeningExecutorService);
@@ -102,6 +113,9 @@ public class CustomAudienceOverrider {
             @NonNull String buyer,
             @NonNull String name,
             @NonNull CustomAudienceOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName =
+                AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 
         callRemoveOverride(owner, buyer, name)
                 .addCallback(
@@ -109,13 +123,13 @@ public class CustomAudienceOverrider {
                             @Override
                             public void onSuccess(Void result) {
                                 LogUtil.d("Removing dev override succeeded!");
-                                invokeSuccess(callback);
+                                invokeSuccess(callback, shortApiName);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Removing dev override failed!");
-                                notifyFailureToCaller(callback, t);
+                                notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
                         mListeningExecutorService);
@@ -127,6 +141,8 @@ public class CustomAudienceOverrider {
      * @param callback callback function to be called in case of success or failure
      */
     public void removeAllOverrides(@NonNull CustomAudienceOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
         callRemoveAllOverrides()
                 .addCallback(
@@ -134,13 +150,13 @@ public class CustomAudienceOverrider {
                             @Override
                             public void onSuccess(Void result) {
                                 LogUtil.d("Removing all dev overrides succeeded!");
-                                invokeSuccess(callback);
+                                invokeSuccess(callback, shortApiName);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Removing all dev overrides failed!");
-                                notifyFailureToCaller(callback, t);
+                                notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
                         mListeningExecutorService);
@@ -181,8 +197,12 @@ public class CustomAudienceOverrider {
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
-    private static void invokeFailure(
-            @NonNull CustomAudienceOverrideCallback callback, int statusCode, String errorMessage) {
+    private void invokeFailure(
+            @NonNull CustomAudienceOverrideCallback callback,
+            int statusCode,
+            String errorMessage,
+            int apiName) {
+        int resultCode = statusCode;
         try {
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
@@ -191,28 +211,41 @@ public class CustomAudienceOverrider {
                             .build());
         } catch (RemoteException e) {
             LogUtil.e("Unable to send failed result to the callback", e);
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
         }
     }
 
     /** Invokes the onSuccess function from the callback and handles the exception. */
-    private static void invokeSuccess(@NonNull CustomAudienceOverrideCallback callback) {
+    private void invokeSuccess(@NonNull CustomAudienceOverrideCallback callback, int apiName) {
+        int resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
             LogUtil.e("Unable to send successful result to the callback", e);
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
         }
     }
 
     private void notifyFailureToCaller(
-            @NonNull CustomAudienceOverrideCallback callback, @NonNull Throwable t) {
+            @NonNull CustomAudienceOverrideCallback callback, @NonNull Throwable t, int apiName) {
         if (t instanceof IllegalArgumentException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
+            invokeFailure(
+                    callback,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
+                    t.getMessage(),
+                    apiName);
         } else if (t instanceof ApiNotAuthorizedException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
         } else {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage(), apiName);
         }
     }
 }

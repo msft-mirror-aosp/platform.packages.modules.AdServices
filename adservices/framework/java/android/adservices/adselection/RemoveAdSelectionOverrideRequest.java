@@ -17,22 +17,25 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.os.OutcomeReceiver;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the removeAdSelectionConfigRemoteInfoOverride request
+ * This POJO represents the {@link
+ * AdSelectionManager#removeAdSelectionConfigRemoteInfoOverride(RemoveAdSelectionOverrideRequest,
+ * Executor, OutcomeReceiver)} request
  *
- * @hide
+ * <p>It contains one field, a {@link AdSelectionConfig} which serves as the identifier of the
+ * override to be removed
  */
 public class RemoveAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
-    private RemoveAdSelectionOverrideRequest(
-            AdSelectionConfig adSelectionConfig) {
+    private RemoveAdSelectionOverrideRequest(AdSelectionConfig adSelectionConfig) {
         mAdSelectionConfig = adSelectionConfig;
     }
-
 
     /**
      * @return AdSelectionConfig, the configuration of the ad selection process.
@@ -47,7 +50,6 @@ public class RemoveAdSelectionOverrideRequest {
         private AdSelectionConfig mAdSelectionConfig;
 
         public Builder() {}
-
 
         /** Set the AdSelectionConfig. */
         @NonNull

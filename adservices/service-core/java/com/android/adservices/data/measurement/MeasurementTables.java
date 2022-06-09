@@ -75,6 +75,7 @@ public final class MeasurementTables {
         String EVENT_TRIGGER_DATA = "event_trigger_data";
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
+        String FILTERS = "filters";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
         @Deprecated
@@ -146,6 +147,17 @@ public final class MeasurementTables {
         String REPORTING_ORIGIN = "reporting_origin";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
+    }
+
+    /**
+     * Contract for aggregate encryption key.
+     */
+    interface AggregateEncryptionKey {
+        String TABLE = MSMT_TABLE_PREFIX + "aggregate_encryption_key";
+        String ID = "_id";
+        String KEY_ID = "key_id";
+        String PUBLIC_KEY = "public_key";
+        String EXPIRY = "expiry";
     }
 
     public static final String CREATE_TABLE_SOURCE =
@@ -235,6 +247,16 @@ public final class MeasurementTables {
                     + AggregateReport.REPORTING_ORIGIN + " TEXT, "
                     + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
                     + SourceContract.STATUS + " INTEGER "
+                    + ")";
+
+    public static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY =
+            "CREATE TABLE "
+                    + AggregateEncryptionKey.TABLE
+                    + " ("
+                    + AggregateEncryptionKey.ID + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateEncryptionKey.KEY_ID + " TEXT, "
+                    + AggregateEncryptionKey.PUBLIC_KEY + " TEXT, "
+                    + AggregateEncryptionKey.EXPIRY + " INTEGER "
                     + ")";
 
     public static final String[] CREATE_INDEXES = {

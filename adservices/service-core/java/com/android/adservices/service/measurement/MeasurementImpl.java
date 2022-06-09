@@ -283,17 +283,21 @@ public final class MeasurementImpl {
             ArrayList<TriggerRegistration> responseBasedRegistrations,
             long triggerTime) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
-            mDatastoreManager.runInTransaction((dao) ->
-                    dao.insertTrigger(
-                            /* attributionDestination */ request.getTopOriginUri(),
-                            /* adTechDomain */ getBaseUri(registration.getReportingOrigin()),
-                            /* registrant */ getRegistrant(request.getAttributionSource()),
-                            /* triggerTime */ triggerTime,
-                            /* triggerData */ registration.getTriggerData(),
-                            /* dedupKey */ registration.getDeduplicationKey(),
-                            /* priority */ registration.getTriggerPriority(),
-                            /* aggregateTriggerData */ registration.getAggregateTriggerData(),
-                            /* aggregateValues */ registration.getAggregateValues()));
+            mDatastoreManager.runInTransaction(
+                    (dao) ->
+                            dao.insertTrigger(
+                                    /* attributionDestination */ request.getTopOriginUri(),
+                                    /* adTechDomain */ getBaseUri(
+                                            registration.getReportingOrigin()),
+                                    /* registrant */ getRegistrant(request.getAttributionSource()),
+                                    /* triggerTime */ triggerTime,
+                                    /* triggerData */ registration.getTriggerData(),
+                                    /* dedupKey */ registration.getDeduplicationKey(),
+                                    /* priority */ registration.getTriggerPriority(),
+                                    /* aggregateTriggerData */ registration
+                                            .getAggregateTriggerData(),
+                                    /* aggregateValues */ registration.getAggregateValues(),
+                                    /* top-level filters */ registration.getFilters()));
         }
         try (ContentProviderClient contentProviderClient =
                      mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {

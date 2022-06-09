@@ -18,8 +18,6 @@ package com.android.adservices.service.topics.classifier;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertThrows;
-
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -39,68 +37,68 @@ import java.util.Map;
  * Precomputed Topics Classifier Test {@link PrecomputedClassifier}.
  */
 public class PrecomputedClassifierTest {
+    private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
+    private static final String TEST_APPS_FILE_PATH =
+            "classifier/precomputed_test_app_list_chrome_topics.csv";
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static PrecomputedClassifier sPrecomputedClassifier;
+    private static final PrecomputedLoader sPrecomputedLoader =
+            new PrecomputedLoader(sContext, TEST_LABELS_FILE_PATH, TEST_APPS_FILE_PATH);
+
+    private PrecomputedClassifier sPrecomputedClassifier;
 
     @Before
     public void setUp() throws IOException {
-        sPrecomputedClassifier = PrecomputedClassifier.getInstance(sContext);
+        sPrecomputedClassifier = new PrecomputedClassifier(sPrecomputedLoader);
     }
 
     @Test
-    public void checkExistingApp() {
+    public void testClassify_existingApp() {
         // Using What's App. This app has 1 classification topic.
-        List<Integer> expectedWhatsAppTopics =
-                Arrays.asList(1379);
+        List<Integer> expectedWhatsAppTopics = Arrays.asList(1379);
 
         Map<String, List<Integer>> expectedAppTopicsResponse = new HashMap<>();
         expectedAppTopicsResponse.put("com.whatsapp", expectedWhatsAppTopics);
 
         // TODO(b/226470370): Convert the app to lower case in Epoch Processing
         Map<String, List<Integer>> testResponse =
-                sPrecomputedClassifier.classify(
-                        new HashSet<>(Arrays.asList("com.whatsapp")));
+                sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("com.whatsapp")));
 
         // The correct response body should be exactly the same as expectedAppTopicsResponse
         assertThat(testResponse).isEqualTo(expectedAppTopicsResponse);
     }
 
     @Test
-    public void checkNonExistingApp() {
+    public void testClassify_nonExistingApp() {
         // Check the non-existing app "random_app"
         Map<String, List<Integer>> testResponse =
-                sPrecomputedClassifier.classify(
-                        new HashSet<>(Arrays.asList("random_app")));
+                sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("random_app")));
 
         // The topics list of "random_app" should be empty
-        assertThat(testResponse.get("random_app").size())
-                .isEqualTo(0);
+        assertThat(testResponse.get("random_app")).isEmpty();
     }
 
     @Test
-    public void checkEmptyStringApp() {
+    public void testClassify_emptyStringApp() {
         // Check if input contains empty string or null
         Map<String, List<Integer>> testResponse =
-                sPrecomputedClassifier.classify(
-                        new HashSet<>(Arrays.asList("", null)));
+                sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("", null)));
 
         // The response body should be empty
-        assertThat(testResponse.size()).isEqualTo(0);
+        assertThat(testResponse).isEmpty();
     }
 
     @Test
-    public void checkEmptyAppList() {
+    public void testClassify_emptyAppList() {
         // Check if input is empty
         Map<String, List<Integer>> testResponse =
-                sPrecomputedClassifier.classify(
-                        new HashSet<>(new ArrayList<>()));
+                sPrecomputedClassifier.classify(new HashSet<>(new ArrayList<>()));
 
         // The response body should be empty
-        assertThat(testResponse.size()).isEqualTo(0);
+        assertThat(testResponse).isEmpty();
     }
 
     @Test
-    public void checkGetTopTopicsLegalInput() {
+    public void testGetTopTopics_legalInput() {
         // construction the appTopics map so that when sorting by the number of occurrences,
         // the order of topics are:
         //topic1, topic2, topic3, topic4, topic5, ...,
@@ -113,9 +111,8 @@ public class PrecomputedClassifierTest {
 
         // This test case should return top 5 topics from appTopics and 1 random topic
         List<Integer> testResponse =
-                sPrecomputedClassifier.getTopTopics(appTopics,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1);
+                sPrecomputedClassifier.getTopTopics(
+                        appTopics, /* numberOfTopTopics = */ 5, /* numberOfRandomTopics = */ 1);
 
         assertThat(testResponse.get(0)).isEqualTo(1);
         assertThat(testResponse.get(1)).isEqualTo(2);
@@ -125,78 +122,5 @@ public class PrecomputedClassifierTest {
         // Check the random topic is not empty
         // The random topic is at the end
         assertThat(testResponse.get(5)).isNotNull();
-    }
-
-    @Test
-    public void checkGetTopTopicsLargeTopTopicsInput() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
-        // We only have 5 topics but requesting for 15 topics,
-        // so we will pad them with 10 random topics.
-        List<Integer> testResponse =
-                sPrecomputedClassifier.getTopTopics(appTopics,
-                        /* numberOfTopTopics = */ 15,
-                        /* numberOfRandomTopics = */ 1);
-
-        // The response body should contains 11 topics
-        assertThat(testResponse.size()).isEqualTo(16);
-    }
-
-    @Test
-    public void checkGetTopTopicsZeroTopTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
-        // This test case should throw an IllegalArgumentException if numberOfTopTopics is 0
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sPrecomputedClassifier.getTopTopics(appTopics,
-                        /* numberOfTopTopics = */ 0,
-                        /* numberOfRandomTopics = */ 1)
-        );
-    }
-
-    @Test
-    public void checkGetTopTopicsZeroRandomTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
-        // This test case should throw an IllegalArgumentException if numberOfRandomTopics is 0
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sPrecomputedClassifier.getTopTopics(appTopics,
-                        /* numberOfTopTopics = */ 3,
-                        /* numberOfRandomTopics = */ 0)
-        );
-    }
-
-    @Test
-    public void checkGetTopTopicsNegativeTopTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
-        // This test case should throw an IllegalArgumentException if numberOfTopTopics is negative
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sPrecomputedClassifier.getTopTopics(appTopics,
-                        /* numberOfTopTopics = */ -5,
-                        /* numberOfRandomTopics = */ 1)
-        );
-    }
-
-    @Test
-    public void checkGetTopTopicsNegativeRandomTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
-        // This test case should throw an IllegalArgumentException
-        // if numberOfRandomTopics is negative
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> sPrecomputedClassifier.getTopTopics(appTopics,
-                        /* numberOfTopTopics = */ 3,
-                        /* numberOfRandomTopics = */ -1)
-        );
     }
 }

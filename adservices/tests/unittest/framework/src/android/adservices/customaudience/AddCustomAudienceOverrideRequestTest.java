@@ -40,7 +40,7 @@ public class AddCustomAudienceOverrideRequestTest {
         assertEquals(request.getOwner(), OWNER);
         assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
-        assertEquals(request.getBiddingLogicJS(), BIDDING_LOGIC_JS);
+        assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
         assertEquals(request.getTrustedBiddingData(), TRUSTED_BIDDING_DATA);
     }
 }
