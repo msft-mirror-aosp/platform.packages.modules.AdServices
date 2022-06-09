@@ -43,7 +43,10 @@ android_test {
         "adservices-test-fixtures",
         "testng",
     ],
+    jni_libs: ["libhpke_jni"],
     sdk_version: "module_current",
+    // CTS demands all APKs to be multi-ABI when including jni_libs
+    compile_multilib: "both",
 }
 android_test {
     name: "CtsAdServicesDebuggableDeviceTestCases",
