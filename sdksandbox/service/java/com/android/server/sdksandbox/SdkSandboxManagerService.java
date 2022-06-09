@@ -454,10 +454,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkDataDirInfo sdkDataInfo = mSdkSandboxStorageManager.getSdkDataDirInfo(
                 callingInfo, sdkProviderInfo.getSdkName());
         try {
-            service.loadSdk(sdkToken, sdkProviderInfo.getApplicationInfo(),
-                    sdkProviderInfo.getSdkName(), sdkProviderInfo.getSdkProviderClassName(),
-                    sdkDataInfo.getCeDataDir(), sdkDataInfo.getDeDataDir(),
-                    params, link);
+            service.loadSdk(
+                    callingInfo.getPackageName(),
+                    sdkToken,
+                    sdkProviderInfo.getApplicationInfo(),
+                    sdkProviderInfo.getSdkName(),
+                    sdkProviderInfo.getSdkProviderClassName(),
+                    sdkDataInfo.getCeDataDir(),
+                    sdkDataInfo.getDeDataDir(),
+                    params,
+                    link);
 
             onSdkLoaded(callingInfo, sdkProviderInfo.getApplicationInfo().uid);
         } catch (RemoteException e) {
@@ -819,9 +825,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    /**
-     * Class which retrieves and stores the sdkProviderClassName and ApplicationInfo
-     */
+    /** Class which retrieves and stores the sdkName, sdkProviderClassName, and ApplicationInfo */
     private static class SdkProviderInfo {
 
         private final ApplicationInfo mApplicationInfo;
