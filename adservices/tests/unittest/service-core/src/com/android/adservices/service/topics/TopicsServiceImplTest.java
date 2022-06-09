@@ -67,9 +67,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}.
- */
+/** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 public class TopicsServiceImplTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
@@ -161,12 +159,12 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -198,7 +196,7 @@ public class TopicsServiceImplTest {
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -214,9 +212,21 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        assertThat(mGetTopicsCallbackLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        GetTopicsResult expectedGetTopicsResult = capturedResponseParcel[0];
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
@@ -253,7 +263,7 @@ public class TopicsServiceImplTest {
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -269,10 +279,21 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        assertThat(mGetTopicsCallbackLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
 
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
+        GetTopicsResult expectedGetTopicsResult = capturedResponseParcel[0];
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
@@ -336,7 +357,7 @@ public class TopicsServiceImplTest {
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -352,12 +373,26 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        assertThat(mGetTopicsCallbackLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
 
-        assertThat(logOperationCalledLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        GetTopicsResult expectedGetTopicsResult = capturedResponseParcel[0];
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+
+        assertThat(
+                        logOperationCalledLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
 
         verify(mAdServicesLogger).logApiCallStats(argument.capture());
         assertThat(argument.getValue().getResultCode()).isEqualTo(ResultCode.RESULT_OK);
