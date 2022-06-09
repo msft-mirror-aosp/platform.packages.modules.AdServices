@@ -37,6 +37,8 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Aplikacije, ki vzbujajo posamezna zanimanja"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Upravljanje aplikacij, ki vzbujajo posamezna zanimanja."</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Upravljanje splošnih zanimanj za oglase"</string>
+    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
+    <skip />
     <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
     <skip />
     <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
