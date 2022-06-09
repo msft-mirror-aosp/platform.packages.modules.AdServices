@@ -32,8 +32,6 @@ java_library {
     // sdk_version: "module_current",
     srcs: [
         ":adservices-clients-sources",
-        ":framework-adservices-sources", // TODO(b/223684663): remove when unhide Topics API.
-        ":framework-sdksandbox-sources", // TODO(b/223684663): remove when unhide Topics API.
     ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
@@ -41,6 +39,8 @@ java_library {
         "guava",
     ],
     libs: [
+        "framework-adservices",
+        "framework-sdksandbox",
         "framework-annotations-lib", // For @SystemApi, etc
         "unsupportedappusage", // for android.compat.annotation.UnsupportedAppUsage
         "framework-adservices", // To access non-API members in this module.
