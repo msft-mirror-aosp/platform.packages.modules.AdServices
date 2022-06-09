@@ -22,7 +22,6 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +29,6 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +57,7 @@ public class Trigger {
     private String mAggregateTriggerData;
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
+    private String mFilters;
 
     @IntDef(value = {
             Status.PENDING,
@@ -67,11 +66,11 @@ public class Trigger {
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status {
+
         int PENDING = 0;
         int IGNORED = 1;
         int ATTRIBUTED = 2;
     }
-
     private Trigger() {
         mDedupKey = null;
         mStatus = Status.PENDING;
@@ -83,7 +82,7 @@ public class Trigger {
             return false;
         }
         Trigger trigger = (Trigger) obj;
-        return  Objects.equals(mId, trigger.getId())
+        return Objects.equals(mId, trigger.getId())
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
@@ -94,15 +93,26 @@ public class Trigger {
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
-                && Objects.equals(mAggregatableAttributionTrigger,
-                trigger.mAggregatableAttributionTrigger);
+                && Objects.equals(
+                        mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
+                && Objects.equals(mFilters, trigger.mFilters);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mAttributionDestination, mAdTechDomain, mTriggerTime,
-                mEventTriggerData, mPriority, mStatus, mDedupKey, mAggregateTriggerData,
-                mAggregateValues, mAggregatableAttributionTrigger);
+        return Objects.hash(
+                mId,
+                mAttributionDestination,
+                mAdTechDomain,
+                mTriggerTime,
+                mEventTriggerData,
+                mPriority,
+                mStatus,
+                mDedupKey,
+                mAggregateTriggerData,
+                mAggregateValues,
+                mAggregatableAttributionTrigger,
+                mFilters);
     }
 
     /**
@@ -224,6 +234,17 @@ public class Trigger {
     }
 
     /**
+     * Returns top level filters. The value is in json format.
+     *
+     * <p>Will be used for deciding if the trigger can be attributed to the source. If the source
+     * fails the filtering against these filters then no reports(event/aggregate) are generated.
+     * example: { "key1" : ["value11", "value12"], "key2" : ["value21", "value22"] }
+     */
+    public String getFilters() {
+        return mFilters;
+    }
+
+    /**
      * Function to truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
      *
      * @param source for which trigger data is being retrieved
@@ -251,7 +272,6 @@ public class Trigger {
                 hexString = hexString.substring(2);
             }
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            BigInteger divisor = BigDecimal.valueOf(Math.pow(2, 63)).toBigInteger();
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();
             for (int j = 0; j < sourceKeys.length(); j++) {
@@ -259,10 +279,7 @@ public class Trigger {
             }
             AggregateTriggerData.Builder builder =
                     new AggregateTriggerData.Builder()
-                            .setKey(new AttributionAggregatableKey.Builder()
-                                    .setHighBits(bigInteger.divide(divisor).longValue())
-                                    .setLowBits(bigInteger.mod(divisor).longValue())
-                                    .build())
+                            .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
             if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
                 AggregateFilterData filters = new AggregateFilterData.Builder()
@@ -383,6 +400,12 @@ public class Trigger {
          */
         public Builder setAggregateValues(String aggregateValues) {
             mBuilding.mAggregateValues = aggregateValues;
+            return this;
+        }
+
+        /** See {@link Trigger#getFilters()} */
+        public Builder setFilters(String filters) {
+            mBuilding.mFilters = filters;
             return this;
         }
 

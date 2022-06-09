@@ -36,6 +36,7 @@ import android.provider.MediaStore;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -164,10 +165,9 @@ public class SdkSandboxRestrictionsTest {
         assertThat(ctx.getExternalCacheDir()).isNull();
     }
 
-    /**
-     * Tests that Sdk Sandbox cannot access app specific external storage
-     */
+    /** Tests that Sdk Sandbox cannot access app specific external storage */
     @Test
+    @Ignore("b/234563287")
     public void testSanboxCannotAccess_MediaStoreApi() throws Exception {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final ContentResolver resolver = ctx.getContentResolver();
@@ -177,6 +177,7 @@ public class SdkSandboxRestrictionsTest {
                 MediaStore.VOLUME_EXTERNAL_PRIMARY);
         final ContentValues newItem = new ContentValues();
         newItem.put(MediaStore.Audio.Media.DISPLAY_NAME, "New Audio Item");
+        newItem.put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg");
         IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class,
                 () -> resolver.insert(audioCollection, newItem));
         assertThat(thrown).hasMessageThat().contains("Unknown URL content");

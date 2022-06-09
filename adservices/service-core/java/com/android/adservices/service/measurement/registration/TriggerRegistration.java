@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement.registration;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 
@@ -30,10 +31,9 @@ public final class TriggerRegistration {
     private final Long mDeduplicationKey;
     private final String mAggregateTriggerData;
     private final String mAggregateValues;
+    private final String mFilters;
 
-    /**
-     * Create a trigger registration.
-     */
+    /** Create a trigger registration. */
     private TriggerRegistration(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
@@ -41,7 +41,8 @@ public final class TriggerRegistration {
             long triggerPriority,
             Long deduplicationKey,
             String aggregateTriggerData,
-            String aggregateValues) {
+            String aggregateValues,
+            @Nullable String filters) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mTriggerData = triggerData;
@@ -49,6 +50,7 @@ public final class TriggerRegistration {
         mDeduplicationKey = deduplicationKey;
         mAggregateTriggerData = aggregateTriggerData;
         mAggregateValues = aggregateValues;
+        mFilters = filters;
     }
 
     /**
@@ -100,6 +102,11 @@ public final class TriggerRegistration {
         return mAggregateValues;
     }
 
+    /** Top level filters. */
+    public String getFilters() {
+        return mFilters;
+    }
+
     /**
      * A builder for {@link TriggerRegistration}.
      */
@@ -111,6 +118,7 @@ public final class TriggerRegistration {
         private Long mDeduplicationKey;
         private String mAggregateTriggerData;
         private String mAggregateValues;
+        private String mFilters;
 
         public Builder() {
             mTopOrigin = Uri.EMPTY;
@@ -174,6 +182,12 @@ public final class TriggerRegistration {
             return this;
         }
 
+        /** See {@link TriggerRegistration#getFilters()}. */
+        public Builder setFilters(String filters) {
+            mFilters = filters;
+            return this;
+        }
+
         /**
          * Build the TriggerRegistration.
          */
@@ -189,7 +203,8 @@ public final class TriggerRegistration {
                     mTriggerPriority,
                     mDeduplicationKey,
                     mAggregateTriggerData,
-                    mAggregateValues);
+                    mAggregateValues,
+                    mFilters);
         }
     }
 }

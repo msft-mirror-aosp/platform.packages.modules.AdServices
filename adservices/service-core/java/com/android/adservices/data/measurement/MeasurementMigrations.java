@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
+import static com.android.adservices.data.measurement.MeasurementTables.AggregateEncryptionKey;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionRateLimitContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.INDEX_PREFIX;
@@ -84,6 +85,11 @@ public final class MeasurementMigrations {
                     AttributionRateLimitContract.AD_TECH_DOMAIN),
     };
 
+    private static final String[] ALTER_STATEMENTS_VER_3 = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT", TriggerContract.TABLE, TriggerContract.FILTERS)
+    };
+
     private static final String[] CREATE_INDEXES_VER_2 = {
             "CREATE INDEX "
                     + INDEX_PREFIX + SourceContract.TABLE + "_ad_rt_et " + "ON "
@@ -104,6 +110,13 @@ public final class MeasurementMigrations {
                     + AttributionRateLimitContract.DESTINATION_SITE + ", "
                     + AttributionRateLimitContract.AD_TECH_DOMAIN + ", "
                     + AttributionRateLimitContract.TRIGGER_TIME + ")"
+    };
+
+    private static final String[] CREATE_INDEXES_VER_3 = {
+            "CREATE INDEX "
+                    + INDEX_PREFIX + AggregateEncryptionKey.TABLE + "_et " + "ON "
+                    + AggregateEncryptionKey.TABLE + "("
+                    + AggregateEncryptionKey.EXPIRY + ")"
     };
 
     private MeasurementMigrations() {
@@ -151,6 +164,32 @@ public final class MeasurementMigrations {
                         new String[] {
                                 MeasurementTables.CREATE_TABLE_AGGREGATE_PAYLOAD
                         }
+                )
+                .flatMap(Arrays::stream)
+                .toArray(String[]::new);
+    }
+
+    /**
+     * Consolidated migration scripts that will execute on the following tables:
+     *
+     * Trigger
+     * <ul>
+     *   <li>Add : filters
+     * </ul>
+     *
+     * Aggregate Encryption Key
+     * <ul>
+     *     <li>Create table</li>
+     *     <li>Create index on expiry</li>
+     * </ul>
+     *
+     * @return consolidated scripts to migrate to version 3
+     */
+    public static String[] migrationScriptVersion3() {
+        return Stream.of(
+                        ALTER_STATEMENTS_VER_3,
+                        new String[] { MeasurementTables.CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY },
+                        CREATE_INDEXES_VER_3
                 )
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
