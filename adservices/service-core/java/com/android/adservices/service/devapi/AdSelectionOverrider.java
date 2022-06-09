@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.devapi;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.common.AdServicesStatusUtils;
@@ -25,6 +29,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -39,6 +44,7 @@ public class AdSelectionOverrider {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
+    @NonNull private final AdServicesLogger mAdServicesLogger;
 
     /**
      * Creates an instance of {@link AdSelectionOverrider} with the given {@link DevContext}, {@link
@@ -47,15 +53,18 @@ public class AdSelectionOverrider {
     public AdSelectionOverrider(
             @NonNull DevContext devContext,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull ExecutorService executor) {
+            @NonNull ExecutorService executor,
+            @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(executor);
+        Objects.requireNonNull(adServicesLogger);
 
         this.mAdSelectionEntryDao = adSelectionEntryDao;
         this.mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
         this.mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
+        this.mAdServicesLogger = adServicesLogger;
     }
 
     /**
@@ -68,6 +77,9 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName =
+                AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
         callAddOverride(adSelectionConfig, decisionLogicJS)
                 .addCallback(
@@ -75,13 +87,13 @@ public class AdSelectionOverrider {
                             @Override
                             public void onSuccess(Void result) {
                                 LogUtil.d("Add dev override succeeded!");
-                                invokeSuccess(callback);
+                                invokeSuccess(callback, shortApiName);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Add dev override failed!");
-                                notifyFailureToCaller(callback, t);
+                                notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
                         mListeningExecutorService);
@@ -96,6 +108,9 @@ public class AdSelectionOverrider {
     public void removeOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName =
+                AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 
         callRemoveOverride(adSelectionConfig)
                 .addCallback(
@@ -103,13 +118,13 @@ public class AdSelectionOverrider {
                             @Override
                             public void onSuccess(Void result) {
                                 LogUtil.d("Removing dev override succeeded!");
-                                invokeSuccess(callback);
+                                invokeSuccess(callback, shortApiName);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Removing dev override failed!");
-                                notifyFailureToCaller(callback, t);
+                                notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
                         mListeningExecutorService);
@@ -121,6 +136,9 @@ public class AdSelectionOverrider {
      * @param callback callback function to be called in case of success or failure
      */
     public void removeAllOverrides(@NonNull AdSelectionOverrideCallback callback) {
+        // Auto-generated variable name is too long for lint check
+        int shortApiName =
+                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 
         callRemoveAllOverrides()
                 .addCallback(
@@ -128,13 +146,13 @@ public class AdSelectionOverrider {
                             @Override
                             public void onSuccess(Void result) {
                                 LogUtil.d("Removing all dev overrides succeeded!");
-                                invokeSuccess(callback);
+                                invokeSuccess(callback, shortApiName);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Removing all dev overrides failed!");
-                                notifyFailureToCaller(callback, t);
+                                notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
                         mListeningExecutorService);
@@ -171,8 +189,12 @@ public class AdSelectionOverrider {
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
-    private static void invokeFailure(
-            @NonNull AdSelectionOverrideCallback callback, int statusCode, String errorMessage) {
+    private void invokeFailure(
+            @NonNull AdSelectionOverrideCallback callback,
+            int statusCode,
+            String errorMessage,
+            int apiName) {
+        int resultCode = statusCode;
         try {
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
@@ -181,28 +203,41 @@ public class AdSelectionOverrider {
                             .build());
         } catch (RemoteException e) {
             LogUtil.e("Unable to send failed result to the callback", e);
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
         }
     }
 
     /** Invokes the onSuccess function from the callback and handles the exception. */
-    private static void invokeSuccess(@NonNull AdSelectionOverrideCallback callback) {
+    private void invokeSuccess(@NonNull AdSelectionOverrideCallback callback, int apiName) {
+        int resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
             LogUtil.e("Unable to send successful result to the callback", e);
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
+        } finally {
+            mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode);
         }
     }
 
     private void notifyFailureToCaller(
-            @NonNull AdSelectionOverrideCallback callback, @NonNull Throwable t) {
+            @NonNull AdSelectionOverrideCallback callback, @NonNull Throwable t, int apiName) {
         if (t instanceof IllegalArgumentException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
+            invokeFailure(
+                    callback,
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
+                    t.getMessage(),
+                    apiName);
         } else if (t instanceof IllegalStateException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage(), apiName);
         } else {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
         }
     }
 }

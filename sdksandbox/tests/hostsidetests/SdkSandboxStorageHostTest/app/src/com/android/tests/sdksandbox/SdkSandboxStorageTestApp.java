@@ -105,6 +105,20 @@ public class SdkSandboxStorageTestApp {
     }
 
     @Test
+    public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
+        // First load code
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Run phase inside the code
+        runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
+
+        // Wait for code to finish handling the request
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
+    }
+
+    @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();

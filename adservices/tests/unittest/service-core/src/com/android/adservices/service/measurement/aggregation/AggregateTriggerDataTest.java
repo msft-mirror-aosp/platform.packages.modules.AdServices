@@ -25,6 +25,7 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,16 +46,13 @@ public final class AggregateTriggerDataTest {
 
         AggregateTriggerData attributionTriggerData =
                 new AggregateTriggerData.Builder()
-                        .setKey(
-                                new AttributionAggregatableKey.Builder()
-                                        .setHighBits(0L).setLowBits(5L).build())
+                        .setKey(BigInteger.valueOf(5L))
                         .setSourceKeys(new HashSet<>(
                                 Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
                         .setFilter(filterData)
                         .build();
 
-        assertEquals(attributionTriggerData.getKey().getHighBits().longValue(), 0L);
-        assertEquals(attributionTriggerData.getKey().getLowBits().longValue(), 5L);
+        assertEquals(attributionTriggerData.getKey().longValue(), 5L);
         assertEquals(attributionTriggerData.getSourceKeys().size(), 3);
         assertTrue(attributionTriggerData.getFilter().isPresent());
         AggregateFilterData data = attributionTriggerData.getFilter().get();

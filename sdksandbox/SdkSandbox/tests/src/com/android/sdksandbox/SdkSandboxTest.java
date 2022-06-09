@@ -46,6 +46,7 @@ public class SdkSandboxTest {
 
     private SdkSandboxServiceImpl mService;
     private ApplicationInfo mApplicationInfo;
+    private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.testprovider";
     private static final String SDK_PACKAGE = "com.android.testprovider";
     private static final String SDK_PROVIDER_CLASS = "com.android.testprovider.TestProvider";
@@ -80,8 +81,16 @@ public class SdkSandboxTest {
     public void testLoadingSuccess() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
-        mService.loadSdk(new Binder(), mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSuccessful).isTrue();
     }
@@ -91,10 +100,26 @@ public class SdkSandboxTest {
         CountDownLatch latch = new CountDownLatch(2);
         RemoteCode mRemoteCode = new RemoteCode(latch);
         IBinder duplicateToken = new Binder();
-        mService.loadSdk(duplicateToken, mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode);
-        mService.loadSdk(duplicateToken, mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                duplicateToken,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                duplicateToken,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode.mSuccessful).isFalse();
         assertThat(mRemoteCode.mErrorCode).isEqualTo(
@@ -107,10 +132,26 @@ public class SdkSandboxTest {
         RemoteCode mRemoteCode1 = new RemoteCode(latch1);
         CountDownLatch latch2 = new CountDownLatch(1);
         RemoteCode mRemoteCode2 = new RemoteCode(latch2);
-        mService.loadSdk(new Binder(), mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode1);
-        mService.loadSdk(new Binder(), mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode2);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode1);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode2);
         assertThat(latch1.await(1, TimeUnit.MINUTES)).isTrue();
         assertThat(mRemoteCode1.mSuccessful).isTrue();
         assertThat(latch2.await(1, TimeUnit.MINUTES)).isTrue();
@@ -121,8 +162,16 @@ public class SdkSandboxTest {
     public void testRequestSurfacePackage() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
-        mService.loadSdk(new Binder(), mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         CountDownLatch surfaceLatch = new CountDownLatch(1);
         mRemoteCode.setLatch(surfaceLatch);
@@ -136,8 +185,16 @@ public class SdkSandboxTest {
     public void testSurfacePackageError() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
-        mService.loadSdk(new Binder(), mApplicationInfo, SDK_NAME, SDK_PROVIDER_CLASS,
-                new Bundle(), mRemoteCode);
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                new Binder(),
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                null,
+                null,
+                new Bundle(),
+                mRemoteCode);
         assertThat(latch.await(1, TimeUnit.MINUTES)).isTrue();
         CountDownLatch surfaceLatch = new CountDownLatch(1);
         mRemoteCode.setLatch(surfaceLatch);

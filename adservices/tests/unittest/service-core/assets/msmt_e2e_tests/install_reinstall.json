@@ -17,7 +17,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "1",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1728000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -42,7 +42,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "1",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1728000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -110,17 +110,6 @@
   },
   "output": {
     "event_level_results": [
-      {
-        "report_time": "800176400001",
-        "report_url": "https://www.ad-tech1.com",
-        "payload": {
-          "attribution_destination": "android-app://example.2d1.com",
-          "source_event_id": "1",
-          "trigger_data": "1",
-          "source_type": "navigation",
-          "randomized_trigger_rate": 0.0024263
-        }
-      },
       {
         "report_time": "800954000001",
         "report_url": "https://www.ad-tech1.com",

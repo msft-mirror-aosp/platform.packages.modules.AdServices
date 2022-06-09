@@ -18,10 +18,8 @@ package com.android.adservices.service.measurement.registration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -32,23 +30,26 @@ import org.junit.Test;
  */
 @SmallTest
 public final class TriggerRegistrationTest {
-    private static final String TAG = "TriggerRegistrationTest";
-
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+            "{\n"
+                    + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
 
     private TriggerRegistration createExampleResponse() {
         return new TriggerRegistration.Builder()
-            .setTopOrigin(Uri.parse("https://foo.com"))
-            .setReportingOrigin(Uri.parse("https://bar.com"))
-            .setTriggerData(1)
-            .setTriggerPriority(345678)
-            .setDeduplicationKey(2345678)
+                .setTopOrigin(Uri.parse("https://foo.com"))
+                .setReportingOrigin(Uri.parse("https://bar.com"))
+                .setTriggerData(1)
+                .setTriggerPriority(345678)
+                .setDeduplicationKey(2345678)
                 .setAggregateTriggerData(
                         "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
                                 + "\"not_filters\":{\"product\":[\"1\"]}},"
                                 + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")
                 .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
-            .build();
+                .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                .build();
     }
 
     void verifyExampleResponse(TriggerRegistration response) {
@@ -63,6 +64,7 @@ public final class TriggerRegistrationTest {
                 response.getAggregateTriggerData());
         assertEquals("{\"campaignCounts\":32768,\"geoValue\":1644}",
                 response.getAggregateValues());
+        assertEquals(TOP_LEVEL_FILTERS_JSON_STRING, response.getFilters());
     }
 
     @Test
@@ -80,5 +82,6 @@ public final class TriggerRegistrationTest {
         assertNull(response.getDeduplicationKey());
         assertNull(response.getAggregateTriggerData());
         assertNull(response.getAggregateValues());
+        assertNull(response.getFilters());
     }
 }
