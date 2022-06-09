@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
@@ -44,6 +45,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 /** A class to manage Epoch computation. */
 public class EpochManager implements Dumpable {
 
@@ -151,20 +154,16 @@ public class EpochManager implements Dumpable {
             // Step 2: Compute the Map from App to its classification topics.
             // Only produce for apps that called the Topics API in the current Epoch.
             // appClassificationTopicsMap = Map<App, List<Topics>>
-            Map<String, List<Integer>> appClassificationTopicsMap =
+            Map<String, List<Topic>> appClassificationTopicsMap =
                     computeAppClassificationTopics(appSdksUsageMap);
             LogUtil.v("appClassificationTopicsMap size is %d", appClassificationTopicsMap.size());
 
             // Then save app-topics Map into DB
-            mTopicsDao.persistAppClassificationTopics(
-                    currentEpochId,
-                    /* taxonomyVersion = */ 1L,
-                    /* modelVersion = */ 1L,
-                    appClassificationTopicsMap);
+            mTopicsDao.persistAppClassificationTopics(currentEpochId, appClassificationTopicsMap);
 
             // Step 3: Compute the Callers can learn map for this epoch.
             // This is similar to the Callers Can Learn table in the explainer.
-            Map<Integer, Set<String>> callersCanLearnThisEpochMap =
+            Map<Topic, Set<String>> callersCanLearnThisEpochMap =
                     computeCallersCanLearnMap(appSdksUsageMap, appClassificationTopicsMap);
             LogUtil.v(
                     "callersCanLearnThisEpochMap size is  %d", callersCanLearnThisEpochMap.size());
@@ -175,7 +174,7 @@ public class EpochManager implements Dumpable {
             // Step 4: For each topic, retrieve the callers (App or SDK) that can learn about that
             // topic. We look at last 3 epochs.
             // Return callersCanLearnMap = Map<Topic, Set<Caller>>  where Caller = App or Sdk.
-            Map<Integer, Set<String>> callersCanLearnMap =
+            Map<Topic, Set<String>> callersCanLearnMap =
                     mTopicsDao.retrieveCallerCanLearnTopicsMap(
                             currentEpochId, mFlags.getTopicsNumberOfLookBackEpochs());
             LogUtil.v("callersCanLearnMap size is %d", callersCanLearnMap.size());
@@ -183,7 +182,16 @@ public class EpochManager implements Dumpable {
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
-            List<Integer> topTopics = computeTopTopics(appClassificationTopicsMap);
+            List<Topic> topTopics = computeTopTopics(appClassificationTopicsMap);
+            // Abort the computation if empty list of top topics is returned from classifier.
+            // This could happen if there is no usage of the Topics API in the last epoch.
+            if (topTopics.isEmpty()) {
+                LogUtil.w(
+                        "Empty list of top topics is returned from classifier. Aborting the"
+                                + " computation!");
+                db.setTransactionSuccessful();
+                return;
+            }
             LogUtil.v("topTopics are  %s", topTopics.toString());
 
             // Then save Top Topics into DB
@@ -192,16 +200,12 @@ public class EpochManager implements Dumpable {
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently hard-code the taxonomyVersion and the modelVersion.
             // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
-            Map<Pair<String, String>, Integer> returnedAppSdkTopics =
+            Map<Pair<String, String>, Topic> returnedAppSdkTopics =
                     computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap, topTopics);
             LogUtil.v("returnedAppSdkTopics size is  %d", returnedAppSdkTopics.size());
 
             // And persist the map to DB so that we can reuse later.
-            mTopicsDao.persistReturnedAppTopicsMap(
-                    currentEpochId,
-                    /* taxonomyVersion = */ 1L,
-                    /* modelVersion = */ 1L,
-                    returnedAppSdkTopics);
+            mTopicsDao.persistReturnedAppTopicsMap(currentEpochId, returnedAppSdkTopics);
 
             // Finally erase outdated epoch's data
             garbageCollectOutdatedEpochData(currentEpochId);
@@ -215,12 +219,30 @@ public class EpochManager implements Dumpable {
 
     // Query the Classifier to get the top Topics for this epoch.
     // appClassificationTopicsMap = Map<App, List<Topics>>
+    // TODO: (b/232807776) Remove Topic Casting when topic can be populated from classifier
     @NonNull
-    private List<Integer> computeTopTopics(Map<String, List<Integer>> appClassificationTopicsMap) {
-        return mClassifier.getTopTopics(
-                appClassificationTopicsMap,
-                mFlags.getTopicsNumberOfTopTopics(),
-                mFlags.getTopicsNumberOfRandomTopics());
+    private List<Topic> computeTopTopics(Map<String, List<Topic>> appClassificationTopicsMap) {
+        Map<String, List<Integer>> appClassificationTopicsMapIntegerTopic = new HashMap<>();
+        for (Map.Entry<String, List<Topic>> appTopics : appClassificationTopicsMap.entrySet()) {
+            appClassificationTopicsMapIntegerTopic.put(
+                    appTopics.getKey(),
+                    appTopics.getValue().stream()
+                            .map(Topic::getTopic)
+                            .collect(Collectors.toList()));
+        }
+        List<Integer> topTopics =
+                mClassifier.getTopTopics(
+                        appClassificationTopicsMapIntegerTopic,
+                        mFlags.getTopicsNumberOfTopTopics(),
+                        mFlags.getTopicsNumberOfRandomTopics());
+        return topTopics.stream()
+                .map(
+                        topicsId ->
+                                Topic.create(
+                                        topicsId,
+                                        /* taxonomyVersion = */ 1L,
+                                        /* modelVersion = */ 1L))
+                .collect(Collectors.toList());
     }
 
     // Compute the Map from App to its classification topics.
@@ -228,10 +250,28 @@ public class EpochManager implements Dumpable {
     // input:
     // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
     // Return appClassificationTopicsMap = Map<App, List<Topic>>
+    // TODO: (b/232807776) Remove Topic Casting when topic can be populated from classifier
     @VisibleForTesting
-    Map<String, List<Integer>> computeAppClassificationTopics(
+    @NonNull
+    Map<String, List<Topic>> computeAppClassificationTopics(
             Map<String, List<String>> appSdksUsageMap) {
-        return mClassifier.classify(appSdksUsageMap.keySet());
+        Map<String, List<Integer>> appClassificationTopicsMapIntegerTopic =
+                mClassifier.classify(appSdksUsageMap.keySet());
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        for (Map.Entry<String, List<Integer>> appTopics :
+                appClassificationTopicsMapIntegerTopic.entrySet()) {
+            appClassificationTopicsMap.put(
+                    appTopics.getKey(),
+                    appTopics.getValue().stream()
+                            .map(
+                                    topicsId ->
+                                            Topic.create(
+                                                    topicsId,
+                                                    /* taxonomyVersion = */ 1L,
+                                                    /* modelVersion = */ 1L))
+                            .collect(Collectors.toList()));
+        }
+        return appClassificationTopicsMap;
     }
 
     /**
@@ -257,26 +297,26 @@ public class EpochManager implements Dumpable {
     // Return Map<Topic, Set<Caller>>  where Caller = App or Sdk.
     @VisibleForTesting
     @NonNull
-    static Map<Integer, Set<String>> computeCallersCanLearnMap(
+    static Map<Topic, Set<String>> computeCallersCanLearnMap(
             @NonNull Map<String, List<String>> appSdksUsageMap,
-            @NonNull Map<String, List<Integer>> appClassificationTopicsMap) {
+            @NonNull Map<String, List<Topic>> appClassificationTopicsMap) {
         Objects.requireNonNull(appSdksUsageMap);
         Objects.requireNonNull(appClassificationTopicsMap);
 
         // Map from Topic to set of App or Sdk that can learn about that topic.
         // This is similar to the table Can Learn Topic in the explainer.
         // Map<Topic, Set<Caller>>  where Caller = App or Sdk.
-        Map<Integer, Set<String>> callersCanLearnMap = new HashMap<>();
+        Map<Topic, Set<String>> callersCanLearnMap = new HashMap<>();
 
-        for (Map.Entry<String, List<Integer>> entry : appClassificationTopicsMap.entrySet()) {
+        for (Map.Entry<String, List<Topic>> entry : appClassificationTopicsMap.entrySet()) {
             String app = entry.getKey();
-            List<Integer> appTopics = entry.getValue();
+            List<Topic> appTopics = entry.getValue();
             if (appTopics == null) {
                 LogUtil.e("Can't find the Classification Topics for app = " + app);
                 continue;
             }
 
-            for (Integer topic : appTopics) {
+            for (Topic topic : appTopics) {
                 if (!callersCanLearnMap.containsKey(topic)) {
                     callersCanLearnMap.put(topic, new HashSet<>());
                 }
@@ -309,14 +349,14 @@ public class EpochManager implements Dumpable {
     // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
     @VisibleForTesting
     @NonNull
-    Map<Pair<String, String>, Integer> computeReturnedAppSdkTopics(
-            @NonNull Map<Integer, Set<String>> callersCanLearnMap,
+    Map<Pair<String, String>, Topic> computeReturnedAppSdkTopics(
+            @NonNull Map<Topic, Set<String>> callersCanLearnMap,
             @NonNull Map<String, List<String>> appSdksUsageMap,
-            @NonNull List<Integer> topTopics) {
-        Map<Pair<String, String>, Integer> returnedAppSdkTopics = new HashMap<>();
+            @NonNull List<Topic> topTopics) {
+        Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
 
         for (Map.Entry<String, List<String>> app : appSdksUsageMap.entrySet()) {
-            Integer returnedTopic = selectRandomTopic(topTopics);
+            Topic returnedTopic = selectRandomTopic(topTopics);
             Set<String> callersCanLearnThisTopic = callersCanLearnMap.get(returnedTopic);
             if (callersCanLearnThisTopic == null) {
                 continue;
@@ -329,7 +369,7 @@ public class EpochManager implements Dumpable {
                         Pair.create(app.getKey(), /* empty Sdk */ ""), returnedTopic);
                 // TODO(b/223159123): Do we need to filter out this log in prod build?
                 LogUtil.v(
-                        "CacheManager.computeReturnedAppSdkTopics. Topic %d is returned for"
+                        "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned for"
                                 + " %s",
                         returnedTopic, app.getKey());
             }
@@ -340,7 +380,7 @@ public class EpochManager implements Dumpable {
                     returnedAppSdkTopics.put(Pair.create(app.getKey(), sdk), returnedTopic);
                     // TODO(b/223159123): Do we need to filter out this log in prod build?
                     LogUtil.v(
-                            "CacheManager.computeReturnedAppSdkTopics. Topic %d is returned"
+                            "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned"
                                     + " for %s, %s",
                             returnedTopic, app.getKey(), sdk);
                 }
@@ -353,7 +393,8 @@ public class EpochManager implements Dumpable {
     // Return a random topics from the Top Topics.
     // The Top Topics include the Top 5 Topics and one random topic from the Taxonomy.
     @VisibleForTesting
-    Integer selectRandomTopic(List<Integer> topTopics) {
+    @NonNull
+    Topic selectRandomTopic(List<Topic> topTopics) {
         Preconditions.checkArgument(
                 topTopics.size()
                         == mFlags.getTopicsNumberOfTopTopics()

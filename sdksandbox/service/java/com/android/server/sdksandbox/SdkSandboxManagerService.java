@@ -454,10 +454,16 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkDataDirInfo sdkDataInfo = mSdkSandboxStorageManager.getSdkDataDirInfo(
                 callingInfo, sdkProviderInfo.getSdkName());
         try {
-            service.loadSdk(sdkToken, sdkProviderInfo.getApplicationInfo(),
-                    sdkProviderInfo.getSdkName(), sdkProviderInfo.getSdkProviderClassName(),
-                    sdkDataInfo.getCeDataDir(), sdkDataInfo.getDeDataDir(),
-                    params, link);
+            service.loadSdk(
+                    callingInfo.getPackageName(),
+                    sdkToken,
+                    sdkProviderInfo.getApplicationInfo(),
+                    sdkProviderInfo.getSdkName(),
+                    sdkProviderInfo.getSdkProviderClassName(),
+                    sdkDataInfo.getCeDataDir(),
+                    sdkDataInfo.getDeDataDir(),
+                    params,
+                    link);
 
             onSdkLoaded(callingInfo, sdkProviderInfo.getApplicationInfo().uid);
         } catch (RemoteException e) {
@@ -554,9 +560,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private String resolveAdServicesPackage() {
         PackageManager pm = mContext.getPackageManager();
         Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
-        List<ResolveInfo> resolveInfos = pm.queryIntentServicesAsUser(serviceIntent,
-                PackageManager.GET_SERVICES | PackageManager.MATCH_SYSTEM_ONLY,
-                UserHandle.SYSTEM);
+        List<ResolveInfo> resolveInfos =
+                pm.queryIntentServicesAsUser(
+                        serviceIntent,
+                        PackageManager.GET_SERVICES
+                                | PackageManager.MATCH_SYSTEM_ONLY
+                                | PackageManager.MATCH_DIRECT_BOOT_AWARE
+                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
+                        UserHandle.SYSTEM);
         if (resolveInfos == null || resolveInfos.size() == 0) {
             Log.e(TAG, "AdServices package could not be resolved");
         } else if (resolveInfos.size() > 1) {
@@ -814,9 +825,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    /**
-     * Class which retrieves and stores the sdkProviderClassName and ApplicationInfo
-     */
+    /** Class which retrieves and stores the sdkName, sdkProviderClassName, and ApplicationInfo */
     private static class SdkProviderInfo {
 
         private final ApplicationInfo mApplicationInfo;

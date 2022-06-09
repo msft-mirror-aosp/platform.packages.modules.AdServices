@@ -17,18 +17,23 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Title of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesTopics">access AdServices Topics API</string>
-    <!-- Description of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE]-->
+    <!-- Description of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesTopics">Allows an application to access AdServices Topics API.</string>
 
     <!-- Title of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesAttribution">access AdServices Attribution APIs</string>
-    <!-- Description of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE]-->
+    <!-- Description of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesAttribution">Allows an application to access AdServices Attribution APIs.</string>
 
     <!-- Title of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesCustomAudience">access AdServices Custom Audience API</string>
-    <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE]-->
+    <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
+
+    <!-- Title of an application permission that lets it access AdServices Consent API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesConsent">access AdServices Consent API</string>
+    <!--Description of an application permission that lets it access AdServices Consent API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesConsent">Allows an application to access AdServices Consent API.</string>
 
     <!-- Title of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_adServicesAccessAdId">Access to Ad ID API</string>
@@ -39,6 +44,11 @@
     <string name="permlab_adServicesAccessAppSetId">Access to App Set ID API</string>
     <!-- Description of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_adServicesAccessAppSetId">Allows an application to access App Set ID API.</string>
+
+    <!-- Title of an application permission that lets it access Consent Service API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_adServicesAccessConsentService">Access to Consent Service API</string>
+    <!-- Description of an application permission that lets it access Consent Service API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_adServicesAccessConsentService">Allows an application to access Consent Service API.</string>
 
     <!-- UI strings -->
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
@@ -67,6 +77,12 @@
     <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_fragment_title">Manage your general interests for ads</string>
 
-    <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_topics_title">Manage your general interests for ads</string>
+    <!-- Text for the button to block a topic. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_block_topic_title">Block</string>
+
+    <!-- Text for the button to open blocked topics fragment. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_blocked_topics_title">Interests you\'ve blocked</string>
+
+    <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_reset_topics_title">Reset all interests</string>
 </resources>

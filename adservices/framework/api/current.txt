@@ -54,6 +54,13 @@ package android.adservices.adselection {
     method @NonNull public android.net.Uri getRenderUrl();
   }
 
+  public static final class AdSelectionOutcome.Builder {
+    ctor public AdSelectionOutcome.Builder();
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome build();
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setAdSelectionId(long);
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUrl(@NonNull android.net.Uri);
+  }
+
   public final class AdWithBid implements android.os.Parcelable {
     ctor public AdWithBid(@NonNull android.adservices.common.AdData, double);
     method public int describeContents();
@@ -310,7 +317,7 @@ package android.adservices.topics {
   }
 
   public class TopicsManager {
-    method @NonNull public void getTopics(@NonNull android.adservices.topics.GetTopicsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.topics.GetTopicsResponse,android.adservices.exceptions.GetTopicsException>);
+    method @NonNull public void getTopics(@NonNull android.adservices.topics.GetTopicsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.topics.GetTopicsResponse,java.lang.Exception>);
     field public static final int RESULT_INTERNAL_ERROR = 1; // 0x1
     field public static final int RESULT_INVALID_ARGUMENT = 2; // 0x2
     field public static final int RESULT_IO_ERROR = 3; // 0x3

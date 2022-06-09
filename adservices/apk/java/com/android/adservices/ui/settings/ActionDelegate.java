@@ -17,17 +17,24 @@ package com.android.adservices.ui.settings;
 
 import static com.android.adservices.ui.settings.AdServicesSettingsMainFragment.TOPICS_PREFERENCE_BUTTON_KEY;
 
+import android.widget.TextView;
+
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.Preference;
 
 import com.android.adservices.api.R;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.ui.settings.TopicsViewModel.TopicsViewModelUiEvent;
 
 import java.util.Objects;
+
+
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
 public class ActionDelegate {
+
     private final FragmentManager mFragmentManager;
     private final MainViewModel mMainViewModel;
     private final TopicsViewModel mTopicsViewModel;
@@ -98,23 +105,53 @@ public class ActionDelegate {
                 (AdServicesSettingsTopicsFragment)
                         mFragmentManager.findFragmentById(R.id.fragment_container_view);
 
+        configureBlockedTopicsFragmentButton(fragment);
+        configureResetTopicsButton(fragment);
         listenToViewModelUiEvents(fragment);
     }
 
-    // TODO(b/229721429): configure UI elements in Topics fragment.
+    private void configureBlockedTopicsFragmentButton(AdServicesSettingsTopicsFragment fragment) {
+        TextView blockedTopicsButton =
+                fragment.requireView().findViewById(R.id.blocked_topics_button);
+
+        blockedTopicsButton.setOnClickListener(
+                view -> {
+                    mTopicsViewModel.blockedTopicsFragmentButtonClickHandler();
+                });
+    }
+
+    private void configureResetTopicsButton(AdServicesSettingsTopicsFragment fragment) {
+        TextView resetTopicsButton = fragment.requireView().findViewById(R.id.reset_topics_button);
+
+        resetTopicsButton.setOnClickListener(
+                view -> {
+                    mTopicsViewModel.resetTopicsButtonClickHandler();
+                });
+    }
 
     private void listenToViewModelUiEvents(AdServicesSettingsTopicsFragment fragment) {
         mTopicsViewModel
                 .getUiEvents()
                 .observe(
                         fragment,
-                        event -> {
+                        eventTopicPair -> {
+                            TopicsViewModelUiEvent event = eventTopicPair.first;
+                            Topic topic = eventTopicPair.second;
                             if (event == null) {
                                 return;
                             }
                             // TODO(b/229721429): handle UI events.
                             switch (event) {
-                                case DISPLAY_SOMETHING_1:
+                                case BLOCK_TOPIC:
+                                    // TODO(b/229721429): show confirmation for blocking a topic.
+                                    mTopicsViewModel.revokeTopicConsent(topic);
+                                    break;
+                                case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
+                                    // TODO(b/232418657): display BlockedTopicsFragment
+                                    break;
+                                case RESET_TOPICS:
+                                    // TODO(b/229721429): show confirmation for resetting topics.
+                                    mTopicsViewModel.resetTopics();
                                     break;
                             }
                         });
