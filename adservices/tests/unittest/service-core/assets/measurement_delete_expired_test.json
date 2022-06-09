@@ -1,0 +1,201 @@
+{
+  "testCases": [
+    {
+      "name": "1 expired Source and 1 non-expired Sources",
+      "input": {
+        "sources": [
+          {
+            "id": "old1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "adTechDomain": "android-app://example3.com",
+            "eventTime": 8640000001,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          },
+          {
+            "id": "young1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "adTechDomain": "android-app://example3.com",
+            "eventTime": 33203622330000,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "young1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://example1.com/s1",
+            "attributionDestination": "android-app://example2.com/d1",
+            "adTechDomain": "android-app://example3.com",
+            "eventTime": 33203622330000,
+            "expiryTime": 8640000030,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      }
+    },
+    {
+      "name": "1 expired Trigger and 1 non-expired Trigger",
+      "input": {
+        "sources": [],
+        "triggers": [
+          {
+            "id": "old1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "adTechDomain": "https://www.example3.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          },
+          {
+            "id": "young1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "adTechDomain": "https://www.example3.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 33203622330000,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [],
+        "triggers": [
+          {
+            "id": "young1",
+            "attributionDestination": "https://www.example2.com/d1",
+            "adTechDomain": "https://www.example3.com",
+            "priority": 101,
+            "status": 0,
+            "triggerData": 2,
+            "triggerTime": 33203622330000,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attribution_rate_limits": []
+      }
+    },
+    {
+      "name": "1 delivered EventReport and 1 non-expired EventReport",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "delivered1",
+            "sourceId": 1,
+            "attributionDestination": "https://www.example2.com/d1",
+            "adTechDomain": "https://www.example3.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 1,
+            "reportTime": 8640000002,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          },
+          {
+            "id": "young1",
+            "sourceId": 1,
+            "attributionDestination": "https://www.example2.com/d1",
+            "adTechDomain": "https://www.example3.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 33203622330000,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          }
+        ],
+        "attribution_rate_limits": []
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [
+          {
+            "id": "young1",
+            "sourceId": 1,
+            "attributionDestination": "https://www.example2.com/d1",
+            "adTechDomain": "https://www.example3.com",
+            "triggerData": 2,
+            "triggerTime": 8640000002,
+            "status": 0,
+            "reportTime": 33203622330000,
+            "triggerPriority": 101,
+            "sourceType": "navigation"
+          }
+        ],
+        "attribution_rate_limits": []
+      }
+    },
+    {
+      "name": "1 expired AttributionRateLimit and 1 non-expired AttributionRateLimit",
+      "input": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attribution_rate_limits": [
+          {
+            "id": "old1",
+            "sourceSite": "remove.me",
+            "destinationSite": "remove.me",
+            "adTechDomain": "android-app://example.one",
+            "triggerTime": 8640000002,
+            "registrant": "android-app://com.example.xyz"
+          },
+          {
+            "id": "young1",
+            "sourceSite": "dont.remove.me",
+            "destinationSite": "dont.remove.me",
+            "adTechDomain": "android-app://example.one",
+            "triggerTime": 33203622330000,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      },
+      "output": {
+        "sources": [],
+        "triggers": [],
+        "event_reports": [],
+        "attribution_rate_limits": [
+          {
+            "id": "young1",
+            "sourceSite": "dont.remove.me",
+            "destinationSite": "dont.remove.me",
+            "adTechDomain": "android-app://example.one",
+            "triggerTime": 33203622330000,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ]
+      }
+    }
+  ]
+}

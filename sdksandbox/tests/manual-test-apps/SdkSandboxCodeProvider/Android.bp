@@ -19,12 +19,23 @@ package {
 android_test_helper_app {
     name: "SdkSandboxCodeProvider",
     defaults: ["platform_app_defaults"],
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     srcs: [
-       "src/**/*.java",
-       ":framework-sdksandbox-sources",
+       "src/**/sdksandboxcode_1/*.java",
     ],
     resource_dirs: ["res"],
     platform_apis: true,
+    manifest: "AndroidManifest.xml",
+}
+
+android_test_helper_app {
+    name: "SdkSandboxWebViewProvider",
+    defaults: ["platform_app_defaults"],
+    certificate: ":sdksandbox-test",
+    srcs: [
+       "src/**/sdksandboxcode_webview/*.java",
+    ],
+    resource_dirs: ["res"],
+    platform_apis: true,
+    manifest: "AndroidManifest_WebViewProvider.xml",
 }
