@@ -34,6 +34,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 
@@ -958,6 +959,25 @@ class MeasurementDao implements IMeasurementDao {
                 values,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ?",
                 new String[]{uri.toString()});
+    }
+
+    @Override
+    public void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateEncryptionKey.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AggregateEncryptionKey.KEY_ID,
+                aggregateEncryptionKey.getKeyId());
+        values.put(MeasurementTables.AggregateEncryptionKey.PUBLIC_KEY,
+                aggregateEncryptionKey.getPublicKey());
+        values.put(MeasurementTables.AggregateEncryptionKey.EXPIRY,
+                aggregateEncryptionKey.getExpiry());
+        long rowId = mSQLTransaction.getDatabase()
+                .insert(MeasurementTables.AggregateEncryptionKey.TABLE,
+                        /*nullColumnHack=*/null, values);
+        if (rowId == -1) {
+            throw new DatastoreException("Aggregate encryption key insertion failed.");
+        }
     }
 
     @Override

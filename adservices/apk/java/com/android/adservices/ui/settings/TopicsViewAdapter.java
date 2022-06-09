@@ -36,25 +36,12 @@ import java.util.Objects;
  * AdServicesSettingsTopicsFragment}.
  */
 public class TopicsViewAdapter extends RecyclerView.Adapter {
+
+    private final TopicsViewModel mViewModel;
     private final LiveData<ImmutableList<Topic>> mTopics;
 
-    /** ViewHolder to display the text for a topic item */
-    public static class TopicsViewHolder extends RecyclerView.ViewHolder {
-        private final TextView mTopicTextView;
-
-        public TopicsViewHolder(final View itemView) {
-            super(itemView);
-            mTopicTextView = itemView.findViewById(R.id.topic_text);
-        }
-
-        /** set the human readable string for the topic */
-        public void setTopic(Topic topic) {
-            // TODO(b/234655984): show readable string of topic
-            mTopicTextView.setText(Integer.toString(topic.getTopic()));
-        }
-    }
-
     public TopicsViewAdapter(TopicsViewModel viewModel) {
+        mViewModel = viewModel;
         mTopics = viewModel.getTopics();
     }
 
@@ -68,7 +55,8 @@ public class TopicsViewAdapter extends RecyclerView.Adapter {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ((TopicsViewHolder) holder)
-                .setTopic(Objects.requireNonNull(mTopics.getValue()).get(position));
+                .initTopicItem(
+                        Objects.requireNonNull(mTopics.getValue()).get(position), mViewModel);
     }
 
     @Override
@@ -79,5 +67,28 @@ public class TopicsViewAdapter extends RecyclerView.Adapter {
     @Override
     public int getItemViewType(final int position) {
         return R.layout.topic_item;
+    }
+
+    /** ViewHolder to display the text for a topic item */
+    public static class TopicsViewHolder extends RecyclerView.ViewHolder {
+
+        private final TextView mTopicTextView;
+        private final TextView mBlockTextView;
+
+        public TopicsViewHolder(final View itemView) {
+            super(itemView);
+            mTopicTextView = itemView.findViewById(R.id.topic_text);
+            mBlockTextView = itemView.findViewById(R.id.block_text);
+        }
+
+        /** set the human readable string for the topic and listener for block topic logic. */
+        public void initTopicItem(Topic topic, TopicsViewModel viewModel) {
+            // TODO(b/234655984): show readable string of topic
+            mTopicTextView.setText(Integer.toString(topic.getTopic()));
+            mBlockTextView.setOnClickListener(
+                    view -> {
+                        viewModel.revokeTopicConsentButtonClickHandler(topic);
+                    });
+        }
     }
 }

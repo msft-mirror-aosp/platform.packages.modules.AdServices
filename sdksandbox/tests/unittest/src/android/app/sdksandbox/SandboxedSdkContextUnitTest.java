@@ -41,6 +41,7 @@ import java.io.InputStreamReader;
 public class SandboxedSdkContextUnitTest {
 
     private SandboxedSdkContext mSandboxedSdkContext;
+    private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeproviderresources";
     private static final String RESOURCES_PACKAGE = "com.android.codeproviderresources_1";
     private static final String TEST_INTEGER_KEY = "test_integer";
@@ -58,9 +59,14 @@ public class SandboxedSdkContextUnitTest {
         ApplicationInfo info = context.getPackageManager().getApplicationInfo(
                 RESOURCES_PACKAGE,
                 PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
-        mSandboxedSdkContext = new SandboxedSdkContext(
-                InstrumentationRegistry.getContext(), info, SDK_NAME,
-                SDK_CE_DATA_DIR, SDK_DE_DATA_DIR);
+        mSandboxedSdkContext =
+                new SandboxedSdkContext(
+                        InstrumentationRegistry.getContext(),
+                        CLIENT_PACKAGE_NAME,
+                        info,
+                        SDK_NAME,
+                        SDK_CE_DATA_DIR,
+                        SDK_DE_DATA_DIR);
     }
 
     @Test
@@ -71,6 +77,16 @@ public class SandboxedSdkContextUnitTest {
         assertThat(resources.getInteger(integerId)).isEqualTo(TEST_INTEGER_VALUE);
         int stringId = resources.getIdentifier(TEST_STRING_KEY, "string", RESOURCES_PACKAGE);
         assertThat(resources.getString(stringId)).isEqualTo(TEST_STRING_VALUE);
+    }
+
+    @Test
+    public void testSdkName() {
+        assertThat(mSandboxedSdkContext.getSdkName()).isEqualTo(SDK_NAME);
+    }
+
+    @Test
+    public void testClientPackageName() {
+        assertThat(mSandboxedSdkContext.getClientPackageName()).isEqualTo(CLIENT_PACKAGE_NAME);
     }
 
     @Test

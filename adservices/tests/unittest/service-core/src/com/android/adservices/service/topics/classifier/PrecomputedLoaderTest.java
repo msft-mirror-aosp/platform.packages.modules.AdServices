@@ -26,37 +26,33 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-/**
- * PrecomputedLoader Test {@link PrecomputedLoader}
- */
+/** PrecomputedLoader Test {@link PrecomputedLoader}. */
 public class PrecomputedLoaderTest {
-    private static final String sLabelsFilePath =
-            "classifier/labels_chrome_topics.txt";
-    private static final String sTestAppFilePath =
+    private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
+    private static final String TEST_APPS_FILE_PATH =
             "classifier/precomputed_test_app_list_chrome_topics.csv";
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final PrecomputedLoader sPrecomputedLoader =
-            new PrecomputedLoader(sContext, sLabelsFilePath, sTestAppFilePath);
+            new PrecomputedLoader(sContext, TEST_LABELS_FILE_PATH, TEST_APPS_FILE_PATH);
 
     @Test
-    public void testLoadedLabels() throws IOException {
+    public void testRetrieveLabels_successfulRead() {
         ImmutableList<Integer> labels = sPrecomputedLoader.retrieveLabels();
-        // Check size of list
-        // The labels.txt contains 350 topics
+        // Check size of list.
+        // The labels.txt contains 350 topics.
         assertThat(labels.size()).isEqualTo(349);
 
-        // Check some labels
+        // Check some labels.
         assertThat(labels).containsAtLeast(1693, 1030, 565, 1770);
     }
 
     @Test
-    public void testLoadedAppTopics() throws IOException {
+    public void testLoadedAppTopics() {
         Map<String, List<Integer>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
         // Check size of map
         // The app topics file contains 1000 apps + 11 sample apps + 2 test valid topics' apps.
@@ -76,23 +72,17 @@ public class PrecomputedLoaderTest {
         // The topicIds of "com.example.adservices.samples.topics.sampleapp" in
         // assets/precomputed_test_app_list_chrome_topics.csv are 1379, 1142, 669, 16, 14
         String sampleAppPrefix = "com.example.adservices.samples.topics.sampleapp";
-        List<Integer> sampleAppTopics =
-                Arrays.asList(1379, 1142, 669, 16, 14);
-        assertThat(appTopic.get(sampleAppPrefix))
-                .isEqualTo(sampleAppTopics);
+        List<Integer> sampleAppTopics = Arrays.asList(1379, 1142, 669, 16, 14);
+        assertThat(appTopic.get(sampleAppPrefix)).isEqualTo(sampleAppTopics);
 
         // The topicIds of "com.example.adservices.samples.topics.sampleapp4" in
         // assets/precomputed_test_app_list_chrome_topics.csv are 529, 1739, 1266, 1013, 315
-        List<Integer> sampleApp4Topics =
-                Arrays.asList(529, 1739, 1266, 1013, 315);
-        assertThat(appTopic.get(sampleAppPrefix + "4"))
-                .isEqualTo(sampleApp4Topics);
+        List<Integer> sampleApp4Topics = Arrays.asList(529, 1739, 1266, 1013, 315);
+        assertThat(appTopic.get(sampleAppPrefix + "4")).isEqualTo(sampleApp4Topics);
 
         // Check if all sample apps have 5 unique topics
         for (int appIndex = 1; appIndex <= 10; appIndex++) {
-            assertThat(new HashSet<>(appTopic.get(
-                    sampleAppPrefix + appIndex)).size())
-                    .isEqualTo(5);
+            assertThat(new HashSet<>(appTopic.get(sampleAppPrefix + appIndex)).size()).isEqualTo(5);
         }
 
         // Verify that the topics from the file are valid:
@@ -102,16 +92,12 @@ public class PrecomputedLoaderTest {
 
         // The valid topicIds of "com.example.adservices.valid.topics.testapp1" in
         // assets/precomputed_test_app_list_chrome_topics.csv are 211, 78, 16
-        List<Integer> validTestApp1Topics =
-                Arrays.asList(211, 78, 16);
-        assertThat(appTopic.get(validTestAppPrefix + "1"))
-                .isEqualTo(validTestApp1Topics);
+        List<Integer> validTestApp1Topics = Arrays.asList(211, 78, 16);
+        assertThat(appTopic.get(validTestAppPrefix + "1")).isEqualTo(validTestApp1Topics);
 
         // The valid topicIds of "com.example.adservices.valid.topics.testapp2" in
         // assets/precomputed_test_app_list_chrome_topics.csv are 1209, 1266
-        List<Integer> validTestApp2Topics =
-                Arrays.asList(1209, 1266);
-        assertThat(appTopic.get(validTestAppPrefix + "2"))
-                .isEqualTo(validTestApp2Topics);
+        List<Integer> validTestApp2Topics = Arrays.asList(1209, 1266);
+        assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
     }
 }
