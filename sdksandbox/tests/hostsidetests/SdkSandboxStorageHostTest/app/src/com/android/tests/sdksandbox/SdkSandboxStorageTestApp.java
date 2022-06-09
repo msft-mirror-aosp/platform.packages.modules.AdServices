@@ -20,14 +20,14 @@ import static android.os.storage.StorageManager.UUID_DEFAULT;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
-import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Process;
 import android.os.UserHandle;
 
@@ -41,45 +41,78 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
 @RunWith(JUnit4.class)
 public class SdkSandboxStorageTestApp {
 
-    private static final String CODE_PROVIDER_PACKAGE =
-            "com.android.tests.codeprovider.storagetest";
-    private static final String CODE_PROVIDER_KEY = "sdk-provider-class";
-    private static final String CODE_PROVIDER_CLASS =
-            "com.android.tests.codeprovider.storagetest.StorageTestSandboxedSdkProvider";
+    private static final String SDK_NAME = "com.android.tests.codeprovider.storagetest";
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
+
+    private static Context sContext;
+
+    private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
+            "open failed: EACCES (Permission denied)";
+    private static final String JAVA_FILE_NOT_FOUND_MSG =
+            "open failed: ENOENT (No such file or directory)";
 
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
-        Context context = ApplicationProvider.getApplicationContext();
-        mSdkSandboxManager = context.getSystemService(
+        sContext = ApplicationProvider.getApplicationContext();
+        mSdkSandboxManager = sContext.getSystemService(
                 SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
     }
 
     // Run a phase of the test inside the code loaded for this app
-    private void runPhaseInsideCode(IBinder token, String phaseName) {
+    private void runPhaseInsideCode(String phaseName) {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(token, new Binder(), 0, bundle);
+        mSdkSandboxManager.requestSurfacePackage(SDK_NAME, 0, 500, 500, bundle);
     }
 
     @Test
-    public void testSdkSandboxDataAppDirectory_SharedStorageIsUsable() throws Exception {
+    public void testSdkSandboxDataRootDirectory_IsNotAccessibleByApps() throws Exception {
+        assertDirIsNotAccessible("/data/misc_ce/0/sdksandbox");
+        assertDirIsNotAccessible("/data/misc_de/0/sdksandbox");
+    }
+
+    @Test
+    public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         // First load code
-        Bundle params = new Bundle();
-        params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, callback);
-        IBinder codeToken = callback.getSdkToken();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Run phase inside the code
-        runPhaseInsideCode(codeToken, "testSdkSandboxDataAppDirectory_SharedStorageIsUsable");
+        runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
+
+        // Wait for code to finish handling the request
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
+    }
+
+    @Test
+    public void testSdkDataPackageDirectory_CreateMissingSdkDirs() throws Exception {
+        // First load code
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    @Test
+    public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
+        // First load code
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Run phase inside the code
+        runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
 
         // Wait for code to finish handling the request
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
@@ -88,11 +121,10 @@ public class SdkSandboxStorageTestApp {
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
-        Bundle params = new Bundle();
-        params.putString(CODE_PROVIDER_KEY, CODE_PROVIDER_CLASS);
         FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(CODE_PROVIDER_PACKAGE, params, callback);
-        IBinder codeToken = callback.getSdkToken();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        // Wait for sdk to finish loading
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         final StorageStatsManager stats = InstrumentationRegistry.getInstrumentation().getContext()
                                                 .getSystemService(StorageStatsManager.class);
@@ -102,7 +134,8 @@ public class SdkSandboxStorageTestApp {
         // Have the sdk use up space
         final StorageStats initialAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats initialUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
-        runPhaseInsideCode(codeToken, "testSdkDataIsAttributedToApp");
+
+        runPhaseInsideCode("testSdkDataIsAttributedToApp");
 
         // Wait for sdk to finish handling the request
         callback.isRequestSurfacePackageSuccessful();
@@ -127,7 +160,19 @@ public class SdkSandboxStorageTestApp {
                            errorMarginSize);
     }
 
-    public static void assertMostlyEquals(long expected, long actual, long delta) {
+    private static void assertDirIsNotAccessible(String path) {
+        // Trying to access a file that does not exist in that directory, it should return
+        // permission denied not file not found.
+        Exception exception = assertThrows(FileNotFoundException.class, () -> {
+            new FileInputStream(new File(path, "FILE_DOES_NOT_EXIST"));
+        });
+        assertThat(exception.getMessage()).contains(JAVA_FILE_PERMISSION_DENIED_MSG);
+        assertThat(exception.getMessage()).doesNotContain(JAVA_FILE_NOT_FOUND_MSG);
+
+        assertThat(new File(path).canExecute()).isFalse();
+    }
+
+    private static void assertMostlyEquals(long expected, long actual, long delta) {
         if (Math.abs(expected - actual) > delta) {
             throw new AssertionFailedError("Expected roughly " + expected + " but was " + actual);
         }

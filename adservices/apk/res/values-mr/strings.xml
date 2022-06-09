@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Copyright (C) 2022 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"AdServices Topics API अ‍ॅक्सेस करा"</string>
+    <string name="permdesc_accessAdServicesTopics" msgid="4220466427260104683">"अ‍ॅप्लिकेशनला AdServices Topics API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_accessAdServicesAttribution" msgid="4498132091418336093">"AdServices Attribution API अ‍ॅक्सेस करा"</string>
+    <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"अ‍ॅप्लिकेशनला AdServices Attribution API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API अ‍ॅक्सेस करा"</string>
+    <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"अ‍ॅप्लिकेशनला AdServices Custom Audience API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API चा अ‍ॅक्सेस"</string>
+    <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"अ‍ॅप्लिकेशनला Ad ID API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"अ‍ॅप संच आयडी API चा अ‍ॅक्सेस"</string>
+    <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"अ‍ॅप्लिकेशनला अ‍ॅप संच आयडी API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"प्रायव्हसी सॅंडबाॅक्स बीटा"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"प्रायव्हसी सॅंडबाॅक्स बीटा"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"प्रायव्हसी सॅंडबाॅक्स बीटा टॉगल करा"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"तुमची साधारण स्वारस्ये"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"तुमची साधारण स्वारस्ये व्यवस्थापित करा"</string>
+    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
+    <string name="settingsUI_apps_title" msgid="2177966577556486280">"तुमची अ‍ॅप्स जी विशिष्ट स्वारस्ये जनरेट करतात"</string>
+    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"विशिष्ट स्वारस्ये जनरेट करणारी तुमची अ‍ॅप्स व्यवस्थापित करा"</string>
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"जाहिरातींसाठी तुमची सामान्य स्वारस्ये व्यवस्थापित करा"</string>
+    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
+    <skip />
+    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
+    <skip />
+</resources>

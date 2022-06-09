@@ -27,7 +27,7 @@ oneway interface ISdkSandboxToSdkSandboxManagerCallback {
     const int LOAD_SDK_ALREADY_LOADED = 1;
     const int LOAD_SDK_PROVIDER_INIT_ERROR = 2;
     const int LOAD_SDK_NOT_FOUND = 3;
-    const int LOAD_SDK_INSTANTIATION_ERROR = 3;
+    const int LOAD_SDK_INSTANTIATION_ERROR = 4;
 
     const int SURFACE_PACKAGE_INTERNAL_ERROR = 700;
 
