@@ -36,7 +36,8 @@
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"As aplicacións que xeran intereses específicos"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Xestiona as aplicacións que xeran intereses específicos"</string>
-    <!-- no translation found for settingsUI_topics_fragment_title (4413069330318399420) -->
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Xestionar os teus intereses xerais relativos aos anuncios"</string>
+    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
     <skip />
     <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
     <skip />
