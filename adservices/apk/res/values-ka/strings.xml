@@ -22,10 +22,14 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"აპლიკაციას აძლევს წვდომას AdServices Attribution API-ზე."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"წვდომა AdServices Custom Audience API-ზე"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"აპლიკაციას აძლევს წვდომას AdServices Custom Audience API-ზე."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API-ზე წვდომა"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"აპლიკაციას აძლევს წვდომას AdServices Consent API-ზე."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"წვდომა Ad ID API-ზე"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"აპლიკაციას აძლევს წვდომას Ad ID API-ზე."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"წვდომა App Set ID API-ზე"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"აპლიკაციას აძლევს წვდომას App Set ID API-ზე."</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-ზე წვდომა"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"აპლიკაციას აძლევს წვდომას Consent Service API-ზე."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox ბეტა"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox ბეტა"</string>
