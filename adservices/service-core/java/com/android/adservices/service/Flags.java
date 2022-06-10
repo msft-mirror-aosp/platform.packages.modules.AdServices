@@ -199,6 +199,13 @@ public interface Flags extends Dumpable {
         return FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
     }
 
+    int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;
+
+    /** Returns the number of CA that can be bid in parallel for one Ad Selection */
+    default int getAdSelectionConcurrentBiddingCount() {
+        return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
