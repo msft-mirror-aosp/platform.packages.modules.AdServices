@@ -149,25 +149,25 @@
         </activity>
 
         <!-- Measurement event main report upload job. -->
-        <service android:name="com.android.adservices.service.measurement.EventReportingJobService"
+        <service android:name="com.android.adservices.service.measurement.reporting.EventReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Measurement event fallback report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.EventFallbackReportingJobService"
+                     "com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Measurement aggregate main report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.AggregateReportingJobService"
+                     "com.android.adservices.service.measurement.reporting.AggregateReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Measurement aggregate fallback report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.AggregateFallbackReportingJobService"
+                     "com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
