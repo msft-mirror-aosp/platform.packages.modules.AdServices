@@ -101,11 +101,10 @@ public class AdSelectionE2ETest {
                     + "}";
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     private Context mContext;
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
