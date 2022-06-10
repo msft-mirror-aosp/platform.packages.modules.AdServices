@@ -22,6 +22,7 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,14 +37,12 @@ public final class AggregatableAttributionTriggerTest {
 
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
-                        .setKey(new AttributionAggregatableKey.Builder()
-                                .setHighBits(0L).setLowBits(159L).build())
+                        .setKey(BigInteger.valueOf(159L))
                         .setSourceKeys(new HashSet<>(
                                 Arrays.asList("campCounts", "campGeoCounts"))).build();
         AggregateTriggerData attributionTriggerData2 =
                 new AggregateTriggerData.Builder()
-                        .setKey(new AttributionAggregatableKey.Builder()
-                                .setHighBits(0L).setLowBits(5L).build())
+                        .setKey(BigInteger.valueOf(5L))
                         .setSourceKeys(new HashSet<>(
                                 Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
                         .build();
@@ -59,15 +58,9 @@ public final class AggregatableAttributionTriggerTest {
                         .setValues(values).build();
 
         assertEquals(attributionTrigger.getTriggerData().size(), 2);
-        assertEquals(attributionTrigger.getTriggerData().get(0).getKey().getHighBits().longValue(),
-                0L);
-        assertEquals(attributionTrigger.getTriggerData().get(0).getKey().getLowBits().longValue(),
-                159L);
+        assertEquals(attributionTrigger.getTriggerData().get(0).getKey().longValue(), 159L);
         assertEquals(attributionTrigger.getTriggerData().get(0).getSourceKeys().size(), 2);
-        assertEquals(attributionTrigger.getTriggerData().get(1).getKey().getHighBits().longValue(),
-                0L);
-        assertEquals(attributionTrigger.getTriggerData().get(1).getKey().getLowBits().longValue(),
-                5L);
+        assertEquals(attributionTrigger.getTriggerData().get(1).getKey().longValue(), 5L);
         assertEquals(attributionTrigger.getTriggerData().get(1).getSourceKeys().size(), 3);
         assertEquals(attributionTrigger.getValues().get("campCounts").intValue(), 1);
         assertEquals(attributionTrigger.getValues().get("campGeoCounts").intValue(), 100);

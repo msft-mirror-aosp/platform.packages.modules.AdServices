@@ -47,12 +47,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-/**
- * Unit test for {@link TopicsWorker}.
- */
+/** Unit test for {@link TopicsWorker}. */
 public class TopicsWorkerTest {
+    @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
     private TopicsWorker mTopicsWorker;
@@ -70,12 +68,8 @@ public class TopicsWorkerTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mMockEpochManager,
-                mTopicsDao,
-                mMockFlags);
-        mTopicsWorker = new TopicsWorker(mMockEpochManager,
-                cacheManager,
-                mMockFlags);
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        mTopicsWorker = new TopicsWorker(mMockEpochManager, cacheManager, mMockFlags);
     }
 
     @Test
@@ -83,20 +77,19 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
@@ -112,10 +105,18 @@ public class TopicsWorkerTest {
                         .setResultCode(RESULT_OK)
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList("1", "2", "3"))
+                        .setTopics(Arrays.asList(1, 2, 3))
                         .build();
 
-        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, times(2)).getCurrentEpochId();
@@ -142,7 +143,15 @@ public class TopicsWorkerTest {
                         .setTopics(Collections.emptyList())
                         .build();
 
-        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, times(2)).getCurrentEpochId();
@@ -155,16 +164,15 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 1;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
@@ -196,16 +204,15 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 1;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
             Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
-            Map<Pair<String, String>, Integer> returnedAppSdkTopicsMap = new HashMap<>();
-            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic.getTopic());
-            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, currentTopic.getTaxonomyVersion(),
-                    currentTopic.getModelVersion(), returnedAppSdkTopicsMap);
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);

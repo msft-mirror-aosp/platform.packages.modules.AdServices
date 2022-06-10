@@ -15,7 +15,6 @@
  */
 package android.adservices.clients.topics;
 
-import android.adservices.exceptions.GetTopicsException;
 import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.TopicsManager;
@@ -29,7 +28,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /** AdvertisingTopicsClient. Add more java doc here. */
 // TODO: This should be in JetPack code.
@@ -73,14 +71,14 @@ public class AdvertisingTopicsClient {
                     mTopicsManager.getTopics(
                             new GetTopicsRequest.Builder().setSdkName(mSdkName).build(),
                             mExecutor,
-                            new OutcomeReceiver<GetTopicsResponse, GetTopicsException>() {
+                            new OutcomeReceiver<GetTopicsResponse, Exception>() {
                                 @Override
                                 public void onResult(@NonNull GetTopicsResponse result) {
                                     completer.set(result);
                                 }
 
                                 @Override
-                                public void onError(@NonNull GetTopicsException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -129,7 +127,7 @@ public class AdvertisingTopicsClient {
         /** Builds a {@link AdvertisingTopicsClient} instance */
         public @NonNull AdvertisingTopicsClient build() {
             if (mExecutor == null) {
-                mExecutor = Executors.newCachedThreadPool();
+                throw new NullPointerException("Executor is not set");
             }
             return new AdvertisingTopicsClient(mContext, mExecutor, mSdkName);
         }
