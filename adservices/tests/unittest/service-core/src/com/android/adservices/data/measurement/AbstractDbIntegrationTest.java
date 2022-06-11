@@ -223,6 +223,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 source.isInstallAttributed() ? 1 : 0);
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -245,6 +246,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, trigger.getEventTriggers());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
+        values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
