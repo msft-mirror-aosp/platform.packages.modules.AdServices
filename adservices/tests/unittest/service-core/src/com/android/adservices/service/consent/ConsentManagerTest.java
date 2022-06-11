@@ -25,6 +25,8 @@ import android.content.pm.PackageManager;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.topics.TopicsWorker;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -43,7 +45,10 @@ public class ConsentManagerTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
 
-        mConsentManager = ConsentManager.getInstance(ApplicationProvider.getApplicationContext());
+        mConsentManager =
+                new ConsentManager(
+                        ApplicationProvider.getApplicationContext(),
+                        TopicsWorker.getInstance(ApplicationProvider.getApplicationContext()));
     }
 
     @Test
