@@ -102,7 +102,6 @@ public abstract class E2ETest {
 
     interface AggregateReportPayloadKeys {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
-        String SOURCE_SITE = "source_site";
         String HISTOGRAMS = "histograms";
     }
 
@@ -278,14 +277,13 @@ public abstract class E2ETest {
     }
 
     private static int hashForAggregateReportObject(JSONObject obj) {
-        Object[] objArray = new Object[4];
+        Object[] objArray = new Object[3];
         // We cannot use report time due to fuzzy matching between actual and expected output.
         objArray[0] = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         objArray[1] = payload.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "");
-        objArray[2] = payload.optString(AggregateReportPayloadKeys.SOURCE_SITE, "");
         // To compare histograms, we already converted them to an ordered string of value pairs.
-        objArray[3] = getComparableHistograms(
+        objArray[2] = getComparableHistograms(
                 payload.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS));
         return Arrays.hashCode(objArray);
     }
@@ -330,10 +328,6 @@ public abstract class E2ETest {
         JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         if (!payload1.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, "").equals(
                 payload2.optString(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION, ""))) {
-            return false;
-        }
-        if (!payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, "").equals(
-                payload1.optString(AggregateReportPayloadKeys.SOURCE_SITE, ""))) {
             return false;
         }
         JSONArray histograms1 = payload1.optJSONArray(AggregateReportPayloadKeys.HISTOGRAMS);

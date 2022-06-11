@@ -45,7 +45,10 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String TRIGGER_BACKUP_TABLE_V3 =
             MeasurementTables.TriggerContract.TABLE + "_backup_v3";
 
-    public static final String CREATE_TABLE_TRIGGER_BACKUP_V3 =
+    private static final String AGGREGATE_REPORT_BACKUP_TABLE_V3 =
+            MeasurementTables.AggregateReport.TABLE + "_backup_v3";
+
+    private static final String CREATE_TABLE_TRIGGER_BACKUP_V3 =
             "CREATE TABLE "
                     + TRIGGER_BACKUP_TABLE_V3
                     + " ("
@@ -71,8 +74,39 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + " TEXT "
                     + ")";
 
+    private static final String CREATE_TABLE_AGGREGATE_REPORT_BACKUP_V3 =
+            "CREATE TABLE "
+                    + AGGREGATE_REPORT_BACKUP_TABLE_V3
+                    + " ("
+                    + MeasurementTables.AggregateReport.ID + " TEXT PRIMARY KEY NOT NULL, "
+                    + MeasurementTables.AggregateReport.PUBLISHER + " TEXT, "
+                    + MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
+                    + MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
+                    + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
+                    + MeasurementTables.AggregateReport.REPORTING_ORIGIN + " TEXT, "
+                    + MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
+                    + MeasurementTables.SourceContract.STATUS + " INTEGER "
+                    + ")";
+
+    private static final String AGGREGATE_REPORT_V3_COLUMNS =
+            String.join(",", List.of(
+                    MeasurementTables.AggregateReport.ID,
+                    MeasurementTables.AggregateReport.PUBLISHER,
+                    MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                    MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+                    MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                    MeasurementTables.AggregateReport.REPORTING_ORIGIN,
+                    MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                    MeasurementTables.SourceContract.STATUS));
+
+    private static final String COPY_AGGREGATE_REPORT_DATA =
+            String.format("INSERT INTO %1$s(%2$s) SELECT %2$s FROM %3$s;",
+                    AGGREGATE_REPORT_BACKUP_TABLE_V3, AGGREGATE_REPORT_V3_COLUMNS,
+                    MeasurementTables.AggregateReport.TABLE);
+
     private static final String[] DROP_TABLES_V3 = {
-        "DROP TABLE IF EXISTS " + MeasurementTables.TriggerContract.TABLE
+        "DROP TABLE IF EXISTS " + MeasurementTables.TriggerContract.TABLE,
+        "DROP TABLE IF EXISTS " + MeasurementTables.AggregateReport.TABLE
     };
 
     private static final String[] ALTER_TABLES_V3 = {
@@ -80,21 +114,15 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 "ALTER TABLE %1$s RENAME TO %2$s",
                 TRIGGER_BACKUP_TABLE_V3, MeasurementTables.TriggerContract.TABLE),
         String.format(
+                "ALTER TABLE %1$s RENAME TO %2$s",
+                AGGREGATE_REPORT_BACKUP_TABLE_V3, MeasurementTables.AggregateReport.TABLE),
+        String.format(
                 "ALTER TABLE %1$s ADD %2$s INTEGER",
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS)
     };
 
     private static final String[] CREATE_INDEXES_V3 = {
-        "CREATE INDEX "
-                + INDEX_PREFIX
-                + MeasurementTables.AggregateEncryptionKey.TABLE
-                + "_et "
-                + "ON "
-                + MeasurementTables.AggregateEncryptionKey.TABLE
-                + "("
-                + MeasurementTables.AggregateEncryptionKey.EXPIRY
-                + ")",
         // Reinstate the index created in v2, since that table is dropped
         "CREATE INDEX "
                 + INDEX_PREFIX
@@ -145,6 +173,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static String[] migrationScriptV3PreDataTransfer() {
         return Stream.of(
                         new String[] {CREATE_TABLE_TRIGGER_BACKUP_V3},
+                        new String[] {CREATE_TABLE_AGGREGATE_REPORT_BACKUP_V3},
                         new String[] {MeasurementTables.CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY})
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
@@ -163,6 +192,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
         }
 
         // transfer data to new table
+        db.execSQL(COPY_AGGREGATE_REPORT_DATA);
         migrateData(db);
 
         for (String sql : migrationScriptV3PostDataTransfer()) {

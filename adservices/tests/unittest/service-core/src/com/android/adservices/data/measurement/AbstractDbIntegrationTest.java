@@ -28,7 +28,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -189,7 +189,7 @@ public abstract class AbstractDbIntegrationTest {
         for (AttributionRateLimit attr : input.mAttrRateLimitList) {
             insertToDb(attr, db);
         }
-        for (CleartextAggregatePayload aggregateReport : input.mAggregateReportList) {
+        for (AggregateReport aggregateReport : input.mAggregateReportList) {
             insertToDb(aggregateReport, db);
         }
         for (AggregateEncryptionKey key : input.mAggregateEncryptionKeyList) {
@@ -304,8 +304,8 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
-    /** Inserts an CleartextAggregatePayload record into the given database. */
-    private static void insertToDb(CleartextAggregatePayload aggregateReport, SQLiteDatabase db)
+    /** Inserts an AggregateReport record into the given database. */
+    private static void insertToDb(AggregateReport aggregateReport, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
@@ -321,9 +321,6 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
-        values.put(
-                MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
-                aggregateReport.getPrivacyBudgetKey());
         values.put(
                 MeasurementTables.AggregateReport.REPORTING_ORIGIN,
                 aggregateReport.getReportingOrigin().toString());
