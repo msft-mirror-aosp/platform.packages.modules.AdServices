@@ -29,7 +29,7 @@
         android:clipToPadding="false"
         android:scrollbars="none" />
     <TextView
-        android:id="@+id/blocked_topics_preference"
+        android:id="@+id/blocked_topics_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="10dip"
@@ -37,7 +37,7 @@
         android:key="blocked_topics"
         android:text="@string/settingsUI_blocked_topics_title" />
     <TextView
-        android:id="@+id/reset_topics_preference"
+        android:id="@+id/reset_topics_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="10dip"

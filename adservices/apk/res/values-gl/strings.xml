@@ -22,10 +22,18 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Permite que unha aplicación acceda ás AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"acceder a AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Permite que unha aplicación acceda a AdServices Custom Audience API."</string>
+    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
+    <skip />
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"acceder a Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite que unha aplicación acceda a Ad ID API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"acceder a App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite que unha aplicación acceda a App Set ID API."</string>
+    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
+    <skip />
+    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
+    <skip />
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Versión beta de Privacy Sandbox"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Versión beta de Privacy Sandbox"</string>
@@ -36,8 +44,11 @@
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"As aplicacións que xeran intereses específicos"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Xestiona as aplicacións que xeran intereses específicos"</string>
-    <!-- no translation found for settingsUI_topics_fragment_title (4413069330318399420) -->
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Xestionar os teus intereses xerais relativos aos anuncios"</string>
+    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
     <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (4432306285378205285) -->
+    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
     <skip />
 </resources>

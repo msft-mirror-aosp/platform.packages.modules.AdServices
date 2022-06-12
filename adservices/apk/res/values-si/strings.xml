@@ -22,10 +22,18 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"AdServices Attribution API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"AdServices Custom Audience API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
+    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
+    <skip />
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API වෙත ප්‍රවේශ වන්න"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API වෙත ප්‍රවේශ වීමට යෙදුමකට ඉඩ දෙයි."</string>
+    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
+    <skip />
+    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
+    <skip />
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"රහස්‍යතා සෑන්ඩ්බොක්ස් බීටා"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"රහස්‍යතා සෑන්ඩ්බොක්ස් බීටා"</string>
@@ -36,8 +44,9 @@
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"විශේෂිත ලැදිකම් ජනනය කරන ඔබගේ යෙදුම්"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"විශේෂිත ලැදිකම් ජනනය කරන ඔබගේ යෙදුම් කළමනාකරණය කරන්න"</string>
-    <!-- no translation found for settingsUI_topics_fragment_title (4413069330318399420) -->
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"දැන්වීම් සඳහා වන ඔබේ සාමාන්‍ය ලැදිකම් කළමනා කරන්න"</string>
+    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
     <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (4432306285378205285) -->
-    <skip />
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"ඔබ අවහිර කර ඇති ලැදිකම්"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ලැදිකම් සියල්ල යළි සකසන්න."</string>
 </resources>

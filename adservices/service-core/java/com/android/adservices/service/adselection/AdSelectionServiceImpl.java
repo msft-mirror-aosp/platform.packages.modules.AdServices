@@ -30,6 +30,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -38,6 +39,7 @@ import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -66,7 +68,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     + " the app is not debuggable.";
 
     @VisibleForTesting
-    AdSelectionServiceImpl(
+    public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdSelectionHttpClient adSelectionHttpClient,
@@ -250,5 +252,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
 
         overrider.removeAllOverrides(callback);
+    }
+
+    /** Close down method to be invoked when the PPAPI process is shut down. */
+    public void destroy() {
+        LogUtil.i("Shutting down AdSelectionService");
+        JSScriptEngine.shutdown();
     }
 }

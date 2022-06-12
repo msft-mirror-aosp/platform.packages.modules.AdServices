@@ -34,6 +34,7 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
@@ -1056,6 +1057,34 @@ public class MeasurementDaoTest {
         Assert.assertEquals(s2.getId(), result4.get(0).getId());
         Assert.assertEquals(s3.getId(), result4.get(1).getId());
         Assert.assertEquals(s4.getId(), result4.get(2).getId());
+    }
+
+    @Test
+    public void testInsertAggregateEncryptionKey() {
+        String keyId = "38b1d571-f924-4dc0-abe1-e2bac9b6a6be";
+        String publicKey = "/amqBgfDOvHAIuatDyoHxhfHaMoYA4BDxZxwtWBRQhc=";
+        long expiry = 1653620135831L;
+
+        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
+                dao.insertAggregateEncryptionKey(
+                        new AggregateEncryptionKey.Builder()
+                                .setKeyId(keyId)
+                                .setPublicKey(publicKey)
+                                .setExpiry(expiry).build())
+        );
+
+        try (Cursor cursor = DbHelper.getInstance(sContext).getReadableDatabase()
+                .query(MeasurementTables.AggregateEncryptionKey.TABLE,
+                    null, null, null, null, null, null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            AggregateEncryptionKey aggregateEncryptionKey =
+                    SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(cursor);
+            Assert.assertNotNull(aggregateEncryptionKey);
+            Assert.assertNotNull(aggregateEncryptionKey.getId());
+            assertEquals(keyId, aggregateEncryptionKey.getKeyId());
+            assertEquals(publicKey, aggregateEncryptionKey.getPublicKey());
+            assertEquals(expiry, aggregateEncryptionKey.getExpiry());
+        }
     }
 
     @Test
