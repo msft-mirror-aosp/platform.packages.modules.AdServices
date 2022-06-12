@@ -102,7 +102,10 @@ public class TopicsServiceImplTest {
         CacheManager cacheManager = new CacheManager(mMockEpochManager,
                 mTopicsDao,
                 mMockFlags);
-        mTopicsWorker = new TopicsWorker(mMockEpochManager, cacheManager, mMockFlags);
+
+        BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
+        mTopicsWorker =
+                new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mTopicsServiceImpl = new TopicsServiceImpl(mContext,
                 mTopicsWorker, mAdServicesLogger, mClock);

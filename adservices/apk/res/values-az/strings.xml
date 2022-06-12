@@ -22,10 +22,18 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Tətbiqə AdServices Attribution API\'ə giriş icazəsi verir."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API\'ə giriş"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Tətbiqə AdServices Custom Audience API\'ə giriş icazəsi verir."</string>
+    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
+    <skip />
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API\'ə giriş"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Tətbiqə Ad ID API\'ə giriş icazəsi verir."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API\'ə giriş"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Tətbiqə App Set ID API\'ə giriş icazəsi verir."</string>
+    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
+    <skip />
+    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
+    <skip />
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Məxfilik Sendboksu beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Məxfilik Sendboksu beta"</string>
