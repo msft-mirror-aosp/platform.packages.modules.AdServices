@@ -127,6 +127,11 @@ public class MeasurementDaoTest {
             assertEquals(ValidSourceParams.INSTALL_COOLDOWN_WINDOW.longValue(),
                     source.getInstallCooldownWindow());
             assertEquals(ValidSourceParams.ATTRIBUTION_MODE, source.getAttributionMode());
+            assertEquals(ValidSourceParams.buildAggregateSource(), source.getAggregateSource());
+            assertEquals(ValidSourceParams.buildAggregateFilterData(),
+                    source.getAggregateFilterData());
+            assertEquals(ValidSourceParams.AGGREGATE_CONTRIBUTIONS,
+                    source.getAggregateContributions());
         }
     }
 
@@ -1216,6 +1221,7 @@ public class MeasurementDaoTest {
         static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
         static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
+        static final int AGGREGATE_CONTRIBUTIONS = 0;
 
         static String buildAggregateSource() {
             try {

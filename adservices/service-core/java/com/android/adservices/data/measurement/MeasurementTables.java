@@ -50,6 +50,7 @@ public final class MeasurementTables {
         String AD_TECH_DOMAIN = "ad_tech_domain";
         String FILTER_DATA = "filter_data";
         String AGGREGATE_SOURCE = "aggregate_source";
+        String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
 
         /** @deprecated replaced by PUBLISHER */
         @Deprecated

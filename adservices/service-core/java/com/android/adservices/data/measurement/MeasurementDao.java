@@ -181,8 +181,7 @@ class MeasurementDao implements IMeasurementDao {
             @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
             @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCoolDownWindow,
-            @Source.AttributionMode int attributionMode,
+            @NonNull Long installCoolDownWindow, @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource, @Nullable String aggregateFilterData)
             throws DatastoreException {
         validateNonNull(sourceEventId, publisher, attributionDestination, adTechDomain,
@@ -209,6 +208,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
         values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -275,6 +275,20 @@ class MeasurementDao implements IMeasurementDao {
                 );
         if (rows != sources.size()) {
             throw new DatastoreException("Source status update failed.");
+        }
+    }
+
+    @Override
+    public void updateSourceAggregateContributions(Source source) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                source.getAggregateContributions());
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.SourceContract.TABLE, values,
+                        MeasurementTables.SourceContract.ID + " = ?",
+                        new String[]{source.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Source aggregate contributions update failed.");
         }
     }
 
