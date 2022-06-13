@@ -478,6 +478,29 @@ public class AdSelectionEntryDaoTest {
     }
 
     /**
+     * Tests that if two decision logic inserts are made with the same URL, the second
+     * overwrites the first.
+     */
+    @Test
+    public void testOverwriteDecisionLogic() {
+        DBBuyerDecisionLogic firstEntry = DB_BUYER_DECISION_LOGIC_1;
+        DBBuyerDecisionLogic secondEntry = new DBBuyerDecisionLogic.Builder()
+                .setBiddingLogicUrl(DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUrl())
+                .setBuyerDecisionLogicJs(DB_BUYER_DECISION_LOGIC_2.getBuyerDecisionLogicJs())
+                .build();
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(firstEntry);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(secondEntry);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+
+        DBAdSelectionEntry adSelectionEntry =
+                mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID_1);
+        DBAdSelectionEntry expected =
+                toAdSelectionEntry(DB_AD_SELECTION_1, secondEntry);
+
+        assertEquals(adSelectionEntry, expected);
+    }
+
+    /**
      * Creates expected DBAdSelectionEntry to be used for testing from DBAdSelection and
      * DBBuyerDecisionLogic. Remarketing Case
      */

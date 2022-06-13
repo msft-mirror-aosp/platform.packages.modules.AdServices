@@ -30,6 +30,7 @@ android_test {
         "mts-adservices",
         "general-tests",
     ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.truth",

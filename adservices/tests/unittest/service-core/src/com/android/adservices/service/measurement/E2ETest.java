@@ -630,6 +630,7 @@ public abstract class E2ETest {
         Assert.assertTrue("measurementDao.undoInstallAttribution failed",
                 sDatastoreManager.runInTransaction(
                     measurementDao -> {
+                        measurementDao.deleteAppRecords(uninstallApp.mUri);
                         measurementDao.undoInstallAttribution(uninstallApp.mUri);
                     }));
     }

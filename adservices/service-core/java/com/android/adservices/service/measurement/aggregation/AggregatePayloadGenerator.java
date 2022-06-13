@@ -16,14 +16,14 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.FilterUtil;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Class used to generate CleartextAggregatePayload using AggregatableAttributionSource and
@@ -47,7 +47,7 @@ public class AggregatePayloadGenerator {
             AggregatableAttributionTrigger attributionTrigger) {
         AggregateFilterData sourceFilterData = attributionSource.getAggregateFilterData();
         Map<String, BigInteger> aggregateKeys = new HashMap<>();
-        Map<String, AttributionAggregatableKey> aggregateSourceMap =
+        Map<String, BigInteger> aggregateSourceMap =
                 attributionSource.getAggregatableSource();
         for (String sourceKey : aggregateSourceMap.keySet()) {
             for (AggregateTriggerData triggerData : attributionTrigger.getTriggerData()) {
@@ -55,29 +55,25 @@ public class AggregatePayloadGenerator {
                 Optional<AggregateFilterData> notFilterData = triggerData.getNotFilter();
                 // Skip this trigger data when filter doesn't match.
                 if (filterData.isPresent()
-                        && !isFilterMatch(sourceFilterData, filterData.get(), true)) {
+                        && !FilterUtil.isFilterMatch(sourceFilterData, filterData.get(), true)) {
                     continue;
                 }
                 // Skip this trigger data when not_filters doesn't match.
                 if (notFilterData.isPresent()
-                        && !isFilterMatch(sourceFilterData, notFilterData.get(), false)) {
+                        && !FilterUtil.isFilterMatch(
+                                sourceFilterData, notFilterData.get(), false)) {
                     continue;
                 }
                 if (triggerData.getSourceKeys().contains(sourceKey)) {
-                    AttributionAggregatableKey currentKey = aggregateSourceMap.get(sourceKey);
-                    AttributionAggregatableKey triggerKey = triggerData.getKey();
+                    BigInteger currentKey = aggregateSourceMap.get(sourceKey);
+                    BigInteger triggerKey = triggerData.getKey();
                     BigInteger currentInt;
                     if (aggregateKeys.containsKey(sourceKey)) {
                         currentInt = aggregateKeys.get(sourceKey);
                     } else {
-                        currentInt = BigInteger.valueOf(
-                                (long) (Math.pow(2, 63) * currentKey.getHighBits()
-                                        + currentKey.getLowBits()));
+                        currentInt = currentKey;
                     }
-                    BigInteger triggerInt = BigInteger.valueOf(
-                            (long) (Math.pow(2, 63) * triggerKey.getHighBits()
-                                    + triggerKey.getLowBits()));
-                    aggregateKeys.put(sourceKey, currentInt.add(triggerInt));
+                    aggregateKeys.put(sourceKey, currentInt.or(triggerKey));
                 }
             }
         }
@@ -97,39 +93,4 @@ public class AggregatePayloadGenerator {
         }
         return Optional.empty();
     }
-
-    /**
-     * Checks whether source filter and trigger filter are matched.
-     * When a key is only present in source or trigger, ignore that key.
-     * When a key is present both in source and trigger, the key matches if the intersection of
-     * values is not empty.
-     * @param sourceFilter the filter_data field in attribution source.
-     * @param triggerFilter the AttributionTriggerData in attribution trigger.
-     * @param isFilter true for filters, false for not_filters.
-     * @return return true when all keys in source filter and trigger filter are matched.
-     */
-    public static boolean isFilterMatch(AggregateFilterData sourceFilter,
-            AggregateFilterData triggerFilter, boolean isFilter) {
-        for (String key : triggerFilter.getAttributionFilterMap().keySet()) {
-            if (!sourceFilter.getAttributionFilterMap().containsKey(key)) {
-                continue;
-            }
-            // Finds the intersection of two value lists.
-            List<String> sourceValues = sourceFilter.getAttributionFilterMap().get(key);
-            List<String> triggerValues = triggerFilter.getAttributionFilterMap().get(key);
-            Set<String> common = new HashSet<>(sourceValues);
-            common.retainAll(triggerValues);
-            // For filters, return false when one key doesn't have intersection.
-            if (isFilter && common.size() == 0) {
-                return false;
-            }
-            // For not_filters, return false when one key has intersection.
-            if (!isFilter && common.size() != 0) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
-
-

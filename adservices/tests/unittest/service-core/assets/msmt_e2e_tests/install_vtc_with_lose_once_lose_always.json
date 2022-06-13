@@ -17,7 +17,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "0",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1296000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -42,7 +42,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "1",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1296000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -67,7 +67,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "2",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1296000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -92,7 +92,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "2",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1296000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -117,7 +117,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "2",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1296000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,
@@ -142,7 +142,7 @@
               "destination": "android-app://example.2d1.com",
               "priority": "2",
               "install_attribution_window": "172800",
-              "install_cooldown_window": "864000",
+              "post_install_exclusivity_window": "864000",
               "expiry": "1296000"
             },
             "Attribution-Reporting-Register-Aggregatable-Source": null,

@@ -39,14 +39,14 @@ public final class GetTopicsResult implements Parcelable {
     @Nullable private final String mErrorMessage;
     private final List<Long> mTaxonomyVersions;
     private final List<Long> mModelVersions;
-    private final List<String> mTopics;
+    private final List<Integer> mTopics;
 
     private GetTopicsResult(
             @ResultCode int resultCode,
             @Nullable String errorMessage,
             @NonNull List<Long> taxonomyVersions,
             @NonNull List<Long> modelVersions,
-            @NonNull List<String> topics) {
+            @NonNull List<Integer> topics) {
         mResultCode = resultCode;
         mErrorMessage = errorMessage;
         mTaxonomyVersions = taxonomyVersions;
@@ -60,10 +60,7 @@ public final class GetTopicsResult implements Parcelable {
 
         mTaxonomyVersions = Collections.unmodifiableList(readLongList(in));
         mModelVersions = Collections.unmodifiableList(readLongList(in));
-
-        List<String> topicsMutable = new ArrayList<>();
-        in.readStringList(topicsMutable);
-        mTopics = Collections.unmodifiableList(topicsMutable);
+        mTopics = Collections.unmodifiableList(readIntegerList(in));
     }
 
     public static final @NonNull Creator<GetTopicsResult> CREATOR =
@@ -92,7 +89,7 @@ public final class GetTopicsResult implements Parcelable {
         out.writeString(mErrorMessage);
         writeLongList(out, mTaxonomyVersions);
         writeLongList(out, mModelVersions);
-        out.writeStringList(mTopics);
+        writeIntegerList(out, mTopics);
     }
 
     /** Returns {@code true} if {@link #getResultCode} equals {@link GetTopicsResult#RESULT_OK}. */
@@ -127,8 +124,19 @@ public final class GetTopicsResult implements Parcelable {
     }
 
     @NonNull
-    public List<String> getTopics() {
+    public List<Integer> getTopics() {
         return mTopics;
+    }
+
+    @Override
+    public String toString() {
+        return "GetTopicsResult{"
+                + "mResultCode=" + mResultCode
+                + ", mErrorMessage='" + mErrorMessage
+                + '\'' + ", mTaxonomyVersions=" + mTaxonomyVersions
+                +  ", mModelVersions=" + mModelVersions
+                + ", mTopics=" + mTopics
+                + '}';
     }
 
     @Override
@@ -168,6 +176,19 @@ public final class GetTopicsResult implements Parcelable {
         return list;
     }
 
+    // Read the list of integer from parcel.
+    private static List<Integer> readIntegerList(@NonNull Parcel in) {
+        List<Integer> list = new ArrayList<>();
+
+        int toReadCount = in.readInt();
+        // Negative toReadCount is handled implicitly
+        for (int i = 0; i < toReadCount; i++) {
+            list.add(in.readInt());
+        }
+
+        return list;
+    }
+
     // Write a List of Long to parcel.
     private static void writeLongList(@NonNull Parcel out, @Nullable List<Long> val) {
         if (val == null) {
@@ -177,6 +198,18 @@ public final class GetTopicsResult implements Parcelable {
         out.writeInt(val.size());
         for (Long l : val) {
             out.writeLong(l);
+        }
+    }
+
+    // Write a List of Integer to parcel.
+    private static void writeIntegerList(@NonNull Parcel out, @Nullable List<Integer> val) {
+        if (val == null) {
+            out.writeInt(-1);
+            return;
+        }
+        out.writeInt(val.size());
+        for (Integer integer : val) {
+            out.writeInt(integer);
         }
     }
 
@@ -190,7 +223,7 @@ public final class GetTopicsResult implements Parcelable {
         @Nullable private String mErrorMessage;
         private List<Long> mTaxonomyVersions = new ArrayList<>();
         private List<Long> mModelVersions = new ArrayList<>();
-        private List<String> mTopics = new ArrayList<>();
+        private List<Integer> mTopics = new ArrayList<>();
 
         public Builder() {}
 
@@ -219,7 +252,7 @@ public final class GetTopicsResult implements Parcelable {
         }
 
         /** Set the list of the returned Topics */
-        public @NonNull Builder setTopics(@NonNull List<String> topics) {
+        public @NonNull Builder setTopics(@NonNull List<Integer> topics) {
             mTopics = topics;
             return this;
         }

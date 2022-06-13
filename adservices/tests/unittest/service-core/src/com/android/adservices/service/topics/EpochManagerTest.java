@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -61,13 +62,18 @@ import java.util.stream.Collectors;
 /** Unit tests for {@link com.android.adservices.service.topics.EpochManager} */
 @SmallTest
 public final class EpochManagerTest {
+    @SuppressWarnings({"unused"})
     private static final String TAG = "EpochManagerTest";
+    // TODO: (b/232807776) Replace below hardcoded taxonomy version and model version
+    private static final long TAXONOMY_VERSION = 1L;
+    private static final long MODEL_VERSION = 1L;
 
+    @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
+
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
-    @Mock
-    Classifier mMockClassifier;
+    @Mock Classifier mMockClassifier;
 
     @Before
     public void setup() {
@@ -95,49 +101,51 @@ public final class EpochManagerTest {
         appSdksUsageMap.put("app3", Arrays.asList("sdk1", "sdk5"));
 
         // app4 has no SDKs, it called Topics API directly.
-        appSdksUsageMap.put("app4", Arrays.asList(""));
+        appSdksUsageMap.put("app4", Collections.singletonList(""));
 
         appSdksUsageMap.put("app5", Arrays.asList("sdk1", "sdk5"));
 
-        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
-        appClassificationTopicsMap.put("app2", Arrays.asList(2, 3));
-        appClassificationTopicsMap.put("app3", Arrays.asList(4, 5));
-        appClassificationTopicsMap.put("app4", Arrays.asList(5, 6));
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
+
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", Arrays.asList(topic1, topic2));
+        appClassificationTopicsMap.put("app2", Arrays.asList(topic2, topic3));
+        appClassificationTopicsMap.put("app3", Arrays.asList(topic4, topic5));
+        appClassificationTopicsMap.put("app4", Arrays.asList(topic5, topic6));
 
         // app5 has not classification topics.
-        appClassificationTopicsMap.put("app5", Arrays.asList());
+        appClassificationTopicsMap.put("app5", Collections.emptyList());
 
-        Map<Integer, Set<String>> expectedCallerCanLearnMap = new HashMap<>();
+        Map<Topic, Set<String>> expectedCallerCanLearnMap = new HashMap<>();
         // topic1 is a classification topic for app1, so all SDKs in apps1 can learn this topic.
         // In addition, the app1 called the Topics API directly so it can learn topic1 as well.
-        expectedCallerCanLearnMap.put(/* topic */ 1,
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        expectedCallerCanLearnMap.put(topic1, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
 
         // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
         // this topic.
-        expectedCallerCanLearnMap.put(/* topic */ 2,
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
+        expectedCallerCanLearnMap.put(
+                topic2, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
 
         // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
-        expectedCallerCanLearnMap.put(/* topic */ 3,
-                new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
+        expectedCallerCanLearnMap.put(topic3, new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
 
         // topic4 is a classification topic for app3, so all SDKs in apps3 can learn this topic.
-        expectedCallerCanLearnMap.put(/* topic */ 4,
-                new HashSet<>(Arrays.asList("sdk1", "sdk5")));
+        expectedCallerCanLearnMap.put(topic4, new HashSet<>(Arrays.asList("sdk1", "sdk5")));
 
         // topic5 is a classification topic for app3 and app4, so any SDKs in apps3 or app4 can
         // learn this topic.
         // app4 called Topics API directly, so it can learn this topic.
-        expectedCallerCanLearnMap.put(/* topic */ 5,
-                new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
+        expectedCallerCanLearnMap.put(topic5, new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
 
         // app4 called the Topics API directly so it can learn this topic.
-        expectedCallerCanLearnMap.put(/* topic */ 6,
-                new HashSet<>(Arrays.asList("app4")));
+        expectedCallerCanLearnMap.put(topic6, new HashSet<>(Collections.singletonList("app4")));
 
-        Map<Integer, Set<String>> canLearnMap =
+        Map<Topic, Set<String>> canLearnMap =
                 EpochManager.computeCallersCanLearnMap(appSdksUsageMap, appClassificationTopicsMap);
 
         assertThat(canLearnMap).isEqualTo(expectedCallerCanLearnMap);
@@ -147,15 +155,17 @@ public final class EpochManagerTest {
     public void testComputeCallersCanLearnMap_nullUsageMapOrNullClassificationMap() {
         assertThrows(
                 NullPointerException.class,
-                () -> EpochManager.computeCallersCanLearnMap(
-                        /* appSdksUsageMap = */ null,
-                        /* appClassificationTopicsMap = */ new HashMap<>()));
+                () ->
+                        EpochManager.computeCallersCanLearnMap(
+                                /* appSdksUsageMap = */ null,
+                                /* appClassificationTopicsMap = */ new HashMap<>()));
 
         assertThrows(
                 NullPointerException.class,
-                () -> EpochManager.computeCallersCanLearnMap(
-                        /* appSdksUsageMap = */ new HashMap<>(),
-                        /* appClassificationTopicsMap = */ null));
+                () ->
+                        EpochManager.computeCallersCanLearnMap(
+                                /* appSdksUsageMap = */ new HashMap<>(),
+                                /* appClassificationTopicsMap = */ null));
     }
 
     @Test
@@ -163,33 +173,40 @@ public final class EpochManagerTest {
         // Create a new epochManager that we can control the random generator.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = new TopicsDao(dbHelper);
-        EpochManager epochManager = new EpochManager(
-                topicsDao,
-                dbHelper,
-                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
-                mMockClassifier,
-                mFlags
-        );
-        List<Integer> topTopics =
-                Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
+        EpochManager epochManager =
+                new EpochManager(
+                        topicsDao,
+                        dbHelper,
+                        new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                        mMockClassifier,
+                        mFlags);
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
+
+        List<Topic> topTopics = Arrays.asList(topic1, topic2, topic3, topic4, topic5, topic6);
 
         // random = 1
-        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(6);
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(topic6);
 
         // random = 5
-        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(1);
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(topic1);
 
         // random = 6
-        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(2);
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(topic2);
 
         // random = 7
-        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(3);
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(topic3);
 
         // random = 8
-        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(4);
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(topic4);
 
         // random = 9
-        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(5);
+        assertThat(epochManager.selectRandomTopic(topTopics)).isEqualTo(topic5);
     }
 
     @Test
@@ -197,18 +214,21 @@ public final class EpochManagerTest {
         // Create a new epochManager that we can control the random generator.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = new TopicsDao(dbHelper);
-        EpochManager epochManager = new EpochManager(
-                topicsDao,
-                dbHelper,
-                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
-                mMockClassifier,
-                mFlags
-        );
+        EpochManager epochManager =
+                new EpochManager(
+                        topicsDao,
+                        dbHelper,
+                        new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                        mMockClassifier,
+                        mFlags);
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> epochManager.selectRandomTopic(
-                        Arrays.asList(1, 2, 3)));
+                () -> epochManager.selectRandomTopic(Arrays.asList(topic1, topic2, topic3)));
 
         assertThrows(
                 NullPointerException.class,
@@ -220,14 +240,13 @@ public final class EpochManagerTest {
         // Create a new epochManager that we can control the random generator.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = new TopicsDao(dbHelper);
-        EpochManager epochManager = new EpochManager(
-                topicsDao,
-                dbHelper,
-                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}),
-                mMockClassifier,
-                mFlags
-        );
-        List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
+        EpochManager epochManager =
+                new EpochManager(
+                        topicsDao,
+                        dbHelper,
+                        new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                        mMockClassifier,
+                        mFlags);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -243,46 +262,41 @@ public final class EpochManagerTest {
         appSdksUsageMap.put("app3", Arrays.asList("sdk1", "sdk5"));
 
         // app4 has no SDKs, it called Topics API directly.
-        appSdksUsageMap.put("app4", Arrays.asList(""));
+        appSdksUsageMap.put("app4", Collections.singletonList(""));
 
         appSdksUsageMap.put("app5", Arrays.asList("sdk1", "sdk5"));
 
-        // Note: the appClassificationTopicsMap is not used in this test but we add here
-        // for documentation.
-        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
-        appClassificationTopicsMap.put("app2", Arrays.asList(2, 3));
-        appClassificationTopicsMap.put("app3", Arrays.asList(4, 5));
-        appClassificationTopicsMap.put("app4", Arrays.asList(5, 6));
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
+        List<Topic> topTopics = Arrays.asList(topic1, topic2, topic3, topic4, topic5, topic6);
 
-        Map<Integer, Set<String>> callersCanLearnMap = new HashMap<>();
+        Map<Topic, Set<String>> callersCanLearnMap = new HashMap<>();
         // topic1 is a classification topic for app1, so all SDKs in apps1 can learn this topic.
         // In addition, the app1 called the Topics API directly so it can learn topic1 as well.
-        callersCanLearnMap.put(/* topic */ 1,
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        callersCanLearnMap.put(topic1, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
 
         // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
         // this topic.
-        callersCanLearnMap.put(/* topic */ 2,
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
+        callersCanLearnMap.put(
+                topic2, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
 
         // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
-        callersCanLearnMap.put(/* topic */ 3,
-                new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
+        callersCanLearnMap.put(topic3, new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
 
         // topic4 is a classification topic for app3, so all SDKs in apps3 can learn this topic.
-        callersCanLearnMap.put(/* topic */ 4,
-                new HashSet<>(Arrays.asList("sdk1", "sdk5")));
+        callersCanLearnMap.put(topic4, new HashSet<>(Arrays.asList("sdk1", "sdk5")));
 
         // topic5 is a classification topic for app3 and app4, so any SDKs in apps3 or app4 can
         // learn this topic.
         // app4 called Topics API directly, so it can learn this topic.
-        callersCanLearnMap.put(/* topic */ 5,
-                new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
+        callersCanLearnMap.put(topic5, new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
 
         // app4 called the Topics API directly so it can learn this topic.
-        callersCanLearnMap.put(/* topic */ 6,
-                new HashSet<>(Arrays.asList("app4")));
+        callersCanLearnMap.put(topic6, new HashSet<>(Collections.singletonList("app4")));
 
         // Random sequence numbers used in this test: {1, 5, 6, 7, 8, 9}.
         // The order of selected topics by iterations: "random_topic", "topic1", "topic2", "topic3",
@@ -290,23 +304,23 @@ public final class EpochManagerTest {
         // The order of app is inserted in appSdksUsageMap: app1, app2, app3, app4, app5.
         // So random_topic is selected for app1, topic1 is selected for app2,
         // topic2 is selected for app3, topic3 is selected for app4, topic4 is selected for app5.
-        Map<Pair<String, String>, Integer> returnedAppSdkTopics =
-                epochManager.computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap,
-                        topTopics);
+        Map<Pair<String, String>, Topic> returnedAppSdkTopics =
+                epochManager.computeReturnedAppSdkTopics(
+                        callersCanLearnMap, appSdksUsageMap, topTopics);
 
-        Map<Pair<String, String>, Integer> expectedReturnedTopics = new HashMap<>();
+        Map<Pair<String, String>, Topic> expectedReturnedTopics = new HashMap<>();
         // Topic4 is selected for app5. Both sdk1 and sdk5 can learn about topic4.
         // (look at callersCanLearnMap)
-        expectedReturnedTopics.put(Pair.create("app5", "sdk1"), /* topic */ 4);
-        expectedReturnedTopics.put(Pair.create("app5", "sdk5"), /* topic */ 4);
+        expectedReturnedTopics.put(Pair.create("app5", "sdk1"), topic4);
+        expectedReturnedTopics.put(Pair.create("app5", "sdk5"), topic4);
 
         // Topic2 is selected for app3. However only sdk1 can learn about topic2.
         // sdk5 can't learn topic2.
-        expectedReturnedTopics.put(Pair.create("app3", "sdk1"), /* topic */ 2);
+        expectedReturnedTopics.put(Pair.create("app3", "sdk1"), topic2);
 
         // Topic1 is selected for app2. However only sdk1 can learn about topic1.
         // sdk3, and sdk4 can't learn topic1.
-        expectedReturnedTopics.put(Pair.create("app2", "sdk1"), /* topic */ 1);
+        expectedReturnedTopics.put(Pair.create("app2", "sdk1"), topic1);
 
         assertThat(returnedAppSdkTopics).isEqualTo(expectedReturnedTopics);
     }
@@ -316,13 +330,8 @@ public final class EpochManagerTest {
         // Create a new epochManager that we can control the random generator.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = new TopicsDao(dbHelper);
-        EpochManager epochManager = new EpochManager(
-                topicsDao,
-                dbHelper,
-                new Random(),
-                mMockClassifier,
-                mFlags
-        );
+        EpochManager epochManager =
+                new EpochManager(topicsDao, dbHelper, new Random(), mMockClassifier, mFlags);
 
         // Record some usages.
         // App1 called the Topics API directly and its SDKs also call Topics API.
@@ -341,7 +350,7 @@ public final class EpochManagerTest {
         Map<String, List<String>> expectedAppSdksUsageMap = new HashMap<>();
         expectedAppSdksUsageMap.put("app1", Arrays.asList("", "sdk1", "sdk2"));
         expectedAppSdksUsageMap.put("app2", Arrays.asList("sdk1", "sdk3"));
-        expectedAppSdksUsageMap.put("app3", Arrays.asList(""));
+        expectedAppSdksUsageMap.put("app3", Collections.singletonList(""));
 
         // Now read back the usages from DB.
         Map<String, List<String>> appSdksUsageMapFromDb =
@@ -349,6 +358,61 @@ public final class EpochManagerTest {
 
         // Make sure that what we write to db is equal to what we read from db.
         assertThat(appSdksUsageMapFromDb).isEqualTo(expectedAppSdksUsageMap);
+    }
+
+    @Test
+    public void testGarbageCollectOutdatedEpochData() {
+        // Create a local Topics Dao to do real db query instead of mocking
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = new TopicsDao(dbHelper);
+        // Mock the flag to make test result deterministic
+        Flags mockedFlags = Mockito.mock(Flags.class);
+        when(mockedFlags.getNumberOfEpochsToKeepInHistory()).thenReturn(3);
+
+        // Both Random and Classifier are not used in this test so initialize them in convenience
+        EpochManager epochManager =
+                new EpochManager(topicsDao, dbHelper, new Random(), mMockClassifier, mockedFlags);
+
+        final long currentEpoch = 6L;
+        final int epochLookBackNumberForGarbageCollection = 3;
+        // The epoch that is outdated starts from 6-1-3 = 2
+        final long epochToDeleteFrom = currentEpoch - epochLookBackNumberForGarbageCollection - 1;
+
+        // Save data in TopTopics Table and AppUsage table for gc testing
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
+        List<Topic> topTopics = Arrays.asList(topic1, topic2, topic3, topic4, topic5, topic6);
+
+        final String appName = "app";
+        // The epoch range for testing is [1, currentEpoch].
+        for (long epoch = 1L; epoch <= currentEpoch; epoch++) {
+            topicsDao.persistTopTopics(epoch, topTopics);
+            topicsDao.recordAppUsageHistory(epoch, appName);
+        }
+
+        epochManager.garbageCollectOutdatedEpochData(currentEpoch);
+
+        verify(mockedFlags).getNumberOfEpochsToKeepInHistory();
+
+        for (long epoch = currentEpoch; epoch > epochToDeleteFrom; epoch--) {
+            assertThat(topicsDao.retrieveTopTopics(epoch)).isEqualTo(topTopics);
+
+            // App has called Topics API once in each epoch
+            Map<String, Integer> appUsageMap = topicsDao.retrieveAppUsageMap(epoch);
+            Map<String, Integer> expectedAppUsageMap = new HashMap<>();
+            expectedAppUsageMap.put(appName, 1);
+            assertThat(appUsageMap).isEqualTo(expectedAppUsageMap);
+        }
+
+        // Epoch [1, epochToDeleteFrom] have been garbage collected.
+        for (long epoch = epochToDeleteFrom; epoch >= 1; epoch--) {
+            assertThat(topicsDao.retrieveTopTopics(epoch)).isEmpty();
+            assertThat(topicsDao.retrieveAppUsageMap(epoch)).isEmpty();
+        }
     }
 
     @Test
@@ -367,12 +431,24 @@ public final class EpochManagerTest {
         // Mockito.Spy instead of a full Mock object.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = Mockito.spy(new TopicsDao(dbHelper));
-        EpochManager epochManager = Mockito.spy(new EpochManager(topicsDao,
-                dbHelper,
-                new MockRandom(new long[]{1, 5, 6, 7, 8, 9}), mMockClassifier, mFlags));
+        EpochManager epochManager =
+                Mockito.spy(
+                        new EpochManager(
+                                topicsDao,
+                                dbHelper,
+                                new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
+                                mMockClassifier,
+                                mFlags));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
         when(epochManager.getCurrentEpochId()).thenReturn(epochId);
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -388,7 +464,7 @@ public final class EpochManagerTest {
         appSdksUsageMap.put("app3", Arrays.asList("sdk1", "sdk5"));
 
         // app4 has no SDKs, it called Topics API directly.
-        appSdksUsageMap.put("app4", Arrays.asList(""));
+        appSdksUsageMap.put("app4", Collections.singletonList(""));
 
         appSdksUsageMap.put("app5", Arrays.asList("sdk1", "sdk5"));
         // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
@@ -404,9 +480,9 @@ public final class EpochManagerTest {
 
         List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
         when(mMockClassifier.getTopTopics(
-                eq(appClassificationTopicsMap),
-                eq(mFlags.getTopicsNumberOfTopTopics()),
-                eq(mFlags.getTopicsNumberOfRandomTopics())))
+                        eq(appClassificationTopicsMap),
+                        eq(mFlags.getTopicsNumberOfTopTopics()),
+                        eq(mFlags.getTopicsNumberOfRandomTopics())))
                 .thenReturn(topTopics);
 
         epochManager.processEpoch();
@@ -414,23 +490,11 @@ public final class EpochManagerTest {
         verify(epochManager).getCurrentEpochId();
         verify(topicsDao).retrieveAppSdksUsageMap(eq(epochId));
         verify(mMockClassifier).classify(eq(appSdksUsageMap.keySet()));
-        verify(mMockClassifier).getTopTopics(
-                eq(appClassificationTopicsMap),
-                eq(mFlags.getTopicsNumberOfTopTopics()),
-                eq(mFlags.getTopicsNumberOfRandomTopics()));
-
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic4 = Topic.create(/* topic */ 4, /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic5 = Topic.create(/* topic */ 5, /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
-        Topic topic6 = Topic.create(/* topic */ 6, /* taxonomyVersion */ 1L,
-                /* modelVersion */ 1L);
+        verify(mMockClassifier)
+                .getTopTopics(
+                        eq(appClassificationTopicsMap),
+                        eq(mFlags.getTopicsNumberOfTopTopics()),
+                        eq(mFlags.getTopicsNumberOfRandomTopics()));
 
         // Verify AppClassificationTopicsContract
         Map<String, List<Topic>> expectedAppClassificationTopicsMap = new HashMap<>();
@@ -438,49 +502,49 @@ public final class EpochManagerTest {
         expectedAppClassificationTopicsMap.put("app2", Arrays.asList(topic2, topic3));
         expectedAppClassificationTopicsMap.put("app3", Arrays.asList(topic4, topic5));
         expectedAppClassificationTopicsMap.put("app4", Arrays.asList(topic5, topic6));
-        Map<String, List<Topic>> appClassificationTopicsMapFromDB = topicsDao
-                .retrieveAppClassificationTopics(epochId);
+        Map<String, List<Topic>> appClassificationTopicsMapFromDB =
+                topicsDao.retrieveAppClassificationTopics(epochId);
         assertThat(appClassificationTopicsMapFromDB).isEqualTo(expectedAppClassificationTopicsMap);
 
         // Verify CallerCanLearnTopicsContract
-        Map<Integer, Set<String>> expectedCallersCanLearnMap = new HashMap<>();
+        Map<Topic, Set<String>> expectedCallersCanLearnMap = new HashMap<>();
         // topic1 is a classification topic for app1, so all SDKs in apps1 can learn this topic.
         // In addition, the app1 called the Topics API directly so it can learn topic1 as well.
-        expectedCallersCanLearnMap.put(/* topic */ 1,
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        expectedCallersCanLearnMap.put(
+                topic1, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
 
         // topic2 is a classification topic for app1 and app2, so any SDKs in app1 or app2 can learn
         // this topic.
-        expectedCallersCanLearnMap.put(/* topic */ 2,
-                new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
+        expectedCallersCanLearnMap.put(
+                topic2, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2", "sdk3", "sdk4")));
 
         // topic3 is a classification topic for app2, so all SDKs in apps2 can learn this topic.
-        expectedCallersCanLearnMap.put(/* topic */ 3,
-                new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
+        expectedCallersCanLearnMap.put(
+                topic3, new HashSet<>(Arrays.asList("sdk1", "sdk3", "sdk4")));
 
         // topic4 is a classification topic for app3, so all SDKs in apps3 can learn this topic.
-        expectedCallersCanLearnMap.put(/* topic */ 4,
-                new HashSet<>(Arrays.asList("sdk1", "sdk5")));
+        expectedCallersCanLearnMap.put(topic4, new HashSet<>(Arrays.asList("sdk1", "sdk5")));
 
         // topic5 is a classification topic for app3 and app4, so any SDKs in apps3 or app4 can
         // learn this topic.
         // app4 called Topics API directly, so it can learn this topic.
-        expectedCallersCanLearnMap.put(/* topic */ 5,
-                new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
+        expectedCallersCanLearnMap.put(
+                topic5, new HashSet<>(Arrays.asList("sdk1", "sdk5", "app4")));
 
         // app4 called the Topics API directly so it can learn this topic.
-        expectedCallersCanLearnMap.put(/* topic */ 6,
-                new HashSet<>(Arrays.asList("app4")));
+        expectedCallersCanLearnMap.put(topic6, new HashSet<>(Collections.singletonList("app4")));
         // Only 1 epoch is recorded so it doesn't need to look back
-        Map<Integer, Set<String>> callersCanLearnMapFromDB = topicsDao
-                .retrieveCallerCanLearnTopicsMap(epochId, /* numberOfLookBackEpochs */ 1);
+        Map<Topic, Set<String>> callersCanLearnMapFromDB =
+                topicsDao.retrieveCallerCanLearnTopicsMap(epochId, /* numberOfLookBackEpochs */ 1);
         assertThat(callersCanLearnMapFromDB).isEqualTo(expectedCallersCanLearnMap);
 
         // Verify TopTopicsContract
-        List<String> topTopicsFromDB = topicsDao.retrieveTopTopics(epochId);
-        assertThat(topTopicsFromDB
-                .stream().map(Integer::parseInt).collect(Collectors.toList()))
-                .isEqualTo(topTopics);
+        List<Topic> topTopicsFromDB = topicsDao.retrieveTopTopics(epochId);
+        List<Topic> expectedTopTopics =
+                topTopics.stream()
+                        .map(e -> Topic.create(e, TAXONOMY_VERSION, MODEL_VERSION))
+                        .collect(Collectors.toList());
+        assertThat(topTopicsFromDB).isEqualTo(expectedTopTopics);
 
         // Verify ReturnedTopicContract
         // Random sequence numbers used in this test: {1, 5, 6, 7, 8, 9}.
@@ -491,8 +555,8 @@ public final class EpochManagerTest {
         // topic2 is selected for app3, topic3 is selected for app4, topic4 is selected for app5.
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopics = new HashMap<>();
         expectedReturnedTopics.put(epochId, new HashMap<>());
-        Map<Pair<String, String>, Topic> expectedReturnedTopicsEpoch1 = expectedReturnedTopics
-                .get(epochId);
+        Map<Pair<String, String>, Topic> expectedReturnedTopicsEpoch1 =
+                expectedReturnedTopics.get(epochId);
         // Topic4 is selected for app5. Both sdk1 and sdk5 can learn about topic4.
         // (look at callersCanLearnMap)
         expectedReturnedTopicsEpoch1.put(Pair.create("app5", "sdk1"), topic4);
@@ -506,8 +570,8 @@ public final class EpochManagerTest {
         // sdk3, and sdk4 can't learn topic1.
         expectedReturnedTopicsEpoch1.put(Pair.create("app2", "sdk1"), topic1);
 
-        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDB = topicsDao
-                .retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1);
+        Map<Long, Map<Pair<String, String>, Topic>> returnedTopicsFromDB =
+                topicsDao.retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1);
         assertThat(returnedTopicsFromDB).isEqualTo(expectedReturnedTopics);
     }
 
@@ -517,13 +581,8 @@ public final class EpochManagerTest {
         // Create a new epochManager that we can control the random generator.
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         TopicsDao topicsDao = new TopicsDao(dbHelper);
-        EpochManager epochManager = new EpochManager(
-                topicsDao,
-                dbHelper,
-                new Random(),
-                mMockClassifier,
-                mFlags
-        );
+        EpochManager epochManager =
+                new EpochManager(topicsDao, dbHelper, new Random(), mMockClassifier, mFlags);
 
         PrintWriter printWriter = new PrintWriter(new Writer() {
             @Override
@@ -541,7 +600,87 @@ public final class EpochManagerTest {
 
             }
         });
-        String[] args = new String[]{};
+        String[] args = new String[] {};
         epochManager.dump(printWriter, args);
+    }
+
+    @Test
+    public void testComputeEpoch_emptyTopTopics() {
+        // Create a new EpochManager that we can control the random generator.
+        DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
+        TopicsDao topicsDao = Mockito.spy(new TopicsDao(dbHelper));
+        // Mock EpochManager for getCurrentEpochId()
+        EpochManager epochManager =
+                Mockito.spy(
+                        new EpochManager(
+                                topicsDao, dbHelper, new Random(), mMockClassifier, mFlags));
+
+        // To mimic the scenario that there was no usage in last epoch.
+        // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
+        final long epochId = 2L;
+        when(epochManager.getCurrentEpochId()).thenReturn(epochId);
+
+        // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
+        // LinkedHashMap so that the order of iteration is defined.
+        Map<String, List<String>> appSdksUsageMap = new LinkedHashMap<>();
+        // app1 called Topics API directly. In addition, 2 of its sdk1 an sdk2 called the Topics
+        // API.
+        appSdksUsageMap.put("app1", Arrays.asList("", "sdk1", "sdk2"));
+
+        // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
+        when(topicsDao.retrieveAppSdksUsageMap(epochId)).thenReturn(appSdksUsageMap);
+
+        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
+        when(mMockClassifier.classify(eq(appSdksUsageMap.keySet())))
+                .thenReturn(appClassificationTopicsMap);
+
+        // Mock Classifier to return empty top topic list
+        when(mMockClassifier.getTopTopics(
+                        eq(appClassificationTopicsMap),
+                        eq(mFlags.getTopicsNumberOfTopTopics()),
+                        eq(mFlags.getTopicsNumberOfRandomTopics())))
+                .thenReturn(Collections.emptyList());
+
+        epochManager.processEpoch();
+
+        verify(epochManager).getCurrentEpochId();
+        verify(topicsDao).retrieveAppSdksUsageMap(eq(epochId));
+        verify(mMockClassifier).classify(eq(appSdksUsageMap.keySet()));
+        verify(mMockClassifier)
+                .getTopTopics(
+                        eq(appClassificationTopicsMap),
+                        eq(mFlags.getTopicsNumberOfTopTopics()),
+                        eq(mFlags.getTopicsNumberOfRandomTopics()));
+
+        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion */ 1L, /* modelVersion */ 1L);
+
+        // Verify AppClassificationTopics table is still persisted
+        Map<String, List<Topic>> expectedAppClassificationTopicsMap = new HashMap<>();
+        expectedAppClassificationTopicsMap.put("app1", Arrays.asList(topic1, topic2));
+        Map<String, List<Topic>> appClassificationTopicsMapFromDB =
+                topicsDao.retrieveAppClassificationTopics(epochId);
+        assertThat(appClassificationTopicsMapFromDB).isEqualTo(expectedAppClassificationTopicsMap);
+
+        // Verify CallerCanLearnTopics table is still persisted
+        Map<Topic, Set<String>> expectedCallersCanLearnMap = new HashMap<>();
+        expectedCallersCanLearnMap.put(
+                topic1, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        expectedCallersCanLearnMap.put(
+                topic2, new HashSet<>(Arrays.asList("app1", "sdk1", "sdk2")));
+        Map<Topic, Set<String>> callersCanLearnMapFromDB =
+                topicsDao.retrieveCallerCanLearnTopicsMap(epochId, /* numberOfLookBackEpochs */ 2);
+        assertThat(callersCanLearnMapFromDB).isEqualTo(expectedCallersCanLearnMap);
+
+        // Look back till epoch id = 1, which has no usage.
+        // In current epoch id 2, top topics return an empty list, which aborts the
+        // processing of epoch computation. So returned topics list is empty for epoch id = 2.
+        // In last epoch id 1, there is no usage so returned topics list is also empty.
+        // Therefore, to verify that no top topic has been persisted into database and return topic
+        // list is empty for 2 epochs
+        assertThat(topicsDao.retrieveTopTopics(epochId)).isEmpty();
+        assertThat(topicsDao.retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 2))
+                .isEmpty();
     }
 }
