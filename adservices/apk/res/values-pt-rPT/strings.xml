@@ -22,10 +22,14 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Permite a uma aplicação aceder às APIs AdServices Attribution."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"aceder à API AdServices Custom Audience"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Permite a uma aplicação aceder à API AdServices Custom Audience."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"aceder à API AdServices Consent"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permite a uma aplicação aceder à API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Acesso à API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permite a uma aplicação aceder à API Ad ID."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Acesso à API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permite a uma aplicação aceder à API App Set ID."</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Acesso à API Consent Service"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Permite a uma aplicação aceder à API Consent Service."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Versão beta do Privacy Sandbox"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Versão beta do Privacy Sandbox"</string>

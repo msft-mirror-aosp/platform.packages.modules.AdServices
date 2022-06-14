@@ -72,7 +72,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     @VisibleForTesting
-    CustomAudienceServiceImpl(
+    public CustomAudienceServiceImpl(
             @NonNull Context context,
             @NonNull CustomAudienceImpl customAudienceImpl,
             @NonNull DevContextFilter devContextFilter,

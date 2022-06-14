@@ -68,37 +68,37 @@ public class CustomAudienceDaoTest {
             Collections.singletonList("key2");
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
-    private static final Instant CREATION_TIME_1 = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant CURRENT_TIME = CLOCK.instant();
+    private static final Instant CREATION_TIME_1 = CURRENT_TIME.truncatedTo(ChronoUnit.MILLIS);
     private static final Instant ACTIVATION_TIME_1 =
-            CLOCK.instant().plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.plus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant EXPIRATION_TIME_1 =
-            CLOCK.instant().plus(Duration.ofDays(3)).truncatedTo(ChronoUnit.MILLIS);
-    private static final Instant LAST_UPDATED_TIME_1 =
-            CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.plus(Duration.ofDays(3)).truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant LAST_UPDATED_TIME_1 = CURRENT_TIME.truncatedTo(ChronoUnit.MILLIS);
     private static final Instant LAST_UPDATED_TIME_36_HRS =
-            CLOCK.instant().minus(Duration.ofHours(36)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.minus(Duration.ofHours(36)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant LAST_UPDATED_TIME_72_HRS =
-            CLOCK.instant().minus(Duration.ofHours(72)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.minus(Duration.ofHours(72)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant CREATION_TIME_2 =
-            CLOCK.instant().plus(Duration.ofMinutes(1)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.plus(Duration.ofMinutes(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant ACTIVATION_TIME_2 =
-            CLOCK.instant()
+            CURRENT_TIME
                     .plus(Duration.ofDays(1))
                     .plus(Duration.ofMinutes(1))
                     .truncatedTo(ChronoUnit.MILLIS);
     private static final Instant EXPIRATION_TIME_2 =
-            CLOCK.instant()
+            CURRENT_TIME
                     .plus(Duration.ofDays(3))
                     .plus(Duration.ofMinutes(1))
                     .truncatedTo(ChronoUnit.MILLIS);
     private static final Instant LAST_UPDATED_TIME_2 =
-            CLOCK.instant().plus(Duration.ofMinutes(1)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.plus(Duration.ofMinutes(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant ACTIVATION_TIME_MINUS_ONE_HOUR =
-            CLOCK.instant().minus(Duration.ofHours(1)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.minus(Duration.ofHours(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant CREATION_TIME_MINUS_THREE_DAYS =
-            CLOCK.instant().minus(Duration.ofDays(3)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.minus(Duration.ofDays(3)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant EXPIRATION_TIME_MINUS_ONE_DAY =
-            CLOCK.instant().minus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MILLIS);
+            CURRENT_TIME.minus(Duration.ofDays(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final String OWNER_1 = "owner1";
     private static final String OWNER_2 = "owner2";
     private static final String OWNER_3 = "owner3";
@@ -569,7 +569,8 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 CUSTOM_AUDIENCE_INACTIVE,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1));
-        assertTrue(mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers).isEmpty());
+        assertTrue(
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME).isEmpty());
     }
 
     @Test
@@ -578,7 +579,8 @@ public class CustomAudienceDaoTest {
         List<DBCustomAudience> expectedCAs = Arrays.asList(CUSTOM_AUDIENCE_ACTIVE);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_ACTIVE);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_EXPIRED);
-        List<DBCustomAudience> result = mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
+        List<DBCustomAudience> result =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
         assertThat(result).containsExactlyElementsIn(expectedCAs);
     }
 
@@ -588,7 +590,8 @@ public class CustomAudienceDaoTest {
         List<DBCustomAudience> expectedCAs = Arrays.asList(CUSTOM_AUDIENCE_UPDATED);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_UPDATED);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_OUTDATED);
-        List<DBCustomAudience> result = mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
+        List<DBCustomAudience> result =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
         assertThat(result).containsExactlyElementsIn(expectedCAs);
     }
 
@@ -599,7 +602,8 @@ public class CustomAudienceDaoTest {
                 CUSTOM_AUDIENCE_NO_TRUSTED_BIDDING_DATA_URL);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_NO_USER_BIDDING_SIGNALS);
         mCustomAudienceDao.insertOrOverrideCustomAudience(CUSTOM_AUDIENCE_NO_ADS);
-        List<DBCustomAudience> result = mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
+        List<DBCustomAudience> result =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
         assertTrue(result.isEmpty());
     }
 }
