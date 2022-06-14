@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settings.viewmodels;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,10 +36,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 
-/**
- *  Tests for {@link MainViewModel}.
- */
+/** Tests for {@link MainViewModel}. */
 public class ViewModelTest {
+
     private MainViewModel mMainViewModel;
     @Mock
     private ConsentManager mConsentManager;

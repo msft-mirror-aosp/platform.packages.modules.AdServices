@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
 
@@ -24,6 +24,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
 import java.io.IOException;
 
@@ -39,7 +41,9 @@ public class MainViewModel extends AndroidViewModel {
 
     /** UI event triggered by view model */
     public enum MainViewModelUiEvent {
-        DISPLAY_TOPICS_FRAGMENT
+        SWITCH_ON_PRIVACY_SANDBOX_BETA,
+        SWITCH_OFF_PRIVACY_SANDBOX_BETA,
+        DISPLAY_TOPICS_FRAGMENT,
     }
 
     public MainViewModel(@NonNull Application application) throws IOException {
@@ -63,14 +67,14 @@ public class MainViewModel extends AndroidViewModel {
     /**
      * Sets the user consent for PP APIs.
      *
-     * @param newConsent the new value that user consent should be set to for PP APIs.
+     * @param newConsentValue the new value that user consent should be set to for PP APIs.
      */
-    public void setConsent(Boolean newConsent) throws IOException {
+    public void setConsent(Boolean newConsentValue) {
         if (mAdServicesConsent == null) {
             mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
         }
-        mAdServicesConsent.postValue(newConsent);
-        if (newConsent) {
+        mAdServicesConsent.postValue(newConsentValue);
+        if (newConsentValue) {
             mConsentManager.enable();
         } else {
             mConsentManager.disable();
@@ -85,6 +89,15 @@ public class MainViewModel extends AndroidViewModel {
     /** Triggers {@link AdServicesSettingsTopicsFragment}. */
     public void topicsButtonClickHandler() {
         mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_TOPICS_FRAGMENT);
+    }
+
+    /** Triggers {@link AdServicesSettingsTopicsFragment}. */
+    public void consentSwitchClickHandler(Boolean newConsentValue) {
+        if (newConsentValue) {
+            mEventTrigger.postValue(MainViewModelUiEvent.SWITCH_ON_PRIVACY_SANDBOX_BETA);
+        } else {
+            mEventTrigger.postValue(MainViewModelUiEvent.SWITCH_OFF_PRIVACY_SANDBOX_BETA);
+        }
     }
 
     @VisibleForTesting
