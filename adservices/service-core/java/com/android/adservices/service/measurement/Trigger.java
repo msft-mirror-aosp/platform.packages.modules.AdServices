@@ -271,6 +271,10 @@ public class Trigger {
             if (hexString.startsWith("0x")) {
                 hexString = hexString.substring(2);
             }
+            // Do not process trigger if a key exceeds 128 bits.
+            if (hexString.length() > 32) {
+                return Optional.empty();
+            }
             BigInteger bigInteger = new BigInteger(hexString, 16);
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();

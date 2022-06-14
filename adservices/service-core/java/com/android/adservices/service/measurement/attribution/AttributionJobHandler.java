@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -175,6 +176,17 @@ class AttributionJobHandler {
                                 aggregateAttributionSource.get(),
                                 aggregateAttributionTrigger.get());
                 if (contributions.isPresent()) {
+                    OptionalInt newAggregateContributions =
+                            validateAndGetUpdatedAggregateContributions(
+                                    contributions.get(), source);
+                    if (newAggregateContributions.isPresent()) {
+                        source.setAggregateContributions(newAggregateContributions.getAsInt());
+                    } else {
+                        LogUtil.d("Aggregate contributions exceeded bound. Source ID: %s ; "
+                                + "Trigger ID: %s ", source.getId(), trigger.getId());
+                        return false;
+                    }
+
                     long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
                             + MIN_TIME_MS);
                     CleartextAggregatePayload aggregateReport =
@@ -192,6 +204,7 @@ class AttributionJobHandler {
                                                     .setContributions(contributions.get()).build())
                                     .setStatus(CleartextAggregatePayload.Status.PENDING).build();
 
+                    measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);
                     // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
                     return true;
@@ -366,5 +379,24 @@ class AttributionJobHandler {
         return new AggregateFilterData.Builder()
                 .buildAggregateFilterData(sourceFilterObject)
                 .build();
+    }
+
+    private static OptionalInt validateAndGetUpdatedAggregateContributions(
+            List<AggregateHistogramContribution> contributions, Source source) {
+        int newAggregateContributions = source.getAggregateContributions();
+        for (AggregateHistogramContribution contribution : contributions) {
+            try {
+                newAggregateContributions =
+                        Math.addExact(newAggregateContributions, contribution.getValue());
+                if (newAggregateContributions
+                        > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                    return OptionalInt.empty();
+                }
+            } catch (ArithmeticException e) {
+                LogUtil.e("Error adding aggregate contribution values.", e);
+                return OptionalInt.empty();
+            }
+        }
+        return OptionalInt.of(newAggregateContributions);
     }
 }
