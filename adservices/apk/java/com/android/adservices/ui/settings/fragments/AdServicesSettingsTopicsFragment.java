@@ -13,38 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settings.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.ActionDelegate;
+import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
+import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 public class AdServicesSettingsTopicsFragment extends Fragment {
+
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.topics_fragment, container, false);
 
-        TopicsViewModel viewModel =
-                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
-        initTopicsList(rootView, viewModel);
+        setupViewModel(rootView);
 
         return rootView;
     }
 
-    private void initTopicsList(View rootView, TopicsViewModel viewModel) {
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        initActionListeners();
+    }
+
+    // initialize all action listeners except for actions in topics list
+    private void initActionListeners() {
+        ActionDelegate actionDelegate =
+                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        actionDelegate.initTopicsFragment(this);
+    }
+
+    // initializes view model connection with topics list.
+    // (Action listeners for each item in the list will be handled by the adapter)
+    private void setupViewModel(View rootView) {
+        TopicsViewModel viewModel =
+                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
         RecyclerView recyclerView = rootView.findViewById(R.id.topics_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        TopicsViewAdapter adapter = new TopicsViewAdapter(viewModel);
+        TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
     }
 }
