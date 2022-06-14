@@ -31,10 +31,10 @@ buildscript {
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
     defaultConfig {
-        targetSdkVersion 30
-        minSdkVersion 30
+        targetSdkVersion 33
+        minSdkVersion 33
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,6 +48,7 @@ android {
                     '../../../../../external/guava/guava/src',
                     '../../../../../frameworks/base/packages/SettingsLib/' +
                             'ActionBarShadow/src',
+                    '../../../../../frameworks/base/core/java',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
@@ -55,6 +56,7 @@ android {
                     'com/android/adservices/*.java',
                     'com/android/settingslib/widget/**/*.java',
                     'com/google/common/collect/*.java',
+                    'android/os/*.java',
             ]))
             res.srcDirs = [
                     'res',
@@ -88,6 +90,8 @@ android {
 dependencies {
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+    implementation files('../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/1.0.1/truth-1.0.1.jar')
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 
     // test dependencies
     testImplementation 'junit:junit:4.+'
