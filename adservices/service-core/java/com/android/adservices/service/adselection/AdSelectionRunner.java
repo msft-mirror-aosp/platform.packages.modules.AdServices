@@ -35,6 +35,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -63,8 +64,6 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
-    private static final String TAG = AdSelectionRunner.class.getName();
-
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -80,7 +79,8 @@ public final class AdSelectionRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService executorService,
-            @NonNull final AdServicesLogger adServicesLogger) {
+            @NonNull final AdServicesLogger adServicesLogger,
+            @NonNull final DevContext devContext) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -90,8 +90,11 @@ public final class AdSelectionRunner {
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(mContext),
                         mExecutorService,
-                        new AdSelectionHttpClient(mExecutorService));
-        mAdBidGenerator = new AdBidGeneratorImpl(context, mExecutorService);
+                        new AdSelectionHttpClient(mExecutorService),
+                        devContext,
+                        mAdSelectionEntryDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(context, executorService, devContext, mCustomAudienceDao);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
     }
@@ -163,7 +166,7 @@ public final class AdSelectionRunner {
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during " + "notifying AdSelection callback", e);
+            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             // TODO(b/233681870): Investigate implementation of actual failures in
@@ -186,7 +189,7 @@ public final class AdSelectionRunner {
             LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during " + "notifying AdSelection callback", e);
+            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -204,17 +207,16 @@ public final class AdSelectionRunner {
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig) {
 
-        List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
-        Preconditions.checkArgument(
-                !buyers.isEmpty(), "The list of the custom audience buyers should not be empty.");
-        List<DBCustomAudience> buyerCustomAudience = getBuyerCustomAudience(buyers);
-        if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-            return Futures.immediateFailedFuture(
-                    new IllegalStateException(
-                            "No Custom Audience available for the given list of buyers."));
-        }
+        ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
+                getBuyersCustomAudience(adSelectionConfig);
+
+        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
+                buyerCAs -> {
+                    return runAdBidding(buyerCAs, adSelectionConfig);
+                };
+
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                runAdBidding(buyerCustomAudience, adSelectionConfig);
+                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
@@ -249,8 +251,28 @@ public final class AdSelectionRunner {
                 dbAdSelectionBuilder, saveResultToPersistence, mExecutorService);
     }
 
-    private List<DBCustomAudience> getBuyerCustomAudience(@NonNull final List<String> buyers) {
-        return mCustomAudienceDao.getCustomAudienceByBuyers(buyers);
+    private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
+            final AdSelectionConfig adSelectionConfig) {
+
+        ListeningExecutorService listeningExecutorService =
+                MoreExecutors.listeningDecorator(mExecutorService);
+
+        return listeningExecutorService.submit(
+                () -> {
+                    List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
+                    Preconditions.checkArgument(
+                            !buyers.isEmpty(),
+                            "The list of the custom audience buyers should not be empty.");
+                    List<DBCustomAudience> buyerCustomAudience =
+                            mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                                    buyers, mClock.instant());
+                    if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
+                        // TODO(b/233296309) : Remove this exception after adding contextual ads
+                        throw new IllegalStateException(
+                                "No Custom Audience available for the given list of buyers.");
+                    }
+                    return buyerCustomAudience;
+                });
     }
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
@@ -280,7 +302,11 @@ public final class AdSelectionRunner {
                                         .get(customAudience.getBuyer()))
                         .orElse("{}");
         return mAdBidGenerator.runAdBiddingPerCA(
-                customAudience, adSelectionConfig.getAdSelectionSignals(), buyerSignal, "{}");
+                customAudience,
+                adSelectionConfig.getAdSelectionSignals(),
+                buyerSignal,
+                "{}",
+                adSelectionConfig);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }
 

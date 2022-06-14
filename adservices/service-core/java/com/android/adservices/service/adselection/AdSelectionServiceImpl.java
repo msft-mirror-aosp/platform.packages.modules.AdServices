@@ -30,6 +30,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -38,6 +39,7 @@ import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -61,8 +63,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
+    private static final String API_NOT_AUTHORIZED_MSG =
+            "This API is not enabled for the given app because either dev options are disabled or"
+                    + " the app is not debuggable.";
+
     @VisibleForTesting
-    AdSelectionServiceImpl(
+    public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdSelectionHttpClient adSelectionHttpClient,
@@ -108,13 +114,17 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
+        DevContext devContext = mDevContextFilter.createDevContext();
+
         AdSelectionRunner adSelectionRunner =
                 new AdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
                         mExecutor,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        devContext);
+
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
 
@@ -166,6 +176,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
@@ -193,6 +210,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
@@ -218,10 +241,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
+        if (!devContext.getDevOptionsEnabled()) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+        }
+
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
 
         overrider.removeAllOverrides(callback);
+    }
+
+    /** Close down method to be invoked when the PPAPI process is shut down. */
+    public void destroy() {
+        LogUtil.i("Shutting down AdSelectionService");
+        JSScriptEngine.shutdown();
     }
 }

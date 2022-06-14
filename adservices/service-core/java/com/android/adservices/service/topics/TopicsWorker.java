@@ -29,6 +29,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -57,13 +59,18 @@ public class TopicsWorker {
 
     private final EpochManager mEpochManager;
     private final CacheManager mCacheManager;
+    private final BlockedTopicsManager mBlockedTopicsManager;
     private final Flags mFlags;
 
     @VisibleForTesting
-    TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager,
+    TopicsWorker(
+            @NonNull EpochManager epochManager,
+            @NonNull CacheManager cacheManager,
+            @NonNull BlockedTopicsManager blockedTopicsManager,
             Flags flags) {
         mEpochManager = epochManager;
         mCacheManager = cacheManager;
+        mBlockedTopicsManager = blockedTopicsManager;
         mFlags = flags;
     }
 
@@ -78,12 +85,86 @@ public class TopicsWorker {
         if (sTopicsWorker == null) {
             synchronized (TopicsWorker.class) {
                 if (sTopicsWorker == null) {
-                    sTopicsWorker = new TopicsWorker(EpochManager.getInstance(context),
-                            CacheManager.getInstance(context), FlagsFactory.getFlags());
+                    sTopicsWorker =
+                            new TopicsWorker(
+                                    EpochManager.getInstance(context),
+                                    CacheManager.getInstance(context),
+                                    BlockedTopicsManager.getInstance(context),
+                                    FlagsFactory.getFlags());
                 }
             }
         }
         return sTopicsWorker;
+    }
+
+    /**
+     * Returns a list of all topics that could be returned to the {@link TopicsWorker} client.
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        LogUtil.v("TopicsWorker.getKnownTopicsWithConsent");
+        mReadWriteLock.readLock().lock();
+        try {
+            return mCacheManager.getKnownTopicsWithConsent();
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Returns a list of all topics that were blocked by the user.
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getTopicsWithRevokedConsent() {
+        LogUtil.v("TopicsWorker.getTopicsWithRevokedConsent");
+        mReadWriteLock.readLock().lock();
+        try {
+            return mCacheManager.getTopicsWithRevokedConsent();
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Revoke consent for provided {@link Topic} (block topic). This topic will not be returned by
+     * any of the {@link TopicsWorker} methods.
+     *
+     * @param topic {@link Topic} to block.
+     */
+    public void revokeConsentForTopic(@NonNull Topic topic) {
+        LogUtil.v("TopicsWorker.revokeConsentForTopic");
+        mReadWriteLock.writeLock().lock();
+        try {
+            mBlockedTopicsManager.blockTopic(topic);
+        } finally {
+            // TODO(b/234978199): optimize it - implement loading only blocked topics, not whole
+            // cache
+            loadCache();
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Restore consent for provided {@link Topic} (unblock the topic). This topic can be returned by
+     * any of the {@link TopicsWorker} methods.
+     *
+     * @param topic {@link Topic} to restore consent for.
+     */
+    public void restoreConsentForTopic(@NonNull Topic topic) {
+        LogUtil.v("TopicsWorker.restoreConsentForTopic");
+        mReadWriteLock.writeLock().lock();
+        try {
+            mBlockedTopicsManager.unblockTopic(topic);
+        } finally {
+            // TODO(b/234978199): optimize it - implement loading only blocked topics, not whole
+            // cache
+            loadCache();
+            mReadWriteLock.writeLock().unlock();
+        }
     }
 
     /**

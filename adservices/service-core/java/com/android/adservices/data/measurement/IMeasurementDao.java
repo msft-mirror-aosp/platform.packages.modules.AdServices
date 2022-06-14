@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import java.time.Instant;
@@ -39,13 +40,19 @@ public interface IMeasurementDao {
      */
     void setTransaction(ITransaction transaction);
 
-    /**
-     * Add an entry to the Trigger datastore.
-     */
-    void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
-            @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues) throws DatastoreException;
+    /** Add an entry to the Trigger datastore. */
+    void insertTrigger(
+            @NonNull Uri attributionDestination,
+            @NonNull Uri adTechDomain,
+            @NonNull Uri registrant,
+            @NonNull Long triggerTime,
+            @NonNull Long triggerData,
+            @Nullable Long dedupKey,
+            @NonNull Long priority,
+            @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues,
+            @Nullable String filters)
+            throws DatastoreException;
 
     /**
      * Returns list of ids for all pending {@link Trigger}.
@@ -109,6 +116,13 @@ public interface IMeasurementDao {
      * @param source the {@link Source} object.
      */
     void updateSourceDedupKeys(Source source) throws DatastoreException;
+
+    /**
+     * Updates the value of aggregate contributions for the corresponding {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateContributions(Source source) throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.
@@ -257,7 +271,13 @@ public interface IMeasurementDao {
     void undoInstallAttribution(Uri uri) throws DatastoreException;
 
     /**
-     * Save unencrypted aggregate payload to database.
+     * Save aggregate encryption key to datastore.
+     */
+    void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
+            throws DatastoreException;
+
+    /**
+     * Save unencrypted aggregate payload to datastore.
      */
     void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;
 

@@ -18,7 +18,6 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.annotation.SystemApi;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
@@ -50,15 +49,22 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     private final Resources mResources;
     private final AssetManager mAssets;
+    private final String mClientPackageName;
     private final String mSdkName;
     private final ApplicationInfo mSdkProviderInfo;
     @Nullable private final File mCeDataDir;
     @Nullable private final File mDeDataDir;
 
     /** @hide */
-    public SandboxedSdkContext(@NonNull Context baseContext, @NonNull ApplicationInfo info,
-            @NonNull String sdkName, @Nullable String sdkCeDataDir, @Nullable String sdkDeDataDir) {
+    public SandboxedSdkContext(
+            @NonNull Context baseContext,
+            @NonNull String clientPackageName,
+            @NonNull ApplicationInfo info,
+            @NonNull String sdkName,
+            @Nullable String sdkCeDataDir,
+            @Nullable String sdkDeDataDir) {
         super(baseContext);
+        mClientPackageName = clientPackageName;
         mSdkName = sdkName;
         mSdkProviderInfo = info;
         Resources resources = null;
@@ -80,18 +86,21 @@ public final class SandboxedSdkContext extends ContextWrapper {
     }
 
     /**
-     * Return a new Context object for the current SandboxedSdkContext but whose storage
-     * APIs are backed by sdk specific credential-protected storage.
+     * Return a new Context object for the current SandboxedSdkContext but whose storage APIs are
+     * backed by sdk specific credential-protected storage.
      *
      * @see Context#isCredentialProtectedStorage()
      * @hide
      */
     @Override
     @NonNull
-    @SystemApi
     public Context createCredentialProtectedStorageContext() {
         Context newBaseContext = getBaseContext().createCredentialProtectedStorageContext();
-        return new SandboxedSdkContext(newBaseContext, mSdkProviderInfo, mSdkName,
+        return new SandboxedSdkContext(
+                newBaseContext,
+                mClientPackageName,
+                mSdkProviderInfo,
+                mSdkName,
                 (mCeDataDir != null) ? mCeDataDir.toString() : null,
                 (mDeDataDir != null) ? mDeDataDir.toString() : null);
     }
@@ -106,7 +115,11 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @NonNull
     public Context createDeviceProtectedStorageContext() {
         Context newBaseContext = getBaseContext().createDeviceProtectedStorageContext();
-        return new SandboxedSdkContext(newBaseContext, mSdkProviderInfo, mSdkName,
+        return new SandboxedSdkContext(
+                newBaseContext,
+                mClientPackageName,
+                mSdkProviderInfo,
+                mSdkName,
                 (mCeDataDir != null) ? mCeDataDir.toString() : null,
                 (mDeDataDir != null) ? mDeDataDir.toString() : null);
     }
@@ -118,6 +131,16 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @NonNull
     public String getSdkName() {
         return mSdkName;
+    }
+
+    /**
+     * Returns the package name of the client application corresponding to the sandbox.
+     *
+     * @hide
+     */
+    @NonNull
+    public String getClientPackageName() {
+        return mClientPackageName;
     }
 
     /** Returns the resources defined in the SDK's .apk file. */

@@ -38,9 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Data Access Object for the Topics API.
- */
+/** Data Access Object for the Topics API. */
 public class TopicsDao {
     private static TopicsDao sSingleton;
 
@@ -71,14 +69,12 @@ public class TopicsDao {
     /**
      * Persist the apps and their classification topics.
      *
-     * @param epochId                    the epoch Id to persist
-     * @param taxonomyVersion            The version of taxonomy
-     * @param modelVersion               The version of model
+     * @param epochId the epoch Id to persist
      * @param appClassificationTopicsMap Map of app -> classified topics
      */
     @VisibleForTesting
-    public void persistAppClassificationTopics(long epochId, long taxonomyVersion,
-            long modelVersion, @NonNull Map<String, List<Integer>> appClassificationTopicsMap) {
+    public void persistAppClassificationTopics(
+            long epochId, @NonNull Map<String, List<Topic>> appClassificationTopicsMap) {
         Objects.requireNonNull(appClassificationTopicsMap);
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -86,26 +82,29 @@ public class TopicsDao {
             return;
         }
 
-        for (Map.Entry<String, List<Integer>> entry : appClassificationTopicsMap.entrySet()) {
+        for (Map.Entry<String, List<Topic>> entry : appClassificationTopicsMap.entrySet()) {
             String app = entry.getKey();
 
             // save each topic in the list by app -> topic mapping in the DB
-            for (Integer topic : entry.getValue()) {
+            for (Topic topic : entry.getValue()) {
                 ContentValues values = new ContentValues();
                 values.put(TopicsTables.AppClassificationTopicsContract.EPOCH_ID, epochId);
                 values.put(TopicsTables.AppClassificationTopicsContract.APP, app);
-                values.put(TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
-                        taxonomyVersion);
-                values.put(TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
-                        modelVersion);
-                values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, topic);
+                values.put(
+                        TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
+                        topic.getTaxonomyVersion());
+                values.put(
+                        TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
+                        topic.getModelVersion());
+                values.put(TopicsTables.AppClassificationTopicsContract.TOPIC, topic.getTopic());
 
                 try {
-                    db.insert(TopicsTables.AppClassificationTopicsContract.TABLE,
-                            /* nullColumnHack */ null, values);
+                    db.insert(
+                            TopicsTables.AppClassificationTopicsContract.TABLE,
+                            /* nullColumnHack */ null,
+                            values);
                 } catch (SQLException e) {
-                    LogUtil.e("Failed to persist classified Topics. Exception : "
-                            + e.getMessage());
+                    LogUtil.e("Failed to persist classified Topics. Exception : " + e.getMessage());
                 }
             }
         }
@@ -127,36 +126,45 @@ public class TopicsDao {
         }
 
         String[] projection = {
-                TopicsTables.AppClassificationTopicsContract.APP,
-                TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
-                TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
-                TopicsTables.AppClassificationTopicsContract.TOPIC,
+            TopicsTables.AppClassificationTopicsContract.APP,
+            TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.AppClassificationTopicsContract.MODEL_VERSION,
+            TopicsTables.AppClassificationTopicsContract.TOPIC,
         };
 
         String selection = TopicsTables.AppClassificationTopicsContract.EPOCH_ID + " = ?";
         String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor = db.query(
-                        TopicsTables.AppClassificationTopicsContract.TABLE,   // The table to query
-                        projection,        // The array of columns to return (pass null to get all)
-                        selection,         // The columns for the WHERE clause
-                        selectionArgs,     // The values for the WHERE clause
-                        null,      // don't group the rows
-                        null,       // don't filter by row groups
-                        null       // The sort order
-                )) {
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.AppClassificationTopicsContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        selection, // The columns for the WHERE clause
+                        selectionArgs, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
             while (cursor.moveToNext()) {
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppClassificationTopicsContract.APP));
-                long taxonomyVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppClassificationTopicsContract.TAXONOMY_VERSION));
-                long modelVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppClassificationTopicsContract.MODEL_VERSION));
-                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppClassificationTopicsContract.TOPIC));
-                Topic topic = Topic.create(
-                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppClassificationTopicsContract.APP));
+                long taxonomyVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppClassificationTopicsContract
+                                                .TAXONOMY_VERSION));
+                long modelVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppClassificationTopicsContract
+                                                .MODEL_VERSION));
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppClassificationTopicsContract.TOPIC));
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
 
                 List<Topic> list = appTopicsMap.getOrDefault(app, new ArrayList<>());
                 list.add(topic);
@@ -170,11 +178,11 @@ public class TopicsDao {
     /**
      * Persist the list of Top Topics in this epoch to DB.
      *
-     * @param epochId   Id of current epoch
+     * @param epochId Id of current epoch
      * @param topTopics the topics list to persist into DB
      */
     @VisibleForTesting
-    public void persistTopTopics(long epochId, @NonNull List<Integer> topTopics) {
+    public void persistTopTopics(long epochId, @NonNull List<Topic> topTopics) {
         // topTopics the Top Topics: a list of 5 top topics and the 6th topic
         // which was selected randomly. We can refer this 6th topic as the random-topic.
         Objects.requireNonNull(topTopics);
@@ -187,20 +195,25 @@ public class TopicsDao {
 
         ContentValues values = new ContentValues();
         values.put(TopicsTables.TopTopicsContract.EPOCH_ID, epochId);
-        values.put(TopicsTables.TopTopicsContract.TOPIC1, topTopics.get(0));
-        values.put(TopicsTables.TopTopicsContract.TOPIC2, topTopics.get(1));
-        values.put(TopicsTables.TopTopicsContract.TOPIC3, topTopics.get(2));
-        values.put(TopicsTables.TopTopicsContract.TOPIC4, topTopics.get(3));
-        values.put(TopicsTables.TopTopicsContract.TOPIC5, topTopics.get(4));
-        values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, topTopics.get(5));
+        values.put(TopicsTables.TopTopicsContract.TOPIC1, topTopics.get(0).getTopic());
+        values.put(TopicsTables.TopTopicsContract.TOPIC2, topTopics.get(1).getTopic());
+        values.put(TopicsTables.TopTopicsContract.TOPIC3, topTopics.get(2).getTopic());
+        values.put(TopicsTables.TopTopicsContract.TOPIC4, topTopics.get(3).getTopic());
+        values.put(TopicsTables.TopTopicsContract.TOPIC5, topTopics.get(4).getTopic());
+        values.put(TopicsTables.TopTopicsContract.RANDOM_TOPIC, topTopics.get(5).getTopic());
+        // Taxonomy version and model version of all top topics should be the same.
+        // Therefore, get it from the first top topic.
+        values.put(
+                TopicsTables.TopTopicsContract.TAXONOMY_VERSION,
+                topTopics.get(0).getTaxonomyVersion());
+        values.put(
+                TopicsTables.TopTopicsContract.MODEL_VERSION, topTopics.get(0).getModelVersion());
 
         try {
-            db.insert(TopicsTables.TopTopicsContract.TABLE,
-                    /* nullColumnHack */null, values);
+            db.insert(TopicsTables.TopTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to persist Top Topics. Exception : " + e.getMessage());
         }
-
     }
 
     /**
@@ -208,51 +221,79 @@ public class TopicsDao {
      * from DB.
      *
      * @param epochId the epochId to retrieve the top topics.
-     * @return List of Top Topics.
+     * @return {@link List} a {@link List} of {@link Topic}
      */
     @VisibleForTesting
     @NonNull
-    public List<String> retrieveTopTopics(long epochId) {
+    public List<Topic> retrieveTopTopics(long epochId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return new ArrayList<>();
         }
 
         String[] projection = {
-                TopicsTables.TopTopicsContract.TOPIC1,
-                TopicsTables.TopTopicsContract.TOPIC2,
-                TopicsTables.TopTopicsContract.TOPIC3,
-                TopicsTables.TopTopicsContract.TOPIC4,
-                TopicsTables.TopTopicsContract.TOPIC5,
-                TopicsTables.TopTopicsContract.RANDOM_TOPIC,
+            TopicsTables.TopTopicsContract.TOPIC1,
+            TopicsTables.TopTopicsContract.TOPIC2,
+            TopicsTables.TopTopicsContract.TOPIC3,
+            TopicsTables.TopTopicsContract.TOPIC4,
+            TopicsTables.TopTopicsContract.TOPIC5,
+            TopicsTables.TopTopicsContract.RANDOM_TOPIC,
+            TopicsTables.TopTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.TopTopicsContract.MODEL_VERSION
         };
 
         String selection = TopicsTables.AppClassificationTopicsContract.EPOCH_ID + " = ?";
         String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor = db.query(
-                        TopicsTables.TopTopicsContract.TABLE,   // The table to query
-                        projection,        // The array of columns to return (pass null to get all)
-                        selection,         // The columns for the WHERE clause
-                        selectionArgs,     // The values for the WHERE clause
-                        null,      // don't group the rows
-                        null,       // don't filter by row groups
-                        null       // The sort order
-                )) {
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.TopTopicsContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        selection, // The columns for the WHERE clause
+                        selectionArgs, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
             if (cursor.moveToNext()) {
-                String topic1 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC1));
-                String topic2 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC2));
-                String topic3 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC3));
-                String topic4 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC4));
-                String topic5 = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.TOPIC5));
-                String randomTopic = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.TopTopicsContract.RANDOM_TOPIC));
+                int topicId1 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC1));
+                int topicId2 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC2));
+                int topicId3 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC3));
+                int topicId4 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC4));
+                int topicId5 =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TOPIC5));
+                int randomTopicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.RANDOM_TOPIC));
+                long taxonomyVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.TAXONOMY_VERSION));
+                long modelVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.TopTopicsContract.MODEL_VERSION));
+                Topic topic1 = Topic.create(topicId1, taxonomyVersion, modelVersion);
+                Topic topic2 = Topic.create(topicId2, taxonomyVersion, modelVersion);
+                Topic topic3 = Topic.create(topicId3, taxonomyVersion, modelVersion);
+                Topic topic4 = Topic.create(topicId4, taxonomyVersion, modelVersion);
+                Topic topic5 = Topic.create(topicId5, taxonomyVersion, modelVersion);
+                Topic randomTopic = Topic.create(randomTopicId, taxonomyVersion, modelVersion);
                 return Arrays.asList(topic1, topic2, topic3, topic4, topic5, randomTopic);
             }
         }
@@ -264,8 +305,8 @@ public class TopicsDao {
      * Record the App and SDK into the Usage History table.
      *
      * @param epochId epochId epoch id to record
-     * @param app     app name
-     * @param sdk     sdk name
+     * @param app app name
+     * @param sdk sdk name
      */
     public void recordUsageHistory(long epochId, @NonNull String app, @NonNull String sdk) {
         Objects.requireNonNull(app);
@@ -283,8 +324,7 @@ public class TopicsDao {
         values.put(TopicsTables.UsageHistoryContract.EPOCH_ID, epochId);
 
         try {
-            db.insert(TopicsTables.UsageHistoryContract.TABLE,
-                    /* nullColumnHack */ null, values);
+            db.insert(TopicsTables.UsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record App-Sdk usage history." + e.getMessage());
         }
@@ -294,7 +334,7 @@ public class TopicsDao {
      * Record the usage history for app only
      *
      * @param epochId epoch id to record
-     * @param app     app name
+     * @param app app name
      */
     public void recordAppUsageHistory(long epochId, @NonNull String app) {
         Objects.requireNonNull(app);
@@ -310,13 +350,12 @@ public class TopicsDao {
         values.put(TopicsTables.AppUsageHistoryContract.EPOCH_ID, epochId);
 
         try {
-            db.insert(TopicsTables.AppUsageHistoryContract.TABLE,
-                    /* nullColumnHack */ null, values);
+            db.insert(
+                    TopicsTables.AppUsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record App Only usage history." + e.getMessage());
         }
     }
-
 
     /**
      * Return all apps and their SDKs that called Topics API in the epoch.
@@ -333,26 +372,32 @@ public class TopicsDao {
         }
 
         String[] projection = {
-                TopicsTables.UsageHistoryContract.APP,
-                TopicsTables.UsageHistoryContract.SDK,
+            TopicsTables.UsageHistoryContract.APP, TopicsTables.UsageHistoryContract.SDK,
         };
 
         String selection = TopicsTables.UsageHistoryContract.EPOCH_ID + " = ?";
         String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor =
-                        db.query(/* distinct = */true,
-                                TopicsTables.UsageHistoryContract.TABLE, projection,
-                                selection,
-                                selectionArgs, null, null,
-                                null, null)
-        ) {
+        try (Cursor cursor =
+                db.query(
+                        /* distinct = */ true,
+                        TopicsTables.UsageHistoryContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             while (cursor.moveToNext()) {
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.UsageHistoryContract.APP));
-                String sdk = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.UsageHistoryContract.SDK));
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.UsageHistoryContract.APP));
+                String sdk =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.UsageHistoryContract.SDK));
                 if (!appSdksUsageMap.containsKey(app)) {
                     appSdksUsageMap.put(app, new ArrayList<>());
                 }
@@ -378,22 +423,27 @@ public class TopicsDao {
         }
 
         String[] projection = {
-                TopicsTables.AppUsageHistoryContract.APP,
+            TopicsTables.AppUsageHistoryContract.APP,
         };
 
         String selection = TopicsTables.AppUsageHistoryContract.EPOCH_ID + " = ?";
         String[] selectionArgs = {String.valueOf(epochId)};
 
-        try (
-                Cursor cursor =
-                        db.query(TopicsTables.AppUsageHistoryContract.TABLE, projection,
-                                selection,
-                                selectionArgs, null, null,
-                                null, null)
-        ) {
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.AppUsageHistoryContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             while (cursor.moveToNext()) {
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.AppUsageHistoryContract.APP));
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.AppUsageHistoryContract.APP));
                 appUsageMap.put(app, appUsageMap.getOrDefault(app, 0) + 1);
             }
         }
@@ -404,33 +454,39 @@ public class TopicsDao {
     /**
      * Persist the Callers can learn topic map to DB.
      *
-     * @param epochId           the epoch Id.
-     * @param callerCanLearnMap callerCanLearnMap = Map<Topic, Set<Caller>>
-     *                          This is a Map from Topic to set of App or Sdk (Caller = App or Sdk)
-     *                          that can learn
-     *                          about that topic. This is similar to the table Can Learn Topic in
-     *                          the explainer.
+     * @param epochId the epoch Id.
+     * @param callerCanLearnMap callerCanLearnMap = Map<Topic, Set<Caller>> This is a Map from Topic
+     *     to set of App or Sdk (Caller = App or Sdk) that can learn about that topic. This is
+     *     similar to the table Can Learn Topic in the explainer.
      */
     public void persistCallerCanLearnTopics(
-            long epochId, @NonNull Map<Integer, Set<String>> callerCanLearnMap) {
+            long epochId, @NonNull Map<Topic, Set<String>> callerCanLearnMap) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
         }
 
-        for (Map.Entry<Integer, Set<String>> entry : callerCanLearnMap.entrySet()) {
-            Integer topic = entry.getKey();
+        for (Map.Entry<Topic, Set<String>> entry : callerCanLearnMap.entrySet()) {
+            Topic topic = entry.getKey();
             Set<String> callers = entry.getValue();
 
             for (String caller : callers) {
                 ContentValues values = new ContentValues();
                 values.put(TopicsTables.CallerCanLearnTopicsContract.CALLER, caller);
-                values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, topic);
+                values.put(TopicsTables.CallerCanLearnTopicsContract.TOPIC, topic.getTopic());
                 values.put(TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID, epochId);
+                values.put(
+                        TopicsTables.CallerCanLearnTopicsContract.TAXONOMY_VERSION,
+                        topic.getTaxonomyVersion());
+                values.put(
+                        TopicsTables.CallerCanLearnTopicsContract.MODEL_VERSION,
+                        topic.getModelVersion());
 
                 try {
-                    db.insert(TopicsTables.CallerCanLearnTopicsContract.TABLE,
-                            /* nullColumnHack */ null, values);
+                    db.insert(
+                            TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                            /* nullColumnHack */ null,
+                            values);
                 } catch (SQLException e) {
                     LogUtil.e(e, "Failed to record can learn topic.");
                 }
@@ -439,32 +495,34 @@ public class TopicsDao {
     }
 
     /**
-     * Retrieve the CallersCanLearnTopicsMap
-     * This is a Map from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that
-     * topic. This is similar to the table Can Learn Topic in the explainer.
-     * We will look back numberOfLookBackEpochs epochs. The current explainer uses 3 past epochs.
-     * Basically we select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
+     * Retrieve the CallersCanLearnTopicsMap This is a Map from Topic to set of App or Sdk (Caller =
+     * App or Sdk) that can learn about that topic. This is similar to the table Can Learn Topic in
+     * the explainer. We will look back numberOfLookBackEpochs epochs. The current explainer uses 3
+     * past epochs. Basically we select epochId between [epochId - numberOfLookBackEpochs + 1,
+     * epochId]
      *
-     * @param epochId                the epochId
+     * @param epochId the epochId
      * @param numberOfLookBackEpochs Look back numberOfLookBackEpochs.
-     * @return a Map<Topic, Set<Caller>>  where Caller = App or Sdk.
+     * @return {@link Map} a Map<Topic, Set<Caller>> where Caller = App or Sdk.
      */
     @VisibleForTesting
     @NonNull
-    public Map<Integer, Set<String>> retrieveCallerCanLearnTopicsMap(
+    public Map<Topic, Set<String>> retrieveCallerCanLearnTopicsMap(
             long epochId, int numberOfLookBackEpochs) {
         Preconditions.checkArgumentPositive(
                 numberOfLookBackEpochs, "numberOfLookBackEpochs must be positive!");
 
-        Map<Integer, Set<String>> callerCanLearnMap = new HashMap<>();
+        Map<Topic, Set<String>> callerCanLearnMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return callerCanLearnMap;
         }
 
         String[] projection = {
-                TopicsTables.CallerCanLearnTopicsContract.CALLER,
-                TopicsTables.CallerCanLearnTopicsContract.TOPIC,
+            TopicsTables.CallerCanLearnTopicsContract.CALLER,
+            TopicsTables.CallerCanLearnTopicsContract.TOPIC,
+            TopicsTables.CallerCanLearnTopicsContract.TAXONOMY_VERSION,
+            TopicsTables.CallerCanLearnTopicsContract.MODEL_VERSION,
         };
 
         // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
@@ -475,20 +533,20 @@ public class TopicsDao {
                         + TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID
                         + " <= ?";
         String[] selectionArgs = {
-                String.valueOf(epochId - numberOfLookBackEpochs + 1), String.valueOf(epochId)
+            String.valueOf(epochId - numberOfLookBackEpochs + 1), String.valueOf(epochId)
         };
 
         try (Cursor cursor =
-                     db.query(
-                             /* distinct = */ true,
-                             TopicsTables.CallerCanLearnTopicsContract.TABLE,
-                             projection,
-                             selection,
-                             selectionArgs,
-                             null,
-                             null,
-                             null,
-                             null)) {
+                db.query(
+                        /* distinct = */ true,
+                        TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null,
+                        null)) {
             if (cursor == null) {
                 return callerCanLearnMap;
             }
@@ -498,11 +556,20 @@ public class TopicsDao {
                         cursor.getString(
                                 cursor.getColumnIndexOrThrow(
                                         TopicsTables.CallerCanLearnTopicsContract.CALLER));
-                Integer topic =
-                        Integer.parseInt(cursor.getString(
+                int topicId =
+                        cursor.getInt(
                                 cursor.getColumnIndexOrThrow(
-                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC)));
-
+                                        TopicsTables.CallerCanLearnTopicsContract.TOPIC));
+                long taxonomyVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.CallerCanLearnTopicsContract
+                                                .TAXONOMY_VERSION));
+                long modelVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.CallerCanLearnTopicsContract.MODEL_VERSION));
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
                 if (!callerCanLearnMap.containsKey(topic)) {
                     callerCanLearnMap.put(topic, new HashSet<>());
                 }
@@ -513,37 +580,38 @@ public class TopicsDao {
         return callerCanLearnMap;
     }
 
-    // Persist the Apps, Sdks returned topics to DB.
-    // returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
-
     /**
      * Persist the Apps, Sdks returned topics to DB.
      *
-     * @param epochId         the epoch Id
-     * @param taxonomyVersion The Taxonomy Version
-     * @param modelVersion    The Model Version
-     *                        returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
+     * @param epochId the epoch Id
+     * @param returnedAppSdkTopics {@link Map} a Map<Pair<app, sdk>, Topic>
      */
-    public void persistReturnedAppTopicsMap(long epochId, long taxonomyVersion, long modelVersion,
-            @NonNull Map<Pair<String, String>, Integer> returnedAppSdkTopics) {
+    public void persistReturnedAppTopicsMap(
+            long epochId, @NonNull Map<Pair<String, String>, Topic> returnedAppSdkTopics) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
             return;
         }
 
-        for (Map.Entry<Pair<String, String>, Integer> app : returnedAppSdkTopics.entrySet()) {
+        for (Map.Entry<Pair<String, String>, Topic> app : returnedAppSdkTopics.entrySet()) {
             // Entry: Key = <Pair<App, Sdk>, Value = Topic.
             ContentValues values = new ContentValues();
             values.put(TopicsTables.ReturnedTopicContract.EPOCH_ID, epochId);
             values.put(TopicsTables.ReturnedTopicContract.APP, app.getKey().first);
             values.put(TopicsTables.ReturnedTopicContract.SDK, app.getKey().second);
-            values.put(TopicsTables.ReturnedTopicContract.TOPIC, app.getValue());
-            values.put(TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION, taxonomyVersion);
-            values.put(TopicsTables.ReturnedTopicContract.MODEL_VERSION, modelVersion);
+            values.put(TopicsTables.ReturnedTopicContract.TOPIC, app.getValue().getTopic());
+            values.put(
+                    TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
+                    app.getValue().getTaxonomyVersion());
+            values.put(
+                    TopicsTables.ReturnedTopicContract.MODEL_VERSION,
+                    app.getValue().getModelVersion());
 
             try {
-                db.insert(TopicsTables.ReturnedTopicContract.TABLE,
-                        /* nullColumnHack */ null, values);
+                db.insert(
+                        TopicsTables.ReturnedTopicContract.TABLE,
+                        /* nullColumnHack */ null,
+                        values);
             } catch (SQLException e) {
                 LogUtil.e(e, "Failed to record returned topic.");
             }
@@ -551,16 +619,16 @@ public class TopicsDao {
     }
 
     /**
-     * Retrieve from the Topics ReturnedTopics Table and populate into the map.
-     * Will return topics for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
+     * Retrieve from the Topics ReturnedTopics Table and populate into the map. Will return topics
+     * for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
      *
-     * @param epochId                the current epochId
+     * @param epochId the current epochId
      * @param numberOfLookBackEpochs How many epoch to look back. The curent explainer uses 3 epochs
      * @return Map<EpochId, Map < Pair < App, Sdk>, Topic>
      */
     @NonNull
-    public Map<Long, Map<Pair<String, String>, Topic>> retrieveReturnedTopics(long epochId,
-            int numberOfLookBackEpochs) {
+    public Map<Long, Map<Pair<String, String>, Topic>> retrieveReturnedTopics(
+            long epochId, int numberOfLookBackEpochs) {
         Map<Long, Map<Pair<String, String>, Topic>> topicsMap = new HashMap<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -568,54 +636,71 @@ public class TopicsDao {
         }
 
         String[] projection = {
-                TopicsTables.ReturnedTopicContract.EPOCH_ID,
-                TopicsTables.ReturnedTopicContract.APP,
-                TopicsTables.ReturnedTopicContract.SDK,
-                TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
-                TopicsTables.ReturnedTopicContract.MODEL_VERSION,
-                TopicsTables.ReturnedTopicContract.TOPIC,
+            TopicsTables.ReturnedTopicContract.EPOCH_ID,
+            TopicsTables.ReturnedTopicContract.APP,
+            TopicsTables.ReturnedTopicContract.SDK,
+            TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION,
+            TopicsTables.ReturnedTopicContract.MODEL_VERSION,
+            TopicsTables.ReturnedTopicContract.TOPIC,
         };
 
         // Select epochId between [epochId - numberOfLookBackEpochs + 1, epochId]
-        String selection = " ? <= " + TopicsTables.ReturnedTopicContract.EPOCH_ID
-                + " AND " + TopicsTables.ReturnedTopicContract.EPOCH_ID + " <= ?";
-        String[] selectionArgs = {String.valueOf(epochId - numberOfLookBackEpochs + 1),
-                String.valueOf(epochId)};
+        String selection =
+                " ? <= "
+                        + TopicsTables.ReturnedTopicContract.EPOCH_ID
+                        + " AND "
+                        + TopicsTables.ReturnedTopicContract.EPOCH_ID
+                        + " <= ?";
+        String[] selectionArgs = {
+            String.valueOf(epochId - numberOfLookBackEpochs + 1), String.valueOf(epochId)
+        };
 
-        try (Cursor cursor = db.query(
-                TopicsTables.ReturnedTopicContract.TABLE,   // The table to query
-                projection,             // The array of columns to return (pass null to get all)
-                selection,              // The columns for the WHERE clause
-                selectionArgs,          // The values for the WHERE clause
-                null,           // don't group the rows
-                null,            // don't filter by row groups
-                null            // The sort order
-        )) {
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.ReturnedTopicContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        selection, // The columns for the WHERE clause
+                        selectionArgs, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
             if (cursor == null) {
                 return topicsMap;
             }
 
             while (cursor.moveToNext()) {
-                long cursorEpochId = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.EPOCH_ID));
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.APP));
-                String sdk = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.SDK));
-                long taxonomyVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
-                long modelVersion = cursor.getInt(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.MODEL_VERSION));
-                String topicString = cursor.getString(cursor.getColumnIndexOrThrow(
-                        TopicsTables.ReturnedTopicContract.TOPIC));
+                long cursorEpochId =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.EPOCH_ID));
+                String app =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.APP));
+                String sdk =
+                        cursor.getString(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.SDK));
+                long taxonomyVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.TAXONOMY_VERSION));
+                long modelVersion =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.MODEL_VERSION));
+                int topicId =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.ReturnedTopicContract.TOPIC));
 
                 // Building Map<EpochId, Map<Pair<AppId, AdTechId>, Topic>
                 if (!topicsMap.containsKey(cursorEpochId)) {
                     topicsMap.put(cursorEpochId, new HashMap<>());
                 }
 
-                Topic topic = Topic.create(
-                        Integer.parseInt(topicString), taxonomyVersion, modelVersion);
+                Topic topic = Topic.create(topicId, taxonomyVersion, modelVersion);
                 topicsMap.get(cursorEpochId).put(Pair.create(app, sdk), topic);
             }
         }
@@ -638,8 +723,7 @@ public class TopicsDao {
         ContentValues values = getContentValuesForBlockedTopic(topic);
 
         try {
-            db.insert(TopicsTables.BlockedTopicsContract.TABLE,
-                    /* nullColumnHack */ null, values);
+            db.insert(TopicsTables.BlockedTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             LogUtil.e("Failed to record blocked topic." + e.getMessage());
         }
@@ -668,16 +752,23 @@ public class TopicsDao {
         }
 
         // Where statement for triplet: topics, taxonomyVersion, modelVersion
-        String whereClause = " ? = " + TopicsTables.BlockedTopicsContract.TOPIC
-                + " AND " + TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION + " = ?"
-                + " AND " + TopicsTables.BlockedTopicsContract.MODEL_VERSION + " = ?";
-        String[] whereArgs = {String.valueOf(topic.getTopic()),
-                String.valueOf(topic.getTaxonomyVersion()), String.valueOf(
-                topic.getModelVersion())};
+        String whereClause =
+                " ? = "
+                        + TopicsTables.BlockedTopicsContract.TOPIC
+                        + " AND "
+                        + TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION
+                        + " = ?"
+                        + " AND "
+                        + TopicsTables.BlockedTopicsContract.MODEL_VERSION
+                        + " = ?";
+        String[] whereArgs = {
+            String.valueOf(topic.getTopic()),
+            String.valueOf(topic.getTaxonomyVersion()),
+            String.valueOf(topic.getModelVersion())
+        };
 
         try {
-            db.delete(TopicsTables.BlockedTopicsContract.TABLE,
-                    whereClause, whereArgs);
+            db.delete(TopicsTables.BlockedTopicsContract.TABLE, whereClause, whereArgs);
         } catch (SQLException e) {
             LogUtil.e("Failed to record blocked topic." + e.getMessage());
         }
@@ -696,25 +787,31 @@ public class TopicsDao {
             return blockedTopics;
         }
 
-        try (
-                Cursor cursor = db.query(
+        try (Cursor cursor =
+                db.query(
                         /* distinct = */ true,
-                        TopicsTables.BlockedTopicsContract.TABLE,   // The table to query
-                        null,     // Get all columns (null for all)
-                        null,     // Select all columns (null for all)
-                        null,  // Select all columns (null for all)
-                        null,     // Don't group the rows
-                        null,      // Don't filter by row groups
-                        null,     // don't sort
-                        null        // don't limit
-                )) {
+                        TopicsTables.BlockedTopicsContract.TABLE, // The table to query
+                        null, // Get all columns (null for all)
+                        null, // Select all columns (null for all)
+                        null, // Select all columns (null for all)
+                        null, // Don't group the rows
+                        null, // Don't filter by row groups
+                        null, // don't sort
+                        null // don't limit
+                        )) {
             while (cursor.moveToNext()) {
-                long taxonomyVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION));
-                long modelVersion = cursor.getLong(cursor.getColumnIndexOrThrow(
-                        TopicsTables.BlockedTopicsContract.MODEL_VERSION));
-                int topicInt = cursor.getInt(cursor.getColumnIndexOrThrow(
-                        TopicsTables.BlockedTopicsContract.TOPIC));
+                long taxonomyVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.BlockedTopicsContract.TAXONOMY_VERSION));
+                long modelVersion =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.BlockedTopicsContract.MODEL_VERSION));
+                int topicInt =
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.BlockedTopicsContract.TOPIC));
                 Topic topic = Topic.create(topicInt, taxonomyVersion, modelVersion);
 
                 blockedTopics.add(topic);
@@ -722,5 +819,30 @@ public class TopicsDao {
         }
 
         return blockedTopics;
+    }
+
+    /**
+     * Delete from epoch-related tables for data older than/equal to certain epoch in DB.
+     *
+     * @param tableName the table to delete data from
+     * @param epochColumnName epoch Column name for given table
+     * @param epochToDeleteFrom the epoch to delete starting from (inclusive)
+     */
+    public void deleteDataOfOldEpochs(
+            @NonNull String tableName, @NonNull String epochColumnName, long epochToDeleteFrom) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        // Delete epochId before epochToDeleteFrom (including epochToDeleteFrom)
+        String deletion = " " + epochColumnName + " <= ?";
+        String[] deletionArgs = {String.valueOf(epochToDeleteFrom)};
+
+        try {
+            db.delete(tableName, deletion, deletionArgs);
+        } catch (SQLException e) {
+            LogUtil.e(e, "Failed to delete old epochs' data.");
+        }
     }
 }

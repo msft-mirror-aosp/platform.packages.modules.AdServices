@@ -28,6 +28,9 @@
     <!-- Used for reporting -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Used for persisting scheduled jobs -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- Allows an application to access AdServices Topics API. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"
         android:label="@string/permlab_accessAdServicesTopics"
@@ -46,6 +49,12 @@
         android:description="@string/permdesc_accessAdServicesCustomAudience"
         android:protectionLevel="normal" />
 
+    <!-- Allows Consent Service to access AdServices. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_CONSENT"
+        android:label="@string/permlab_accessAdServicesConsent"
+        android:description="@string/permdesc_accessAdServicesConsent"
+        android:protectionLevel="signature|privileged" />
+
     <!-- Allows AdServices to access API for Ad ID. -->
     <permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID"
         android:label="@string/permlab_adServicesAccessAdId"
@@ -58,9 +67,16 @@
         android:description="@string/permdesc_adServicesAccessAppSetId"
         android:protectionLevel="signature" />
 
+    <!-- Allows AdServices to access Consent Service. -->
+    <permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE"
+        android:label="@string/permlab_adServicesAccessConsentService"
+        android:description="@string/permdesc_adServicesAccessConsentService"
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
+    <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
+
     <application
         android:label="Android AdServices"
         android:forceQueryable="true"
@@ -68,7 +84,6 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true">
-        <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name="com.android.adservices.adselection.AdSelectionService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
@@ -77,7 +92,6 @@
             </intent-filter>
         </service>
 
-        <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name=
                      "com.android.adservices.customaudience.CustomAudienceService"
                  android:exported="true"
@@ -88,7 +102,6 @@
             </intent-filter>
         </service>
 
-        <!-- TODO(b/221123093): Support multi-user. -->
         <service android:name="com.android.adservices.topics.TopicsService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
@@ -96,6 +109,7 @@
                 <action android:name="android.adservices.TOPICS_SERVICE"/>
             </intent-filter>
         </service>
+
         <service android:name="com.android.adservices.measurement.MeasurementService"
             android:exported="true"
             android:visibleToInstantApps="false"
@@ -135,25 +149,25 @@
         </activity>
 
         <!-- Measurement event main report upload job. -->
-        <service android:name="com.android.adservices.service.measurement.EventReportingJobService"
+        <service android:name="com.android.adservices.service.measurement.reporting.EventReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Measurement event fallback report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.EventFallbackReportingJobService"
+                     "com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Measurement aggregate main report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.AggregateReportingJobService"
+                     "com.android.adservices.service.measurement.reporting.AggregateReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Measurement aggregate fallback report upload job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.AggregateFallbackReportingJobService"
+                     "com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -169,10 +183,17 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- FLEDGE Background Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.customaudience.BackgroundFetchJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <provider
             android:name=
                 "com.android.adservices.service.measurement.attribution.TriggerContentProvider"
             android:authorities="com.android.adservices.provider.trigger"
             android:exported="false"
-        /></application>
+        />
+    </application>
 </manifest>

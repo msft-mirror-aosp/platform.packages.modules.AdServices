@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static org.mockito.Mockito.when;
+
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -35,11 +37,15 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -55,7 +61,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,7 +101,8 @@ public class AdSelectionE2ETest {
                     + "}";
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     private Context mContext;
     private ExecutorService mExecutorService;
@@ -108,8 +116,6 @@ public class AdSelectionE2ETest {
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
         // Initialize dependencies for the AdSelectionService
         mContext = ApplicationProvider.getApplicationContext();
         mExecutorService = Executors.newSingleThreadExecutor();
@@ -126,6 +132,8 @@ public class AdSelectionE2ETest {
         mAdSelectionHttpClient = new AdSelectionHttpClient(mExecutorService);
 
         mAdServicesLogger = AdServicesLoggerImpl.getInstance();
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
 
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
@@ -186,6 +194,80 @@ public class AdSelectionE2ETest {
                         BUYER_2,
                         mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
                         bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
+        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        Assert.assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        Assert.assertEquals(
+                AD_URL_PREFIX + "buyer2/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+    }
+
+    @Test
+    public void testRunAdSelectionSucceedsWithOverride() throws Exception {
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        bidsForBuyer2);
+
+        String myAppPackageName = "com.google.ppapi.test";
+
+        // Set dev override for  ad selection
+        DBAdSelectionOverride adSelectionOverride =
+                DBAdSelectionOverride.builder()
+                        .setAdSelectionConfigId(
+                                AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
+                                        mAdSelectionConfig))
+                        .setAppPackageName(myAppPackageName)
+                        .setDecisionLogicJS(USE_BID_AS_SCORE_JS)
+                        .build();
+        mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
+
+        // Set dev override for custom audience
+        DBCustomAudienceOverride dbCustomAudienceOverride =
+                DBCustomAudienceOverride.builder()
+                        .setOwner(dBCustomAudienceForBuyer2.getOwner())
+                        .setBuyer(dBCustomAudienceForBuyer2.getBuyer())
+                        .setName(dBCustomAudienceForBuyer2.getName())
+                        .setAppPackageName(myAppPackageName)
+                        .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS)
+                        .setTrustedBiddingData("")
+                        .build();
+        mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        // Creating new instance of service with new DevContextFilter
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdSelectionHttpClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        mContext,
+                        mAdServicesLogger);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);

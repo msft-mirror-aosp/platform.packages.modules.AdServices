@@ -37,7 +37,8 @@ public final class TopicsTables {
     public interface TaxonomyContract {
         String TABLE = TOPICS_TABLE_PREFIX + "taxonomy";
         String ID = "_id";
-        String VERSION = "version";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
         String TOPIC = "topic";
     }
 
@@ -46,9 +47,14 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + TaxonomyContract.TABLE
                     + "("
-                    + TaxonomyContract.ID + " INTEGER PRIMARY KEY, "
-                    + TaxonomyContract.VERSION + " TEXT, "
-                    + TaxonomyContract.TOPIC + " TEXT"
+                    + TaxonomyContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + TaxonomyContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + TaxonomyContract.MODEL_VERSION
+                    + " INTEGER NOT NULL, "
+                    + TaxonomyContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -72,12 +78,18 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + AppClassificationTopicsContract.TABLE
                     + "("
-                    + AppClassificationTopicsContract.ID + " INTEGER PRIMARY KEY, "
-                    + AppClassificationTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + AppClassificationTopicsContract.APP + " TEXT NOT NULL, "
-                    + AppClassificationTopicsContract.TAXONOMY_VERSION + " INTEGER NOT NULL, "
-                    + AppClassificationTopicsContract.MODEL_VERSION + " INTEGER NOT NULL, "
-                    + AppClassificationTopicsContract.TOPIC + " TEXT NOT NULL"
+                    + AppClassificationTopicsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + AppClassificationTopicsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + AppClassificationTopicsContract.APP
+                    + " TEXT NOT NULL, "
+                    + AppClassificationTopicsContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + AppClassificationTopicsContract.MODEL_VERSION
+                    + " INTEGER NOT NULL, "
+                    + AppClassificationTopicsContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -93,6 +105,8 @@ public final class TopicsTables {
         String EPOCH_ID = "epoch_id";
         String CALLER = "caller";
         String TOPIC = "topic";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
     }
 
     // Create Statement for the Caller Learned Topic table.
@@ -100,10 +114,18 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + CallerCanLearnTopicsContract.TABLE
                     + "("
-                    + CallerCanLearnTopicsContract.ID + " INTEGER PRIMARY KEY, "
-                    + CallerCanLearnTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + CallerCanLearnTopicsContract.CALLER + " TEXT NOT NULL, "
-                    + CallerCanLearnTopicsContract.TOPIC + " TEXT NOT NULL"
+                    + CallerCanLearnTopicsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + CallerCanLearnTopicsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + CallerCanLearnTopicsContract.CALLER
+                    + " TEXT NOT NULL, "
+                    + CallerCanLearnTopicsContract.TOPIC
+                    + " INTEGER NOT NULL, "
+                    + CallerCanLearnTopicsContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + CallerCanLearnTopicsContract.MODEL_VERSION
+                    + " INTEGER NOT NULL"
                     + ")";
 
     // TODO(b/223446202): Make this table to configurable numbers of top topics.
@@ -123,6 +145,8 @@ public final class TopicsTables {
         String TOPIC4 = "topic4";
         String TOPIC5 = "topic5";
         String RANDOM_TOPIC = "random_topic";
+        String TAXONOMY_VERSION = "taxonomy_version";
+        String MODEL_VERSION = "model_version";
     }
 
     // Table Create Statement for the Top Topics table
@@ -130,14 +154,26 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + TopTopicsContract.TABLE
                     + "("
-                    + TopTopicsContract.ID + " INTEGER PRIMARY KEY, "
-                    + TopTopicsContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + TopTopicsContract.TOPIC1 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC2 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC3 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC4 + " TEXT NOT NULL, "
-                    + TopTopicsContract.TOPIC5 + " TEXT NOT NULL, "
-                    + TopTopicsContract.RANDOM_TOPIC + " TEXT NOT NULL"
+                    + TopTopicsContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + TopTopicsContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC1
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC2
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC3
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC4
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TOPIC5
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.RANDOM_TOPIC
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + TopTopicsContract.MODEL_VERSION
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**
@@ -161,13 +197,20 @@ public final class TopicsTables {
             "CREATE TABLE "
                     + ReturnedTopicContract.TABLE
                     + "("
-                    + ReturnedTopicContract.ID + " INTEGER PRIMARY KEY, "
-                    + ReturnedTopicContract.EPOCH_ID + " INTEGER NOT NULL, "
-                    + ReturnedTopicContract.APP + " TEXT NOT NULL, "
-                    + ReturnedTopicContract.SDK + " TEXT NOT NULL, "
-                    + ReturnedTopicContract.TAXONOMY_VERSION + " INTEGER NOT NULL, "
-                    + ReturnedTopicContract.MODEL_VERSION + " INTEGER NOT NULL, "
-                    + ReturnedTopicContract.TOPIC + " TEXT NOT NULL"
+                    + ReturnedTopicContract.ID
+                    + " INTEGER PRIMARY KEY, "
+                    + ReturnedTopicContract.EPOCH_ID
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.APP
+                    + " TEXT NOT NULL, "
+                    + ReturnedTopicContract.SDK
+                    + " TEXT NOT NULL, "
+                    + ReturnedTopicContract.TAXONOMY_VERSION
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.MODEL_VERSION
+                    + " INTEGER NOT NULL, "
+                    + ReturnedTopicContract.TOPIC
+                    + " INTEGER NOT NULL"
                     + ")";
 
     /**

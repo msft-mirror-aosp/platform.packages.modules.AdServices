@@ -34,6 +34,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 
@@ -62,10 +63,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertTrigger(@NonNull Uri attributionDestination, @NonNull Uri adTechDomain,
-            @NonNull Uri registrant, @NonNull Long triggerTime, @NonNull Long triggerData,
-            @Nullable Long dedupKey, @NonNull Long priority, @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues) throws DatastoreException {
+    public void insertTrigger(
+            @NonNull Uri attributionDestination,
+            @NonNull Uri adTechDomain,
+            @NonNull Uri registrant,
+            @NonNull Long triggerTime,
+            @NonNull Long triggerData,
+            @Nullable Long dedupKey,
+            @NonNull Long priority,
+            @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues,
+            @Nullable String filters)
+            throws DatastoreException {
         validateNonNull(attributionDestination, adTechDomain, registrant, triggerTime, triggerData,
                 priority);
         validateUri(attributionDestination, adTechDomain, registrant);
@@ -83,6 +92,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
         values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES, aggregateValues);
+        values.put(MeasurementTables.TriggerContract.FILTERS, filters);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -171,8 +181,7 @@ class MeasurementDao implements IMeasurementDao {
             @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
             @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCoolDownWindow,
-            @Source.AttributionMode int attributionMode,
+            @NonNull Long installCoolDownWindow, @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource, @Nullable String aggregateFilterData)
             throws DatastoreException {
         validateNonNull(sourceEventId, publisher, attributionDestination, adTechDomain,
@@ -199,6 +208,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
         values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -265,6 +275,20 @@ class MeasurementDao implements IMeasurementDao {
                 );
         if (rows != sources.size()) {
             throw new DatastoreException("Source status update failed.");
+        }
+    }
+
+    @Override
+    public void updateSourceAggregateContributions(Source source) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                source.getAggregateContributions());
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.SourceContract.TABLE, values,
+                        MeasurementTables.SourceContract.ID + " = ?",
+                        new String[]{source.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Source aggregate contributions update failed.");
         }
     }
 
@@ -949,6 +973,25 @@ class MeasurementDao implements IMeasurementDao {
                 values,
                 MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ?",
                 new String[]{uri.toString()});
+    }
+
+    @Override
+    public void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateEncryptionKey.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.AggregateEncryptionKey.KEY_ID,
+                aggregateEncryptionKey.getKeyId());
+        values.put(MeasurementTables.AggregateEncryptionKey.PUBLIC_KEY,
+                aggregateEncryptionKey.getPublicKey());
+        values.put(MeasurementTables.AggregateEncryptionKey.EXPIRY,
+                aggregateEncryptionKey.getExpiry());
+        long rowId = mSQLTransaction.getDatabase()
+                .insert(MeasurementTables.AggregateEncryptionKey.TABLE,
+                        /*nullColumnHack=*/null, values);
+        if (rowId == -1) {
+            throw new DatastoreException("Aggregate encryption key insertion failed.");
+        }
     }
 
     @Override

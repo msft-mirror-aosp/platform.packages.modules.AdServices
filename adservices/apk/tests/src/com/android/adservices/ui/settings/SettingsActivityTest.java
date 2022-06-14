@@ -16,6 +16,7 @@
 package com.android.adservices.ui.settings;
 
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
@@ -27,18 +28,19 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import android.widget.Switch;
 
+import androidx.test.espresso.ViewInteraction;
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-/**
- *  Tests for {@link AdServicesSettingsMainFragment}.
- */
+/** Tests for {@link AdServicesSettingsActivity}. */
 public class SettingsActivityTest {
 
     /**
@@ -53,11 +55,11 @@ public class SettingsActivityTest {
             AdServicesSettingsActivity.class);
 
     /**
-     *  Test if {@link AdServicesSettingsMainFragment} is displayed in
-     *  {@link AdServicesSettingsActivity}.
+     * Test if {@link AdServicesSettingsMainFragment} is displayed in {@link
+     * AdServicesSettingsActivity}.
      */
     @Test
-    public void testMainFragmentContainer_isDisplayed() {
+    public void testFragmentContainer_isDisplayed() {
         onView(withId(R.id.fragment_container_view)).check(matches(isDisplayed()));
     }
 
@@ -68,14 +70,15 @@ public class SettingsActivityTest {
      */
     @Test
     public void testMainFragmentViews_isDisplayed() {
-        // R.id.recycler_view refers to the RecyclerView used internally by PreferenceFragmentCompat
-        onView(withId(R.id.recycler_view))
+        onPreferenceScreen()
                 .check(matches(hasDescendant(withText(R.string.settingsUI_topics_title))));
-        onView(withId(R.id.recycler_view))
+        onPreferenceScreen()
                 .check(matches(hasDescendant(withText(R.string.settingsUI_apps_title))));
-        onView(withId(R.id.recycler_view))
-                .check(matches(hasDescendant(withText(
-                        R.string.settingsUI_privacy_sandbox_beta_title))));
+        onPreferenceScreen()
+                .check(
+                        matches(
+                                hasDescendant(
+                                        withText(R.string.settingsUI_privacy_sandbox_beta_title))));
     }
 
     /**
@@ -83,18 +86,60 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_MainViewModel_getConsent() {
-        onView(withId(R.id.recycler_view))
-                .check(matches(hasDescendant(Matchers.allOf(
-                        withClassName(Matchers.is(Switch.class.getName())),
-                        isChecked()))));
-        onView(withId(R.id.recycler_view))
-                .perform(RecyclerViewActions.actionOnItem(hasDescendant(withClassName(
-                        Matchers.is(Switch.class.getName()))), click()));
+        onPreferenceScreen()
+                .check(
+                        matches(
+                                hasDescendant(
+                                        Matchers.allOf(
+                                                withClassName(Matchers.is(Switch.class.getName())),
+                                                isChecked()))));
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withClassName(Matchers.is(Switch.class.getName()))),
+                                click()));
 
         mRule.getScenario().recreate();
-        onView(withId(R.id.recycler_view))
-                .check(matches(hasDescendant(Matchers.allOf(
-                        withClassName(Matchers.is(Switch.class.getName())),
-                        Matchers.not(isChecked())))));
+        onPreferenceScreen()
+                .check(
+                        matches(
+                                hasDescendant(
+                                        Matchers.allOf(
+                                                withClassName(Matchers.is(Switch.class.getName())),
+                                                Matchers.not(isChecked())))));
+    }
+
+    /**
+     * Test if the Topics button in the main fragment opens the topics fragment, and the back button
+     * returns to the main fragment.
+     */
+    @Test
+    public void test_TopicsPreference() {
+        assertMainFragmentDisplayed();
+
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withText(R.string.settingsUI_topics_title)),
+                                click()));
+
+        assertTopicsFragmentDisplayed();
+
+        pressBack();
+
+        assertMainFragmentDisplayed();
+    }
+
+    private void assertMainFragmentDisplayed() {
+        onView(withText(R.string.settingsUI_topics_title)).check(matches(isDisplayed()));
+    }
+
+    private void assertTopicsFragmentDisplayed() {
+        onView(withText(R.string.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
+    }
+
+    private ViewInteraction onPreferenceScreen() {
+        // R.id.recycler_view refers to the RecyclerView used internally by PreferenceFragmentCompat
+        return onView(withId(R.id.recycler_view));
     }
 }
