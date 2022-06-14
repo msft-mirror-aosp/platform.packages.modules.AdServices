@@ -21,9 +21,14 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
-import com.android.internal.annotations.VisibleForTesting;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.topics.TopicsWorker;
+
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 
@@ -43,9 +48,12 @@ public class ConsentManager {
     private static final int STORAGE_VERSION = 1;
     private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
     private static volatile ConsentManager sConsentManager;
+    private final TopicsWorker mTopicsWorker;
     private BooleanFileDatastore mDatastore;
 
-    ConsentManager(@NonNull Context appContext) throws IOException {
+    ConsentManager(@NonNull Context appContext, @NonNull TopicsWorker topicsWorker)
+            throws IOException {
+        mTopicsWorker = topicsWorker;
         init(appContext);
     }
 
@@ -60,7 +68,8 @@ public class ConsentManager {
         if (sConsentManager == null) {
             synchronized (ConsentManager.class) {
                 if (sConsentManager == null) {
-                    sConsentManager = new ConsentManager(context);
+                    sConsentManager =
+                            new ConsentManager(context, TopicsWorker.getInstance(context));
                 }
             }
         }
@@ -128,6 +137,50 @@ public class ConsentManager {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
         }
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
+     * be returned to the {@link TopicsWorker} clients.
+     *
+     * @return {@link ImmutableList} of {@link Topic}s.
+     */
+    @NonNull
+    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        return mTopicsWorker.getKnownTopicsWithConsent();
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which were
+     * blocked by the user.
+     *
+     * @return {@link ImmutableList} of blocked {@link Topic}s.
+     */
+    @NonNull
+    public ImmutableList<Topic> getTopicsWithRevokedConsent() {
+        return mTopicsWorker.getTopicsWithRevokedConsent();
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to revoke consent for provided {@link Topic} (block
+     * topic).
+     *
+     * @param topic {@link Topic} to block.
+     */
+    @NonNull
+    public void revokeConsentForTopic(@NonNull Topic topic) {
+        mTopicsWorker.revokeConsentForTopic(topic);
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to restore consent for provided {@link Topic} (unblock the
+     * topic).
+     *
+     * @param topic {@link Topic} to restore consent for.
+     */
+    @NonNull
+    public void restoreConsentForTopic(@NonNull Topic topic) {
+        mTopicsWorker.restoreConsentForTopic(topic);
     }
 
     private void setConsent(AdServicesApiConsent state)

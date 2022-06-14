@@ -19,7 +19,7 @@
         android:id="@+id/main_preference_screen">
     <SwitchPreference
             android:id="@+id/privacy_sandbox_beta_switch"
-            android:key="@string/settingsUI_privacy_sandbox_beta_switch_key"
+            android:key="privacy_sandbox_beta_switch"
             android:summary="@string/settingsUI_privacy_sandbox_beta_switch_summary"
             android:title="@string/settingsUI_privacy_sandbox_beta_switch_title" />
     <Preference

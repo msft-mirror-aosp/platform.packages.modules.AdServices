@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
 import android.util.Pair;
@@ -26,6 +26,8 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
 import com.google.common.collect.ImmutableList;
 
@@ -34,31 +36,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * View model for the topics view of the AdServices Settings App. This view model is responsible for
- * serving topics to the topics view, and interacting with the {@link ConsentManager} that persists
- * and changes the topics data in a storage.
+ * View model for the topics view and blocked topics view of the AdServices Settings App. This view
+ * model is responsible for serving topics to the topics view and blocked topics view, and
+ * interacting with the {@link ConsentManager} that persists and changes the topics data in a
+ * storage.
  */
 public class TopicsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Pair<TopicsViewModelUiEvent, Topic>> mEventTrigger =
             new MutableLiveData<>();
-    private MutableLiveData<ImmutableList<Topic>> mTopics;
+    private final MutableLiveData<ImmutableList<Topic>> mTopics;
+    private final MutableLiveData<ImmutableList<Topic>> mBlockedTopics;
     private ConsentManager mConsentManager;
+
+    /** UI event triggered by view model */
+    public enum TopicsViewModelUiEvent {
+        BLOCK_TOPIC,
+        DISPLAY_BLOCKED_TOPICS_FRAGMENT,
+        RESET_TOPICS,
+        RESTORE_TOPIC,
+    }
 
     public TopicsViewModel(@NonNull Application application) throws IOException {
         super(application);
         setConsentManager(ConsentManager.getInstance(application));
+        mTopics = new MutableLiveData<>(getTopicsFromConsentManager());
+        mBlockedTopics = new MutableLiveData<>(getBlockedTopicsFromConsentManager());
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // Topics View
+    // ---------------------------------------------------------------------------------------------
 
     /**
      * Provides the topics displayed in {@link AdServicesSettingsTopicsFragment}.
      *
      * @return {@link mTopics} a list of topics that represents the user's interests.
      */
-    public MutableLiveData<ImmutableList<Topic>> getTopics() {
-        if (mTopics == null) {
-            mTopics = getTopicsFromConsentManager();
-        }
+    public LiveData<ImmutableList<Topic>> getTopics() {
         return mTopics;
     }
 
@@ -68,22 +83,43 @@ public class TopicsViewModel extends AndroidViewModel {
      * @param topic the topic to be blocked.
      */
     public void revokeTopicConsent(Topic topic) {
-        if (mTopics == null) {
-            mTopics = getTopicsFromConsentManager();
-        }
         // TODO(b/232417846): mConsentManager.revokeConsentForTopic(topic);
-        ImmutableList<Topic> newTopics = getTopicsFromConsentManager().getValue();
-        mTopics.postValue(newTopics);
+        mTopics.postValue(getTopicsFromConsentManager());
+        mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
     }
 
     /** reset all information related to topics. */
     public void resetTopics() {
-        mTopics.postValue(ImmutableList.of());
         // TODO(b/232417846): reset all topics through ConsentManager.
+        mTopics.postValue(getTopicsFromConsentManager());
     }
 
     // ---------------------------------------------------------------------------------------------
-    // BEGIN Action handlers
+    // Blocked Topics View
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Provides the blocked topics displayed in {@link AdServicesSettingsBlockedTopicsFragment}.
+     *
+     * @return {@link mBlockedTopics} a list of topics that represents the user's blocked interests.
+     */
+    public LiveData<ImmutableList<Topic>> getBlockedTopics() {
+        return mBlockedTopics;
+    }
+
+    /**
+     * Restore the consent for the specified topic (i.e. unblock the topic).
+     *
+     * @param topic the topic to be restored.
+     */
+    public void restoreTopicConsent(Topic topic) {
+        // TODO(b/232417846): mConsentManager.restoreConsentForTopic(topic);
+        mTopics.postValue(getTopicsFromConsentManager());
+        mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Action Handlers
     // ---------------------------------------------------------------------------------------------
 
     /** Returns an observable but immutable event enum representing an view action on UI. */
@@ -112,8 +148,18 @@ public class TopicsViewModel extends AndroidViewModel {
         mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.RESET_TOPICS, null));
     }
 
+    /**
+     * Triggers the block of the specified topic in the list of topics in {@link
+     * AdServicesSettingsTopicsFragment}.
+     *
+     * @param topic the topic to be blocked.
+     */
+    public void restoreTopicConsentButtonClickHandler(Topic topic) {
+        mEventTrigger.postValue(new Pair<>(TopicsViewModelUiEvent.RESTORE_TOPIC, topic));
+    }
+
     // ---------------------------------------------------------------------------------------------
-    // END Action handlers
+    // Private Methods
     // ---------------------------------------------------------------------------------------------
 
     @VisibleForTesting
@@ -121,21 +167,20 @@ public class TopicsViewModel extends AndroidViewModel {
         mConsentManager = consentManager;
     }
 
-    private MutableLiveData<ImmutableList<Topic>> getTopicsFromConsentManager() {
-        // TODO(b/232417846): return new
-        // MutableLiveData<>(mConsentManager.getKnownTopicsWithConsent());
+    private ImmutableList<Topic> getTopicsFromConsentManager() {
+        // TODO(b/232417846): return mConsentManager.getKnownTopicsWithConsent();
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(1, 1, 1));
         tempList.add(Topic.create(2, 1, 1));
-        tempList.add(Topic.create(4, 1, 1));
-        ImmutableList<Topic> immutableTempList = ImmutableList.copyOf(tempList);
-        return new MutableLiveData<>(immutableTempList);
+        tempList.add(Topic.create(3, 1, 1));
+        return ImmutableList.copyOf(tempList);
     }
 
-    /** UI event triggered by view model */
-    public enum TopicsViewModelUiEvent {
-        BLOCK_TOPIC,
-        DISPLAY_BLOCKED_TOPICS_FRAGMENT,
-        RESET_TOPICS,
+    private ImmutableList<Topic> getBlockedTopicsFromConsentManager() {
+        // TODO(b/232417846): return mConsentManager.getTopicsWithRevokedConsent();
+        List<Topic> tempList = new ArrayList<>();
+        tempList.add(Topic.create(4, 1, 1));
+        tempList.add(Topic.create(5, 1, 1));
+        return ImmutableList.copyOf(tempList);
     }
 }

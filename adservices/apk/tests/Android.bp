@@ -26,7 +26,7 @@ android_test {
     min_sdk_version: "Tiramisu",
     static_libs: [
         "adservices-service-core",
-        "adservices-assets-lib",
+        "adservices-assets",
         "androidx.fragment_fragment",
         "androidx.preference_preference",
         "androidx.test.espresso.contrib",

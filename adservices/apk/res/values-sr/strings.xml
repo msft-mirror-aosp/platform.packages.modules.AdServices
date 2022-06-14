@@ -22,10 +22,18 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Дозвољава апликацији да приступа API-јима за атрибуцију услуга оглашавања."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"приступ API-ју за прилагођену публику услуга оглашавања"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Дозвољава апликацији да приступа API-ју за прилагођену публику услуга оглашавања."</string>
+    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
+    <skip />
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Приступ API-ју за ИД огласа"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Дозвољава апликацији да приступа API-ју за ИД огласа."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Приступ API-ју за ИД скупа апликација"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Дозвољава апликацији да приступа API-ју за ИД скупа апликација."</string>
+    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
+    <skip />
+    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
+    <skip />
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Бета верзија заштићеног окружења приватности"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Бета верзија заштићеног окружења приватности"</string>
@@ -37,10 +45,7 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Апликације које генеришу одређена интересовања"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Управљајте апликацијама које генеришу одређена интересовања"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Управљајте општим интересовањима за огласе"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Блокирај"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Интересовања која сте блокирали"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Ресетуј сва интересовања"</string>
 </resources>

@@ -166,7 +166,7 @@ public final class AdSelectionRunner {
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during " + "notifying AdSelection callback", e);
+            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             // TODO(b/233681870): Investigate implementation of actual failures in
@@ -189,7 +189,7 @@ public final class AdSelectionRunner {
             LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during " + "notifying AdSelection callback", e);
+            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -207,17 +207,16 @@ public final class AdSelectionRunner {
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig) {
 
-        List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
-        Preconditions.checkArgument(
-                !buyers.isEmpty(), "The list of the custom audience buyers should not be empty.");
-        List<DBCustomAudience> buyerCustomAudience = getBuyerCustomAudience(buyers);
-        if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-            return Futures.immediateFailedFuture(
-                    new IllegalStateException(
-                            "No Custom Audience available for the given list of buyers."));
-        }
+        ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
+                getBuyersCustomAudience(adSelectionConfig);
+
+        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
+                buyerCAs -> {
+                    return runAdBidding(buyerCAs, adSelectionConfig);
+                };
+
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                runAdBidding(buyerCustomAudience, adSelectionConfig);
+                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
@@ -252,8 +251,28 @@ public final class AdSelectionRunner {
                 dbAdSelectionBuilder, saveResultToPersistence, mExecutorService);
     }
 
-    private List<DBCustomAudience> getBuyerCustomAudience(@NonNull final List<String> buyers) {
-        return mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers);
+    private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
+            final AdSelectionConfig adSelectionConfig) {
+
+        ListeningExecutorService listeningExecutorService =
+                MoreExecutors.listeningDecorator(mExecutorService);
+
+        return listeningExecutorService.submit(
+                () -> {
+                    List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
+                    Preconditions.checkArgument(
+                            !buyers.isEmpty(),
+                            "The list of the custom audience buyers should not be empty.");
+                    List<DBCustomAudience> buyerCustomAudience =
+                            mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                                    buyers, mClock.instant());
+                    if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
+                        // TODO(b/233296309) : Remove this exception after adding contextual ads
+                        throw new IllegalStateException(
+                                "No Custom Audience available for the given list of buyers.");
+                    }
+                    return buyerCustomAudience;
+                });
     }
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
