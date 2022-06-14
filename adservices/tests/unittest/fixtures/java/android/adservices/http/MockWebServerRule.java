@@ -22,6 +22,7 @@ import android.net.Uri;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -34,6 +35,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -104,6 +106,18 @@ public class MockWebServerRule implements TestRule {
         }
         mMockWebServer.play(mPort);
         return mMockWebServer;
+    }
+
+    public MockWebServer startMockWebServer(Function<RecordedRequest, MockResponse> lambda)
+            throws Exception {
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        return lambda.apply(request);
+                    }
+                };
+        return startMockWebServer(dispatcher);
     }
 
     public MockWebServer startMockWebServer(Dispatcher dispatcher) throws Exception {
