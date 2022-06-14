@@ -36,7 +36,7 @@ public final class GetTopicsResultTest {
                 new GetTopicsResult.Builder()
                         .setTaxonomyVersions(Arrays.asList(1L, 2L))
                         .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList("topic1", "topic2"))
+                        .setTopics(Arrays.asList(1, 2))
                         .build();
         Parcel p = Parcel.obtain();
         response.writeToParcel(p, 0);
@@ -46,7 +46,7 @@ public final class GetTopicsResultTest {
 
         assertThat(fromParcel.getTaxonomyVersions()).containsExactly(1L, 2L).inOrder();
         assertThat(fromParcel.getModelVersions()).containsExactly(3L, 4L).inOrder();
-        assertThat(fromParcel.getTopics()).containsExactly("topic1", "topic2").inOrder();
+        assertThat(fromParcel.getTopics()).containsExactly(1, 2).inOrder();
     }
 
     @Test
@@ -88,7 +88,7 @@ public final class GetTopicsResultTest {
                             new GetTopicsResult.Builder()
                                     .setTaxonomyVersions(Arrays.asList(1L))
                                     .setModelVersions(Arrays.asList(3L, 4L))
-                                    .setTopics(Arrays.asList("topic1", "topic2"))
+                                    .setTopics(Arrays.asList(1, 2))
                                     .build();
                 });
 
@@ -99,7 +99,7 @@ public final class GetTopicsResultTest {
                             new GetTopicsResult.Builder()
                                     // Not setting TaxonomyVersions implies empty.
                                     .setModelVersions(Arrays.asList(3L, 4L))
-                                    .setTopics(Arrays.asList("topic1", "topic2"))
+                                    .setTopics(Arrays.asList(1, 2))
                                     .build();
                 });
 
@@ -110,7 +110,7 @@ public final class GetTopicsResultTest {
                             new GetTopicsResult.Builder()
                                     .setTaxonomyVersions(Arrays.asList(1L, 2L))
                                     .setModelVersions(Arrays.asList(3L, 4L))
-                                    .setTopics(Arrays.asList("topic1"))
+                                    .setTopics(Arrays.asList(1))
                                     .build();
                 });
     }

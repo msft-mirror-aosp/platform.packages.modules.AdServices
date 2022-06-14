@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import java.util.Arrays;
@@ -113,6 +114,8 @@ class SqliteObjectMapper {
                 builder::setAggregateFilterData);
         setTextColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_SOURCE,
                 builder::setAggregateSource);
+        setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                builder::setAggregateContributions);
         return builder.build();
     }
 
@@ -143,6 +146,7 @@ class SqliteObjectMapper {
                 builder::setAggregateTriggerData);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
         return builder.build();
     }
 
@@ -181,6 +185,22 @@ class SqliteObjectMapper {
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
+        return builder.build();
+    }
+
+    /**
+     * Create {@link AggregateEncryptionKey} object from SQLite datastore.
+     */
+    static AggregateEncryptionKey constructAggregateEncryptionKeyFromCursor(Cursor cursor) {
+        AggregateEncryptionKey.Builder builder = new AggregateEncryptionKey.Builder();
+        setTextColumn(cursor, MeasurementTables.AggregateEncryptionKey.ID,
+                builder::setId);
+        setTextColumn(cursor, MeasurementTables.AggregateEncryptionKey.KEY_ID,
+                builder::setKeyId);
+        setTextColumn(cursor, MeasurementTables.AggregateEncryptionKey.PUBLIC_KEY,
+                builder::setPublicKey);
+        setLongColumn(cursor, MeasurementTables.AggregateEncryptionKey.EXPIRY,
+                builder::setExpiry);
         return builder.build();
     }
 

@@ -59,13 +59,12 @@ java_library {
         "auto_value_annotations"
     ],
     static_libs: [
-        // TODO(b/208705888): Renable tflite.
-        // "tensorflowlite_java",
         "js-sandbox-client",
         "androidx.concurrent_concurrent-futures",
         "androidx.annotation_annotation",
         "guava",
         "modules-utils-preconditions",
+        "tflite_support_classifiers_java",
     ],
     apex_available: ["com.android.adservices"],
 }

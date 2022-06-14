@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,59 +54,71 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private void handlePhase(Bundle params) {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
         Log.i(TAG, "Handling phase: " + phaseName);
-        switch (phaseName) {
-            case "testSdkDataPackageDirectory_SharedStorageIsUsable":
-                testSdkDataPackageDirectory_SharedStorageIsUsable();
-                break;
-            case "testSdkDataIsAttributedToApp":
-                testSdkDataIsAttributedToApp();
-                break;
-            default:
-        }
-    }
-
-    private void testSdkDataPackageDirectory_SharedStorageIsUsable() {
-        String sharedPath = getSharedStoragePath();
-
         try {
-            // Read the file
-            String input = Files.readAllLines(Paths.get(sharedPath, "readme.txt")).get(0);
-
-            // Create a dir
-            Files.createDirectory(Paths.get(sharedPath, "dir"));
-            // Write to a file
-            Path filepath = Paths.get(sharedPath, "dir", "file");
-            Files.createFile(filepath);
-            Files.write(filepath, input.getBytes());
-        } catch (IOException e) {
+            switch (phaseName) {
+                case "testSdkDataPackageDirectory_SharedStorageIsUsable":
+                    testSdkDataPackageDirectory_SharedStorageIsUsable();
+                    break;
+                case "testSdkDataSubDirectory_PerSdkStorageIsUsable":
+                    testSdkDataSubDirectory_PerSdkStorageIsUsable();
+                    break;
+                case "testSdkDataIsAttributedToApp":
+                    testSdkDataIsAttributedToApp();
+                    break;
+                default:
+            }
+        } catch (Exception e) {
             Log.e(TAG, e.getMessage(), e);
         }
     }
 
-    private void testSdkDataIsAttributedToApp() {
+    private void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
+        String sharedPath = getSharedStoragePath();
+        // Read the file
+        String input = Files.readAllLines(Paths.get(sharedPath, "readme.txt")).get(0);
+
+        // Create a dir
+        Files.createDirectory(Paths.get(sharedPath, "dir"));
+        // Write to a file
+        Path filepath = Paths.get(sharedPath, "dir", "file");
+        Files.createFile(filepath);
+        Files.write(filepath, input.getBytes());
+    }
+
+    private void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
+        String sdkDataPath = mContext.getDataDir().toString();
+        // Read the file
+        String input = Files.readAllLines(Paths.get(sdkDataPath, "readme.txt")).get(0);
+
+        // Create a dir
+        Files.createDirectory(Paths.get(sdkDataPath, "dir"));
+        // Write to a file
+        Path filepath = Paths.get(sdkDataPath, "dir", "file");
+        Files.createFile(filepath);
+        Files.write(filepath, input.getBytes());
+    }
+
+    private void testSdkDataIsAttributedToApp() throws Exception {
         final byte[] buffer = new byte[1000000];
         String sharedPath = getSharedStoragePath();
         String sharedCachePath = getSharedStorageCachePath();
-        try {
-            Files.createDirectory(Paths.get(sharedPath, "attribution"));
-            Path filepath = Paths.get(sharedPath, "attribution", "file");
-            Files.createFile(filepath);
-            Files.write(filepath, buffer);
 
-            Files.createDirectory(Paths.get(sharedCachePath, "attribution"));
-            Path cacheFilepath = Paths.get(sharedCachePath, "attribution", "file");
-            Files.createFile(cacheFilepath);
-            Files.write(cacheFilepath, buffer);
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-        }
+        Files.createDirectory(Paths.get(sharedPath, "attribution"));
+        Path filepath = Paths.get(sharedPath, "attribution", "file");
+        Files.createFile(filepath);
+        Files.write(filepath, buffer);
+
+        Files.createDirectory(Paths.get(sharedCachePath, "attribution"));
+        Path cacheFilepath = Paths.get(sharedCachePath, "attribution", "file");
+        Files.createFile(cacheFilepath);
+        Files.write(cacheFilepath, buffer);
     }
 
     private String getSharedStoragePath() {
-        return mContext.getDataDir().toString();
+        return mContext.getApplicationContext().getDataDir().toString();
     }
 
     private String getSharedStorageCachePath() {
-        return mContext.getCacheDir().toString();
+        return mContext.getApplicationContext().getCacheDir().toString();
     }
 }

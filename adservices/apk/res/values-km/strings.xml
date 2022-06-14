@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Copyright (C) 2022 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"ចូលប្រើប្រាស់ AdServices Topics API"</string>
+    <string name="permdesc_accessAdServicesTopics" msgid="4220466427260104683">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Topics API។"</string>
+    <string name="permlab_accessAdServicesAttribution" msgid="4498132091418336093">"ចូលប្រើប្រាស់ AdServices Attribution API"</string>
+    <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Attribution API។"</string>
+    <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"ចូលប្រើប្រាស់ AdServices Custom Audience API"</string>
+    <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ AdServices Custom Audiences API។"</string>
+    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
+    <skip />
+    <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"ចូលប្រើប្រាស់ Ad ID API"</string>
+    <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ Ad ID API។"</string>
+    <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"ចូលប្រើប្រាស់ App Set ID API"</string>
+    <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"អនុញ្ញាតឱ្យកម្មវិធីចូលប្រើប្រាស់ App Set ID API។"</string>
+    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
+    <skip />
+    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
+    <skip />
+    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"បេតា Privacy Sandbox"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"បេតា Privacy Sandbox"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"បិទ/បើកបេតា Privacy Sandbox"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ចំណាប់អារម្មណ៍ទូទៅរបស់អ្នក"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"គ្រប់គ្រងចំណាប់អារម្មណ៍ទូទៅរបស់អ្នក"</string>
+    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
+    <string name="settingsUI_apps_title" msgid="2177966577556486280">"កម្មវិធីដែលបង្កើតចំណាប់អារម្មណ៍ជាក់លាក់របស់អ្នក"</string>
+    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"គ្រប់គ្រងកម្មវិធី​ដែលបង្កើតចំណាប់អារម្មណ៍ជាក់លាក់របស់អ្នក"</string>
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"គ្រប់គ្រងចំណាប់អារម្មណ៍ទូទៅលើការផ្សាយពាណិជ្ជកម្មរបស់អ្នក"</string>
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ទប់ស្កាត់"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"ចំណាប់អារម្មណ៍ដែល​អ្នក​បាន​ទប់ស្កាត់"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"កំណត់​ចំណាប់អារម្មណ៍​ទាំង​អស់​​ឡើង​វិញ"</string>
+</resources>

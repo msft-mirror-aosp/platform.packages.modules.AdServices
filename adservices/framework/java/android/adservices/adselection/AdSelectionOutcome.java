@@ -72,8 +72,6 @@ public class AdSelectionOutcome {
 
     /**
      * Builder for {@link AdSelectionOutcome} objects.
-     *
-     * @hide
      */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
