@@ -45,8 +45,7 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Belirli ilgi alanları oluşturan uygulamalarınız"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Belirli ilgi alanları oluşturan uygulamalarınızı yönetin"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Reklamlar için genel ilgi alanlarınızı yönetme"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Engelle"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Engellediğiniz ilgi alanları"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tüm ilgi alanlarını sıfırla"</string>
 </resources>
