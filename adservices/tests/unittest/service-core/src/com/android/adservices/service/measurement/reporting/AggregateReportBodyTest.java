@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
 
-import android.net.Uri;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
-import org.mockito.Mockito;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-
-public class AggregateReportSenderTest {
+public class AggregateReportBodyTest {
 
     private static final String SOURCE_SITE = "https://source.example";
     private static final String ATTRIBUTION_DESTINATION = "https://attribution.destination";
@@ -58,31 +51,38 @@ public class AggregateReportSenderTest {
                 .build();
     }
 
-    /**
-     *
-     * Tests posting a report with a mock HttpUrlConnection.
-     */
     @Test
-    public void testSendAggregateReport() throws JSONException, IOException {
-        HttpURLConnection httpUrlConnection = Mockito.mock(HttpURLConnection.class);
+    public void testAggregateBodyJsonSerialization() throws JSONException {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+        JSONObject aggregateReportJson = aggregateReport.toJson();
 
-        OutputStream outputStream = new ByteArrayOutputStream();
-        Mockito.when(httpUrlConnection.getOutputStream()).thenReturn(outputStream);
-        Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
+        assertEquals(SOURCE_SITE, aggregateReportJson.get("source_site"));
+        assertEquals(ATTRIBUTION_DESTINATION, aggregateReportJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, aggregateReportJson.get("source_registration_time"));
+    }
 
-        JSONObject aggregateReportJson = createAggregateReportBodyExample1().toJson();
-        Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
+    @Test
+    public void testSharedInfoJsonSerialization() throws JSONException {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
 
-        AggregateReportSender aggregateReportSender = new AggregateReportSender();
-        AggregateReportSender spyAggregateReportSender = Mockito.spy(aggregateReportSender);
+        assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
+        assertEquals(PRIVACY_BUDGET_KEY, sharedInfoJson.get("privacy_budget_key"));
+        assertEquals(VERSION, sharedInfoJson.get("version"));
+        assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
+        assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+    }
 
-        Mockito.doReturn(httpUrlConnection).when(spyAggregateReportSender)
-                .createHttpUrlConnection(Mockito.any());
+    @Test
+    public void testAggregationServicePayloadsJsonSerialization() throws JSONException {
+        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+        JSONArray aggregationServicePayloadsJson =
+                aggregateReport.aggregationServicePayloadsToJson();
 
-        int responseCode = spyAggregateReportSender.sendReport(reportingOrigin,
-                aggregateReportJson);
+        JSONObject debugCleartextPayloadJson =
+                aggregationServicePayloadsJson.getJSONObject(0);
 
-        assertEquals(outputStream.toString(), aggregateReportJson.toString());
-        assertEquals(responseCode, 200);
+        assertEquals(DEBUG_CLEARTEXT_PAYLOAD,
+                debugCleartextPayloadJson.get("debug_cleartext_payload"));
     }
 }

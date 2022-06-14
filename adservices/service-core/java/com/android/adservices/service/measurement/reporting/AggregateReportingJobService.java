@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.reporting;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -31,6 +31,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.SystemHealthParams;
 
 import java.util.concurrent.Executor;
 
