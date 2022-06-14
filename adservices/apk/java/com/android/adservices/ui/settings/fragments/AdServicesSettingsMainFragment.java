@@ -13,56 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settings.fragments;
 
-import android.content.Context;
 import android.os.Bundle;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.ActionDelegate;
+import com.android.adservices.ui.settings.AdServicesSettingsActivity;
+import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 
-import java.io.IOException;
 import java.util.Objects;
 
 /**
  * Fragment for the main view of the AdServices Settings App.
  */
 public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
+
     public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
             "getConsent method failed. Will not change consent value in view model.";
+    public static final String PRIVACY_SANDBOX_BETA_SWITCH_KEY = "privacy_sandbox_beta_switch";
     public static final String TOPICS_PREFERENCE_BUTTON_KEY = "topics_preference";
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.main_preferences, rootKey);
-        try {
-            setupViewModel(requireContext());
-        } catch (IOException e) {
-            LogUtil.e(e, ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT);
-        }
+
+        setupViewModel();
     }
 
-    private void setupViewModel(Context context) throws IOException {
-        SwitchPreference switchPreference = Objects.requireNonNull(findPreference(
-                context.getResources().getString(
-                        R.string.settingsUI_privacy_sandbox_beta_switch_key)));
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
-        MainViewModel model;
-        model = new ViewModelProvider(this).get(MainViewModel.class);
+        initActionListeners();
+    }
+
+    // initialize all action listeners
+    private void initActionListeners() {
+        ActionDelegate actionDelegate =
+                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        actionDelegate.initMainFragment(this);
+    }
+
+    private void setupViewModel() {
+        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+
+        SwitchPreference switchPreference =
+                Objects.requireNonNull(findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
         model.getConsent().observe(this, switchPreference::setChecked);
-
-        switchPreference.setOnPreferenceChangeListener((preference, newConsent) -> {
-            try {
-                model.setConsent((Boolean) newConsent);
-                return true;
-            } catch (IOException e) {
-                LogUtil.e(e, ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT);
-            }
-            return false;
-        });
     }
 }

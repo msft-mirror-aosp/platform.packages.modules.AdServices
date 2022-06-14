@@ -86,6 +86,8 @@ public final class MeasurementMigrations {
     };
 
     private static final String[] ALTER_STATEMENTS_VER_3 = {
+        String.format("ALTER TABLE %1$s ADD %2$s INTEGER",
+                SourceContract.TABLE, SourceContract.AGGREGATE_CONTRIBUTIONS),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT", TriggerContract.TABLE, TriggerContract.FILTERS)
     };

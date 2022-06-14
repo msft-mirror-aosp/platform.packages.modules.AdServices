@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.reporting;
 
 import android.net.Uri;
 
@@ -22,21 +22,20 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Class to construct the full reporting url specific to aggregate reports.
+ * Class to construct the full reporting url specific to event reports.
  */
-public class AggregateReportSender extends MeasurementReportSender {
+public class EventReportSender extends MeasurementReportSender {
 
-    private static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
-            ".well-known/attribution-reporting/report-aggregate-attribution";
+    private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-attribution";
 
     /**
-     * Given a String reportingOrigin, returns the URL Object
-     * of the URL to send the POST request to.
+     * Creates URL to send the POST request to.
      */
     URL createReportingFullUrl(Uri adTechDomain)
             throws MalformedURLException {
         Uri reportingFullUrl = Uri.withAppendedPath(adTechDomain,
-                AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+                EVENT_ATTRIBUTION_REPORT_URI_PATH);
         return new URL(reportingFullUrl.toString());
     }
 }

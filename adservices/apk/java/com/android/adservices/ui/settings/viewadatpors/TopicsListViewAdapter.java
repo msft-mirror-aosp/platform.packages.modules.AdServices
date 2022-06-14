@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settings.viewadatpors;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +26,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
+import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -33,16 +36,19 @@ import java.util.Objects;
 
 /**
  * ViewAdapter to handle data binding for the list of {@link Topic}s on {@link
- * AdServicesSettingsTopicsFragment}.
+ * AdServicesSettingsTopicsFragment} and blocked {@link Topic}s on {@link
+ * AdServicesSettingsBlockedTopicsFragment}.
  */
-public class TopicsViewAdapter extends RecyclerView.Adapter {
+public class TopicsListViewAdapter extends RecyclerView.Adapter {
 
     private final TopicsViewModel mViewModel;
-    private final LiveData<ImmutableList<Topic>> mTopics;
+    private final LiveData<ImmutableList<Topic>> mTopicsList;
+    private final boolean mIsBlockedTopicsList;
 
-    public TopicsViewAdapter(TopicsViewModel viewModel) {
+    public TopicsListViewAdapter(TopicsViewModel viewModel, boolean isBlockedTopicsList) {
         mViewModel = viewModel;
-        mTopics = viewModel.getTopics();
+        mTopicsList = isBlockedTopicsList ? viewModel.getBlockedTopics() : viewModel.getTopics();
+        mIsBlockedTopicsList = isBlockedTopicsList;
     }
 
     @NonNull
@@ -56,12 +62,14 @@ public class TopicsViewAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ((TopicsViewHolder) holder)
                 .initTopicItem(
-                        Objects.requireNonNull(mTopics.getValue()).get(position), mViewModel);
+                        Objects.requireNonNull(mTopicsList.getValue()).get(position),
+                        mViewModel,
+                        mIsBlockedTopicsList);
     }
 
     @Override
     public int getItemCount() {
-        return Objects.requireNonNull(mTopics.getValue()).size();
+        return Objects.requireNonNull(mTopicsList.getValue()).size();
     }
 
     @Override
@@ -73,22 +81,32 @@ public class TopicsViewAdapter extends RecyclerView.Adapter {
     public static class TopicsViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView mTopicTextView;
-        private final TextView mBlockTextView;
+        private final TextView mOptionTextView;
 
-        public TopicsViewHolder(final View itemView) {
+        public TopicsViewHolder(View itemView) {
             super(itemView);
             mTopicTextView = itemView.findViewById(R.id.topic_text);
-            mBlockTextView = itemView.findViewById(R.id.block_text);
+            mOptionTextView = itemView.findViewById(R.id.option_text);
         }
 
-        /** set the human readable string for the topic and listener for block topic logic. */
-        public void initTopicItem(Topic topic, TopicsViewModel viewModel) {
+        /** Set the human readable string for the topic and listener for block topic logic. */
+        public void initTopicItem(
+                Topic topic, TopicsViewModel viewModel, boolean mIsBlockedTopicsListItem) {
             // TODO(b/234655984): show readable string of topic
             mTopicTextView.setText(Integer.toString(topic.getTopic()));
-            mBlockTextView.setOnClickListener(
-                    view -> {
-                        viewModel.revokeTopicConsentButtonClickHandler(topic);
-                    });
+            if (mIsBlockedTopicsListItem) {
+                mOptionTextView.setText(R.string.settingsUI_unblock_topic_title);
+                mOptionTextView.setOnClickListener(
+                        view -> {
+                            viewModel.restoreTopicConsentButtonClickHandler(topic);
+                        });
+            } else {
+                mOptionTextView.setText(R.string.settingsUI_block_topic_title);
+                mOptionTextView.setOnClickListener(
+                        view -> {
+                            viewModel.revokeTopicConsentButtonClickHandler(topic);
+                        });
+            }
         }
     }
 }
