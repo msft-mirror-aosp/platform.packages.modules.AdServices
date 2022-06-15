@@ -22,8 +22,10 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONException;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link EventReport} */
@@ -31,6 +33,27 @@ import java.util.concurrent.TimeUnit;
 public final class EventReportTest {
 
     private static final double DOUBLE_MAX_DELTA = 0.0000001D;
+    private static final long TRIGGER_PRIORITY = 345678L;
+    private static final Long TRIGGER_DEDUP_KEY = 2345678L;
+    private static final Long TRIGGER_DATA = 4L;
+    private static final String EVENT_TRIGGERS =
+            "[\n"
+                    + "{\n"
+                    + "  \"trigger_data\": \""
+                    + TRIGGER_DATA
+                    + "\",\n"
+                    + "  \"priority\": \""
+                    + TRIGGER_PRIORITY
+                    + "\",\n"
+                    + "  \"deduplication_key\": \""
+                    + TRIGGER_DEDUP_KEY
+                    + "\",\n"
+                    + "  \"filters\": {\n"
+                    + "    \"source_type\": [\"navigation\"],\n"
+                    + "    \"key_1\": [\"value_1\"] \n"
+                    + "   }\n"
+                    + "}"
+                    + "]\n";
 
     private EventReport createExample() {
         return new EventReport.Builder()
@@ -96,24 +119,26 @@ public final class EventReportTest {
     private Trigger createTriggerForTest(long eventTime) {
         return new Trigger.Builder()
                 .setTriggerTime(eventTime)
-                .setPriority(1)
+                .setEventTriggers(EVENT_TRIGGERS)
                 .setAdTechDomain(Uri.parse("https://example-adtech2.com"))
                 .setAttributionDestination(Uri.parse("android-app://example2.app"))
-                .setEventTriggerData(4)
                 .build();
     }
 
     @Test
-    public void testPopulateFromSourceAndTrigger_event() {
+    public void testPopulateFromSourceAndTrigger_event() throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source = createSourceForTest(baseTime, Source.SourceType.EVENT, false);
         Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
 
-        EventReport report = new EventReport.Builder()
-                .populateFromSourceAndTrigger(source, trigger).build();
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .build();
 
-        assertEquals(trigger.getPriority(), report.getTriggerPriority());
-        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         // Truncated data 4 % 2 = 0
         assertEquals(0, report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
@@ -127,17 +152,20 @@ public final class EventReportTest {
     }
 
     @Test
-    public void testPopulateFromSourceAndTrigger_eventWithInstallAttribution() {
+    public void testPopulateFromSourceAndTrigger_eventWithInstallAttribution()
+            throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source = createSourceForTest(baseTime, Source.SourceType.EVENT, true);
         Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
 
-        EventReport report = new EventReport.Builder()
-                .populateFromSourceAndTrigger(source, trigger).build();
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .build();
 
-        assertEquals(trigger.getPriority(), report.getTriggerPriority());
-        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
-        assertEquals(trigger.getTruncatedTriggerData(source), report.getTriggerData());
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
@@ -150,17 +178,19 @@ public final class EventReportTest {
     }
 
     @Test
-    public void testPopulateFromSourceAndTrigger_navigation() {
+    public void testPopulateFromSourceAndTrigger_navigation() throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source = createSourceForTest(baseTime, Source.SourceType.NAVIGATION, false);
         Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
 
-        EventReport report = new EventReport.Builder()
-                .populateFromSourceAndTrigger(source, trigger).build();
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .build();
 
-        assertEquals(trigger.getPriority(), report.getTriggerPriority());
-        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
-        assertEquals(trigger.getTruncatedTriggerData(source), report.getTriggerData());
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
@@ -172,17 +202,21 @@ public final class EventReportTest {
     }
 
     @Test
-    public void testPopulateFromSourceAndTrigger_navigationWithInstallAttribution() {
+    public void testPopulateFromSourceAndTrigger_navigationWithInstallAttribution()
+            throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source = createSourceForTest(baseTime, Source.SourceType.NAVIGATION, true);
         Trigger trigger = createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10));
 
-        EventReport report = new EventReport.Builder()
-                .populateFromSourceAndTrigger(source, trigger).build();
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .build();
 
-        assertEquals(trigger.getPriority(), report.getTriggerPriority());
-        assertEquals(trigger.getDedupKey(), report.getTriggerDedupKey());
-        assertEquals(trigger.getTruncatedTriggerData(source), report.getTriggerData());
+        assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
+        assertEquals(TRIGGER_DEDUP_KEY, report.getTriggerDedupKey());
+        assertEquals(4, report.getTriggerData());
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
