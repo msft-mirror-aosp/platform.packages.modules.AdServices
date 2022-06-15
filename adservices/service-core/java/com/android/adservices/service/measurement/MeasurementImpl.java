@@ -256,21 +256,25 @@ public final class MeasurementImpl {
     @VisibleForTesting
     List<EventReport> getSourceEventReports(Source source) {
         List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReport();
-        return fakeReports.stream().map(fakeReport ->
-                new EventReport.Builder()
-                        .setSourceId(source.getEventId())
-                        .setReportTime(fakeReport.getReportingTime())
-                        .setTriggerData(fakeReport.getTriggerData())
-                        .setAttributionDestination(source.getAttributionDestination())
-                        .setAdTechDomain(source.getAdTechDomain())
-                        .setTriggerTime(0)
-                        .setTriggerPriority(0)
-                        .setTriggerDedupKey(null)
-                        .setSourceType(source.getSourceType())
-                        .setStatus(EventReport.Status.PENDING)
-                        .setRandomizedTriggerRate(source.getRandomAttributionProbability())
-                        .build()
-        ).collect(Collectors.toList());
+        return fakeReports.stream()
+                .map(
+                        fakeReport ->
+                                new EventReport.Builder()
+                                        .setSourceId(source.getEventId())
+                                        .setReportTime(fakeReport.getReportingTime())
+                                        .setTriggerData(fakeReport.getTriggerData())
+                                        .setAttributionDestination(
+                                                source.getAttributionDestination())
+                                        .setAdTechDomain(source.getAdTechDomain())
+                                        .setTriggerTime(0)
+                                        .setTriggerPriority(0L)
+                                        .setTriggerDedupKey(null)
+                                        .setSourceType(source.getSourceType())
+                                        .setStatus(EventReport.Status.PENDING)
+                                        .setRandomizedTriggerRate(
+                                                source.getRandomAttributionProbability())
+                                        .build())
+                .collect(Collectors.toList());
     }
 
     private Source.SourceType getSourceType(RegistrationRequest request) {
@@ -291,9 +295,7 @@ public final class MeasurementImpl {
                                             registration.getReportingOrigin()),
                                     /* registrant */ getRegistrant(request.getAttributionSource()),
                                     /* triggerTime */ triggerTime,
-                                    /* triggerData */ registration.getTriggerData(),
-                                    /* dedupKey */ registration.getDeduplicationKey(),
-                                    /* priority */ registration.getTriggerPriority(),
+                                    /* event triggers */ registration.getEventTriggers(),
                                     /* aggregateTriggerData */ registration
                                             .getAggregateTriggerData(),
                                     /* aggregateValues */ registration.getAggregateValues(),

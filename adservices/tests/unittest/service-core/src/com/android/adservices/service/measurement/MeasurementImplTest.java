@@ -92,6 +92,27 @@ public final class MeasurementImplTest {
                     + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                     + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                     + "}\n";
+    private static final long TRIGGER_PRIORITY = 345678L;
+    private static final Long TRIGGER_DEDUP_KEY = 2345678L;
+    private static final Long TRIGGER_DATA = 1L;
+    private static final String EVENT_TRIGGERS =
+            "[\n"
+                    + "{\n"
+                    + "  \"trigger_data\": \""
+                    + TRIGGER_DATA
+                    + "\",\n"
+                    + "  \"priority\": \""
+                    + TRIGGER_PRIORITY
+                    + "\",\n"
+                    + "  \"deduplication_key\": \""
+                    + TRIGGER_DEDUP_KEY
+                    + "\",\n"
+                    + "  \"filters\": {\n"
+                    + "    \"source_type\": [\"navigation\"],\n"
+                    + "    \"key_1\": [\"value_1\"] \n"
+                    + "   }\n"
+                    + "}"
+                    + "]\n";
 
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_1 =
             new com.android.adservices.service.measurement.registration.SourceRegistration
@@ -123,9 +144,7 @@ public final class MeasurementImplTest {
             new TriggerRegistration.Builder()
                     .setTopOrigin(Uri.parse("https://foo.com"))
                     .setReportingOrigin(Uri.parse("https://bar.com"))
-                    .setTriggerData(1)
-                    .setTriggerPriority(345678)
-                    .setDeduplicationKey(2345678)
+                    .setEventTriggers(EVENT_TRIGGERS)
                     .setAggregateTriggerData(
                             "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
                                     + "\"not_filters\":{\"product\":[\"1\"]}},"
@@ -265,9 +284,7 @@ public final class MeasurementImplTest {
                                 ANDROID_APP_SCHEME
                                         + DEFAULT_CONTEXT.getAttributionSource().getPackageName()),
                         triggerTime,
-                        VALID_TRIGGER_REGISTRATION.getTriggerData(),
-                        VALID_TRIGGER_REGISTRATION.getDeduplicationKey(),
-                        VALID_TRIGGER_REGISTRATION.getTriggerPriority(),
+                        EVENT_TRIGGERS,
                         VALID_TRIGGER_REGISTRATION.getAggregateTriggerData(),
                         VALID_TRIGGER_REGISTRATION.getAggregateValues(),
                         VALID_TRIGGER_REGISTRATION.getFilters());
