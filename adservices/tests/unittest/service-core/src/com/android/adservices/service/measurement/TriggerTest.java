@@ -61,6 +61,8 @@ public class TriggerTest {
                     + "}"
                     + "]\n";
 
+    private static final Long DEBUG_KEY = 2367372L;
+
     @Test
     public void testEqualsPass() throws JSONException {
         assertEquals(TriggerFixture.getValidTriggerBuilder().build(),
@@ -89,6 +91,7 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setDebugKey(DEBUG_KEY)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -101,6 +104,7 @@ public class TriggerTest {
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                        .setDebugKey(DEBUG_KEY)
                         .build());
     }
 
@@ -178,7 +182,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
                 TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
@@ -187,7 +192,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
     @Test
@@ -200,7 +206,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 Uri.parse("com.adTechDomain"),
@@ -209,7 +216,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
     @Test
@@ -222,7 +230,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 TriggerFixture.ValidTriggerParams.AD_TECH_DOMAIN,
@@ -231,8 +240,10 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
-                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
+
 
     @Test
     public void testParseAggregateTrigger() throws JSONException {
@@ -386,21 +397,22 @@ public class TriggerTest {
             String eventTriggers,
             String aggregateTriggerData,
             String aggregateValues,
-            String filters) {
+            String filters,
+            Long debugKey) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new Trigger.Builder()
-                            .setAttributionDestination(attributionDestination)
-                            .setAdTechDomain(adTechDomain)
-                            .setRegistrant(registrant)
-                            .setTriggerTime(triggerTime)
-                            .setEventTriggers(eventTriggers)
-                            .setAggregateTriggerData(aggregateTriggerData)
-                            .setAggregateValues(aggregateValues)
-                            .setFilters(filters)
-                            .build()
-        );
+                        new Trigger.Builder()
+                                .setAttributionDestination(attributionDestination)
+                                .setAdTechDomain(adTechDomain)
+                                .setRegistrant(registrant)
+                                .setTriggerTime(triggerTime)
+                                .setEventTriggers(eventTriggers)
+                                .setAggregateTriggerData(aggregateTriggerData)
+                                .setAggregateValues(aggregateValues)
+                                .setFilters(filters)
+                                .setDebugKey(debugKey)
+                                .build());
     }
 
     private JSONObject createFilterJSONObject() throws JSONException {

@@ -46,6 +46,8 @@ import java.util.stream.LongStream;
 public class SourceTest {
 
     private static final double DOUBLE_MAX_DELTA = 0.000000001D;
+    private static final Long DEBUG_KEY_1 = 81786463L;
+    private static final Long DEBUG_KEY_2 = 23487834L;
 
     @Test
     public void testDefaults() {
@@ -92,6 +94,7 @@ public class SourceTest {
                         .setAggregateFilterData(aggregateFilterData.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
+                        .setDebugKey(DEBUG_KEY_1)
                         .build(),
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -110,6 +113,7 @@ public class SourceTest {
                         .setAggregateFilterData(aggregateFilterData.toString())
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
+                        .setDebugKey(DEBUG_KEY_1)
                         .build());
     }
 
@@ -205,6 +209,10 @@ public class SourceTest {
                         .setAggregateContributions(4000).build(),
                 SourceFixture.getValidSourceBuilder()
                         .setAggregateContributions(4055).build());
+
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_1).build(),
+                SourceFixture.getValidSourceBuilder().setDebugKey(DEBUG_KEY_2).build());
     }
 
     @Test
@@ -222,6 +230,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -239,6 +248,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -259,6 +269,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -276,6 +287,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -293,6 +305,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -313,6 +326,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -330,6 +344,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -350,6 +365,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -367,6 +383,7 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.SOURCE_TYPE,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -387,6 +404,7 @@ public class SourceTest {
                 null,
                 SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
                 SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
+                SourceFixture.ValidSourceParams.DEBUG_KEY,
                 SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
                 SourceFixture.ValidSourceParams.buildAggregateSource(),
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
@@ -1074,6 +1092,7 @@ public class SourceTest {
             Source.SourceType sourceType,
             Long installAttributionWindow,
             Long installCooldownWindow,
+            @Nullable Long debugKey,
             @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {
@@ -1096,6 +1115,7 @@ public class SourceTest {
                                 .setAttributionMode(attributionMode)
                                 .setAggregateSource(aggregateSource)
                                 .setAggregateFilterData(aggregateFilterData)
+                                .setDebugKey(debugKey)
                                 .build());
     }
 }
