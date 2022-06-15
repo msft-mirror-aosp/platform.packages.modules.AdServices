@@ -68,6 +68,15 @@
             "priority": 101,
             "status": 0,
             "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -78,6 +87,15 @@
             "priority": 101,
             "status": 0,
             "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"
           }
@@ -95,6 +113,15 @@
             "priority": 101,
             "status": 0,
             "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 33203622330000,
             "registrant": "android-app://com.example.xyz"
           }

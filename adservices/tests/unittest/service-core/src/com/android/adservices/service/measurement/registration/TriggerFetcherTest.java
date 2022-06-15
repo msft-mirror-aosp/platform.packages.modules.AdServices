@@ -17,7 +17,6 @@ package com.android.adservices.service.measurement.registration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -63,6 +62,25 @@ public final class TriggerFetcherTest {
 
     private static final String DEFAULT_REDIRECT = "https://bar.com";
 
+    private static final String EVENT_TRIGGERS =
+            "[\n"
+                    + "{\n"
+                    + "  \"trigger_data\": \""
+                    + TRIGGER_DATA
+                    + "\",\n"
+                    + "  \"priority\": \""
+                    + PRIORITY
+                    + "\",\n"
+                    + "  \"deduplication_key\": \""
+                    + DEDUP_KEY
+                    + "\",\n"
+                    + "  \"filters\": {\n"
+                    + "    \"source_type\": [\"navigation\"],\n"
+                    + "    \"key_1\": [\"value_1\"] \n"
+                    + "   }\n"
+                    + "}"
+                    + "]\n";
+
     private static final Context sContext = InstrumentationRegistry.getTargetContext();
 
     @Spy TriggerFetcher mFetcher;
@@ -79,20 +97,16 @@ public final class TriggerFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
-                        List.of("[{\n"
-                                + "  \"trigger_data\": \"" + TRIGGER_DATA + "\",\n"
-                                + "  \"priority\": \"" + PRIORITY + "\",\n"
-                                + "  \"deduplication_key\": \"" + DEDUP_KEY + "\"\n"
-                                + "}]\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Event-Trigger",
+                                List.of(EVENT_TRIGGERS)));
         ArrayList<TriggerRegistration> result = new ArrayList();
         assertTrue(mFetcher.fetchTrigger(request, result));
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
-        assertEquals(TRIGGER_DATA, result.get(0).getTriggerData());
-        assertEquals(PRIORITY, result.get(0).getTriggerPriority());
-        assertEquals(DEDUP_KEY, result.get(0).getDeduplicationKey().longValue());
+        assertEquals(EVENT_TRIGGERS, result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -135,21 +149,6 @@ public final class TriggerFetcherTest {
     }
 
     @Test
-    public void testBadTriggerJson() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
-                        List.of("{\n"
-                                + "\"foo\": 123")));
-        ArrayList<TriggerRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchTrigger(request, result));
-        assertEquals(0, result.size());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
     public void testBasicTriggerRequestMinimumFields() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -157,14 +156,12 @@ public final class TriggerFetcherTest {
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
                         List.of("[{}]\n")));
-        ArrayList<TriggerRegistration> result = new ArrayList();
+        ArrayList<TriggerRegistration> result = new ArrayList<>();
         assertTrue(mFetcher.fetchTrigger(request, result));
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
-        assertEquals(0, result.get(0).getTriggerData());
-        assertEquals(0, result.get(0).getTriggerPriority());
-        assertNull(result.get(0).getDeduplicationKey());
+        assertEquals("[{}]\n", result.get(0).getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -184,24 +181,18 @@ public final class TriggerFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200).thenReturn(500);
 
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
-        headersFirstRequest.put("Attribution-Reporting-Register-Event-Trigger",
-                List.of("[{\n"
-                        + "  \"trigger_data\": \"" + TRIGGER_DATA + "\",\n"
-                        + "  \"priority\": \"" + PRIORITY + "\",\n"
-                        + "  \"deduplication_key\": \"" + DEDUP_KEY + "\"\n"
-                        + "}]\n"));
+        headersFirstRequest.put(
+                "Attribution-Reporting-Register-Event-Trigger", List.of(EVENT_TRIGGERS));
         headersFirstRequest.put("Attribution-Reporting-Redirect", List.of(DEFAULT_REDIRECT));
 
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest);
 
-        ArrayList<TriggerRegistration> result = new ArrayList();
+        ArrayList<TriggerRegistration> result = new ArrayList<>();
         assertTrue(mFetcher.fetchTrigger(request, result));
         assertEquals(1, result.size());
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
-        assertEquals(TRIGGER_DATA, result.get(0).getTriggerData());
-        assertEquals(PRIORITY, result.get(0).getTriggerPriority());
-        assertEquals(DEDUP_KEY, result.get(0).getDeduplicationKey().longValue());
+        assertEquals(EVENT_TRIGGERS, result.get(0).getEventTriggers());
         verify(mUrlConnection, times(2)).setRequestMethod("POST");
     }
 
@@ -212,61 +203,14 @@ public final class TriggerFetcherTest {
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Redirect", List.of(DEFAULT_REDIRECT)))
-                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
-                        List.of("[{\n"
-                                + "  \"trigger_data\": \"" + TRIGGER_DATA + "\",\n"
-                                + "  \"priority\": \"" + PRIORITY + "\",\n"
-                                + "  \"deduplication_key\": \"" + DEDUP_KEY + "\"\n"
-                                + "}]\n")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Event-Trigger",
+                                List.of(EVENT_TRIGGERS)));
         ArrayList<TriggerRegistration> result = new ArrayList();
         assertFalse(mFetcher.fetchTrigger(request, result));
         assertEquals(0, result.size());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
-    }
-
-    @Test
-    public void testBasicTriggerRequestWithoutDedupKey() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
-                        List.of("[{\n"
-                                + "  \"trigger_data\": \"" + TRIGGER_DATA + "\",\n"
-                                + "  \"priority\": \"" + PRIORITY + "\"\n"
-                                + "}]\n")));
-        ArrayList<TriggerRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchTrigger(request, result));
-        assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
-        assertEquals(TRIGGER_DATA, result.get(0).getTriggerData());
-        assertEquals(PRIORITY, result.get(0).getTriggerPriority());
-        assertNull(result.get(0).getDeduplicationKey());
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void testBasicTriggerRequestWithNullValues() throws Exception {
-        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Event-Trigger",
-                        List.of("[{\n"
-                                + "  \"trigger_data\": null,\n"
-                                + "  \"priority\": null,\n"
-                                + "  \"deduplication_key\": null\n"
-                                + "}]\n")));
-        ArrayList<TriggerRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchTrigger(request, result));
-        assertEquals(1, result.size());
-        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
-        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
-        assertEquals(0, result.get(0).getTriggerData());
-        assertEquals(0, result.get(0).getTriggerPriority());
-        assertNull(result.get(0).getDeduplicationKey());
-        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test

@@ -46,9 +46,7 @@ public interface IMeasurementDao {
             @NonNull Uri adTechDomain,
             @NonNull Uri registrant,
             @NonNull Long triggerTime,
-            @NonNull Long triggerData,
-            @Nullable Long dedupKey,
-            @NonNull Long priority,
+            @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters)

@@ -35,7 +35,6 @@ import java.util.concurrent.Executor;
  */
 public class AdServicesCommonServiceImpl extends
         IAdServicesCommonService.Stub {
-    private static final String TAG = "AdServicesCommonServiceImpl";
     private final MeasurementImpl mMeasurementImpl;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
