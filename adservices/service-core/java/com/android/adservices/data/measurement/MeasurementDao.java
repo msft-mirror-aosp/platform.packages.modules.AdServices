@@ -68,15 +68,13 @@ class MeasurementDao implements IMeasurementDao {
             @NonNull Uri adTechDomain,
             @NonNull Uri registrant,
             @NonNull Long triggerTime,
-            @NonNull Long triggerData,
-            @Nullable Long dedupKey,
-            @NonNull Long priority,
+            @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters)
             throws DatastoreException {
-        validateNonNull(attributionDestination, adTechDomain, registrant, triggerTime, triggerData,
-                priority);
+        validateNonNull(
+                attributionDestination, adTechDomain, registrant, triggerTime, eventTriggers);
         validateUri(attributionDestination, adTechDomain, registrant);
 
         ContentValues values = new ContentValues();
@@ -84,9 +82,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 attributionDestination.toString());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, triggerTime);
-        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA, triggerData);
-        values.put(MeasurementTables.TriggerContract.DEDUP_KEY, dedupKey);
-        values.put(MeasurementTables.TriggerContract.PRIORITY, priority);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN, adTechDomain.toString());
         values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());

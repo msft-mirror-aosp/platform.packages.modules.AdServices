@@ -21,10 +21,6 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -48,28 +44,6 @@ public class TriggerFetcher {
         return url.openConnection();
     }
 
-    private static void parseEventTrigger(
-            @NonNull String text,
-            TriggerRegistration.Builder result) throws JSONException {
-        final JSONArray array = new JSONArray(text);
-        if (array.length() != 1) {
-            throw new JSONException("Expected list with 1 item");
-        }
-        final JSONObject inside = array.getJSONObject(0);
-        if (inside.has(EventTriggerContract.TRIGGER_DATA)
-                && !inside.isNull(EventTriggerContract.TRIGGER_DATA)) {
-            result.setTriggerData(inside.getLong(EventTriggerContract.TRIGGER_DATA));
-        }
-        if (inside.has(EventTriggerContract.PRIORITY)
-                && !inside.isNull(EventTriggerContract.PRIORITY)) {
-            result.setTriggerPriority(inside.getLong(EventTriggerContract.PRIORITY));
-        }
-        if (inside.has(EventTriggerContract.DEDUPLICATION_KEY)
-                && !inside.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
-            result.setDeduplicationKey(inside.getLong(EventTriggerContract.DEDUPLICATION_KEY));
-        }
-    }
-
     private static boolean parseTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
@@ -83,15 +57,12 @@ public class TriggerFetcher {
         field = headers.get("Attribution-Reporting-Register-Event-Trigger");
         if (field != null) {
             if (field.size() != 1) {
-                LogUtil.d("Expected one event trigger!");
+                LogUtil.d("Expected one event trigger header element!");
                 return false;
             }
-            try {
-                parseEventTrigger(field.get(0), result);
-            } catch (JSONException e) {
-                LogUtil.d("Invalid JSON %s", e);
-                return false;
-            }
+            // Parses in event triggers data, which is a list of event metadata containing
+            // trigger data, priority, de-dup key and event-level filters.
+            result.setEventTriggers(field.get(0));
             additionalResult = true;
         }
         field = headers.get("Attribution-Reporting-Register-Aggregatable-Trigger-Data");
@@ -203,11 +174,5 @@ public class TriggerFetcher {
                 request.getRegistrationUri(),
                 true, out);
         return !out.isEmpty();
-    }
-
-    private interface EventTriggerContract {
-        String TRIGGER_DATA = "trigger_data";
-        String PRIORITY = "priority";
-        String DEDUPLICATION_KEY = "deduplication_key";
     }
 }
