@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.data.common;
 
-import android.net.Uri;
-import android.adservices.common.IAdServicesCommonCallback;
 /**
-  * Common AdServices service.
-  * {@hide}
-  */
-interface IAdServicesCommonService {
-     /**
-     * get adservice status service.
-     */
-    void isAdServicesEnabled(
-            in IAdServicesCommonCallback callback
-    );
+ * Public key value pair for Adservice entry point status
+ *
+ * <p>Hiding for future implementation and review for public exposure.
+ *
+ * @hide
+ */
+public class AdservicesEntryPointConstant {
+    public static final String KEY_ADSERVICES_ENTRY_POINT_STATUS = "adservicesEntryPointStatus";
 
-    void setAdServicesEntryPointEnabled(in boolean adservicesEntryPointEnabled);
+    public static final int ADSERVICES_ENTRY_POINT_STATUS_ENABLE = 0;
+
+    public static final int ADSERVICES_ENTRY_POINT_STATUS_DISABLE = 1;
 }

@@ -116,6 +116,9 @@ public final class PhFlags implements Flags {
     static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
 
+    // Adservices enable status keys.
+    static final String KEY_ADSERVICES_ENABLE_STATUS = "adservice_enable_status";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -518,6 +521,15 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
+    @Override
+    public boolean getAdservicesEnableStatus() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_ENABLE_STATUS,
+                /* defaultValue */ ADSERVICES_ENABLE_STATUS);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -667,5 +679,7 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionScoringTimeoutMs());
+        writer.println("==== AdServices PH Flags Dump STATUS ====");
+        writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
     }
 }
