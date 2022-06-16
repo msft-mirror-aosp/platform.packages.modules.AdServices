@@ -48,11 +48,16 @@ android_app {
         "androidx.recyclerview_recyclerview",
         // TODO(b/230653497): Try to remove this.
         "androidx.room_room-runtime",
+        "tflite_support_classifiers_java",
     ],
     resource_dirs: ["res"],
-    // TODO(b/208705888): Renable tflite.
-    // jni_libs: ["libtensorflowlite_jni"],
-    use_embedded_native_libs: true,
+    aaptflags: [
+        // Don't compress *.tflite files. Compressed models cannot be loaded on device.
+        "-0 .tflite",
+    ],
+     optimize: {
+        proguard_flags_files: ["proguard.flags"],
+     },
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
     apex_available: ["com.android.adservices"],
 }
@@ -60,13 +65,17 @@ android_app {
 // Assets needs to be bundled via this android_library since our classes in service-core needs to
 // load assets.
 android_library {
-    name: "adservices-assets-lib",
+    name: "adservices-assets",
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     asset_dirs: [
         "assets",
     ],
-    // Must use EmptyManifest.xml since "adservices-assets-lib" will also be used by the
+    aaptflags: [
+        // Don't compress *.tflite files. Compressed models cannot be loaded on device.
+        "-0 .tflite",
+    ],
+    // Must use EmptyManifest.xml since "adservices-assets" will also be used by the
     // service-core tests. If we use the normal "AndroidManifest.xml", we will redeclare permissions
     // in the tests
     // See b/228270294 for the error about duplicated permissions.

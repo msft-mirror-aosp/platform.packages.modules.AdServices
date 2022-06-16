@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
@@ -69,5 +70,10 @@ public class AdBiddingOutcomeTest {
                         .build();
         assertEquals(adBiddingOutcome.getAdWithBid(), AD_WITH_BID);
         assertEquals(adBiddingOutcome.getCustomAudienceBiddingInfo(), CUSTOM_AUDIENCE_BIDDING_INFO);
+    }
+
+    @Test
+    public void testAdBiddingOutcomeFailureMissingBiddingInfo() {
+        assertThrows(IllegalStateException.class, () -> AdBiddingOutcome.builder().build());
     }
 }

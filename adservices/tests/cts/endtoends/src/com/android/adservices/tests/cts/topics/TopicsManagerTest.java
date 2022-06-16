@@ -100,23 +100,24 @@ public class TopicsManagerTest {
         assertThat(sdk1Result.getModelVersions()).isNotEmpty();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // We only have 1 test app which has 5 classification topics: "1740", "529", "911", "14",
-        // "590".
+        // We only have 1 test app which has 10 classification topics: 48, 20, 241, 1579, 467, 29,
+        // 1416, 12, 138, 1049
         // These 5 classification topics will become top 5 topics of the epoch since there is
         // no other apps calling Topics API.
         // The app will be assigned one random topic from one of these 5 topics.
         assertThat(sdk1Result.getTopics()).hasSize(1);
         int topic = sdk1Result.getTopics().get(0);
 
-        // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic).isIn(Arrays.asList(1740, 529, 911, 14, 590));
+        // topic is one of the 10 classification topics of the Test App.
+        assertThat(topic).isIn(Arrays.asList(48, 20, 241, 1579, 467, 29, 1416, 12, 138, 1049));
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
-        AdvertisingTopicsClient advertisingTopicsClient2 = new AdvertisingTopicsClient.Builder()
-                .setContext(sContext)
-                .setSdkName("sdk2")
-                .setExecutor(CALLBACK_EXECUTOR)
-                .build();
+        AdvertisingTopicsClient advertisingTopicsClient2 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk2")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
         assertThat(sdk2Result2.getTaxonomyVersions()).isEmpty();
@@ -130,8 +131,8 @@ public class TopicsManagerTest {
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
     private void overrideEpochPeriod(long overrideEpochPeriod) {
-        ShellUtils.runShellCommand("setprop debug.adservices.topics_epoch_job_period_ms "
-                + overrideEpochPeriod);
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
     }
 
     // Override the Percentage For Random Topic in the test.

@@ -59,13 +59,18 @@ public class TopicsWorker {
 
     private final EpochManager mEpochManager;
     private final CacheManager mCacheManager;
+    private final BlockedTopicsManager mBlockedTopicsManager;
     private final Flags mFlags;
 
     @VisibleForTesting
-    TopicsWorker(@NonNull EpochManager epochManager, @NonNull CacheManager cacheManager,
+    TopicsWorker(
+            @NonNull EpochManager epochManager,
+            @NonNull CacheManager cacheManager,
+            @NonNull BlockedTopicsManager blockedTopicsManager,
             Flags flags) {
         mEpochManager = epochManager;
         mCacheManager = cacheManager;
+        mBlockedTopicsManager = blockedTopicsManager;
         mFlags = flags;
     }
 
@@ -80,8 +85,12 @@ public class TopicsWorker {
         if (sTopicsWorker == null) {
             synchronized (TopicsWorker.class) {
                 if (sTopicsWorker == null) {
-                    sTopicsWorker = new TopicsWorker(EpochManager.getInstance(context),
-                            CacheManager.getInstance(context), FlagsFactory.getFlags());
+                    sTopicsWorker =
+                            new TopicsWorker(
+                                    EpochManager.getInstance(context),
+                                    CacheManager.getInstance(context),
+                                    BlockedTopicsManager.getInstance(context),
+                                    FlagsFactory.getFlags());
                 }
             }
         }
@@ -89,15 +98,73 @@ public class TopicsWorker {
     }
 
     /**
-     * Gets a list of all topics that could be returned to the user in the last
-     * numberOfLookBackEpochs epochs. Does not include the current epoch, so range is
-     * [currentEpochId - numberOfLookBackEpochs, currentEpochId - 1].
+     * Returns a list of all topics that could be returned to the {@link TopicsWorker} client.
      *
      * @return The list of Topics.
      */
     @NonNull
     public ImmutableList<Topic> getKnownTopicsWithConsent() {
-        return mCacheManager.getKnownTopicsWithConsent();
+        LogUtil.v("TopicsWorker.getKnownTopicsWithConsent");
+        mReadWriteLock.readLock().lock();
+        try {
+            return mCacheManager.getKnownTopicsWithConsent();
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Returns a list of all topics that were blocked by the user.
+     *
+     * @return The list of Topics.
+     */
+    @NonNull
+    public ImmutableList<Topic> getTopicsWithRevokedConsent() {
+        LogUtil.v("TopicsWorker.getTopicsWithRevokedConsent");
+        mReadWriteLock.readLock().lock();
+        try {
+            return mCacheManager.getTopicsWithRevokedConsent();
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Revoke consent for provided {@link Topic} (block topic). This topic will not be returned by
+     * any of the {@link TopicsWorker} methods.
+     *
+     * @param topic {@link Topic} to block.
+     */
+    public void revokeConsentForTopic(@NonNull Topic topic) {
+        LogUtil.v("TopicsWorker.revokeConsentForTopic");
+        mReadWriteLock.writeLock().lock();
+        try {
+            mBlockedTopicsManager.blockTopic(topic);
+        } finally {
+            // TODO(b/234978199): optimize it - implement loading only blocked topics, not whole
+            // cache
+            loadCache();
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Restore consent for provided {@link Topic} (unblock the topic). This topic can be returned by
+     * any of the {@link TopicsWorker} methods.
+     *
+     * @param topic {@link Topic} to restore consent for.
+     */
+    public void restoreConsentForTopic(@NonNull Topic topic) {
+        LogUtil.v("TopicsWorker.restoreConsentForTopic");
+        mReadWriteLock.writeLock().lock();
+        try {
+            mBlockedTopicsManager.unblockTopic(topic);
+        } finally {
+            // TODO(b/234978199): optimize it - implement loading only blocked topics, not whole
+            // cache
+            loadCache();
+            mReadWriteLock.writeLock().unlock();
+        }
     }
 
     /**
@@ -112,8 +179,8 @@ public class TopicsWorker {
         LogUtil.v("TopicsWorker.getTopics for %s, %s", app, sdk);
         mReadWriteLock.readLock().lock();
         try {
-            List<Topic> topics = mCacheManager.getTopics(
-                    mFlags.getTopicsNumberOfLookBackEpochs(), app, sdk);
+            List<Topic> topics =
+                    mCacheManager.getTopics(mFlags.getTopicsNumberOfLookBackEpochs(), app, sdk);
 
             List<Long> taxonomyVersions = new ArrayList<>(topics.size());
             List<Long> modelVersions = new ArrayList<>(topics.size());
@@ -125,14 +192,16 @@ public class TopicsWorker {
                 topicIds.add(topic.getTopic());
             }
 
-            GetTopicsResult result = new GetTopicsResult.Builder()
-                    .setResultCode(RESULT_OK)
-                    .setTaxonomyVersions(taxonomyVersions)
-                    .setModelVersions(modelVersions)
-                    .setTopics(topicIds)
-                    .build();
-            LogUtil.v("The result of TopicsWorker.getTopics for %s, %s is %s", app, sdk,
-                    result.toString());
+            GetTopicsResult result =
+                    new GetTopicsResult.Builder()
+                            .setResultCode(RESULT_OK)
+                            .setTaxonomyVersions(taxonomyVersions)
+                            .setModelVersions(modelVersions)
+                            .setTopics(topicIds)
+                            .build();
+            LogUtil.v(
+                    "The result of TopicsWorker.getTopics for %s, %s is %s",
+                    app, sdk, result.toString());
             return result;
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -140,13 +209,12 @@ public class TopicsWorker {
     }
 
     /**
-     * Record the call from App and Sdk to usage history.
-     * This UsageHistory will be used to determine if a caller (app or sdk) has observed a topic
-     * before.
+     * Record the call from App and Sdk to usage history. This UsageHistory will be used to
+     * determine if a caller (app or sdk) has observed a topic before.
      *
      * @param app the app
-     * @param sdk the sdk of the app. In case the app calls the Topics API directly, the sdk
-     *            == empty string.
+     * @param sdk the sdk of the app. In case the app calls the Topics API directly, the sdk ==
+     *     empty string.
      */
     @NonNull
     public void recordUsage(@NonNull String app, @NonNull String sdk) {
@@ -158,9 +226,7 @@ public class TopicsWorker {
         }
     }
 
-    /**
-     * Load the Topics Cache from DB.
-     */
+    /** Load the Topics Cache from DB. */
     @NonNull
     public void loadCache() {
         // This loadCache happens when the TopicsService is created. The Cache is empty at that
@@ -174,10 +240,7 @@ public class TopicsWorker {
         }
     }
 
-    /**
-     * Compute Epoch algorithm.
-     * If the computation succeed, it will reload the cache.
-     */
+    /** Compute Epoch algorithm. If the computation succeed, it will reload the cache. */
     @NonNull
     public void computeEpoch() {
         // This computeEpoch happens in the EpochJobService which happens every epoch. Since the
@@ -195,4 +258,23 @@ public class TopicsWorker {
         }
     }
 
+    /**
+     * Delete all data generated by Topics API, except for tables in the exclusion list.
+     *
+     * @param tablesToExclude a {@link List} of tables that won't be deleted.
+     */
+    public void clearAllTopicsData(@NonNull List<String> tablesToExclude) {
+        // Here we use Write lock to block Read during that computation time.
+        mReadWriteLock.writeLock().lock();
+        try {
+            mCacheManager.clearAllTopicsData(tablesToExclude);
+
+            loadCache();
+            LogUtil.v(
+                    "All derived data are cleaned for Topics API except: %s",
+                    tablesToExclude.toString());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
 }

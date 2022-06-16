@@ -17,7 +17,6 @@
 package com.android.adservices.data.measurement;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import android.content.ContentValues;
@@ -127,6 +126,11 @@ public class MeasurementDaoTest {
             assertEquals(ValidSourceParams.INSTALL_COOLDOWN_WINDOW.longValue(),
                     source.getInstallCooldownWindow());
             assertEquals(ValidSourceParams.ATTRIBUTION_MODE, source.getAttributionMode());
+            assertEquals(ValidSourceParams.buildAggregateSource(), source.getAggregateSource());
+            assertEquals(ValidSourceParams.buildAggregateFilterData(),
+                    source.getAggregateFilterData());
+            assertEquals(ValidSourceParams.AGGREGATE_CONTRIBUTIONS,
+                    source.getAggregateContributions());
         }
     }
 
@@ -446,9 +450,7 @@ public class MeasurementDaoTest {
                                         ValidTriggerParams.sAdTechDomain,
                                         ValidTriggerParams.sRegistrant,
                                         ValidTriggerParams.TRIGGER_TIME,
-                                        ValidTriggerParams.TRIGGER_DATA,
-                                        ValidTriggerParams.DEDUP_KEY,
-                                        ValidTriggerParams.PRIORITY,
+                                        ValidTriggerParams.EVENT_TRIGGERS,
                                         ValidTriggerParams.buildAggregateTriggerData(),
                                         ValidTriggerParams.buildAggregateValues(),
                                         ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING));
@@ -466,10 +468,7 @@ public class MeasurementDaoTest {
             assertEquals(ValidTriggerParams.sAdTechDomain, trigger.getAdTechDomain());
             assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
-            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
-                    trigger.getEventTriggerData());
-            assertEquals(ValidTriggerParams.DEDUP_KEY, trigger.getDedupKey());
-            assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
+            assertEquals(ValidTriggerParams.EVENT_TRIGGERS, trigger.getEventTriggers());
         }
     }
 
@@ -480,9 +479,7 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.sAdTechDomain,
                 ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -492,9 +489,7 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.sAdTechDomain,
                 ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -507,9 +502,7 @@ public class MeasurementDaoTest {
                 null,
                 ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -519,9 +512,7 @@ public class MeasurementDaoTest {
                 Uri.parse("com.adTechDomain"),
                 ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -534,9 +525,7 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.sAdTechDomain,
                 null,
                 ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -546,9 +535,7 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.sAdTechDomain,
                 Uri.parse("com.registrant"),
                 ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -561,9 +548,7 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.sAdTechDomain,
                 ValidTriggerParams.sRegistrant,
                 null,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
+                ValidTriggerParams.EVENT_TRIGGERS,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -577,8 +562,6 @@ public class MeasurementDaoTest {
                 ValidTriggerParams.sRegistrant,
                 ValidTriggerParams.TRIGGER_TIME,
                 null,
-                ValidTriggerParams.DEDUP_KEY,
-                ValidTriggerParams.PRIORITY,
                 ValidTriggerParams.buildAggregateTriggerData(),
                 ValidTriggerParams.buildAggregateValues(),
                 ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
@@ -596,10 +579,8 @@ public class MeasurementDaoTest {
                                         ValidTriggerParams.sAdTechDomain,
                                         ValidTriggerParams.sRegistrant,
                                         ValidTriggerParams.TRIGGER_TIME,
-                                        ValidTriggerParams.TRIGGER_DATA,
+                                        ValidTriggerParams.EVENT_TRIGGERS,
                                         null,
-                                        ValidTriggerParams.PRIORITY,
-                                        ValidTriggerParams.buildAggregateTriggerData(),
                                         ValidTriggerParams.buildAggregateValues(),
                                         ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING));
 
@@ -616,26 +597,8 @@ public class MeasurementDaoTest {
             assertEquals(ValidTriggerParams.sAdTechDomain, trigger.getAdTechDomain());
             assertEquals(ValidTriggerParams.sRegistrant, trigger.getRegistrant());
             assertEquals(ValidTriggerParams.TRIGGER_TIME.longValue(), trigger.getTriggerTime());
-            assertEquals(ValidTriggerParams.TRIGGER_DATA.longValue(),
-                    trigger.getEventTriggerData());
-            assertNull(trigger.getDedupKey());
-            assertEquals(ValidTriggerParams.PRIORITY.longValue(), trigger.getPriority());
+            assertEquals(ValidTriggerParams.EVENT_TRIGGERS, trigger.getEventTriggers());
         }
-    }
-
-    @Test
-    public void testInsertTrigger_validateArgumentPriority() {
-        assertInvalidTriggerArguments(
-                ValidTriggerParams.sAttributionDestination,
-                ValidTriggerParams.sAdTechDomain,
-                ValidTriggerParams.sRegistrant,
-                ValidTriggerParams.TRIGGER_TIME,
-                ValidTriggerParams.TRIGGER_DATA,
-                ValidTriggerParams.DEDUP_KEY,
-                null,
-                ValidTriggerParams.buildAggregateTriggerData(),
-                ValidTriggerParams.buildAggregateValues(),
-                ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
     public void assertInvalidTriggerArguments(
@@ -643,9 +606,7 @@ public class MeasurementDaoTest {
             Uri adTechDomain,
             Uri registrant,
             Long triggerTime,
-            Long triggerData,
-            Long dedupKey,
-            Long priority,
+            String eventTriggers,
             String aggregateTriggerData,
             String aggregateValues,
             String filters) {
@@ -658,9 +619,7 @@ public class MeasurementDaoTest {
                                         adTechDomain,
                                         registrant,
                                         triggerTime,
-                                        triggerData,
-                                        dedupKey,
-                                        priority,
+                                        eventTriggers,
                                         aggregateTriggerData,
                                         aggregateValues,
                                         filters);
@@ -1216,6 +1175,7 @@ public class MeasurementDaoTest {
         static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
         static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
+        static final int AGGREGATE_CONTRIBUTIONS = 0;
 
         static String buildAggregateSource() {
             try {
@@ -1246,18 +1206,34 @@ public class MeasurementDaoTest {
     }
 
     private static class ValidTriggerParams {
-        static final Long DEDUP_KEY = 200L;
-        static final Long PRIORITY = 100L;
         static final Long TRIGGER_TIME = 8640000000L;
-        static final Long TRIGGER_DATA = 3L;
         static final Uri sAttributionDestination = Uri.parse("android-app://com.destination");
         static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
         static final Uri sAdTechDomain = Uri.parse("https://com.example");
-        private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+        static final String TOP_LEVEL_FILTERS_JSON_STRING =
                 "{\n"
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
                         + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
                         + "}\n";
+        static final String EVENT_TRIGGERS =
+                "[\n"
+                        + "{\n"
+                        + "  \"trigger_data\": \"5\",\n"
+                        + "  \"priority\": \"123\"\n"
+                        + "  \"filters\": {\n"
+                        + "    \"source_type\": [\"navigation\"],\n"
+                        + "    \"key_1\": [\"value_1\"] \n"
+                        + "   }\n"
+                        + "},\n"
+                        + "{\n"
+                        + "  \"trigger_data\": \"0\",\n"
+                        + "  \"priority\": \"124\"\n"
+                        + "  \"deduplication_key\": \"101\"\n"
+                        + "  \"filters\": {\n"
+                        + "     \"source_type\": [\"event\"]\n"
+                        + "   },\n"
+                        + "}\n"
+                        + "]\n";
 
         static String buildAggregateTriggerData() {
             try {
