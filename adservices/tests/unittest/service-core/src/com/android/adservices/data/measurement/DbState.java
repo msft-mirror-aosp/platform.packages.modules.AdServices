@@ -128,9 +128,7 @@ public class DbState {
         mSourceList.sort(
                 Comparator.comparing(Source::getEventTime)
                         .thenComparing(Source::getPriority));
-        mTriggerList.sort(
-                Comparator.comparing(Trigger::getTriggerTime)
-                        .thenComparing(Trigger::getPriority));
+        mTriggerList.sort(Comparator.comparing(Trigger::getTriggerTime));
         mReportList.sort(
                 Comparator.comparing(EventReport::getReportTime)
                         .thenComparing(EventReport::getTriggerTime));
@@ -168,9 +166,8 @@ public class DbState {
                 .setId(tJSON.getString("id"))
                 .setAttributionDestination(Uri.parse(tJSON.getString("attributionDestination")))
                 .setAdTechDomain(Uri.parse(tJSON.getString("adTechDomain")))
-                .setEventTriggerData(tJSON.getLong("triggerData"))
+                .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
-                .setPriority(tJSON.getLong("priority"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
                 .build();

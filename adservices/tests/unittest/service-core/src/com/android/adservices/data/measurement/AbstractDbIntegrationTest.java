@@ -227,9 +227,7 @@ public abstract class AbstractDbIntegrationTest {
                 trigger.getAdTechDomain().toString());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
-        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
-                trigger.getEventTriggerData());
-        values.put(MeasurementTables.TriggerContract.PRIORITY, trigger.getPriority());
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, trigger.getEventTriggers());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);

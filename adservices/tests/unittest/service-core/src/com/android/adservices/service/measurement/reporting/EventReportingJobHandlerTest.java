@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.reporting;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,6 +27,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SystemHealthParams;
 
 import org.json.JSONException;
 import org.junit.After;

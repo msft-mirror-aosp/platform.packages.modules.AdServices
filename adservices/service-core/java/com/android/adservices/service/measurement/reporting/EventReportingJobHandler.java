@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.reporting;
 
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.Source;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;

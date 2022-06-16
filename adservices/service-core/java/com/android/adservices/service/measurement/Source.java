@@ -98,8 +98,18 @@ public class Source {
     }
 
     public enum SourceType {
-        EVENT,
-        NAVIGATION,
+        EVENT("event"),
+        NAVIGATION("navigation");
+
+        private final String mValue;
+
+        SourceType(String value) {
+            this.mValue = value;
+        }
+
+        public String getValue() {
+            return mValue;
+        }
     }
 
     private Source() {
