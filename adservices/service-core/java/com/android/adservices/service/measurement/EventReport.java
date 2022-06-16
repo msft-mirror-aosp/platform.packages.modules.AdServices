@@ -272,13 +272,13 @@ public class EventReport {
             return this;
         }
 
-        /**
-         * Populates fields using {@link Source} and {@link Trigger}.
-         */
-        public Builder populateFromSourceAndTrigger(Source source, Trigger trigger) {
-            mBuilding.mTriggerPriority = trigger.getPriority();
-            mBuilding.mTriggerDedupKey = trigger.getDedupKey();
-            mBuilding.mTriggerData = trigger.getTruncatedTriggerData(source);
+        /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
+        public Builder populateFromSourceAndTrigger(
+                Source source, Trigger trigger, EventTrigger eventTrigger) {
+            mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
+            mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
+            // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
+            mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceId = source.getEventId();
             mBuilding.mAdTechDomain = source.getAdTechDomain();
@@ -288,6 +288,10 @@ public class EventReport {
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
             return this;
+        }
+
+        private long getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
+            return eventTrigger.getTriggerData() % source.getTriggerDataCardinality();
         }
 
         /**

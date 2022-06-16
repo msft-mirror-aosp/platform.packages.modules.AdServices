@@ -32,10 +32,8 @@ import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Helper class for SQLite operations.
- */
-class SqliteObjectMapper {
+/** Helper class for SQLite operations. */
+public class SqliteObjectMapper {
 
     /**
      * Create {@link EventReport} object from SQLite datastore.
@@ -119,25 +117,21 @@ class SqliteObjectMapper {
         return builder.build();
     }
 
-    /**
-     * Create {@link Trigger} object from SQLite datastore.
-     */
-    static Trigger constructTriggerFromCursor(Cursor cursor) {
+    /** Create {@link Trigger} object from SQLite datastore. */
+    public static Trigger constructTriggerFromCursor(Cursor cursor) {
         Trigger.Builder builder = new Trigger.Builder();
         setTextColumn(cursor, MeasurementTables.TriggerContract.ID,
                 builder::setId);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.PRIORITY,
-                builder::setPriority);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                builder::setEventTriggers);
         setUriColumn(cursor, MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
         setUriColumn(cursor, MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 builder::setAdTechDomain);
         setIntColumn(cursor, MeasurementTables.TriggerContract.STATUS,
                 builder::setStatus);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA,
-                builder::setEventTriggerData);
-        setLongColumn(cursor, MeasurementTables.TriggerContract.DEDUP_KEY,
-                builder::setDedupKey);
         setLongColumn(cursor, MeasurementTables.TriggerContract.TRIGGER_TIME,
                 builder::setTriggerTime);
         setUriColumn(cursor, MeasurementTables.TriggerContract.REGISTRANT,

@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Unit tests for {@link com.android.adservices.service.topics.CacheManager} */
 @SmallTest
@@ -66,8 +67,14 @@ public final class CacheManagerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        // Clean DB before each test
+        // Erase all existing data.
+        DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppClassificationTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.CallerCanLearnTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.TopTopicsContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
@@ -557,5 +564,97 @@ public final class CacheManagerTest {
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
 
         assertThat(cacheManager.getKnownTopicsWithConsent()).isEqualTo(Collections.emptyList());
+    }
+
+    @Test
+    public void testClearAllTopicsData() {
+        // The cache is empty.
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic4 =
+                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic5 =
+                Topic.create(/* topic */ 5, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+        Topic topic6 =
+                Topic.create(/* topic */ 6, /* taxonomyVersion = */ 1L, /* modelVersion = */ 1L);
+
+        final String app1 = "app1";
+        final String app2 = "app2";
+        final String sdk1 = "sdk1";
+        final String sdk2 = "sdk2";
+        final long epochId1 = 1L;
+        final long epochId2 = 1L;
+
+        List<String> tableExclusionList = List.of(TopicsTables.BlockedTopicsContract.TABLE);
+
+        // Persist data into tables
+        // Below implementation may insert duplicate data into tables, but the duplicated data
+        // should be handled correctly
+        for (long epochId : new long[] {epochId1, epochId2}) {
+            for (String app : new String[] {app1, app2}) {
+                for (String sdk : new String[] {sdk1, sdk2}) {
+                    mTopicsDao.recordUsageHistory(epochId, app, sdk);
+                    mTopicsDao.recordAppUsageHistory(epochId, app);
+
+                    mTopicsDao.persistReturnedAppTopicsMap(
+                            epochId, Map.of(Pair.create(app, sdk), topic1));
+                    mTopicsDao.persistReturnedAppTopicsMap(
+                            epochId, Map.of(Pair.create(app, sdk), topic2));
+                }
+            }
+            mTopicsDao.persistAppClassificationTopics(
+                    epochId,
+                    Map.of(
+                            app1,
+                            Arrays.asList(topic1, topic2),
+                            app2,
+                            Arrays.asList(topic1, topic2)));
+
+            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic1, Set.of(app1, sdk1)));
+            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic2, Set.of(app2, sdk2)));
+
+            mTopicsDao.persistTopTopics(
+                    epochId, List.of(topic1, topic2, topic3, topic4, topic5, topic6));
+        }
+        mTopicsDao.recordBlockedTopic(topic1);
+        mTopicsDao.recordBlockedTopic(topic2);
+
+        // Delete all tables except excluded ones.
+        cacheManager.clearAllTopicsData(tableExclusionList);
+
+        for (long epochId : new long[] {epochId1, epochId2}) {
+            assertThat(mTopicsDao.retrieveAppUsageMap(epochId)).isEmpty();
+            assertThat(mTopicsDao.retrieveAppSdksUsageMap(epochId)).isEmpty();
+            assertThat(mTopicsDao.retrieveAppClassificationTopics(epochId)).isEmpty();
+            assertThat(mTopicsDao.retrieveTopTopics(epochId)).isEmpty();
+
+            // BlockedTopics Table is not cleared
+            assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
+        }
+        assertThat(
+                        mTopicsDao.retrieveCallerCanLearnTopicsMap(
+                                /* current Epoch Id */ 3, /* look back Epochs */ 3))
+                .isEmpty();
+        assertThat(
+                        mTopicsDao.retrieveReturnedTopics(
+                                /* current Epoch Id */ 3, /* look back Epochs */ 3))
+                .isEmpty();
+
+        cacheManager.clearAllTopicsData(Collections.emptyList());
+        assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+
+        // Also verify no topics will be returned as a second check
+        cacheManager.loadCache();
+        for (String app : new String[] {app1, app2}) {
+            for (String sdk : new String[] {sdk1, sdk2}) {
+                assertThat(cacheManager.getTopics((int) epochId2 + 1, app, sdk)).isEmpty();
+            }
+        }
     }
 }
