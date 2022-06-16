@@ -18,7 +18,10 @@ package com.android.server.sdksandbox;
 
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
+import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
+
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.ActivityManager;
 import android.app.sdksandbox.IRemoteSdkCallback;
@@ -32,25 +35,26 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
-import android.os.UserManager;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
-import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 import android.view.SurfaceControlViewHost;
 import android.webkit.WebViewUpdateService;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
@@ -58,16 +62,16 @@ import com.android.sdksandbox.ISdkSandboxService;
 import com.android.sdksandbox.ISdkSandboxToSdkSandboxManagerCallback;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
-import com.android.server.pm.PackageManagerLocal;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -87,37 +91,38 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final ActivityManager mActivityManager;
     private final Handler mHandler;
-    private final PackageManagerLocal mPackageManagerLocal;
-
+    private final SdkSandboxStorageManager mSdkSandboxStorageManager;
     private final SdkSandboxServiceProvider mServiceProvider;
 
     private final Object mLock = new Object();
 
     // For communication between app<-ManagerService->RemoteCode for each codeToken
-    // TODO(b/208824602): Remove from this map when an app dies.
     @GuardedBy("mLock")
-    private final ArrayMap<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
-    // TODO: Following 2 should be keyed by (packageName, uid) pair
+    private final Map<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
     @GuardedBy("mLock")
-    private final ArrayMap<Integer, HashSet<Integer>> mAppLoadedSdkUids = new ArrayMap<>();
+    private final ArrayMap<CallingInfo, HashSet<Integer>> mSandboxLoadedSdkUids =
+            new ArrayMap<>();
     @GuardedBy("mLock")
-    private final ArraySet<Integer> mRunningInstrumentations = new ArraySet<>();
+    private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
 
     private final SdkSandboxManagerLocal mLocalManager;
 
+    private final String mAdServicesPackageName;
 
     SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
         mContext = context;
         mServiceProvider = provider;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
+        mSdkSandboxStorageManager = new SdkSandboxStorageManager(mContext);
+
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
-        mPackageManagerLocal = LocalManagerRegistry.getManager(PackageManagerLocal.class);
         registerBroadcastReceivers();
 
         mLocalManager = new LocalImpl();
+        mAdServicesPackageName = resolveAdServicesPackage();
     }
 
     private void registerBroadcastReceivers() {
@@ -151,10 +156,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             public void onReceive(Context context, Intent intent) {
                 final String packageName = intent.getData().getSchemeSpecificPart();
                 final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+                final CallingInfo callingInfo = new CallingInfo(uid, packageName);
                 // TODO(b/223386213): We could miss broadcast or app might be started before we
                 // handle broadcast.
-                mHandler.post(
-                        () -> reconcileSdkData(packageName, uid, /* forInstrumentation= */ false));
+                mHandler.post(() -> mSdkSandboxStorageManager.onPackageAddedOrUpdated(callingInfo));
             }
         };
         mContext.registerReceiver(packageAddedIntentReceiver, packageAddedIntentFilter,
@@ -164,161 +169,95 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void onSdkUpdating(int sdkUid) {
         final ArrayList<Integer> appUids = new ArrayList<>();
         synchronized (mLock) {
-            for (Map.Entry<Integer, HashSet<Integer>> appEntry :
-                    mAppLoadedSdkUids.entrySet()) {
-                final int appUid = appEntry.getKey();
-                final HashSet<Integer> loadedCodeUids = appEntry.getValue();
-
-                if (loadedCodeUids.contains(sdkUid)) {
-                    appUids.add(appUid);
+            for (int i = 0; i < mSandboxLoadedSdkUids.size(); i++) {
+                final CallingInfo callingInfo = mSandboxLoadedSdkUids.keyAt(i);
+                final HashSet<Integer> loadedCodeUids = mSandboxLoadedSdkUids.get(callingInfo);
+                if (Objects.requireNonNull(loadedCodeUids).contains(sdkUid)) {
+                    appUids.add(callingInfo.getUid());
                 }
             }
         }
-        for (Integer appUid : appUids) {
+        for (int i = 0; i < appUids.size(); i++) {
+            final int appUid = appUids.get(i);
             Log.i(TAG, "Killing app " + appUid + " containing code " + sdkUid);
+            // TODO(b/230839879): Avoid killing by uid
             mActivityManager.killUid(appUid, "Package updating");
         }
     }
 
-    /**
-     * Returns list of sdks {@code packageName} uses
-     */
-    @SuppressWarnings("MixedMutabilityReturnType")
-    List<SharedLibraryInfo> getSdksUsed(String packageName) {
-        List<SharedLibraryInfo> result = new ArrayList<>();
-        PackageManager pm = mContext.getPackageManager();
-        try {
-            ApplicationInfo info = pm.getApplicationInfo(
-                    packageName, PackageManager.GET_SHARED_LIBRARY_FILES);
-            List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
-            for (int i = 0; i < sharedLibraries.size(); i++) {
-                final SharedLibraryInfo sharedLib = sharedLibraries.get(i);
-                if (sharedLib.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
-                    continue;
-                }
-                result.add(sharedLib);
-            }
-            return result;
-        } catch (PackageManager.NameNotFoundException ignored) {
-            return Collections.emptyList();
-        }
-    }
-
-    // Returns a random string.
-    private static String getRandomString() {
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[16];
-        random.nextBytes(bytes);
-        return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP);
-    }
-
-    private void reconcileSdkData(String packageName, int uid, boolean forInstrumentation) {
-        final List<SharedLibraryInfo> sdksUsed = getSdksUsed(packageName);
-        if (sdksUsed.isEmpty()) {
-            if (forInstrumentation) {
-                Log.w(TAG,
-                        "Running instrumentation for the sdk-sandbox process belonging to client "
-                                + "app "
-                                + packageName + " (uid = " + uid
-                                + "). However client app doesn't depend on any SDKs. Only "
-                                + "creating \"shared\" sdk sandbox data sub directory");
-            } else {
-                return;
-            }
-        }
-        final List<String> subDirNames = new ArrayList<>();
-        subDirNames.add("shared");
-        for (int i = 0; i < sdksUsed.size(); i++) {
-            final SharedLibraryInfo sdk = sdksUsed.get(i);
-            //TODO(b/223386213): We need to scan the sdk package directory so that we don't create
-            //multiple subdirectories for the same sdk, due to passing different random suffix.
-            subDirNames.add(sdk.getName() + "@" + getRandomString());
-        }
-        final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
-        final int userId = userHandle.getIdentifier();
-        final int appId = UserHandle.getAppId(uid);
-        final int flags = mContext.getSystemService(UserManager.class).isUserUnlocked(userHandle)
-                ? PackageManagerLocal.FLAG_STORAGE_CE | PackageManagerLocal.FLAG_STORAGE_DE
-                : PackageManagerLocal.FLAG_STORAGE_DE;
-
-        try {
-            //TODO(b/224719352): Pass actual seinfo from here
-            mPackageManagerLocal.reconcileSdkData(/*volumeUuid=*/null, packageName, subDirNames,
-                    userId, appId, /*previousAppId=*/-1, /*seInfo=*/"default", flags);
-        } catch (Exception e) {
-            // We will retry when sdk gets loaded
-            Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
-                    + String.join(", ", subDirNames) + " error: " + e.getMessage());
-        }
-    }
-
     @Override
-    public void loadSdk(String callingPackage, String name, Bundle params,
-            IRemoteSdkCallback callback) {
+    public void loadSdk(String callingPackageName, String sdkName,
+            Bundle params, IRemoteSdkCallback callback) {
         final int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         synchronized (mLock) {
-            if (mRunningInstrumentations.contains(callingUid)) {
+            if (mRunningInstrumentations.contains(callingInfo)) {
                 throw new SecurityException(
                         "Currently running instrumentation of this sdk sandbox process");
             }
         }
-        enforceCallingPackage(callingPackage, callingUid);
+        enforceCallingPackageBelongsToUid(callingInfo);
+        enforceCallerHasNetworkAccess(callingPackageName);
+
+        //TODO(b/232924025): Sdk data should be prepared once per sandbox instantiation
+        mSdkSandboxStorageManager.prepareSdkDataOnLoad(callingInfo);
         final long token = Binder.clearCallingIdentity();
         try {
-            loadSdkWithClearIdentity(callingUid, callingPackage, name, params, callback);
+            loadSdkWithClearIdentity(callingInfo, sdkName, params, callback);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
     }
 
-    private void loadSdkWithClearIdentity(int callingUid, String callingPackage, String name,
-            Bundle params, IRemoteSdkCallback callback) {
-        // Step 1: create unique identity for the {callingUid, name} pair
-        final IBinder sdkToken = mSdkTokenManager.createOrGetSdkToken(callingUid, name);
+    private void loadSdkWithClearIdentity(CallingInfo callingInfo, String sdkName, Bundle params,
+            IRemoteSdkCallback callback) {
+        // Step 1: create unique identity for the {callingUid, sdkName} pair
+        final IBinder sdkToken = mSdkTokenManager.createOrGetSdkToken(callingInfo, sdkName);
 
         // Ensure we are not already loading sdk for this sdkToken. That's determined by
         // checking if we already have an AppAndRemoteCodeLink for the sdkToken.
         final AppAndRemoteSdkLink link = new AppAndRemoteSdkLink(sdkToken, callback);
         synchronized (mLock) {
             if (mAppAndRemoteSdkLinks.putIfAbsent(sdkToken, link) != null) {
-                link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_SDK_ALREADY_LOADED,
-                        name + " is being loaded or has been loaded already");
+                link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
+                        sdkName + " is being loaded or has been loaded already");
                 return;
             }
         }
         // Step 2: fetch the installed code in device
-        SdkProviderInfo sdkProviderInfo = createSdkProviderInfo(name, callingUid);
+        SdkProviderInfo sdkProviderInfo = createSdkProviderInfo(
+                sdkName, callingInfo.getPackageName());
 
         String errorMsg = "";
         if (sdkProviderInfo == null) {
-            errorMsg = name + " not found for loading";
+            errorMsg = sdkName + " not found for loading";
         } else if (TextUtils.isEmpty(sdkProviderInfo.getSdkProviderClassName())) {
-            errorMsg = name + " did not set " + PROPERTY_SDK_PROVIDER_CLASS_NAME;
+            errorMsg = sdkName + " did not set " + PROPERTY_SDK_PROVIDER_CLASS_NAME;
         }
 
         if (!TextUtils.isEmpty(errorMsg)) {
             Log.w(TAG, errorMsg);
-            link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_SDK_NOT_FOUND, errorMsg);
+            link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg);
             return;
         }
 
         // TODO(b/204991850): ensure requested code is included in the AndroidManifest.xml
-        invokeSdkSandboxServiceToLoadSdk(callingUid, callingPackage, sdkToken, sdkProviderInfo,
-                params, link);
+        invokeSdkSandboxServiceToLoadSdk(callingInfo, sdkToken, sdkProviderInfo, params, link);
 
         // Register a death recipient to clean up sdkToken and unbind its service after app dies.
         try {
-            callback.asBinder().linkToDeath(() -> {
-                onAppDeath(sdkToken, callingUid);
-            }, 0);
+            callback.asBinder().linkToDeath(
+                    () -> onAppDeath(sdkToken, callingInfo), 0);
         } catch (RemoteException re) {
             // App has already died, cleanup sdk token and link, and unbind its service
-            onAppDeath(sdkToken, callingUid);
+            onAppDeath(sdkToken, callingInfo);
         }
     }
 
-    private void enforceCallingPackage(String callingPackage, int callingUid) {
-        int packageUid = -1;
+    private void enforceCallingPackageBelongsToUid(CallingInfo callingInfo) {
+        int callingUid = callingInfo.getUid();
+        String callingPackage = callingInfo.getPackageName();
+        int packageUid;
         PackageManager pm = mContext.createContextAsUser(
                 UserHandle.getUserHandleForUid(callingUid), 0).getPackageManager();
         try {
@@ -331,43 +270,53 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private void onAppDeath(IBinder sdkToken, int appUid) {
+    private void enforceCallerHasNetworkAccess(String callingPackage) {
+        mContext.enforceCallingPermission(android.Manifest.permission.INTERNET,
+                callingPackage + " does not hold INTERNET permission");
+        mContext.enforceCallingPermission(android.Manifest.permission.ACCESS_NETWORK_STATE,
+                callingPackage + " does not hold ACCESS_NETWORK_STATE permission");
+    }
+
+    private void onAppDeath(IBinder sdkToken, CallingInfo callingInfo) {
         cleanUp(sdkToken);
-        final int sdkSandboxUid = Process.toSdkSandboxUid(appUid);
-        mServiceProvider.unbindService(appUid);
-        synchronized (mLock) {
-            mAppLoadedSdkUids.remove(appUid);
-        }
-        Log.i(TAG, "Killing sdk sandbox process " + sdkSandboxUid);
-        mActivityManager.killUid(sdkSandboxUid, "App " + appUid + " has died");
+        stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
     }
 
     @Override
-    public void requestSurfacePackage(IBinder sdkToken, IBinder hostToken,
-            int displayId, Bundle params) {
-        //TODO(b/204991850): verify that sdkToken belongs to the callingUid
+    public void requestSurfacePackage(String callingPackageName, String sdkName, IBinder hostToken,
+            int displayId, int width, int height, Bundle params) {
+        final int callingUid = Binder.getCallingUid();
         final long token = Binder.clearCallingIdentity();
+
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
         try {
-            requestSurfacePackageWithClearIdentity(sdkToken,
-                    hostToken, displayId, params);
+            final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
+            if (sdkToken == null) {
+                throw new SecurityException("Sdk " + sdkName + "is not loaded");
+            }
+            requestSurfacePackageWithClearIdentity(sdkToken, hostToken, displayId,
+                    width, height, params);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
     }
 
     private void requestSurfacePackageWithClearIdentity(IBinder sdkToken,
-            IBinder hostToken, int displayId, Bundle params) {
+            IBinder hostToken, int displayId, int width, int height, Bundle params) {
         synchronized (mLock) {
-            if (!mAppAndRemoteSdkLinks.containsKey(sdkToken)) {
-                throw new SecurityException("sdkToken is invalid");
-            }
             final AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.get(sdkToken);
-            link.requestSurfacePackageToCode(hostToken, displayId, params);
+            link.requestSurfacePackageToSdk(hostToken, displayId, width, height, params);
         }
     }
 
     @Override
-    public void sendData(int id, Bundle params) {
+    public void sendData(String sdkName, Bundle params) {
+    }
+
+    private void onUserUnlocking(int userId) {
+        Log.i(TAG, "onUserUnlocking " + userId);
+        mHandler.post(() -> mSdkSandboxStorageManager.onUserUnlocking(userId));
     }
 
     @Override
@@ -390,71 +339,133 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         writer.println();
     }
 
+    static class SandboxServiceConnection implements ServiceConnection {
 
-    private void invokeSdkSandboxServiceToLoadSdk(
-            int callingUid, String callingPackage, IBinder sdkToken, SdkProviderInfo sdkInfo,
-            Bundle params, AppAndRemoteSdkLink link) {
+        interface Callback {
+            void onBindingSuccessful(ISdkSandboxService service);
+
+            void onBindingFailed();
+        }
+
+        private final SdkSandboxServiceProvider mServiceProvider;
+        private final CallingInfo mCallingInfo;
+        private boolean mServiceBound = false;
+
+        private final Callback mCallback;
+
+        SandboxServiceConnection(
+                SdkSandboxServiceProvider serviceProvider,
+                CallingInfo callingInfo,
+                Callback callback) {
+            mServiceProvider = serviceProvider;
+            mCallingInfo = callingInfo;
+            mCallback = callback;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            final ISdkSandboxService mService =
+                    ISdkSandboxService.Stub.asInterface(service);
+            Log.d(
+                    TAG,
+                    String.format(
+                            "Sdk sandbox has been bound for app package %s with uid %d",
+                            mCallingInfo.getPackageName(), mCallingInfo.getUid()));
+            mServiceProvider.setBoundServiceForApp(mCallingInfo, mService);
+
+            if (!mServiceBound) {
+                mCallback.onBindingSuccessful(mService);
+                mServiceBound = true;
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // Sdk sandbox crashed or killed, system will start it again.
+            // TODO(b/204991850): Handle restarts differently
+            //  (e.g. Exponential backoff retry strategy)
+            mServiceProvider.setBoundServiceForApp(mCallingInfo, null);
+        }
+
+        @Override
+        public void onBindingDied(ComponentName name) {
+            mServiceProvider.setBoundServiceForApp(mCallingInfo, null);
+            mServiceProvider.unbindService(mCallingInfo);
+            mServiceProvider.bindService(mCallingInfo, this);
+        }
+
+        @Override
+        public void onNullBinding(ComponentName name) {
+            mCallback.onBindingFailed();
+        }
+    }
+
+    void startSdkSandbox(CallingInfo callingInfo, SandboxServiceConnection.Callback callback) {
+        mServiceProvider.bindService(
+                callingInfo, new SandboxServiceConnection(mServiceProvider, callingInfo, callback));
+    }
+
+    private void invokeSdkSandboxServiceToLoadSdk(CallingInfo callingInfo, IBinder sdkToken,
+            SdkProviderInfo info, Bundle params, AppAndRemoteSdkLink link) {
         // check first if service already bound
-        ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingUid);
+        ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
         if (service != null) {
-            loadSdkForService(callingUid, sdkToken, sdkInfo, params, link, service);
+            loadSdkForService(callingInfo, sdkToken, info, params, link, service);
             return;
         }
 
-        mServiceProvider.bindService(
-                callingUid,
-                callingPackage,
-                new ServiceConnection() {
-                    private boolean mIsServiceBound = false;
-
+        startSdkSandbox(
+                callingInfo,
+                new SandboxServiceConnection.Callback() {
                     @Override
-                    public void onServiceConnected(ComponentName name, IBinder service) {
-                        final ISdkSandboxService mService =
-                                ISdkSandboxService.Stub.asInterface(service);
-                        Log.i(TAG, "Sdk sandbox has been bound");
-                        mServiceProvider.setBoundServiceForApp(callingUid, mService);
-
-                        // Ensuring the code is not loaded again if connection restarted
-                        if (!mIsServiceBound) {
-                            loadSdkForService(callingUid, sdkToken, sdkInfo, params, link,
-                                    mService);
-                            mIsServiceBound = true;
-                        }
+                    public void onBindingSuccessful(ISdkSandboxService service) {
+                        loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
                     @Override
-                    public void onServiceDisconnected(ComponentName name) {
-                        // Sdk sandbox crashed or killed, system will start it again.
-                        // TODO(b/204991850): Handle restarts differently
-                        //  (e.g. Exponential backoff retry strategy)
-                        mServiceProvider.setBoundServiceForApp(callingUid, null);
-                    }
-
-                    @Override
-                    public void onBindingDied(ComponentName name) {
-                        mServiceProvider.setBoundServiceForApp(callingUid, null);
-                        mServiceProvider.unbindService(callingUid);
-                        mServiceProvider.bindService(callingUid, callingPackage, this);
-                    }
-
-                    @Override
-                    public void onNullBinding(ComponentName name) {
+                    public void onBindingFailed() {
                         link.sendLoadSdkErrorToApp(
                                 SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
                                 "Failed to bind the service");
                     }
-                }
-        );
+                });
     }
 
-    private void loadSdkForService(
-            int callingUid, IBinder sdkToken, SdkProviderInfo sdkProviderInfo, Bundle params,
-            AppAndRemoteSdkLink link, ISdkSandboxService service) {
-        try {
-            service.loadSdk(sdkToken, sdkProviderInfo.getApplicationInfo(),
-                    sdkProviderInfo.getSdkProviderClassName(), params, link);
+    void stopSdkSandboxService(CallingInfo callingInfo, String reason) {
+        mServiceProvider.unbindService(callingInfo);
+        synchronized (mLock) {
+            mSandboxLoadedSdkUids.remove(callingInfo);
+        }
+        final int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
+        Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
+        // TODO(b/230839879): Avoid killing by uid
+        mActivityManager.killUid(sdkSandboxUid, reason);
+    }
 
-            onSdkLoaded(callingUid, sdkProviderInfo.getApplicationInfo().uid);
+    boolean isSdkSandboxServiceRunning(CallingInfo callingInfo) {
+        return mServiceProvider.getBoundServiceForApp(callingInfo) != null;
+    }
+
+    private void loadSdkForService(CallingInfo callingInfo, IBinder sdkToken,
+            SdkProviderInfo sdkProviderInfo, Bundle params, AppAndRemoteSdkLink link,
+            ISdkSandboxService service) {
+
+        // Gather sdk storage information
+        SdkDataDirInfo sdkDataInfo = mSdkSandboxStorageManager.getSdkDataDirInfo(
+                callingInfo, sdkProviderInfo.getSdkName());
+        try {
+            service.loadSdk(
+                    callingInfo.getPackageName(),
+                    sdkToken,
+                    sdkProviderInfo.getApplicationInfo(),
+                    sdkProviderInfo.getSdkName(),
+                    sdkProviderInfo.getSdkProviderClassName(),
+                    sdkDataInfo.getCeDataDir(),
+                    sdkDataInfo.getDeDataDir(),
+                    params,
+                    link);
+
+            onSdkLoaded(callingInfo, sdkProviderInfo.getApplicationInfo().uid);
         } catch (RemoteException e) {
             String errorMsg = "Failed to load code";
             Log.w(TAG, errorMsg, e);
@@ -463,13 +474,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private void onSdkLoaded(int appUid, int sdkUid) {
+    private void onSdkLoaded(CallingInfo callingInfo, int sdkUid) {
         synchronized (mLock) {
-            final HashSet<Integer> sdkUids = mAppLoadedSdkUids.get(appUid);
+            final HashSet<Integer> sdkUids = mSandboxLoadedSdkUids.get(callingInfo);
             if (sdkUids != null) {
                 sdkUids.add(sdkUid);
             } else {
-                mAppLoadedSdkUids.put(appUid, new HashSet<>(Collections.singletonList(sdkUid)));
+                mSandboxLoadedSdkUids.put(
+                        callingInfo, new HashSet<>(Collections.singletonList(sdkUid))
+                );
             }
         }
     }
@@ -494,9 +507,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
         String componentPackageName = component.getPackageName();
         if (componentPackageName != null) {
-            // TODO(b/225327125): Allowlist AdServices.
-            if (!componentPackageName.equals(
-                    WebViewUpdateService.getCurrentWebViewPackageName())) {
+            if (!componentPackageName.equals(WebViewUpdateService.getCurrentWebViewPackageName())
+                    && !componentPackageName.equals(getAdServicesPackageName())) {
                 throw new SecurityException(errorMsg + "component package name "
                         + componentPackageName + " is not allowlisted.");
             }
@@ -506,32 +518,38 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private SdkProviderInfo createSdkProviderInfo(String sharedLibraryName, int callingUid) {
+    @Override
+    public int handleShellCommand(ParcelFileDescriptor in, ParcelFileDescriptor out,
+            ParcelFileDescriptor err, String[] args) {
+        return new SdkSandboxShellCommand(this, mContext).exec(this,
+                in.getFileDescriptor(), out.getFileDescriptor(), err.getFileDescriptor(), args);
+    }
+
+    private SdkProviderInfo createSdkProviderInfo(
+            String sharedLibraryName, String callingPackageName) {
         try {
             PackageManager pm = mContext.getPackageManager();
-            String[] packageNames = pm.getPackagesForUid(callingUid);
-            for (int i = 0; i < packageNames.length; i++) {
-                ApplicationInfo info = pm.getApplicationInfo(
-                        packageNames[i], PackageManager.GET_SHARED_LIBRARY_FILES);
-                List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
-                for (int j = 0; j < sharedLibraries.size(); j++) {
-                    SharedLibraryInfo sharedLibrary = sharedLibraries.get(j);
-                    if (sharedLibrary.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
-                        continue;
-                    }
-
-                    if (!sharedLibraryName.equals(sharedLibrary.getName())) {
-                        continue;
-                    }
-
-                    String sdkProviderClassName = pm.getProperty(PROPERTY_SDK_PROVIDER_CLASS_NAME,
-                            sharedLibrary.getDeclaringPackage().getPackageName()).getString();
-
-                    ApplicationInfo applicationInfo = pm.getPackageInfo(
-                            sharedLibrary.getDeclaringPackage(),
-                            PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES).applicationInfo;
-                    return new SdkProviderInfo(applicationInfo, sdkProviderClassName);
+            ApplicationInfo info = pm.getApplicationInfo(
+                    callingPackageName, PackageManager.GET_SHARED_LIBRARY_FILES);
+            List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
+            for (int j = 0; j < sharedLibraries.size(); j++) {
+                SharedLibraryInfo sharedLibrary = sharedLibraries.get(j);
+                if (sharedLibrary.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
+                    continue;
                 }
+
+                if (!sharedLibraryName.equals(sharedLibrary.getName())) {
+                    continue;
+                }
+
+                String sdkProviderClassName = pm.getProperty(PROPERTY_SDK_PROVIDER_CLASS_NAME,
+                        sharedLibrary.getDeclaringPackage().getPackageName()).getString();
+
+                ApplicationInfo applicationInfo = pm.getPackageInfo(
+                        sharedLibrary.getDeclaringPackage(),
+                        PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES).applicationInfo;
+                return new SdkProviderInfo(
+                        applicationInfo, sharedLibraryName, sdkProviderClassName);
             }
             return null;
         } catch (PackageManager.NameNotFoundException ignored) {
@@ -539,26 +557,62 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    private String resolveAdServicesPackage() {
+        PackageManager pm = mContext.getPackageManager();
+        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
+        List<ResolveInfo> resolveInfos =
+                pm.queryIntentServicesAsUser(
+                        serviceIntent,
+                        PackageManager.GET_SERVICES
+                                | PackageManager.MATCH_SYSTEM_ONLY
+                                | PackageManager.MATCH_DIRECT_BOOT_AWARE
+                                | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
+                        UserHandle.SYSTEM);
+        if (resolveInfos == null || resolveInfos.size() == 0) {
+            Log.e(TAG, "AdServices package could not be resolved");
+        } else if (resolveInfos.size() > 1) {
+            Log.e(TAG, "More than one service matched intent " + serviceIntent.getAction());
+        } else {
+            return resolveInfos.get(0).serviceInfo.packageName;
+        }
+        return null;
+    }
+
+    @VisibleForTesting
+    String getAdServicesPackageName() {
+        return mAdServicesPackageName;
+    }
+
     @ThreadSafe
     private static class SdkTokenManager {
-        // Keep track of codeToken for each unique pair of {callingUid, name}
+        // Keep track of codeToken for each unique pair of {callingUid, sdkName}
         @GuardedBy("mSdkTokens")
-        final ArrayMap<Pair<Integer, String>, IBinder> mSdkTokens = new ArrayMap<>();
+        final ArrayMap<Pair<CallingInfo, String>, IBinder> mSdkTokens = new ArrayMap<>();
         @GuardedBy("mSdkTokens")
-        final ArrayMap<IBinder, Pair<Integer, String>> mReverseSdkTokens = new ArrayMap<>();
+        final ArrayMap<IBinder, Pair<CallingInfo, String>> mReverseSdkTokens =
+                new ArrayMap<>();
 
         /**
          * For the given {callingUid, name} pair, create unique {@code sdkToken} or
          * return existing one.
          */
-        public IBinder createOrGetSdkToken(int callingUid, String name) {
-            final Pair<Integer, String> pair = Pair.create(callingUid, name);
+        public IBinder createOrGetSdkToken(CallingInfo callingInfo, String sdkName) {
+            final Pair<CallingInfo, String> pair = Pair.create(callingInfo, sdkName);
             synchronized (mSdkTokens) {
-                if (!mSdkTokens.containsKey(pair)) {
-                    final IBinder sdkToken = new Binder();
-                    mSdkTokens.put(pair, sdkToken);
-                    mReverseSdkTokens.put(sdkToken, pair);
+                if (mSdkTokens.containsKey(pair)) {
+                    return mSdkTokens.get(pair);
                 }
+                final IBinder sdkToken = new Binder();
+                mSdkTokens.put(pair, sdkToken);
+                mReverseSdkTokens.put(sdkToken, pair);
+                return sdkToken;
+            }
+        }
+
+        @Nullable
+        public IBinder getSdkToken(CallingInfo callingInfo, String sdkName) {
+            final Pair<CallingInfo, String> pair = Pair.create(callingInfo, sdkName);
+            synchronized (mSdkTokens) {
                 return mSdkTokens.get(pair);
             }
         }
@@ -577,8 +631,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 } else {
                     writer.print("mSdkTokens size: ");
                     writer.println(mSdkTokens.size());
-                    for (Pair<Integer, String> pair : mSdkTokens.keySet()) {
-                        writer.printf("callingUid: %s, name: %s", pair.first, pair.second);
+                    for (Pair<CallingInfo, String> pair : mSdkTokens.keySet()) {
+                        writer.printf("caller: %s, sdkName: %s",
+                                pair.first,
+                                pair.second);
                         writer.println();
                     }
                 }
@@ -606,8 +662,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * We maintain a link for each unique {app, remoteCode} pair, which is identified with
      * {@code codeToken}.
      */
-    private class AppAndRemoteSdkLink extends
-            ISdkSandboxToSdkSandboxManagerCallback.Stub {
+    private class AppAndRemoteSdkLink extends ISdkSandboxToSdkSandboxManagerCallback.Stub {
         // The codeToken for which this channel has been created
         private final IBinder mSdkToken;
         private final IRemoteSdkCallback mManagerToAppCallback;
@@ -633,7 +688,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onLoadSdkError(int errorCode, String errorMsg) {
-            sendLoadSdkErrorToApp(errorCode, errorMsg);
+            sendLoadSdkErrorToApp(toSdkSandboxManagerLoadSdkErrorCode(errorCode), errorMsg);
         }
 
         @Override
@@ -644,12 +699,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onSurfacePackageError(int errorCode, String errorMsg) {
-            sendSurfacePackageErrorToApp(errorCode, errorMsg);
+            sendSurfacePackageErrorToApp(
+                    SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR, errorMsg);
         }
 
         private void sendLoadSdkSuccessToApp(Bundle params) {
             try {
-                mManagerToAppCallback.onLoadSdkSuccess(mSdkToken, params);
+                mManagerToAppCallback.onLoadSdkSuccess(params);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
             }
@@ -686,14 +742,34 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        void requestSurfacePackageToCode(IBinder hostToken, int displayId, Bundle params) {
+        void requestSurfacePackageToSdk(IBinder hostToken, int displayId,
+                int width, int height, Bundle params) {
             try {
                 synchronized (this) {
-                    mManagerToCodeCallback.onSurfacePackageRequested(hostToken, displayId, params);
+                    mManagerToCodeCallback.onSurfacePackageRequested(hostToken, displayId,
+                            width, height, params);
                 }
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to requestSurfacePackage", e);
                 // TODO(b/204991850): send request surface package error back to app
+            }
+        }
+
+        @SdkSandboxManager.LoadSdkErrorCode
+        private int toSdkSandboxManagerLoadSdkErrorCode(int sdkSandboxErrorCode) {
+            switch (sdkSandboxErrorCode) {
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_ALREADY_LOADED:
+                    return SdkSandboxManager.LOAD_SDK_ALREADY_LOADED;
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_NOT_FOUND:
+                    return SdkSandboxManager.LOAD_SDK_NOT_FOUND;
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_PROVIDER_INIT_ERROR:
+                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+                case ISdkSandboxToSdkSandboxManagerCallback.LOAD_SDK_INSTANTIATION_ERROR:
+                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
+                default:
+                    Log.e(TAG, "Error code" + sdkSandboxErrorCode
+                            + "has no mapping to the SdkSandboxManager error codes");
+                    return SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
             }
         }
     }
@@ -703,59 +779,68 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return mLocalManager;
     }
 
-    private void notifyInstrumentationStarted(
-            @NonNull String clientAppPackageName, int clientAppUid) {
-        Log.d(TAG, "notifyInstrumentationStarted: clientApp = " + clientAppPackageName
-                + " clientAppUid = " + clientAppUid);
+    private void notifyInstrumentationStarted(CallingInfo callingInfo) {
+        Log.d(TAG, "notifyInstrumentationStarted: clientApp = " + callingInfo.getPackageName()
+                + " clientAppUid = " + callingInfo.getUid());
         synchronized (mLock) {
-            mServiceProvider.unbindService(clientAppUid);
-            int sdkSandboxUid = Process.toSdkSandboxUid(clientAppUid);
+            mServiceProvider.unbindService(callingInfo);
+            int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
             mActivityManager.killUid(sdkSandboxUid, "instrumentation started");
-            mRunningInstrumentations.add(clientAppUid);
+            mRunningInstrumentations.add(callingInfo);
         }
         // TODO(b/223386213): we need to check if there is reconcileSdkData task already enqueued
         //  because the instrumented client app was just installed.
-        reconcileSdkData(clientAppPackageName, clientAppUid, /* forInstrumentation= */ true);
+        mSdkSandboxStorageManager.notifyInstrumentationStarted(callingInfo);
     }
 
-    private void notifyInstrumentationFinished(
-            @NonNull String clientAppPackageName, int clientAppUid) {
-        Log.d(TAG, "notifyInstrumentationFinished: clientApp = " + clientAppPackageName
-                + " clientAppUid = " + clientAppUid);
+    private void notifyInstrumentationFinished(CallingInfo callingInfo) {
+        Log.d(TAG, "notifyInstrumentationFinished: clientApp = " + callingInfo.getPackageName()
+                + " clientAppUid = " + callingInfo.getUid());
         synchronized (mLock) {
-            mRunningInstrumentations.remove(clientAppUid);
+            mRunningInstrumentations.remove(callingInfo);
         }
     }
 
     /** @hide */
     public static class Lifecycle extends SystemService {
+        private final SdkSandboxManagerService mService;
+
         public Lifecycle(Context context) {
             super(context);
+            SdkSandboxServiceProvider provider = new SdkSandboxServiceProviderImpl(getContext());
+            mService = new SdkSandboxManagerService(getContext(), provider);
         }
 
         @Override
         public void onStart() {
-            SdkSandboxServiceProvider provider =
-                    new SdkSandboxServiceProviderImpl(getContext());
-            SdkSandboxManagerService service =
-                    new SdkSandboxManagerService(getContext(), provider);
-            publishBinderService(SDK_SANDBOX_SERVICE, service);
+            publishBinderService(SDK_SANDBOX_SERVICE, mService);
             LocalManagerRegistry.addManager(
-                    SdkSandboxManagerLocal.class, service.getLocalManager());
+                    SdkSandboxManagerLocal.class, mService.getLocalManager());
+        }
+
+        @Override
+        public void onUserUnlocking(TargetUser user) {
+            final int userId = user.getUserHandle().getIdentifier();
+            mService.onUserUnlocking(userId);
         }
     }
 
-    /**
-     * Class which retrieves and stores the sdkProviderClassName and ApplicationInfo
-     */
-    private class SdkProviderInfo {
+    /** Class which retrieves and stores the sdkName, sdkProviderClassName, and ApplicationInfo */
+    private static class SdkProviderInfo {
 
-        private ApplicationInfo mApplicationInfo;
-        private String mSdkProviderClassName;
+        private final ApplicationInfo mApplicationInfo;
+        private final String mSdkName;
+        private final String mSdkProviderClassName;
 
-        private SdkProviderInfo(ApplicationInfo applicationInfo, String sdkProviderClassName) {
+        private SdkProviderInfo(ApplicationInfo applicationInfo, String sdkName,
+                String sdkProviderClassName) {
             mApplicationInfo = applicationInfo;
+            mSdkName = sdkName;
             mSdkProviderClassName = sdkProviderClassName;
+        }
+
+        public String getSdkName() {
+            return mSdkName;
         }
 
         public String getSdkProviderClassName() {
@@ -780,14 +865,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public void notifyInstrumentationStarted(
                 @NonNull String clientAppPackageName, int clientAppUid) {
             SdkSandboxManagerService.this.notifyInstrumentationStarted(
-                    clientAppPackageName, clientAppUid);
+                    new CallingInfo(clientAppUid, clientAppPackageName));
         }
 
         @Override
         public void notifyInstrumentationFinished(
                 @NonNull String clientAppPackageName, int clientAppUid) {
             SdkSandboxManagerService.this.notifyInstrumentationFinished(
-                    clientAppPackageName, clientAppUid);
+                    new CallingInfo(clientAppUid, clientAppPackageName));
         }
 
         @Override

@@ -50,8 +50,8 @@ public final class MaintenanceJobService extends JobService {
         final JobInfo job = new JobInfo.Builder(MAINTENANCE_JOB_ID,
                 new ComponentName(context, MaintenanceJobService.class))
                 .setRequiresCharging(true)
-                .setPeriodic(AdServicesConfig.getMaintenanceJobPeriodMs(),
-                        AdServicesConfig.getMaintenanceJobFlexMs())
+                .setPeriodic(FlagsFactory.getFlags().getMaintenanceJobPeriodMs(),
+                        FlagsFactory.getFlags().getMaintenanceJobFlexMs())
                 .build();
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling maintenance job ...");
