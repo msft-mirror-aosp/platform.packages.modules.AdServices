@@ -35,13 +35,14 @@ filegroup {
     ],
 }
 
-java_library {
+android_library {
     name: "adservices-service-core",
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     srcs: [
         ":adservices-service-core-sources", ":statslog-adservices-java-gen",
     ],
+    manifest: "AndroidManifest.xml",
     plugins: [
         "androidx.room_room-compiler-plugin",
         "auto_value_plugin",
