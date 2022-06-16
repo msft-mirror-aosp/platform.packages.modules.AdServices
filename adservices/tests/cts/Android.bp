@@ -28,7 +28,9 @@ android_test {
     test_suites: [
         "cts",
         "mts-adservices",
+        "general-tests",
     ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
     static_libs: [
         "androidx.test.rules",
         "androidx.test.ext.truth",
@@ -36,7 +38,12 @@ android_test {
         "ctstestrunner-axt",
         "cts-wm-util",
         "framework-adservices.impl",
+        "adservices-clients",
+        "adservices-test-fixtures",
         "testng",
+        "adservices-test-fixtures",
+        "adservices-clients",
+        "adservices-service-core",
     ],
     sdk_version: "module_current",
 }
