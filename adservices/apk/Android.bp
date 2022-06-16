@@ -16,6 +16,13 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+filegroup {
+    name: "adservicesapk-filegroup",
+    srcs: [
+        "java/**/*.java",
+    ],
+}
+
 android_app_certificate {
     name: "com.android.adservices.api.certificate",
     certificate: "com.android.adservices.api",
@@ -36,10 +43,40 @@ android_app {
     ],
     static_libs: [
         "adservices-service-core",
+        "androidx.preference_preference",
+        "androidx.fragment_fragment",
+        "androidx.recyclerview_recyclerview",
+        // TODO(b/230653497): Try to remove this.
+        "androidx.room_room-runtime",
+        "tflite_support_classifiers_java",
     ],
-    // TODO(b/208705888): Renable tflite.
-    // jni_libs: ["libtensorflowlite_jni"],
-    use_embedded_native_libs: true,
+    resource_dirs: ["res"],
+    aaptflags: [
+        // Don't compress *.tflite files. Compressed models cannot be loaded on device.
+        "-0 .tflite",
+    ],
+     optimize: {
+        proguard_flags_files: ["proguard.flags"],
+     },
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
     apex_available: ["com.android.adservices"],
+}
+
+// Assets needs to be bundled via this android_library since our classes in service-core needs to
+// load assets.
+android_library {
+    name: "adservices-assets",
+    sdk_version: "module_current",
+    asset_dirs: [
+        "assets",
+    ],
+    aaptflags: [
+        // Don't compress *.tflite files. Compressed models cannot be loaded on device.
+        "-0 .tflite",
+    ],
+    // Must use EmptyManifest.xml since "adservices-assets" will also be used by the
+    // service-core tests. If we use the normal "AndroidManifest.xml", we will redeclare permissions
+    // in the tests
+    // See b/228270294 for the error about duplicated permissions.
+    manifest: "EmptyManifest.xml",
 }
