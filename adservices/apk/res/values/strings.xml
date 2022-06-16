@@ -53,8 +53,6 @@
     <!-- UI strings -->
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
-    <!-- Key for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_privacy_sandbox_beta_switch_key">privacy_sandbox_beta_switch</string>
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_switch_title">Privacy Sandbox beta</string>
     <!-- Summary of Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
@@ -85,4 +83,7 @@
 
     <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_reset_topics_title">Reset all interests</string>
+
+    <!-- Text for the button to unblock a topic. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_unblock_topic_title">Unblock</string>
 </resources>

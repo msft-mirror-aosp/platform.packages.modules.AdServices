@@ -149,21 +149,35 @@
             "id": "T1",
             "attributionDestination": "android-app://example2.com",
             "adTechDomain": "https://example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
             "triggerTime": 8640000002,
-            "registrant": "android-app://remove.me"
+            "registrant": "android-app://remove.me",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
           },
           {
             "id": "T2",
             "attributionDestination": "android-app://example2.com",
             "adTechDomain": "https://example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
             "triggerTime": 8640000002,
-            "registrant": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
           }
         ],
         "event_reports": [
@@ -203,11 +217,18 @@
             "id": "T2",
             "attributionDestination": "android-app://example2.com",
             "adTechDomain": "https://example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
             "triggerTime": 8640000002,
-            "registrant": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
           }
         ],
         "event_reports": [
@@ -251,11 +272,18 @@
             "id": "T1",
             "attributionDestination": "android-app://example2.com",
             "adTechDomain": "https://example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
             "triggerTime": 8640000002,
-            "registrant": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
           }
         ],
         "event_reports": [
@@ -319,11 +347,18 @@
             "id": "T1",
             "attributionDestination": "android-app://example2.com",
             "adTechDomain": "https://example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
             "triggerTime": 8640000002,
-            "registrant": "android-app://dont.remove.me"
+            "registrant": "android-app://dont.remove.me",
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ]
           }
         ],
         "event_reports": [

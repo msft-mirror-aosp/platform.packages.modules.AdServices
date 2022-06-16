@@ -46,9 +46,7 @@ public interface IMeasurementDao {
             @NonNull Uri adTechDomain,
             @NonNull Uri registrant,
             @NonNull Long triggerTime,
-            @NonNull Long triggerData,
-            @Nullable Long dedupKey,
-            @NonNull Long priority,
+            @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters)
@@ -116,6 +114,13 @@ public interface IMeasurementDao {
      * @param source the {@link Source} object.
      */
     void updateSourceDedupKeys(Source source) throws DatastoreException;
+
+    /**
+     * Updates the value of aggregate contributions for the corresponding {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateContributions(Source source) throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.

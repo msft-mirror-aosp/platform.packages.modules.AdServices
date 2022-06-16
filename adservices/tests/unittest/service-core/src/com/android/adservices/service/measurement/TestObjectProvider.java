@@ -34,7 +34,6 @@ import org.mockito.stubbing.Answer;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 class TestObjectProvider {
@@ -67,24 +66,26 @@ class TestObjectProvider {
             MeasurementImpl measurementImpl = spy(new MeasurementImpl(
                     new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher));
             // Create impression noise with 100% probability
-            doAnswer((Answer<List<EventReport>>) invocation -> {
-                Source source = (Source) invocation.getArgument(0);
-                source.setAttributionMode(Source.AttributionMode.FALSELY);
-                return Collections.singletonList(
-                        new EventReport.Builder()
-                                .setSourceId(source.getEventId())
-                                .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
-                                .setTriggerData(0)
-                                .setAttributionDestination(source.getAttributionDestination())
-                                .setAdTechDomain(source.getAdTechDomain())
-                                .setTriggerTime(0)
-                                .setTriggerPriority(0)
-                                .setTriggerDedupKey(null)
-                                .setSourceType(source.getSourceType())
-                                .setStatus(EventReport.Status.PENDING)
-                                .build()
-                );
-            }).when(measurementImpl).getSourceEventReports(any());
+            Answer<?> answerSourceEventReports =
+                    invocation -> {
+                        Source source = invocation.getArgument(0);
+                        source.setAttributionMode(Source.AttributionMode.FALSELY);
+                        return Collections.singletonList(
+                                new EventReport.Builder()
+                                        .setSourceId(source.getEventId())
+                                        .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
+                                        .setTriggerData(0)
+                                        .setAttributionDestination(
+                                                source.getAttributionDestination())
+                                        .setAdTechDomain(source.getAdTechDomain())
+                                        .setTriggerTime(0)
+                                        .setTriggerPriority(0L)
+                                        .setTriggerDedupKey(null)
+                                        .setSourceType(source.getSourceType())
+                                        .setStatus(EventReport.Status.PENDING)
+                                        .build());
+                    };
+            doAnswer(answerSourceEventReports).when(measurementImpl).getSourceEventReports(any());
             return measurementImpl;
         }
 

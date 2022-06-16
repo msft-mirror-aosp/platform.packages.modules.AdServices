@@ -70,6 +70,7 @@ public class Source {
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;
+    private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
 
     @IntDef(value = {
@@ -97,8 +98,18 @@ public class Source {
     }
 
     public enum SourceType {
-        EVENT,
-        NAVIGATION,
+        EVENT("event"),
+        NAVIGATION("navigation");
+
+        private final String mValue;
+
+        SourceType(String value) {
+            this.mValue = value;
+        }
+
+        public String getValue() {
+            return mValue;
+        }
     }
 
     private Source() {
@@ -254,6 +265,7 @@ public class Source {
                 && mAttributionMode == source.mAttributionMode
                 && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
+                && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(mAggregatableAttributionSource,
                 source.mAggregatableAttributionSource);
     }
@@ -262,7 +274,8 @@ public class Source {
     public int hashCode() {
         return Objects.hash(mId, mPublisher, mAttributionDestination, mAdTechDomain, mPriority,
                 mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys,
-                mAggregateFilterData, mAggregateSource, mAggregatableAttributionSource);
+                mAggregateFilterData, mAggregateSource, mAggregateContributions,
+                mAggregatableAttributionSource);
     }
 
     /**
@@ -462,6 +475,13 @@ public class Source {
     }
 
     /**
+     * Returns the current sum of values the source contributed to aggregatable reports.
+     */
+    public int getAggregateContributions() {
+        return mAggregateContributions;
+    }
+
+    /**
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
@@ -481,6 +501,13 @@ public class Source {
      */
     public void setStatus(@Status int status) {
         mStatus = status;
+    }
+
+    /**
+     * Set the aggregate contributions value.
+     */
+    public void setAggregateContributions(int aggregateContributions) {
+        mAggregateContributions = aggregateContributions;
     }
 
     /**
@@ -663,6 +690,14 @@ public class Source {
          */
         public Builder setAggregateSource(String aggregateSource) {
             mBuilding.mAggregateSource = aggregateSource;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregateContributions()}
+         */
+        public Builder setAggregateContributions(int aggregateContributions) {
+            mBuilding.mAggregateContributions = aggregateContributions;
             return this;
         }
 

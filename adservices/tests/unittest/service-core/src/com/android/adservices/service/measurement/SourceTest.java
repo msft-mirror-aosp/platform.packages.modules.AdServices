@@ -86,6 +86,7 @@ public class SourceTest {
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateFilterData(aggregateFilterData.toString())
                         .setAggregateSource(aggregateSource.toString())
+                        .setAggregateContributions(50001)
                         .build(),
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -102,6 +103,7 @@ public class SourceTest {
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateFilterData(aggregateFilterData.toString())
                         .setAggregateSource(aggregateSource.toString())
+                        .setAggregateContributions(50001)
                         .build());
     }
 
@@ -167,6 +169,9 @@ public class SourceTest {
         assertNotEquals(
                 new Source.Builder().setAggregateSource(aggregateSource1.toString()).build(),
                 new Source.Builder().setAggregateSource(aggregateSource2.toString()).build());
+        assertNotEquals(
+                new Source.Builder().setAggregateContributions(4000).build(),
+                new Source.Builder().setAggregateContributions(4055).build());
     }
 
     @Test

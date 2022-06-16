@@ -68,15 +68,13 @@ class MeasurementDao implements IMeasurementDao {
             @NonNull Uri adTechDomain,
             @NonNull Uri registrant,
             @NonNull Long triggerTime,
-            @NonNull Long triggerData,
-            @Nullable Long dedupKey,
-            @NonNull Long priority,
+            @NonNull String eventTriggers,
             @Nullable String aggregateTriggerData,
             @Nullable String aggregateValues,
             @Nullable String filters)
             throws DatastoreException {
-        validateNonNull(attributionDestination, adTechDomain, registrant, triggerTime, triggerData,
-                priority);
+        validateNonNull(
+                attributionDestination, adTechDomain, registrant, triggerTime, eventTriggers);
         validateUri(attributionDestination, adTechDomain, registrant);
 
         ContentValues values = new ContentValues();
@@ -84,9 +82,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 attributionDestination.toString());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, triggerTime);
-        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA, triggerData);
-        values.put(MeasurementTables.TriggerContract.DEDUP_KEY, dedupKey);
-        values.put(MeasurementTables.TriggerContract.PRIORITY, priority);
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN, adTechDomain.toString());
         values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
@@ -181,8 +177,7 @@ class MeasurementDao implements IMeasurementDao {
             @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
             @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
             @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCoolDownWindow,
-            @Source.AttributionMode int attributionMode,
+            @NonNull Long installCoolDownWindow, @Source.AttributionMode int attributionMode,
             @Nullable String aggregateSource, @Nullable String aggregateFilterData)
             throws DatastoreException {
         validateNonNull(sourceEventId, publisher, attributionDestination, adTechDomain,
@@ -209,6 +204,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
         values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -275,6 +271,20 @@ class MeasurementDao implements IMeasurementDao {
                 );
         if (rows != sources.size()) {
             throw new DatastoreException("Source status update failed.");
+        }
+    }
+
+    @Override
+    public void updateSourceAggregateContributions(Source source) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
+                source.getAggregateContributions());
+        long rows = mSQLTransaction.getDatabase()
+                .update(MeasurementTables.SourceContract.TABLE, values,
+                        MeasurementTables.SourceContract.ID + " = ?",
+                        new String[]{source.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Source aggregate contributions update failed.");
         }
     }
 
