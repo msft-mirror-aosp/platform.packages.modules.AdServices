@@ -16,13 +16,16 @@
 
 package com.android.adservices.ui.settings.viewmodels;
 
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.app.Application;
+import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -59,7 +62,9 @@ public class ViewModelTest {
      */
     @Test
     public void testGetConsentReturnsTrue() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(PackageManager.class));
 
         assertTrue(mMainViewModel.getConsent().getValue());
     }
@@ -69,34 +74,36 @@ public class ViewModelTest {
      */
     @Test
     public void testGetConsentReturnsFalse() {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(mConsentManager)
+                .getConsent(any(PackageManager.class));
 
         assertFalse(mMainViewModel.getConsent().getValue());
     }
 
-    /**
-     * Test if setConsent enables consent with a call to {@link ConsentManager}.
-     */
+    /** Test if setConsent enables consent with a call to {@link ConsentManager}. */
     @Test
-    public void testSetConsentTrue() throws IOException {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+    public void testSetConsentTrue() {
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(PackageManager.class));
         mMainViewModel.setConsent(true);
 
-        verify(mConsentManager, times(1)).enable();
+        verify(mConsentManager, times(1)).enable(any(PackageManager.class));
     }
 
-    /**
-     * Test if setConsent revokes consent with a call to {@link ConsentManager}.
-     */
+    /** Test if setConsent revokes consent with a call to {@link ConsentManager}. */
     @Test
-    public void testSetConsentFalse() throws IOException {
+    public void testSetConsentFalse() {
         // It does not matter what the ConsentManager returns because it will be overwritten
         // immediately, and the case where setConsent is called before getConsent should not happen
         // in practice.
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(mConsentManager)
+                .getConsent(any(PackageManager.class));
         mMainViewModel.setConsent(false);
 
-        verify(mConsentManager, times(1)).disable();
+        verify(mConsentManager, times(1)).disable(any(PackageManager.class));
     }
 }
 
