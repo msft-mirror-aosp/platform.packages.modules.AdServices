@@ -22,6 +22,9 @@
 
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
+    <!-- Permissions required for showing notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Permissions required for reading device configs -->
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
 
@@ -87,7 +90,7 @@
         <service android:name="com.android.adservices.adselection.AdSelectionService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
-            <intent-filter>
+            <intent-filter android:priority="1">
                 <action android:name="android.adservices.adselection.AD_SELECTION_SERVICE"/>
             </intent-filter>
         </service>
@@ -96,7 +99,7 @@
                      "com.android.adservices.customaudience.CustomAudienceService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
-            <intent-filter>
+            <intent-filter android:priority="1">
                 <action android:name=
                             "android.adservices.customaudience.CUSTOM_AUDIENCE_SERVICE"/>
             </intent-filter>
@@ -105,7 +108,7 @@
         <service android:name="com.android.adservices.topics.TopicsService"
                  android:exported="true"
                  android:visibleToInstantApps="false">
-            <intent-filter>
+            <intent-filter android:priority="1">
                 <action android:name="android.adservices.TOPICS_SERVICE"/>
             </intent-filter>
         </service>
@@ -114,7 +117,7 @@
             android:exported="true"
             android:visibleToInstantApps="false"
             >
-            <intent-filter>
+            <intent-filter android:priority="1">
                 <action android:name="android.adservices.MEASUREMENT_SERVICE" />
             </intent-filter>
         </service>
@@ -123,7 +126,7 @@
                  android:exported="true"
                  android:visibleToInstantApps="false"
              >
-            <intent-filter>
+            <intent-filter android:priority="1">
                 <action android:name="android.adservices.AD_SERVICES_COMMON_SERVICE"/>
             </intent-filter>
         </service>
@@ -142,7 +145,7 @@
         <activity
             android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
             android:exported="true">
-            <intent-filter>
+            <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.SETTINGS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
