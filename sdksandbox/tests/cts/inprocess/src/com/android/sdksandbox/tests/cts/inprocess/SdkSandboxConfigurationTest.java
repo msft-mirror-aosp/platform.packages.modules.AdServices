@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.PackageInfoFlags;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.IBinder;
@@ -79,6 +80,20 @@ public class SdkSandboxConfigurationTest {
         assertThat(ctx).contains("u:r:sdk_sandbox");
     }
 
+    /** Tests that sdk sandbox SDK minimum and target versions are correct. */
+    @Test
+    public void testCorrectSdkVersion() throws Exception {
+        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final PackageManager pm = ctx.getPackageManager();
+        final PackageInfo info = pm.getPackageInfo(ctx.getPackageName(), PackageInfoFlags.of(0));
+
+        int minSdkVersion = info.applicationInfo.minSdkVersion;
+        assertThat(minSdkVersion).isEqualTo(33);
+
+        int targetSdkVersion = info.applicationInfo.targetSdkVersion;
+        assertThat(targetSdkVersion).isEqualTo(33);
+    }
+
     /**
      * Tests that client app is visible to the sdk sandbox.
      */
@@ -86,7 +101,7 @@ public class SdkSandboxConfigurationTest {
     public void testClientAppIsVisibleToSdkSandbox() throws Exception {
         final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final PackageManager pm = ctx.getPackageManager();
-        final PackageInfo info = pm.getPackageInfo(TEST_PKG, 0);
+        final PackageInfo info = pm.getPackageInfo(TEST_PKG, PackageInfoFlags.of(0));
         assertThat(info.applicationInfo.uid).isEqualTo(
                 Process.getAppUidForSdkSandboxUid(Process.myUid()));
     }
