@@ -25,8 +25,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.RemoteException;
+import android.util.ArrayMap;
 import android.util.Log;
-import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.sdksandbox.ISdkSandboxService;
@@ -47,6 +47,7 @@ import javax.annotation.concurrent.ThreadSafe;
 class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
 
     private static final String TAG = "SdkSandboxManager";
+    private static final String SANDBOX_PROCESS_NAME_SUFFIX = "_sdk_sandbox";
 
     private final Object mLock = new Object();
 
@@ -54,26 +55,24 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     private final ActivityManagerLocal mActivityManagerLocal;
 
     @GuardedBy("mLock")
-    private final SparseArray<SdkSandboxConnection> mAppSdkSandboxConnections =
-            new SparseArray<>();
+    private final ArrayMap<CallingInfo, SdkSandboxConnection> mAppSdkSandboxConnections =
+            new ArrayMap<>();
 
     SdkSandboxServiceProviderImpl(Context context) {
         mContext = context;
         mActivityManagerLocal = LocalManagerRegistry.getManager(ActivityManagerLocal.class);
     }
 
-    // TODO(b/214240264): Write E2E tests for checking binding from different apps
     @Override
     @Nullable
-    public void bindService(int appUid, String appPackageName,
-            ServiceConnection serviceConnection) {
+    public void bindService(CallingInfo callingInfo, ServiceConnection serviceConnection) {
         synchronized (mLock) {
-            if (getBoundServiceForApp(appUid) != null) {
-                Log.i(TAG, "SDK sandbox for " + appUid + " is already bound");
+            if (getBoundServiceForApp(callingInfo) != null) {
+                Log.i(TAG, "SDK sandbox for " + callingInfo + " is already bound");
                 return;
             }
 
-            Log.i(TAG, "Binding sdk sandbox for " + appUid);
+            Log.i(TAG, "Binding sdk sandbox for " + callingInfo);
 
             ComponentName componentName = getServiceComponentName();
             if (componentName == null) {
@@ -86,11 +85,13 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             SdkSandboxConnection sdkSandboxConnection =
                     new SdkSandboxConnection(serviceConnection);
 
-            final String processName = "sdk_sandbox_" + appUid;
+            final String callingPackageName = callingInfo.getPackageName();
+            String sandboxProcessName = getProcessName(callingPackageName)
+                    + SANDBOX_PROCESS_NAME_SUFFIX;
             try {
                 boolean bound = mActivityManagerLocal.bindSdkSandboxService(intent,
-                        serviceConnection, appUid, appPackageName, processName,
-                        Context.BIND_AUTO_CREATE);
+                        serviceConnection, callingInfo.getUid(), callingPackageName,
+                        sandboxProcessName, Context.BIND_AUTO_CREATE);
                 if (!bound) {
                     mContext.unbindService(serviceConnection);
                     notifyFailedBinding(serviceConnection);
@@ -100,8 +101,7 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 notifyFailedBinding(serviceConnection);
                 return;
             }
-
-            mAppSdkSandboxConnections.append(appUid, sdkSandboxConnection);
+            mAppSdkSandboxConnections.put(callingInfo, sdkSandboxConnection);
             Log.i(TAG, "Sdk sandbox has been bound");
         }
     }
@@ -120,9 +120,12 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                 writer.print("mAppSdkSandboxConnections size: ");
                 writer.println(mAppSdkSandboxConnections.size());
                 for (int i = 0; i < mAppSdkSandboxConnections.size(); i++) {
-                    writer.printf("Sdk sandbox for UID: %s, isConnected: %s",
-                            mAppSdkSandboxConnections.keyAt(i),
-                            mAppSdkSandboxConnections.valueAt(i).isConnected());
+                    CallingInfo callingInfo = mAppSdkSandboxConnections.keyAt(i);
+                    SdkSandboxConnection sdkSandboxConnection =
+                            mAppSdkSandboxConnections.get(callingInfo);
+                    writer.printf("Sdk sandbox for UID: %s, app package: %s, isConnected: %s",
+                            callingInfo.getUid(), callingInfo.getPackageName(),
+                            Objects.requireNonNull(sdkSandboxConnection).isConnected());
                     writer.println();
                 }
             }
@@ -130,9 +133,9 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
-    public void unbindService(int appUid) {
+    public void unbindService(CallingInfo callingInfo) {
         synchronized (mLock) {
-            SdkSandboxConnection sandbox = getSdkSandboxConnectionLocked(appUid);
+            SdkSandboxConnection sandbox = getSdkSandboxConnectionLocked(callingInfo);
 
             if (sandbox == null) {
                 // Skip, already unbound
@@ -140,17 +143,17 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
             }
 
             mContext.unbindService(sandbox.getServiceConnection());
-            mAppSdkSandboxConnections.delete(appUid);
+            mAppSdkSandboxConnections.remove(callingInfo);
             Log.i(TAG, "Sdk sandbox has been unbound");
         }
     }
 
     @Override
     @Nullable
-    public ISdkSandboxService getBoundServiceForApp(int appUid) {
+    public ISdkSandboxService getBoundServiceForApp(CallingInfo callingInfo) {
         synchronized (mLock) {
-            if (mAppSdkSandboxConnections.contains(appUid)) {
-                return Objects.requireNonNull(mAppSdkSandboxConnections.get(appUid))
+            if (mAppSdkSandboxConnections.containsKey(callingInfo)) {
+                return Objects.requireNonNull(mAppSdkSandboxConnections.get(callingInfo))
                         .getSdkSandboxService();
             }
         }
@@ -158,10 +161,10 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
     }
 
     @Override
-    public void setBoundServiceForApp(int appUid, ISdkSandboxService service) {
+    public void setBoundServiceForApp(CallingInfo callingInfo, ISdkSandboxService service) {
         synchronized (mLock) {
-            if (mAppSdkSandboxConnections.contains(appUid)) {
-                Objects.requireNonNull(mAppSdkSandboxConnections.get(appUid))
+            if (mAppSdkSandboxConnections.containsKey(callingInfo)) {
+                Objects.requireNonNull(mAppSdkSandboxConnections.get(callingInfo))
                         .setSdkSandboxService(service);
             }
         }
@@ -190,8 +193,18 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
 
     @GuardedBy("mLock")
     @Nullable
-    private SdkSandboxConnection getSdkSandboxConnectionLocked(int appUid) {
-        return mAppSdkSandboxConnections.get(appUid);
+    private SdkSandboxConnection getSdkSandboxConnectionLocked(CallingInfo callingInfo) {
+        return mAppSdkSandboxConnections.get(callingInfo);
+    }
+
+    private String getProcessName(String packageName) {
+        try {
+            return mContext.getPackageManager().getApplicationInfo(packageName,
+                    /*flags=*/ 0).processName;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, packageName + " package not found");
+        }
+        return packageName;
     }
 
     private static class SdkSandboxConnection {

@@ -21,6 +21,6 @@ import android.os.IBinder;
 
 /** @hide */
 oneway interface ISdkSandboxManagerToSdkSandboxCallback {
-    void onSurfacePackageRequested(in IBinder hostToken, int displayId, in Bundle extraParams);
+    void onSurfacePackageRequested(in IBinder hostToken, int displayId, in int width, in int height, in Bundle extraParams);
 }
 
