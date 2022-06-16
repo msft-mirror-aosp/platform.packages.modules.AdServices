@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2022 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Title of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesTopics">access AdServices Topics API</string>
+    <!-- Description of an application permission that lets it access AdServices Topics API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesTopics">Allows an application to access AdServices Topics API.</string>
+
+    <!-- Title of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesAttribution">access AdServices Attribution APIs</string>
+    <!-- Description of an application permission that lets it access AdServices Attribution APIs. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesAttribution">Allows an application to access AdServices Attribution APIs.</string>
+
+    <!-- Title of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesCustomAudience">access AdServices Custom Audience API</string>
+    <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
+
+    <!-- Title of an application permission that lets it access AdServices Consent API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesConsent">access AdServices Consent API</string>
+    <!--Description of an application permission that lets it access AdServices Consent API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesConsent">Allows an application to access AdServices Consent API.</string>
+
+    <!-- Title of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_adServicesAccessAdId">Access to Ad ID API</string>
+    <!-- Description of an application permission that lets it access Ad ID API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_adServicesAccessAdId">Allows an application to access Ad ID API.</string>
+
+    <!-- Title of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_adServicesAccessAppSetId">Access to App Set ID API</string>
+    <!-- Description of an application permission that lets it access App Set ID API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_adServicesAccessAppSetId">Allows an application to access App Set ID API.</string>
+
+    <!-- Title of an application permission that lets it access Consent Service API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_adServicesAccessConsentService">Access to Consent Service API</string>
+    <!-- Description of an application permission that lets it access Consent Service API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_adServicesAccessConsentService">Allows an application to access Consent Service API.</string>
+
+    <!-- UI strings -->
+    <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
+    <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_switch_title">Privacy Sandbox beta</string>
+    <!-- Summary of Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_privacy_sandbox_beta_switch_summary">Toggle Privacy Sandbox beta</string>
+
+    <!-- Key for the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_key">topics_preference</string>
+    <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_title">Your general interests</string>
+    <!-- Summary of the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_summary">Manage your general interests</string>
+
+    <!-- Key for the apps preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_key">apps_preference</string>
+    <!-- Text for the apps preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_title">Your apps that generate specific interests</string>
+    <!-- Summary of the apps preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_apps_summary">Manage your apps that generate specific interests</string>
+
+    <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_fragment_title">Manage your general interests for ads</string>
+
+    <!-- Text for the button to block a topic. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_block_topic_title">Block</string>
+
+    <!-- Text for the button to open blocked topics fragment. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_blocked_topics_title">Interests you\'ve blocked</string>
+
+    <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_reset_topics_title">Reset all interests</string>
+
+    <!-- Text for the button to unblock a topic. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_unblock_topic_title">Unblock</string>
+</resources>
