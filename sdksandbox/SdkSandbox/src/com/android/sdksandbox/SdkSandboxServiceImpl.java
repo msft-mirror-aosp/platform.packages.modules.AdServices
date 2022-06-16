@@ -17,7 +17,9 @@
 package com.android.sdksandbox;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -44,15 +46,10 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Implementation of Sdk Sandbox Service. */
+@SuppressLint("NewApi") // TODO(b/227329631): remove this after T SDK is finalized
 public class SdkSandboxServiceImpl extends Service {
 
     private static final String TAG = "SdkSandbox";
-
-    // The options below may be passed in a {@code Bundle} while loading or rendering.
-    // TODO(b/210670819): Encapsulate in a parcelable.
-    public static final String SDK_PROVIDER_KEY = "sdk-provider-class";
-    public static final String WIDTH_KEY = "width";
-    public static final String HEIGHT_KEY = "height";
 
     @GuardedBy("mHeldSdk")
     private final Map<IBinder, SandboxedSdkHolder> mHeldSdk = new ArrayMap<>();
@@ -95,16 +92,30 @@ public class SdkSandboxServiceImpl extends Service {
         mInjector = new Injector(getApplicationContext());
     }
 
-    /**
-     * Loads SDK.
-     */
+    /** Loads SDK. */
     public void loadSdk(
-            IBinder sdkToken, ApplicationInfo applicationInfo, String sdkProviderClassName,
-            Bundle params, ISdkSandboxToSdkSandboxManagerCallback callback) {
+            String callingPackageName,
+            IBinder sdkToken,
+            ApplicationInfo applicationInfo,
+            String sdkName,
+            String sdkProviderClassName,
+            String sdkCeDataDir,
+            String sdkDeDataDir,
+            Bundle params,
+            ISdkSandboxToSdkSandboxManagerCallback callback) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
-            loadSdkInternal(sdkToken, applicationInfo, sdkProviderClassName, params, callback);
+            loadSdkInternal(
+                    callingPackageName,
+                    sdkToken,
+                    applicationInfo,
+                    sdkName,
+                    sdkProviderClassName,
+                    sdkCeDataDir,
+                    sdkDeDataDir,
+                    params,
+                    callback);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
@@ -138,14 +149,16 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
-    private void loadSdkInternal(@NonNull IBinder sdkToken,
+    private void loadSdkInternal(
+            @NonNull String callingPackageName,
+            @NonNull IBinder sdkToken,
             @NonNull ApplicationInfo applicationInfo,
+            @NonNull String sdkName,
             @NonNull String sdkProviderClassName,
+            @Nullable String sdkCeDataDir,
+            @Nullable String sdkDeDataDir,
             @NonNull Bundle params,
             @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
-        if (params.containsKey(SDK_PROVIDER_KEY)) {
-            sdkProviderClassName = params.getString(SDK_PROVIDER_KEY);
-        }
         synchronized (mHeldSdk) {
             if (mHeldSdk.containsKey(sdkToken)) {
                 sendLoadError(callback,
@@ -161,8 +174,14 @@ public class SdkSandboxServiceImpl extends Service {
             Class<?> clz = Class.forName(SandboxedSdkHolder.class.getName(), true, loader);
             SandboxedSdkHolder sandboxedSdkHolder =
                     (SandboxedSdkHolder) clz.getDeclaredConstructor().newInstance();
-            SandboxedSdkContext sandboxedSdkContext = new SandboxedSdkContext(
-                    mInjector.getContext(), applicationInfo);
+            SandboxedSdkContext sandboxedSdkContext =
+                    new SandboxedSdkContext(
+                            mInjector.getContext(),
+                            callingPackageName,
+                            applicationInfo,
+                            sdkName,
+                            sdkCeDataDir,
+                            sdkDeDataDir);
             sandboxedSdkHolder.init(
                     mInjector.getContext(),
                     params,
@@ -202,13 +221,19 @@ public class SdkSandboxServiceImpl extends Service {
 
         @Override
         public void loadSdk(
+                @NonNull String callingPackageName,
                 @NonNull IBinder sdkToken,
                 @NonNull ApplicationInfo applicationInfo,
+                @NonNull String sdkName,
                 @NonNull String sdkProviderClassName,
+                @Nullable String sdkCeDataDir,
+                @Nullable String sdkDeDataDir,
                 @NonNull Bundle params,
                 @NonNull ISdkSandboxToSdkSandboxManagerCallback callback) {
+            Objects.requireNonNull(callingPackageName, "callingPackageName should not be null");
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
+            Objects.requireNonNull(sdkName, "sdkName should not be null");
             Objects.requireNonNull(sdkProviderClassName,
                     "sdkProviderClassName should not be null");
             Objects.requireNonNull(params, "params should not be null");
@@ -217,7 +242,15 @@ public class SdkSandboxServiceImpl extends Service {
                 throw new IllegalArgumentException("sdkProviderClassName must not be empty");
             }
             SdkSandboxServiceImpl.this.loadSdk(
-                    sdkToken, applicationInfo, sdkProviderClassName, params, callback);
+                    callingPackageName,
+                    sdkToken,
+                    applicationInfo,
+                    sdkName,
+                    sdkProviderClassName,
+                    sdkCeDataDir,
+                    sdkDeDataDir,
+                    params,
+                    callback);
         }
     }
 }
