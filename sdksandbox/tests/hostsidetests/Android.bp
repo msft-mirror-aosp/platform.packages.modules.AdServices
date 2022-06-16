@@ -25,15 +25,36 @@ java_test_host {
 
 java_test_host {
     name: "SdkSandboxLifecycleHostTest",
-    srcs: ["src/**/SdkSandboxLifecycleHostTest.java"],
+    srcs: [
+        "src/**/SdkSandboxLifecycleHostTest.java",
+        ":CtsHostsideTestsAppSecurityUtil",
+    ],
     test_config: "SdkSandboxLifecycleHostTest.xml",
     libs: ["tradefed"],
     test_suites: ["general-tests"],
+    static_libs: [
+        "cts-install-lib-host",
+    ],
     data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestApp2",
+        ":SdkSandboxTestSharedApp1",
+        ":SdkSandboxTestSharedApp2",
+    ],
+}
+
+java_test_host {
+    name: "SdkSandboxShellHostTest",
+    srcs: ["src/**/SdkSandboxShellHostTest.java"],
+    test_config: "SdkSandboxShellHostTest.xml",
+    libs: ["tradefed"],
+    test_suites: ["general-tests"],
+    data: [
+        ":TestCodeProvider",
+        ":SdkSandboxTestApp",
+        ":SdkSandboxTestDebuggableApp"
     ],
 }
 
@@ -72,11 +93,63 @@ android_test_helper_app {
 }
 
 android_test_helper_app {
+    name: "SdkSandboxTestDebuggableApp",
+    manifest: "app/SdkSandboxTestDebuggableAppManifest.xml",
+    defaults: ["platform_app_defaults"],
+    platform_apis: true,
+    srcs: [
+        "app/src/**/SdkSandboxTestDebuggableActivity.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "SdkSandboxTestUtils",
+    ],
+}
+
+android_test_helper_app {
+    name: "SdkSandboxTestSharedApp1",
+    manifest: "app/SdkSandboxTestSharedApp1Manifest.xml",
+    srcs: [
+        "app/src/**/SdkSandboxTestSharedActivity.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    test_suites: ["general-tests"],
+    static_libs: [
+        "androidx.core_core",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+    ],
+    platform_apis: true,
+}
+
+android_test_helper_app {
+    name: "SdkSandboxTestSharedApp2",
+    manifest: "app/SdkSandboxTestSharedApp2Manifest.xml",
+    srcs: [
+        "app/src/**/SdkSandboxTestSharedApp2.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    test_suites: ["general-tests"],
+    static_libs: [
+        "androidx.core_core",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+    ],
+    platform_apis: true,
+}
+
+android_test_helper_app {
     name: "TestCodeProvider",
     manifest: "codeprovider/TestCodeProviderManifest.xml",
     defaults: ["platform_app_defaults"],
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     srcs: [
        "codeprovider/src/**/TestSandboxedSdkProvider.java",
        ":framework-sdksandbox-sources",
@@ -87,8 +160,7 @@ android_test_helper_app {
 android_test_helper_app {
     name: "TestCodeProvider2",
     manifest: "codeprovider/TestCodeProvider2Manifest.xml",
-    // TODO(b/215372846): Create our own signing key.
-    certificate: ":cts-keyset-test-b",
+    certificate: ":sdksandbox-test",
     defaults: ["platform_app_defaults"],
     srcs: [
        "codeprovider/src/**/TestSandboxedSdkProvider2.java",
