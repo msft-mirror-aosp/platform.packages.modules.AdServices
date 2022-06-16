@@ -22,9 +22,6 @@ android_app {
     platform_apis: true,
     srcs: [
         "src/**/sdksandboxclient/*.java",
-        ":framework-sdksandbox-sources",
-        ":sdksandbox_aidl",
-        ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.annotation_annotation",
@@ -42,9 +39,6 @@ android_app {
     platform_apis: true,
     srcs: [
         "src/**/sdksandboxclienttwo/*.java",
-        ":framework-sdksandbox-sources",
-        ":sdksandbox_aidl",
-        ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.annotation_annotation",
@@ -54,4 +48,21 @@ android_app {
         "res",
     ],
     manifest: "AndroidManifest_Client2.xml",
+}
+
+android_app {
+    name: "SdkSandboxClientWebView",
+    defaults: ["platform_app_defaults"],
+    platform_apis: true,
+    srcs: [
+        "src/**/sdksandboxclient/*.java",
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+        "androidx.core_core",
+    ],
+    resource_dirs: [
+        "res",
+    ],
+    manifest: "AndroidManifest_WebViewClient.xml",
 }
