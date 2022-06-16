@@ -15,9 +15,17 @@
  */
 package com.android.server.adservices;
 
+import android.adservices.common.AdServicesCommonManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
+import com.android.adservices.LogUtil;
 import com.android.server.SystemService;
 
 /**
@@ -25,26 +33,89 @@ import com.android.server.SystemService;
  */
 public class AdServicesManagerService {
     private static final String TAG = "AdServicesManagerService";
-
     private final Context mContext;
+
+    private final Handler mHandler;
 
     private AdServicesManagerService(Context context) {
         mContext = context;
+
+        // Start the handler thread.
+        HandlerThread handlerThread = new HandlerThread("AdServicesManagerServiceHandler");
+        handlerThread.start();
+        mHandler = new Handler(handlerThread.getLooper());
+        registerBootBroadcastReceivers();
     }
 
     /** @hide */
     public static class Lifecycle extends SystemService {
+        private AdServicesManagerService mService;
+
         /** @hide */
         public Lifecycle(Context context) {
             super(context);
+            mService = new AdServicesManagerService(getContext());
         }
 
         /** @hide */
         @Override
         public void onStart() {
-            AdServicesManagerService service =
-                    new AdServicesManagerService(getContext());
-            Log.i(TAG, "AdServicesManagerService started!");
+            Log.d(TAG, "AdServicesManagerService started!");
         }
+    }
+
+    private void registerBootBroadcastReceivers() {
+        BroadcastReceiver bootIntentReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                switch(intent.getAction()) {
+                    case Intent.ACTION_BOOT_COMPLETED:
+                        registerPackagedChangedBroadcastReceivers();
+                }
+            }
+        };
+        mContext.registerReceiver(bootIntentReceiver,
+                new IntentFilter(Intent.ACTION_BOOT_COMPLETED));
+        Log.d(TAG, "Boot Broadcast Receivers registered.");
+    }
+
+    private void registerPackagedChangedBroadcastReceivers() {
+        final IntentFilter packageChangedIntentFilter = new IntentFilter();
+
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        packageChangedIntentFilter.addDataScheme("package");
+
+        BroadcastReceiver packageChangedIntentReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                LogUtil.d("Received for intent: " + intent);
+                switch(intent.getAction()) {
+                    case Intent.ACTION_PACKAGE_FULLY_REMOVED:
+                        Uri removedPackageUri = intent.getData();
+                        LogUtil.d("Removed package: " + removedPackageUri);
+                        onPackageFullyRemoved(removedPackageUri);
+                        break;
+                    case Intent.ACTION_PACKAGE_ADDED:
+                        Uri addedPackageUri = intent.getData();
+                        LogUtil.d("Added package: " + addedPackageUri);
+                        onPackageAdded(addedPackageUri);
+                }
+            }
+        };
+        mContext.registerReceiver(packageChangedIntentReceiver, packageChangedIntentFilter,
+                null, mHandler);
+        LogUtil.d("Package changed Broadcast Receivers registered.");
+    }
+
+    private void onPackageFullyRemoved(Uri packageUri) {
+        mHandler.post(() -> mContext.getSystemService(AdServicesCommonManager.class)
+                .onPackageFullyRemoved(packageUri));
+
+    }
+
+    private void onPackageAdded(Uri packageUri) {
+        mHandler.post(() -> mContext.getSystemService(AdServicesCommonManager.class)
+                .onPackageAdded(packageUri));
     }
 }
