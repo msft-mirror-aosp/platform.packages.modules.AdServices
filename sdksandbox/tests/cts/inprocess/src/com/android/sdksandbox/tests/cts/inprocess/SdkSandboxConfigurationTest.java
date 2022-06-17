@@ -21,13 +21,25 @@ import static android.content.Context.MODE_PRIVATE;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assume.assumeThat;
+
+import android.app.sdksandbox.SdkSandboxManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
+import android.os.IBinder;
 import android.os.Process;
 import android.os.SELinux;
 
 import androidx.test.platform.app.InstrumentationRegistry;
+
+import com.android.adservices.AdServicesCommon;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +49,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests to check some basic properties of the Sdk Sandbox processes.
@@ -137,6 +152,54 @@ public class SdkSandboxConfigurationTest {
                 new InputStreamReader(ctx.openFileInput("random_de_file")))) {
             String line = reader.readLine();
             assertThat(line).isEqualTo("I am also an sdk sandbox");
+        }
+    }
+
+    /** Tests that sdk sandbox process can resolve the package that provides AdServices APIs. */
+    @Test
+    public void testCanResolveAndBindToAdServicesApiPackage() throws Exception {
+        // Only run this test if sdk sandbox is enabled.
+        assumeThat(
+                SdkSandboxManager.getSdkSandboxState(),
+                equalTo(SdkSandboxManager.SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION));
+        final Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        // First check that we can resolve the adservices apk
+        final PackageManager pm = ctx.getPackageManager();
+        final Intent resolveIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
+        final List<ResolveInfo> services =
+                pm.queryIntentServices(
+                        resolveIntent,
+                        PackageManager.ResolveInfoFlags.of(
+                                PackageManager.GET_SERVICES
+                                        | PackageManager.MATCH_SYSTEM_ONLY
+                                        | PackageManager.MATCH_DIRECT_BOOT_AWARE
+                                        | PackageManager.MATCH_DIRECT_BOOT_UNAWARE));
+        assertThat(services).hasSize(1);
+        final ServiceInfo serviceInfo = services.get(0).serviceInfo;
+
+        // Now check that we can bind to the adservices api process.
+        final Intent serviceIntent =
+                new Intent()
+                        .setComponent(new ComponentName(serviceInfo.packageName, serviceInfo.name));
+        final CountDownLatch latch = new CountDownLatch(1);
+        final ServiceConnection conn =
+                new ServiceConnection() {
+                    @Override
+                    public void onServiceConnected(ComponentName name, IBinder service) {
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onServiceDisconnected(ComponentName name) {}
+                };
+        final boolean ret = ctx.bindService(serviceIntent, conn, Context.BIND_AUTO_CREATE);
+
+        try {
+            assertThat(ret).isTrue();
+            assertThat(latch.await(3, TimeUnit.SECONDS)).isTrue();
+        } finally {
+            ctx.unbindService(conn);
         }
     }
 }
