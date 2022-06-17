@@ -40,15 +40,14 @@ import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.ThreadSafe;
-
 
 /**
  *
@@ -127,11 +126,10 @@ public final class MeasurementImpl {
         try {
             switch (request.getRegistrationType()) {
                 case RegistrationRequest.REGISTER_SOURCE: {
-                    ArrayList<SourceRegistration> results = new ArrayList();
-                    boolean success = mSourceFetcher.fetchSource(request, results);
-                    LogUtil.d("MeasurementImpl: register: success=" + success);
-                    if (success) {
-                        insertSources(request, results, requestTime);
+                    Optional<List<SourceRegistration>> fetch = mSourceFetcher.fetchSource(request);
+                    LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
+                    if (fetch.isPresent()) {
+                        insertSources(request, fetch.get(), requestTime);
                         return IMeasurementCallback.RESULT_OK;
                     } else {
                         return IMeasurementCallback.RESULT_IO_ERROR;
@@ -139,11 +137,11 @@ public final class MeasurementImpl {
                 }
 
                 case RegistrationRequest.REGISTER_TRIGGER: {
-                    ArrayList<TriggerRegistration> results = new ArrayList();
-                    boolean success = mTriggerFetcher.fetchTrigger(request, results);
-                    LogUtil.d("MeasurementImpl: register: success=" + success);
-                    if (success) {
-                        insertTriggers(request, results, requestTime);
+                    Optional<List<TriggerRegistration>> fetch =
+                            mTriggerFetcher.fetchTrigger(request);
+                    LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
+                    if (fetch.isPresent()) {
+                        insertTriggers(request, fetch.get(), requestTime);
                         return IMeasurementCallback.RESULT_OK;
                     } else {
                         return IMeasurementCallback.RESULT_IO_ERROR;
@@ -203,7 +201,7 @@ public final class MeasurementImpl {
 
     private void insertSources(
             @NonNull RegistrationRequest request,
-            ArrayList<SourceRegistration> responseBasedRegistrations,
+            List<SourceRegistration> responseBasedRegistrations,
             long sourceEventTime) {
         for (SourceRegistration registration : responseBasedRegistrations) {
             Source source = new Source.Builder()
@@ -270,7 +268,7 @@ public final class MeasurementImpl {
 
     private void insertTriggers(
             @NonNull RegistrationRequest request,
-            ArrayList<TriggerRegistration> responseBasedRegistrations,
+            List<TriggerRegistration> responseBasedRegistrations,
             long triggerTime) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
             Trigger trigger = new Trigger.Builder()
