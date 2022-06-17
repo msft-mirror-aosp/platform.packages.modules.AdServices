@@ -15,16 +15,30 @@
  */
 package com.android.adservices;
 
-/** Common constants for AdServices
+/**
+ * Common constants for AdServices
  *
  * @hide
  */
 public class AdServicesCommon {
     private AdServicesCommon() {}
 
-    /** The service APK name. */
-    public static final String ADSERVICES_PACKAGE = "com.android.adservices.apk";
-
-    /** Intent action to discover the Topics servce in the APK. */
+    /** Intent action to discover the Topics service in the APK. */
     public static final String ACTION_TOPICS_SERVICE = "android.adservices.TOPICS_SERVICE";
+
+    /** Intent action to discover the Custom Audience service in the APK. */
+    public static final String ACTION_CUSTOM_AUDIENCE_SERVICE =
+            "android.adservices.customaudience.CUSTOM_AUDIENCE_SERVICE";
+
+    /** Intent action to discover the AdSelection service in the APK. */
+    public static final String ACTION_AD_SELECTION_SERVICE =
+            "android.adservices.adselection.AD_SELECTION_SERVICE";
+
+    /** Intent action to discover the Measurement service in the APK. */
+    public static final String ACTION_MEASUREMENT_SERVICE =
+            "android.adservices.MEASUREMENT_SERVICE";
+
+    /** Intent action to discover the AdServicesCommon service in the APK. */
+    public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
+            "android.adservices.AD_SERVICES_COMMON_SERVICE";
 }

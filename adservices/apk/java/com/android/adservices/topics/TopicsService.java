@@ -17,12 +17,21 @@ package com.android.adservices.topics;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
+import com.android.adservices.service.topics.TopicsWorker;
 
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Topics Service */
@@ -35,7 +44,9 @@ public class TopicsService extends Service {
     public void onCreate() {
         super.onCreate();
         if (mTopicsService == null) {
-            mTopicsService = new TopicsServiceImpl(this);
+            mTopicsService = new TopicsServiceImpl(this, TopicsWorker.getInstance(this),
+                    AdServicesLoggerImpl.getInstance(), Clock.SYSTEM_CLOCK);
+            mTopicsService.init();
         }
 
         schedulePeriodicJobs();
@@ -46,9 +57,21 @@ public class TopicsService extends Service {
         EpochJobService.schedule(this);
     }
 
-
     @Override
     public IBinder onBind(Intent intent) {
         return Objects.requireNonNull(mTopicsService);
+    }
+
+    @Override
+    public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
+        super.dump(fd, writer, args);
+        FlagsFactory.getFlags().dump(writer, args);
+        if (Build.isDebuggable()) {
+            writer.println("Build is Debuggable, dumping information for TopicsService");
+            EpochManager.getInstance(this).dump(writer, args);
+            CacheManager.getInstance(this).dump(writer, args);
+        } else {
+            writer.println("Build is not Debuggable");
+        }
     }
 }
