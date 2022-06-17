@@ -40,10 +40,10 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-
 
 /**
  * Download and decode Response Based Registration
@@ -245,18 +245,22 @@ public class SourceFetcher {
     /**
      * Fetch an attribution source type registration.
      */
-    public boolean fetchSource(@NonNull RegistrationRequest request,
-                               @NonNull List<SourceRegistration> out) {
+    public Optional<List<SourceRegistration>> fetchSource(@NonNull RegistrationRequest request) {
         if (request.getRegistrationType()
                 != RegistrationRequest.REGISTER_SOURCE) {
             throw new IllegalArgumentException("Expected source registration");
         }
+        List<SourceRegistration> out = new ArrayList<>();
         fetchSource(
                 request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 true, out);
-        return !out.isEmpty();
+        if (out.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(out);
+        }
     }
 
     private interface EventSourceContract {
