@@ -231,21 +231,7 @@ public final class MeasurementImpl {
                     .build();
             List<EventReport> eventReports = getSourceEventReports(source);
             mDatastoreManager.runInTransaction((dao) -> {
-                dao.insertSource(
-                        /* sourceEventId */ source.getEventId(),
-                        /* publisher */ source.getPublisher(),
-                        /* attributionDestination */ source.getAttributionDestination(),
-                        /* adTechDomain */ source.getAdTechDomain(),
-                        /* registrant */ source.getRegistrant(),
-                        /* sourceEventTime */ source.getEventTime(),
-                        /* expiryTime */ source.getExpiryTime(),
-                        /* priority */ source.getPriority(),
-                        /* sourceType */ source.getSourceType(),
-                        source.getInstallAttributionWindow(),
-                        source.getInstallCooldownWindow(),
-                        /* attributionMode */ source.getAttributionMode(),
-                        /* aggregateSource */ source.getAggregateSource(),
-                        /* aggregateFilterData */ source.getAggregateFilterData());
+                dao.insertSource(source);
                 for (EventReport report : eventReports) {
                     dao.insertEventReport(report);
                 }
@@ -287,19 +273,17 @@ public final class MeasurementImpl {
             ArrayList<TriggerRegistration> responseBasedRegistrations,
             long triggerTime) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
-            mDatastoreManager.runInTransaction(
-                    (dao) ->
-                            dao.insertTrigger(
-                                    /* attributionDestination */ request.getTopOriginUri(),
-                                    /* adTechDomain */ getBaseUri(
-                                            registration.getReportingOrigin()),
-                                    /* registrant */ getRegistrant(request.getAttributionSource()),
-                                    /* triggerTime */ triggerTime,
-                                    /* event triggers */ registration.getEventTriggers(),
-                                    /* aggregateTriggerData */ registration
-                                            .getAggregateTriggerData(),
-                                    /* aggregateValues */ registration.getAggregateValues(),
-                                    /* top-level filters */ registration.getFilters()));
+            Trigger trigger = new Trigger.Builder()
+                    .setAttributionDestination(request.getTopOriginUri())
+                    .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
+                    .setRegistrant(getRegistrant(request.getAttributionSource()))
+                    .setTriggerTime(triggerTime)
+                    .setEventTriggers(registration.getEventTriggers())
+                    .setAggregateTriggerData(registration.getAggregateTriggerData())
+                    .setAggregateValues(registration.getAggregateValues())
+                    .setFilters(registration.getFilters())
+                    .build();
+            mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
         try (ContentProviderClient contentProviderClient =
                      mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {
