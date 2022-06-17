@@ -337,40 +337,35 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_IsClearedOnClearAppData() throws Exception {
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
-        {
-            // Verify directory is not clear
-            final String ceDataSharedPath =
-                    getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true);
-            final String[] ceChildren = getDevice().getChildren(ceDataSharedPath);
-            {
-                final String fileToDelete = ceDataSharedPath + "/deleteme.txt";
-                getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
-                assertThat(getDevice().doesFileExist(fileToDelete)).isTrue();
-            }
-            assertThat(ceChildren.length).isNotEqualTo(0);
-            final String deDataSharedPath =
-                    getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false);
-            final String[] deChildren = getDevice().getChildren(deDataSharedPath);
-            {
-                final String fileToDelete = deDataSharedPath + "/deleteme.txt";
-                getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
-                assertThat(getDevice().doesFileExist(fileToDelete)).isTrue();
-            }
-            assertThat(deChildren.length).isNotEqualTo(0);
+
+        // Ensure per-sdk storage has been created
+        runPhase("loadCode");
+
+        // Create app data to be cleared
+        final List<String> dataPaths =
+                Arrays.asList(
+                        getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
+                        getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
+                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
+                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataPerSdkPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
+                        getSdkDataPerSdkPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false) // DE per-sdk
+                        );
+        for (String dataPath : dataPaths) {
+            final String fileToDelete = dataPath + "/cache/deleteme.txt";
+            getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
+            assertThat(getDevice().doesFileExist(fileToDelete)).isTrue();
         }
 
         // Clear the app data
         getDevice().executeShellCommand("pm clear " + TEST_APP_STORAGE_PACKAGE);
-        {
-            // Verify directory is cleared
-            final String ceDataSharedPath =
-                    getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true);
-            final String[] ceChildren = getDevice().getChildren(ceDataSharedPath);
-            assertThat(ceChildren.length).isEqualTo(0);
-            final String deDataSharedPath =
-                    getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false);
-            final String[] deChildren = getDevice().getChildren(deDataSharedPath);
-            assertThat(deChildren.length).isEqualTo(0);
+
+        // Verify cache directories are empty
+        for (String dataPath : dataPaths) {
+            final String[] cacheChildren = getDevice().getChildren(dataPath);
+            assertWithMessage(dataPath + " is not empty").that(cacheChildren).asList().isEmpty();
         }
     }
 
@@ -379,13 +374,21 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
 
+        // Ensure per-sdk storage has been created
+        runPhase("loadCode");
+
         // Create cache data to be cleared
-        final List<String> dataPaths = Arrays.asList(
-                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), //CE app data
-                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false) // DE sdk data
-        );
+        final List<String> dataPaths =
+                Arrays.asList(
+                        getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
+                        getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
+                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
+                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataPerSdkPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
+                        getSdkDataPerSdkPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false) // DE per-sdk
+                        );
         for (String dataPath : dataPaths) {
             final String fileToDelete = dataPath + "/cache/deleteme.txt";
             getDevice().executeShellCommand("echo something to delete > " + fileToDelete);
@@ -407,13 +410,21 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
 
+        // Ensure per-sdk storage has been created
+        runPhase("loadCode");
+
         // Create cache data to be cleared
-        final List<String> dataPaths = Arrays.asList(
-                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), //CE app data
-                getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
-                getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false) // DE sdk data
-        );
+        final List<String> dataPaths =
+                Arrays.asList(
+                        getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE app data
+                        getAppDataPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE app data
+                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, true), // CE sdk data
+                        getSdkDataSharedPath(0, TEST_APP_STORAGE_PACKAGE, false), // DE sdk data
+                        getSdkDataPerSdkPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true), // CE per-sdk
+                        getSdkDataPerSdkPath(
+                                0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false) // DE per-sdk
+                        );
         for (String dataPath : dataPaths) {
             final String fileToDelete = dataPath + "/cache/deleteme.txt";
             getDevice().executeShellCommand("echo something to delete > " + fileToDelete);

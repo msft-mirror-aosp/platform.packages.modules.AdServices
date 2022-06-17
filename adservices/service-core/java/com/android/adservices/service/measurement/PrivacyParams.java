@@ -148,6 +148,12 @@ public final class PrivacyParams {
      */
     public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
+    /**
+     * L1, the maximum sum of the contributions (values) across all buckets for a given source
+     * event.
+     */
+    public static final int MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
+
     private PrivacyParams() {
     }
 }

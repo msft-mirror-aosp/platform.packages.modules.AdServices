@@ -48,7 +48,7 @@ public class CustomAudienceImpl {
     private final Clock mClock;
 
     @VisibleForTesting
-    CustomAudienceImpl(@NonNull CustomAudienceDao customAudienceDao, @NonNull Clock clock) {
+    public CustomAudienceImpl(@NonNull CustomAudienceDao customAudienceDao, @NonNull Clock clock) {
         mCustomAudienceDao = customAudienceDao;
         mClock = clock;
     }

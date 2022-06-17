@@ -68,7 +68,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     + " the app is not debuggable.";
 
     @VisibleForTesting
-    AdSelectionServiceImpl(
+    public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdSelectionHttpClient adSelectionHttpClient,
