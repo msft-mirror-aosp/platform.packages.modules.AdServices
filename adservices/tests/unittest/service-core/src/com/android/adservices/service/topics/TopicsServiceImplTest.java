@@ -20,6 +20,7 @@ import static android.adservices.topics.TopicsManager.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,8 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -87,6 +90,8 @@ public class TopicsServiceImplTest {
     private GetTopicsParam mRequest;
 
     @Mock private EpochManager mMockEpochManager;
+    @Mock private ConsentManager mConsentManager;
+    @Mock private PackageManager mPackageManager;
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
 
@@ -107,8 +112,9 @@ public class TopicsServiceImplTest {
         mTopicsWorker =
                 new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
-        mTopicsServiceImpl = new TopicsServiceImpl(mContext,
-                mTopicsWorker, mAdServicesLogger, mClock);
+        mTopicsServiceImpl =
+                new TopicsServiceImpl(
+                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
         mCallerMetadata = new CallerMetadata.Builder()
                 .setBinderElapsedTimestamp(100L)
                 .build();
@@ -132,10 +138,59 @@ public class TopicsServiceImplTest {
                     public int checkCallingOrSelfPermission(String permission) {
                         return PackageManager.PERMISSION_DENIED;
                     }
+
+                    @Override
+                    public PackageManager getPackageManager() {
+                        return mPackageManager;
+                    }
                 };
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
 
         TopicsServiceImpl topicsService =
-                new TopicsServiceImpl(context, mTopicsWorker, mAdServicesLogger, mClock);
+                new TopicsServiceImpl(
+                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+    }
+
+    @Test
+    public void checkNoUserConsent() {
+        MockContext context =
+                new MockContext() {
+                    @Override
+                    public int checkCallingOrSelfPermission(String permission) {
+                        return PackageManager.PERMISSION_GRANTED;
+                    }
+
+                    @Override
+                    public PackageManager getPackageManager() {
+                        return mPackageManager;
+                    }
+                };
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        TopicsServiceImpl topicsService =
+                new TopicsServiceImpl(
+                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,
@@ -177,6 +232,8 @@ public class TopicsServiceImplTest {
             mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -242,6 +299,8 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -309,6 +368,8 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
