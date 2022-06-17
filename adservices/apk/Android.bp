@@ -43,6 +43,7 @@ android_app {
     ],
     static_libs: [
         "adservices-service-core",
+        "androidx-constraintlayout_constraintlayout",
         "androidx.preference_preference",
         "androidx.fragment_fragment",
         "androidx.recyclerview_recyclerview",
@@ -69,6 +70,9 @@ android_library {
     sdk_version: "module_current",
     asset_dirs: [
         "assets",
+    ],
+    static_libs: [
+        "androidx-constraintlayout_constraintlayout",
     ],
     aaptflags: [
         // Don't compress *.tflite files. Compressed models cannot be loaded on device.
