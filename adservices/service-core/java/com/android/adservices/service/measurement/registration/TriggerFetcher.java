@@ -29,7 +29,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 
 /**
  * Download and decode Trigger registration.
@@ -163,16 +163,20 @@ public class TriggerFetcher {
     /**
      * Fetch a trigger type registration.
      */
-    public boolean fetchTrigger(@NonNull RegistrationRequest request,
-            @NonNull List<TriggerRegistration> out) {
+    public Optional<List<TriggerRegistration>> fetchTrigger(@NonNull RegistrationRequest request) {
         if (request.getRegistrationType()
                 != RegistrationRequest.REGISTER_TRIGGER) {
             throw new IllegalArgumentException("Expected trigger registration");
         }
+        List<TriggerRegistration> out = new ArrayList<>();
         fetchTrigger(
                 request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 true, out);
-        return !out.isEmpty();
+        if (out.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(out);
+        }
     }
 }
