@@ -16,10 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
@@ -32,11 +29,12 @@ import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
+import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -99,47 +97,28 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(ReportingJob reportingJob) throws IOException, JSONException {
-        // Set up event reporting job handler spy
-        EventReportingJobHandler eventReportingJobHandler =
-                Mockito.spy(new EventReportingJobHandler(sDatastoreManager));
-        Mockito.doReturn(200).when(eventReportingJobHandler)
-                .makeHttpPostRequest(any(), any());
+        Object[] eventCaptures = EventReportingJobHandlerWrapper
+                .spyPerformScheduledPendingReportsInWindow(
+                        sDatastoreManager,
+                        reportingJob.mTimestamp
+                                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        reportingJob.mTimestamp);
 
-        // Perform event reports and capture arguments
-        eventReportingJobHandler.performScheduledPendingReportsInWindow(
-                reportingJob.mTimestamp
-                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                    reportingJob.mTimestamp);
-        ArgumentCaptor<Uri> eventDestination = ArgumentCaptor.forClass(Uri.class);
-        ArgumentCaptor<EventReport> eventReport = ArgumentCaptor.forClass(EventReport.class);
-        verify(eventReportingJobHandler, atLeast(0))
-                .createReportJsonPayload(eventReport.capture());
-        ArgumentCaptor<JSONObject> eventPayload = ArgumentCaptor.forClass(JSONObject.class);
-        verify(eventReportingJobHandler, atLeast(0))
-                .makeHttpPostRequest(eventDestination.capture(), eventPayload.capture());
+        Object[] aggregateCaptures = AggregateReportingJobHandlerWrapper
+                .spyPerformScheduledPendingReportsInWindow(
+                        sDatastoreManager,
+                        reportingJob.mTimestamp
+                                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
+                        reportingJob.mTimestamp);
 
-        // Set up aggregate reporting job handler spy
-        AggregateReportingJobHandler aggregateReportingJobHandler =
-                Mockito.spy(new AggregateReportingJobHandler(sDatastoreManager));
-        Mockito.doReturn(200).when(aggregateReportingJobHandler)
-                .makeHttpPostRequest(any(), any());
+        processEventReports(
+                (List<EventReport>) eventCaptures[0],
+                (List<Uri>) eventCaptures[1],
+                (List<JSONObject>) eventCaptures[2]);
 
-        // Perform aggregate reports and capture arguments
-        aggregateReportingJobHandler.performScheduledPendingReportsInWindow(
-                reportingJob.mTimestamp
-                - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                    reportingJob.mTimestamp);
-        ArgumentCaptor<Uri> aggregateDestination = ArgumentCaptor.forClass(Uri.class);
-        ArgumentCaptor<JSONObject> aggregatePayload = ArgumentCaptor.forClass(JSONObject.class);
-        verify(aggregateReportingJobHandler, atLeast(0))
-                .makeHttpPostRequest(aggregateDestination.capture(), aggregatePayload.capture());
-
-        // Collect actual reports
-        processEventReports(eventReport.getAllValues(), eventDestination.getAllValues(),
-                eventPayload.getAllValues());
-
-        processAggregateReports(aggregateDestination.getAllValues(),
-                aggregatePayload.getAllValues());
+        processAggregateReports(
+                (List<Uri>) aggregateCaptures[0],
+                (List<JSONObject>) aggregateCaptures[1]);
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
