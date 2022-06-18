@@ -22,18 +22,14 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Umožňuje aplikácii prístup k rozhraniam AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"prístup k rozhraniu AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Umožňuje aplikácii prístup k rozhraniu AdServices Custom Audiences API."</string>
-    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
-    <skip />
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"prístup k rozhraniu AdServices Consent API"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Umožňuje aplikácii prístup k rozhraniu AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Prístup k rozhraniu Ad ID API"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Umožňuje aplikácii prístup k rozhraniu Ad ID API."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Prístup k rozhraniu App Set ID API"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Umožňuje aplikácii prístup k rozhraniu App Set ID API."</string>
-    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
-    <skip />
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Prístup k rozhraniu Consent Service API"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Umožňuje aplikácii prístup k rozhraniu Consent Service API."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox beta"</string>
