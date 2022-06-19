@@ -22,20 +22,15 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Permet à une appli d\'accéder aux API AdServices Attribution."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"accéder à l\'API AdServices Custom Audience"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Permet à une appli d\'accéder à l\'API AdServices Custom Audience."</string>
-    <!-- no translation found for permlab_accessAdServicesConsent (3203633397142568707) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesConsent (8440334072391708453) -->
-    <skip />
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"accéder à l\'API AdServices Consent"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Permet à une appli d\'accéder à l\'API AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Accéder à l\'API Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Permet à une appli d\'accéder à l\'API Ad ID."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Accéder à l\'API App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Permet à une appli d\'accéder à l\'API App Set ID."</string>
-    <!-- no translation found for permlab_adServicesAccessConsentService (5994709782267864205) -->
-    <skip />
-    <!-- no translation found for permdesc_adServicesAccessConsentService (4587727715580124241) -->
-    <skip />
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Accéder à l\'API Consent Service"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Permet à une appli d\'accéder à l\'API Consent Service."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Version bêta de Privacy Sandbox"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Version bêta de Privacy Sandbox"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Activer/Désactiver la version bêta de Privacy Sandbox"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -48,4 +43,6 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Bloquer"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Centres d\'intérêt que vous avez bloqués"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Réinitialiser tous les centres d\'intérêt"</string>
+    <!-- no translation found for settingsUI_unblock_topic_title (1710283575567727667) -->
+    <skip />
 </resources>
