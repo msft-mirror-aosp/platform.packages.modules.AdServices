@@ -21,12 +21,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.topics.GetTopicsResult;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -43,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -53,8 +57,8 @@ import java.util.Map;
 
 /** Unit test for {@link TopicsWorker}. */
 public class TopicsWorkerTest {
-    @SuppressWarnings({"unused"})
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+    // Spy the Context to test app reconciliation
+    private final Context mContext = spy(ApplicationProvider.getApplicationContext());
 
     private TopicsWorker mTopicsWorker;
     private TopicsDao mTopicsDao;
@@ -72,10 +76,17 @@ public class TopicsWorkerTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
+
+        AppUpdateManager appUpdateManager = new AppUpdateManager(mTopicsDao);
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
         BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         mTopicsWorker =
-                new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
+                new TopicsWorker(
+                        mMockEpochManager,
+                        cacheManager,
+                        blockedTopicsManager,
+                        appUpdateManager,
+                        mMockFlags);
     }
 
     @Test
@@ -336,7 +347,6 @@ public class TopicsWorkerTest {
                 Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
         Topic blockedTopic3 =
                 Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
-        Topic[] blockedTopics = {blockedTopic1, blockedTopic2, blockedTopic3};
         // block all blockedTopics
         mTopicsDao.recordBlockedTopic(blockedTopic1);
         mTopicsDao.recordBlockedTopic(blockedTopic2);
@@ -353,8 +363,10 @@ public class TopicsWorkerTest {
         mTopicsWorker.loadCache();
         ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
 
-        assertThat(topicsWithRevokedConsent).hasSize(blockedTopics.length);
-        assertThat(topicsWithRevokedConsent).containsExactly(blockedTopics);
+        // Three topics are persisted into blocked topic table
+        assertThat(topicsWithRevokedConsent).hasSize(3);
+        assertThat(topicsWithRevokedConsent)
+                .containsExactly(blockedTopic1, blockedTopic2, blockedTopic3);
     }
 
     @Test
@@ -508,5 +520,115 @@ public class TopicsWorkerTest {
         // loadCache(): 1, getTopics(): 2 * 2, clearAllTopicsData(): 2
         verify(mMockEpochManager, times(7)).getCurrentEpochId();
         verify(mMockFlags, times(7)).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
+    public void testReconcileUninstalledApps() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final String app1 = "app1";
+        final String app2 = "app2";
+        final String sdk = "sdk";
+
+        // Topics for app1
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+
+        // Topics for app2
+        Topic topic4 =
+                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic5 =
+                Topic.create(/* topic */ 5, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic6 =
+                Topic.create(/* topic */ 6, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+
+        // In order to mock Package Manager, context also needs to be mocked to return
+        // mocked Package Manager
+        PackageManager mockPackageManager = Mockito.mock(PackageManager.class);
+        when(mContext.getPackageManager()).thenReturn(mockPackageManager);
+
+        // Mock Package Manager for installed applications
+        ApplicationInfo appInfo = new ApplicationInfo();
+        appInfo.packageName = app1;
+
+        // Package Manager only returns app1 so that app2 is unhandled uninstalled app
+        when(mockPackageManager.getInstalledApplications(Mockito.any()))
+                .thenReturn(Collections.singletonList(appInfo));
+
+        Topic[] topics1 = {topic1, topic2, topic3};
+        Topic[] topics2 = {topic4, topic5, topic6};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic1 = topics1[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap1 = new HashMap<>();
+            returnedAppSdkTopicsMap1.put(Pair.create(app1, sdk), currentTopic1);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap1);
+
+            Topic currentTopic2 = topics2[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap2 = new HashMap<>();
+            returnedAppSdkTopicsMap2.put(Pair.create(app2, sdk), currentTopic2);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap2);
+
+            // Since AppUpdateManager evaluates previously installed apps through App Usage, usages
+            // should be persisted into database
+            mTopicsDao.recordAppUsageHistory(numEpoch, app1);
+            mTopicsDao.recordAppUsageHistory(numEpoch, app2);
+            // Persist into AppSdkUsage table to mimic reality but this is unnecessary.
+            mTopicsDao.recordUsageHistory(numEpoch, app1, sdk);
+            mTopicsDao.recordUsageHistory(numEpoch, app2, sdk);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+
+        verify(mMockEpochManager).getCurrentEpochId();
+        verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
+
+        // Reconcile the unhandled uninstalled apps.
+        // As PackageManager is mocked, app2 will be identified as unhandled uninstalled app.
+        // All data belonging to app2 will be deleted.
+        mTopicsWorker.reconcileUninstalledApps(mContext);
+
+        verify(mContext).getPackageManager();
+        verify(mockPackageManager).getInstalledApplications(Mockito.any());
+
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList(1, 2, 3))
+                        .build();
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics(app1, sdk);
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+
+        GetTopicsResult emptyGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+        assertThat((mTopicsWorker.getTopics(app2, sdk))).isEqualTo(emptyGetTopicsResult);
+
+        // Invocations Summary
+        // loadCache() : 1, reconcileInstalledApps() : 1, getTopics(): 2
+        verify(mMockEpochManager, times(4)).getCurrentEpochId();
+        verify(mMockFlags, times(4)).getTopicsNumberOfLookBackEpochs();
     }
 }
