@@ -212,4 +212,14 @@ public class SdkSandboxRestrictionsTest {
                     "may not be broadcast from an SDK sandbox uid");
         }
     }
+
+    /** Test that sdk sandbox can't grant read uri permission. */
+    @Test
+    public void testCheckUriPermission() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        Uri uri = Uri.parse("content://com.example.sdk.provider/abc");
+        int ret =
+                context.checkCallingOrSelfUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        assertThat(ret).isEqualTo(PackageManager.PERMISSION_DENIED);
+    }
 }
