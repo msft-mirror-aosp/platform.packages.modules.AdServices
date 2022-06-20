@@ -20,6 +20,7 @@ import static android.adservices.topics.TopicsManager.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,8 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -67,9 +70,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}.
- */
+/** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 public class TopicsServiceImplTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
@@ -89,6 +90,8 @@ public class TopicsServiceImplTest {
     private GetTopicsParam mRequest;
 
     @Mock private EpochManager mMockEpochManager;
+    @Mock private ConsentManager mConsentManager;
+    @Mock private PackageManager mPackageManager;
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
 
@@ -104,10 +107,14 @@ public class TopicsServiceImplTest {
         CacheManager cacheManager = new CacheManager(mMockEpochManager,
                 mTopicsDao,
                 mMockFlags);
-        mTopicsWorker = new TopicsWorker(mMockEpochManager, cacheManager, mMockFlags);
+
+        BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
+        mTopicsWorker =
+                new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
-        mTopicsServiceImpl = new TopicsServiceImpl(mContext,
-                mTopicsWorker, mAdServicesLogger, mClock);
+        mTopicsServiceImpl =
+                new TopicsServiceImpl(
+                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
         mCallerMetadata = new CallerMetadata.Builder()
                 .setBinderElapsedTimestamp(100L)
                 .build();
@@ -131,10 +138,59 @@ public class TopicsServiceImplTest {
                     public int checkCallingOrSelfPermission(String permission) {
                         return PackageManager.PERMISSION_DENIED;
                     }
+
+                    @Override
+                    public PackageManager getPackageManager() {
+                        return mPackageManager;
+                    }
                 };
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
 
         TopicsServiceImpl topicsService =
-                new TopicsServiceImpl(context, mTopicsWorker, mAdServicesLogger, mClock);
+                new TopicsServiceImpl(
+                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+    }
+
+    @Test
+    public void checkNoUserConsent() {
+        MockContext context =
+                new MockContext() {
+                    @Override
+                    public int checkCallingOrSelfPermission(String permission) {
+                        return PackageManager.PERMISSION_GRANTED;
+                    }
+
+                    @Override
+                    public PackageManager getPackageManager() {
+                        return mPackageManager;
+                    }
+                };
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        TopicsServiceImpl topicsService =
+                new TopicsServiceImpl(
+                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,
@@ -161,12 +217,12 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -176,6 +232,8 @@ public class TopicsServiceImplTest {
             mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
         }
 
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -198,7 +256,7 @@ public class TopicsServiceImplTest {
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -214,9 +272,21 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        assertThat(mGetTopicsCallbackLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+
+        GetTopicsResult expectedGetTopicsResult = capturedResponseParcel[0];
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
@@ -229,6 +299,8 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -253,7 +325,7 @@ public class TopicsServiceImplTest {
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -269,10 +341,21 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        assertThat(mGetTopicsCallbackLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
 
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
+        GetTopicsResult expectedGetTopicsResult = capturedResponseParcel[0];
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
@@ -285,6 +368,8 @@ public class TopicsServiceImplTest {
         final long currentEpochId = 4L;
         final int numberOfLookBackEpochs = 3;
 
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
@@ -336,7 +421,7 @@ public class TopicsServiceImplTest {
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                    public void onResult(GetTopicsResult responseParcel) {
                         capturedResponseParcel[0] = responseParcel;
                         mGetTopicsCallbackLatch.countDown();
                     }
@@ -352,12 +437,26 @@ public class TopicsServiceImplTest {
                     }
                 });
 
-        assertThat(mGetTopicsCallbackLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(capturedResponseParcel[0]).isEqualTo(getTopicsResult);
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
 
-        assertThat(logOperationCalledLatch
-                .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        GetTopicsResult expectedGetTopicsResult = capturedResponseParcel[0];
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+
+        assertThat(
+                        logOperationCalledLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
 
         verify(mAdServicesLogger).logApiCallStats(argument.capture());
         assertThat(argument.getValue().getResultCode()).isEqualTo(ResultCode.RESULT_OK);

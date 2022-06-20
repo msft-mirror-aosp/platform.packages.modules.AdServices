@@ -22,10 +22,14 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Aplikaciji omogoča dostop do API-jev AdServices Attribution."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"dostop do API-ja AdServices Custom Audience"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Aplikaciji omogoča dostop do API-ja AdServices Custom Audience."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"Dostop do API-ja AdServices Consent"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Aplikaciji omogoča dostop do API-ja AdServices Consent."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"dostop do API-ja Ad ID"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Aplikaciji omogoča dostop do API-ja Ad ID."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"dostop do API-ja App Set ID"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Aplikaciji omogoča dostop do API-ja App Set ID."</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Dostop do API-ja Consent Service"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Aplikaciji omogoča dostop do API-ja Consent Service."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Zasebni peskovnik različice beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Zasebni peskovnik različice beta"</string>
@@ -37,10 +41,7 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Aplikacije, ki vzbujajo posamezna zanimanja"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Upravljanje aplikacij, ki vzbujajo posamezna zanimanja."</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Upravljanje splošnih zanimanj za oglase"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokiraj"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Blokirana zanimanja"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Ponastavi vsa zanimanja"</string>
 </resources>
