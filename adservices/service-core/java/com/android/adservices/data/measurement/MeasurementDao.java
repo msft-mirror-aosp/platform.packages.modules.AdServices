@@ -63,32 +63,24 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertTrigger(
-            @NonNull Uri attributionDestination,
-            @NonNull Uri adTechDomain,
-            @NonNull Uri registrant,
-            @NonNull Long triggerTime,
-            @NonNull String eventTriggers,
-            @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues,
-            @Nullable String filters)
-            throws DatastoreException {
-        validateNonNull(
-                attributionDestination, adTechDomain, registrant, triggerTime, eventTriggers);
-        validateUri(attributionDestination, adTechDomain, registrant);
-
+    public void insertTrigger(@NonNull Trigger trigger) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
-                attributionDestination.toString());
-        values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, triggerTime);
-        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, eventTriggers);
+                trigger.getAttributionDestination().toString());
+        values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                trigger.getEventTriggers());
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
-        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN, adTechDomain.toString());
-        values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
-        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
-        values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES, aggregateValues);
-        values.put(MeasurementTables.TriggerContract.FILTERS, filters);
+        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.REGISTRANT,
+                trigger.getRegistrant().toString());
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                trigger.getAggregateTriggerData());
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                trigger.getAggregateValues());
+        values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -173,37 +165,28 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
-            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
-            @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCoolDownWindow, @Source.AttributionMode int attributionMode,
-            @Nullable String aggregateSource, @Nullable String aggregateFilterData)
-            throws DatastoreException {
-        validateNonNull(sourceEventId, publisher, attributionDestination, adTechDomain,
-                registrant, sourceEventTime, expiryTime, priority, sourceType,
-                installAttributionWindow, installCoolDownWindow);
-        validateUri(publisher, attributionDestination, adTechDomain, registrant);
-
+    public void insertSource(@NonNull Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
-        values.put(MeasurementTables.SourceContract.EVENT_ID, sourceEventId);
-        values.put(MeasurementTables.SourceContract.PUBLISHER, publisher.toString());
+        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+        values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                attributionDestination.toString());
-        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN, adTechDomain.toString());
-        values.put(MeasurementTables.SourceContract.EVENT_TIME, sourceEventTime);
-        values.put(MeasurementTables.SourceContract.EXPIRY_TIME, expiryTime);
-        values.put(MeasurementTables.SourceContract.PRIORITY, priority);
+                source.getAttributionDestination().toString());
+        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
+                source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
+        values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
-        values.put(MeasurementTables.SourceContract.SOURCE_TYPE, sourceType.name());
-        values.put(MeasurementTables.SourceContract.REGISTRANT, registrant.toString());
+        values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().name());
+        values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
-                installAttributionWindow);
-        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW, installCoolDownWindow);
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
-        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
+                source.getInstallAttributionWindow());
+        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW,
+                source.getInstallCooldownWindow());
+        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
@@ -1075,22 +1058,6 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
-        }
-    }
-
-    private void validateNonNull(Object... objects) throws DatastoreException {
-        for (Object o : objects) {
-            if (o == null) {
-                throw new DatastoreException("Received null values");
-            }
-        }
-    }
-
-    private void validateUri(Uri... uris) throws DatastoreException {
-        for (Uri uri : uris) {
-            if (uri == null || uri.getScheme() == null) {
-                throw new DatastoreException("Uri with no scheme is not valid");
-            }
         }
     }
 }

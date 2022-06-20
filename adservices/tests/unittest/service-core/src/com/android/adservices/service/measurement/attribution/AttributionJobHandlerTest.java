@@ -42,7 +42,9 @@ import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerFixture;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,7 +85,7 @@ public class AttributionJobHandlerTest {
                     + "]\n";
 
     private static Trigger createAPendingTrigger() {
-        return new Trigger.Builder()
+        return TriggerFixture.getValidTriggerBuilder()
                 .setId("triggerId1")
                 .setStatus(Trigger.Status.PENDING)
                 .setEventTriggers(EVENT_TRIGGERS)
@@ -139,7 +141,7 @@ public class AttributionJobHandlerTest {
 
     @Test
     public void shouldIgnoreNonPendingTrigger() throws DatastoreException {
-        Trigger trigger = new Trigger.Builder()
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setId("triggerId1")
                 .setStatus(Trigger.Status.IGNORED).build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -174,7 +176,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldRejectBasedOnDedupKey() throws DatastoreException {
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -190,7 +192,7 @@ public class AttributionJobHandlerTest {
                                         + "}"
                                         + "]\n")
                         .build();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setDedupKeys(Arrays.asList(1L, 2L))
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
@@ -214,7 +216,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldNotAddIfRateLimitExceeded() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -238,7 +240,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldIgnoreForMaxReportsPerSource() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -282,12 +284,12 @@ public class AttributionJobHandlerTest {
                         + "}"
                         + "]\n";
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setEventTriggers(eventTriggers)
                         .setStatus(Trigger.Status.PENDING)
                         .build();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -326,7 +328,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldDoSimpleAttribution() throws DatastoreException {
         Trigger trigger = createAPendingTrigger();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -364,17 +366,17 @@ public class AttributionJobHandlerTest {
                         + "}"
                         + "]\n";
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(eventTriggers)
                         .build();
-        Source source1 = new Source.Builder()
+        Source source1 = SourceFixture.getValidSourceBuilder()
                 .setPriority(100L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setEventTime(1L)
                 .build();
-        Source source2 = new Source.Builder()
+        Source source2 = SourceFixture.getValidSourceBuilder()
                 .setPriority(200L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setEventTime(2L)
@@ -414,7 +416,7 @@ public class AttributionJobHandlerTest {
                         + "}"
                         + "]\n";
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setEventTriggers(eventTriggers)
                         .setStatus(Trigger.Status.PENDING)
@@ -463,7 +465,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldRollbackOnFailure() throws DatastoreException {
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(EVENT_TRIGGERS)
@@ -471,7 +473,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(anyString())).thenReturn(trigger);
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build();
         List<Source> matchingSourceList = new ArrayList<>();
@@ -518,7 +520,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldPerformMultipleAttributions() throws DatastoreException, JSONException {
         Trigger trigger1 =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -531,7 +533,7 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         Trigger trigger2 =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId2")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -547,11 +549,11 @@ public class AttributionJobHandlerTest {
         triggers.add(trigger1);
         triggers.add(trigger2);
         List<Source> matchingSourceList1 = new ArrayList<>();
-        matchingSourceList1.add(new Source.Builder()
+        matchingSourceList1.add(SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build());
         List<Source> matchingSourceList2 = new ArrayList<>();
-        matchingSourceList2.add(new Source.Builder()
+        matchingSourceList2.add(SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .build());
         when(mMeasurementDao.getPendingTriggerIds())
@@ -598,7 +600,7 @@ public class AttributionJobHandlerTest {
     public void shouldAttributedToInstallAttributedSource() throws DatastoreException {
         long eventTime = System.currentTimeMillis();
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setStatus(Trigger.Status.PENDING)
                         .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(5))
                         .setEventTriggers(
@@ -611,7 +613,7 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         // Lower priority and older priority source.
-        Source source1 = new Source.Builder()
+        Source source1 = SourceFixture.getValidSourceBuilder()
                 .setEventId(1)
                 .setPriority(100L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -619,7 +621,7 @@ public class AttributionJobHandlerTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(10))
                 .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
                 .build();
-        Source source2 = new Source.Builder()
+        Source source2 = SourceFixture.getValidSourceBuilder()
                 .setEventId(2)
                 .setPriority(200L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -653,7 +655,7 @@ public class AttributionJobHandlerTest {
     public void shouldNotAttributeToOldInstallAttributedSource() throws DatastoreException {
         long eventTime = System.currentTimeMillis();
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setStatus(Trigger.Status.PENDING)
                         .setTriggerTime(eventTime + TimeUnit.DAYS.toMillis(10))
                         .setEventTriggers(
@@ -666,7 +668,7 @@ public class AttributionJobHandlerTest {
                                         + "]\n")
                         .build();
         // Lower Priority. Install cooldown Window passed.
-        Source source1 = new Source.Builder()
+        Source source1 = SourceFixture.getValidSourceBuilder()
                 .setEventId(1)
                 .setPriority(100L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -674,7 +676,7 @@ public class AttributionJobHandlerTest {
                 .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(3))
                 .setEventTime(eventTime - TimeUnit.DAYS.toMillis(2))
                 .build();
-        Source source2 = new Source.Builder()
+        Source source2 = SourceFixture.getValidSourceBuilder()
                 .setEventId(2)
                 .setPriority(200L)
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
@@ -707,7 +709,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldNotGenerateReportForAttributionModeFalsely() throws DatastoreException {
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -719,7 +721,7 @@ public class AttributionJobHandlerTest {
                                         + "}"
                                         + "]\n")
                         .build();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.FALSELY)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -744,7 +746,7 @@ public class AttributionJobHandlerTest {
     @Test
     public void shouldNotGenerateReportForAttributionModeNever() throws DatastoreException {
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -756,7 +758,7 @@ public class AttributionJobHandlerTest {
                                         + "}"
                                         + "]\n")
                         .build();
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.NEVER)
                 .build();
         when(mMeasurementDao.getPendingTriggerIds())
@@ -792,7 +794,7 @@ public class AttributionJobHandlerTest {
         triggerDatas.put(jsonObject2);
 
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -807,7 +809,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
 
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
@@ -842,7 +844,7 @@ public class AttributionJobHandlerTest {
         triggerDatas.put(jsonObject2);
 
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setAggregateTriggerData(triggerDatas.toString())
@@ -850,7 +852,7 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(EVENT_TRIGGERS)
                         .build();
 
-        Source source = new Source.Builder()
+        Source source = SourceFixture.getValidSourceBuilder()
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
@@ -875,7 +877,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -893,7 +895,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"
@@ -929,7 +931,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -947,7 +949,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"
@@ -985,7 +987,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -1003,7 +1005,7 @@ public class AttributionJobHandlerTest {
                                         + "}\n")
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"
@@ -1041,7 +1043,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -1066,7 +1068,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"
@@ -1117,7 +1119,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -1142,7 +1144,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"
@@ -1193,7 +1195,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -1220,7 +1222,7 @@ public class AttributionJobHandlerTest {
                         .setTriggerTime(234324L)
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"
@@ -1272,7 +1274,7 @@ public class AttributionJobHandlerTest {
             throws DatastoreException, JSONException {
         // Setup
         Trigger trigger =
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId1")
                         .setStatus(Trigger.Status.PENDING)
                         .setEventTriggers(
@@ -1299,7 +1301,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                         .build();
         Source source =
-                new Source.Builder()
+                SourceFixture.getValidSourceBuilder()
                         .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                         .setAggregateFilterData(
                                 "{\n"

@@ -31,6 +31,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.pm.PackageManagerLocal;
 
@@ -55,9 +56,18 @@ class SdkSandboxStorageManager {
     private final PackageManagerLocal mPackageManagerLocal;
     private final Object mLock = new Object();
 
+    // Prefix to prepend with all sdk storage paths.
+    private final String mRootDir;
+
     SdkSandboxStorageManager(Context context) {
+        this(context, /*rootDir=*/ "");
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    SdkSandboxStorageManager(Context context, String rootDir) {
         mContext = context;
         mPackageManagerLocal = LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        mRootDir = rootDir;
     }
 
     public void notifyInstrumentationStarted(CallingInfo callingInfo) {
@@ -339,22 +349,23 @@ class SdkSandboxStorageManager {
         }
     }
 
-    private static String getDataDirectory(@Nullable String volumeUuid) {
+    private String getDataDirectory(@Nullable String volumeUuid) {
         if (TextUtils.isEmpty(volumeUuid)) {
-            return "/data";
+            return mRootDir + "/data";
         } else {
-            return "/mnt/expand/" + volumeUuid;
+            return mRootDir + "/mnt/expand/" + volumeUuid;
         }
     }
 
-    private static String getSdkDataRootDirectory(@Nullable String volumeUuid, int userId,
-            boolean isCeData) {
+    private String getSdkDataRootDirectory(
+            @Nullable String volumeUuid, int userId, boolean isCeData) {
         return getDataDirectory(volumeUuid) + (isCeData ? "/misc_ce/" : "/misc_de/") + userId
             + "/sdksandbox";
     }
 
-    private static String getSdkDataPackageDirectory(@Nullable String volumeUuid, int userId,
-            String packageName, boolean isCeData) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    String getSdkDataPackageDirectory(
+            @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
         return getSdkDataRootDirectory(volumeUuid, userId, isCeData) + "/" + packageName;
     }
 
