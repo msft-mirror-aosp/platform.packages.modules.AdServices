@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Copyright (C) 2022 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"pasiekti „AdServices Topics“ API"</string>
+    <string name="permdesc_accessAdServicesTopics" msgid="4220466427260104683">"Leidžiama programai pasiekti „AdServices Topics“ API."</string>
+    <string name="permlab_accessAdServicesAttribution" msgid="4498132091418336093">"pasiekti „AdServices Attribution“ API"</string>
+    <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Leidžiama programai pasiekti „AdServices Attribution“ API."</string>
+    <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"pasiekti „AdServices Custom Audience“ API"</string>
+    <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Leidžiama programai pasiekti „AdServices Custom Audience“ API."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"pasiekti „AdServices Consent“ API"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Leidžiama programai pasiekti „AdServices Consent“ API."</string>
+    <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Prieiga prie „Ad ID“ API"</string>
+    <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Leidžiama programai pasiekti „Ad ID“ API."</string>
+    <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Prieiga prie „App Set ID“ API"</string>
+    <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Leidžiama programai pasiekti „App Set ID“ API."</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Pasiekti „Consent Service“ API"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Leidžiama programai pasiekti „Consent Service“ API."</string>
+    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privatumo „sandbox“ (smėlio dėžės) beta versija"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privatumo „sandbox“ (smėlio dėžės) beta versija"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Įjungti privatumo „sandbox“ (smėlio dėžės) beta versiją"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"Jūsų bendri pomėgiai"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Tvarkykite savo bendrus pomėgius"</string>
+    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
+    <string name="settingsUI_apps_title" msgid="2177966577556486280">"Jūsų programos, kurios generuoja konkrečius pomėgius"</string>
+    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Tvarkykite programas, kurios generuoja konkrečius pomėgius"</string>
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Bendrų su skelbimais susijusių pomėgių tvarkymas"</string>
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokuoti"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Jūsų užblokuoti pomėgiai"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Iš naujo nustatyti visus pomėgius"</string>
+</resources>
