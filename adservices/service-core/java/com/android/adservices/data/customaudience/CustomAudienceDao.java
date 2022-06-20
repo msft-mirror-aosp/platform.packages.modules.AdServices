@@ -25,6 +25,7 @@ import androidx.room.Query;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -127,6 +128,7 @@ public interface CustomAudienceDao {
      * Fetch all the Custom Audience corresponding to the buyers
      *
      * @param buyers associated with the Custom Audience
+     * @param currentTime to compare against CA time values and find an active CA
      * @return All the Custom Audience that represent given buyers
      */
     // TODO(229297645): replace the validation check with last update time within 48 hours with a
@@ -134,13 +136,14 @@ public interface CustomAudienceDao {
     @Query(
             "SELECT * FROM custom_audience "
                     + "WHERE buyer in (:buyers) "
-                    + "AND activation_time <= (strftime('%s', 'now') * 1000) "
-                    + "AND (strftime('%s', 'now') * 1000) < expiration_time "
+                    + "AND activation_time <= (:currentTime) "
+                    + "AND (:currentTime) < expiration_time "
                     + "AND (last_ads_and_bidding_data_updated_time + 48 * 3600000) "
-                    + ">= (strftime('%s', 'now') * 1000) "
+                    + ">= (:currentTime) "
                     + "AND user_bidding_signals IS NOT NULL "
                     + "AND trusted_bidding_data_url IS NOT NULL "
                     + "AND ads IS NOT NULL ")
     @Nullable
-    List<DBCustomAudience> getActiveCustomAudienceByBuyers(List<String> buyers);
+    List<DBCustomAudience> getActiveCustomAudienceByBuyers(
+            List<String> buyers, Instant currentTime);
 }

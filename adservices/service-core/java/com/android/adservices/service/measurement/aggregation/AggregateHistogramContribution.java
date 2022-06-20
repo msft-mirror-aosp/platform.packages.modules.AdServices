@@ -27,11 +27,10 @@ import java.util.Objects;
  */
 public class AggregateHistogramContribution {
     private BigInteger mKey;  // Equivalent to uint128 in C++.
-    private long mValue;
+    private int mValue;
 
     private AggregateHistogramContribution() {
         mKey = BigInteger.valueOf(0L);
-        mValue = 0L;
     }
 
     @Override
@@ -42,7 +41,7 @@ public class AggregateHistogramContribution {
         AggregateHistogramContribution aggregateHistogramContribution =
                 (AggregateHistogramContribution) obj;
         return Objects.equals(mKey, aggregateHistogramContribution.mKey)
-                && Objects.equals(mValue, aggregateHistogramContribution.mValue);
+                && mValue == aggregateHistogramContribution.mValue;
     }
 
     @Override
@@ -70,7 +69,7 @@ public class AggregateHistogramContribution {
     /**
      * Value for the aggregate histogram contribution.
      */
-    public long getValue() {
+    public int getValue() {
         return mValue;
     }
 
@@ -95,7 +94,7 @@ public class AggregateHistogramContribution {
         /**
          * See {@link AggregateHistogramContribution#getValue()}.
          */
-        public Builder setValue(long value) {
+        public Builder setValue(int value) {
             mAggregateHistogramContribution.mValue = value;
             return this;
         }
