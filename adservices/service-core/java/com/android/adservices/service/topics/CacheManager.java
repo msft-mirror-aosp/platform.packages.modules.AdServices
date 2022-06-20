@@ -57,7 +57,7 @@ public class CacheManager implements Dumpable {
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
     // HashSet<BlockedTopic>
-    private HashSet<Topic> mCachedBlockedTopics;
+    private HashSet<Topic> mCachedBlockedTopics = new HashSet<>();
 
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
