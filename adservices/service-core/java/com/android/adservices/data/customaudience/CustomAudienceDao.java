@@ -25,6 +25,7 @@ import androidx.room.Query;
 
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -82,11 +83,14 @@ public interface CustomAudienceDao {
      */
     @Query(
             "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner AND buyer ="
-                    + " :buyer AND name = :name")
+                    + " :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
     @VisibleForTesting
     String getBiddingLogicUrlOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String appPackageName);
 
     /**
      * Get trusted bidding data override by its unique key.
@@ -124,9 +128,22 @@ public interface CustomAudienceDao {
      * Fetch all the Custom Audience corresponding to the buyers
      *
      * @param buyers associated with the Custom Audience
+     * @param currentTime to compare against CA time values and find an active CA
      * @return All the Custom Audience that represent given buyers
      */
-    @Query("SELECT * FROM custom_audience where buyer in (:buyers)")
+    // TODO(229297645): replace the validation check with last update time within 48 hours with a
+    // value that is passed in by a P/H flag.
+    @Query(
+            "SELECT * FROM custom_audience "
+                    + "WHERE buyer in (:buyers) "
+                    + "AND activation_time <= (:currentTime) "
+                    + "AND (:currentTime) < expiration_time "
+                    + "AND (last_ads_and_bidding_data_updated_time + 48 * 3600000) "
+                    + ">= (:currentTime) "
+                    + "AND user_bidding_signals IS NOT NULL "
+                    + "AND trusted_bidding_data_url IS NOT NULL "
+                    + "AND ads IS NOT NULL ")
     @Nullable
-    List<DBCustomAudience> getCustomAudienceByBuyers(List<String> buyers);
+    List<DBCustomAudience> getActiveCustomAudienceByBuyers(
+            List<String> buyers, Instant currentTime);
 }

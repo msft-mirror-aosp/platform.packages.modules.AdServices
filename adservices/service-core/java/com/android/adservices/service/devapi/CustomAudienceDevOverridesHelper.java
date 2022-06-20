@@ -19,6 +19,8 @@ package com.android.adservices.service.devapi;
 import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 
@@ -47,6 +49,25 @@ public class CustomAudienceDevOverridesHelper {
 
         this.mDevContext = devContext;
         this.mCustomAudienceDao = customAudienceDao;
+    }
+
+    /**
+     * Looks for an bidding logic override for the given combination of {@code owner}, {@code
+     * buyer}, and {@code name}. Will return {@code null} if {@link
+     * DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in the
+     * constructor or if there is no override created by the app with package name specified in
+     * {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public String getBiddingLogicOverride(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+        Objects.requireNonNull(owner);
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(name);
+
+        String appPackageName = mDevContext.getCallingAppPackageName();
+
+        return mCustomAudienceDao.getBiddingLogicUrlOverride(owner, buyer, name, appPackageName);
     }
 
     /**
@@ -97,8 +118,8 @@ public class CustomAudienceDevOverridesHelper {
      */
     public void removeOverride(@NonNull String owner, @NonNull String buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
-        Objects.requireNonNull(owner);
-        Objects.requireNonNull(owner);
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(name);
 
         if (!mDevContext.getDevOptionsEnabled()) {
             throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);

@@ -64,8 +64,7 @@ interface ICustomAudienceService {
      * use the content provided in {@code biddingLogicJS} and {@code trustedBiddingData} for the CA
      * identified by {@code owner}, {@code buyer}, {@code name}
      *
-     * The call will fail with status
-     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if:
+     * The call will throw an IllegalStateException if:
      * the API hasn't been enabled by developer options or by an adb command
      * or if the calling application manifest is not setting Android:debuggable to true.
      * or if the CA hasn't been created by the same app doing invoking this API.
@@ -85,8 +84,7 @@ interface ICustomAudienceService {
      * {@code overrideCustomAudienceRemoteInfo} for the CA identified by
      * {@code owner} {@code buyer}, {@code name}.
      *
-     * The call will fail with status
-     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if:
+     * The call will throw an IllegalStateException if:
      * the API hasn't been enabled by developer options or by an adb command
      * or if the calling application manifest is not setting Android:debuggable to true.
      *
@@ -102,8 +100,7 @@ interface ICustomAudienceService {
      * Deletes any override created by calling
      * {@code overrideCustomAudienceRemoteInfo} from this application.
      *
-     * The call will fail with status
-     * {@link FledgeErrorResponse#STATUS_INTERNAL_ERROR} if the API hasn't been enabled
+     * The call will throw an IllegalStateException if the API hasn't been enabled
      * by developer options or by an adb command and if the calling
      * application manifest is not setting Android:debuggable to true.
      */

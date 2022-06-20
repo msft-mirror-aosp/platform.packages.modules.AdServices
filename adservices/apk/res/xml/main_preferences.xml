@@ -14,21 +14,22 @@
      limitations under the License.
 -->
 <PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="Privacy Sandbox beta">
-  <SwitchPreference
-      android:id="@+id/privacy_sandbox_beta_switch"
-      android:key="@string/settingsUI_privacy_sandbox_beta_switch_key"
-      android:summary="@string/settingsUI_privacy_sandbox_beta_switch_summary"
-      android:title="@string/settingsUI_privacy_sandbox_beta_switch_title" />
-  <Preference
-      android:id="@+id/topics_preference"
-      android:key="@string/settingsUI_topics_key"
-      android:summary="@string/settingsUI_topics_summary"
-      android:title="@string/settingsUI_topics_title" />
-  <Preference
-      android:id="@+id/apps_preference"
-      android:key="@string/settingsUI_apps_key"
-      android:summary="@string/settingsUI_apps_summary"
-      android:title="@string/settingsUI_apps_title" />
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:title="Privacy Sandbox beta"
+        android:id="@+id/main_preference_screen">
+    <SwitchPreference
+            android:id="@+id/privacy_sandbox_beta_switch"
+            android:key="privacy_sandbox_beta_switch"
+            android:summary="@string/settingsUI_privacy_sandbox_beta_switch_summary"
+            android:title="@string/settingsUI_privacy_sandbox_beta_switch_title" />
+    <Preference
+            android:id="@+id/topics_preference"
+            android:key="@string/settingsUI_topics_key"
+            android:summary="@string/settingsUI_topics_summary"
+            android:title="@string/settingsUI_topics_title" />
+    <Preference
+            android:id="@+id/apps_preference"
+            android:key="@string/settingsUI_apps_key"
+            android:summary="@string/settingsUI_apps_summary"
+            android:title="@string/settingsUI_apps_title" />
 </PreferenceScreen>

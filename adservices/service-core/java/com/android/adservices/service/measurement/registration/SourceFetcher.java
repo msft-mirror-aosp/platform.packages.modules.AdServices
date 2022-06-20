@@ -16,10 +16,10 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_COOLDOWN_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_ATTRIBUTION_WINDOW;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_COOLDOWN_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -40,10 +40,10 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-
 
 /**
  * Download and decode Response Based Registration
@@ -94,18 +94,21 @@ public class SourceFetcher {
                             MAX_INSTALL_ATTRIBUTION_WINDOW);
             result.setInstallAttributionWindow(installAttributionWindow);
         }
-        if (json.has(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)
-                && !json.isNull(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY)) {
+        if (json.has(EventSourceContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)
+                && !json.isNull(EventSourceContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY)) {
             long installCooldownWindow =
-                    extractValidValue(json.getLong(EventSourceContract.INSTALL_COOLDOWN_WINDOW_KEY),
-                            MIN_INSTALL_COOLDOWN_WINDOW,
-                            MAX_INSTALL_COOLDOWN_WINDOW);
+                    extractValidValue(
+                            json.getLong(EventSourceContract.POST_INSTALL_EXCLUSIVITY_WINDOW_KEY),
+                            MIN_POST_INSTALL_EXCLUSIVITY_WINDOW,
+                            MAX_POST_INSTALL_EXCLUSIVITY_WINDOW);
             result.setInstallCooldownWindow(installCooldownWindow);
         }
 
-        // This "filter_data" field is used to generate aggregate report.
-        if (json.has("filter_data") && !json.isNull("filter_data")) {
-            result.setAggregateFilterData(json.getJSONObject("filter_data").toString());
+        // This "filter_data" field is used to generate reports.
+        if (json.has(EventSourceContract.FILTER_DATA)
+                && !json.isNull(EventSourceContract.FILTER_DATA)) {
+            result.setAggregateFilterData(
+                    json.getJSONObject(EventSourceContract.FILTER_DATA).toString());
         }
     }
 
@@ -242,18 +245,22 @@ public class SourceFetcher {
     /**
      * Fetch an attribution source type registration.
      */
-    public boolean fetchSource(@NonNull RegistrationRequest request,
-                               @NonNull List<SourceRegistration> out) {
+    public Optional<List<SourceRegistration>> fetchSource(@NonNull RegistrationRequest request) {
         if (request.getRegistrationType()
                 != RegistrationRequest.REGISTER_SOURCE) {
             throw new IllegalArgumentException("Expected source registration");
         }
+        List<SourceRegistration> out = new ArrayList<>();
         fetchSource(
                 request.getTopOriginUri(),
                 request.getRegistrationUri(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 true, out);
-        return !out.isEmpty();
+        if (out.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(out);
+        }
     }
 
     private interface EventSourceContract {
@@ -262,6 +269,7 @@ public class SourceFetcher {
         String EXPIRY = "expiry";
         String PRIORITY = "priority";
         String INSTALL_ATTRIBUTION_WINDOW_KEY = "install_attribution_window";
-        String INSTALL_COOLDOWN_WINDOW_KEY = "install_cooldown_window";
+        String POST_INSTALL_EXCLUSIVITY_WINDOW_KEY = "post_install_exclusivity_window";
+        String FILTER_DATA = "filter_data";
     }
 }
