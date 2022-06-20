@@ -21,9 +21,9 @@ import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
-import com.android.adservices.service.measurement.aggregation.AttributionAggregatableKey;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
+import com.android.adservices.service.measurement.validation.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -34,7 +34,6 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,6 +71,7 @@ public class Source {
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;
+    private int mAggregateContributions;
     private AggregatableAttributionSource mAggregatableAttributionSource;
 
     @IntDef(value = {
@@ -99,8 +99,18 @@ public class Source {
     }
 
     public enum SourceType {
-        EVENT,
-        NAVIGATION,
+        EVENT("event"),
+        NAVIGATION("navigation");
+
+        private final String mValue;
+
+        SourceType(String value) {
+            this.mValue = value;
+        }
+
+        public String getValue() {
+            return mValue;
+        }
     }
 
     private Source() {
@@ -256,6 +266,7 @@ public class Source {
                 && mAttributionMode == source.mAttributionMode
                 && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
+                && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(mAggregatableAttributionSource,
                 source.mAggregatableAttributionSource);
     }
@@ -264,7 +275,8 @@ public class Source {
     public int hashCode() {
         return Objects.hash(mId, mPublisher, mAttributionDestination, mAdTechDomain, mPriority,
                 mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys,
-                mAggregateFilterData, mAggregateSource, mAggregatableAttributionSource);
+                mAggregateFilterData, mAggregateSource, mAggregateContributions,
+                mAggregatableAttributionSource);
     }
 
     /**
@@ -464,6 +476,13 @@ public class Source {
     }
 
     /**
+     * Returns the current sum of values the source contributed to aggregatable reports.
+     */
+    public int getAggregateContributions() {
+        return mAggregateContributions;
+    }
+
+    /**
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
@@ -486,6 +505,13 @@ public class Source {
     }
 
     /**
+     * Set the aggregate contributions value.
+     */
+    public void setAggregateContributions(int aggregateContributions) {
+        mAggregateContributions = aggregateContributions;
+    }
+
+    /**
      * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
      * data string in Source.
      */
@@ -495,7 +521,7 @@ public class Source {
             return Optional.empty();
         }
         JSONArray jsonArray = new JSONArray(this.mAggregateSource);
-        Map<String, AttributionAggregatableKey> aggregateSourceMap = new HashMap<>();
+        Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             String id = jsonObject.getString("id");
@@ -504,12 +530,7 @@ public class Source {
                 hexString = hexString.substring(2);
             }
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            BigInteger divisor = BigDecimal.valueOf(Math.pow(2, 63)).toBigInteger();
-            aggregateSourceMap.put(id,
-                    new AttributionAggregatableKey.Builder()
-                            .setHighBits(bigInteger.divide(divisor).longValue())
-                            .setLowBits(bigInteger.mod(divisor).longValue())
-                            .build());
+            aggregateSourceMap.put(id, bigInteger);
         }
         return Optional.of(new AggregatableAttributionSource.Builder()
                 .setAggregatableSource(aggregateSourceMap)
@@ -548,6 +569,7 @@ public class Source {
          * See {@link Source#getPublisher()}.
          */
         public Builder setPublisher(Uri publisher) {
+            Validation.validateUri(publisher);
             mBuilding.mPublisher = publisher;
             return this;
         }
@@ -557,6 +579,7 @@ public class Source {
          */
 
         public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
@@ -565,6 +588,7 @@ public class Source {
          * See {@link Source#getAdTechDomain()} ()}.
          */
         public Builder setAdTechDomain(Uri adTechDomain) {
+            Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
@@ -621,6 +645,7 @@ public class Source {
          * See {@link Source#getRegistrant()}
          */
         public Builder setRegistrant(Uri registrant) {
+            Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
@@ -674,6 +699,14 @@ public class Source {
         }
 
         /**
+         * See {@link Source#getAggregateContributions()}
+         */
+        public Builder setAggregateContributions(int aggregateContributions) {
+            mBuilding.mAggregateContributions = aggregateContributions;
+            return this;
+        }
+
+        /**
          * See {@link Source#getAggregatableAttributionSource()}
          */
         public Builder setAggregatableAttributionSource(
@@ -686,6 +719,13 @@ public class Source {
          * Build the {@link Source}.
          */
         public Source build() {
+            Validation.validateNonNull(
+                    mBuilding.mPublisher,
+                    mBuilding.mAttributionDestination,
+                    mBuilding.mAdTechDomain,
+                    mBuilding.mRegistrant,
+                    mBuilding.mSourceType);
+
             return mBuilding;
         }
     }

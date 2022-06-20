@@ -15,11 +15,14 @@
  */
 package android.adservices.topics;
 
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+
 import android.adservices.common.CallerMetadata;
 import android.adservices.exceptions.GetTopicsException;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -40,18 +43,18 @@ import java.util.concurrent.Executor;
 public class TopicsManager {
 
     /**
-     * Result codes from
-     * {@link TopicsManager#getTopics(GetTopicsRequest, Executor, OutcomeReceiver)} methods.
+     * Result codes from {@link TopicsManager#getTopics(GetTopicsRequest, Executor,
+     * OutcomeReceiver)} methods.
      *
      * @hide
      */
     @IntDef(
             value = {
-                    RESULT_OK,
-                    RESULT_INTERNAL_ERROR,
-                    RESULT_INVALID_ARGUMENT,
-                    RESULT_IO_ERROR,
-                    RESULT_RATE_LIMIT_REACHED,
+                RESULT_OK,
+                RESULT_INTERNAL_ERROR,
+                RESULT_INVALID_ARGUMENT,
+                RESULT_IO_ERROR,
+                RESULT_RATE_LIMIT_REACHED,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ResultCode {}
@@ -118,12 +121,20 @@ public class TopicsManager {
         return service;
     }
 
-    /** Return the topics. */
+    /**
+     * Return the topics.
+     *
+     * @param getTopicsRequest The request for obtaining Topics.
+     * @param executor The executor to run callback.
+     * @param callback The callback that's called after topics are available or an error occurs.
+     * @throws SecurityException if caller is not authorized to call this API.
+     * @throws GetTopicsException if call results in an internal error.
+     */
     @NonNull
     public void getTopics(
             @NonNull GetTopicsRequest getTopicsRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<GetTopicsResponse, GetTopicsException> callback) {
+            @NonNull OutcomeReceiver<GetTopicsResponse, Exception> callback) {
         Objects.requireNonNull(getTopicsRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
@@ -131,12 +142,24 @@ public class TopicsManager {
                 .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
         final ITopicsService service = getService();
-
+        String sdkName = "";
+        if (mContext instanceof SandboxedSdkContext) {
+            sdkName = ((SandboxedSdkContext) mContext).getSdkName();
+            if (!sdkName.equals(getTopicsRequest.getSdkName())) {
+                callback.onError(
+                        new GetTopicsException(
+                                RESULT_INTERNAL_ERROR,
+                                "SdkName get from SandboxedSdkContext is different "
+                                        + "from SdkName get from getTopicsRequest"));
+            }
+        } else {
+            sdkName = getTopicsRequest.getSdkName();
+        }
         try {
             service.getTopics(
                     new GetTopicsParam.Builder()
                             .setAttributionSource(mContext.getAttributionSource())
-                            .setSdkName(getTopicsRequest.getSdkName())
+                            .setSdkName(sdkName)
                             .build(),
                     callerMetadata,
                     new IGetTopicsCallback.Stub() {
@@ -155,9 +178,23 @@ public class TopicsManager {
                                                             .setTopics(resultParcel.getTopics())
                                                             .build());
                                         } else {
+                                            // TODO: Errors should be returned in onFailure method.
                                             callback.onError(
                                                     new GetTopicsException(
                                                             resultParcel.getResultCode()));
+                                        }
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(int resultCode) {
+                            executor.execute(
+                                    () -> {
+                                        if (resultCode == RESULT_UNAUTHORIZED_CALL) {
+                                            callback.onError(
+                                                    new SecurityException(
+                                                            "Caller is not authorized to call this"
+                                                                    + " API."));
                                         }
                                     });
                         }

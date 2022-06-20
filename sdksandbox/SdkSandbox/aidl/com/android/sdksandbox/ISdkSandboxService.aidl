@@ -25,7 +25,8 @@ import com.android.sdksandbox.ISdkSandboxToSdkSandboxManagerCallback;
 /** @hide */
 oneway interface ISdkSandboxService {
     // TODO(b/228045863): Wrap parameters in a parcelable
-    void loadSdk(IBinder sdkToken, in ApplicationInfo info, in String sdkName,
-                  in String sdkProviderClassName, in Bundle params,
-                  in ISdkSandboxToSdkSandboxManagerCallback callback);
+    void loadSdk(in String callingPackageName, IBinder sdkToken, in ApplicationInfo info,
+                  in String sdkName, in String sdkProviderClassName,
+                  in String sdkCeDataDir, in String sdkDeDataDir,
+                  in Bundle params, in ISdkSandboxToSdkSandboxManagerCallback callback);
 }

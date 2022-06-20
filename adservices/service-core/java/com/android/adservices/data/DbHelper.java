@@ -16,8 +16,6 @@
 
 package com.android.adservices.data;
 
-import static com.android.adservices.data.measurement.MeasurementMigrations.migrationScriptVersion2;
-
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -27,8 +25,15 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 /**
  * Helper to manage the PP API database. Designed as a singleton to make sure that all PP API usages
@@ -36,20 +41,29 @@ import com.android.internal.annotations.VisibleForTesting;
  */
 public final class DbHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 2;
+    static final int LATEST_DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
+
+    /**
+     * Ideally we'd want to keep only the {@link #LATEST_DATABASE_VERSION} parameter. This field
+     * helps initialize and upgrade the DB to a certain version, which is useful for DB migration
+     * tests.
+     */
+    private final int mDbVersion;
 
     /**
      * It's only public to unit test.
      *
      * @param context the context
      * @param dbName Name of database to query
+     * @param dbVersion db version
      */
     @VisibleForTesting
-    public DbHelper(@NonNull Context context, @NonNull String dbName) {
-        super(context, dbName, null, DATABASE_VERSION);
+    public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
+        super(context, dbName, null, dbVersion);
+        this.mDbVersion = dbVersion;
     }
 
     /** Returns an instance of the DbHelper given a context. */
@@ -57,7 +71,7 @@ public final class DbHelper extends SQLiteOpenHelper {
     public static DbHelper getInstance(@NonNull Context ctx) {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(ctx, DATABASE_NAME);
+                sSingleton = new DbHelper(ctx, DATABASE_NAME, LATEST_DATABASE_VERSION);
             }
             return sSingleton;
         }
@@ -65,6 +79,7 @@ public final class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(@NonNull SQLiteDatabase db) {
+        LogUtil.d("DbHelper.onCreate.");
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
             db.execSQL(sql);
         }
@@ -74,13 +89,7 @@ public final class DbHelper extends SQLiteOpenHelper {
         for (String sql : MeasurementTables.CREATE_INDEXES) {
             db.execSQL(sql);
         }
-        onUpgrade(db, 0, DATABASE_VERSION);
-    }
-
-    @Override
-    public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
-        LogUtil.d("DbHelper.onUpgrade.");
-        migrate(db, migrationScriptVersion2(), oldVersion, /* scriptVersion = */ 2);
+        onUpgrade(db, 0, mDbVersion);
     }
 
     /**
@@ -109,13 +118,14 @@ public final class DbHelper extends SQLiteOpenHelper {
         }
     }
 
-    private void migrate(
-            @NonNull SQLiteDatabase db, String[] scripts, int deviceVersion, int scriptVersion) {
-        if (deviceVersion < scriptVersion) {
-            LogUtil.d("Migration executing script version %d", scriptVersion);
-            for (String sql : scripts) {
-                db.execSQL(sql);
-            }
-        }
+    @Override
+    public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+        LogUtil.d("DbHelper.onUpgrade.");
+        getOrderedDbMigrators()
+                .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+    }
+
+    private static List<IMeasurementDbMigrator> getOrderedDbMigrators() {
+        return ImmutableList.of(new MeasurementDbMigratorV2(), new MeasurementDbMigratorV3());
     }
 }

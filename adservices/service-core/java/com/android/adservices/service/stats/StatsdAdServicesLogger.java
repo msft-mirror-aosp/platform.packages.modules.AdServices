@@ -16,17 +16,17 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * AdServicesLogger that log stats to StatsD
- */
+/** AdServicesLogger that log stats to StatsD */
 @ThreadSafe
 public class StatsdAdServicesLogger implements AdServicesLogger {
     private static volatile StatsdAdServicesLogger sStatsdAdServicesLogger;
 
-    private StatsdAdServicesLogger() {
-    }
+    private StatsdAdServicesLogger() {}
 
     /** Returns an instance of WestWorldAdServicesLogger. */
     public static StatsdAdServicesLogger getInstance() {
@@ -39,21 +39,38 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
         }
         return sStatsdAdServicesLogger;
     }
-    /**
-     * log method for measurement reporting.
-     */
+    /** log method for measurement reporting. */
     public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
-        AdServicesStatsLog.write(measurementReportsStats.getCode(),
-                measurementReportsStats.getType(), measurementReportsStats.getResultCode());
+        AdServicesStatsLog.write(
+                measurementReportsStats.getCode(),
+                measurementReportsStats.getType(),
+                measurementReportsStats.getResultCode());
     }
 
-    /**
-     * log method for API call stats.
-     */
+    /** log method for API call stats. */
     public void logApiCallStats(ApiCallStats apiCallStats) {
-        AdServicesStatsLog.write(apiCallStats.getCode(), apiCallStats.getApiClass(),
-                apiCallStats.getApiName(), apiCallStats.getAppPackageName(),
-                apiCallStats.getSdkPackageName(), apiCallStats.getLatencyMillisecond(),
+        AdServicesStatsLog.write(
+                apiCallStats.getCode(),
+                apiCallStats.getApiClass(),
+                apiCallStats.getApiName(),
+                apiCallStats.getAppPackageName(),
+                apiCallStats.getSdkPackageName(),
+                apiCallStats.getLatencyMillisecond(),
                 apiCallStats.getResultCode());
+    }
+
+    @Override
+    public void logFledgeApiCallStats(int apiName, int resultCode) {
+        // TODO(b/233628316): Implement latency measurement
+        logApiCallStats(
+                new ApiCallStats.Builder()
+                        .setCode(AD_SERVICES_API_CALLED)
+                        .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__FLEDGE)
+                        .setApiName(apiName)
+                        .setResultCode(resultCode)
+                        // TODO(b/233629557): Implement app/SDK reporting
+                        .setSdkPackageName("")
+                        .setAppPackageName("")
+                        .build());
     }
 }

@@ -18,8 +18,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.tests.cts.endtoendtest" >
 
-    <application>
-    </application>
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
         android:targetPackage="com.android.adservices.tests.cts.endtoendtest" >

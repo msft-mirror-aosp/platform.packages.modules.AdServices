@@ -23,9 +23,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -54,9 +61,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -109,9 +123,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d2",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -140,9 +161,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d2",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 1,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -187,9 +215,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -231,9 +266,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -299,9 +341,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           }
@@ -343,9 +392,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           }
@@ -414,9 +470,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -460,9 +523,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -533,9 +603,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
           }
@@ -580,9 +657,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
           }
@@ -655,7 +739,15 @@
             "adTechDomain": "https://www.example3.com",
             "priority": 101,
             "status": 0,
-            "triggerData": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 1,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -699,9 +791,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 1,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -772,9 +871,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
           }
@@ -818,9 +924,16 @@
             "id": "T1",
             "attributionDestination": "android-app://com.example.xyz",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 9072000001,
             "registrant": "android-app://com.example.xyz"
           }
@@ -876,9 +989,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 7,
+            "eventTriggers": [
+              {
+                "trigger_data": 7,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -907,9 +1027,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 7,
+            "eventTriggers": [
+              {
+                "trigger_data": 7,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -963,9 +1090,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 15,
+            "eventTriggers": [
+              {
+                "trigger_data": 15,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -994,9 +1128,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 15,
+            "eventTriggers": [
+              {
+                "trigger_data": 15,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1047,18 +1188,32 @@
           "id": "T1",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 101,
-          "status": 0,
-          "triggerData": 2,
+          "status":0,
+          "eventTriggers": [
+            {
+              "trigger_data": 2,
+              "priority": 101,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000002,
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 101,
           "status": 0,
-          "triggerData": 2,
+          "eventTriggers": [
+            {
+              "trigger_data": 2,
+              "priority": 101,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000003,
           "registrant": "android-app://com.example.xyz"
         }],
@@ -1083,18 +1238,32 @@
           "id": "T1",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 101,
           "status": 2,
-          "triggerData": 2,
+          "eventTriggers": [
+            {
+              "trigger_data": 2,
+              "priority": 101,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000002,
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 101,
           "status": 1,
-          "triggerData": 2,
+          "eventTriggers": [
+            {
+              "trigger_data": 2,
+              "priority": 101,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000003,
           "registrant": "android-app://com.example.xyz"
         }],
@@ -1142,18 +1311,32 @@
           "id": "T1",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 101,
           "status": 0,
-          "triggerData": 2,
+          "eventTriggers": [
+            {
+              "trigger_data": 2,
+              "priority": 101,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000002,
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 102,
           "status": 0,
-          "triggerData": 1,
+          "eventTriggers": [
+            {
+              "trigger_data": 1,
+              "priority": 102,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000003,
           "registrant": "android-app://com.example.xyz"
         }],
@@ -1178,18 +1361,32 @@
           "id": "T1",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 101,
           "status": 2,
-          "triggerData": 2,
+          "eventTriggers": [
+            {
+              "trigger_data": 2,
+              "priority": 101,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000002,
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
           "attributionDestination": "https://www.example2.com/d1",
           "adTechDomain": "https://www.example3.com",
-          "priority": 102,
           "status": 2,
-          "triggerData": 1,
+          "eventTriggers": [
+            {
+              "trigger_data": 1,
+              "priority": 102,
+              "filters": {
+                "key_1": ["value_1"]
+              }
+            }
+          ],
           "triggerTime": 8640000003,
           "registrant": "android-app://com.example.xyz"
         }],
@@ -1249,9 +1446,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 1,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1259,9 +1463,16 @@
             "id": "T2",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 102,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 102,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1269,9 +1480,16 @@
             "id": "T3",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 103,
             "status": 0,
-            "triggerData": 3,
+            "eventTriggers": [
+              {
+                "trigger_data": 3,
+                "priority": 103,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1279,9 +1497,16 @@
             "id": "T4",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 104,
             "status": 0,
-            "triggerData": 4,
+            "eventTriggers": [
+              {
+                "trigger_data": 4,
+                "priority": 104,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1310,9 +1535,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 1,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1320,9 +1552,16 @@
             "id": "T2",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 102,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 102,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1330,9 +1569,16 @@
             "id": "T3",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 103,
             "status": 2,
-            "triggerData": 3,
+            "eventTriggers": [
+              {
+                "trigger_data": 3,
+                "priority": 103,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1340,9 +1586,16 @@
             "id": "T4",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 104,
             "status": 2,
-            "triggerData": 4,
+            "eventTriggers": [
+              {
+                "trigger_data": 4,
+                "priority": 104,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1448,9 +1701,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 1,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1458,9 +1718,16 @@
             "id": "T2",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1468,9 +1735,16 @@
             "id": "T3",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 3,
+            "eventTriggers": [
+              {
+                "trigger_data": 3,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1478,9 +1752,16 @@
             "id": "T4",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 102,
             "status": 0,
-            "triggerData": 4,
+            "eventTriggers": [
+              {
+                "trigger_data": 4,
+                "priority": 102,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1509,9 +1790,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 1,
+            "eventTriggers": [
+              {
+                "trigger_data": 1,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1519,9 +1807,16 @@
             "id": "T2",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000003,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1529,9 +1824,16 @@
             "id": "T3",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 2,
-            "triggerData": 3,
+            "eventTriggers": [
+              {
+                "trigger_data": 3,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000004,
             "registrant": "android-app://com.example.xyz"
           },
@@ -1539,9 +1841,16 @@
             "id": "T4",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 102,
             "status": 2,
-            "triggerData": 4,
+            "eventTriggers": [
+              {
+                "trigger_data": 4,
+                "priority": 102,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000005,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1662,9 +1971,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1708,9 +2024,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 1,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1758,9 +2081,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 0,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
@@ -1804,9 +2134,16 @@
             "id": "T1",
             "attributionDestination": "https://www.example2.com/d1",
             "adTechDomain": "https://www.example3.com",
-            "priority": 101,
             "status": 1,
-            "triggerData": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": {
+                  "key_1": ["value_1"]
+                }
+              }
+            ],
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz"
           }
