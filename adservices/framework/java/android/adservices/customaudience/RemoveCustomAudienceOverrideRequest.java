@@ -17,20 +17,26 @@
 package android.adservices.customaudience;
 
 import android.annotation.NonNull;
+import android.os.OutcomeReceiver;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the removeCustomAudienceRemoteInfoOverride request
+ * This POJO represents the {@link
+ * CustomAudienceManager#removeCustomAudienceRemoteInfoOverride(RemoveCustomAudienceOverrideRequest,
+ * Executor, OutcomeReceiver)} request
  *
- * @hide
+ * <p>It contains 3 fields {@code owner}, {@code buyer}, and {@code name} which will serve as the
+ * identifier for the overrides
  */
 public class RemoveCustomAudienceOverrideRequest {
     @NonNull private final String mOwner;
     @NonNull private final String mBuyer;
     @NonNull private final String mName;
 
-    public RemoveCustomAudienceOverrideRequest(String owner, String buyer, String name) {
+    public RemoveCustomAudienceOverrideRequest(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
         mOwner = owner;
         mBuyer = buyer;
         mName = name;

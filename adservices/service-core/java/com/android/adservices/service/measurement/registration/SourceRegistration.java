@@ -17,7 +17,7 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
-import static com.android.adservices.service.measurement.PrivacyParams.MIN_INSTALL_COOLDOWN_WINDOW;
+import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -155,7 +155,7 @@ public final class SourceRegistration {
             mDestination = Uri.EMPTY;
             mExpiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             mInstallAttributionWindow = MAX_INSTALL_ATTRIBUTION_WINDOW;
-            mInstallCooldownWindow = MIN_INSTALL_COOLDOWN_WINDOW;
+            mInstallCooldownWindow = MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
         }
 
         /**

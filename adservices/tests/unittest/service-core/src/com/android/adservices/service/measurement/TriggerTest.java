@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,13 +31,39 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class TriggerTest {
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+            "{\n"
+                    + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
+
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING_X =
+            "{\n"
+                    + "  \"key_1x\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2x\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
+
+    private static final String EVENT_TRIGGERS =
+            "[\n"
+                    + "{\n"
+                    + "  \"trigger_data\": \"1\",\n"
+                    + "  \"priority\": \"345678\",\n"
+                    + "  \"deduplication_key\": \"2345678\",\n"
+                    + "  \"filters\": {\n"
+                    + "    \"source_type\": [\"navigation\"],\n"
+                    + "    \"key_1\": [\"value_1\"] \n"
+                    + "   }\n"
+                    + "}"
+                    + "]\n";
 
     @Test
     public void testEqualsPass() throws JSONException {
-        assertEquals(new Trigger.Builder().build(), new Trigger.Builder().build());
+        assertEquals(TriggerFixture.getValidTriggerBuilder().build(),
+                TriggerFixture.getValidTriggerBuilder().build());
         JSONArray aggregateTriggerDatas = new JSONArray();
         JSONObject aggregateTriggerData1  = new JSONObject();
         aggregateTriggerData1.put("key_piece", "0x400");
@@ -46,74 +73,67 @@ public class TriggerTest {
         aggregateTriggerData2.put("source_keys", Arrays.asList("geoValue", "nonMatchingKey"));
         aggregateTriggerDatas.put(aggregateTriggerData1);
         aggregateTriggerDatas.put(aggregateTriggerData2);
-
         JSONObject values  = new JSONObject();
         values.put("campaignCounts", 32768);
         values.put("geoValue", 1664);
-
         assertEquals(
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
                         .setId("1")
-                        .setEventTriggerData(1L)
-                        .setPriority(3L)
+                        .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
-                        .setDedupKey(6L)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
+                        .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .build(),
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
                         .setAttributionDestination(Uri.parse("https://example.com/aD"))
                         .setId("1")
-                        .setEventTriggerData(1L)
-                        .setPriority(3L)
+                        .setEventTriggers(EVENT_TRIGGERS)
                         .setTriggerTime(5L)
-                        .setDedupKey(6L)
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
                         .setAggregateValues(values.toString())
+                        .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .build());
     }
 
     @Test
     public void testEqualsFail() throws JSONException {
         assertNotEquals(
-                new Trigger.Builder().setId("1").build(),
-                new Trigger.Builder().setId("2").build());
+                TriggerFixture.getValidTriggerBuilder().setId("1").build(),
+                TriggerFixture.getValidTriggerBuilder().setId("2").build());
         assertNotEquals(
-                new Trigger.Builder().setAttributionDestination(Uri.parse("1")).build(),
-                new Trigger.Builder().setAttributionDestination(Uri.parse("2")).build());
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(Uri.parse("https://1.com")).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(Uri.parse("https://2.com")).build());
         assertNotEquals(
-                new Trigger.Builder().setAdTechDomain(Uri.parse("1")).build(),
-                new Trigger.Builder().setAdTechDomain(Uri.parse("2")).build());
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAdTechDomain(Uri.parse("https://1.com")).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAdTechDomain(Uri.parse("https://2.com")).build());
         assertNotEquals(
-                new Trigger.Builder().setPriority(1L).build(),
-                new Trigger.Builder().setPriority(2L).build());
+                TriggerFixture.getValidTriggerBuilder().setEventTriggers("a").build(),
+                TriggerFixture.getValidTriggerBuilder().setEventTriggers("b").build());
         assertNotEquals(
-                new Trigger.Builder().setTriggerTime(1L).build(),
-                new Trigger.Builder().setTriggerTime(2L).build());
+                TriggerFixture.getValidTriggerBuilder().setTriggerTime(1L).build(),
+                TriggerFixture.getValidTriggerBuilder().setTriggerTime(2L).build());
         assertNotEquals(
-                new Trigger.Builder().setEventTriggerData(1L).build(),
-                new Trigger.Builder().setEventTriggerData(2L).build());
+                TriggerFixture.getValidTriggerBuilder()
+                        .setStatus(Trigger.Status.PENDING).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setStatus(Trigger.Status.IGNORED).build());
         assertNotEquals(
-                new Trigger.Builder().setStatus(Trigger.Status.PENDING).build(),
-                new Trigger.Builder().setStatus(Trigger.Status.IGNORED).build());
-        assertNotEquals(
-                new Trigger.Builder().setDedupKey(1L).build(),
-                new Trigger.Builder().setDedupKey(2L).build());
-        assertNotEquals(
-                new Trigger.Builder().setDedupKey(1L).build(),
-                new Trigger.Builder().setDedupKey(null).build());
-        assertNotEquals(
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .build(),
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setRegistrant(Uri.parse("android-app://com.example.xyz"))
                         .build());
         JSONArray aggregateTriggerDataList1 = new JSONArray();
@@ -127,54 +147,24 @@ public class TriggerTest {
         aggregateTriggerData2.put("source_keys", Arrays.asList("geoValue", "nonMatchingKey"));
         aggregateTriggerDataList2.put(aggregateTriggerData2);
         assertNotEquals(
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setAggregateTriggerData(aggregateTriggerDataList1.toString()).build(),
-                new Trigger.Builder()
+                TriggerFixture.getValidTriggerBuilder()
                         .setAggregateTriggerData(aggregateTriggerDataList2.toString()).build());
-
         JSONObject values1  = new JSONObject();
         values1.put("campaignCounts", 32768);
         JSONObject values2  = new JSONObject();
         values2.put("geoValue", 1664);
-        assertNotEquals(new Trigger.Builder().setAggregateValues(values1.toString()).build(),
-                new Trigger.Builder().setAggregateValues(values2.toString()).build());
-    }
-
-    @Test
-    public void getTruncatedTriggerDataNavigation() {
-        Source source = new Source.Builder()
-                .setSourceType(Source.SourceType.NAVIGATION).build();
-
-        assertEquals(6, (new Trigger.Builder().setEventTriggerData(6).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(7, (new Trigger.Builder().setEventTriggerData(7).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(3, (new Trigger.Builder().setEventTriggerData(11).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(4, (new Trigger.Builder().setEventTriggerData(12).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(2, (new Trigger.Builder().setEventTriggerData(10).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(7, (new Trigger.Builder().setEventTriggerData(127).build())
-                .getTruncatedTriggerData(source));
-    }
-
-    @Test
-    public void getTruncatedTriggerDataEvent() {
-        Source source = new Source.Builder()
-                .setSourceType(Source.SourceType.EVENT).build();
-
-        assertEquals(0, (new Trigger.Builder().setEventTriggerData(0).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(1, (new Trigger.Builder().setEventTriggerData(1).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(0, (new Trigger.Builder().setEventTriggerData(2).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(1, (new Trigger.Builder().setEventTriggerData(3).build())
-                .getTruncatedTriggerData(source));
-        assertEquals(1, (new Trigger.Builder().setEventTriggerData(101).build())
-                .getTruncatedTriggerData(source));
-
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValues(values1.toString()).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValues(values2.toString()).build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
     }
 
     @Test
@@ -195,7 +185,8 @@ public class TriggerTest {
         values.put("campaignCounts", 32768);
         values.put("geoValue", 1664);
 
-        Trigger trigger = new Trigger.Builder().setAggregateTriggerData(triggerDatas.toString())
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAggregateTriggerData(triggerDatas.toString())
                 .setAggregateValues(values.toString()).build();
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
                 trigger.parseAggregateTrigger();
@@ -204,10 +195,7 @@ public class TriggerTest {
         AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
         assertEquals(aggregateTrigger.getTriggerData().size(), 2);
         assertEquals(aggregateTrigger.getTriggerData().get(0).getSourceKeys().size(), 1);
-        assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().getHighBits().longValue(),
-                0L);
-        assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().getLowBits().longValue(),
-                1024L);
+        assertEquals(aggregateTrigger.getTriggerData().get(0).getKey().intValue(), 1024);
         assertTrue(aggregateTrigger.getTriggerData().get(0)
                 .getSourceKeys().contains("campaignCounts"));
         assertTrue(aggregateTrigger.getTriggerData().get(0).getFilter().isPresent());
@@ -217,16 +205,92 @@ public class TriggerTest {
         assertEquals(aggregateTrigger.getTriggerData().get(0).getNotFilter()
                 .get().getAttributionFilterMap().size(), 2);
 
-        assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().getHighBits().longValue(),
-                0L);
-        assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().getLowBits().longValue(),
-                2688L);
+        assertEquals(aggregateTrigger.getTriggerData().get(1).getKey().intValue(), 2688);
         assertEquals(aggregateTrigger.getTriggerData().get(1).getSourceKeys().size(), 2);
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("geoValue"));
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("noMatch"));
         assertEquals(aggregateTrigger.getValues().size(), 2);
         assertEquals(aggregateTrigger.getValues().get("campaignCounts").intValue(), 32768);
         assertEquals(aggregateTrigger.getValues().get("geoValue").intValue(), 1664);
+    }
+
+    @Test
+    public void parseEventTriggers() throws JSONException {
+        // setup
+        JSONObject filters1 =
+                new JSONObject(
+                        "{\n"
+                                + "    \"filter_key_1\": [\"filter_value_1\"], \n"
+                                + "    \"filter_key_2\": [\"filter_value_2\"] \n"
+                                + "   }");
+        JSONObject notFilters1 =
+                new JSONObject(
+                        "{\n"
+                                + "    \"not_filter_key_1\": [\"not_filter_value_1\", "
+                                + "\"not_filter_value_2\"]"
+                                + "   }");
+        JSONObject notFilters2 =
+                new JSONObject("{\n" + "    \"key_1\": [\"value_1_x\"] \n" + "   }");
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"2\",\n"
+                                        + "  \"priority\": \"2\",\n"
+                                        + "  \"deduplication_key\": \"2\",\n"
+                                        + "  \"filters\": {\n"
+                                        + "    \"filter_key_1\": [\"filter_value_1\"], \n"
+                                        + "    \"filter_key_2\": [\"filter_value_2\"] \n"
+                                        + "   },\n"
+                                        + "  \"not_filters\": {\n"
+                                        + "    \"not_filter_key_1\": [\"not_filter_value_1\", "
+                                        + "\"not_filter_value_2\"]"
+                                        + "   }\n"
+                                        + "},"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"3\",\n"
+                                        + "  \"priority\": \"3\",\n"
+                                        + "  \"deduplication_key\": \"3\",\n"
+                                        + "  \"not_filters\": {\n"
+                                        + "    \"key_1\": [\"value_1_x\"] \n"
+                                        + "   }\n"
+                                        + "}"
+                                        + "]\n")
+                        .setTriggerTime(234324L)
+                        .build();
+        EventTrigger eventTrigger1 =
+                new EventTrigger.Builder()
+                        .setTriggerPriority(2L)
+                        .setTriggerData(2L)
+                        .setDedupKey(2L)
+                        .setFilter(
+                                new AggregateFilterData.Builder()
+                                        .buildAggregateFilterData(filters1)
+                                        .build())
+                        .setNotFilter(
+                                new AggregateFilterData.Builder()
+                                        .buildAggregateFilterData(notFilters1)
+                                        .build())
+                        .build();
+        EventTrigger eventTrigger2 =
+                new EventTrigger.Builder()
+                        .setTriggerPriority(3L)
+                        .setTriggerData(3L)
+                        .setDedupKey(3L)
+                        .setNotFilter(
+                                new AggregateFilterData.Builder()
+                                        .buildAggregateFilterData(notFilters2)
+                                        .build())
+                        .build();
+
+        // Action
+        List<EventTrigger> actualEventTriggers = trigger.parseEventTriggers();
+
+        // Assertion
+        assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
     }
 
     private JSONObject createFilterJSONObject() throws JSONException {
