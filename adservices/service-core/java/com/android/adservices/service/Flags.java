@@ -24,16 +24,14 @@ import androidx.annotation.Nullable;
 import java.io.PrintWriter;
 
 /**
- * AdServices Feature Flags interface.
- * This Flags interface hold the default values of Ad Services Flags.
+ * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
+ * Flags.
  */
 public interface Flags extends Dumpable {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
-    /**
-     * Returns the max time period (in millis) between each epoch computation job run.
-     */
+    /** Returns the max time period (in millis) between each epoch computation job run. */
     default long getTopicsEpochJobPeriodMs() {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
@@ -41,13 +39,10 @@ public interface Flags extends Dumpable {
     /** Topics Epoch Job Flex. */
     long TOPICS_EPOCH_JOB_FLEX_MS = 5 * 60 * 60 * 1000; // 5 hours.
 
-    /**
-     * Returns flex for the Epoch computation job in Millisecond.
-     */
+    /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
         return TOPICS_EPOCH_JOB_FLEX_MS;
     }
-
 
     /* The percentage that we will return a random topic from the Taxonomy. */
     int TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 5;
@@ -76,7 +71,10 @@ public interface Flags extends Dumpable {
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
     int TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = 3;
 
-    /** Returns the percentage that we will return a random topic from the Taxonomy. */
+    /**
+     * Returns the number of epochs to look back when deciding if a caller has observed a topic
+     * before.
+     */
     default int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
@@ -84,43 +82,92 @@ public interface Flags extends Dumpable {
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
-    /**
-     * Returns the max time period (in millis) between each idle maintenance job run.
-     */
+    /** Returns the max time period (in millis) between each idle maintenance job run. */
     default long getMaintenanceJobPeriodMs() {
         return MAINTENANCE_JOB_PERIOD_MS;
     }
 
-    /* The default flex for Maintenaine Job. */
-    long MAINTENANCE_JOB_FLEX_MS = 3 * 60 * 60 * 1000;  // 3 hours.
+    /* The default flex for Maintenance Job. */
+    long MAINTENANCE_JOB_FLEX_MS = 3 * 60 * 60 * 1000; // 3 hours.
 
-    /**
-     * Returns flex for the Daily Maintenance job in Millisecond.
-     */
+    /** Returns flex for the Daily Maintenance job in Millisecond. */
     default long getMaintenanceJobFlexMs() {
         return MAINTENANCE_JOB_FLEX_MS;
     }
 
-    /* The default max time period (in millis) between each main reporting maintenance job run. */
-    long MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
+    /* The default min time period (in millis) between each event main reporting job run. */
+    long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
-    /**
-     * Returns max time period (in millis) between each main reporting maintenance job run.
-     */
-    default long getMeasurementMainReportingJobPeriodMs() {
-        return MEASUREMENT_MAIN_REPORTING_JOB_PERIOD_MS;
+    /** Returns min time period (in millis) between each event main reporting job run. */
+    default long getMeasurementEventMainReportingJobPeriodMs() {
+        return MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default min time period (in millis) between each event fallback reporting job run. */
+    long MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours.
+
+    /** Returns min time period (in millis) between each event fallback reporting job run. */
+    default long getMeasurementEventFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default min time period (in millis) between each aggregate main reporting job run. */
+    long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
+
+    /** Returns min time period (in millis) between each aggregate main reporting job run. */
+    default long getMeasurementAggregateMainReportingJobPeriodMs() {
+        return MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
+    }
+
+    /* The default min time period (in millis) between each aggregate fallback reporting job run. */
+    long MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours.
+
+    /** Returns min time period (in millis) between each aggregate fallback job run. */
+    default long getMeasurementAggregateFallbackReportingJobPeriodMs() {
+        return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
     /* The default measurement app name. */
     String MEASUREMENT_APP_NAME = "";
 
-    /**
-     * Returns the app name.
-     */
+    /** Returns the app name. */
     default String getMeasurementAppName() {
         return MEASUREMENT_APP_NAME;
     }
 
+    long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
+    long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
+
+    /**
+     * Returns the best effort max time (in milliseconds) between each FLEDGE Background Fetch job
+     * run.
+     */
+    default long getFledgeBackgroundFetchJobPeriodMs() {
+        return FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
+    }
+
+    /**
+     * Returns the amount of flex (in milliseconds) around the end of each period to run each FLEDGE
+     * Background Fetch job.
+     */
+    default long getFledgeBackgroundFetchJobFlexMs() {
+        return FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
+
+    /**
+     * The number of epoch to look back to do garbage collection for old epoch data. Assume current
+     * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
+     * should be erased
+     */
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS + 1;
+
+    /*
+     * Return the number of epochs to keep in the history
+     */
+    default int getNumberOfEpochsToKeepInHistory() {
+        return NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+    }
 }

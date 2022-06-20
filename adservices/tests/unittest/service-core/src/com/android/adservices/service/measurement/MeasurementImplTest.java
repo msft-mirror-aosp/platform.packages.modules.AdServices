@@ -53,6 +53,7 @@ import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
+import com.android.adservices.service.measurement.registration.TriggerRegistration;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,12 +63,15 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -79,10 +83,37 @@ public final class MeasurementImplTest {
     private static final Uri URI_WITHOUT_APP_SCHEME = Uri.parse("com.example.abc");
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri DEFAULT_REGISTRATION_URI = Uri.parse("https://foo.com/bar?ad=134");
+    private static final String ANDROID_APP_SCHEME = "android-app://";
     private static final RegistrationRequest SOURCE_REGISTRATION_REQUEST =
             createRegistrationRequest(RegistrationRequest.REGISTER_SOURCE);
     private static final RegistrationRequest TRIGGER_REGISTRATION_REQUEST =
             createRegistrationRequest(RegistrationRequest.REGISTER_TRIGGER);
+    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
+            "{\n"
+                    + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
+                    + "  \"key_2\": [\"value_1\", \"value_2\"]\n"
+                    + "}\n";
+    private static final long TRIGGER_PRIORITY = 345678L;
+    private static final Long TRIGGER_DEDUP_KEY = 2345678L;
+    private static final Long TRIGGER_DATA = 1L;
+    private static final String EVENT_TRIGGERS =
+            "[\n"
+                    + "{\n"
+                    + "  \"trigger_data\": \""
+                    + TRIGGER_DATA
+                    + "\",\n"
+                    + "  \"priority\": \""
+                    + TRIGGER_PRIORITY
+                    + "\",\n"
+                    + "  \"deduplication_key\": \""
+                    + TRIGGER_DEDUP_KEY
+                    + "\",\n"
+                    + "  \"filters\": {\n"
+                    + "    \"source_type\": [\"navigation\"],\n"
+                    + "    \"key_1\": [\"value_1\"] \n"
+                    + "   }\n"
+                    + "}"
+                    + "]\n";
 
     private static final SourceRegistration VALID_SOURCE_REGISTRATION_1 =
             new com.android.adservices.service.measurement.registration.SourceRegistration
@@ -108,6 +139,19 @@ public final class MeasurementImplTest {
                     .setInstallCooldownWindow(7418398274L)//
                     .setReportingOrigin(Uri.parse("https://com.example2"))//
                     .setTopOrigin(Uri.parse("android-app://com.source2"))
+                    .build();
+
+    private static final TriggerRegistration VALID_TRIGGER_REGISTRATION =
+            new TriggerRegistration.Builder()
+                    .setTopOrigin(Uri.parse("https://foo.com"))
+                    .setReportingOrigin(Uri.parse("https://bar.com"))
+                    .setEventTriggers(EVENT_TRIGGERS)
+                    .setAggregateTriggerData(
+                            "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                                    + "\"not_filters\":{\"product\":[\"1\"]}},"
+                                    + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")
+                    .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                    .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                     .build();
 
     @Mock
@@ -151,11 +195,9 @@ public final class MeasurementImplTest {
         List<SourceRegistration> sourceRegistrationsOut =
                 Arrays.asList(VALID_SOURCE_REGISTRATION_1, VALID_SOURCE_REGISTRATION_2);
         RegistrationRequest registrationRequest = SOURCE_REGISTRATION_REQUEST;
-        when(mSourceFetcher.fetchSource(any(), any())).thenAnswer(
+        when(mSourceFetcher.fetchSource(any())).thenAnswer(
                 (invocation) -> {
-                    List<SourceRegistration> argument = invocation.getArgument(1);
-                    argument.addAll(sourceRegistrationsOut);
-                    return true;
+                    return Optional.of(sourceRegistrationsOut);
                 });
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
@@ -171,10 +213,10 @@ public final class MeasurementImplTest {
         // Assert
         assertEquals(IMeasurementCallback.RESULT_OK, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
-        verify(mSourceFetcher, times(1)).fetchSource(any(), any());
+        verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mDatastoreManager, times(2))
                 .runInTransaction(insertionLogicExecutorCaptor.capture());
-        verify(mTriggerFetcher, never()).fetchTrigger(ArgumentMatchers.any(), any());
+        verify(mTriggerFetcher, never()).fetchTrigger(any());
 
         List<ThrowingCheckedConsumer> insertionLogicExecutor =
                 insertionLogicExecutorCaptor.getAllValues();
@@ -191,7 +233,7 @@ public final class MeasurementImplTest {
 
     @Test
     public void testRegister_registrationTypeSource_sourceFetchFailure() {
-        when(mSourceFetcher.fetchSource(any(), any())).thenReturn(false);
+        when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
         MeasurementImpl measurement = spy(new MeasurementImpl(
                 mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher));
         // Disable Impression Noise
@@ -199,34 +241,63 @@ public final class MeasurementImplTest {
         final int result = measurement.register(SOURCE_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
         assertEquals(IMeasurementCallback.RESULT_IO_ERROR, result);
-        verify(mSourceFetcher, times(1)).fetchSource(any(), any());
-        verify(mTriggerFetcher, never()).fetchTrigger(ArgumentMatchers.any(), any());
+        verify(mSourceFetcher, times(1)).fetchSource(any());
+        verify(mTriggerFetcher, never()).fetchTrigger(any());
     }
 
     @Test
-    public void testRegister_registrationTypeTrigger_triggerFetchSuccess() throws RemoteException {
-        when(mTriggerFetcher.fetchTrigger(any(), any())).thenReturn(true);
+    public void testRegister_registrationTypeTrigger_triggerFetchSuccess() throws Exception {
+        // Setup
         MeasurementImpl measurement = new MeasurementImpl(
                 mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
-        final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
-                System.currentTimeMillis());
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+        final long triggerTime = System.currentTimeMillis();
+        Answer<Optional<List<TriggerRegistration>>> populateTriggerRegistrations =
+                invocation -> {
+                    List<TriggerRegistration> triggerRegs = new ArrayList<>();
+                    triggerRegs.add(VALID_TRIGGER_REGISTRATION);
+                    return Optional.of(triggerRegs);
+                };
+        doAnswer(populateTriggerRegistrations)
+                .when(mTriggerFetcher)
+                .fetchTrigger(TRIGGER_REGISTRATION_REQUEST);
+
+        // Execution
+        final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST, triggerTime);
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+
+        // Assertions
         assertEquals(IMeasurementCallback.RESULT_OK, result);
         verify(mMockContentProviderClient).insert(any(), any());
-        verify(mSourceFetcher, never()).fetchSource(any(), any());
-        verify(mTriggerFetcher, times(1)).fetchTrigger(ArgumentMatchers.any(), any());
+        verify(mSourceFetcher, never()).fetchSource(any());
+        verify(mTriggerFetcher, times(1)).fetchTrigger(any());
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder()
+                .setAttributionDestination(DEFAULT_URI)
+                .setAdTechDomain(VALID_TRIGGER_REGISTRATION.getReportingOrigin())
+                .setRegistrant(Uri.parse(ANDROID_APP_SCHEME
+                        + DEFAULT_CONTEXT.getAttributionSource().getPackageName()))
+                .setTriggerTime(triggerTime)
+                .setEventTriggers(EVENT_TRIGGERS)
+                .setAggregateTriggerData(VALID_TRIGGER_REGISTRATION.getAggregateTriggerData())
+                .setAggregateValues(VALID_TRIGGER_REGISTRATION.getAggregateValues())
+                .setFilters(VALID_TRIGGER_REGISTRATION.getFilters())
+                .build();
+        verify(mMeasurementDao).insertTrigger(trigger);
     }
 
     @Test
     public void testRegister_registrationTypeTrigger_triggerFetchFailure() throws RemoteException {
-        when(mTriggerFetcher.fetchTrigger(any(), any())).thenReturn(false);
+        when(mTriggerFetcher.fetchTrigger(any())).thenReturn(Optional.empty());
         MeasurementImpl measurement = new MeasurementImpl(
                 mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
         assertEquals(IMeasurementCallback.RESULT_IO_ERROR, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
-        verify(mSourceFetcher, never()).fetchSource(any(), any());
-        verify(mTriggerFetcher, times(1)).fetchTrigger(ArgumentMatchers.any(), any());
+        verify(mSourceFetcher, never()).fetchSource(any());
+        verify(mTriggerFetcher, times(1)).fetchTrigger(any());
     }
 
     @Test
@@ -322,7 +393,7 @@ public final class MeasurementImplTest {
         long eventTime = System.currentTimeMillis();
         long expiry = TimeUnit.DAYS.toSeconds(20);
         // Creating source for easy comparison
-        Source sampleSource = new Source.Builder()
+        Source sampleSource = SourceFixture.getValidSourceBuilder()
                 .setAdTechDomain(BaseUriExtractor.getBaseUri(DEFAULT_REGISTRATION_URI))
                 .setSourceType(Source.SourceType.NAVIGATION)
                 .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
@@ -333,7 +404,7 @@ public final class MeasurementImplTest {
                 .build();
         // Mocking fetchSource call to populate source registrations.
         doAnswer(invocation -> {
-            List<SourceRegistration> sourceReg = invocation.getArgument(1);
+            List<SourceRegistration> sourceReg = new ArrayList<>();
             sourceReg.add(new SourceRegistration.Builder()
                     .setSourceEventId(sampleSource.getEventId())
                     .setDestination(sampleSource.getAttributionDestination())
@@ -342,8 +413,8 @@ public final class MeasurementImplTest {
                     .setReportingOrigin(sampleSource.getAdTechDomain())
                     .build()
             );
-            return true;
-        }).when(mSourceFetcher).fetchSource(any(), any());
+            return Optional.of(sourceReg);
+        }).when(mSourceFetcher).fetchSource(any());
         MeasurementImpl measurement = spy(new MeasurementImpl(
                 mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher));
         InputEvent inputEvent = getInputEvent();
@@ -378,7 +449,7 @@ public final class MeasurementImplTest {
     @Test
     public void testGetSourceEventReports() {
         long eventTime = System.currentTimeMillis();
-        Source source = spy(new Source.Builder()
+        Source source = spy(SourceFixture.getValidSourceBuilder()
                 .setEventId(123L)
                 .setEventTime(eventTime)
                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
@@ -444,22 +515,26 @@ public final class MeasurementImplTest {
             long eventTime,
             Uri firstSourceDestination)
             throws DatastoreException {
-        verify(mMeasurementDao).insertSource(
-                sourceRegistration.getSourceEventId(),
-                registrationRequest.getTopOriginUri(),
-                firstSourceDestination,
-                sourceRegistration.getReportingOrigin(),
-                Uri.parse("android-app://"
-                        + registrationRequest.getAttributionSource().getPackageName()),
-                eventTime,
-                eventTime + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()),
-                sourceRegistration.getSourcePriority(),
-                Source.SourceType.EVENT,
-                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallAttributionWindow()),
-                TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallCooldownWindow()),
-                Source.AttributionMode.TRUTHFULLY,
-                sourceRegistration.getAggregateSource(),
-                sourceRegistration.getAggregateFilterData()
-        );
+        Source source = SourceFixture.getValidSourceBuilder()
+                .setEventId(sourceRegistration.getSourceEventId())
+                .setPublisher(registrationRequest.getTopOriginUri())
+                .setAttributionDestination(firstSourceDestination)
+                .setAdTechDomain(sourceRegistration.getReportingOrigin())
+                .setRegistrant(Uri.parse("android-app://"
+                        + registrationRequest.getAttributionSource().getPackageName()))
+                .setEventTime(eventTime)
+                .setExpiryTime(eventTime
+                        + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()))
+                .setPriority(sourceRegistration.getSourcePriority())
+                .setSourceType(Source.SourceType.EVENT)
+                .setInstallAttributionWindow(
+                        TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallAttributionWindow()))
+                .setInstallCooldownWindow(
+                        TimeUnit.SECONDS.toMillis(sourceRegistration.getInstallCooldownWindow()))
+                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                .setAggregateSource(sourceRegistration.getAggregateSource())
+                .setAggregateFilterData(sourceRegistration.getAggregateFilterData())
+                .build();
+        verify(mMeasurementDao).insertSource(source);
     }
 }
