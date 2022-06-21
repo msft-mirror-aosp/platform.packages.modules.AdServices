@@ -23,6 +23,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,14 +41,16 @@ import java.util.concurrent.TimeUnit;
 public class DbState {
     List<Source> mSourceList;
     List<Trigger> mTriggerList;
-    List<EventReport> mReportList;
+    List<EventReport> mEventReportList;
     List<AttributionRateLimit> mAttrRateLimitList;
+    List<CleartextAggregatePayload> mAggregateReportList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
         mTriggerList = new ArrayList<>();
-        mReportList = new ArrayList<>();
+        mEventReportList = new ArrayList<>();
         mAttrRateLimitList = new ArrayList<>();
+        mAggregateReportList = new ArrayList<>();
     }
 
     // TODO: consider extracting business logic in these
@@ -72,11 +75,11 @@ public class DbState {
         }
 
         // EventReports
-        JSONArray reports = testInput.getJSONArray("event_reports");
-        for (int i = 0; i < reports.length(); i++) {
-            JSONObject rJSON = reports.getJSONObject(i);
+        JSONArray eventReports = testInput.getJSONArray("event_reports");
+        for (int i = 0; i < eventReports.length(); i++) {
+            JSONObject rJSON = eventReports.getJSONObject(i);
             EventReport eventReport = getEventReportFrom(rJSON);
-            mReportList.add(eventReport);
+            mEventReportList.add(eventReport);
         }
 
         // AttributionRateLimits
@@ -85,6 +88,16 @@ public class DbState {
             JSONObject attrJSON = attrs.getJSONObject(i);
             AttributionRateLimit attrRateLimit = getAttributionRateLimitFrom(attrJSON);
             mAttrRateLimitList.add(attrRateLimit);
+        }
+
+        if (testInput.has("aggregate_reports")) {
+            // AggregateReports
+            JSONArray aggregateReports = testInput.getJSONArray("aggregate_reports");
+            for (int i = 0; i < aggregateReports.length(); i++) {
+                JSONObject rJSON = aggregateReports.getJSONObject(i);
+                CleartextAggregatePayload aggregateReport = getAggregateReportFrom(rJSON);
+                mAggregateReportList.add(aggregateReport);
+            }
         }
     }
 
@@ -108,12 +121,20 @@ public class DbState {
         triggerCursor.close();
 
         // Read EventReport table
-        Cursor reportCursor = readerDB.query(MeasurementTables.EventReportContract.TABLE,
-                null, null, null, null, null, MeasurementTables.EventReportContract.ID);
-        while (reportCursor.moveToNext()) {
-            mReportList.add(SqliteObjectMapper.constructEventReportFromCursor(reportCursor));
+        Cursor eventReportCursor =
+                readerDB.query(
+                        MeasurementTables.EventReportContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.EventReportContract.ID);
+        while (eventReportCursor.moveToNext()) {
+            mEventReportList.add(
+                    SqliteObjectMapper.constructEventReportFromCursor(eventReportCursor));
         }
-        reportCursor.close();
+        eventReportCursor.close();
 
         // Read AttributionRateLimit table
         Cursor attrCursor = readerDB.query(MeasurementTables.AttributionRateLimitContract.TABLE,
@@ -122,18 +143,38 @@ public class DbState {
             mAttrRateLimitList.add(getAttributionRateLimitFrom(attrCursor));
         }
         attrCursor.close();
+
+        // Read AggregateReport table
+        Cursor aggregateReportCursor =
+                readerDB.query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.AggregateReport.ID);
+        while (aggregateReportCursor.moveToNext()) {
+            mAggregateReportList.add(
+                    SqliteObjectMapper.constructCleartextAggregatePayload(aggregateReportCursor));
+        }
     }
 
     public void sortAll() {
         mSourceList.sort(
                 Comparator.comparing(Source::getEventTime)
                         .thenComparing(Source::getPriority));
+
         mTriggerList.sort(Comparator.comparing(Trigger::getTriggerTime));
-        mReportList.sort(
+
+        mEventReportList.sort(
                 Comparator.comparing(EventReport::getReportTime)
                         .thenComparing(EventReport::getTriggerTime));
         mAttrRateLimitList.sort(
                 Comparator.comparing(AttributionRateLimit::getTriggerTime));
+        mAggregateReportList.sort(
+                Comparator.comparing(CleartextAggregatePayload::getScheduledReportTime)
+                        .thenComparing(CleartextAggregatePayload::getSourceRegistrationTime));
     }
 
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
@@ -177,19 +218,17 @@ public class DbState {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setSourceId(rJSON.getLong("sourceId"))
-                .setAttributionDestination(
-                        Uri.parse(rJSON.getString("attributionDestination")))
+                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setAdTechDomain(Uri.parse(rJSON.getString("adTechDomain")))
                 .setTriggerData(rJSON.getLong("triggerData"))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
                 .setReportTime(rJSON.getLong("reportTime"))
                 .setTriggerPriority(rJSON.getLong("triggerPriority"))
                 .setStatus(rJSON.getInt("status"))
-                .setRandomizedTriggerRate(rJSON.optDouble("randomizedTriggerRate",
-                        0.0D))
+                .setRandomizedTriggerRate(rJSON.optDouble("randomizedTriggerRate", 0.0D))
                 .setSourceType(
-                Source.SourceType.valueOf(rJSON.getString("sourceType").toUpperCase(
-                        Locale.ENGLISH)))
+                        Source.SourceType.valueOf(
+                                rJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .build();
     }
 
@@ -219,6 +258,21 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)))
                 .setRegistrant(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.REGISTRANT)))
+                .build();
+    }
+
+    private CleartextAggregatePayload getAggregateReportFrom(JSONObject rJSON)
+            throws JSONException {
+        return new CleartextAggregatePayload.Builder()
+                .setId(rJSON.getString("id"))
+                .setPublisher(Uri.parse(rJSON.getString("publisher")))
+                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
+                .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
+                .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
+                .setPrivacyBudgetKey(rJSON.getString("privacyBudgetKey"))
+                .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
+                .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
+                .setStatus(rJSON.getInt("status"))
                 .build();
     }
 }
