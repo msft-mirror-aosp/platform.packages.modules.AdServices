@@ -58,17 +58,19 @@ public final class SdkSandboxManager {
      */
     public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
 
-    /** SDK not found.
+    /**
+     * SDK not found.
      *
-     * <p>This indicates that client application tried to load a non-existing SDK by calling
-     * {@link SdkSandboxManager#loadSdk(String, Bundle, Executor, RemoteSdkCallback)}.
+     * <p>This indicates that client application tried to load a non-existing SDK by calling {@link
+     * SdkSandboxManager#loadSdk(String, Bundle, Executor, LoadSdkCallback)}.
      */
     public static final int LOAD_SDK_NOT_FOUND = 100;
-    /** SDK is already loaded.
+    /**
+     * SDK is already loaded.
      *
-     * <p>This indicates that client application tried to reload the same SDk by calling
-     * {@link SdkSandboxManager#loadSdk(String, Bundle, Executor, RemoteSdkCallback)}
-     * after being successfully loaded.
+     * <p>This indicates that client application tried to reload the same SDk by calling {@link
+     * SdkSandboxManager#loadSdk(String, Bundle, Executor, LoadSdkCallback)} after being
+     * successfully loaded.
      */
     public static final int LOAD_SDK_ALREADY_LOADED = 101;
     /** Internal error while loading SDK.
@@ -146,30 +148,29 @@ public final class SdkSandboxManager {
     /**
      * Load SDK in a SDK sandbox java process.
      *
-     * <p>It loads SDK library with {@code sdkName} to a sandbox process
-     * asynchronously, caller should be notified through
-     * {@link RemoteSdkCallback} {@code callback}.
+     * <p>It loads SDK library with {@code sdkName} to a sandbox process asynchronously, caller
+     * should be notified through {@link LoadSdkCallback} {@code callback}.
      *
-     * <p>App should already declare {@code SDKs} it depends on in its {@code AndroidManifest}
-     * using {@code <use-sdk-library>} tag. App can only load {@code SDKs} it depends on into
-     * the {@code SdkSandbox}.
+     * <p>App should already declare {@code SDKs} it depends on in its {@code AndroidManifest} using
+     * {@code <use-sdk-library>} tag. App can only load {@code SDKs} it depends on into the {@code
+     * SdkSandbox}.
      *
-     * <p>When client application loads the first SDK, a new {@code SdkSandbox} process
-     * will be created, otherwise other SDKs will be loaded into the same sandbox which
-     * already created for the client application.
+     * <p>When client application loads the first SDK, a new {@code SdkSandbox} process will be
+     * created, otherwise other SDKs will be loaded into the same sandbox which already created for
+     * the client application.
      *
      * @param sdkName name of the SDK to be loaded
      * @param params the parameters App passes to SDK
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
-     * @param callback the {@link RemoteSdkCallback} which will receive events from
-     *                 loading and interacting with SDKs
+     * @param callback the {@link LoadSdkCallback} which will receive events from loading SDKs
      */
     public void loadSdk(
             @NonNull String sdkName,
-            @NonNull Bundle params, @NonNull @CallbackExecutor Executor callbackExecutor,
-            @NonNull RemoteSdkCallback callback) {
-        RemoteSdkCallbackProxy callbackProxy =
-                new RemoteSdkCallbackProxy(callbackExecutor, callback);
+            @NonNull Bundle params,
+            @NonNull @CallbackExecutor Executor callbackExecutor,
+            @NonNull LoadSdkCallback callback) {
+        final LoadSdkCallbackProxy callbackProxy =
+                new LoadSdkCallbackProxy(callbackExecutor, callback);
         try {
             mService.loadSdk(mContext.getPackageName(), sdkName, params, callbackProxy);
         } catch (RemoteException e) {
@@ -180,23 +181,42 @@ public final class SdkSandboxManager {
     /**
      * Send a request for a surface package to the sdk.
      *
-     * <p>After client application receives a signal about a successful SDK loading
-     * by {@link RemoteSdkCallback#onLoadSdkSuccess(Bundle)},
-     * it is then able to asynchronously request a {@link SurfacePackage} to render view from SDK.
-     * <p>The requested {@link SurfacePackage} is returned to client application through
-     * {@link RemoteSdkCallback#onSurfacePackageReady(SurfacePackage, int, Bundle)}.
+     * <p>After client application receives a signal about a successful SDK loading by {@link
+     * LoadSdkCallback#onLoadSdkSuccess(Bundle)}, it is then able to asynchronously request a {@link
+     * SurfacePackage} to render view from SDK.
+     *
+     * <p>The requested {@link SurfacePackage} is returned to client application through {@link
+     * RequestSurfacePackageCallback#onSurfacePackageReady(SurfacePackage, int, Bundle)}.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox
      * @param displayId the id of the logical display to display the surface package
      * @param width the width of the surface package
      * @param height the height of the surface package
      * @param params the parameters which client application passes to SDK
+     * @param callbackExecutor the {@link Executor} on which to invoke the callback
+     * @param callback the {@link RequestSurfacePackageCallback} which will receive results of
+     *     requesting surface packages from SDKs.
      */
-    public void requestSurfacePackage(@NonNull String sdkName,
-            int displayId, int width, int height, @NonNull Bundle params) {
+    public void requestSurfacePackage(
+            @NonNull String sdkName,
+            int displayId,
+            int width,
+            int height,
+            @NonNull Bundle params,
+            @NonNull @CallbackExecutor Executor callbackExecutor,
+            @NonNull RequestSurfacePackageCallback callback) {
+        final RequestSurfacePackageCallbackProxy callbackProxy =
+                new RequestSurfacePackageCallbackProxy(callbackExecutor, callback);
         try {
-            mService.requestSurfacePackage(mContext.getPackageName(), sdkName, new Binder(),
-                    displayId, width, height, params);
+            mService.requestSurfacePackage(
+                    mContext.getPackageName(),
+                    sdkName,
+                    new Binder(),
+                    displayId,
+                    width,
+                    height,
+                    params,
+                    callbackProxy);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -205,8 +225,8 @@ public final class SdkSandboxManager {
     /**
      * Sends a bundle of {@code params} to SDK.
      *
-     * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in
-     *              {@link SdkSandboxManager#loadSdk(String, Bundle,Executor, RemoteSdkCallback)}
+     * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
+     *     SdkSandboxManager#loadSdk(String, Bundle,Executor, LoadSdkCallback)}
      * @hide
      */
     public void sendData(@NonNull String sdkName, @NonNull Bundle params) {
@@ -220,11 +240,11 @@ public final class SdkSandboxManager {
     /**
      * A callback for tracking events regarding loading and interacting with SDKs.
      *
-     * <p>Callback is registered to {@link SdkSandboxManager} at the moment of loading a new SDK
-     * by passing an implementation of this callback to
-     * {@link SdkSandboxManager#loadSdk(String, Bundle, Executor, RemoteSdkCallback)}.
+     * <p>Callback is registered to {@link SdkSandboxManager} at the moment of loading a new SDK by
+     * passing an implementation of this callback to {@link SdkSandboxManager#loadSdk(String,
+     * Bundle, Executor, LoadSdkCallback)}.
      */
-    public interface RemoteSdkCallback {
+    public interface LoadSdkCallback {
         /**
          * This notifies client application that the requested Sdk is successfully loaded.
          *
@@ -238,16 +258,29 @@ public final class SdkSandboxManager {
          * @param errorMsg a String description of the error
          */
         void onLoadSdkFailure(@LoadSdkErrorCode int errorCode, @NonNull String errorMsg);
+    }
+
+    /**
+     * A callback for tracking a request for a surface package from an SDK.
+     *
+     * <p>An implementation of this callback is sent to {@link
+     * SdkSandboxManager#requestSurfacePackage(String, int, int, int, Bundle, Executor,
+     * RequestSurfacePackageCallback)}.
+     */
+    public interface RequestSurfacePackageCallback {
         /**
-         * This notifies client application that {@link SurfacePackage}
-         * is ready to remote render view from the SDK.
+         * This notifies client application that {@link SurfacePackage} is ready to remote render
+         * view from the SDK.
          *
-         * @param surfacePackage the requested surface package by
-         *            {@link SdkSandboxManager#requestSurfacePackage(String, int, int, int, Bundle)}
+         * @param surfacePackage the requested surface package by {@link
+         *     SdkSandboxManager#requestSurfacePackage(String, int, int, int, Bundle, Executor,
+         *     RequestSurfacePackageCallback)}
          * @param surfacePackageId a unique id for the {@link SurfacePackage} {@code surfacePackage}
          * @param params list of params returned from Sdk to the App.
          */
-        void onSurfacePackageReady(@NonNull SurfacePackage surfacePackage, int surfacePackageId,
+        void onSurfacePackageReady(
+                @NonNull SurfacePackage surfacePackage,
+                int surfacePackageId,
                 @NonNull Bundle params);
         /**
          * This notifies client application that requesting {@link SurfacePackage} has failed.
@@ -260,11 +293,11 @@ public final class SdkSandboxManager {
     }
 
     /** @hide */
-    private static class RemoteSdkCallbackProxy extends IRemoteSdkCallback.Stub {
+    private static class LoadSdkCallbackProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
-        private final RemoteSdkCallback mCallback;
+        private final LoadSdkCallback mCallback;
 
-        RemoteSdkCallbackProxy(Executor executor, RemoteSdkCallback callback) {
+        LoadSdkCallbackProxy(Executor executor, LoadSdkCallback callback) {
             mExecutor = executor;
             mCallback = callback;
         }
@@ -277,6 +310,19 @@ public final class SdkSandboxManager {
         @Override
         public void onLoadSdkFailure(int errorCode, String errorMsg) {
             mExecutor.execute(() -> mCallback.onLoadSdkFailure(errorCode, errorMsg));
+        }
+    }
+
+    /** @hide */
+    private static class RequestSurfacePackageCallbackProxy
+            extends IRequestSurfacePackageCallback.Stub {
+        private final Executor mExecutor;
+        private final RequestSurfacePackageCallback mCallback;
+
+        RequestSurfacePackageCallbackProxy(
+                Executor executor, RequestSurfacePackageCallback callback) {
+            mExecutor = executor;
+            mCallback = callback;
         }
 
         @Override
@@ -291,5 +337,4 @@ public final class SdkSandboxManager {
             mExecutor.execute(() -> mCallback.onSurfacePackageError(errorCode, errorMsg));
         }
     }
-
 }

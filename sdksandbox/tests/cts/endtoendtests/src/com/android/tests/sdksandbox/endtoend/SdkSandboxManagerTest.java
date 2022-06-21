@@ -19,7 +19,8 @@ package com.android.tests.sdksandbox.endtoend;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.content.Context;
 import android.os.Bundle;
 
@@ -49,7 +50,7 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
-        final FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -60,13 +61,13 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.retryLoadSameSdkShouldFailSdkProvider";
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(
                 sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
-        callback = new FakeRemoteSdkCallback();
+        callback = new FakeLoadSdkCallback();
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
@@ -78,7 +79,7 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.not_exist";
-        final FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(sdkName, new Bundle(),  Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
@@ -91,7 +92,7 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.loadSdkWithInternalErrorSdkProvider";
-        final FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
@@ -103,13 +104,16 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.requestSurfacePackageSuccessfullySdkProvider";
-        final FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
-        sdkSandboxManager.requestSurfacePackage(sdkName, 0, 500, 500, new Bundle());
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isTrue();
+        final FakeRequestSurfacePackageCallback surfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        sdkSandboxManager.requestSurfacePackage(
+                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
     @Test
@@ -117,14 +121,17 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.requestSurfacePackageWithInternalErrorSdkProvider";
-        final FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
-        sdkSandboxManager.requestSurfacePackage(sdkName, 0, 500, 500, new Bundle());
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
-        assertThat(callback.getSurfacePackageErrorCode())
+        final FakeRequestSurfacePackageCallback surfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        sdkSandboxManager.requestSurfacePackage(
+                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
     }
 
@@ -133,7 +140,7 @@ public class SdkSandboxManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.codeproviderresources";
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }

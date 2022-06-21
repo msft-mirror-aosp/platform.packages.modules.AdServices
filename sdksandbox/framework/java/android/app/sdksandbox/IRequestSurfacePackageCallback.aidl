@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox;
+package android.app.sdksandbox;
 
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 
-import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
-
 /** @hide */
-oneway interface ISdkSandboxToSdkSandboxManagerCallback {
-    const int LOAD_SDK_ALREADY_LOADED = 1;
-    const int LOAD_SDK_PROVIDER_INIT_ERROR = 2;
-    const int LOAD_SDK_NOT_FOUND = 3;
-    const int LOAD_SDK_INSTANTIATION_ERROR = 4;
-
-    const int SURFACE_PACKAGE_INTERNAL_ERROR = 700;
-
-    void onLoadSdkSuccess(in Bundle params, in ISdkSandboxManagerToSdkSandboxCallback callback);
-    void onLoadSdkError(int errorCode, in String errorMessage);
-
+oneway interface IRequestSurfacePackageCallback {
     void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params);
-    void onSurfacePackageError(int errorCode, in String errorMessage);
+    void onSurfacePackageError(int errorCode, String errorMsg);
 }

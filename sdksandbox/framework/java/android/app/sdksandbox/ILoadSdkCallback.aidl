@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.sdksandbox;
+package android.app.sdksandbox;
 
 import android.os.Bundle;
-import android.os.IBinder;
-
-import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 
 /** @hide */
-oneway interface ISdkSandboxManagerToSdkSandboxCallback {
-    void onSurfacePackageRequested(in IBinder hostToken, int displayId, in int width, in int height, in Bundle extraParams, IRequestSurfacePackageFromSdkCallback callback);
+oneway interface ILoadSdkCallback {
+    void onLoadSdkSuccess(in Bundle params);
+    void onLoadSdkFailure(int errorCode, String errorMsg);
 }
-
