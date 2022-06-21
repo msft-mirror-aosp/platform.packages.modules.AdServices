@@ -303,17 +303,20 @@ package android.adservices.topics {
   }
 
   public class GetTopicsResponse {
-    method @NonNull public java.util.List<java.lang.Long> getModelVersions();
-    method @NonNull public java.util.List<java.lang.Long> getTaxonomyVersions();
-    method @NonNull public java.util.List<java.lang.Integer> getTopics();
+    method @NonNull public java.util.List<android.adservices.topics.Topic> getTopics();
   }
 
   public static final class GetTopicsResponse.Builder {
     ctor public GetTopicsResponse.Builder();
     method @NonNull public android.adservices.topics.GetTopicsResponse build();
-    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setModelVersions(@NonNull java.util.List<java.lang.Long>);
-    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTaxonomyVersions(@NonNull java.util.List<java.lang.Long>);
-    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTopics(@NonNull java.util.List<java.lang.Integer>);
+    method @NonNull public android.adservices.topics.GetTopicsResponse.Builder setTopics(@NonNull java.util.List<android.adservices.topics.Topic>);
+  }
+
+  public class Topic {
+    ctor public Topic(long, long, int);
+    method public long getModelVersion();
+    method public long getTaxonomyVersion();
+    method public int getTopicId();
   }
 
   public class TopicsManager {
