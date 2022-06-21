@@ -43,6 +43,5 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokkér"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Interesser du har blokkert"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tilbakestill alle interesser"</string>
-    <!-- no translation found for settingsUI_unblock_topic_title (1710283575567727667) -->
-    <skip />
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Opphev blokkeringen"</string>
 </resources>
