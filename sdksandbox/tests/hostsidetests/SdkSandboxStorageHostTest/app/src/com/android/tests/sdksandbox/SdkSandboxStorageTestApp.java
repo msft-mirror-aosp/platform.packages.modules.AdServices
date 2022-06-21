@@ -77,6 +77,13 @@ public class SdkSandboxStorageTestApp {
     }
 
     @Test
+    public void loadSdk() throws Exception {
+        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    @Test
     public void testSdkSandboxDataRootDirectory_IsNotAccessibleByApps() throws Exception {
         assertDirIsNotAccessible("/data/misc_ce/0/sdksandbox");
         assertDirIsNotAccessible("/data/misc_de/0/sdksandbox");
@@ -94,14 +101,6 @@ public class SdkSandboxStorageTestApp {
 
         // Wait for code to finish handling the request
         assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
-    }
-
-    @Test
-    public void testSdkDataPackageDirectory_CreateMissingSdkDirs() throws Exception {
-        // First load code
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
     @Test

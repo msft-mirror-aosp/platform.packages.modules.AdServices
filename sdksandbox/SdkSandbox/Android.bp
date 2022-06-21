@@ -45,7 +45,6 @@ android_app {
         "//packages/modules/AdServices:__subpackages__",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
     updatable: true,
     certificate: "sdk_sandbox",
     apex_available: ["com.android.adservices"],

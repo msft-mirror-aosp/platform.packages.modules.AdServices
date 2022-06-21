@@ -31,7 +31,6 @@
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API-д хандах"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Аппликэйшнд Consent Service API-д хандах зөвшөөрөл олгодог."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox-н бета"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox-н бета"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Privacy Sandbox-н бетаг асаах/унтраах"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -44,4 +43,5 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Блоклох"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Таны блоклосон сонирхлууд"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Бүх сонирхлыг шинэчлэх"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Блокоос гаргах"</string>
 </resources>

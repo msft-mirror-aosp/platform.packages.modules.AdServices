@@ -45,11 +45,11 @@ import org.mockito.Spy;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -97,8 +97,9 @@ public final class SourceFetcherTest {
                         + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
                         + "}\n")));
 
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
@@ -129,8 +130,9 @@ public final class SourceFetcherTest {
                                 + "  \"install_attribution_window\": \"272800\",\n"
                                 + "  \"post_install_exclusivity_window\": \"987654\"\n"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
@@ -166,8 +168,9 @@ public final class SourceFetcherTest {
                                             + "  \"install_attribution_window\": null,\n"
                                             + "  \"post_install_exclusivity_window\": null\n"
                                             + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
@@ -204,8 +207,9 @@ public final class SourceFetcherTest {
                                 // Max value of cooldown is 30 days or 2592000 seconds
                                 + "  \"post_install_exclusivity_window\": \"9876543210\"\n"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
@@ -224,9 +228,8 @@ public final class SourceFetcherTest {
     public void testBadSourceUrl() throws Exception {
         RegistrationRequest request = buildRequest(
                 /* registrationUri = */ "bad-schema://foo.com", DEFAULT_TOP_ORIGIN);
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
     }
 
     @Test
@@ -235,9 +238,8 @@ public final class SourceFetcherTest {
         doThrow(new IOException("Bad internet things")).when(mFetcher).openUrl(
                 new URL(DEFAULT_REGISTRATION)
         );
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
     }
 
     @Test
@@ -249,9 +251,8 @@ public final class SourceFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source",
                         List.of("{\n"
                                 + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -261,9 +262,8 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields()).thenReturn(Collections.emptyMap());
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -276,9 +276,8 @@ public final class SourceFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source",
                         List.of("{\n"
                                 + "\"destination\": \"" + DEFAULT_DESTINATION + "\"")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -293,8 +292,9 @@ public final class SourceFetcherTest {
                                 + "\"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
                                 + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
@@ -324,8 +324,9 @@ public final class SourceFetcherTest {
                                 + "\"priority\": null,\n"
                                 + "\"expiry\": null\n"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
@@ -349,8 +350,9 @@ public final class SourceFetcherTest {
                                 + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
                                 + "\"expiry\": 1"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
@@ -374,8 +376,9 @@ public final class SourceFetcherTest {
                                 + "\"source_event_id\": \"" + DEFAULT_EVENT_ID + "\",\n"
                                 + "\"expiry\": 2678400"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
@@ -390,10 +393,8 @@ public final class SourceFetcherTest {
     @Test
     public void testNotOverHttps() throws Exception {
         RegistrationRequest request = buildRequest("http://foo.com", DEFAULT_TOP_ORIGIN);
-
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
         verify(mFetcher, never()).openUrl(any());
     }
 
@@ -421,8 +422,9 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
                 headersSecondRequest);
 
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
@@ -453,9 +455,8 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
                 headersSecondRequest);
 
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
 
@@ -485,8 +486,9 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
                 headersSecondRequest);
 
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(2, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
@@ -538,8 +540,9 @@ public final class SourceFetcherTest {
         when(mUrlConnection.getHeaderFields()).thenReturn(headersFirstRequest).thenReturn(
                 headersSecondRequest, headersThirdRequest);
 
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(3, result.size());
         result.sort((o1, o2) -> (int) (o2.getSourcePriority() - o1.getSourcePriority()));
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
@@ -611,8 +614,9 @@ public final class SourceFetcherTest {
                     return headersSixthRequest;
                 });
 
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(6, result.size());
         long expected = 1;
         for (long priority : result.stream().map(i -> i.getSourcePriority()).sorted()
@@ -637,8 +641,9 @@ public final class SourceFetcherTest {
                                 + "  \"source_event_id\": \"987654321\",\n"
                                 + filterData
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList<>();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
@@ -665,9 +670,8 @@ public final class SourceFetcherTest {
                                 + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
                                 + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
                                 + "}\n")));
-        ArrayList<SourceRegistration> result = new ArrayList();
-        assertFalse(mFetcher.fetchSource(request, result));
-        assertEquals(0, result.size());
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
 
@@ -680,8 +684,9 @@ public final class SourceFetcherTest {
                 .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Source",
                         List.of("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                 + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")));
-        ArrayList<SourceRegistration> result = new ArrayList<>();
-        assertTrue(mFetcher.fetchSource(request, result));
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());

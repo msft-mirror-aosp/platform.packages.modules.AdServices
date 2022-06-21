@@ -31,7 +31,6 @@
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API 액세스"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"애플리케이션이 Consent Service API에 액세스하도록 허용합니다."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"개인 정보 보호 샌드박스 베타"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"개인 정보 보호 샌드박스 베타"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"개인 정보 보호 샌드박스 베타 전환"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -44,4 +43,6 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"차단"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"차단한 관심분야"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"모든 관심분야 재설정"</string>
+    <!-- no translation found for settingsUI_unblock_topic_title (1710283575567727667) -->
+    <skip />
 </resources>

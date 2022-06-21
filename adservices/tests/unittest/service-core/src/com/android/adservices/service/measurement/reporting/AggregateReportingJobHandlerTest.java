@@ -28,6 +28,7 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
@@ -168,17 +169,17 @@ public class AggregateReportingJobHandlerTest {
                     .setStatus(CleartextAggregatePayload.Status.DELIVERED)
                     .build();
 
-    private final Source mSourceWithAppName1 = new Source.Builder()
+    private final Source mSourceWithAppName1 = SourceFixture.getValidSourceBuilder()
             .setId("1000")
             .setRegistrant(Uri.parse("android-app://source.app1"))
             .build();
 
-    private final Source mSourceWithAppName2 = new Source.Builder()
+    private final Source mSourceWithAppName2 = SourceFixture.getValidSourceBuilder()
             .setId("1001")
             .setRegistrant(Uri.parse("android-app://source.app2"))
             .build();
 
-    private final Source mSourceWithAppName3 = new Source.Builder()
+    private final Source mSourceWithAppName3 = SourceFixture.getValidSourceBuilder()
             .setId("1002")
             .setRegistrant(Uri.parse("android-app://source.app1"))
             .build();
