@@ -36,6 +36,28 @@ java_defaults {
 }
 
 android_test {
+    name: "SdkSandboxUnitTests",
+    srcs: [
+        "src/com/android/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    defaults: ["SdkSandboxUnitTestsDefault"],
+    manifest: "SdkSandboxManifest.xml",
+    test_config: "SdkSandboxTest.xml",
+    data: [
+        ":TestProviderApp",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.rules",
+        "androidx.test.ext.truth",
+        "androidx.test.ext.junit",
+    ],
+}
+
+android_test {
     name: "SdkSandboxManagerServiceUnitTests",
     srcs: [
         "src/com/android/server/sdksandbox/*.java",
@@ -81,3 +103,4 @@ android_test {
       ":CodeProviderWithResources",
     ],
 }
+

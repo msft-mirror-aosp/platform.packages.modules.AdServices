@@ -38,6 +38,8 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -46,12 +48,12 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/**
- * Unit test for {@link TopicsWorker}.
- */
+/** Unit test for {@link TopicsWorker}. */
 public class TopicsWorkerTest {
+    @SuppressWarnings({"unused"})
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
     private TopicsWorker mTopicsWorker;
@@ -66,15 +68,14 @@ public class TopicsWorkerTest {
 
         // Clean DB before each test
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mMockEpochManager,
-                mTopicsDao,
-                mMockFlags);
-        mTopicsWorker = new TopicsWorker(mMockEpochManager,
-                cacheManager,
-                mMockFlags);
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
+        BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
+        mTopicsWorker =
+                new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
     }
 
     @Test
@@ -82,12 +83,12 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 3;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
-        Topic topic2 = Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L,
-                /* modelVersion = */ 5L);
-        Topic topic3 = Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L,
-                /* modelVersion = */ 6L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
         Topic[] topics = {topic1, topic2, topic3};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -113,9 +114,17 @@ public class TopicsWorkerTest {
                         .setTopics(Arrays.asList(1, 2, 3))
                         .build();
 
-        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // loadcache() and getTopics() in CacheManager calls this mock
+        // loadCache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, times(2)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
@@ -140,9 +149,17 @@ public class TopicsWorkerTest {
                         .setTopics(Collections.emptyList())
                         .build();
 
-        assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // loadcache() and getTopics() in CacheManager calls this mock
+        // loadCache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, times(2)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
@@ -153,8 +170,8 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 1;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -182,7 +199,7 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        // loadcache() and getTopics() in CacheManager calls this mock
+        // loadCache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, times(2)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
@@ -193,8 +210,8 @@ public class TopicsWorkerTest {
         final long epochId = 4L;
         final int numberOfLookBackEpochs = 1;
         final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
-        Topic topic1 = Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L,
-                /* modelVersion = */ 4L);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
         Topic[] topics = {topic1};
         // persist returned topics into DB
         for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
@@ -222,7 +239,7 @@ public class TopicsWorkerTest {
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        // loadcache() and getTopics() in CacheManager calls this mock
+        // loadCache() and getTopics() in CacheManager calls this mock
         verify(mMockEpochManager, times(2)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
@@ -238,5 +255,258 @@ public class TopicsWorkerTest {
     public void testComputeEpoch() {
         mTopicsWorker.computeEpoch();
         verify(mMockEpochManager, times(1)).processEpoch();
+    }
+
+    @Test
+    public void testGetKnownTopicsWithConsent_oneTopicBlocked() {
+        final long lastEpoch = 3;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into Db
+        // populate topics for different epochs to get realistic state of the Db for testing
+        // blocked topics.
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(lastEpoch);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        Topic blockedTopic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        mTopicsDao.recordBlockedTopic(blockedTopic1);
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> knownTopicsWithConsent = mTopicsWorker.getKnownTopicsWithConsent();
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        // there is only one blocked topic.
+        assertThat(topicsWithRevokedConsent).hasSize(1);
+        assertThat(topicsWithRevokedConsent).containsExactly(blockedTopic1);
+        // out of 3 existing topics, 2 of them are not blocked.
+        assertThat(knownTopicsWithConsent).hasSize(2);
+        assertThat(knownTopicsWithConsent).containsExactly(topic2, topic3);
+    }
+
+    @Test
+    public void testGetKnownTopicsWithConsent_allTopicsBlocked() {
+        final long lastEpoch = 3;
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(lastEpoch);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+        // block all topics
+        mTopicsDao.recordBlockedTopic(topic1);
+        mTopicsDao.recordBlockedTopic(topic2);
+        mTopicsDao.recordBlockedTopic(topic3);
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> knownTopicsWithConsent = mTopicsWorker.getKnownTopicsWithConsent();
+
+        assertThat(knownTopicsWithConsent).isEmpty();
+    }
+
+    @Test
+    public void testTopicsWithRevokedConsent() {
+        Topic blockedTopic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic blockedTopic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic blockedTopic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] blockedTopics = {blockedTopic1, blockedTopic2, blockedTopic3};
+        // block all blockedTopics
+        mTopicsDao.recordBlockedTopic(blockedTopic1);
+        mTopicsDao.recordBlockedTopic(blockedTopic2);
+        mTopicsDao.recordBlockedTopic(blockedTopic3);
+
+        // persist one not blocked topic.
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 4, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+        returnedAppSdkTopicsMap.put(appSdkKey, topic1);
+        mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 1, returnedAppSdkTopicsMap);
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).hasSize(blockedTopics.length);
+        assertThat(topicsWithRevokedConsent).containsExactly(blockedTopics);
+    }
+
+    @Test
+    public void testTopicsWithRevokedConsent_noTopicsBlocked() {
+        final int numberOfLookBackEpochs = 3;
+        final Pair<String, String> appSdkKey = Pair.create("app", "sdk");
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into DB
+        // populate topics for different epochs to get realistic state of the Db for testing
+        // blocked topics.
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+
+        mTopicsWorker.loadCache();
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).isEmpty();
+    }
+
+    @Test
+    public void testRevokeConsent() {
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        mTopicsWorker.loadCache();
+        mTopicsWorker.revokeConsentForTopic(topic1);
+
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).hasSize(1);
+        assertThat(topicsWithRevokedConsent).containsExactly(topic1);
+
+        // TODO(b/234214293): add checks on getTopics method.
+    }
+
+    @Test
+    public void testRevokeAndRestoreConsent() {
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        mTopicsWorker.loadCache();
+
+        // Revoke consent for topic1
+        mTopicsWorker.revokeConsentForTopic(topic1);
+        ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).hasSize(1);
+        assertThat(topicsWithRevokedConsent).containsExactly(topic1);
+
+        // Restore consent for topic1
+        mTopicsWorker.restoreConsentForTopic(topic1);
+        topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent).isEmpty();
+
+        // TODO(b/234214293): add checks on getTopics method.
+    }
+
+    @Test
+    public void testClearAllTopicsData() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final String app = "app";
+        final String sdk = "sdk";
+
+        List<String> tableExclusionList = List.of(TopicsTables.BlockedTopicsContract.TABLE);
+
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+
+            // Test both cases of app and app-sdk calling getTopics()
+            returnedAppSdkTopicsMap.put(Pair.create(app, sdk), currentTopic);
+            returnedAppSdkTopicsMap.put(Pair.create(app, /* sdk */ ""), currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+        mTopicsDao.recordBlockedTopic(topic1);
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+
+        // Verify topics are persisted in the database
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList(1, 2, 3))
+                        .build();
+        GetTopicsResult getTopicsResultAppOnly1 = mTopicsWorker.getTopics(app, /* sdk */ "");
+        GetTopicsResult getTopicsResultAppSdk1 = mTopicsWorker.getTopics(app, sdk);
+
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResultAppOnly1.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResultAppOnly1.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResultAppOnly1.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResultAppOnly1.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+        assertThat(getTopicsResultAppSdk1.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResultAppSdk1.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResultAppSdk1.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResultAppSdk1.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+
+        verify(mMockEpochManager, times(3)).getCurrentEpochId();
+        verify(mMockFlags, times(3)).getTopicsNumberOfLookBackEpochs();
+
+        // Clear all data in database belonging to app except blocked topics table
+        mTopicsWorker.clearAllTopicsData(tableExclusionList);
+        assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
+
+        mTopicsWorker.clearAllTopicsData(Collections.emptyList());
+        assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+
+        GetTopicsResult emptyGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+
+        assertThat(mTopicsWorker.getTopics(app, sdk)).isEqualTo(emptyGetTopicsResult);
+        assertThat(mTopicsWorker.getTopics(app, /* sdk */ "")).isEqualTo(emptyGetTopicsResult);
+
+        // loadCache(): 1, getTopics(): 2 * 2, clearAllTopicsData(): 2
+        verify(mMockEpochManager, times(7)).getCurrentEpochId();
+        verify(mMockFlags, times(7)).getTopicsNumberOfLookBackEpochs();
     }
 }

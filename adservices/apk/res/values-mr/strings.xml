@@ -22,12 +22,15 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"अ‍ॅप्लिकेशनला AdServices Attribution API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API अ‍ॅक्सेस करा"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"अ‍ॅप्लिकेशनला AdServices Custom Audience API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API अ‍ॅक्सेस करणे"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"अ‍ॅप्लिकेशनला AdServices Consent API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API चा अ‍ॅक्सेस"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"अ‍ॅप्लिकेशनला Ad ID API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"अ‍ॅप संच आयडी API चा अ‍ॅक्सेस"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"अ‍ॅप्लिकेशनला अ‍ॅप संच आयडी API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API चा अ‍ॅक्सेस"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"अ‍ॅप्लिकेशनला Consent Service API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"प्रायव्हसी सॅंडबाॅक्स बीटा"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"प्रायव्हसी सॅंडबाॅक्स बीटा"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"प्रायव्हसी सॅंडबाॅक्स बीटा टॉगल करा"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -37,10 +40,8 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"तुमची अ‍ॅप्स जी विशिष्ट स्वारस्ये जनरेट करतात"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"विशिष्ट स्वारस्ये जनरेट करणारी तुमची अ‍ॅप्स व्यवस्थापित करा"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"जाहिरातींसाठी तुमची सामान्य स्वारस्ये व्यवस्थापित करा"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ब्लॉक करा"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"तुम्ही ब्लॉक केलेली स्वारस्ये"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"सर्व स्वारस्ये रीसेट करा"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"अनब्लॉक करा"</string>
 </resources>

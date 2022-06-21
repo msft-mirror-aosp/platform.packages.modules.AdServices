@@ -22,12 +22,15 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Dozvoljava aplikaciji da pristupa API-jima za atribuciju usluga oglašavanja."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"pristup API-ju za prilagođenu publiku usluga oglašavanja"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Dozvoljava aplikaciji da pristupa API-ju za prilagođenu publiku usluga oglašavanja."</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"pristup AdServices Consent API-ju"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Dozvoljava aplikaciji da pristupa AdServices Consent API-ju."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Pristup API-ju za ID oglasa"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Dozvoljava aplikaciji da pristupa API-ju za ID oglasa."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"Pristup API-ju za ID skupa aplikacija"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Dozvoljava aplikaciji da pristupa API-ju za ID skupa aplikacija."</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Pristup Consent Service API-ju"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Dozvoljava aplikaciji da pristupa Consent Service API-ju."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Beta verzija zaštićenog okruženja privatnosti"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Beta verzija zaštićenog okruženja privatnosti"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Uključite/isključite beta verziju zaštićenog okruženja privatnosti"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -37,10 +40,8 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Aplikacije koje generišu određena interesovanja"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Upravljajte aplikacijama koje generišu određena interesovanja"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Upravljajte opštim interesovanjima za oglase"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokiraj"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Interesovanja koja ste blokirali"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Resetuj sva interesovanja"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Odblokiraj"</string>
 </resources>

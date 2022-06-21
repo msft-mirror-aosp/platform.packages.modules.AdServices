@@ -31,14 +31,14 @@ public final class AggregateHistogramContributionTest {
     private AggregateHistogramContribution createExample() {
         return new AggregateHistogramContribution.Builder()
                 .setKey(BigInteger.valueOf(100L))
-                .setValue(1L).build();
+                .setValue(1).build();
     }
 
     @Test
     public void testCreation() throws Exception {
         AggregateHistogramContribution contribution = createExample();
         assertEquals(100L, contribution.getKey().longValue());
-        assertEquals(1L, contribution.getValue());
+        assertEquals(1, contribution.getValue());
     }
 
     @Test
@@ -46,6 +46,6 @@ public final class AggregateHistogramContributionTest {
         AggregateHistogramContribution contribution =
                 new AggregateHistogramContribution.Builder().build();
         assertEquals(0L, contribution.getKey().longValue());
-        assertEquals(0L, contribution.getValue());
+        assertEquals(0, contribution.getValue());
     }
 }

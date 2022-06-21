@@ -35,11 +35,11 @@ android_test {
         "adservices-service-core",
         "truth-prebuilt",
         "ub-uiautomator",
-        "adservices-assets-lib",
+        "adservices-assets",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "adservices-test-fixtures",
-        "tensorflowlite_java",
+        "tflite_support_classifiers_java",
     ],
     libs: [
         "android.test.base",
@@ -53,7 +53,7 @@ android_test {
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     jni_libs: [
-        "libtensorflowlite_jni",
+        "libtflite_support_classifiers_native",
     ],
     aaptflags: [
         // avoid compression on lite and tflite files as the Interpreter

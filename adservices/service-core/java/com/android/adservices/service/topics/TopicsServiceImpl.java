@@ -32,6 +32,8 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -49,12 +51,18 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final TopicsWorker mTopicsWorker;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final AdServicesLogger mAdServicesLogger;
+    private final ConsentManager mConsentManager;
     private Clock mClock;
 
-    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker,
-            AdServicesLogger adServicesLogger, Clock clock) {
+    public TopicsServiceImpl(
+            Context context,
+            TopicsWorker topicsWorker,
+            ConsentManager consentManager,
+            AdServicesLogger adServicesLogger,
+            Clock clock) {
         mContext = context;
         mTopicsWorker = topicsWorker;
+        mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
     }
@@ -71,13 +79,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
         // Check the permission in the same thread since we're looking for caller's permissions.
         boolean permitted = PermissionHelper.hasTopicsPermission(mContext);
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(mContext.getPackageManager());
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = RESULT_OK;
 
                     try {
-                        // Check if caller has permission to invoke this API.
-                        if (!permitted) {
+                        // Check if caller has permission to invoke this API and user has given
+                        // a consent
+                        if (!permitted && userConsent.isGiven()) {
                             resultCode = RESULT_UNAUTHORIZED_CALL;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);

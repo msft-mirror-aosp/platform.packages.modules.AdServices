@@ -21,9 +21,14 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
-import com.android.internal.annotations.VisibleForTesting;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.topics.TopicsWorker;
+
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 
@@ -42,11 +47,16 @@ public class ConsentManager {
             "setConsent method failed due to IOException thrown by Datastore.";
     private static final int STORAGE_VERSION = 1;
     private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
-    private static volatile ConsentManager sConsentManager;
-    private BooleanFileDatastore mDatastore;
 
-    ConsentManager(@NonNull Context appContext) throws IOException {
-        init(appContext);
+    private static volatile ConsentManager sConsentManager;
+    private volatile Boolean mInitialized = false;
+
+    private final TopicsWorker mTopicsWorker;
+    private final BooleanFileDatastore mDatastore;
+
+    ConsentManager(@NonNull Context context, @NonNull TopicsWorker topicsWorker) {
+        mTopicsWorker = topicsWorker;
+        mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
     }
 
     /**
@@ -56,50 +66,25 @@ public class ConsentManager {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManager getInstance(@NonNull Context context) throws IOException {
+    public static ConsentManager getInstance(@NonNull Context context) {
         if (sConsentManager == null) {
             synchronized (ConsentManager.class) {
                 if (sConsentManager == null) {
-                    sConsentManager = new ConsentManager(context);
+                    sConsentManager =
+                            new ConsentManager(context, TopicsWorker.getInstance(context));
                 }
             }
         }
         return sConsentManager;
     }
 
-    @VisibleForTesting
-    void init(@NonNull Context appContext) throws IOException {
-        mDatastore = new BooleanFileDatastore(appContext, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
-        mDatastore.initialize();
-        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
-                || mDatastore.get(CONSENT_KEY) == null) {
-            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
-
-            boolean initialConsent = getInitialConsent(appContext.getPackageManager());
-            setInitialConsent(initialConsent);
-        }
-    }
-
-    private void setInitialConsent(boolean initialConsent) {
-        if (initialConsent) {
-            enable();
-        } else {
-            disable();
-        }
-    }
-
-    @VisibleForTesting
-    boolean getInitialConsent(PackageManager packageManager) {
-        // The existence of this feature means that device should be treated as EU device.
-        return !packageManager.hasSystemFeature(EEA_DEVICE);
-    }
-
     /**
      * Enables all PP API services. It gives consent to Topics, Fledge and Measurements services.
      */
-    public void enable() {
+    public void enable(@NonNull PackageManager packageManager) {
         // Enable all the APIs
         try {
+            init(packageManager);
             setConsent(AdServicesApiConsent.GIVEN);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -110,9 +95,10 @@ public class ConsentManager {
     /**
      * Disables all PP API services. It revokes consent to Topics, Fledge and Measurements services.
      */
-    public void disable() {
+    public void disable(@NonNull PackageManager packageManager) {
         // Disable all the APIs
         try {
+            init(packageManager);
             setConsent(AdServicesApiConsent.REVOKED);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -121,17 +107,98 @@ public class ConsentManager {
     }
 
     /** Retrieves the consent for all PP API services. */
-    public AdServicesApiConsent getConsent() {
+    public AdServicesApiConsent getConsent(@NonNull PackageManager packageManager) {
         try {
+            init(packageManager);
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
-        } catch (NullPointerException | IllegalArgumentException e) {
+        } catch (NullPointerException | IllegalArgumentException | IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
         }
     }
 
+    /**
+     * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
+     * be returned to the {@link TopicsWorker} clients.
+     *
+     * @return {@link ImmutableList} of {@link Topic}s.
+     */
+    @NonNull
+    public ImmutableList<Topic> getKnownTopicsWithConsent() {
+        return mTopicsWorker.getKnownTopicsWithConsent();
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which were
+     * blocked by the user.
+     *
+     * @return {@link ImmutableList} of blocked {@link Topic}s.
+     */
+    @NonNull
+    public ImmutableList<Topic> getTopicsWithRevokedConsent() {
+        return mTopicsWorker.getTopicsWithRevokedConsent();
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to revoke consent for provided {@link Topic} (block
+     * topic).
+     *
+     * @param topic {@link Topic} to block.
+     */
+    @NonNull
+    public void revokeConsentForTopic(@NonNull Topic topic) {
+        mTopicsWorker.revokeConsentForTopic(topic);
+    }
+
+    /**
+     * Proxy call to {@link TopicsWorker} to restore consent for provided {@link Topic} (unblock the
+     * topic).
+     *
+     * @param topic {@link Topic} to restore consent for.
+     */
+    @NonNull
+    public void restoreConsentForTopic(@NonNull Topic topic) {
+        mTopicsWorker.restoreConsentForTopic(topic);
+    }
+
     private void setConsent(AdServicesApiConsent state)
             throws IOException {
         mDatastore.put(CONSENT_KEY, state.isGiven());
+    }
+
+    void init(PackageManager packageManager) throws IOException {
+        initializeStorage();
+        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
+                || mDatastore.get(CONSENT_KEY) == null) {
+            boolean initialConsent = getInitialConsent(packageManager);
+            setInitialConsent(initialConsent);
+
+            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
+        }
+    }
+
+    private void initializeStorage() throws IOException {
+        if (!mInitialized) {
+            synchronized (ConsentManager.class) {
+                if (!mInitialized) {
+                    mDatastore.initialize();
+                    mInitialized = true;
+                }
+            }
+        }
+    }
+
+    private void setInitialConsent(boolean initialConsent) throws IOException {
+        if (initialConsent) {
+            setConsent(AdServicesApiConsent.GIVEN);
+        } else {
+            setConsent(AdServicesApiConsent.REVOKED);
+        }
+    }
+
+    @VisibleForTesting
+    boolean getInitialConsent(PackageManager packageManager) {
+        // The existence of this feature means that device should be treated as EU device.
+        return !packageManager.hasSystemFeature(EEA_DEVICE);
     }
 }

@@ -22,12 +22,15 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"AdServices Attribution API များကို အပလီကေးရှင်းတစ်ခုအား သုံးခွင့်ပေးနိုင်သည်။"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API သုံးခွင့်"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"AdServices Custom Audience API ကို အပလီကေးရှင်းတစ်ခုအား သုံးခွင့်ပေးနိုင်သည်။"</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API သုံးခွင့်"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"အပလီကေးရှင်းတစ်ခုကို AdServices Consent API သုံးခွင့်ပြုနိုင်သည်။"</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API သုံးခွင့်"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"အပလီကေးရှင်းကို ကြော်ငြာ ID API သုံးခွင့်ပြုနိုင်သည်။"</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API သုံးခွင့်"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"အပလီကေးရှင်းကို အက်ပ်အတွဲ ID API သုံးခွင့်ပြုနိုင်သည်။"</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API သုံးခွင့်"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"အပလီကေးရှင်းတစ်ခုကို Consent Service API သုံးခွင့်ပြုနိုင်သည်။"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox စမ်းသပ်ဆော့ဖ်ဝဲ"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox စမ်းသပ်ဆော့ဖ်ဝဲ"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Privacy Sandbox ခလုတ် စမ်းသပ်ဆော့ဖ်ဝဲ"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -37,10 +40,8 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"သတ်သတ်မှတ်မှတ် စိတ်ဝင်စားမှုများကို ထုတ်သော သင့်အက်ပ်များ"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"သတ်သတ်မှတ်မှတ် စိတ်ဝင်စားမှုများကို ထုတ်သော အက်ပ်များကို စီမံနိုင်သည်"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"ကြော်ငြာအတွက် အထွေထွေစိတ်ဝင်စားမှုများကို စီမံခြင်း"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ပိတ်ရန်"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"သင်ပိတ်ထားသည့် စိတ်ဝင်စားမှုများ"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"စိတ်ဝင်စားမှုအားလုံးကို အသစ်ပြန်စရန်"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ပြန်ဖွင့်ရန်"</string>
 </resources>
