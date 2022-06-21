@@ -100,14 +100,40 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    public void reloadingSdkDoesNotInvalidateIt() {
+        final SdkSandboxManager sdkSandboxManager =
+                sContext.getSystemService(SdkSandboxManager.class);
+        final String sdkName = "com.android.requestSurfacePackageSuccessfullySdkProvider";
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        // If the SDK provider has already been loaded from another test, ignore the error.
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        // Attempt to load the SDK again and see that it fails.
+        final FakeLoadSdkCallback reloadCallback = new FakeLoadSdkCallback();
+        sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, reloadCallback);
+        assertThat(reloadCallback.isLoadSdkSuccessful()).isFalse();
+
+        // Further calls to the SDK should still be valid.
+        final FakeRequestSurfacePackageCallback surfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        sdkSandboxManager.requestSurfacePackage(
+                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
+    }
+
+    @Test
     public void requestSurfacePackageSuccessfully() {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
         final String sdkName = "com.android.requestSurfacePackageSuccessfullySdkProvider";
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         sdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        // If the SDK provider has already been loaded from another test, ignore the SDK already
+        // loaded error.
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
 
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();

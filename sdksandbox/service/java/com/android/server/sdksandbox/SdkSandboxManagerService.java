@@ -221,8 +221,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         final AppAndRemoteSdkLink link = new AppAndRemoteSdkLink(sdkToken, callback);
         synchronized (mLock) {
             if (mAppAndRemoteSdkLinks.putIfAbsent(sdkToken, link) != null) {
-                link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
-                        sdkName + " is being loaded or has been loaded already");
+                link.handleLoadSdkError(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
+                        sdkName + " is being loaded or has been loaded already",
+                        /*cleanupInternalState=*/ false);
                 return;
             }
         }
@@ -239,7 +240,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         if (!TextUtils.isEmpty(errorMsg)) {
             Log.w(TAG, errorMsg);
-            link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg);
+            link.handleLoadSdkError(SdkSandboxManager.LOAD_SDK_NOT_FOUND, errorMsg,
+                    /*cleanupInternalState=*/ true);
             return;
         }
 
@@ -440,9 +442,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
                     @Override
                     public void onBindingFailed() {
-                        link.sendLoadSdkErrorToApp(
+                        link.handleLoadSdkError(
                                 SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
-                                "Failed to bind the service");
+                                "Failed to bind the service",
+                                /*cleanupInternalState=*/ true);
                     }
                 });
     }
@@ -485,7 +488,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (RemoteException e) {
             String errorMsg = "Failed to load code";
             Log.w(TAG, errorMsg, e);
-            link.sendLoadSdkErrorToApp(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg);
+            link.handleLoadSdkError(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg,
+                    /*cleanupInternalState=*/ true);
         }
     }
 
@@ -706,7 +710,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onLoadSdkError(int errorCode, String errorMsg) {
-            sendLoadSdkErrorToApp(toSdkSandboxManagerLoadSdkErrorCode(errorCode), errorMsg);
+            handleLoadSdkError(toSdkSandboxManagerLoadSdkErrorCode(errorCode), errorMsg,
+                    /*cleanupInternalState=*/ true);
         }
 
         private void sendLoadSdkSuccessToApp(Bundle params) {
@@ -717,11 +722,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
-        void sendLoadSdkErrorToApp(int errorCode, String errorMsg) {
-            // Since loadSdk failed, manager should no longer concern itself with communication
-            // between the app and a non-existing remote code.
-            cleanUp(mSdkToken);
-
+        void handleLoadSdkError(int errorCode, String errorMsg, boolean cleanUpInternalState) {
+            if (cleanUpInternalState) {
+                // If an SDK fails to load entirely and does not exist in the sandbox, cleanup
+                // might need to occur so that the manager has to no longer concern itself with
+                // communication between the app and a non-existing remote code.
+                cleanUp(mSdkToken);
+            }
             try {
                 mManagerToAppCallback.onLoadSdkFailure(errorCode, errorMsg);
             } catch (RemoteException e) {

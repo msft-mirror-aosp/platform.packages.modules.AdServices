@@ -18,6 +18,7 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback;
 import android.os.Bundle;
 
@@ -47,7 +48,15 @@ public class FakeLoadSdkCallback implements LoadSdkCallback {
     }
 
     public boolean isLoadSdkSuccessful() {
+        return isLoadSdkSuccessful(false);
+    }
+
+    public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
         waitForLatch(mLoadSdkLatch);
+        if (ignoreSdkAlreadyLoadedError
+                && mErrorCode == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED) {
+            mLoadSdkSuccess = true;
+        }
         return mLoadSdkSuccess;
     }
 
