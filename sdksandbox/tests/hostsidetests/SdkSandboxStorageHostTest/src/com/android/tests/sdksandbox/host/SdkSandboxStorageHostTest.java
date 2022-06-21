@@ -339,7 +339,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Ensure per-sdk storage has been created
-        runPhase("loadCode");
+        runPhase("loadSdk");
 
         // Create app data to be cleared
         final List<String> dataPaths =
@@ -375,7 +375,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Ensure per-sdk storage has been created
-        runPhase("loadCode");
+        runPhase("loadSdk");
 
         // Create cache data to be cleared
         final List<String> dataPaths =
@@ -411,7 +411,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Ensure per-sdk storage has been created
-        runPhase("loadCode");
+        runPhase("loadSdk");
 
         // Create cache data to be cleared
         final List<String> dataPaths =
@@ -532,7 +532,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             getDevice().deleteFile(dePackagePath + "/" + child);
         }
         assertThat(getDevice().getChildren(cePackagePath)).asList().isEmpty();
-        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+        runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
                 /*includeRandomSuffix=*/false);
@@ -553,7 +553,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Delete the package paths
         getDevice().deleteFile(cePackagePath);
         getDevice().deleteFile(dePackagePath);
-        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+        runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
                 /*includeRandomSuffix=*/false);
@@ -578,7 +578,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Delete the sdk sub directories
         getDevice().deleteFile(cePackagePath + "/" + ceSdkDirsBeforeLoadingSdksList.get(0));
         getDevice().deleteFile(dePackagePath + "/" + deSdkDirsBeforeLoadingSdksList.get(0));
-        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+        runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
                 /*includeRandomSuffix=*/false);
@@ -603,7 +603,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Delete the sdk sub directories
         getDevice().deleteFile(cePackagePath + "/" + ceSdkDirsBeforeLoadingSdksList.get(1));
         getDevice().deleteFile(dePackagePath + "/" + deSdkDirsBeforeLoadingSdksList.get(1));
-        runPhase("testSdkDataPackageDirectory_CreateMissingSdkDirs");
+        runPhase("loadSdk");
 
         final List<String> ceSdkDirsAfterLoadingSdksList = getSubDirs(cePackagePath,
                 /*includeRandomSuffix=*/true);
@@ -771,6 +771,54 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
             String content = getDevice().executeShellCommand("cat " + sharedCePath + "/dir/file");
             assertThat(content).isEqualTo("something to read");
 
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    @Test
+    public void testSdkData_ReconcileSdkDataSubDirsIncludesDifferentVolumes() throws Exception {
+        assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
+
+        installPackage(TEST_APP_STORAGE_APK);
+
+        // Create a new adoptable storage where we will be moving our installed package
+        try {
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+
+            assertSuccess(
+                    getDevice()
+                            .executeShellCommand(
+                                    "pm move-package "
+                                            + TEST_APP_STORAGE_PACKAGE
+                                            + " "
+                                            + newVolumeUuid));
+
+            // Verify that sdk data is moved
+            for (int i = 0; i < 2; i++) {
+                boolean isCeData = (i == 0) ? true : false;
+                final String sdkDataRootPath =
+                        "/mnt/expand/"
+                                + newVolumeUuid
+                                + (isCeData ? "/misc_ce" : "/misc_de")
+                                + "/0/sdksandbox";
+                final String sdkDataPackagePath = sdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
+
+                final List<String> sdkDirsBeforeLoadingSdksList =
+                        getSubDirs(sdkDataPackagePath, /*includeRandomSuffix=*/ true);
+                // Forcing the reconciling by deleting the sdk sub directory
+                getDevice()
+                        .deleteFile(sdkDataPackagePath + "/" + sdkDirsBeforeLoadingSdksList.get(0));
+
+                runPhase("loadSdk");
+
+                final String OldPackagePath =
+                        getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, isCeData);
+                assertDirectoryDoesNotExist(OldPackagePath);
+                final List<String> SdkDirsInNewVolume =
+                        getSubDirs(sdkDataPackagePath, /*includeRandomSuffix=*/ false);
+                assertThat(SdkDirsInNewVolume).containsExactly("shared", SDK_NAME);
+            }
         } finally {
             mAdoptableUtils.cleanUpVolume();
         }
