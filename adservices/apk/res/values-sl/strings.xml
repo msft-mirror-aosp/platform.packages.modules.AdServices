@@ -31,7 +31,6 @@
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Dostop do API-ja Consent Service"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Aplikaciji omogoča dostop do API-ja Consent Service."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Zasebni peskovnik različice beta"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Zasebni peskovnik različice beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Preklop Zasebnega peskovnika različice beta"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -41,10 +40,9 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Aplikacije, ki vzbujajo posamezna zanimanja"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Upravljanje aplikacij, ki vzbujajo posamezna zanimanja."</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Upravljanje splošnih zanimanj za oglase"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
-    <!-- no translation found for settingsUI_blocked_topics_title (8563397445730522086) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_topics_title (6917960006583871987) -->
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokiraj"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Blokirana zanimanja"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Ponastavi vsa zanimanja"</string>
+    <!-- no translation found for settingsUI_unblock_topic_title (1710283575567727667) -->
     <skip />
 </resources>
