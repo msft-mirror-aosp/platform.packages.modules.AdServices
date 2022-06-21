@@ -23,8 +23,6 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  *  This class encapsulates possible states of the APIs exposed by MeasurementApi apk.
- *
- *  @hide
  */
 public class MeasurementApiUtil {
 
