@@ -355,11 +355,13 @@ public class FledgeE2ETest {
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
 
-        RecordedRequest fetchBuyerRequest1 = server.takeRequest();
-        assertEquals(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1, fetchBuyerRequest1.getPath());
+        List<String> fetchBuyerRequests =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
 
-        RecordedRequest fetchBuyerRequest2 = server.takeRequest();
-        assertEquals(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2, fetchBuyerRequest2.getPath());
+        assertThat(fetchBuyerRequests)
+                .containsExactly(
+                        BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1,
+                        BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2);
 
         RecordedRequest fetchSellerRequest1 = server.takeRequest();
         assertEquals(SELLER_DECISION_LOGIC_URL, fetchSellerRequest1.getPath());
