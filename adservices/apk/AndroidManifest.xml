@@ -20,6 +20,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.api">
 
+    <!-- Declare the broadcast as protected so only the system service can send it.  The AdServices
+    System Service will send this broadcast to the AdServices module where there is a package
+    change.-->
+    <protected-broadcast android:name="com.android.adservices.PACKAGE_CHANGED" />
+
+    <!-- Allows the system service to query app status-->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
     <!-- Permissions required for showing notifications. -->
@@ -191,6 +197,15 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+
+        <receiver android:name="com.android.adservices.service.common.PackageChangedReceiver"
+                  android:exported="true">
+            <intent-filter>
+                <!-- This intent must match the intent definition in the AdServices system
+                service. -->
+                <action android:name="com.android.adservices.PACKAGE_CHANGED"/>
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name=
