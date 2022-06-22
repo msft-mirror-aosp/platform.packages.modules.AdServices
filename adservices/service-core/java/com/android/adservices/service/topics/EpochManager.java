@@ -292,6 +292,34 @@ public class EpochManager implements Dumpable {
         mTopicsDao.recordAppUsageHistory(epochID, app);
     }
 
+    /**
+     * Determine the learn-ability of a topic to a certain caller.
+     *
+     * @param topic the topic to check the learn-ability
+     * @param caller the caller to check whether it can learn the given topic
+     * @param callersCanLearnMap the map that stores topic->caller mapping which shows a topic can
+     *     be learnt by a caller
+     * @param topTopics a {@link List} of top topics
+     * @return a {@code boolean} that indicates if the caller can learn the topic
+     */
+    // TODO(b/234444036): Enable this feature for newly installed apps
+    // TODO(b/236834213): Create a class for Top Topics
+    public boolean isTopicLearnableByCaller(
+            @NonNull Topic topic,
+            @NonNull String caller,
+            @NonNull Map<Topic, Set<String>> callersCanLearnMap,
+            @NonNull List<Topic> topTopics) {
+        // If a topic is the random topic in top topic list, it can be learnt by any caller.
+        int index = topTopics.lastIndexOf(topic);
+        // Regular top topics are placed in the front of the list. Topics after are random topics.
+        if (index >= mFlags.getTopicsNumberOfTopTopics()) {
+            return true;
+        }
+
+        return callersCanLearnMap.containsKey(topic)
+                && callersCanLearnMap.get(topic).contains(caller);
+    }
+
     // Return a Map from Topic to set of App or Sdk that can learn about that topic.
     // This is similar to the table Can Learn Topic in the explainer.
     // Return Map<Topic, Set<Caller>>  where Caller = App or Sdk.
@@ -355,34 +383,30 @@ public class EpochManager implements Dumpable {
             @NonNull List<Topic> topTopics) {
         Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
 
-        for (Map.Entry<String, List<String>> app : appSdksUsageMap.entrySet()) {
+        for (Map.Entry<String, List<String>> appSdks : appSdksUsageMap.entrySet()) {
             Topic returnedTopic = selectRandomTopic(topTopics);
-            Set<String> callersCanLearnThisTopic = callersCanLearnMap.get(returnedTopic);
-            if (callersCanLearnThisTopic == null) {
-                continue;
-            }
+            String app = appSdks.getKey();
 
             // Check if the app can learn this topic.
-            if (callersCanLearnThisTopic.contains(app.getKey())) {
+            if (isTopicLearnableByCaller(returnedTopic, app, callersCanLearnMap, topTopics)) {
                 // The app calls Topics API directly. In this case, we set the sdk == empty string.
-                returnedAppSdkTopics.put(
-                        Pair.create(app.getKey(), /* empty Sdk */ ""), returnedTopic);
+                returnedAppSdkTopics.put(Pair.create(app, /* empty Sdk */ ""), returnedTopic);
                 // TODO(b/223159123): Do we need to filter out this log in prod build?
                 LogUtil.v(
                         "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned for"
                                 + " %s",
-                        returnedTopic, app.getKey());
+                        returnedTopic, app);
             }
 
             // Then check all SDKs of the app.
-            for (String sdk : app.getValue()) {
-                if (callersCanLearnThisTopic.contains(sdk)) {
-                    returnedAppSdkTopics.put(Pair.create(app.getKey(), sdk), returnedTopic);
+            for (String sdk : appSdks.getValue()) {
+                if (isTopicLearnableByCaller(returnedTopic, sdk, callersCanLearnMap, topTopics)) {
+                    returnedAppSdkTopics.put(Pair.create(app, sdk), returnedTopic);
                     // TODO(b/223159123): Do we need to filter out this log in prod build?
                     LogUtil.v(
                             "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned"
                                     + " for %s, %s",
-                            returnedTopic, app.getKey(), sdk);
+                            returnedTopic, app, sdk);
                 }
             }
         }
