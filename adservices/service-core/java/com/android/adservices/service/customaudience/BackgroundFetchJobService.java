@@ -26,8 +26,14 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Background fetch for FLEDGE Custom Audience API, executing periodic garbage collection and custom
@@ -38,10 +44,37 @@ public class BackgroundFetchJobService extends JobService {
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("BackgroundFetchJobService.onStartJob");
 
-        // TODO(b/221862020): Garbage collection of expired custom audiences
-        // Wait for completion of expired custom audience garbage collection so the actual fetch
-        // won't do unnecessary work
-        // TODO(b/221861818): Fetch stale/eligible/delinquent custom audiences
+        // TODO(b/234642471): Stop and cancel the job if the FLEDGE APIs no longer have user consent
+
+        // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
+        //  Java Clock
+        Instant jobStartTime = Clock.systemUTC().instant();
+        LogUtil.v("BackgroundFetchJobService.onStartJob at %s", jobStartTime.toString());
+
+        AdServicesExecutors.getBackgroundExecutor()
+                .execute(
+                        () -> {
+                            try {
+                                BackgroundFetchWorker.getInstance(this)
+                                        .runBackgroundFetch(jobStartTime);
+                            } catch (InterruptedException exception) {
+                                LogUtil.e(
+                                        exception,
+                                        "FLEDGE background fetch interrupted while waiting for"
+                                                + " custom audience updates");
+                            } catch (ExecutionException exception) {
+                                LogUtil.e(
+                                        exception,
+                                        "FLEDGE background fetch failed due to internal error");
+                            } catch (TimeoutException exception) {
+                                LogUtil.e(exception, "FLEDGE background fetch timeout exceeded");
+                            }
+
+                            // Never manually reschedule the background fetch job, since it is
+                            // already scheduled periodically and should try again multiple times
+                            // per day
+                            jobFinished(params, false);
+                        });
 
         return true;
     }
@@ -74,10 +107,13 @@ public class BackgroundFetchJobService extends JobService {
         }
     }
 
-    // Actually schedule the job.
-    // Split out from scheduleIfNeeded() for mockable testing without pesky permissions.
+    /**
+     * Actually schedules the FLEDGE Background Fetch as a singleton periodic job.
+     *
+     * <p>Split out from scheduleIfNeeded() for mockable testing without pesky permissions.
+     */
     @VisibleForTesting
-    static void schedule(Context context) {
+    protected static void schedule(Context context) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         final JobInfo job =
                 new JobInfo.Builder(
