@@ -127,6 +127,14 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default URL for fetching public encryption keys for aggregatable reports. */
+    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL = "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
+
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
+    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
+    }
+
     /* The default measurement app name. */
     String MEASUREMENT_APP_NAME = "";
 

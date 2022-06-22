@@ -41,18 +41,7 @@ public interface IMeasurementDao {
     void setTransaction(ITransaction transaction);
 
     /** Add an entry to the Trigger datastore. */
-    void insertTrigger(
-            @NonNull Uri attributionDestination,
-            @NonNull Uri adTechDomain,
-            @NonNull Uri registrant,
-            @NonNull Long triggerTime,
-            @NonNull Long triggerData,
-            @Nullable Long dedupKey,
-            @NonNull Long priority,
-            @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues,
-            @Nullable String filters)
-            throws DatastoreException;
+    void insertTrigger(Trigger trigger) throws DatastoreException;
 
     /**
      * Returns list of ids for all pending {@link Trigger}.
@@ -85,14 +74,7 @@ public interface IMeasurementDao {
     /**
      * Add an entry to the Source datastore.
      */
-    void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
-            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
-            @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCooldownWindow,
-            @Source.AttributionMode int attributionMode,
-            @Nullable String aggregateSource,
-            @Nullable String aggregateFilterData) throws DatastoreException;
+    void insertSource(Source source) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
@@ -275,6 +257,18 @@ public interface IMeasurementDao {
      */
     void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
             throws DatastoreException;
+
+    /**
+     * Retrieve all aggregate encryption keys from the datastore whose expiry time is greater than
+     * or equal to {@code expiry}.
+     */
+    List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException;
+
+    /**
+     *  Remove aggregate encryption keys from the datastore older than {@code expiry}.
+     */
+    void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
 
     /**
      * Save unencrypted aggregate payload to datastore.

@@ -41,9 +41,6 @@ android_test {
         "adservices-clients",
         "adservices-test-fixtures",
         "testng",
-        "adservices-test-fixtures",
-        "adservices-clients",
-        "adservices-service-core",
     ],
     sdk_version: "module_current",
 }
