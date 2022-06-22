@@ -44,7 +44,7 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
                     return new WebTriggerRegistrationRequestInternal[size];
                 }
             };
-    /** Holds input to measurement trigger registration calls from embedded web context. */
+    /** Holds input to measurement trigger registration calls from web context. */
     @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
     /** Holds package info of where the request is coming from. */
     @NonNull private final AttributionSource mAttributionSource;
