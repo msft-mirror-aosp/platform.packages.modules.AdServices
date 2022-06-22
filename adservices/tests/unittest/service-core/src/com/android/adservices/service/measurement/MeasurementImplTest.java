@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementCallback;
+import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.RegistrationRequest;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
@@ -508,6 +509,13 @@ public final class MeasurementImplTest {
 
         // Assertion
         verify(mMeasurementDao).doInstallAttribution(DEFAULT_URI, systemTime);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_enabled() {
+        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
+        final int result = measurement.getMeasurementApiStatus();
+        assertEquals(MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED, result);
     }
 
     private void verifyInsertSource(RegistrationRequest registrationRequest,

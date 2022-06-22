@@ -17,6 +17,7 @@
 package android.adservices.cts;
 
 import android.adservices.exceptions.AdServicesException;
+import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.content.Context;
 import android.net.Uri;
@@ -28,6 +29,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -114,5 +116,33 @@ public class CtsMeasurementManagerTest {
         manager.registerTrigger(
                 /* trigger = */ Uri.parse(INVALID_SERVER_ADDRESS)
         );
+    }
+
+    @Test
+    @Ignore("Will remove this line when unhiding the API method.")
+    public void testGetMeasurementApiStatus_NoErrors() throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        OutcomeReceiver<Integer, AdServicesException> callback =
+                new OutcomeReceiver<Integer, AdServicesException>() {
+                    @Override
+                    public void onResult(@NonNull Integer result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(AdServicesException error) {
+                        Assert.fail();
+                    }
+                };
+        manager.getMeasurementApiStatus(
+                /* executor = */ mExecutorService,
+                /* callback = */ callback
+        );
+
+        Assert.assertEquals(Integer.valueOf(
+                MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
     }
 }

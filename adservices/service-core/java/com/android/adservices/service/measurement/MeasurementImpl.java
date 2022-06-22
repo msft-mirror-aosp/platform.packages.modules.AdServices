@@ -21,6 +21,7 @@ import static com.android.adservices.service.measurement.attribution.TriggerCont
 
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementCallback;
+import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
@@ -34,6 +35,8 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -59,6 +62,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class MeasurementImpl {
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private static volatile MeasurementImpl sMeasurementImpl;
+    private final Context mContext;
     private final DatastoreManager mDatastoreManager;
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
@@ -67,6 +71,7 @@ public final class MeasurementImpl {
     private static final String ANDROID_APP_SCHEME = "android-app://";
 
     private MeasurementImpl(Context context) {
+        mContext = context;
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
@@ -76,6 +81,7 @@ public final class MeasurementImpl {
     @VisibleForTesting
     MeasurementImpl(ContentResolver contentResolver, DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
+        mContext = null;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
@@ -177,6 +183,19 @@ public final class MeasurementImpl {
             return IMeasurementCallback.RESULT_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Implement a getMeasurementApiStatus request, returning a result code.
+     */
+    @MeasurementApiUtil.MeasurementApiState int getMeasurementApiStatus() {
+        ConsentManager consentManager = ConsentManager.getInstance(mContext);
+        AdServicesApiConsent consent = consentManager.getConsent(mContext.getPackageManager());
+        if (consent.isGiven()) {
+            return MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED;
+        } else {
+            return MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 
