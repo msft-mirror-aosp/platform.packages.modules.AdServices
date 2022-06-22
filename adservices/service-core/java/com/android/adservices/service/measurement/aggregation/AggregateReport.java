@@ -31,13 +31,12 @@ import java.util.Objects;
 /**
  * Class that contains all the real data needed after aggregation, it is not encrypted.
  */
-public class CleartextAggregatePayload {
+public class AggregateReport {
     private String mId;
     private Uri mPublisher;
     private Uri mAttributionDestination;
     private long mSourceRegistrationTime;
     private long mScheduledReportTime;   // triggerTime + random([10min, 1hour])
-    private String mPrivacyBudgetKey;
     private Uri mReportingOrigin;
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
@@ -53,47 +52,44 @@ public class CleartextAggregatePayload {
         int DELIVERED = 1;
     }
 
-    private CleartextAggregatePayload() {
+    private AggregateReport() {
         mId = null;
         mPublisher = null;
         mAttributionDestination = null;
         mSourceRegistrationTime = 0L;
         mScheduledReportTime = 0L;
-        mPrivacyBudgetKey = null;
         mReportingOrigin = null;
         mDebugCleartextPayload = null;
         mAggregateAttributionData = null;
-        mStatus = CleartextAggregatePayload.Status.PENDING;
+        mStatus = AggregateReport.Status.PENDING;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof CleartextAggregatePayload)) {
+        if (!(obj instanceof AggregateReport)) {
             return false;
         }
-        CleartextAggregatePayload aggregatePayload = (CleartextAggregatePayload) obj;
-        return  mId.equals(aggregatePayload.mId)
-                && Objects.equals(mPublisher, aggregatePayload.mPublisher)
-                && Objects.equals(mAttributionDestination, aggregatePayload.mAttributionDestination)
-                && mSourceRegistrationTime == aggregatePayload.mSourceRegistrationTime
-                && mScheduledReportTime == aggregatePayload.mScheduledReportTime
-                && mPrivacyBudgetKey.equals(aggregatePayload.mPrivacyBudgetKey)
-                && Objects.equals(mReportingOrigin, aggregatePayload.mReportingOrigin)
-                && mDebugCleartextPayload.equals(aggregatePayload.mDebugCleartextPayload)
+        AggregateReport aggregateReport = (AggregateReport) obj;
+        return  Objects.equals(mPublisher, aggregateReport.mPublisher)
+                && Objects.equals(mAttributionDestination, aggregateReport.mAttributionDestination)
+                && mSourceRegistrationTime == aggregateReport.mSourceRegistrationTime
+                && mScheduledReportTime == aggregateReport.mScheduledReportTime
+                && Objects.equals(mReportingOrigin, aggregateReport.mReportingOrigin)
+                && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
                 && Objects.equals(mAggregateAttributionData,
-                aggregatePayload.mAggregateAttributionData)
-                && mStatus == aggregatePayload.mStatus;
+                        aggregateReport.mAggregateAttributionData)
+                && mStatus == aggregateReport.mStatus;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(mId, mPublisher, mAttributionDestination, mSourceRegistrationTime,
-                mScheduledReportTime, mPrivacyBudgetKey, mReportingOrigin, mDebugCleartextPayload,
+                mScheduledReportTime, mReportingOrigin, mDebugCleartextPayload,
                 mAggregateAttributionData, mStatus);
     }
 
     /**
-     * Unique identifier for the {@link CleartextAggregatePayload}.
+     * Unique identifier for the {@link AggregateReport}.
      */
     public String getId() {
         return mId;
@@ -125,13 +121,6 @@ public class CleartextAggregatePayload {
      */
     public long getScheduledReportTime() {
         return mScheduledReportTime;
-    }
-
-    /**
-     * Privacy budget key for aggregate report.
-     */
-    public String getPrivacyBudgetKey() {
-        return mPrivacyBudgetKey;
     }
 
     /**
@@ -190,17 +179,17 @@ public class CleartextAggregatePayload {
     }
 
     /**
-     * Builder for {@link CleartextAggregatePayload}.
+     * Builder for {@link AggregateReport}.
      */
     public static final class Builder {
-        private final CleartextAggregatePayload mAttributionReport;
+        private final AggregateReport mAttributionReport;
 
         public Builder() {
-            mAttributionReport = new CleartextAggregatePayload();
+            mAttributionReport = new AggregateReport();
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getId()}.
+         * See {@link AggregateReport#getId()}.
          */
         public Builder setId(String id) {
             mAttributionReport.mId = id;
@@ -208,7 +197,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getPublisher()}.
+         * See {@link AggregateReport#getPublisher()}.
          */
         public Builder setPublisher(Uri publisher) {
             mAttributionReport.mPublisher = publisher;
@@ -216,7 +205,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getAttributionDestination()}.
+         * See {@link AggregateReport#getAttributionDestination()}.
          */
         public Builder setAttributionDestination(Uri attributionDestination) {
             mAttributionReport.mAttributionDestination = attributionDestination;
@@ -224,7 +213,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getSourceRegistrationTime()}.
+         * See {@link AggregateReport#getSourceRegistrationTime()}.
          */
         public Builder setSourceRegistrationTime(long sourceRegistrationTime) {
             mAttributionReport.mSourceRegistrationTime = sourceRegistrationTime;
@@ -232,7 +221,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getScheduledReportTime()}.
+         * See {@link AggregateReport#getScheduledReportTime()}.
          */
         public Builder setScheduledReportTime(long scheduledReportTime) {
             mAttributionReport.mScheduledReportTime = scheduledReportTime;
@@ -240,15 +229,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getPrivacyBudgetKey()}.
-         */
-        public Builder setPrivacyBudgetKey(String privacyBudgetKey) {
-            mAttributionReport.mPrivacyBudgetKey = privacyBudgetKey;
-            return this;
-        }
-
-        /**
-         * See {@link CleartextAggregatePayload#getReportingOrigin()}.
+         * See {@link AggregateReport#getReportingOrigin()}.
          */
         public Builder setReportingOrigin(Uri reportingOrigin) {
             mAttributionReport.mReportingOrigin = reportingOrigin;
@@ -256,7 +237,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getDebugCleartextPayload()}.
+         * See {@link AggregateReport#getDebugCleartextPayload()}.
          */
         public Builder setDebugCleartextPayload(String debugCleartextPayload) {
             mAttributionReport.mDebugCleartextPayload = debugCleartextPayload;
@@ -264,7 +245,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getAggregateAttributionData()}.
+         * See {@link AggregateReport#getAggregateAttributionData()}.
          */
         public Builder setAggregateAttributionData(
                 AggregateAttributionData aggregateAttributionData) {
@@ -273,7 +254,7 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * See {@link CleartextAggregatePayload#getStatus()}
+         * See {@link AggregateReport#getStatus()}
          */
         public Builder setStatus(@Status int status) {
             mAttributionReport.mStatus = status;
@@ -281,9 +262,9 @@ public class CleartextAggregatePayload {
         }
 
         /**
-         * Build the {@link CleartextAggregatePayload}.
+         * Build the {@link AggregateReport}.
          */
-        public CleartextAggregatePayload build() {
+        public AggregateReport build() {
             return mAttributionReport;
         }
     }
