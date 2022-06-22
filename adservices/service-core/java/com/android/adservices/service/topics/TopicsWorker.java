@@ -22,6 +22,7 @@ import android.adservices.topics.GetTopicsResult;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
+import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -291,6 +292,22 @@ public class TopicsWorker {
         mReadWriteLock.writeLock().lock();
         try {
             mAppUpdateManager.reconcileUninstalledApps(context);
+
+            loadCache();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Delete derived data for a specific app
+     *
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     */
+    public void deletePackageData(@NonNull Uri packageUri) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.deleteAppDataByUri(packageUri);
 
             loadCache();
         } finally {
