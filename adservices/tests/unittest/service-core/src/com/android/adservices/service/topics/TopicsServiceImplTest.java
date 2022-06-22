@@ -104,20 +104,22 @@ public class TopicsServiceImplTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-        CacheManager cacheManager = new CacheManager(mMockEpochManager,
-                mTopicsDao,
-                mMockFlags);
-
+        CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
         BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
+        AppUpdateManager appUpdateManager = new AppUpdateManager(mTopicsDao);
         mTopicsWorker =
-                new TopicsWorker(mMockEpochManager, cacheManager, blockedTopicsManager, mMockFlags);
+                new TopicsWorker(
+                        mMockEpochManager,
+                        cacheManager,
+                        blockedTopicsManager,
+                        appUpdateManager,
+                        mMockFlags);
+
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mTopicsServiceImpl =
                 new TopicsServiceImpl(
                         mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
-        mCallerMetadata = new CallerMetadata.Builder()
-                .setBinderElapsedTimestamp(100L)
-                .build();
+        mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         AttributionSource source =
                 new AttributionSource.Builder(SOME_UID)
                         .setPackageName(SOME_PACKAGE_NAME)
