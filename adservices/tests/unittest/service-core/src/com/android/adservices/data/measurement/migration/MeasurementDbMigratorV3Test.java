@@ -29,11 +29,17 @@ import android.net.Uri;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.SqliteObjectMapperWrapper;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.Objects;
+import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTestBase {
@@ -64,12 +70,18 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                     .setEventTriggers(EVENT_TRIGGERS)
                     .build();
 
+    private static final AggregateReport AGGREGATE_REPORT =
+            AggregateReportFixture.getValidAggregateReport();
+    private static final String AGGREGATE_REPORT_ID = UUID.randomUUID().toString();
+    private static final String PRIVACY_BUDGET_KEY = "privacy_budget_key";
+
     @Test
     public void performMigration_success() {
         // Setup
         DbHelper dbHelper = getDbHelper(2);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         insertTriggerV2(db, TRIGGER, V2_TRIGGER_EXTENSION);
+        insertAggregateReportV2(db);
 
         // Execution
         new MeasurementDbMigratorV3().performMigration(db, 2, 3);
@@ -81,15 +93,16 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         try (Cursor cursor =
                 db.query(
                         MeasurementTables.TriggerContract.TABLE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null)) {
+                        null, null, null, null, null, null, null)) {
             assertTrue(cursor.moveToNext());
             compareCursorValues(TRIGGER, cursor);
+        }
+        try (Cursor cursor =
+                db.query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        null, null, null, null, null, null, null)) {
+            assertTrue(cursor.moveToNext());
+            verifyAggregateReportMigration(cursor);
         }
     }
 
@@ -131,6 +144,15 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                         cursor.getColumnIndex(MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
     }
 
+    private void verifyAggregateReportMigration(Cursor cursor) {
+        assertEquals(
+                AGGREGATE_REPORT_ID,
+                cursor.getString(cursor.getColumnIndex(MeasurementTables.AggregateReport.ID)));
+        assertTrue(Objects.equals(
+                AGGREGATE_REPORT,
+                SqliteObjectMapperWrapper.constructAggregateReport(cursor)));
+    }
+
     private void insertTriggerV2(
             SQLiteDatabase db, Trigger trigger, TriggerV2Extension triggerV2Extension) {
         ContentValues values = new ContentValues();
@@ -161,6 +183,31 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
 
         long rowId = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
+
+        if (rowId == -1) {
+            fail();
+        }
+    }
+
+    private void insertAggregateReportV2(SQLiteDatabase db) {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateReport.ID, AGGREGATE_REPORT_ID);
+        values.put(MeasurementTables.AggregateReport.PUBLISHER,
+                AGGREGATE_REPORT.getPublisher().toString());
+        values.put(MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                AGGREGATE_REPORT.getAttributionDestination().toString());
+        values.put(MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+                AGGREGATE_REPORT.getSourceRegistrationTime());
+        values.put(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                AGGREGATE_REPORT.getScheduledReportTime());
+        values.put(MeasurementTables.AggregateReport.DEPRECATED_PRIVACY_BUDGET_KEY,
+                PRIVACY_BUDGET_KEY);
+        values.put(MeasurementTables.AggregateReport.REPORTING_ORIGIN,
+                AGGREGATE_REPORT.getReportingOrigin().toString());
+        values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                AGGREGATE_REPORT.getDebugCleartextPayload());
+
+        long rowId = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
 
         if (rowId == -1) {
             fail();

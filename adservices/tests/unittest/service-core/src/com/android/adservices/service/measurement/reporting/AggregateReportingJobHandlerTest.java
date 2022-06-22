@@ -33,7 +33,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -86,10 +86,10 @@ public class AggregateReportingJobHandlerTest {
     @Test
     public void testSendReportForPendingReportSuccess()
             throws DatastoreException, IOException, JSONException {
-        CleartextAggregatePayload aggregateReport =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId")
-                        .setStatus(CleartextAggregatePayload.Status.PENDING)
+                        .setStatus(AggregateReport.Status.PENDING)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .build();
         JSONObject aggregateReportBody =
@@ -120,10 +120,10 @@ public class AggregateReportingJobHandlerTest {
     @Test
     public void testSendReportForPendingReportFailure()
             throws DatastoreException, IOException, JSONException {
-        CleartextAggregatePayload aggregateReport =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId")
-                        .setStatus(CleartextAggregatePayload.Status.PENDING)
+                        .setStatus(AggregateReport.Status.PENDING)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .build();
         JSONObject aggregateReportBody =
@@ -152,10 +152,10 @@ public class AggregateReportingJobHandlerTest {
 
     @Test
     public void testSendReportForAlreadyDeliveredReport() throws DatastoreException {
-        CleartextAggregatePayload aggregateReport =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId")
-                        .setStatus(CleartextAggregatePayload.Status.DELIVERED)
+                        .setStatus(AggregateReport.Status.DELIVERED)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .build();
 
@@ -173,10 +173,10 @@ public class AggregateReportingJobHandlerTest {
     @Test
     public void testPerformScheduledPendingReportsForMultipleReports()
             throws DatastoreException, IOException, JSONException {
-        CleartextAggregatePayload aggregateReport1 =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport1 =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId1")
-                        .setStatus(CleartextAggregatePayload.Status.PENDING)
+                        .setStatus(AggregateReport.Status.PENDING)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .setScheduledReportTime(1000L)
                         .build();
@@ -185,10 +185,10 @@ public class AggregateReportingJobHandlerTest {
                         .setReportId(aggregateReport1.getId())
                         .build()
                         .toJson();
-        CleartextAggregatePayload aggregateReport2 =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport2 =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId2")
-                        .setStatus(CleartextAggregatePayload.Status.PENDING)
+                        .setStatus(AggregateReport.Status.PENDING)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .setScheduledReportTime(1100L)
                         .build();
@@ -226,10 +226,10 @@ public class AggregateReportingJobHandlerTest {
     @Test
     public void testPerformAllPendingReportsForGivenAppForMultipleReports()
             throws DatastoreException, IOException, JSONException {
-        CleartextAggregatePayload aggregateReport1 =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport1 =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId1")
-                        .setStatus(CleartextAggregatePayload.Status.PENDING)
+                        .setStatus(AggregateReport.Status.PENDING)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .setPublisher(Uri.parse("android-app://source.app1"))
                         .build();
@@ -238,10 +238,10 @@ public class AggregateReportingJobHandlerTest {
                         .setReportId(aggregateReport1.getId())
                         .build()
                         .toJson();
-        CleartextAggregatePayload aggregateReport2 =
-                new CleartextAggregatePayload.Builder()
+        AggregateReport aggregateReport2 =
+                new AggregateReport.Builder()
                         .setId("aggregateReportId2")
-                        .setStatus(CleartextAggregatePayload.Status.PENDING)
+                        .setStatus(AggregateReport.Status.PENDING)
                         .setReportingOrigin(Uri.parse("https://adtech.domain"))
                         .setPublisher(Uri.parse("android-app://source.app1"))
                         .build();
