@@ -74,7 +74,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull IGetTopicsCallback callback) {
 
         final long startServiceTime = mClock.elapsedRealtime();
-        final String packageName = topicsParam.getAttributionSource().getPackageName();
+        // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
+        final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
@@ -96,8 +97,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                             callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
 
                             mTopicsWorker.recordUsage(
-                                    topicsParam.getAttributionSource().getPackageName(),
-                                    topicsParam.getSdkName());
+                                    topicsParam.getAppPackageName(), topicsParam.getSdkName());
                         }
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
