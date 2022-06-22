@@ -79,7 +79,7 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
-                .containsExactly(48, 20, 241, 1579, 467, 29, 1416, 12, 138, 1049);
+                .containsExactly(20, 183, 96, 6, 13, 286, 112, 194, 242, 17);
     }
 
     @Test
@@ -113,10 +113,10 @@ public class OnDeviceClassifierTest {
 
         // Check if the first 10 categories contains at least the top 5.
         // Scores can differ a little on devices. Using this to reduce flakiness.
-        // Expected top 10: 69, 31, 374, 25, 694, 955, 216, 384, 11, 12
-        assertThat(classifications.get(appPackage1)).containsAtLeast(69, 31, 374, 25, 694);
-        // Expected top 10: 935, 1798, 529, 41, 933, 998, 39, 676, 622, 554
-        assertThat(classifications.get(appPackage2)).containsAtLeast(935, 1798, 529, 41, 933);
+        // Expected top 10: 43, 140, 151, 189, 193, 208, 271, 262, 6, 136
+        assertThat(classifications.get(appPackage1)).containsAtLeast(43, 140, 151, 189, 193);
+        // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
+        assertThat(classifications.get(appPackage2)).containsAtLeast(93, 88, 90, 99, 101);
     }
 
     @Test
@@ -153,7 +153,7 @@ public class OnDeviceClassifierTest {
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
         ImmutableList<Integer> expectedLabelsForCommonDescription =
-                ImmutableList.of(935, 1798, 529, 41, 933, 998, 39, 676, 622, 554);
+                ImmutableList.of(96, 1, 99, 3, 10, 251, 300, 231, 123, 56);
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }
