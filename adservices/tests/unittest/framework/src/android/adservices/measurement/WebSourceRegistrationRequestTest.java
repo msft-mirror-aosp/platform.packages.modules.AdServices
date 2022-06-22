@@ -43,19 +43,19 @@ public class WebSourceRegistrationRequestTest {
     private static final KeyEvent INPUT_KEY_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
 
-    private static final SourceParams SOURCE_REGISTRATION_1 =
-            new SourceParams.Builder()
+    private static final WebSourceParams SOURCE_REGISTRATION_1 =
+            new WebSourceParams.Builder()
                     .setRegistrationUri(REGISTRATION_URI_1)
-                    .setDebugEnabled(true)
+                    .setAllowDebugKey(true)
                     .build();
 
-    private static final SourceParams SOURCE_REGISTRATION_2 =
-            new SourceParams.Builder()
+    private static final WebSourceParams SOURCE_REGISTRATION_2 =
+            new WebSourceParams.Builder()
                     .setRegistrationUri(REGISTRATION_URI_2)
-                    .setDebugEnabled(false)
+                    .setAllowDebugKey(false)
                     .build();
 
-    private static final List<SourceParams> SOURCE_REGISTRATIONS =
+    private static final List<WebSourceParams> SOURCE_REGISTRATIONS =
             Arrays.asList(SOURCE_REGISTRATION_1, SOURCE_REGISTRATION_2);
 
     @Test

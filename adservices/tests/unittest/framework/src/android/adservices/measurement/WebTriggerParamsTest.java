@@ -25,28 +25,28 @@ import android.os.Parcel;
 
 import org.junit.Test;
 
-/** Unit tests for {@link TriggerParams}. */
-public class TriggerParamsTest {
+/** Unit tests for {@link WebTriggerParams}. */
+public class WebTriggerParamsTest {
     private static final Uri REGISTRATION_URI = Uri.parse("http://foo.com");
 
-    private TriggerParams createExampleRegistration() {
-        return new TriggerParams.Builder()
+    private WebTriggerParams createExampleRegistration() {
+        return new WebTriggerParams.Builder()
                 .setRegistrationUri(REGISTRATION_URI)
-                .setDebugEnabled(true)
+                .setAllowDebugKey(true)
                 .build();
     }
 
-    void verifyExampleRegistration(TriggerParams request) {
+    void verifyExampleRegistration(WebTriggerParams request) {
         assertEquals(REGISTRATION_URI, request.getRegistrationUri());
-        assertTrue(request.isDebugEnabled());
+        assertTrue(request.isAllowDebugKey());
     }
 
     @Test
     public void testDefaults() throws Exception {
-        TriggerParams triggerParams =
-                new TriggerParams.Builder().setRegistrationUri(REGISTRATION_URI).build();
-        assertEquals(REGISTRATION_URI, triggerParams.getRegistrationUri());
-        assertFalse(triggerParams.isDebugEnabled());
+        WebTriggerParams webTriggerParams =
+                new WebTriggerParams.Builder().setRegistrationUri(REGISTRATION_URI).build();
+        assertEquals(REGISTRATION_URI, webTriggerParams.getRegistrationUri());
+        assertFalse(webTriggerParams.isAllowDebugKey());
     }
 
     @Test
@@ -59,7 +59,7 @@ public class TriggerParamsTest {
         Parcel p = Parcel.obtain();
         createExampleRegistration().writeToParcel(p, 0);
         p.setDataPosition(0);
-        verifyExampleRegistration(TriggerParams.CREATOR.createFromParcel(p));
+        verifyExampleRegistration(WebTriggerParams.CREATOR.createFromParcel(p));
         p.recycle();
     }
 }
