@@ -18,6 +18,8 @@ package android.adservices.measurement;
 
 import android.adservices.measurement.IMeasurementCallback;
 
+import android.adservices.measurement.EmbeddedWebSourceRegistrationRequestInternal;
+import android.adservices.measurement.EmbeddedWebTriggerRegistrationRequestInternal;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.DeletionRequest;
 
@@ -26,8 +28,8 @@ import android.adservices.measurement.DeletionRequest;
   * {@hide}
   */
 interface IMeasurementService {
-    void register(in RegistrationRequest params,
-                  in IMeasurementCallback callback);
-    void deleteRegistrations(in DeletionRequest params,
-                             in IMeasurementCallback callback);
+    void register(in RegistrationRequest params, in IMeasurementCallback callback);
+    void registerEmbeddedWebSource(in EmbeddedWebSourceRegistrationRequestInternal params, in IMeasurementCallback callback);
+    void registerEmbeddedWebTrigger(in EmbeddedWebTriggerRegistrationRequestInternal params, in IMeasurementCallback callback);
+    void deleteRegistrations(in DeletionRequest params, in IMeasurementCallback callback);
 }

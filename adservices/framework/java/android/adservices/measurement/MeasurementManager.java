@@ -129,6 +129,83 @@ public class MeasurementManager {
     }
 
     /**
+     * Register an attribution source(click or view) from an embedded web context. This API will not
+     * process any redirects, all registration URLs should be supplied with the request. At least
+     * one of osDestination or webDestination parameters are required to be provided.
+     *
+     * @param request source registration request
+     * @param executor used by callback to dispatch results.
+     * @param callback intended to notify asynchronously the API result.
+     * @hide
+     */
+    public void registerEmbeddedWebSource(
+            @NonNull EmbeddedWebSourceRegistrationRequest request,
+            @Nullable @CallbackExecutor Executor executor,
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+        Objects.requireNonNull(request);
+        final IMeasurementService service = getService();
+
+        try {
+            service.registerEmbeddedWebSource(
+                    new EmbeddedWebSourceRegistrationRequestInternal.Builder()
+                            .setSourceRegistrationRequest(request)
+                            .setAttributionSource(mContext.getAttributionSource())
+                            .build(),
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            if (callback != null && executor != null) {
+                                executor.execute(() -> callback.onResult(null));
+                            }
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+            if (callback != null && executor != null) {
+                executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
+            }
+        }
+    }
+
+    /**
+     * Register an attribution trigger(click or view) from an embedded web context. This API will
+     * not process any redirects, all registration URLs should be supplied with the request.
+     *
+     * @param request trigger registration request
+     * @param executor used by callback to dispatch results
+     * @param callback intended to notify asynchronously the API result
+     * @hide
+     */
+    public void registerEmbeddedWebTrigger(
+            @NonNull EmbeddedWebTriggerRegistrationRequest request,
+            @Nullable @CallbackExecutor Executor executor,
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+        Objects.requireNonNull(request);
+        final IMeasurementService service = getService();
+
+        try {
+            service.registerEmbeddedWebTrigger(
+                    new EmbeddedWebTriggerRegistrationRequestInternal.Builder()
+                            .setTriggerRegistrationRequest(request)
+                            .setAttributionSource(mContext.getAttributionSource())
+                            .build(),
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            if (callback != null && executor != null) {
+                                executor.execute(() -> callback.onResult(null));
+                            }
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+            if (callback != null && executor != null) {
+                executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
+            }
+        }
+    }
+
+    /**
      * Register an attribution source (click or view).
      * Shortcut for the common case with no callback.
      *
