@@ -22,7 +22,6 @@ import android.adservices.exceptions.GetTopicsException;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -144,19 +143,8 @@ public class TopicsManager {
                 .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
         final ITopicsService service = getService();
-        String sdkName = "";
-        if (mContext instanceof SandboxedSdkContext) {
-            sdkName = ((SandboxedSdkContext) mContext).getSdkName();
-            if (!sdkName.equals(getTopicsRequest.getSdkName())) {
-                callback.onError(
-                        new GetTopicsException(
-                                RESULT_INTERNAL_ERROR,
-                                "SdkName get from SandboxedSdkContext is different "
-                                        + "from SdkName get from getTopicsRequest"));
-            }
-        } else {
-            sdkName = getTopicsRequest.getSdkName();
-        }
+        String sdkName = getTopicsRequest.getSdkName();
+
         try {
             service.getTopics(
                     new GetTopicsParam.Builder()
