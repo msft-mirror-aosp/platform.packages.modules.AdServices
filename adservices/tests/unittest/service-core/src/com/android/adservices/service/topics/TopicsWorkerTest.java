@@ -471,9 +471,9 @@ public class TopicsWorkerTest {
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
                         .setResultCode(RESULT_OK)
-                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
-                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
-                        .setTopics(Arrays.asList(1, 2, 3))
+                        .setTaxonomyVersions(Arrays.asList(2L, 3L))
+                        .setModelVersions(Arrays.asList(5L, 6L))
+                        .setTopics(Arrays.asList(2, 3))
                         .build();
         GetTopicsResult getTopicsResultAppOnly1 = mTopicsWorker.getTopics(app, /* sdk */ "");
         GetTopicsResult getTopicsResultAppSdk1 = mTopicsWorker.getTopics(app, sdk);
