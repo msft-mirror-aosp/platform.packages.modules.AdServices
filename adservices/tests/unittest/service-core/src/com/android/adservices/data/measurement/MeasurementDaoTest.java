@@ -120,12 +120,12 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(validTrigger));
 
-        try (Cursor sourceCursor =
+        try (Cursor triggerCursor =
                      DbHelper.getInstance(sContext).getReadableDatabase()
                              .query(MeasurementTables.TriggerContract.TABLE,
                                      null, null, null, null, null, null)) {
-            Assert.assertTrue(sourceCursor.moveToNext());
-            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
+            Assert.assertTrue(triggerCursor.moveToNext());
+            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(triggerCursor);
             Assert.assertNotNull(trigger);
             Assert.assertNotNull(trigger.getId());
             assertEquals(validTrigger.getAttributionDestination(),
