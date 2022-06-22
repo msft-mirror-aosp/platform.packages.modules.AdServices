@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -42,19 +44,20 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.MockitoSession;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -96,7 +99,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     private CustomAudienceServiceImpl mService;
 
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    private MockitoSession mStaticMockSession = null;
 
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
@@ -104,13 +107,19 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Before
     public void setup() {
+        // Test applications don't have the required permissions to read config P/H flags, and
+        // injecting mocked flags everywhere is annoying and non-trivial for static methods
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .startMocking();
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .build()
                         .customAudienceDao();
 
-        when(mDevContextFilter.createDevContext())
-                .thenReturn(DevContext.createForDevOptionsDisabled());
         mService =
                 new CustomAudienceServiceImpl(
                         CONTEXT,
@@ -121,8 +130,17 @@ public class CustomAudienceServiceEndToEndTest {
                         mAdServicesLogger);
     }
 
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
+    }
+
     @Test
     public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
         assertTrue(callback.isSuccess());
@@ -160,6 +178,8 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
         assertTrue(callback.isSuccess());
@@ -252,6 +272,8 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testOverrideCustomAudienceRemoteInfoFailsWithDevOptionsDisabled() throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
 
         assertThrows(
                 IllegalStateException.class,
@@ -341,6 +363,9 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testRemoveCustomAudienceRemoteInfoOverrideFailsWithDevOptionsDisabled()
             throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
@@ -471,6 +496,9 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testResetAllCustomAudienceRemoteOverridesFailsWithDevOptionsDisabled()
             throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)

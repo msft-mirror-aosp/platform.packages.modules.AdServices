@@ -54,6 +54,14 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_job_period_ms";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS =
             "fledge_background_fetch_job_flex_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS =
+            "fledge_background_fetch_job_max_runtime_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED =
+            "fledge_background_fetch_max_num_updated";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE =
+            "fledge_background_fetch_thread_pool_size";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S =
+            "fledge_background_fetch_eligible_update_base_interval_s";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -216,6 +224,42 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS);
     }
 
+    @Override
+    public long getFledgeBackgroundFetchJobMaxRuntimeMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS);
+    }
+
+    @Override
+    public long getFledgeBackgroundFetchMaxNumUpdated() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED);
+    }
+
+    @Override
+    public int getFledgeBackgroundFetchThreadPoolSize() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE);
+    }
+
+    @Override
+    public long getFledgeBackgroundFetchEligibleUpdateBaseIntervalS() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -260,5 +304,20 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS
                         + " = "
                         + getFledgeBackgroundFetchJobFlexMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED
+                        + " = "
+                        + getFledgeBackgroundFetchMaxNumUpdated());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE
+                        + " = "
+                        + getFledgeBackgroundFetchThreadPoolSize());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S
+                        + " = "
+                        + getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
     }
 }

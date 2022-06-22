@@ -16,11 +16,13 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -51,6 +53,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionHttpClient;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
@@ -59,6 +62,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -66,12 +70,12 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +87,7 @@ import java.util.concurrent.Executors;
 public class FledgeE2ETest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    private MockitoSession mStaticMockSession = null;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     // This object access some system APIs
@@ -115,6 +119,15 @@ public class FledgeE2ETest {
 
     @Before
     public void setUp() throws Exception {
+        // Test applications don't have the required permissions to read config P/H flags, and
+        // injecting mocked flags everywhere is annoying and non-trivial for static methods
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .startMocking();
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .build()
@@ -151,6 +164,13 @@ public class FledgeE2ETest {
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLogger);
+    }
+
+    @After
+    public void teardown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
