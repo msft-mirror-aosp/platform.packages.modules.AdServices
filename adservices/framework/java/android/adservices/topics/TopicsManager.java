@@ -22,6 +22,7 @@ import android.adservices.exceptions.GetTopicsException;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
@@ -144,11 +145,18 @@ public class TopicsManager {
                 .build();
         final ITopicsService service = getService();
         String sdkName = getTopicsRequest.getSdkName();
-
+        String appPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        Context getTopicsRequestContext = getTopicsRequest.getContext();
+        if (getTopicsRequestContext instanceof SandboxedSdkContext) {
+            appPackageName = ((SandboxedSdkContext) getTopicsRequestContext).getClientPackageName();
+        } else { // This is the case without the Sandbox.
+            appPackageName = getTopicsRequestContext.getPackageName();
+        }
         try {
             service.getTopics(
                     new GetTopicsParam.Builder()
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
                             .build(),
                     callerMetadata,
