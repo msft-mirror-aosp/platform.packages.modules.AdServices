@@ -15,6 +15,7 @@
  */
 package android.adservices.measurement;
 
+import android.adservices.AdServicesApiUtil;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -311,6 +312,47 @@ public class MeasurementManager {
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
+    }
+
+    /**
+     * Get Measurement API status.
+     *
+     * @param executor used by callback to dispatch results.
+     * @param callback intended to notify asynchronously the API result.
+     *
+     * The callback's {Integer} value is one of {@code MeasurementApiState}.
+     *
+     * @hide
+     */
+    public void getMeasurementApiStatus(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Integer, AdServicesException> callback) {
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        if (AdServicesApiUtil.getAdServicesApiState()
+                == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
+            executor.execute(() -> {
+                callback.onResult(MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED);
+            });
+            return;
+        }
+
+        final IMeasurementService service = getService();
+
+        try {
+            service.getMeasurementApiStatus(
+                    new IMeasurementApiStatusCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            executor.execute(() -> callback.onResult(result));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+            executor.execute(() ->
+                    callback.onError(new AdServicesException("Internal Error")));
+        }
     }
 
     /**

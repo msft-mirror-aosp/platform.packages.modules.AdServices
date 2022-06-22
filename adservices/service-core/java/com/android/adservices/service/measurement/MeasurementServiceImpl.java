@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.EmbeddedWebSourceRegistrationRequestInternal;
 import android.adservices.measurement.EmbeddedWebTriggerRegistrationRequestInternal;
+import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.RegistrationRequest;
@@ -96,5 +97,16 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         LogUtil.e("Unable to send result to the callback", e);
                     }
                 });
+    }
+
+    @Override
+    public void getMeasurementApiStatus(@NonNull IMeasurementApiStatusCallback callback) {
+        Objects.requireNonNull(callback);
+
+        try {
+            callback.onResult(Integer.valueOf(mMeasurementImpl.getMeasurementApiStatus()));
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+        }
     }
 }
