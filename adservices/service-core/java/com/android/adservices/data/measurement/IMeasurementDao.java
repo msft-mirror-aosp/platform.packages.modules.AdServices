@@ -259,6 +259,18 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Retrieve all aggregate encryption keys from the datastore whose expiry time is greater than
+     * or equal to {@code expiry}.
+     */
+    List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException;
+
+    /**
+     *  Remove aggregate encryption keys from the datastore older than {@code expiry}.
+     */
+    void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
+
+    /**
      * Save unencrypted aggregate payload to datastore.
      */
     void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;

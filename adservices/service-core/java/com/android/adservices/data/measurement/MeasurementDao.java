@@ -974,6 +974,32 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException {
+        List<AggregateEncryptionKey> aggregateEncryptionKeys = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateEncryptionKey.TABLE,
+                /*columns=*/null,
+                MeasurementTables.AggregateEncryptionKey.EXPIRY + " >= ?",
+                new String[]{String.valueOf(expiry)},
+                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+            while (cursor.moveToNext()) {
+                aggregateEncryptionKeys
+                        .add(SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(cursor));
+            }
+            return aggregateEncryptionKeys;
+        }
+    }
+
+    @Override
+    public void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(MeasurementTables.AggregateEncryptionKey.TABLE,
+                MeasurementTables.AggregateEncryptionKey.EXPIRY + " < ?",
+                new String[]{String.valueOf(expiry)});
+    }
+
+    @Override
     public void insertAggregateReport(CleartextAggregatePayload aggregateReport)
             throws DatastoreException {
         ContentValues values = new ContentValues();
