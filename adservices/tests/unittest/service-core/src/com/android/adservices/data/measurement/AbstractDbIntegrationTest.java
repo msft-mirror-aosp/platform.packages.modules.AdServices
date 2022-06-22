@@ -27,6 +27,8 @@ import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,10 +93,15 @@ public abstract class AbstractDbIntegrationTest {
                 areEqual(mOutput.mSourceList, dbState.mSourceList));
         Assert.assertTrue("Trigger mismatch",
                 areEqual(mOutput.mTriggerList, dbState.mTriggerList));
-        Assert.assertTrue("Report mismatch",
-                areEqual(mOutput.mReportList, dbState.mReportList));
+        Assert.assertTrue(
+                "Report mismatch", areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         Assert.assertTrue("AttributionRateLimit mismatch",
                 areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
+        Assert.assertTrue(
+                "AggregateReport mismatch",
+                areEqual(mOutput.mAggregateReportList, dbState.mAggregateReportList));
+        Assert.assertTrue("AggregateEncryptionKey mismatch",
+                areEqual(mOutput.mAggregateEncryptionKeyList, dbState.mAggregateEncryptionKeyList));
     }
 
     /**
@@ -162,6 +169,8 @@ public abstract class AbstractDbIntegrationTest {
         db.delete(MeasurementTables.TriggerContract.TABLE, null, null);
         db.delete(MeasurementTables.EventReportContract.TABLE, null, null);
         db.delete(MeasurementTables.AttributionRateLimitContract.TABLE, null, null);
+        db.delete(MeasurementTables.AggregateReport.TABLE, null, null);
+        db.delete(MeasurementTables.AggregateEncryptionKey.TABLE, null, null);
     }
 
     /**
@@ -174,11 +183,17 @@ public abstract class AbstractDbIntegrationTest {
         for (Trigger trigger : input.mTriggerList) {
             insertToDb(trigger, db);
         }
-        for (EventReport report : input.mReportList) {
-            insertToDb(report, db);
+        for (EventReport eventReport : input.mEventReportList) {
+            insertToDb(eventReport, db);
         }
         for (AttributionRateLimit attr : input.mAttrRateLimitList) {
             insertToDb(attr, db);
+        }
+        for (CleartextAggregatePayload aggregateReport : input.mAggregateReportList) {
+            insertToDb(aggregateReport, db);
+        }
+        for (AggregateEncryptionKey key : input.mAggregateEncryptionKeyList) {
+            insertToDb(key, db);
         }
     }
 
@@ -286,6 +301,58 @@ public abstract class AbstractDbIntegrationTest {
         long row = db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AttributionRateLimit insertion failed");
+        }
+    }
+
+    /** Inserts an CleartextAggregatePayload record into the given database. */
+    private static void insertToDb(CleartextAggregatePayload aggregateReport, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+        values.put(
+                MeasurementTables.AggregateReport.PUBLISHER,
+                aggregateReport.getPublisher().toString());
+        values.put(
+                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                aggregateReport.getAttributionDestination().toString());
+        values.put(
+                MeasurementTables.AggregateReport.SOURCE_REGISTRATION_TIME,
+                aggregateReport.getSourceRegistrationTime());
+        values.put(
+                MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                aggregateReport.getScheduledReportTime());
+        values.put(
+                MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
+                aggregateReport.getPrivacyBudgetKey());
+        values.put(
+                MeasurementTables.AggregateReport.REPORTING_ORIGIN,
+                aggregateReport.getReportingOrigin().toString());
+        values.put(
+                MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                aggregateReport.getDebugCleartextPayload());
+        values.put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus());
+        long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+        if (row == -1) {
+            throw new SQLiteException("AggregateReport insertion failed");
+        }
+    }
+
+    /**
+     * Inserts an AggregateEncryptionKey record into the given database.
+     */
+    private static void insertToDb(AggregateEncryptionKey aggregateEncryptionKey, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.AggregateEncryptionKey.ID, aggregateEncryptionKey.getId());
+        values.put(MeasurementTables.AggregateEncryptionKey.KEY_ID,
+                aggregateEncryptionKey.getKeyId());
+        values.put(MeasurementTables.AggregateEncryptionKey.PUBLIC_KEY,
+                aggregateEncryptionKey.getPublicKey());
+        values.put(MeasurementTables.AggregateEncryptionKey.EXPIRY,
+                aggregateEncryptionKey.getExpiry());
+        long row = db.insert(MeasurementTables.AggregateEncryptionKey.TABLE, null, values);
+        if (row == -1) {
+            throw new SQLiteException("AggregateEncryptionKey insertion failed.");
         }
     }
 }

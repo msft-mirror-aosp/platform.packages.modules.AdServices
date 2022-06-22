@@ -185,7 +185,7 @@ public final class MeasurementImpl {
      */
     public void deletePackageRecords(Uri packageUri) {
         Uri appUri = getAppUri(packageUri);
-        LogUtil.i("Deleting records for " + appUri);
+        LogUtil.d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
             mDatastoreManager.runInTransaction((dao) -> {

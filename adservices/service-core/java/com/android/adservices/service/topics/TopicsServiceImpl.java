@@ -79,15 +79,16 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
         // Check the permission in the same thread since we're looking for caller's permissions.
         boolean permitted = PermissionHelper.hasTopicsPermission(mContext);
-        AdServicesApiConsent userConsent = mConsentManager.getConsent(mContext.getPackageManager());
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = RESULT_OK;
 
                     try {
+                        AdServicesApiConsent userConsent =
+                                mConsentManager.getConsent(mContext.getPackageManager());
                         // Check if caller has permission to invoke this API and user has given
                         // a consent
-                        if (!permitted && userConsent.isGiven()) {
+                        if (!permitted || !userConsent.isGiven()) {
                             resultCode = RESULT_UNAUTHORIZED_CALL;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);
