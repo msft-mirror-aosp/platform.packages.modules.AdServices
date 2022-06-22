@@ -23,6 +23,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
 
 import org.json.JSONArray;
@@ -43,6 +44,7 @@ public class DbState {
     List<Trigger> mTriggerList;
     List<EventReport> mEventReportList;
     List<AttributionRateLimit> mAttrRateLimitList;
+    List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
     List<CleartextAggregatePayload> mAggregateReportList;
 
     public DbState() {
@@ -50,44 +52,61 @@ public class DbState {
         mTriggerList = new ArrayList<>();
         mEventReportList = new ArrayList<>();
         mAttrRateLimitList = new ArrayList<>();
+        mAggregateEncryptionKeyList = new ArrayList<>();
         mAggregateReportList = new ArrayList<>();
     }
 
-    // TODO: consider extracting business logic in these
-    // constructors to avoid side effects in the DbState class.
     public DbState(JSONObject testInput) throws JSONException {
         this();
 
         // Sources
-        JSONArray sources = testInput.getJSONArray("sources");
-        for (int i = 0; i < sources.length(); i++) {
-            JSONObject sJSON = sources.getJSONObject(i);
-            Source source = getSourceFrom(sJSON);
-            mSourceList.add(source);
+        if (testInput.has("sources")) {
+            JSONArray sources = testInput.getJSONArray("sources");
+            for (int i = 0; i < sources.length(); i++) {
+                JSONObject sJSON = sources.getJSONObject(i);
+                Source source = getSourceFrom(sJSON);
+                mSourceList.add(source);
+            }
         }
 
         // Triggers
-        JSONArray triggers = testInput.getJSONArray("triggers");
-        for (int i = 0; i < triggers.length(); i++) {
-            JSONObject tJSON = triggers.getJSONObject(i);
-            Trigger trigger = getTriggerFrom(tJSON);
-            mTriggerList.add(trigger);
+        if (testInput.has("triggers")) {
+            JSONArray triggers = testInput.getJSONArray("triggers");
+            for (int i = 0; i < triggers.length(); i++) {
+                JSONObject tJSON = triggers.getJSONObject(i);
+                Trigger trigger = getTriggerFrom(tJSON);
+                mTriggerList.add(trigger);
+            }
         }
 
         // EventReports
-        JSONArray eventReports = testInput.getJSONArray("event_reports");
-        for (int i = 0; i < eventReports.length(); i++) {
-            JSONObject rJSON = eventReports.getJSONObject(i);
-            EventReport eventReport = getEventReportFrom(rJSON);
-            mEventReportList.add(eventReport);
+        if (testInput.has("event_reports")) {
+            JSONArray eventReports = testInput.getJSONArray("event_reports");
+            for (int i = 0; i < eventReports.length(); i++) {
+                JSONObject rJSON = eventReports.getJSONObject(i);
+                EventReport eventReport = getEventReportFrom(rJSON);
+                mEventReportList.add(eventReport);
+            }
         }
 
         // AttributionRateLimits
-        JSONArray attrs = testInput.getJSONArray("attribution_rate_limits");
-        for (int i = 0; i < attrs.length(); i++) {
-            JSONObject attrJSON = attrs.getJSONObject(i);
-            AttributionRateLimit attrRateLimit = getAttributionRateLimitFrom(attrJSON);
-            mAttrRateLimitList.add(attrRateLimit);
+        if (testInput.has("attribution_rate_limits")) {
+            JSONArray attrs = testInput.getJSONArray("attribution_rate_limits");
+            for (int i = 0; i < attrs.length(); i++) {
+                JSONObject attrJSON = attrs.getJSONObject(i);
+                AttributionRateLimit attrRateLimit = getAttributionRateLimitFrom(attrJSON);
+                mAttrRateLimitList.add(attrRateLimit);
+            }
+        }
+
+        // AggregateEncryptionKeys
+        if (testInput.has("aggregate_encryption_keys")) {
+            JSONArray keys = testInput.getJSONArray("aggregate_encryption_keys");
+            for (int i = 0; i < keys.length(); i++) {
+                JSONObject keyJSON = keys.getJSONObject(i);
+                AggregateEncryptionKey key = getAggregateEncryptionKeyFrom(keyJSON);
+                mAggregateEncryptionKeyList.add(key);
+            }
         }
 
         if (testInput.has("aggregate_reports")) {
@@ -158,6 +177,16 @@ public class DbState {
             mAggregateReportList.add(
                     SqliteObjectMapper.constructCleartextAggregatePayload(aggregateReportCursor));
         }
+        aggregateReportCursor.close();
+
+        // Read AggregateEncryptionKey table
+        Cursor keyCursor = readerDB.query(MeasurementTables.AggregateEncryptionKey.TABLE,
+                null, null, null, null, null, MeasurementTables.AggregateEncryptionKey.ID);
+        while (keyCursor.moveToNext()) {
+            mAggregateEncryptionKeyList.add(
+                    SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(keyCursor));
+        }
+        keyCursor.close();
     }
 
     public void sortAll() {
@@ -172,9 +201,17 @@ public class DbState {
                         .thenComparing(EventReport::getTriggerTime));
         mAttrRateLimitList.sort(
                 Comparator.comparing(AttributionRateLimit::getTriggerTime));
+
+        mAggregateEncryptionKeyList.sort(
+                Comparator.comparing(AggregateEncryptionKey::getKeyId));
+
         mAggregateReportList.sort(
                 Comparator.comparing(CleartextAggregatePayload::getScheduledReportTime)
                         .thenComparing(CleartextAggregatePayload::getSourceRegistrationTime));
+    }
+
+    public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
+        return mAggregateEncryptionKeyList;
     }
 
     private Source getSourceFrom(JSONObject sJSON) throws JSONException {
@@ -241,6 +278,16 @@ public class DbState {
                 .setAdTechDomain(attrJSON.getString("adTechDomain"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
+                .build();
+    }
+
+    private AggregateEncryptionKey getAggregateEncryptionKeyFrom(JSONObject keyJSON)
+            throws JSONException {
+        return new AggregateEncryptionKey.Builder()
+                .setId(keyJSON.getString("id"))
+                .setKeyId(keyJSON.getString("keyId"))
+                .setPublicKey(keyJSON.getString("publicKey"))
+                .setExpiry(keyJSON.getLong("expiry"))
                 .build();
     }
 
