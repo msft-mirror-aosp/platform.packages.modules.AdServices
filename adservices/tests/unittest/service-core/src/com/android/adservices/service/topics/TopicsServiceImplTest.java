@@ -28,7 +28,6 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.GetTopicsResult;
 import android.adservices.topics.IGetTopicsCallback;
-import android.content.AttributionSource;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
@@ -75,7 +74,6 @@ import java.util.concurrent.TimeUnit;
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 public class TopicsServiceImplTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
-    private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int SOME_UID = 11;
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
@@ -123,14 +121,9 @@ public class TopicsServiceImplTest {
                 new TopicsServiceImpl(
                         mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(SOME_PACKAGE_NAME)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
         mRequest =
                 new GetTopicsParam.Builder()
-                        .setAttributionSource(source)
+                        .setAppPackageName(SOME_PACKAGE_NAME)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
