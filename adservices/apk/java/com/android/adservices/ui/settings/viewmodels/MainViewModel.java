@@ -27,8 +27,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
-import java.io.IOException;
-
 /**
  * View model for the main view of the AdServices Settings App. This view model is responsible
  * for serving consent to the main view, and interacting with the {@link ConsentManager} that
@@ -46,7 +44,7 @@ public class MainViewModel extends AndroidViewModel {
         DISPLAY_TOPICS_FRAGMENT,
     }
 
-    public MainViewModel(@NonNull Application application) throws IOException {
+    public MainViewModel(@NonNull Application application) {
         super(application);
         setConsentManager(ConsentManager.getInstance(application));
     }
@@ -75,9 +73,9 @@ public class MainViewModel extends AndroidViewModel {
         }
         mAdServicesConsent.postValue(newConsentValue);
         if (newConsentValue) {
-            mConsentManager.enable();
+            mConsentManager.enable(getApplication().getPackageManager());
         } else {
-            mConsentManager.disable();
+            mConsentManager.disable(getApplication().getPackageManager());
         }
     }
 
@@ -106,6 +104,6 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     private boolean getConsentFromConsentManager() {
-        return mConsentManager.getConsent().isGiven();
+        return mConsentManager.getConsent(getApplication().getPackageManager()).isGiven();
     }
 }

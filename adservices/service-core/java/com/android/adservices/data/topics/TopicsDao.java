@@ -42,7 +42,18 @@ import java.util.Set;
 public class TopicsDao {
     private static TopicsDao sSingleton;
 
-    @SuppressWarnings("unused")
+    // TODO(b/227393493): Should support a test to notify if new table is added.
+    private static final String[] ALL_TOPICS_TABLES = {
+        TopicsTables.TaxonomyContract.TABLE,
+        TopicsTables.AppClassificationTopicsContract.TABLE,
+        TopicsTables.AppUsageHistoryContract.TABLE,
+        TopicsTables.UsageHistoryContract.TABLE,
+        TopicsTables.CallerCanLearnTopicsContract.TABLE,
+        TopicsTables.ReturnedTopicContract.TABLE,
+        TopicsTables.TopTopicsContract.TABLE,
+        TopicsTables.BlockedTopicsContract.TABLE
+    };
+
     private final DbHelper mDbHelper; // Used in tests.
 
     /**
@@ -69,7 +80,7 @@ public class TopicsDao {
     /**
      * Persist the apps and their classification topics.
      *
-     * @param epochId the epoch Id to persist
+     * @param epochId the epoch ID to persist
      * @param appClassificationTopicsMap Map of app -> classified topics
      */
     @VisibleForTesting
@@ -113,7 +124,7 @@ public class TopicsDao {
     /**
      * Get the map of apps and their classification topics.
      *
-     * @param epochId the epoch Id to retrieve
+     * @param epochId the epoch ID to retrieve
      * @return {@link Map} a map of app -> topics
      */
     @VisibleForTesting
@@ -178,7 +189,7 @@ public class TopicsDao {
     /**
      * Persist the list of Top Topics in this epoch to DB.
      *
-     * @param epochId Id of current epoch
+     * @param epochId ID of current epoch
      * @param topTopics the topics list to persist into DB
      */
     @VisibleForTesting
@@ -452,12 +463,51 @@ public class TopicsDao {
     }
 
     /**
+     * Return the list of distinct apps from the table.
+     *
+     * @param tableName the table name
+     * @param appColumnName app Column name for given table
+     * @return a {@link Set} of unique apps in the table
+     */
+    @NonNull
+    public Set<String> retrieveDistinctAppsFromTable(
+            @NonNull String tableName, @NonNull String appColumnName) {
+        Set<String> apps = new HashSet<>();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return apps;
+        }
+
+        String[] projection = {appColumnName};
+
+        try (Cursor cursor =
+                db.query(
+                        /* distinct */ true,
+                        tableName,
+                        projection,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)) {
+            while (cursor.moveToNext()) {
+                String app = cursor.getString(cursor.getColumnIndexOrThrow(appColumnName));
+                apps.add(app);
+            }
+        }
+
+        return apps;
+    }
+
+    // TODO(b/236764602): Create a Caller Class.
+    /**
      * Persist the Callers can learn topic map to DB.
      *
-     * @param epochId the epoch Id.
-     * @param callerCanLearnMap callerCanLearnMap = Map<Topic, Set<Caller>> This is a Map from Topic
-     *     to set of App or Sdk (Caller = App or Sdk) that can learn about that topic. This is
-     *     similar to the table Can Learn Topic in the explainer.
+     * @param epochId the epoch ID.
+     * @param callerCanLearnMap callerCanLearnMap = {@code Map<Topic, Set<Caller>>} This is a Map
+     *     from Topic to set of App or Sdk (Caller = App or Sdk) that can learn about that topic.
+     *     This is similar to the table Can Learn Topic in the explainer.
      */
     public void persistCallerCanLearnTopics(
             long epochId, @NonNull Map<Topic, Set<String>> callerCanLearnMap) {
@@ -580,10 +630,11 @@ public class TopicsDao {
         return callerCanLearnMap;
     }
 
+    // TODO(b/236759629): Add a validation to ensure same topic for an app.
     /**
      * Persist the Apps, Sdks returned topics to DB.
      *
-     * @param epochId the epoch Id
+     * @param epochId the epoch ID
      * @param returnedAppSdkTopics {@link Map} a Map<Pair<app, sdk>, Topic>
      */
     public void persistReturnedAppTopicsMap(
@@ -623,8 +674,9 @@ public class TopicsDao {
      * for epoch with epochId in [epochId - numberOfLookBackEpochs + 1, epochId]
      *
      * @param epochId the current epochId
-     * @param numberOfLookBackEpochs How many epoch to look back. The curent explainer uses 3 epochs
-     * @return Map<EpochId, Map < Pair < App, Sdk>, Topic>
+     * @param numberOfLookBackEpochs How many epoch to look back. The current explainer uses 3
+     *     epochs
+     * @return a {@link Map} in type {@code Map<EpochId, Map < Pair < App, Sdk>, Topic>}
      */
     @NonNull
     public Map<Long, Map<Pair<String, String>, Topic>> retrieveReturnedTopics(
@@ -843,6 +895,72 @@ public class TopicsDao {
             db.delete(tableName, deletion, deletionArgs);
         } catch (SQLException e) {
             LogUtil.e(e, "Failed to delete old epochs' data.");
+        }
+    }
+
+    /**
+     * Delete all data generated by Topics API, except for tables in the exclusion list.
+     *
+     * @param tablesToExclude a {@link List} of tables that won't be deleted.
+     */
+    public void deleteAllTopicsTables(@NonNull List<String> tablesToExclude) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        // Handle this in a transaction.
+        db.beginTransaction();
+
+        try {
+            for (String table : ALL_TOPICS_TABLES) {
+                if (!tablesToExclude.contains(table)) {
+                    db.delete(table, /* whereClause = */ null, /* whereArgs = */ null);
+                }
+            }
+
+            // Mark the transaction successful.
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    /**
+     * Erase all data in a table that associates with a certain application
+     *
+     * @param tableName the table to remove data from
+     * @param appColumnName the column name in the table that represents the name of an application
+     * @param appNames a {@link List} of apps to wipe out data for
+     */
+    public void deleteAppFromTable(
+            @NonNull String tableName,
+            @NonNull String appColumnName,
+            @NonNull List<String> appNames) {
+        Objects.requireNonNull(tableName);
+        Objects.requireNonNull(appColumnName);
+        Objects.requireNonNull(appNames);
+
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null || appNames.isEmpty()) {
+            return;
+        }
+
+        // Construct the "IN" part of SQL Query
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("(?");
+        for (int i = 0; i < appNames.size() - 1; i++) {
+            stringBuilder.append(",?");
+        }
+        stringBuilder.append(')');
+
+        String whereClause = appColumnName + " IN " + stringBuilder;
+        String[] whereArgs = appNames.toArray(new String[0]);
+
+        try {
+            db.delete(tableName, whereClause, whereArgs);
+        } catch (SQLException e) {
+            LogUtil.e(e, String.format("Failed to delete %s in table %s.", appNames, tableName));
         }
     }
 }

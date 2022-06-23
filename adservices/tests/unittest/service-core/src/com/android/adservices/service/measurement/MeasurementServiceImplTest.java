@@ -23,7 +23,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
+import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.RegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
@@ -134,6 +136,31 @@ public final class MeasurementServiceImplTest {
                 getDefaultDeletionRequest(),
                 null
         );
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_success() throws Exception {
+        MeasurementImpl measurementImpl = MeasurementImpl.getInstance(sContext);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        final List<Integer> list = new ArrayList<>();
+
+        new MeasurementServiceImpl(measurementImpl).getMeasurementApiStatus(
+                new IMeasurementApiStatusCallback.Stub() {
+                    @Override
+                    public void onResult(int result) throws RemoteException {
+                        list.add(result);
+                        countDownLatch.countDown();
+                    }
+                }
+        );
+
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(list.get(0)).isEqualTo(MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testGetMeasurementApiStatus_invalidCallback() throws Exception {
+        new MeasurementServiceImpl(mMockMeasurementImpl).getMeasurementApiStatus(null);
     }
 
     private RegistrationRequest getDefaultRegistrationRequest() {

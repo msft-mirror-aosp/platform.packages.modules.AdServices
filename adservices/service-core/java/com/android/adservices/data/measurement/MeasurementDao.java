@@ -35,7 +35,7 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 
 import java.time.Instant;
@@ -63,36 +63,24 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertTrigger(
-            @NonNull Uri attributionDestination,
-            @NonNull Uri adTechDomain,
-            @NonNull Uri registrant,
-            @NonNull Long triggerTime,
-            @NonNull Long triggerData,
-            @Nullable Long dedupKey,
-            @NonNull Long priority,
-            @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues,
-            @Nullable String filters)
-            throws DatastoreException {
-        validateNonNull(attributionDestination, adTechDomain, registrant, triggerTime, triggerData,
-                priority);
-        validateUri(attributionDestination, adTechDomain, registrant);
-
+    public void insertTrigger(@NonNull Trigger trigger) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
-                attributionDestination.toString());
-        values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, triggerTime);
-        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGER_DATA, triggerData);
-        values.put(MeasurementTables.TriggerContract.DEDUP_KEY, dedupKey);
-        values.put(MeasurementTables.TriggerContract.PRIORITY, priority);
+                trigger.getAttributionDestination().toString());
+        values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
+        values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                trigger.getEventTriggers());
         values.put(MeasurementTables.TriggerContract.STATUS, Trigger.Status.PENDING);
-        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN, adTechDomain.toString());
-        values.put(MeasurementTables.TriggerContract.REGISTRANT, registrant.toString());
-        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA, aggregateTriggerData);
-        values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES, aggregateValues);
-        values.put(MeasurementTables.TriggerContract.FILTERS, filters);
+        values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                trigger.getAdTechDomain().toString());
+        values.put(MeasurementTables.TriggerContract.REGISTRANT,
+                trigger.getRegistrant().toString());
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                trigger.getAggregateTriggerData());
+        values.put(MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                trigger.getAggregateValues());
+        values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -156,7 +144,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+    public AggregateReport getAggregateReport(String aggregateReportId)
             throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.AggregateReport.TABLE,
@@ -172,42 +160,33 @@ class MeasurementDao implements IMeasurementDao {
                         "AggregateReport retrieval failed. Id: " + aggregateReportId);
             }
             cursor.moveToNext();
-            return SqliteObjectMapper.constructCleartextAggregatePayload(cursor);
+            return SqliteObjectMapper.constructAggregateReport(cursor);
         }
     }
 
     @Override
-    public void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
-            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
-            @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCoolDownWindow, @Source.AttributionMode int attributionMode,
-            @Nullable String aggregateSource, @Nullable String aggregateFilterData)
-            throws DatastoreException {
-        validateNonNull(sourceEventId, publisher, attributionDestination, adTechDomain,
-                registrant, sourceEventTime, expiryTime, priority, sourceType,
-                installAttributionWindow, installCoolDownWindow);
-        validateUri(publisher, attributionDestination, adTechDomain, registrant);
-
+    public void insertSource(@NonNull Source source) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
-        values.put(MeasurementTables.SourceContract.EVENT_ID, sourceEventId);
-        values.put(MeasurementTables.SourceContract.PUBLISHER, publisher.toString());
+        values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
+        values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                attributionDestination.toString());
-        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN, adTechDomain.toString());
-        values.put(MeasurementTables.SourceContract.EVENT_TIME, sourceEventTime);
-        values.put(MeasurementTables.SourceContract.EXPIRY_TIME, expiryTime);
-        values.put(MeasurementTables.SourceContract.PRIORITY, priority);
+                source.getAttributionDestination().toString());
+        values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
+                source.getAdTechDomain().toString());
+        values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
+        values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
+        values.put(MeasurementTables.SourceContract.PRIORITY, source.getPriority());
         values.put(MeasurementTables.SourceContract.STATUS, Source.Status.ACTIVE);
-        values.put(MeasurementTables.SourceContract.SOURCE_TYPE, sourceType.name());
-        values.put(MeasurementTables.SourceContract.REGISTRANT, registrant.toString());
+        values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().name());
+        values.put(MeasurementTables.SourceContract.REGISTRANT, source.getRegistrant().toString());
         values.put(MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW,
-                installAttributionWindow);
-        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW, installCoolDownWindow);
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, attributionMode);
-        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, aggregateSource);
-        values.put(MeasurementTables.SourceContract.FILTER_DATA, aggregateFilterData);
+                source.getInstallAttributionWindow());
+        values.put(MeasurementTables.SourceContract.INSTALL_COOLDOWN_WINDOW,
+                source.getInstallCooldownWindow());
+        values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
+        values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         values.put(MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS, 0);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
@@ -309,7 +288,7 @@ class MeasurementDao implements IMeasurementDao {
     public void markAggregateReportDelivered(String aggregateReportId) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.STATUS,
-                CleartextAggregatePayload.Status.DELIVERED);
+                AggregateReport.Status.DELIVERED);
         long rows = mSQLTransaction.getDatabase().update(MeasurementTables.AggregateReport.TABLE,
                 values, MeasurementTables.AggregateReport.ID + " = ? ",
                 new String[]{aggregateReportId});
@@ -995,7 +974,33 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertAggregateReport(CleartextAggregatePayload aggregateReport)
+    public List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException {
+        List<AggregateEncryptionKey> aggregateEncryptionKeys = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateEncryptionKey.TABLE,
+                /*columns=*/null,
+                MeasurementTables.AggregateEncryptionKey.EXPIRY + " >= ?",
+                new String[]{String.valueOf(expiry)},
+                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+            while (cursor.moveToNext()) {
+                aggregateEncryptionKeys
+                        .add(SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(cursor));
+            }
+            return aggregateEncryptionKeys;
+        }
+    }
+
+    @Override
+    public void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(MeasurementTables.AggregateEncryptionKey.TABLE,
+                MeasurementTables.AggregateEncryptionKey.EXPIRY + " < ?",
+                new String[]{String.valueOf(expiry)});
+    }
+
+    @Override
+    public void insertAggregateReport(AggregateReport aggregateReport)
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, UUID.randomUUID().toString());
@@ -1007,8 +1012,6 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getSourceRegistrationTime());
         values.put(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
-        values.put(MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
-                aggregateReport.getPrivacyBudgetKey());
         values.put(MeasurementTables.AggregateReport.REPORTING_ORIGIN,
                 aggregateReport.getReportingOrigin().toString());
         values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
@@ -1024,25 +1027,6 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<CleartextAggregatePayload> getAllCleartextAggregatePayload()
-            throws DatastoreException {
-        List<CleartextAggregatePayload> res = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.AggregateReport.TABLE,
-                /*columns=*/null, /*selection=*/ null, /*selectionArgs*/ null,
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
-            if (cursor == null) {
-                return res;
-            }
-            while (cursor.moveToNext()) {
-                res.add(SqliteObjectMapper.constructCleartextAggregatePayload(cursor));
-            }
-            return res;
-        }
-    }
-
-
-    @Override
     public List<String> getPendingAggregateReportIdsInWindow(long windowStartTime,
             long windowEndTime) throws DatastoreException {
         List<String> aggregateReports = new ArrayList<>();
@@ -1053,7 +1037,7 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME + " <= ? AND "
                         + MeasurementTables.AggregateReport.STATUS + " = ? ",
                 new String[]{String.valueOf(windowStartTime), String.valueOf(windowEndTime),
-                        String.valueOf(CleartextAggregatePayload.Status.PENDING)},
+                        String.valueOf(AggregateReport.Status.PENDING)},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/"RANDOM()", /*limit=*/null)) {
             while (cursor.moveToNext()) {
                 aggregateReports.add(cursor.getString(cursor.getColumnIndex(
@@ -1072,29 +1056,13 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AggregateReport.PUBLISHER + " = ? AND "
                 + MeasurementTables.AggregateReport.STATUS + " = ? ",
                 new String[]{appName.toString(),
-                        String.valueOf(CleartextAggregatePayload.Status.PENDING)},
+                        String.valueOf(AggregateReport.Status.PENDING)},
                 null, null, "RANDOM()", null)) {
             while (cursor.moveToNext()) {
                 aggregateReports.add(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AggregateReport.ID)));
             }
             return aggregateReports;
-        }
-    }
-
-    private void validateNonNull(Object... objects) throws DatastoreException {
-        for (Object o : objects) {
-            if (o == null) {
-                throw new DatastoreException("Received null values");
-            }
-        }
-    }
-
-    private void validateUri(Uri... uris) throws DatastoreException {
-        for (Uri uri : uris) {
-            if (uri == null || uri.getScheme() == null) {
-                throw new DatastoreException("Uri with no scheme is not valid");
-            }
         }
     }
 }

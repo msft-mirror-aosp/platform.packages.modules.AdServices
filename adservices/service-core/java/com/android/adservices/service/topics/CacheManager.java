@@ -41,26 +41,26 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /** A class to manage Topics Cache. */
 public class CacheManager implements Dumpable {
+    // The verbose level for dumpsys usage
+    private static final int VERBOSE = 1;
     private static CacheManager sSingleton;
-
     // Lock for Read and Write on the cached topics map.
     // This allows concurrent reads but exclusive update to the cache.
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
-
     private final EpochManager mEpochManager;
     private final TopicsDao mTopicsDao;
     private final Flags mFlags;
-
     // Map<EpochId, Map<Pair<App, Sdk>, Topic>
     private Map<Long, Map<Pair<String, String>, Topic>> mCachedTopics = new HashMap<>();
+    // TODO(b/236422354): merge hashsets to have one point of truth (Taxonomy update)
     // HashSet<BlockedTopic>
-    private HashSet<Topic> mCachedBlockedTopics;
-
-    // The verbose level for dumpsys usage
-    private static final int VERBOSE = 1;
+    private HashSet<Topic> mCachedBlockedTopics = new HashSet<>();
+    // HashSet<TopicId>
+    private HashSet<Integer> mCachedBlockedTopicIds = new HashSet<>();
 
     @VisibleForTesting
     CacheManager(EpochManager epochManager, TopicsDao topicsDao, Flags flags) {
@@ -99,6 +99,10 @@ public class CacheManager implements Dumpable {
         // HashSet<BlockedTopic>
         HashSet<Topic> blockedTopicsCacheFromDb =
                 new HashSet<>(mTopicsDao.retrieveAllBlockedTopics());
+        HashSet<Integer> blockedTopicIdsFromDb =
+                blockedTopicsCacheFromDb.stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toCollection(HashSet::new));
 
         LogUtil.v(
                 "CacheManager.loadCache(). CachedTopics mapping size is "
@@ -109,6 +113,7 @@ public class CacheManager implements Dumpable {
             mReadWriteLock.writeLock().lock();
             mCachedTopics = cacheFromDb;
             mCachedBlockedTopics = blockedTopicsCacheFromDb;
+            mCachedBlockedTopicIds = blockedTopicIdsFromDb;
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -116,7 +121,7 @@ public class CacheManager implements Dumpable {
 
     /**
      * Get list of topics for the numberOfLookBackEpochs epoch starting from [epochId -
-     * numberOfLookBackEpochs + 1, epochId]
+     * numberOfLookBackEpochs + 1, epochId] that were not blocked by the user.
      *
      * @param numberOfLookBackEpochs how many epochs to look back.
      * @param app the app
@@ -138,7 +143,9 @@ public class CacheManager implements Dumpable {
             for (int numEpoch = 0; numEpoch < numberOfLookBackEpochs; numEpoch++) {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {
                     Topic topic = mCachedTopics.get(epochId - numEpoch).get(Pair.create(app, sdk));
-                    if (topic != null && !topicsSet.contains(topic.getTopic())) {
+                    if (topic != null
+                            && !topicsSet.contains(topic.getTopic())
+                            && !mCachedBlockedTopicIds.contains(topic.getTopic())) {
                         topics.add(topic);
                         topicsSet.add(topic.getTopic());
                     }
@@ -149,7 +156,6 @@ public class CacheManager implements Dumpable {
         }
 
         Collections.shuffle(topics, random);
-        // TODO(b/234214293): filter out blocked topics.
         return topics;
     }
 
@@ -178,12 +184,24 @@ public class CacheManager implements Dumpable {
         // We will need to look at the 3 historical epochs starting from last epoch.
         long epochId = mEpochManager.getCurrentEpochId() - 1;
         HashSet<Topic> topics = new HashSet<>();
-        for (int numEpoch = 0; numEpoch < mFlags.getTopicsNumberOfLookBackEpochs(); numEpoch++) {
-            if (mCachedTopics.containsKey(epochId - numEpoch)) {
-                topics.addAll(mCachedTopics.get(epochId - numEpoch).values());
+        mReadWriteLock.readLock().lock();
+        try {
+            for (int numEpoch = 0;
+                    numEpoch < mFlags.getTopicsNumberOfLookBackEpochs();
+                    numEpoch++) {
+                if (mCachedTopics.containsKey(epochId - numEpoch)) {
+                    topics.addAll(
+                            mCachedTopics.get(epochId - numEpoch).values().stream()
+                                    .filter(
+                                            topic ->
+                                                    !mCachedBlockedTopicIds.contains(
+                                                            topic.getTopic()))
+                                    .collect(Collectors.toList()));
+                }
             }
+        } finally {
+            mReadWriteLock.readLock().unlock();
         }
-        topics.removeAll(mCachedBlockedTopics);
         return ImmutableList.copyOf(topics);
     }
 
@@ -199,6 +217,20 @@ public class CacheManager implements Dumpable {
             return ImmutableList.copyOf(mCachedBlockedTopics);
         } finally {
             mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Delete all data generated by Topics API, except for tables in the exclusion list.
+     *
+     * @param tablesToExclude a {@link List} of tables that won't be deleted.
+     */
+    public void clearAllTopicsData(@NonNull List<String> tablesToExclude) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mTopicsDao.deleteAllTopicsTables(tablesToExclude);
+        } finally {
+            mReadWriteLock.writeLock().unlock();
         }
     }
 

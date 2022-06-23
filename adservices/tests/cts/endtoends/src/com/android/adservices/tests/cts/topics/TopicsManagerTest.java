@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -82,8 +83,6 @@ public class TopicsManagerTest {
 
         // At beginning, Sdk1 receives no topic.
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
-        assertThat(sdk1Result.getTaxonomyVersions()).isEmpty();
-        assertThat(sdk1Result.getModelVersions()).isEmpty();
         assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for
@@ -96,20 +95,19 @@ public class TopicsManagerTest {
 
         // Since the sdk1 called the Topics API in the previous Epoch, it should receive some topic.
         sdk1Result = advertisingTopicsClient1.getTopics().get();
-        assertThat(sdk1Result.getTaxonomyVersions()).isNotEmpty();
-        assertThat(sdk1Result.getModelVersions()).isNotEmpty();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // We only have 1 test app which has 10 classification topics: 48, 20, 241, 1579, 467, 29,
-        // 1416, 12, 138, 1049
+        // We only have 1 test app which has 10 classification topics: 114, 299, 96, 232, 159,
+        // 272, 80, 103, 82, 51
         // These 5 classification topics will become top 5 topics of the epoch since there is
         // no other apps calling Topics API.
         // The app will be assigned one random topic from one of these 5 topics.
         assertThat(sdk1Result.getTopics()).hasSize(1);
-        int topic = sdk1Result.getTopics().get(0);
+        Topic topic = sdk1Result.getTopics().get(0);
 
         // topic is one of the 10 classification topics of the Test App.
-        assertThat(topic).isIn(Arrays.asList(48, 20, 241, 1579, 467, 29, 1416, 12, 138, 1049));
+        assertThat(topic.getTopicId())
+                .isIn(Arrays.asList(114, 299, 96, 232, 159, 272, 80, 103, 82, 51));
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
         AdvertisingTopicsClient advertisingTopicsClient2 =
@@ -120,8 +118,6 @@ public class TopicsManagerTest {
                         .build();
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
-        assertThat(sdk2Result2.getTaxonomyVersions()).isEmpty();
-        assertThat(sdk2Result2.getModelVersions()).isEmpty();
         assertThat(sdk2Result2.getTopics()).isEmpty();
 
         // Reset back the original values.

@@ -31,7 +31,6 @@
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Достъп до API за съгласие в услугата"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Позволява на приложението достъп до API за съгласие в услугата."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Бета-версия на Privacy Sandbox"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Бета-версия на Privacy Sandbox"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Превключване към бета-версията на Privacy Sandbox"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -41,8 +40,8 @@
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Приложенията ви, които генерират конкретни интереси"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Управление на приложенията ви, които генерират конкретни интереси"</string>
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Управление на общите ви интереси за рекламите"</string>
-    <!-- no translation found for settingsUI_block_topic_title (1883542291264768402) -->
-    <skip />
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Блокиране"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Интереси, които сте блокирали"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Повторно задаване на всички интереси"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Отблокиране"</string>
 </resources>
