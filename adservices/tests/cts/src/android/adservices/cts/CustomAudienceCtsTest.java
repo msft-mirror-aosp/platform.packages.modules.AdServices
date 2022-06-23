@@ -106,25 +106,6 @@ public class CustomAudienceCtsTest {
     }
 
     @Test
-    public void testAddOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        AddCustomAudienceOverrideRequest request =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER)
-                        .setName(NAME)
-                        .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
-                        .build();
-
-        ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
-
-        // Asserting no exception since there is no returned value
-        result.get(10, TimeUnit.SECONDS);
-    }
-
-    @Test
     public void testAddOverrideFailsWithDebugModeDisabled() throws Exception {
         Assume.assumeFalse(mIsDebugMode);
 
@@ -149,55 +130,6 @@ public class CustomAudienceCtsTest {
     }
 
     @Test
-    public void testRemoveNotExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        RemoveCustomAudienceOverrideRequest request =
-                new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER)
-                        .setName(NAME)
-                        .build();
-
-        ListenableFuture<Void> result = mClient.removeCustomAudienceRemoteInfoOverride(request);
-
-        // Asserting no exception since there is no returned value
-        result.get(10, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void testRemoveExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        AddCustomAudienceOverrideRequest addRequest =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER)
-                        .setName(NAME)
-                        .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
-                        .build();
-
-        ListenableFuture<Void> addResult = mClient.overrideCustomAudienceRemoteInfo(addRequest);
-
-        // Asserting no exception since there is no returned value
-        addResult.get(10, TimeUnit.SECONDS);
-
-        RemoveCustomAudienceOverrideRequest removeRequest =
-                new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER)
-                        .setName(NAME)
-                        .build();
-
-        ListenableFuture<Void> removeResult =
-                mClient.removeCustomAudienceRemoteInfoOverride(removeRequest);
-
-        // Asserting no exception since there is no returned value
-        removeResult.get(10, TimeUnit.SECONDS);
-    }
-
-    @Test
     public void testRemoveOverrideFailsWithDebugModeDisabled() throws Exception {
         Assume.assumeFalse(mIsDebugMode);
 
@@ -217,16 +149,6 @@ public class CustomAudienceCtsTest {
                             result.get(10, TimeUnit.SECONDS);
                         });
         assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    public void testResetAllOverridesSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
-
-        ListenableFuture<Void> result = mClient.resetAllCustomAudienceOverrides();
-
-        // Asserting no exception since there is no returned value
-        result.get(10, TimeUnit.SECONDS);
     }
 
     @Test
