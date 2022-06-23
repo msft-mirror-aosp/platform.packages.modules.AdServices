@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -30,45 +31,93 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.topics.AppUpdateManager;
+import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.topics.CacheManager;
+import com.android.adservices.service.topics.EpochManager;
+import com.android.adservices.service.topics.TopicsWorker;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 
+/** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
 @SmallTest
 public class PackageChangedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
-    private @Mock PackageChangedReceiver mPackageChangedReceiver = new PackageChangedReceiver();
+    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
+
+    @Mock PackageChangedReceiver mMockPackageChangedReceiver;
+    @Mock EpochManager mMockEpochManager;
+    @Mock CacheManager mMockCacheManager;
+    @Mock BlockedTopicsManager mBlockedTopicsManager;
+    @Mock AppUpdateManager mMockAppUpdateManager;
+
+    private TopicsWorker mTopicsWorker;
+    private MockitoSession mTopicsWorkerMockedSession;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
         doNothing()
-                .when(mPackageChangedReceiver)
+                .when(mMockPackageChangedReceiver)
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
         doNothing()
-                .when(mPackageChangedReceiver)
+                .when(mMockPackageChangedReceiver)
                 .onPackageAdded(any(Context.class), any(Uri.class));
         doCallRealMethod()
-                .when(mPackageChangedReceiver)
+                .when(mMockPackageChangedReceiver)
                 .onReceive(any(Context.class), any(Intent.class));
+
+        // Mock TopicsWorker to test app update flow in topics API.
+        // Start a mockitoSession to mock static method
+        mTopicsWorker =
+                new TopicsWorker(
+                        mMockEpochManager,
+                        mMockCacheManager,
+                        mBlockedTopicsManager,
+                        mMockAppUpdateManager,
+                        FlagsFactory.getFlagsForTest());
+        mTopicsWorkerMockedSession =
+                ExtendedMockito.mockitoSession().spyStatic(TopicsWorker.class).startMocking();
+    }
+
+    @After
+    public void teardown() {
+        mTopicsWorkerMockedSession.finishMocking();
     }
 
     @Test
-    public void testReceivePackageFullyRemoved() {
+    public void testReceivePackageFullyRemoved() throws InterruptedException {
         Intent intent = new Intent();
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(
                 PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
 
-        mPackageChangedReceiver.onReceive(sContext, intent);
+        // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+        ExtendedMockito.doReturn(mTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
 
-        verify(mPackageChangedReceiver, times(1))
+        mMockPackageChangedReceiver.onReceive(sContext, intent);
+
+        // Grant some time to allow background thread to execute
+        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+        verify(mMockPackageChangedReceiver, times(1))
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
-        verify(mPackageChangedReceiver, never()).onPackageAdded(any(Context.class), any(Uri.class));
+        verify(mMockPackageChangedReceiver, never())
+                .onPackageAdded(any(Context.class), any(Uri.class));
+
+        // Verify method in AppUpdateManager is invoked
+        // Note that only package name is passed into following methods.
+        verify(mMockAppUpdateManager).deleteAppDataByUri(eq(Uri.parse(SAMPLE_PACKAGE)));
     }
 
     @Test
@@ -78,11 +127,11 @@ public class PackageChangedReceiverTest {
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_ADDED);
 
-        mPackageChangedReceiver.onReceive(sContext, intent);
+        mMockPackageChangedReceiver.onReceive(sContext, intent);
 
-        verify(mPackageChangedReceiver, times(1))
+        verify(mMockPackageChangedReceiver, times(1))
                 .onPackageAdded(any(Context.class), any(Uri.class));
-        verify(mPackageChangedReceiver, never())
+        verify(mMockPackageChangedReceiver, never())
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
     }
 }
