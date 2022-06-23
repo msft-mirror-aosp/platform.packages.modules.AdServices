@@ -70,9 +70,10 @@ public class MeasurementManager {
 
     /**
      * Register an attribution source / trigger.
+     *
      * @hide
      */
-    public void register(
+    private void register(
             @NonNull RegistrationRequest registrationRequest,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
@@ -207,24 +208,6 @@ public class MeasurementManager {
     }
 
     /**
-     * Register an attribution source (click or view).
-     * Shortcut for the common case with no callback.
-     *
-     * @param attributionSource the platform issues a request to this URI in order to fetch metadata
-     *                         associated with the attribution source.
-     * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
-     *                  event).
-     */
-    public void registerSource(
-            @NonNull Uri attributionSource,
-            @Nullable InputEvent inputEvent) {
-        Objects.requireNonNull(attributionSource);
-        registerSource(
-                attributionSource, inputEvent,
-                /* executor = */ null, /* callback = */ null);
-    }
-
-    /**
      * Register a trigger (conversion).
      *
      * @param trigger the API issues a request to this URI to fetch metadata associated with the
@@ -245,18 +228,6 @@ public class MeasurementManager {
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
-    }
-
-    /**
-     * Register a trigger (conversion).
-     * Shortcut for the common case with no callback.
-     *
-     * @param trigger the API issues a request to this URI to fetch metadata associated with the
-     *                trigger.
-     */
-    public void registerTrigger(@NonNull Uri trigger) {
-        Objects.requireNonNull(trigger);
-        registerTrigger(trigger, /* executor = */ null, /* callback = */ null);
     }
 
     /**

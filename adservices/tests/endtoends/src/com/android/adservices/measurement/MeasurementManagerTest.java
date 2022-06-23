@@ -60,18 +60,6 @@ public class MeasurementManagerTest {
                 + duration + " ms: " + label);
     }
 
-    private void measureRegisterAttributionSourceShort(
-            MeasurementManager mm, String label) throws Exception {
-        Log.i(TAG, "Calling registerSource() [short]");
-        final long start = System.currentTimeMillis();
-
-        mm.registerSource(Uri.parse("https://example.com"), null);
-
-        final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "registerSource() [short] took "
-                + duration + " ms: " + label);
-    }
-
     private void measureTriggerAttribution(
             MeasurementManager mm, String label) throws Exception {
         Log.i(TAG, "Calling registerTrigger()");
@@ -84,17 +72,6 @@ public class MeasurementManagerTest {
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "registerTrigger() took " + duration + " ms: " + label);
-    }
-
-    private void measureTriggerAttributionShort(
-            MeasurementManager mm, String label) throws Exception {
-        Log.i(TAG, "Calling registerTrigger() [short]");
-        final long start = System.currentTimeMillis();
-
-        mm.registerTrigger(Uri.parse("https://example.com"));
-
-        final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "registerTrigger() [short] took " + duration + " ms: " + label);
     }
 
     private void measureDeleteRegistrations(
@@ -149,12 +126,8 @@ public class MeasurementManagerTest {
 
         measureRegisterAttributionSource(mm, "no-kill, 1st call");
         measureRegisterAttributionSource(mm, "no-kill, 2nd call");
-        measureRegisterAttributionSourceShort(mm, "no-kill, 1st call");
-        measureRegisterAttributionSourceShort(mm, "no-kill, 2nd call");
         measureTriggerAttribution(mm, "no-kill, 1st call");
         measureTriggerAttribution(mm, "no-kill, 2nd call");
-        measureTriggerAttributionShort(mm, "no-kill, 1st call");
-        measureTriggerAttributionShort(mm, "no-kill, 2nd call");
         measureDeleteRegistrations(mm, "no-kill, 1st call");
         measureDeleteRegistrations(mm, "no-kill, 2nd call");
     }
