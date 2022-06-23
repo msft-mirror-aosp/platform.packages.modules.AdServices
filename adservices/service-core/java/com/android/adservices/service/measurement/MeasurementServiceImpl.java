@@ -16,6 +16,9 @@
 package com.android.adservices.service.measurement;
 
 import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.EmbeddedWebSourceRegistrationRequestInternal;
+import android.adservices.measurement.EmbeddedWebTriggerRegistrationRequestInternal;
+import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.RegistrationRequest;
@@ -36,8 +39,8 @@ import java.util.concurrent.Executor;
  * @hide
  */
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
-    private final MeasurementImpl mMeasurementImpl;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private final MeasurementImpl mMeasurementImpl;
 
     public MeasurementServiceImpl(Context context) {
         mMeasurementImpl = MeasurementImpl.getInstance(context);
@@ -54,30 +57,56 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        sBackgroundExecutor.execute(() -> {
-            try {
-                LogUtil.d("MeasurementServiceImpl: register: ");
-                callback.onResult(Integer.valueOf(
-                        mMeasurementImpl.register(request, System.currentTimeMillis())));
-            } catch (RemoteException e) {
-                LogUtil.e("Unable to send result to the callback", e);
-            }
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        LogUtil.d("MeasurementServiceImpl: register: ");
+                        callback.onResult(
+                                mMeasurementImpl.register(request, System.currentTimeMillis()));
+                    } catch (RemoteException e) {
+                        LogUtil.e("Unable to send result to the callback", e);
+                    }
+                });
     }
 
     @Override
-    public void deleteRegistrations(@NonNull DeletionRequest request,
-                                    @NonNull IMeasurementCallback callback) {
+    public void registerEmbeddedWebSource(
+            @NonNull EmbeddedWebSourceRegistrationRequestInternal registrationRequest,
+            @NonNull IMeasurementCallback iMeasurementCallback) {
+        // TODO: Implementation
+    }
+
+    @Override
+    public void registerEmbeddedWebTrigger(
+            @NonNull EmbeddedWebTriggerRegistrationRequestInternal registrationRequest,
+            @NonNull IMeasurementCallback iMeasurementCallback) {
+        // TODO: Implementation
+    }
+
+    @Override
+    public void deleteRegistrations(
+            @NonNull DeletionRequest request, @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
-        sBackgroundExecutor.execute(() -> {
-            try {
-                callback.onResult(Integer.valueOf(
-                        mMeasurementImpl.deleteRegistrations(request)));
-            } catch (RemoteException e) {
-                LogUtil.e("Unable to send result to the callback", e);
-            }
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        callback.onResult(mMeasurementImpl.deleteRegistrations(request));
+                    } catch (RemoteException e) {
+                        LogUtil.e("Unable to send result to the callback", e);
+                    }
+                });
+    }
+
+    @Override
+    public void getMeasurementApiStatus(@NonNull IMeasurementApiStatusCallback callback) {
+        Objects.requireNonNull(callback);
+
+        try {
+            callback.onResult(Integer.valueOf(mMeasurementImpl.getMeasurementApiStatus()));
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+        }
     }
 }
