@@ -33,39 +33,46 @@ import java.util.Collections;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EmbeddedWebTriggerRegistrationRequestTest {
+public class WebSourceRegistrationRequestTest {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
+    private static final Uri OS_DESTINATION_URI = Uri.parse("https://os-destination.com");
+    private static final Uri WEB_DESTINATION_URI = Uri.parse("https://web-destination.com");
+    private static final Uri VERIFIED_DESTINATION = Uri.parse("https://verified-dest.com");
     private static final KeyEvent INPUT_KEY_EVENT =
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
 
-    private static final TriggerParams TRIGGER_REGISTRATION_1 =
-            new TriggerParams.Builder()
+    private static final SourceParams SOURCE_REGISTRATION_1 =
+            new SourceParams.Builder()
                     .setRegistrationUri(REGISTRATION_URI_1)
                     .setDebugEnabled(true)
                     .build();
 
-    private static final TriggerParams TRIGGER_REGISTRATION_2 =
-            new TriggerParams.Builder()
+    private static final SourceParams SOURCE_REGISTRATION_2 =
+            new SourceParams.Builder()
                     .setRegistrationUri(REGISTRATION_URI_2)
                     .setDebugEnabled(false)
                     .build();
 
-    private static final List<TriggerParams> TRIGGER_REGISTRATIONS =
-            Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2);
+    private static final List<SourceParams> SOURCE_REGISTRATIONS =
+            Arrays.asList(SOURCE_REGISTRATION_1, SOURCE_REGISTRATION_2);
 
     @Test
     public void testDefaults() throws Exception {
-        EmbeddedWebTriggerRegistrationRequest request =
-                new EmbeddedWebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(TRIGGER_REGISTRATIONS)
+        WebSourceRegistrationRequest request =
+                new WebSourceRegistrationRequest.Builder()
+                        .setSourceParams(SOURCE_REGISTRATIONS)
                         .setTopOriginUri(TOP_ORIGIN_URI)
+                        .setOsDestination(OS_DESTINATION_URI)
                         .build();
 
-        assertEquals(TRIGGER_REGISTRATIONS, request.getTriggerParams());
+        assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
         assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
+        assertEquals(OS_DESTINATION_URI, request.getOsDestination());
         assertNull(request.getInputEvent());
+        assertNull(request.getWebDestination());
+        assertNull(request.getVerifiedDestination());
     }
 
     @Test
@@ -74,12 +81,26 @@ public class EmbeddedWebTriggerRegistrationRequestTest {
     }
 
     @Test
+    public void build_withMissingOsAndWebDestination_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new WebSourceRegistrationRequest.Builder()
+                                .setSourceParams(SOURCE_REGISTRATIONS)
+                                .setInputEvent(INPUT_KEY_EVENT)
+                                .setVerifiedDestination(VERIFIED_DESTINATION)
+                                .setTopOriginUri(TOP_ORIGIN_URI)
+                                .setOsDestination(null)
+                                .setWebDestination(null)
+                                .build());
+    }
+
+    @Test
     public void testParcelingAttribution() {
         Parcel p = Parcel.obtain();
         createExampleRegistrationRequest().writeToParcel(p, 0);
         p.setDataPosition(0);
-        verifyExampleRegistration(
-                EmbeddedWebTriggerRegistrationRequest.CREATOR.createFromParcel(p));
+        verifyExampleRegistration(WebSourceRegistrationRequest.CREATOR.createFromParcel(p));
         p.recycle();
     }
 
@@ -88,8 +109,8 @@ public class EmbeddedWebTriggerRegistrationRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new EmbeddedWebTriggerRegistrationRequest.Builder()
-                                .setTriggerParams(null)
+                        new WebSourceRegistrationRequest.Builder()
+                                .setSourceParams(null)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .setTopOriginUri(TOP_ORIGIN_URI)
                                 .build());
@@ -97,26 +118,32 @@ public class EmbeddedWebTriggerRegistrationRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new EmbeddedWebTriggerRegistrationRequest.Builder()
-                                .setTriggerParams(Collections.emptyList())
+                        new WebSourceRegistrationRequest.Builder()
+                                .setSourceParams(Collections.emptyList())
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .setTopOriginUri(TOP_ORIGIN_URI)
                                 .build());
     }
 
-    private EmbeddedWebTriggerRegistrationRequest createExampleRegistrationRequest() {
-        return new EmbeddedWebTriggerRegistrationRequest.Builder()
-                .setTriggerParams(TRIGGER_REGISTRATIONS)
+    private WebSourceRegistrationRequest createExampleRegistrationRequest() {
+        return new WebSourceRegistrationRequest.Builder()
+                .setSourceParams(SOURCE_REGISTRATIONS)
                 .setInputEvent(INPUT_KEY_EVENT)
+                .setVerifiedDestination(VERIFIED_DESTINATION)
                 .setTopOriginUri(TOP_ORIGIN_URI)
+                .setOsDestination(OS_DESTINATION_URI)
+                .setWebDestination(WEB_DESTINATION_URI)
                 .build();
     }
 
-    private void verifyExampleRegistration(EmbeddedWebTriggerRegistrationRequest request) {
-        assertEquals(TRIGGER_REGISTRATIONS, request.getTriggerParams());
+    private void verifyExampleRegistration(WebSourceRegistrationRequest request) {
+        assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
         assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
+        assertEquals(OS_DESTINATION_URI, request.getOsDestination());
+        assertEquals(WEB_DESTINATION_URI, request.getWebDestination());
         assertEquals(INPUT_KEY_EVENT.getAction(), ((KeyEvent) request.getInputEvent()).getAction());
         assertEquals(
                 INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) request.getInputEvent()).getKeyCode());
+        assertEquals(VERIFIED_DESTINATION, request.getVerifiedDestination());
     }
 }

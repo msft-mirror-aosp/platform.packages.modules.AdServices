@@ -139,16 +139,16 @@ public class MeasurementManager {
      * @param callback intended to notify asynchronously the API result.
      * @hide
      */
-    public void registerEmbeddedWebSource(
-            @NonNull EmbeddedWebSourceRegistrationRequest request,
-            @Nullable @CallbackExecutor Executor executor,
+    public void registerWebSource(
+            @NonNull WebSourceRegistrationRequest request,
+            @Nullable Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
         try {
-            service.registerEmbeddedWebSource(
-                    new EmbeddedWebSourceRegistrationRequestInternal.Builder()
+            service.registerWebSource(
+                    new WebSourceRegistrationRequestInternal.Builder()
                             .setSourceRegistrationRequest(request)
                             .setAttributionSource(mContext.getAttributionSource())
                             .build(),
@@ -177,16 +177,16 @@ public class MeasurementManager {
      * @param callback intended to notify asynchronously the API result
      * @hide
      */
-    public void registerEmbeddedWebTrigger(
-            @NonNull EmbeddedWebTriggerRegistrationRequest request,
-            @Nullable @CallbackExecutor Executor executor,
+    public void registerWebTrigger(
+            @NonNull WebTriggerRegistrationRequest request,
+            @Nullable Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
         try {
-            service.registerEmbeddedWebTrigger(
-                    new EmbeddedWebTriggerRegistrationRequestInternal.Builder()
+            service.registerWebTrigger(
+                    new WebTriggerRegistrationRequestInternal.Builder()
                             .setTriggerRegistrationRequest(request)
                             .setAttributionSource(mContext.getAttributionSource())
                             .build(),
