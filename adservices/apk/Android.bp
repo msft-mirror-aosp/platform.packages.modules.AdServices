@@ -71,13 +71,11 @@ android_library {
     name: "adservices-assets",
     sdk_version: "module_current",
     static_libs: [
+        "androidx-constraintlayout_constraintlayout",
         "SettingsLibSettingsTheme",
     ],
     asset_dirs: [
         "assets",
-    ],
-    static_libs: [
-        "androidx-constraintlayout_constraintlayout",
     ],
     aaptflags: [
         // Don't compress *.tflite files. Compressed models cannot be loaded on device.
