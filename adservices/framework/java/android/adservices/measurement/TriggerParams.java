@@ -79,12 +79,13 @@ public final class TriggerParams implements Parcelable {
         return Objects.hash(mRegistrationUri, mDebugEnabled);
     }
 
+    /** Getter for registration Uri. */
     @NonNull
     public Uri getRegistrationUri() {
         return mRegistrationUri;
     }
 
-    /** Getter for {@link #mDebugEnabled}. */
+    /** Getter for debug enablement flag. */
     public boolean isDebugEnabled() {
         return mDebugEnabled;
     }
@@ -114,7 +115,7 @@ public final class TriggerParams implements Parcelable {
         }
 
         /**
-         * Setter for {@link TriggerParams#mRegistrationUri}.
+         * Setter for registration Uri.
          *
          * @param registrationUri registration URI
          * @return builder
@@ -126,9 +127,9 @@ public final class TriggerParams implements Parcelable {
         }
 
         /**
-         * Setter for {@link TriggerParams#mDebugEnabled}.
+         * Setter for debug enablement flag.
          *
-         * @param debugEnabled debug enabler flag
+         * @param debugEnabled debug enablement flag
          * @return builder
          */
         @NonNull

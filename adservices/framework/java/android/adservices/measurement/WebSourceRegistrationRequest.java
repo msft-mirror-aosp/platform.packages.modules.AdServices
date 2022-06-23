@@ -32,19 +32,19 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
+public final class WebSourceRegistrationRequest implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
-    public static final Parcelable.Creator<EmbeddedWebSourceRegistrationRequest> CREATOR =
-            new Parcelable.Creator<EmbeddedWebSourceRegistrationRequest>() {
+    public static final Parcelable.Creator<WebSourceRegistrationRequest> CREATOR =
+            new Parcelable.Creator<WebSourceRegistrationRequest>() {
                 @Override
-                public EmbeddedWebSourceRegistrationRequest createFromParcel(Parcel in) {
-                    return new EmbeddedWebSourceRegistrationRequest(in);
+                public WebSourceRegistrationRequest createFromParcel(Parcel in) {
+                    return new WebSourceRegistrationRequest(in);
                 }
 
                 @Override
-                public EmbeddedWebSourceRegistrationRequest[] newArray(int size) {
-                    return new EmbeddedWebSourceRegistrationRequest[size];
+                public WebSourceRegistrationRequest[] newArray(int size) {
+                    return new WebSourceRegistrationRequest[size];
                 }
             };
     /** Registration info to fetch sources. */
@@ -53,8 +53,8 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
     /** User interaction input event. */
     @Nullable private final InputEvent mInputEvent;
 
-    /** Top level origin of publisher app. */
-    @Nullable private final Uri mTopOriginUri;
+    /** Top level origin of publisher. */
+    @NonNull private final Uri mTopOriginUri;
 
     /** App destination of the source. */
     @Nullable private final Uri mOsDestination;
@@ -62,14 +62,14 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
     /** Web destination of the source. */
     @Nullable private final Uri mWebDestination;
 
-    /** Verified destination by the caller. If available, sources should be checked against it. */
+    /** Verified destination by the caller. This is where the user actually landed. */
     @Nullable private final Uri mVerifiedDestination;
 
-    /** Constructor for {@link EmbeddedWebSourceRegistrationRequest}. */
-    private EmbeddedWebSourceRegistrationRequest(
+    /** Constructor for {@link WebSourceRegistrationRequest}. */
+    private WebSourceRegistrationRequest(
             @NonNull List<SourceParams> sourceParams,
             @Nullable InputEvent inputEvent,
-            @Nullable Uri topOriginUri,
+            @NonNull Uri topOriginUri,
             @Nullable Uri osDestination,
             @Nullable Uri webDestination,
             @Nullable Uri verifiedDestination) {
@@ -86,7 +86,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
      *
      * @param in parcel
      */
-    private EmbeddedWebSourceRegistrationRequest(@NonNull Parcel in) {
+    private WebSourceRegistrationRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<SourceParams> sourceRegistrations = new ArrayList<>();
         in.readList(sourceRegistrations, SourceParams.class.getClassLoader(), SourceParams.class);
@@ -96,11 +96,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         } else {
             mInputEvent = null;
         }
-        if (in.readBoolean()) {
-            mTopOriginUri = Uri.CREATOR.createFromParcel(in);
-        } else {
-            mTopOriginUri = null;
-        }
+        mTopOriginUri = Uri.CREATOR.createFromParcel(in);
         if (in.readBoolean()) {
             mOsDestination = Uri.CREATOR.createFromParcel(in);
         } else {
@@ -121,8 +117,8 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof EmbeddedWebSourceRegistrationRequest)) return false;
-        EmbeddedWebSourceRegistrationRequest that = (EmbeddedWebSourceRegistrationRequest) o;
+        if (!(o instanceof WebSourceRegistrationRequest)) return false;
+        WebSourceRegistrationRequest that = (WebSourceRegistrationRequest) o;
         return Objects.equals(mSourceParams, that.mSourceParams)
                 && Objects.equals(mInputEvent, that.mInputEvent)
                 && Objects.equals(mTopOriginUri, that.mTopOriginUri)
@@ -142,37 +138,37 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
                 mVerifiedDestination);
     }
 
-    /** Getter for {@link #mSourceParams}. */
+    /** Getter for source params. */
     @NonNull
     public List<SourceParams> getSourceParams() {
         return mSourceParams;
     }
 
-    /** Getter for {@link #mInputEvent}. */
+    /** Getter for input event. */
     @Nullable
     public InputEvent getInputEvent() {
         return mInputEvent;
     }
 
-    /** Getter for {@link #mTopOriginUri}. */
-    @Nullable
+    /** Getter for top origin Uri. */
+    @NonNull
     public Uri getTopOriginUri() {
         return mTopOriginUri;
     }
 
-    /** Getter for {@link #mOsDestination}. */
+    /** Getter for OS destination. */
     @Nullable
     public Uri getOsDestination() {
         return mOsDestination;
     }
 
-    /** Getter for {@link #mWebDestination}. */
+    /** Getter for web destination. */
     @Nullable
     public Uri getWebDestination() {
         return mWebDestination;
     }
 
-    /** Getter for {@link #mVerifiedDestination}. */
+    /** Getter for verified destination. */
     @Nullable
     public Uri getVerifiedDestination() {
         return mVerifiedDestination;
@@ -193,12 +189,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         } else {
             out.writeBoolean(false);
         }
-        if (mTopOriginUri != null) {
-            out.writeBoolean(true);
-            mTopOriginUri.writeToParcel(out, flags);
-        } else {
-            out.writeBoolean(false);
-        }
+        mTopOriginUri.writeToParcel(out, flags);
         if (mOsDestination != null) {
             out.writeBoolean(true);
             mOsDestination.writeToParcel(out, flags);
@@ -219,14 +210,14 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         }
     }
 
-    /** Builder for {@link EmbeddedWebSourceRegistrationRequest}. */
+    /** Builder for {@link WebSourceRegistrationRequest}. */
     public static final class Builder {
         /** Registration info to fetch sources. */
         @NonNull private List<SourceParams> mSourceParams;
         /** User interaction input event. */
         @Nullable private InputEvent mInputEvent;
-        /** Top level origin of publisher app. */
-        @Nullable private Uri mTopOriginUri;
+        /** Top level origin of publisher. */
+        @NonNull private Uri mTopOriginUri;
         /** App destination of the source. */
         @Nullable private Uri mOsDestination;
         /** Web destination of the source. */
@@ -237,7 +228,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         @Nullable private Uri mVerifiedDestination;
 
         /**
-         * Setter for {@link #mSourceParams}.
+         * Setter for source params.
          *
          * @param sourceParams source sourceParams
          * @return builder
@@ -249,7 +240,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for input {@link #mInputEvent}.
+         * Setter for input event.
          *
          * @param inputEvent user input event
          * @return builder
@@ -261,19 +252,19 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for {@link #mTopOriginUri}.
+         * Setter for top origin Uri.
          *
          * @param topOriginUri publisher top origin {@link Uri}
          * @return builder
          */
         @NonNull
-        public Builder setTopOriginUri(@Nullable Uri topOriginUri) {
+        public Builder setTopOriginUri(@NonNull Uri topOriginUri) {
             mTopOriginUri = topOriginUri;
             return this;
         }
 
         /**
-         * Setter for {@link #mOsDestination}.
+         * Setter for OS destination.
          *
          * @param osDestination app destination {@link Uri}
          * @return builder
@@ -285,7 +276,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for {@link #mWebDestination}.
+         * Setter for web destination.
          *
          * @param webDestination web destination {@link Uri}
          * @return builder
@@ -297,7 +288,7 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for {@link #mVerifiedDestination}.
+         * Setter for verified destination.
          *
          * @param verifiedDestination verified destination
          * @return builder
@@ -308,9 +299,9 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
             return this;
         }
 
-        /** Pre-validates paramerters and builds {@link EmbeddedWebSourceRegistrationRequest}. */
+        /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequest}. */
         @NonNull
-        public EmbeddedWebSourceRegistrationRequest build() {
+        public WebSourceRegistrationRequest build() {
             if (mSourceParams == null || mSourceParams.isEmpty()) {
                 throw new IllegalArgumentException("source params not provided");
             }
@@ -320,7 +311,9 @@ public final class EmbeddedWebSourceRegistrationRequest implements Parcelable {
                         "At least one of osDestination or webDestination needs to be provided");
             }
 
-            return new EmbeddedWebSourceRegistrationRequest(
+            Objects.requireNonNull(mTopOriginUri);
+
+            return new WebSourceRegistrationRequest(
                     mSourceParams,
                     mInputEvent,
                     mTopOriginUri,
