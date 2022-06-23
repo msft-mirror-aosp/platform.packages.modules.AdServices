@@ -289,9 +289,7 @@ package android.adservices.measurement {
   public class MeasurementManager {
     method public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,android.adservices.exceptions.AdServicesException>);
     method public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
-    method public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent);
     method public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
-    method public void registerTrigger(@NonNull android.net.Uri);
   }
 
 }
