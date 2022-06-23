@@ -64,6 +64,22 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
+
+    @VisibleForTesting
+    static final String ERROR_AD_SELECTION_FAILURE = "Encountered failure during Ad Selection";
+
+    @VisibleForTesting static final String ERROR_NO_WINNING_AD_FOUND = "No winning Ads found";
+
+    @VisibleForTesting
+    static final String ERROR_NO_VALID_BIDS_FOR_SCORING = "No valid bids for scoring";
+
+    @VisibleForTesting static final String ERROR_NO_CA_AVAILABLE = "No Custom Audience available";
+
+    @VisibleForTesting
+    static final String ERROR_NO_BUYERS_AVAILABLE =
+            "The list of the custom audience buyers should not be empty.";
+
+    private static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -183,7 +199,11 @@ public final class AdSelectionRunner {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
-                            .setErrorMessage("Encountered failure during Ad Selection")
+                            .setErrorMessage(
+                                    String.format(
+                                            AD_SELECTION_ERROR_PATTERN,
+                                            ERROR_AD_SELECTION_FAILURE,
+                                            t.getMessage()))
                             .setStatusCode(resultCode)
                             .build();
             LogUtil.e(t, "Ad Selection failure: ");
@@ -260,16 +280,13 @@ public final class AdSelectionRunner {
         return listeningExecutorService.submit(
                 () -> {
                     List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
-                    Preconditions.checkArgument(
-                            !buyers.isEmpty(),
-                            "The list of the custom audience buyers should not be empty.");
+                    Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
                                     buyers, mClock.instant());
                     if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
                         // TODO(b/233296309) : Remove this exception after adding contextual ads
-                        throw new IllegalStateException(
-                                "No Custom Audience available for the given list of buyers.");
+                        throw new IllegalStateException(ERROR_NO_CA_AVAILABLE);
                     }
                     return buyerCustomAudience;
                 });
@@ -318,7 +335,7 @@ public final class AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
         if (validBiddingOutcomes.isEmpty()) {
-            throw new IllegalStateException("No valid bids for scoring");
+            throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
     }
@@ -332,7 +349,7 @@ public final class AdSelectionRunner {
                                 Double.compare(
                                         a.getAdWithScore().getScore(),
                                         b.getAdWithScore().getScore()))
-                .orElseThrow(() -> new IllegalStateException("No winning Ad found"));
+                .orElseThrow(() -> new IllegalStateException(ERROR_NO_WINNING_AD_FOUND));
     }
 
     /**
