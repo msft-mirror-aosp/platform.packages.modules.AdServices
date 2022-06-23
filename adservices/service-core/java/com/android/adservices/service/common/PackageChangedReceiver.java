@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import android.annotation.NonNull;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,7 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -60,6 +62,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
                         onPackageFullyRemoved(context, packageUri);
+                        topicsOnPackageFullyRemoved(context, packageUri);
                         break;
                     case PACKAGE_ADDED:
                         onPackageAdded(context, packageUri);
@@ -83,5 +86,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () ->
                         MeasurementImpl.getInstance(context)
                                 .doInstallAttribution(packageUri, System.currentTimeMillis()));
+    }
+
+    private void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
+        LogUtil.d("Deleting topics data for package: " + packageUri.toString());
+        sBackgroundExecutor.execute(
+                () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
     }
 }

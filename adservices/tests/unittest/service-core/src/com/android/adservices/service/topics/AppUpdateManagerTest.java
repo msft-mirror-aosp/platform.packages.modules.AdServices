@@ -19,6 +19,8 @@ package com.android.adservices.service.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +28,7 @@ import static org.mockito.Mockito.when;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -345,5 +348,35 @@ public class AppUpdateManagerTest {
     public void testDeleteAppDataFromTableByApp_nonExistingUninstalledAppName() {
         // To test it won't throw by calling the method with non-existing application name
         mAppUpdateManager.deleteAppDataFromTableByApps(List.of("app"));
+    }
+
+    @Test
+    public void testDeleteAppDataByUri() {
+        // Mock AppUpdateManager to check the invocation of deleteAppDataByUri() because
+        // the functionality has already been tested in testDeleteAppDataFromTableByApp
+        AppUpdateManager appUpdateManager = Mockito.spy(new AppUpdateManager(mTopicsDao));
+
+        final String appName = "app";
+        Uri packageUri = Uri.parse(appName);
+
+        // Only verify the invocation of deleteAppDataFromTableByApp()
+        doNothing().when(appUpdateManager).deleteAppDataFromTableByApps(eq(List.of(appName)));
+
+        appUpdateManager.deleteAppDataByUri(packageUri);
+
+        verify(appUpdateManager).deleteAppDataByUri(eq(packageUri));
+        verify(appUpdateManager).deleteAppDataFromTableByApps(eq(List.of(appName)));
+    }
+
+    @Test
+    public void testDeleteAppDataByUri_nullUri() {
+        assertThrows(NullPointerException.class, () -> mAppUpdateManager.deleteAppDataByUri(null));
+    }
+
+    @Test
+    public void testDeleteAppDataByUri_nonExistingUninstalledAppName() {
+        // To test it won't throw by calling the method with Uri containing
+        // non-existing application name.
+        mAppUpdateManager.deleteAppDataByUri(Uri.parse("app"));
     }
 }
