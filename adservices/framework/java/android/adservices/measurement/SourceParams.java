@@ -79,12 +79,13 @@ public final class SourceParams implements Parcelable {
         return Objects.hash(mRegistrationUri, mDebugEnabled);
     }
 
+    /** Getter for registration Uri. */
     @NonNull
     public Uri getRegistrationUri() {
         return mRegistrationUri;
     }
 
-    /** Getter for {@link #mDebugEnabled}. */
+    /** Getter for debug enablement flag. */
     public boolean isDebugEnabled() {
         return mDebugEnabled;
     }
@@ -114,7 +115,7 @@ public final class SourceParams implements Parcelable {
         }
 
         /**
-         * Setter for {@link SourceParams#mRegistrationUri}.
+         * Setter for registration Uri.
          *
          * @param registrationUri registration URI
          * @return builder
@@ -126,7 +127,7 @@ public final class SourceParams implements Parcelable {
         }
 
         /**
-         * Setter for {@link SourceParams#mDebugEnabled}.
+         * Setter for debug enablement flag.
          *
          * @param debugEnabled debug enabler flag
          * @return builder

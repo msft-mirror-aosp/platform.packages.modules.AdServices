@@ -29,42 +29,41 @@ import java.util.Objects;
  *
  * @hide
  */
-public class EmbeddedWebSourceRegistrationRequestInternal implements Parcelable {
+public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
-    public static final Parcelable.Creator<EmbeddedWebSourceRegistrationRequestInternal> CREATOR =
-            new Parcelable.Creator<EmbeddedWebSourceRegistrationRequestInternal>() {
+    public static final Parcelable.Creator<WebSourceRegistrationRequestInternal> CREATOR =
+            new Parcelable.Creator<WebSourceRegistrationRequestInternal>() {
                 @Override
-                public EmbeddedWebSourceRegistrationRequestInternal createFromParcel(Parcel in) {
-                    return new EmbeddedWebSourceRegistrationRequestInternal(in);
+                public WebSourceRegistrationRequestInternal createFromParcel(Parcel in) {
+                    return new WebSourceRegistrationRequestInternal(in);
                 }
 
                 @Override
-                public EmbeddedWebSourceRegistrationRequestInternal[] newArray(int size) {
-                    return new EmbeddedWebSourceRegistrationRequestInternal[size];
+                public WebSourceRegistrationRequestInternal[] newArray(int size) {
+                    return new WebSourceRegistrationRequestInternal[size];
                 }
             };
     /** Holds input to measurement source registration calls from embedded web context. */
-    @NonNull private final EmbeddedWebSourceRegistrationRequest mSourceRegistrationRequest;
+    @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
     /** Holds package info of where the request is coming from. */
     @NonNull private final AttributionSource mAttributionSource;
 
-    private EmbeddedWebSourceRegistrationRequestInternal(
-            EmbeddedWebSourceRegistrationRequest sourceRegistrationRequest,
+    private WebSourceRegistrationRequestInternal(
+            WebSourceRegistrationRequest sourceRegistrationRequest,
             AttributionSource attributionSource) {
         mSourceRegistrationRequest = sourceRegistrationRequest;
         mAttributionSource = attributionSource;
     }
 
-    private EmbeddedWebSourceRegistrationRequestInternal(Parcel in) {
+    private WebSourceRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
-        mSourceRegistrationRequest =
-                EmbeddedWebSourceRegistrationRequest.CREATOR.createFromParcel(in);
+        mSourceRegistrationRequest = WebSourceRegistrationRequest.CREATOR.createFromParcel(in);
         mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
     }
 
     /** Getter for {@link #mSourceRegistrationRequest}. */
-    public EmbeddedWebSourceRegistrationRequest getSourceRegistrationRequest() {
+    public WebSourceRegistrationRequest getSourceRegistrationRequest() {
         return mSourceRegistrationRequest;
     }
 
@@ -76,9 +75,8 @@ public class EmbeddedWebSourceRegistrationRequestInternal implements Parcelable 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof EmbeddedWebSourceRegistrationRequestInternal)) return false;
-        EmbeddedWebSourceRegistrationRequestInternal that =
-                (EmbeddedWebSourceRegistrationRequestInternal) o;
+        if (!(o instanceof WebSourceRegistrationRequestInternal)) return false;
+        WebSourceRegistrationRequestInternal that = (WebSourceRegistrationRequestInternal) o;
         return Objects.equals(mSourceRegistrationRequest, that.mSourceRegistrationRequest)
                 && Objects.equals(mAttributionSource, that.mAttributionSource);
     }
@@ -100,10 +98,10 @@ public class EmbeddedWebSourceRegistrationRequestInternal implements Parcelable 
         mAttributionSource.writeToParcel(out, flags);
     }
 
-    /** Builder for {@link EmbeddedWebSourceRegistrationRequestInternal}. */
+    /** Builder for {@link WebSourceRegistrationRequestInternal}. */
     public static final class Builder {
         /** External source registration request from client app SDK. */
-        @NonNull private EmbeddedWebSourceRegistrationRequest mSourceRegistrationRequest;
+        @NonNull private WebSourceRegistrationRequest mSourceRegistrationRequest;
         /** AttributionSource of the registration. Used to determine the registrant. */
         @NonNull private AttributionSource mAttributionSource;
 
@@ -115,7 +113,7 @@ public class EmbeddedWebSourceRegistrationRequestInternal implements Parcelable 
          */
         @NonNull
         public Builder setSourceRegistrationRequest(
-                @NonNull EmbeddedWebSourceRegistrationRequest sourceRegistrationRequest) {
+                @NonNull WebSourceRegistrationRequest sourceRegistrationRequest) {
             mSourceRegistrationRequest = sourceRegistrationRequest;
             return this;
         }
@@ -132,16 +130,13 @@ public class EmbeddedWebSourceRegistrationRequestInternal implements Parcelable 
             return this;
         }
 
-        /**
-         * Pre-validates paramerters and builds {@link
-         * EmbeddedWebSourceRegistrationRequestInternal}.
-         */
+        /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequestInternal}. */
         @NonNull
-        public EmbeddedWebSourceRegistrationRequestInternal build() {
+        public WebSourceRegistrationRequestInternal build() {
             Objects.requireNonNull(mSourceRegistrationRequest);
             Objects.requireNonNull(mAttributionSource);
 
-            return new EmbeddedWebSourceRegistrationRequestInternal(
+            return new WebSourceRegistrationRequestInternal(
                     mSourceRegistrationRequest, mAttributionSource);
         }
     }
