@@ -576,7 +576,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testInsertUnencryptedAggregatePayload() {
+    public void testInsertAggregateReport() {
         AggregateReport validAggregateReport = AggregateReportFixture.getValidAggregateReport();
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertAggregateReport(validAggregateReport));
