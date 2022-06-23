@@ -16,4 +16,4 @@
 
 package android.adservices.measurement;
 
-parcelable EmbeddedWebTriggerRegistrationRequestInternal;
+parcelable WebTriggerRegistrationRequestInternal;

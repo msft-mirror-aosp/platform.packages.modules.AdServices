@@ -19,8 +19,8 @@ package android.adservices.measurement;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 
-import android.adservices.measurement.EmbeddedWebSourceRegistrationRequestInternal;
-import android.adservices.measurement.EmbeddedWebTriggerRegistrationRequestInternal;
+import android.adservices.measurement.WebSourceRegistrationRequestInternal;
+import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.DeletionRequest;
 
@@ -30,8 +30,8 @@ import android.adservices.measurement.DeletionRequest;
   */
 interface IMeasurementService {
     void register(in RegistrationRequest params, in IMeasurementCallback callback);
-    void registerEmbeddedWebSource(in EmbeddedWebSourceRegistrationRequestInternal params, in IMeasurementCallback callback);
-    void registerEmbeddedWebTrigger(in EmbeddedWebTriggerRegistrationRequestInternal params, in IMeasurementCallback callback);
+    void registerWebSource(in WebSourceRegistrationRequestInternal params, in IMeasurementCallback callback);
+    void registerWebTrigger(in WebTriggerRegistrationRequestInternal params, in IMeasurementCallback callback);
     void deleteRegistrations(in DeletionRequest params, in IMeasurementCallback callback);
     void getMeasurementApiStatus(in IMeasurementApiStatusCallback callback);
 }

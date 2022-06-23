@@ -29,42 +29,41 @@ import java.util.Objects;
  *
  * @hide
  */
-public class EmbeddedWebTriggerRegistrationRequestInternal implements Parcelable {
+public class WebTriggerRegistrationRequestInternal implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
-    public static final Creator<EmbeddedWebTriggerRegistrationRequestInternal> CREATOR =
-            new Creator<EmbeddedWebTriggerRegistrationRequestInternal>() {
+    public static final Creator<WebTriggerRegistrationRequestInternal> CREATOR =
+            new Creator<WebTriggerRegistrationRequestInternal>() {
                 @Override
-                public EmbeddedWebTriggerRegistrationRequestInternal createFromParcel(Parcel in) {
-                    return new EmbeddedWebTriggerRegistrationRequestInternal(in);
+                public WebTriggerRegistrationRequestInternal createFromParcel(Parcel in) {
+                    return new WebTriggerRegistrationRequestInternal(in);
                 }
 
                 @Override
-                public EmbeddedWebTriggerRegistrationRequestInternal[] newArray(int size) {
-                    return new EmbeddedWebTriggerRegistrationRequestInternal[size];
+                public WebTriggerRegistrationRequestInternal[] newArray(int size) {
+                    return new WebTriggerRegistrationRequestInternal[size];
                 }
             };
     /** Holds input to measurement trigger registration calls from embedded web context. */
-    @NonNull private final EmbeddedWebTriggerRegistrationRequest mTriggerRegistrationRequest;
+    @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
     /** Holds package info of where the request is coming from. */
     @NonNull private final AttributionSource mAttributionSource;
 
-    private EmbeddedWebTriggerRegistrationRequestInternal(
-            EmbeddedWebTriggerRegistrationRequest triggerRegistrationRequest,
+    private WebTriggerRegistrationRequestInternal(
+            WebTriggerRegistrationRequest triggerRegistrationRequest,
             AttributionSource attributionSource) {
         mTriggerRegistrationRequest = triggerRegistrationRequest;
         mAttributionSource = attributionSource;
     }
 
-    private EmbeddedWebTriggerRegistrationRequestInternal(Parcel in) {
+    private WebTriggerRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
-        mTriggerRegistrationRequest =
-                EmbeddedWebTriggerRegistrationRequest.CREATOR.createFromParcel(in);
+        mTriggerRegistrationRequest = WebTriggerRegistrationRequest.CREATOR.createFromParcel(in);
         mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
     }
 
     /** Getter for {@link #mTriggerRegistrationRequest}. */
-    public EmbeddedWebTriggerRegistrationRequest getTriggerRegistrationRequest() {
+    public WebTriggerRegistrationRequest getTriggerRegistrationRequest() {
         return mTriggerRegistrationRequest;
     }
 
@@ -76,9 +75,8 @@ public class EmbeddedWebTriggerRegistrationRequestInternal implements Parcelable
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof EmbeddedWebTriggerRegistrationRequestInternal)) return false;
-        EmbeddedWebTriggerRegistrationRequestInternal that =
-                (EmbeddedWebTriggerRegistrationRequestInternal) o;
+        if (!(o instanceof WebTriggerRegistrationRequestInternal)) return false;
+        WebTriggerRegistrationRequestInternal that = (WebTriggerRegistrationRequestInternal) o;
         return Objects.equals(mTriggerRegistrationRequest, that.mTriggerRegistrationRequest)
                 && Objects.equals(mAttributionSource, that.mAttributionSource);
     }
@@ -100,10 +98,10 @@ public class EmbeddedWebTriggerRegistrationRequestInternal implements Parcelable
         mAttributionSource.writeToParcel(out, flags);
     }
 
-    /** Builder for {@link EmbeddedWebTriggerRegistrationRequestInternal}. */
+    /** Builder for {@link WebTriggerRegistrationRequestInternal}. */
     public static final class Builder {
         /** External trigger registration request from client app SDK. */
-        @NonNull private EmbeddedWebTriggerRegistrationRequest mTriggerRegistrationRequest;
+        @NonNull private WebTriggerRegistrationRequest mTriggerRegistrationRequest;
         /** AttributionSource of the registration. Used to determine the registrant. */
         @NonNull private AttributionSource mAttributionSource;
 
@@ -115,7 +113,7 @@ public class EmbeddedWebTriggerRegistrationRequestInternal implements Parcelable
          */
         @NonNull
         public Builder setTriggerRegistrationRequest(
-                @NonNull EmbeddedWebTriggerRegistrationRequest triggerRegistrationRequest) {
+                @NonNull WebTriggerRegistrationRequest triggerRegistrationRequest) {
             mTriggerRegistrationRequest = triggerRegistrationRequest;
             return this;
         }
@@ -132,16 +130,13 @@ public class EmbeddedWebTriggerRegistrationRequestInternal implements Parcelable
             return this;
         }
 
-        /**
-         * Pre-validates paramerters and builds {@link
-         * EmbeddedWebTriggerRegistrationRequestInternal}.
-         */
+        /** Pre-validates paramerters and builds {@link WebTriggerRegistrationRequestInternal}. */
         @NonNull
-        public EmbeddedWebTriggerRegistrationRequestInternal build() {
+        public WebTriggerRegistrationRequestInternal build() {
             Objects.requireNonNull(mTriggerRegistrationRequest);
             Objects.requireNonNull(mAttributionSource);
 
-            return new EmbeddedWebTriggerRegistrationRequestInternal(
+            return new WebTriggerRegistrationRequestInternal(
                     mTriggerRegistrationRequest, mAttributionSource);
         }
     }
