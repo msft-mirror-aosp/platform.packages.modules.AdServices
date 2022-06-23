@@ -13,14 +13,14 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<LinearLayout
+<vector
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:theme="@style/AdServices.Settings">
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment_container_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:name="com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment" />
-</LinearLayout>
+        android:autoMirrored="true"
+        android:height="24dp"
+        android:width="24dp"
+        android:viewportHeight="24.0"
+        android:viewportWidth="24.0"
+        android:tint="?android:attr/colorControlNormal">
+    <path android:fillColor="@android:color/secondary_text_light"
+            android:pathData="M9.71,18.71l-1.42,-1.42l5.3,-5.29l-5.3,-5.29l1.42,-1.42l6.7,6.71z"/>
+</vector>
