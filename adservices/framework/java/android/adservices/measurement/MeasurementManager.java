@@ -320,9 +320,7 @@ public class MeasurementManager {
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      *
-     * The callback's {Integer} value is one of {@code MeasurementApiState}.
-     *
-     * @hide
+     * The callback's {@code Integer} value is one of {@code MeasurementApiState}.
      */
     public void getMeasurementApiStatus(
             @NonNull @CallbackExecutor Executor executor,
@@ -330,6 +328,7 @@ public class MeasurementManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
+        // TODO: Remove here and apply across the board.
         if (AdServicesApiUtil.getAdServicesApiState()
                 == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
             executor.execute(() -> {

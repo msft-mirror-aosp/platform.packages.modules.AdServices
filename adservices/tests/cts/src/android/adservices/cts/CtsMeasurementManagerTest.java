@@ -29,7 +29,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -119,7 +118,6 @@ public class CtsMeasurementManagerTest {
     }
 
     @Test
-    @Ignore("Will remove this line when unhiding the API method.")
     public void testGetMeasurementApiStatus_NoErrors() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
