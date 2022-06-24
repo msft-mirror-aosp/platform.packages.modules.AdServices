@@ -50,18 +50,40 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class AdServicesHttpsClient {
 
-    private final int mTimeoutMS;
+    private final int mConnectTimeoutMs;
+    private final int mReadTimeoutMs;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
     private final ListeningExecutorService mExecutorService;
 
-    public AdServicesHttpsClient(int timeoutMS, ExecutorService executorService) {
-        mTimeoutMS = timeoutMS;
+    /**
+     * Create an HTTPS client with the input {@link ExecutorService} and initial connect and read
+     * timeouts (in milliseconds).
+     *
+     * @param executorService an {@link ExecutorService} that allows connection and fetching to be
+     *     executed outside the main calling thread
+     * @param connectTimeoutMs the timeout, in milliseconds, for opening an initial link with to a
+     *     target resource using this client. If set to 0, this timeout is interpreted as infinite
+     *     (see {@link URLConnection#setConnectTimeout(int)}).
+     * @param readTimeoutMs the timeout, in milliseconds, for reading a response from a target
+     *     address using this client. If set to 0, this timeout is interpreted as infinite (see
+     *     {@link URLConnection#setReadTimeout(int)}).
+     */
+    public AdServicesHttpsClient(
+            ExecutorService executorService, int connectTimeoutMs, int readTimeoutMs) {
+        mConnectTimeoutMs = connectTimeoutMs;
+        mReadTimeoutMs = readTimeoutMs;
         this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
     }
 
+    /**
+     * Create an HTTPS client with the input {@link ExecutorService} and default initial connect and
+     * read timeouts.
+     *
+     * @param executorService an {@link ExecutorService} that allows connection and fetching to be
+     *     executed outside the main calling thread
+     */
     public AdServicesHttpsClient(ExecutorService executorService) {
-        mTimeoutMS = DEFAULT_TIMEOUT_MS;
-        this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
+        this(executorService, DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS);
     }
 
     /** Opens the Url Connection */
@@ -94,8 +116,8 @@ public class AdServicesHttpsClient {
 
         // We validated that the URL is https in toUrl
         HttpsURLConnection urlConnection = (HttpsURLConnection) openUrl(url);
-        urlConnection.setConnectTimeout(mTimeoutMS);
-        urlConnection.setReadTimeout(mTimeoutMS);
+        urlConnection.setConnectTimeout(mConnectTimeoutMs);
+        urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
         urlConnection.setInstanceFollowRedirects(true);
         return urlConnection;
@@ -109,19 +131,19 @@ public class AdServicesHttpsClient {
     }
 
     /**
-     * Performs a GET request on an SDK provided URI in order to fetch javascript code
+     * Performs a GET request on the given URI in order to fetch a payload.
      *
-     * @param uri Provided by the SDK, will be converted to a URL for fetching
-     * @return a string containing the fetched javascript
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @return a string containing the fetched payload
      */
     @NonNull
-    public ListenableFuture<String> fetchJavascript(@NonNull Uri uri) {
+    public ListenableFuture<String> fetchPayload(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
-        return mExecutorService.submit(() -> doFetchJavascript(uri));
+        return mExecutorService.submit(() -> doFetchPayload(uri));
     }
 
-    private String doFetchJavascript(@NonNull Uri uri) throws IOException {
+    private String doFetchPayload(@NonNull Uri uri) throws IOException {
         URL url = toUrl(uri);
         HttpsURLConnection urlConnection;
 
@@ -158,13 +180,12 @@ public class AdServicesHttpsClient {
                                     Locale.US,
                                     "Server returned an error with code %d and null" + " message",
                                     responseCode);
-
                     LogUtil.d(exceptionMessage);
                     throw new IOException(exceptionMessage);
                 }
             }
         } catch (SocketTimeoutException e) {
-            throw new IOException("Connection times out while reading response!", e);
+            throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
         }
@@ -176,7 +197,6 @@ public class AdServicesHttpsClient {
      * @param uri Provided as a result of invoking buyer or seller javascript.
      * @return an int that represents the HTTP response code in a successful case
      */
-    // TODO (b/229660545): Return a void instead of an int
     public ListenableFuture<Void> reportUrl(@NonNull Uri uri) {
         Objects.requireNonNull(uri);
 
@@ -185,7 +205,6 @@ public class AdServicesHttpsClient {
 
     private Void doReportUrl(@NonNull Uri uri) throws IOException {
         URL url = toUrl(uri);
-        // TODO (b/228380865): Change to HttpSURLConnection
         HttpsURLConnection urlConnection;
 
         try {
@@ -216,7 +235,6 @@ public class AdServicesHttpsClient {
 
                     LogUtil.d(exceptionMessage);
                     throw new IOException(exceptionMessage);
-
                 } else {
                     String exceptionMessage =
                             String.format(
@@ -228,7 +246,7 @@ public class AdServicesHttpsClient {
                 }
             }
         } catch (SocketTimeoutException e) {
-            throw new IOException("Connection times out while reading response!", e);
+            throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
         }
@@ -246,10 +264,19 @@ public class AdServicesHttpsClient {
     }
 
     /**
-     * @return the timeout to be used in this client
+     * @return the connect timeout, in milliseconds, when opening an initial link to a target
+     *     address with this client
      */
-    public int getTimeoutMS() {
-        return mTimeoutMS;
+    public int getConnectTimeoutMs() {
+        return mConnectTimeoutMs;
+    }
+
+    /**
+     * @return the read timeout, in milliseconds, when reading the response from a target address
+     *     with this client
+     */
+    public int getReadTimeoutMs() {
+        return mReadTimeoutMs;
     }
 
     /**

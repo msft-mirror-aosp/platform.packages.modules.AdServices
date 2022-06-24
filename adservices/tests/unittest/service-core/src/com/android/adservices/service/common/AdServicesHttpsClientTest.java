@@ -48,9 +48,9 @@ public class AdServicesHttpsClientTest {
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
-    private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    private final String mFetchPayloadPath = "/fetchPayload/";
     private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
-    private final int mTimeoutDelta = 1000;
+    private final int mTimeoutDeltaMs = 1000;
     private final int mBytesPerPeriod = 1;
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -110,61 +110,61 @@ public class AdServicesHttpsClientTest {
         ExecutionException wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchJavascript(Uri.parse("http://google.com")));
+                        () -> fetchPayload(Uri.parse("http://google.com")));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testFetchJavascriptSuccessfulResponse() throws Exception {
+    public void testFetchPayloadSuccessfulResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         ImmutableList.of(new MockResponse().setBody(mJsScript)));
-        URL url = server.getUrl(mFetchJavaScriptPath);
+        URL url = server.getUrl(mFetchPayloadPath);
 
-        String result = fetchJavascript(Uri.parse(url.toString()));
+        String result = fetchPayload(Uri.parse(url.toString()));
         assertEquals(mJsScript, result);
     }
 
     @Test
-    public void testFetchJavascriptCorrectPath() throws Exception {
+    public void testFetchPayloadCorrectPath() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         ImmutableList.of(new MockResponse().setBody(mJsScript)));
-        URL url = server.getUrl(mFetchJavaScriptPath);
-        fetchJavascript(Uri.parse(url.toString()));
+        URL url = server.getUrl(mFetchPayloadPath);
+        fetchPayload(Uri.parse(url.toString()));
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mFetchJavaScriptPath, request1.getPath());
+        assertEquals(mFetchPayloadPath, request1.getPath());
         assertEquals("GET", request1.getMethod());
     }
 
     @Test
-    public void testFetchJavascriptFailedResponse() throws Exception {
+    public void testFetchPayloadFailedResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         ImmutableList.of(new MockResponse().setResponseCode(305)));
-        URL url = server.getUrl(mFetchJavaScriptPath);
+        URL url = server.getUrl(mFetchPayloadPath);
 
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () -> {
-                            fetchJavascript(Uri.parse(url.toString()));
+                            fetchPayload(Uri.parse(url.toString()));
                         });
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
     @Test
-    public void testFetchJavascriptDomainDoesNotExist() throws Exception {
+    public void testFetchPayloadDomainDoesNotExist() throws Exception {
         mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
 
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () -> {
-                            fetchJavascript(Uri.parse("https://www.domain.com/adverts/123"));
+                            fetchPayload(Uri.parse("https://www.domain.com/adverts/123"));
                         });
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
@@ -178,32 +178,34 @@ public class AdServicesHttpsClientTest {
                                         .setBody(mJsScript)
                                         .throttleBody(
                                                 mBytesPerPeriod,
-                                                mClient.getTimeoutMS() + mTimeoutDelta,
+                                                mClient.getConnectTimeoutMs()
+                                                        + mClient.getReadTimeoutMs()
+                                                        + mTimeoutDeltaMs,
                                                 TimeUnit.MILLISECONDS)));
-        URL url = server.getUrl(mFetchJavaScriptPath);
+        URL url = server.getUrl(mFetchPayloadPath);
 
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
                         () -> {
-                            fetchJavascript(Uri.parse(url.toString()));
+                            fetchPayload(Uri.parse(url.toString()));
                         });
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
     @Test
-    public void testFetchJavascriptThrowsExceptionIfUsingPlainTextHttp() {
+    public void testFetchPayloadThrowsExceptionIfUsingPlainTextHttp() {
         Exception wrapperExecutionException =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchJavascript(Uri.parse("http://google.com")));
+                        () -> fetchPayload(Uri.parse("http://google.com")));
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    private String fetchJavascript(Uri uri) throws Exception {
-        return mClient.fetchJavascript(uri).get();
+    private String fetchPayload(Uri uri) throws Exception {
+        return mClient.fetchPayload(uri).get();
     }
 
     private Void reportUrl(Uri uri) throws Exception {

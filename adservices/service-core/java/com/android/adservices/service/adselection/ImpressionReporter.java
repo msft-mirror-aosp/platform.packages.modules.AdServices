@@ -247,7 +247,7 @@ public class ImpressionReporter {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                return mAdServicesHttpsClient.fetchJavascript(
+                                return mAdServicesHttpsClient.fetchPayload(
                                         ctx.mAdSelectionConfig.getDecisionLogicUrl());
                             } else {
                                 LogUtil.i(
