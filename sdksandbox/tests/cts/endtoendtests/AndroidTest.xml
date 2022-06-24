@@ -27,6 +27,7 @@
         <option name="test-file-name" value="LoadSdkWithInternalErrorSdkProvider.apk"/>
         <option name="test-file-name" value="RequestSurfacePackageSuccessfullySdkProvider.apk"/>
         <option name="test-file-name" value="RequestSurfacePackageWithInternalErrorSdkProvider.apk"/>
+        <option name="test-file-name" value="SendDataSdkProvider.apk"/>
         <option name="test-file-name" value="CodeProviderWithResources.apk"/>
         <option name="test-file-name" value="SdkSandboxManagerTests.apk"/>
     </target_preparer>

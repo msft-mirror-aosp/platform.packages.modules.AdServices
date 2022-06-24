@@ -17,15 +17,9 @@
 package android.app.sdksandbox;
 
 import android.os.Bundle;
-import android.os.IBinder;
-
-import android.app.sdksandbox.ILoadSdkCallback;
-import android.app.sdksandbox.IRequestSurfacePackageCallback;
-import android.app.sdksandbox.ISendDataCallback;
 
 /** @hide */
-interface ISdkSandboxManager {
-    void loadSdk(in String callingPackageName, in String sdkName, in Bundle params, in ILoadSdkCallback callback);
-    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params, IRequestSurfacePackageCallback callback);
-    void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
+oneway interface ILoadSdkCallback {
+    void onLoadSdkSuccess(in Bundle params);
+    void onLoadSdkFailure(int errorCode, String errorMsg);
 }
