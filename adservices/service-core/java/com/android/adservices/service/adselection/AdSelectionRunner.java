@@ -35,6 +35,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -106,7 +107,7 @@ public final class AdSelectionRunner {
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(mContext),
                         mExecutorService,
-                        new AdSelectionHttpClient(mExecutorService),
+                        new AdServicesHttpsClient(mExecutorService),
                         devContext,
                         mAdSelectionEntryDao);
         mAdBidGenerator =

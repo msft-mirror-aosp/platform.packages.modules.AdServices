@@ -30,6 +30,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.VisibleForTesting;
@@ -56,7 +57,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final Context mContext;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
-    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
 
     public AdBidGeneratorImpl(
@@ -70,7 +71,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mContext = context;
         mListeningExecutorService = MoreExecutors.listeningDecorator(listeningExecutorService);
         mAdSelectionScriptEngine = new AdSelectionScriptEngine(mContext);
-        mAdSelectionHttpClient = new AdSelectionHttpClient(listeningExecutorService);
+        mAdServicesHttpsClient = new AdServicesHttpsClient(listeningExecutorService);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
     }
@@ -80,18 +81,18 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull Context context,
             @NonNull ListeningExecutorService listeningExecutorService,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
-            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(listeningExecutorService);
         Objects.requireNonNull(adSelectionScriptEngine);
-        Objects.requireNonNull(adSelectionHttpClient);
+        Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
 
         mContext = context;
         mListeningExecutorService = listeningExecutorService;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
-        mAdSelectionHttpClient = adSelectionHttpClient;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
     }
 
@@ -195,7 +196,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (jsOverride == null) {
-                        return mAdSelectionHttpClient.fetchJavascript(decisionLogicUri);
+                        return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
                     } else {
                         LogUtil.d(
                                 "Developer options enabled and an override JS is provided "
