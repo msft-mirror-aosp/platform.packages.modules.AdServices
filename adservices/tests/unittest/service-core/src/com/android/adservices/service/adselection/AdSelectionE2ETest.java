@@ -51,6 +51,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -114,7 +115,7 @@ public class AdSelectionE2ETest {
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
-    private AdSelectionHttpClient mAdSelectionHttpClient;
+    private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
@@ -143,7 +144,7 @@ public class AdSelectionE2ETest {
                         .build()
                         .adSelectionEntryDao();
 
-        mAdSelectionHttpClient = new AdSelectionHttpClient(mExecutorService);
+        mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
 
         mAdServicesLogger = AdServicesLoggerImpl.getInstance();
         when(mDevContextFilter.createDevContext())
@@ -154,7 +155,7 @@ public class AdSelectionE2ETest {
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mCustomAudienceDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         mDevContextFilter,
                         mExecutorService,
                         mContext,
@@ -286,7 +287,7 @@ public class AdSelectionE2ETest {
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mCustomAudienceDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         mDevContextFilter,
                         mExecutorService,
                         mContext,

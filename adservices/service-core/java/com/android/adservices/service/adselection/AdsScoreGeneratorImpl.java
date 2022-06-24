@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.VisibleForTesting;
@@ -51,18 +52,18 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
-    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
 
     public AdsScoreGeneratorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull ExecutorService executor,
-            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdSelectionEntryDao adSelectionEntryDao) {
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
-        mAdSelectionHttpClient = adSelectionHttpClient;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
     }
@@ -110,7 +111,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (jsOverride == null) {
-                        return mAdSelectionHttpClient.fetchJavascript(decisionLogicUri);
+                        return mAdServicesHttpsClient.fetchJavascript(decisionLogicUri);
                     } else {
                         LogUtil.d(
                                 "Developer options enabled and an override JS is provided "
