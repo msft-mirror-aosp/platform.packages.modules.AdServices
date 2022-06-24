@@ -56,7 +56,6 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.AdSelectionHttpClient;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
@@ -113,7 +112,7 @@ public class FledgeE2ETest {
     private static final List<Double> INVALID_BIDS = ImmutableList.of(0.0, -1.0, -2.0);
 
     private AdSelectionConfig mAdSelectionConfig;
-    private AdSelectionHttpClient mAdSelectionHttpClient;
+    private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private ExecutorService mExecutorService;
@@ -143,7 +142,7 @@ public class FledgeE2ETest {
 
         mExecutorService = Executors.newFixedThreadPool(20);
 
-        mAdSelectionHttpClient = new AdSelectionHttpClient(mExecutorService);
+        mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -162,7 +161,7 @@ public class FledgeE2ETest {
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mCustomAudienceDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,

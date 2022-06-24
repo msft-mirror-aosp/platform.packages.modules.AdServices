@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -44,22 +44,22 @@ import java.util.concurrent.ExecutorService;
 import javax.net.ssl.HttpsURLConnection;
 
 /**
- * This is an HTTPClient to be used by both the AdSelection API and Report Impression API. The
- * primary uses of this client will be to fetch Javascript code from an SDK provided URL, and
- * perform reporting on the generated reporting_url's through a GET call.
+ * This is an HTTPS client to be used by the PP API services. The primary uses of this client
+ * include fetching payloads from ad tech-provided URLs and reporting on generated reporting URLs
+ * through GET calls.
  */
-public class AdSelectionHttpClient {
+public class AdServicesHttpsClient {
 
     private final int mTimeoutMS;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
     private final ListeningExecutorService mExecutorService;
 
-    public AdSelectionHttpClient(int timeoutMS, ExecutorService executorService) {
+    public AdServicesHttpsClient(int timeoutMS, ExecutorService executorService) {
         mTimeoutMS = timeoutMS;
         this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
     }
 
-    public AdSelectionHttpClient(ExecutorService executorService) {
+    public AdServicesHttpsClient(ExecutorService executorService) {
         mTimeoutMS = DEFAULT_TIMEOUT_MS;
         this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
     }

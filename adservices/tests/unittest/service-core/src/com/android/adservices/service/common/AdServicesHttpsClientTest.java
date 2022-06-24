@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -44,13 +44,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @SmallTest
-public class AdSelectionHttpClientTest {
-    private static final String TAG = "AdSelectionHttpClientTest";
+public class AdServicesHttpsClientTest {
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
-    private final AdSelectionHttpClient mClient = new AdSelectionHttpClient(mExecutorService);
+    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
     private final int mTimeoutDelta = 1000;
     private final int mBytesPerPeriod = 1;
 
