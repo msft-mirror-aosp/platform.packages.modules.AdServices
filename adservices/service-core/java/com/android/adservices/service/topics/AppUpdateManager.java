@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
@@ -107,6 +108,16 @@ public class AppUpdateManager {
     }
 
     /**
+     * Delete application data for a specific application.
+     *
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     */
+    public void deleteAppDataByUri(@NonNull Uri packageUri) {
+        String appName = convertUriToAppName(packageUri);
+        deleteAppDataFromTableByApps(List.of(appName));
+    }
+
+    /**
      * Reconcile any mismatched data for applications.
      *
      * <p>Currently, wipe out data in all tables for an uninstalled application with data still
@@ -125,17 +136,6 @@ public class AppUpdateManager {
                 "Detect below unhandled mismatched applications: %s",
                 unhandledUninstalledApps.toString());
         handleUninstalledApps(unhandledUninstalledApps);
-    }
-
-    // Get current installed applications from package manager
-    @NonNull
-    private Set<String> getCurrentInstalledApps(Context context) {
-        PackageManager packageManager = context.getPackageManager();
-        List<ApplicationInfo> appInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
-
-        return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
     }
 
     // An app will be regarded as unhandled uninstalled apps if it has an entry in any epoch of
@@ -163,11 +163,28 @@ public class AppUpdateManager {
         return appsWithUsage;
     }
 
+    // Get current installed applications from package manager
+    @NonNull
+    private Set<String> getCurrentInstalledApps(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        List<ApplicationInfo> appInfoList =
+                packageManager.getInstalledApplications(
+                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+
+        return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
+    }
+
     // Handle Uninstalled applications that still have derived data in database
     //
     // Currently, simply wipe out these data in the database for an app. i.e. Deleting all
     // derived data from all tables that are related to app (has app column)
     private void handleUninstalledApps(@NonNull Set<String> newlyUninstalledApps) {
         deleteAppDataFromTableByApps(new ArrayList<>(newlyUninstalledApps));
+    }
+
+    // packageUri.toString() has only app name, without "package:" in the front, i.e. it'll be like
+    // "com.example.adservices.sampleapp".
+    private String convertUriToAppName(@NonNull Uri packageUri) {
+        return packageUri.getSchemeSpecificPart();
     }
 }

@@ -30,6 +30,7 @@ import android.adservices.topics.GetTopicsResult;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -55,7 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Unit test for {@link TopicsWorker}. */
+/** Unit test for {@link com.android.adservices.service.topics.TopicsWorker}. */
 public class TopicsWorkerTest {
     // Spy the Context to test app reconciliation
     private final Context mContext = spy(ApplicationProvider.getApplicationContext());
@@ -76,8 +77,8 @@ public class TopicsWorkerTest {
 
         DbHelper dbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(dbHelper);
-
         AppUpdateManager appUpdateManager = new AppUpdateManager(mTopicsDao);
+
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
         BlockedTopicsManager blockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
         mTopicsWorker =
@@ -628,6 +629,75 @@ public class TopicsWorkerTest {
 
         // Invocations Summary
         // loadCache() : 1, reconcileInstalledApps() : 1, getTopics(): 2
+        verify(mMockEpochManager, times(4)).getCurrentEpochId();
+        verify(mMockFlags, times(4)).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
+    public void testDeletePackageData() {
+        final long epochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+        final String app = "app";
+        final String sdk = "sdk";
+
+        final Pair<String, String> appSdkKey = Pair.create(app, sdk);
+        Topic topic1 =
+                Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
+        Topic topic2 =
+                Topic.create(/* topic */ 2, /* taxonomyVersion = */ 2L, /* modelVersion = */ 5L);
+        Topic topic3 =
+                Topic.create(/* topic */ 3, /* taxonomyVersion = */ 3L, /* modelVersion = */ 6L);
+        Topic[] topics = {topic1, topic2, topic3};
+        // persist returned topics into DB
+        for (int numEpoch = 1; numEpoch <= numberOfLookBackEpochs; numEpoch++) {
+            Topic currentTopic = topics[numberOfLookBackEpochs - numEpoch];
+            Map<Pair<String, String>, Topic> returnedAppSdkTopicsMap = new HashMap<>();
+            returnedAppSdkTopicsMap.put(appSdkKey, currentTopic);
+            mTopicsDao.persistReturnedAppTopicsMap(numEpoch, returnedAppSdkTopicsMap);
+        }
+
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        // Real Cache Manager requires loading cache before getTopics() being called.
+        mTopicsWorker.loadCache();
+
+        GetTopicsResult getTopicsResult = mTopicsWorker.getTopics(app, sdk);
+
+        verify(mMockEpochManager, times(2)).getCurrentEpochId();
+        verify(mMockFlags, times(2)).getTopicsNumberOfLookBackEpochs();
+
+        GetTopicsResult expectedGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
+                        .setModelVersions(Arrays.asList(4L, 5L, 6L))
+                        .setTopics(Arrays.asList(1, 2, 3))
+                        .build();
+
+        // Since the returned topic list is shuffled, elements have to be verified separately
+        assertThat(getTopicsResult.getResultCode())
+                .isEqualTo(expectedGetTopicsResult.getResultCode());
+        assertThat(getTopicsResult.getTaxonomyVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTaxonomyVersions());
+        assertThat(getTopicsResult.getModelVersions())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getModelVersions());
+        assertThat(getTopicsResult.getTopics())
+                .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
+
+        // Delete data belonging to the app
+        Uri packageUri = Uri.parse("package:" + app);
+        mTopicsWorker.deletePackageData(packageUri);
+
+        GetTopicsResult emptyGetTopicsResult =
+                new GetTopicsResult.Builder()
+                        .setResultCode(RESULT_OK)
+                        .setTaxonomyVersions(Collections.emptyList())
+                        .setModelVersions(Collections.emptyList())
+                        .setTopics(Collections.emptyList())
+                        .build();
+        assertThat((mTopicsWorker.getTopics(app, sdk))).isEqualTo(emptyGetTopicsResult);
+
         verify(mMockEpochManager, times(4)).getCurrentEpochId();
         verify(mMockFlags, times(4)).getTopicsNumberOfLookBackEpochs();
     }

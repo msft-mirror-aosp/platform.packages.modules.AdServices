@@ -29,7 +29,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -73,16 +72,6 @@ public class CtsMeasurementManagerTest {
     }
 
     @Test
-    public void testRegisterSource_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerSource(
-                /* attributionSource = */ Uri.parse(INVALID_SERVER_ADDRESS),
-                /* inputEvent = */ null
-        );
-    }
-
-    @Test
     public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
@@ -110,16 +99,6 @@ public class CtsMeasurementManagerTest {
     }
 
     @Test
-    public void testRegisterTrigger_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerTrigger(
-                /* trigger = */ Uri.parse(INVALID_SERVER_ADDRESS)
-        );
-    }
-
-    @Test
-    @Ignore("Will remove this line when unhiding the API method.")
     public void testGetMeasurementApiStatus_NoErrors() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);

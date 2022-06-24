@@ -16,12 +16,12 @@
 package com.android.adservices.service.measurement;
 
 import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.EmbeddedWebSourceRegistrationRequestInternal;
-import android.adservices.measurement.EmbeddedWebTriggerRegistrationRequestInternal;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.WebSourceRegistrationRequestInternal;
+import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
@@ -70,17 +70,37 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     }
 
     @Override
-    public void registerEmbeddedWebSource(
-            @NonNull EmbeddedWebSourceRegistrationRequestInternal registrationRequest,
+    public void registerWebSource(
+            @NonNull WebSourceRegistrationRequestInternal registrationRequest,
             @NonNull IMeasurementCallback iMeasurementCallback) {
-        // TODO: Implementation
+        Objects.requireNonNull(registrationRequest);
+        Objects.requireNonNull(iMeasurementCallback);
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        LogUtil.d("MeasurementServiceImpl: registerWebSource: ");
+                        // TODO: call measurement Impl and remove the callback invocation below
+                        iMeasurementCallback.onResult(IMeasurementCallback.RESULT_OK);
+                    } catch (RemoteException e) {
+                        LogUtil.e("Unable to send result to the callback", e);
+                    }
+                });
     }
 
     @Override
-    public void registerEmbeddedWebTrigger(
-            @NonNull EmbeddedWebTriggerRegistrationRequestInternal registrationRequest,
+    public void registerWebTrigger(
+            @NonNull WebTriggerRegistrationRequestInternal registrationRequest,
             @NonNull IMeasurementCallback iMeasurementCallback) {
-        // TODO: Implementation
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        LogUtil.d("MeasurementServiceImpl: registerWebTrigger: ");
+                        // TODO: call measurement Impl and remove the callback invocation below
+                        iMeasurementCallback.onResult(IMeasurementCallback.RESULT_OK);
+                    } catch (RemoteException e) {
+                        LogUtil.e("Unable to send result to the callback", e);
+                    }
+                });
     }
 
     @Override

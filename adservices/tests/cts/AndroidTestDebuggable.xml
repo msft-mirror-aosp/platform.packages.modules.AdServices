@@ -13,23 +13,24 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Config for CTS AdServices test cases">
-    <option name="test-suite-tag" value="cts" />
+<configuration description="Config for CTS AdServices test cases requiring a debuggable app">
+    <object class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController"
+            type="module_controller">
+        <option name="mainline-module-package-name" value="com.google.android.adservices" />
+    </object>
     <option name="config-descriptor:metadata" key="component" value="framework" />
     <option name="config-descriptor:metadata" key="parameter" value="instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="test-suite-tag" value="cts" />
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="CtsAdServicesDeviceTestCases.apk" />
+        <option name="test-file-name" value="CtsAdServicesDebuggableDeviceTestCases.apk" />
     </target_preparer>
-    <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
-        <option name="package" value="android.adservices.cts" />
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest">
+        <option name="package" value="android.adservices.debuggablects" />
         <option name="hidden-api-checks" value="false" />
+        <option name="exclude-annotation" value="org.junit.Ignore" />
     </test>
-    <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
-        <option name="mainline-module-package-name" value="com.google.android.adservices" />
-    </object>
 </configuration>
 

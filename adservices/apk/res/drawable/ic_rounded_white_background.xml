@@ -13,14 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:theme="@style/AdServices.Settings">
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment_container_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:name="com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment" />
-</LinearLayout>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+  <solid android:color="#F9F9F9"/>
+  <corners android:radius="28dp"/>
+</shape>
