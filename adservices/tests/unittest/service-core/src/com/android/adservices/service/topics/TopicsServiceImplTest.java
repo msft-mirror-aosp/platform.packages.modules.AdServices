@@ -73,9 +73,9 @@ import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 public class TopicsServiceImplTest {
-    private static final String SOME_PACKAGE_NAME = "SomePackageName";
+    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private static final int SOME_UID = 11;
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
@@ -123,7 +123,7 @@ public class TopicsServiceImplTest {
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
                 new GetTopicsParam.Builder()
-                        .setAppPackageName(SOME_PACKAGE_NAME)
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
@@ -382,7 +382,7 @@ public class TopicsServiceImplTest {
 
     @NonNull
     private List<Topic> prepareAndPersistTopics(int numberOfLookBackEpochs) {
-        final Pair<String, String> appSdkKey = Pair.create(SOME_PACKAGE_NAME, SOME_SDK_NAME);
+        final Pair<String, String> appSdkKey = Pair.create(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME);
         Topic topic1 =
                 Topic.create(/* topic */ 1, /* taxonomyVersion = */ 1L, /* modelVersion = */ 4L);
         Topic topic2 =
@@ -544,7 +544,7 @@ public class TopicsServiceImplTest {
 
         verify(mAdServicesLogger).logApiCallStats(argument.capture());
         assertThat(argument.getValue().getResultCode()).isEqualTo(ResultCode.RESULT_OK);
-        assertThat(argument.getValue().getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
         assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
@@ -553,5 +553,68 @@ public class TopicsServiceImplTest {
         verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
         verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+    }
+
+    @Test
+    public void testGetTopics_enforceCallingPackage_invalidPackage() throws InterruptedException {
+        MockContext context =
+                new MockContext() {
+                    @Override
+                    public int checkCallingOrSelfPermission(String permission) {
+                        return PackageManager.PERMISSION_GRANTED;
+                    }
+
+                    @Override
+                    public PackageManager getPackageManager() {
+                        return mPackageManager;
+                    }
+                };
+        final long currentEpochId = 4L;
+        final int numberOfLookBackEpochs = 3;
+
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);
+        when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
+
+        TopicsServiceImpl topicsService =
+                new TopicsServiceImpl(
+                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+
+        // A request with an invalid package name.
+        mRequest =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(INVALID_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .build();
+
+        mGetTopicsCallbackLatch = new CountDownLatch(1);
+
+        topicsService.getTopics(
+                mRequest,
+                mCallerMetadata,
+                new IGetTopicsCallback() {
+                    @Override
+                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onFailure(int resultCode) {
+                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        mGetTopicsCallbackLatch.countDown();
+                    }
+
+                    @Override
+                    public IBinder asBinder() {
+                        return null;
+                    }
+                });
+
+        // This ensures that the callback was called.
+        assertThat(
+                        mGetTopicsCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
     }
 }
