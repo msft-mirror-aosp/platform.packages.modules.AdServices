@@ -40,6 +40,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -104,7 +105,7 @@ public class AdBidGeneratorImplTest {
     @Mock AdSelectionScriptEngine mAdSelectionScriptEngine;
     Uri mDecisionLogicUri;
     private AdBidGeneratorImpl mAdBidGenerator;
-    private AdSelectionHttpClient mAdSelectionHttpClient;
+    private AdServicesHttpsClient mAdServicesHttpsClient;
     private String mBuyerDecisionLogicJs;
     private MockWebServer mServer;
     private DBCustomAudience mCustomAudienceWithAds;
@@ -124,8 +125,8 @@ public class AdBidGeneratorImplTest {
 
         mDevContext = DevContext.createForDevOptionsDisabled();
 
-        mAdSelectionHttpClient =
-                new AdSelectionHttpClient(MoreExecutors.newDirectExecutorService());
+        mAdServicesHttpsClient =
+                new AdServicesHttpsClient(MoreExecutors.newDirectExecutorService());
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
@@ -176,7 +177,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper);
 
         Mockito.when(
@@ -255,7 +256,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper);
 
         // Given we are using a direct executor and mock the returned result from the
@@ -318,7 +319,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper);
 
         Mockito.when(
@@ -371,7 +372,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper);
 
         JSONException jsonException = new JSONException("");
@@ -416,7 +417,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper);
 
         // Given we are using a direct executor and mock the returned result from the
@@ -458,7 +459,7 @@ public class AdBidGeneratorImplTest {
                         mContext,
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper);
 
         FluentFuture<AdBiddingOutcome> result =

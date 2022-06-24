@@ -61,6 +61,7 @@ import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -108,7 +109,7 @@ public class AdSelectionServiceImplTest {
     private final String mBuyerReportingPath = "/reporting/buyer";
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
     private final String mContextualSignals = "{\"contextual_signals\":1}";
-    private final AdSelectionHttpClient mClient = new AdSelectionHttpClient(mExecutorService);
+    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
 
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
