@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package android.app.sdksandbox;
+package com.android.sdksandbox;
 
 import android.os.Bundle;
-import android.os.IBinder;
-import android.view.SurfaceControlViewHost.SurfacePackage;
+
+import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 
 /** @hide */
-oneway interface IRemoteSdkCallback {
-    void onLoadSdkSuccess(in Bundle params);
-    void onLoadSdkFailure(int errorCode, String errorMsg);
-    void onSurfacePackageReady(in SurfacePackage surfacePackage, int surfacePackageId, in Bundle params);
-    void onSurfacePackageError(int errorCode, String errorMsg);
+oneway interface ILoadSdkInSandboxCallback {
+    const int LOAD_SDK_ALREADY_LOADED = 1;
+    const int LOAD_SDK_PROVIDER_INIT_ERROR = 2;
+    const int LOAD_SDK_NOT_FOUND = 3;
+    const int LOAD_SDK_INSTANTIATION_ERROR = 4;
+
+    void onLoadSdkSuccess(in Bundle params, in ISdkSandboxManagerToSdkSandboxCallback callback);
+    void onLoadSdkError(int errorCode, in String errorMessage);
 }
