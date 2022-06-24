@@ -196,7 +196,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (jsOverride == null) {
-                        return mAdServicesHttpsClient.fetchJavascript(decisionLogicUri);
+                        return mAdServicesHttpsClient.fetchPayload(decisionLogicUri);
                     } else {
                         LogUtil.d(
                                 "Developer options enabled and an override JS is provided "
