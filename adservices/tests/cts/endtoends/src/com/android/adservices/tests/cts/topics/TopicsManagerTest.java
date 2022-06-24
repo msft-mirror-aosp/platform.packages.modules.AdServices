@@ -97,8 +97,8 @@ public class TopicsManagerTest {
         sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // We only have 1 test app which has 10 classification topics: 48, 20, 241, 1579, 467, 29,
-        // 1416, 12, 138, 1049
+        // We only have 1 test app which has 10 classification topics: 20, 183, 96, 6, 13, 286, 112,
+        // 194, 242, 17
         // These 5 classification topics will become top 5 topics of the epoch since there is
         // no other apps calling Topics API.
         // The app will be assigned one random topic from one of these 5 topics.
@@ -107,7 +107,7 @@ public class TopicsManagerTest {
 
         // topic is one of the 10 classification topics of the Test App.
         assertThat(topic.getTopicId())
-                .isIn(Arrays.asList(48, 20, 241, 1579, 467, 29, 1416, 12, 138, 1049));
+                .isIn(Arrays.asList(20, 183, 96, 6, 13, 286, 112, 194, 242, 17));
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
         AdvertisingTopicsClient advertisingTopicsClient2 =

@@ -26,7 +26,6 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
         <option name="package" value="android.adservices.cts" />
         <option name="hidden-api-checks" value="false" />
-        <option name="exclude-annotation" value="org.junit.Ignore" />
     </test>
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >

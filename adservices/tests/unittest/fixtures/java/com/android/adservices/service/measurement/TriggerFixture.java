@@ -33,18 +33,18 @@ public final class TriggerFixture {
     // {@link ValidTriggerParams}
     public static Trigger.Builder getValidTriggerBuilder() {
         return new Trigger.Builder()
-            .setAttributionDestination(ValidTriggerParams.sAttributionDestination)
-            .setAdTechDomain(ValidTriggerParams.sAdTechDomain)
-            .setRegistrant(ValidTriggerParams.sRegistrant);
+            .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
+            .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
+            .setRegistrant(ValidTriggerParams.REGISTRANT);
     }
 
     // Assume the field values in this Trigger have no relation to the field values in
     // {@link ValidTriggerParams}
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
-                .setAttributionDestination(ValidTriggerParams.sAttributionDestination)
-                .setAdTechDomain(ValidTriggerParams.sAdTechDomain)
-                .setRegistrant(ValidTriggerParams.sRegistrant)
+                .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                .setAdTechDomain(ValidTriggerParams.AD_TECH_DOMAIN)
+                .setRegistrant(ValidTriggerParams.REGISTRANT)
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
                 .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
                 .setAggregateTriggerData(ValidTriggerParams.buildAggregateTriggerData())
@@ -56,10 +56,10 @@ public final class TriggerFixture {
     public static class ValidTriggerParams {
         public static final Long TRIGGER_TIME = 8640000000L;
         public static final Long TRIGGER_DATA = 3L;
-        public static final Uri sAttributionDestination =
+        public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
-        public static final Uri sRegistrant = Uri.parse("android-app://com.registrant");
-        public static final Uri sAdTechDomain = Uri.parse("https://com.example");
+        public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
+        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
         public static final String TOP_LEVEL_FILTERS_JSON_STRING =
                 "{\n"
                         + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -86,7 +86,7 @@ public final class TriggerFixture {
                         + "}\n"
                         + "]\n";
 
-        public static String buildAggregateTriggerData() {
+        public static final String buildAggregateTriggerData() {
             try {
                 JSONArray triggerData = new JSONArray();
                 JSONObject jsonObject = new JSONObject();
@@ -100,7 +100,7 @@ public final class TriggerFixture {
             return null;
         }
 
-        public static String buildAggregateValues() {
+        public static final String buildAggregateValues() {
             try {
                 JSONObject values = new JSONObject();
                 values.put("campaignCounts", 32768);

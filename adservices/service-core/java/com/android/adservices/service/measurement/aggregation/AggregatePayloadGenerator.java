@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Class used to generate CleartextAggregatePayload using AggregatableAttributionSource and
+ * Class used to generate AggregateReport using AggregatableAttributionSource and
  * AggregatableAttributionTrigger.
  */
 public class AggregatePayloadGenerator {
@@ -34,7 +34,7 @@ public class AggregatePayloadGenerator {
     private AggregatePayloadGenerator() {}
 
     /**
-     * Generates the {@link CleartextAggregatePayload} from given AggregatableAttributionSource and
+     * Generates the {@link AggregateReport} from given AggregatableAttributionSource and
      * AggregatableAttributionTrigger.
      *
      * @param attributionSource the aggregate attribution source used for aggregation.
