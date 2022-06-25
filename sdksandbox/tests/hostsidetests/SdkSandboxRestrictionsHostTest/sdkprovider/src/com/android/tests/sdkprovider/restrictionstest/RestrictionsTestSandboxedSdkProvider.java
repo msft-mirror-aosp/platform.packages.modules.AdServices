@@ -47,10 +47,7 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-
-    }
-
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void handlePhase(Bundle params) {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");

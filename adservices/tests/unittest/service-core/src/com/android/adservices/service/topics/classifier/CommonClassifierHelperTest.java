@@ -67,7 +67,7 @@ public class CommonClassifierHelperTest {
         assertThat(labels.size()).isEqualTo(349);
 
         // Check some labels.
-        assertThat(labels).containsAtLeast(1693, 1030, 565, 1770);
+        assertThat(labels).containsAtLeast(5, 100, 250, 349);
     }
 
     @Test
@@ -246,11 +246,11 @@ public class CommonClassifierHelperTest {
         // array,
         // their corresponding topicIds in the topics list will not overlap with
         // the topicIds of app1 below.
-        MockRandom mockRandom = new MockRandom(new long[] {20, 100, 30});
+        MockRandom mockRandom = new MockRandom(new long[] {20, 100, 300});
 
         Map<String, List<Integer>> appTopics = new HashMap<>();
         // We label app1 with the first 5 topicIds in topics list.
-        appTopics.put("app1", Arrays.asList(1013, 89, 69, 512, 1376));
+        appTopics.put("app1", Arrays.asList(253, 146, 277, 59, 127));
 
         List<Integer> testResponse =
                 getTopTopics(
@@ -267,8 +267,8 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_test_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 20, topicId = 541
-        assertThat(testResponse.get(5)).isEqualTo(541);
+        // random = 20, topicId = 21
+        assertThat(testResponse.get(5)).isEqualTo(21);
     }
 
     @Test
@@ -287,7 +287,7 @@ public class CommonClassifierHelperTest {
         Map<String, List<Integer>> appTopics = new HashMap<>();
         // The topicId we use is verticals4 and its index range is from 0 to 1918.
         // We label app1 with the first 5 topicIds in topics list.
-        appTopics.put("app1", Arrays.asList(1013, 89, 69, 512, 1376));
+        appTopics.put("app1", Arrays.asList(34, 89, 69, 349, 241));
 
         List<Integer> testResponse =
                 getTopTopics(
@@ -304,27 +304,27 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_test_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 10, topicId = 1852
-        assertThat(testResponse.get(5)).isEqualTo(1852);
+        // random = 10, topicId = 11
+        assertThat(testResponse.get(5)).isEqualTo(11);
 
-        // random = 20, topicId = 541
-        assertThat(testResponse.get(6)).isEqualTo(541);
+        // random = 20, topicId = 21
+        assertThat(testResponse.get(6)).isEqualTo(21);
 
-        // random = 50, topicId = 1007
-        assertThat(testResponse.get(7)).isEqualTo(1007);
+        // random = 50, topicId = 51
+        assertThat(testResponse.get(7)).isEqualTo(51);
 
-        // random = 75, topicId = 1596
-        assertThat(testResponse.get(8)).isEqualTo(1596);
+        // random = 75, topicId = 76
+        assertThat(testResponse.get(8)).isEqualTo(76);
 
-        // random = 100, topicId = 1289
-        assertThat(testResponse.get(9)).isEqualTo(1289);
+        // random = 100, topicId = 101
+        assertThat(testResponse.get(9)).isEqualTo(101);
 
-        // random = 300, topicId = 273
-        assertThat(testResponse.get(10)).isEqualTo(273);
+        // random = 300, topicId = 301
+        assertThat(testResponse.get(10)).isEqualTo(301);
 
         // random = 500, size of labels list is 349,
-        // index should be 500 % 349 = 151, topicId = 1023
-        assertThat(testResponse.get(11)).isEqualTo(1023);
+        // index should be 500 % 349 = 151, topicId = 152
+        assertThat(testResponse.get(11)).isEqualTo(152);
     }
 
     @Test
@@ -342,10 +342,10 @@ public class CommonClassifierHelperTest {
 
         // If the random topic duplicates with the real topic, then pick another random
         // one until no duplicates. In this test, we will let app1 have five topicIds of
-        // 89, 612, 1852, 959, 1289. These topicIds are the same as the topicIds in the
+        // 2, 6, 11, 26, 101. These topicIds are the same as the topicIds in the
         // classifier/precomputed_test_app_list_chrome_topics.csv corresponding to
         // the first five indices in the MockRandomArray.
-        appTopics.put("app1", Arrays.asList(89, 612, 1852, 959, 1289));
+        appTopics.put("app1", Arrays.asList(2, 6, 11, 26, 101));
 
         List<Integer> testResponse =
                 getTopTopics(
@@ -364,7 +364,7 @@ public class CommonClassifierHelperTest {
         // topicId in the topics list.
         // In this test, if we want to select a random topic that does not repeat,
         // we should select the one corresponding to the sixth index
-        // in the MockRandom array topicId, i.e. random = 300, topicId = 273
-        assertThat(testResponse.get(5)).isEqualTo(273);
+        // in the MockRandom array topicId, i.e. random = 300, topicId = 301
+        assertThat(testResponse.get(5)).isEqualTo(301);
     }
 }

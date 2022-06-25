@@ -13,6 +13,10 @@
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
+      "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsAdServicesEndToEndTests.
       "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     }
@@ -31,10 +35,16 @@
       "name": "CtsAdServicesDeviceTestCases"
     },
     {
+      "name": "CtsAdServicesDebuggableDeviceTestCases"
+    },
+    {
       "name": "AdServicesSettingsUITests"
     },
     {
       "name": "CtsAdServicesEndToEndTests"
+    },
+    {
+      "name": "AdServicesManagerServiceTests"
     }
   ]
 }

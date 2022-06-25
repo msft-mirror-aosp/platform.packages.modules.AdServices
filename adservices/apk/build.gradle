@@ -46,14 +46,30 @@ android {
                     '../service-core/java',
                     '../framework/java',
                     '../../../../../external/guava/guava/src',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'ActionBarShadow/src',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
                     'com/android/adservices/service/consent/*.java',
                     'com/android/adservices/*.java',
+                    'com/android/settingslib/widget/**/*.java',
                     'com/google/common/collect/*.java',
             ]))
-            res.srcDirs = ['res']
+            res.srcDirs = [
+                    'res',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'SettingsTheme/res',
+                    '../../../../../frameworks/base/core/res/res',
+            ]
+            resources.setIncludes(new HashSet([
+                    'drawable/*',
+                    'drawable24/*',
+                    'layout/*',
+                    'mipmap-*/*',
+                    'values/*',
+                    'xml/*',
+            ]))
         }
 
         androidTest {
@@ -71,6 +87,7 @@ android {
 
 dependencies {
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.4'
 
     // test dependencies
     testImplementation 'junit:junit:4.+'

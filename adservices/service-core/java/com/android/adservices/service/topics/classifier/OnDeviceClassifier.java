@@ -57,7 +57,7 @@ public class OnDeviceClassifier implements Classifier {
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
-    private static final String LABELS_FILE_PATH = "classifier/labels_chrome_topics.txt";
+    private static final String LABELS_FILE_PATH = "classifier/labels_topics.txt";
 
     private final Preprocessor mPreprocessor;
     private final PackageManagerUtil mPackageManagerUtil;

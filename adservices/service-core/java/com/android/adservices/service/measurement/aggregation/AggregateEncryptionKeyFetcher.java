@@ -54,7 +54,7 @@ final class AggregateEncryptionKeyFetcher {
     private static long getMaxAgeInSeconds(@NonNull Map<String, List<String>> headers) {
         String cacheControl = null;
         for (String key : headers.keySet()) {
-            if (key.equalsIgnoreCase("cache-control")) {
+            if (key != null && key.equalsIgnoreCase("cache-control")) {
                 List<String> field = headers.get(key);
                 if (field != null && field.size() > 0) {
                     cacheControl = field.get(0).toLowerCase(Locale.ENGLISH);
