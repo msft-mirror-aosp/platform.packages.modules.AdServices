@@ -17,6 +17,7 @@
 package android.adservices.cts;
 
 import android.adservices.exceptions.AdServicesException;
+import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.content.Context;
 import android.net.Uri;
@@ -71,16 +72,6 @@ public class CtsMeasurementManagerTest {
     }
 
     @Test
-    public void testRegisterSource_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerSource(
-                /* attributionSource = */ Uri.parse(INVALID_SERVER_ADDRESS),
-                /* inputEvent = */ null
-        );
-    }
-
-    @Test
     public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
@@ -108,11 +99,29 @@ public class CtsMeasurementManagerTest {
     }
 
     @Test
-    public void testRegisterTrigger_withNoCallback_NoErrorsThrown() throws Exception {
+    public void testGetMeasurementApiStatus_NoErrors() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerTrigger(
-                /* trigger = */ Uri.parse(INVALID_SERVER_ADDRESS)
+
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        OutcomeReceiver<Integer, AdServicesException> callback =
+                new OutcomeReceiver<Integer, AdServicesException>() {
+                    @Override
+                    public void onResult(@NonNull Integer result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(AdServicesException error) {
+                        Assert.fail();
+                    }
+                };
+        manager.getMeasurementApiStatus(
+                /* executor = */ mExecutorService,
+                /* callback = */ callback
         );
+
+        Assert.assertEquals(Integer.valueOf(
+                MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
     }
 }

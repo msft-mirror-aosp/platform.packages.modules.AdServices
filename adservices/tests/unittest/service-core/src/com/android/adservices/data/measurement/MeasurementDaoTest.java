@@ -26,7 +26,6 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
@@ -34,15 +33,13 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 
-import org.json.JSONException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.math.BigInteger;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,12 +55,6 @@ public class MeasurementDaoTest {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "MeasurementDaoTest";
-    private static final String PAYLOAD =
-            "{\"operation\":\"histogram\","
-                    + "\"data\":[{\"bucket\":1369,\"value\":32768},"
-                    + "{\"bucket\":3461,\"value\":1664}]}";
-    private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
-    private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
     private static final Uri APP_NO_SOURCE = Uri.parse("android-app://com.example3.no-sources");
@@ -120,12 +111,12 @@ public class MeasurementDaoTest {
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
                 dao.insertTrigger(validTrigger));
 
-        try (Cursor sourceCursor =
+        try (Cursor triggerCursor =
                      DbHelper.getInstance(sContext).getReadableDatabase()
                              .query(MeasurementTables.TriggerContract.TABLE,
                                      null, null, null, null, null, null)) {
-            Assert.assertTrue(sourceCursor.moveToNext());
-            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(sourceCursor);
+            Assert.assertTrue(triggerCursor.moveToNext());
+            Trigger trigger = SqliteObjectMapper.constructTriggerFromCursor(triggerCursor);
             Assert.assertNotNull(trigger);
             Assert.assertNotNull(trigger.getId());
             assertEquals(validTrigger.getAttributionDestination(),
@@ -586,56 +577,20 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertUnencryptedAggregatePayload() {
-        long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS)) + MIN_TIME_MS);
-        List<AggregateHistogramContribution> contributions = new ArrayList<>();
-        AggregateHistogramContribution contribution1 =
-                new AggregateHistogramContribution.Builder()
-                        .setKey(BigInteger.valueOf(1369L)).setValue(32768).build();
-        AggregateHistogramContribution contribution2 =
-                new AggregateHistogramContribution.Builder()
-                        .setKey(BigInteger.valueOf(3461L)).setValue(1664).build();
-        contributions.add(contribution1);
-        contributions.add(contribution2);
-        String debugPayload = null;
-        try {
-            debugPayload = CleartextAggregatePayload.generateDebugPayload(contributions);
-        } catch (JSONException e) {
-            LogUtil.e("JSONException when generating debug payload.");
-        }
-        String finalDebugPayload = debugPayload;
-        Uri registrant = Uri.parse("android-app://com.registrant");
-        Uri attributionDestination = Uri.parse("android-app://com.destination");
-        Long sourceEventTime = 8640000000L;
-        Long triggerTime = 8640000000L;
-        Uri adTechDomain = Uri.parse("https://com.example");
+        AggregateReport validAggregateReport = AggregateReportFixture.getValidAggregateReport();
         DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) ->
-                dao.insertAggregateReport(
-                        new CleartextAggregatePayload.Builder()
-                                .setPublisher(registrant)
-                                .setAttributionDestination(attributionDestination)
-                                .setSourceRegistrationTime(sourceEventTime)
-                                .setScheduledReportTime(triggerTime + randomTime)
-                                .setReportingOrigin(adTechDomain)
-                                .setDebugCleartextPayload(finalDebugPayload)
-                                .setStatus(EventReport.Status.PENDING).build())
-        );
+                dao.insertAggregateReport(validAggregateReport));
 
         try (Cursor cursor =
                      DbHelper.getInstance(sContext).getReadableDatabase()
                              .query(MeasurementTables.AggregateReport.TABLE,
                                      null, null, null, null, null, null)) {
             Assert.assertTrue(cursor.moveToNext());
-            CleartextAggregatePayload aggregateReport =
-                    SqliteObjectMapper.constructCleartextAggregatePayload(cursor);
+            AggregateReport aggregateReport =
+                    SqliteObjectMapper.constructAggregateReport(cursor);
             Assert.assertNotNull(aggregateReport);
             Assert.assertNotNull(aggregateReport.getId());
-            assertEquals(registrant, aggregateReport.getPublisher());
-            assertEquals(attributionDestination, aggregateReport.getAttributionDestination());
-            assertEquals(sourceEventTime.longValue(), aggregateReport.getSourceRegistrationTime());
-            assertEquals(triggerTime + randomTime, aggregateReport.getScheduledReportTime());
-            assertEquals(adTechDomain, aggregateReport.getReportingOrigin());
-            assertEquals(PAYLOAD, aggregateReport.getDebugCleartextPayload());
-            assertEquals(EventReport.Status.PENDING, aggregateReport.getStatus());
+            Assert.assertTrue(Objects.equals(validAggregateReport, aggregateReport));
         }
     }
 

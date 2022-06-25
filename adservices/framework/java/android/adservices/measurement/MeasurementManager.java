@@ -15,6 +15,7 @@
  */
 package android.adservices.measurement;
 
+import android.adservices.AdServicesApiUtil;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -69,9 +70,10 @@ public class MeasurementManager {
 
     /**
      * Register an attribution source / trigger.
+     *
      * @hide
      */
-    public void register(
+    private void register(
             @NonNull RegistrationRequest registrationRequest,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
@@ -129,21 +131,80 @@ public class MeasurementManager {
     }
 
     /**
-     * Register an attribution source (click or view).
-     * Shortcut for the common case with no callback.
+     * Register an attribution source(click or view) from an embedded web context. This API will not
+     * process any redirects, all registration URLs should be supplied with the request. At least
+     * one of osDestination or webDestination parameters are required to be provided.
      *
-     * @param attributionSource the platform issues a request to this URI in order to fetch metadata
-     *                         associated with the attribution source.
-     * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
-     *                  event).
+     * @param request source registration request
+     * @param executor used by callback to dispatch results.
+     * @param callback intended to notify asynchronously the API result.
+     * @hide
      */
-    public void registerSource(
-            @NonNull Uri attributionSource,
-            @Nullable InputEvent inputEvent) {
-        Objects.requireNonNull(attributionSource);
-        registerSource(
-                attributionSource, inputEvent,
-                /* executor = */ null, /* callback = */ null);
+    public void registerWebSource(
+            @NonNull WebSourceRegistrationRequest request,
+            @Nullable Executor executor,
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+        Objects.requireNonNull(request);
+        final IMeasurementService service = getService();
+
+        try {
+            service.registerWebSource(
+                    new WebSourceRegistrationRequestInternal.Builder()
+                            .setSourceRegistrationRequest(request)
+                            .setAttributionSource(mContext.getAttributionSource())
+                            .build(),
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            if (callback != null && executor != null) {
+                                executor.execute(() -> callback.onResult(null));
+                            }
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+            if (callback != null && executor != null) {
+                executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
+            }
+        }
+    }
+
+    /**
+     * Register an attribution trigger(click or view) from an embedded web context. This API will
+     * not process any redirects, all registration URLs should be supplied with the request.
+     *
+     * @param request trigger registration request
+     * @param executor used by callback to dispatch results
+     * @param callback intended to notify asynchronously the API result
+     * @hide
+     */
+    public void registerWebTrigger(
+            @NonNull WebTriggerRegistrationRequest request,
+            @Nullable Executor executor,
+            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+        Objects.requireNonNull(request);
+        final IMeasurementService service = getService();
+
+        try {
+            service.registerWebTrigger(
+                    new WebTriggerRegistrationRequestInternal.Builder()
+                            .setTriggerRegistrationRequest(request)
+                            .setAttributionSource(mContext.getAttributionSource())
+                            .build(),
+                    new IMeasurementCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            if (callback != null && executor != null) {
+                                executor.execute(() -> callback.onResult(null));
+                            }
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+            if (callback != null && executor != null) {
+                executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
+            }
+        }
     }
 
     /**
@@ -167,18 +228,6 @@ public class MeasurementManager {
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
-    }
-
-    /**
-     * Register a trigger (conversion).
-     * Shortcut for the common case with no callback.
-     *
-     * @param trigger the API issues a request to this URI to fetch metadata associated with the
-     *                trigger.
-     */
-    public void registerTrigger(@NonNull Uri trigger) {
-        Objects.requireNonNull(trigger);
-        registerTrigger(trigger, /* executor = */ null, /* callback = */ null);
     }
 
     /**
@@ -234,6 +283,46 @@ public class MeasurementManager {
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
+    }
+
+    /**
+     * Get Measurement API status.
+     *
+     * @param executor used by callback to dispatch results.
+     * @param callback intended to notify asynchronously the API result.
+     *
+     * The callback's {@code Integer} value is one of {@code MeasurementApiState}.
+     */
+    public void getMeasurementApiStatus(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Integer, AdServicesException> callback) {
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        // TODO: Remove here and apply across the board.
+        if (AdServicesApiUtil.getAdServicesApiState()
+                == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
+            executor.execute(() -> {
+                callback.onResult(MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED);
+            });
+            return;
+        }
+
+        final IMeasurementService service = getService();
+
+        try {
+            service.getMeasurementApiStatus(
+                    new IMeasurementApiStatusCallback.Stub() {
+                        @Override
+                        public void onResult(int result) {
+                            executor.execute(() -> callback.onResult(result));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e("RemoteException", e);
+            executor.execute(() ->
+                    callback.onError(new AdServicesException("Internal Error")));
+        }
     }
 
     /**
