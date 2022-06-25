@@ -70,9 +70,10 @@ public class MeasurementManager {
 
     /**
      * Register an attribution source / trigger.
+     *
      * @hide
      */
-    public void register(
+    private void register(
             @NonNull RegistrationRequest registrationRequest,
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
@@ -139,16 +140,16 @@ public class MeasurementManager {
      * @param callback intended to notify asynchronously the API result.
      * @hide
      */
-    public void registerEmbeddedWebSource(
-            @NonNull EmbeddedWebSourceRegistrationRequest request,
-            @Nullable @CallbackExecutor Executor executor,
+    public void registerWebSource(
+            @NonNull WebSourceRegistrationRequest request,
+            @Nullable Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
         try {
-            service.registerEmbeddedWebSource(
-                    new EmbeddedWebSourceRegistrationRequestInternal.Builder()
+            service.registerWebSource(
+                    new WebSourceRegistrationRequestInternal.Builder()
                             .setSourceRegistrationRequest(request)
                             .setAttributionSource(mContext.getAttributionSource())
                             .build(),
@@ -177,16 +178,16 @@ public class MeasurementManager {
      * @param callback intended to notify asynchronously the API result
      * @hide
      */
-    public void registerEmbeddedWebTrigger(
-            @NonNull EmbeddedWebTriggerRegistrationRequest request,
-            @Nullable @CallbackExecutor Executor executor,
+    public void registerWebTrigger(
+            @NonNull WebTriggerRegistrationRequest request,
+            @Nullable Executor executor,
             @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
         try {
-            service.registerEmbeddedWebTrigger(
-                    new EmbeddedWebTriggerRegistrationRequestInternal.Builder()
+            service.registerWebTrigger(
+                    new WebTriggerRegistrationRequestInternal.Builder()
                             .setTriggerRegistrationRequest(request)
                             .setAttributionSource(mContext.getAttributionSource())
                             .build(),
@@ -204,24 +205,6 @@ public class MeasurementManager {
                 executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
             }
         }
-    }
-
-    /**
-     * Register an attribution source (click or view).
-     * Shortcut for the common case with no callback.
-     *
-     * @param attributionSource the platform issues a request to this URI in order to fetch metadata
-     *                         associated with the attribution source.
-     * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
-     *                  event).
-     */
-    public void registerSource(
-            @NonNull Uri attributionSource,
-            @Nullable InputEvent inputEvent) {
-        Objects.requireNonNull(attributionSource);
-        registerSource(
-                attributionSource, inputEvent,
-                /* executor = */ null, /* callback = */ null);
     }
 
     /**
@@ -245,18 +228,6 @@ public class MeasurementManager {
                 .setAttributionSource(mContext.getAttributionSource())
                 .build(),
                 executor, callback);
-    }
-
-    /**
-     * Register a trigger (conversion).
-     * Shortcut for the common case with no callback.
-     *
-     * @param trigger the API issues a request to this URI to fetch metadata associated with the
-     *                trigger.
-     */
-    public void registerTrigger(@NonNull Uri trigger) {
-        Objects.requireNonNull(trigger);
-        registerTrigger(trigger, /* executor = */ null, /* callback = */ null);
     }
 
     /**

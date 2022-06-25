@@ -72,16 +72,6 @@ public class CtsMeasurementManagerTest {
     }
 
     @Test
-    public void testRegisterSource_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerSource(
-                /* attributionSource = */ Uri.parse(INVALID_SERVER_ADDRESS),
-                /* inputEvent = */ null
-        );
-    }
-
-    @Test
     public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
@@ -106,15 +96,6 @@ public class CtsMeasurementManagerTest {
         );
 
         Assert.assertNull(future.get());
-    }
-
-    @Test
-    public void testRegisterTrigger_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerTrigger(
-                /* trigger = */ Uri.parse(INVALID_SERVER_ADDRESS)
-        );
     }
 
     @Test
