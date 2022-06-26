@@ -86,7 +86,8 @@ public class CustomAudienceImpl {
                 DBCustomAudience.fromServiceObject(
                         customAudience, "not.implemented.yet", currentTime);
 
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dbCustomAudience);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dbCustomAudience, customAudience.getDailyUpdateUrl());
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */
@@ -95,7 +96,7 @@ public class CustomAudienceImpl {
         Preconditions.checkStringNotEmpty(buyer);
         Preconditions.checkStringNotEmpty(name);
 
-        mCustomAudienceDao.deleteCustomAudienceByPrimaryKey(
+        mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(
                 Optional.ofNullable(owner).orElse("not.implemented.yet"), buyer, name);
     }
 

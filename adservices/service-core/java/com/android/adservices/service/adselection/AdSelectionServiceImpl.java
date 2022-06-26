@@ -36,6 +36,7 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -57,7 +58,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
-    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
     @NonNull private final DevContextFilter mDevContextFilter;
@@ -71,7 +72,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context,
@@ -80,7 +81,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adServicesLogger);
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
-        mAdSelectionHttpClient = adSelectionHttpClient;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mExecutor = executorService;
         mContext = context;
@@ -92,7 +93,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                new AdSelectionHttpClient(AdServicesExecutors.getBackgroundExecutor()),
+                new AdServicesHttpsClient(AdServicesExecutors.getBackgroundExecutor()),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
@@ -151,7 +152,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mExecutor,
                         mAdSelectionEntryDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         devContext,
                         mAdServicesLogger);
         reporter.reportImpression(requestParams, callback);

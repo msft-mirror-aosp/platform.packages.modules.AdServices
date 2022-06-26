@@ -21,9 +21,11 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 public class DBTrustedBiddingDataFixture {
-    public static DBTrustedBiddingData VALID_DB_TRUSTED_BIDDING_DATA =
-            new DBTrustedBiddingData.Builder()
-                    .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
-                    .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
-                    .build();
+    public static DBTrustedBiddingData VALID_DB_TRUSTED_BIDDING_DATA = getValidBuilder().build();
+
+    public static DBTrustedBiddingData.Builder getValidBuilder() {
+        return new DBTrustedBiddingData.Builder()
+                .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
+                .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS);
+    }
 }

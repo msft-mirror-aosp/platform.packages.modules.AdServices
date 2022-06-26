@@ -26,7 +26,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import java.time.Instant;
 import java.util.List;
@@ -124,12 +124,12 @@ public interface IMeasurementDao {
     EventReport getEventReport(String eventReportId) throws DatastoreException;
 
     /**
-     * Queries and returns the {@link CleartextAggregatePayload}
+     * Queries and returns the {@link AggregateReport}
      * @param aggregateReportId Id of the request Aggregate Report
      * @return the request Aggregate Report; Null in case of SQL failure
      */
     @Nullable
-    CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+    AggregateReport getAggregateReport(String aggregateReportId)
             throws DatastoreException;
 
     /**
@@ -259,14 +259,21 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Save unencrypted aggregate payload to datastore.
+     * Retrieve all aggregate encryption keys from the datastore whose expiry time is greater than
+     * or equal to {@code expiry}.
      */
-    void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;
+    List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException;
 
     /**
-     * Get CleartextAggregatePayload using unique Id.
+     *  Remove aggregate encryption keys from the datastore older than {@code expiry}.
      */
-    List<CleartextAggregatePayload> getAllCleartextAggregatePayload() throws DatastoreException;
+    void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
+
+    /**
+     * Save unencrypted aggregate payload to datastore.
+     */
+    void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given

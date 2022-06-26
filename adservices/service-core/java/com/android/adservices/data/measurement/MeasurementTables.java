@@ -138,7 +138,7 @@ public final class MeasurementTables {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String SOURCE_REGISTRATION_TIME = "source_registration_time";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
-        String PRIVACY_BUDGET_KEY = "privacy_budget_key";
+        String DEPRECATED_PRIVACY_BUDGET_KEY = "privacy_budget_key";
         String REPORTING_ORIGIN = "reporting_origin";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
@@ -236,7 +236,7 @@ public final class MeasurementTables {
                     + AttributionRateLimitContract.REGISTRANT + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_AGGREGATE_PAYLOAD =
+    public static final String CREATE_TABLE_AGGREGATE_REPORT =
             "CREATE TABLE "
                     + AggregateReport.TABLE
                     + " ("
@@ -245,7 +245,7 @@ public final class MeasurementTables {
                     + AggregateReport.ATTRIBUTION_DESTINATION + " TEXT, "
                     + AggregateReport.SOURCE_REGISTRATION_TIME + " INTEGER, "
                     + AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
-                    + AggregateReport.PRIVACY_BUDGET_KEY + " TEXT, "
+                    + AggregateReport.DEPRECATED_PRIVACY_BUDGET_KEY + " TEXT, "
                     + AggregateReport.REPORTING_ORIGIN + " TEXT, "
                     + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
                     + SourceContract.STATUS + " INTEGER "

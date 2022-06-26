@@ -35,7 +35,7 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 
 import java.time.Instant;
@@ -144,7 +144,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+    public AggregateReport getAggregateReport(String aggregateReportId)
             throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.AggregateReport.TABLE,
@@ -160,7 +160,7 @@ class MeasurementDao implements IMeasurementDao {
                         "AggregateReport retrieval failed. Id: " + aggregateReportId);
             }
             cursor.moveToNext();
-            return SqliteObjectMapper.constructCleartextAggregatePayload(cursor);
+            return SqliteObjectMapper.constructAggregateReport(cursor);
         }
     }
 
@@ -288,7 +288,7 @@ class MeasurementDao implements IMeasurementDao {
     public void markAggregateReportDelivered(String aggregateReportId) throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.STATUS,
-                CleartextAggregatePayload.Status.DELIVERED);
+                AggregateReport.Status.DELIVERED);
         long rows = mSQLTransaction.getDatabase().update(MeasurementTables.AggregateReport.TABLE,
                 values, MeasurementTables.AggregateReport.ID + " = ? ",
                 new String[]{aggregateReportId});
@@ -974,7 +974,33 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertAggregateReport(CleartextAggregatePayload aggregateReport)
+    public List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException {
+        List<AggregateEncryptionKey> aggregateEncryptionKeys = new ArrayList<>();
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.AggregateEncryptionKey.TABLE,
+                /*columns=*/null,
+                MeasurementTables.AggregateEncryptionKey.EXPIRY + " >= ?",
+                new String[]{String.valueOf(expiry)},
+                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+            while (cursor.moveToNext()) {
+                aggregateEncryptionKeys
+                        .add(SqliteObjectMapper.constructAggregateEncryptionKeyFromCursor(cursor));
+            }
+            return aggregateEncryptionKeys;
+        }
+    }
+
+    @Override
+    public void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        db.delete(MeasurementTables.AggregateEncryptionKey.TABLE,
+                MeasurementTables.AggregateEncryptionKey.EXPIRY + " < ?",
+                new String[]{String.valueOf(expiry)});
+    }
+
+    @Override
+    public void insertAggregateReport(AggregateReport aggregateReport)
             throws DatastoreException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, UUID.randomUUID().toString());
@@ -986,8 +1012,6 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getSourceRegistrationTime());
         values.put(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
-        values.put(MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
-                aggregateReport.getPrivacyBudgetKey());
         values.put(MeasurementTables.AggregateReport.REPORTING_ORIGIN,
                 aggregateReport.getReportingOrigin().toString());
         values.put(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
@@ -1003,25 +1027,6 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<CleartextAggregatePayload> getAllCleartextAggregatePayload()
-            throws DatastoreException {
-        List<CleartextAggregatePayload> res = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.AggregateReport.TABLE,
-                /*columns=*/null, /*selection=*/ null, /*selectionArgs*/ null,
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
-            if (cursor == null) {
-                return res;
-            }
-            while (cursor.moveToNext()) {
-                res.add(SqliteObjectMapper.constructCleartextAggregatePayload(cursor));
-            }
-            return res;
-        }
-    }
-
-
-    @Override
     public List<String> getPendingAggregateReportIdsInWindow(long windowStartTime,
             long windowEndTime) throws DatastoreException {
         List<String> aggregateReports = new ArrayList<>();
@@ -1032,7 +1037,7 @@ class MeasurementDao implements IMeasurementDao {
                         + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME + " <= ? AND "
                         + MeasurementTables.AggregateReport.STATUS + " = ? ",
                 new String[]{String.valueOf(windowStartTime), String.valueOf(windowEndTime),
-                        String.valueOf(CleartextAggregatePayload.Status.PENDING)},
+                        String.valueOf(AggregateReport.Status.PENDING)},
                 /*groupBy=*/null, /*having=*/null, /*orderBy=*/"RANDOM()", /*limit=*/null)) {
             while (cursor.moveToNext()) {
                 aggregateReports.add(cursor.getString(cursor.getColumnIndex(
@@ -1051,7 +1056,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AggregateReport.PUBLISHER + " = ? AND "
                 + MeasurementTables.AggregateReport.STATUS + " = ? ",
                 new String[]{appName.toString(),
-                        String.valueOf(CleartextAggregatePayload.Status.PENDING)},
+                        String.valueOf(AggregateReport.Status.PENDING)},
                 null, null, "RANDOM()", null)) {
             while (cursor.moveToNext()) {
                 aggregateReports.add(cursor.getString(cursor.getColumnIndex(

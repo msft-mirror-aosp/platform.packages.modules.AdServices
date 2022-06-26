@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
+import android.app.ActionBar;
 import android.os.Bundle;
 
 import androidx.lifecycle.ViewModelProvider;
@@ -25,6 +26,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.ActionDelegate;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
+import com.android.settingslib.widget.ActionBarShadowController;
 
 import java.util.Objects;
 
@@ -38,6 +40,8 @@ public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
     public static final String PRIVACY_SANDBOX_BETA_SWITCH_KEY = "privacy_sandbox_beta_switch";
     public static final String TOPICS_PREFERENCE_BUTTON_KEY = "topics_preference";
 
+    protected boolean mUseShadowController = true;
+
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.main_preferences, rootKey);
@@ -49,7 +53,29 @@ public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        initActionBar();
         initActionListeners();
+    }
+
+    /**
+     * Attaching {@link ActionBarShadowController} from SettingsLib to have the same action bar
+     * style as the Android Settings App.
+     */
+    private void initActionBar() {
+        if (getListView() != null) {
+            ActionBar ab = requireActivity().getActionBar();
+
+            if (ab != null) {
+                ab.setDisplayHomeAsUpEnabled(true);
+                ab.setTitle(R.string.settingsUI_privacy_sandbox_beta_title);
+                ab.setElevation(0);
+            }
+
+            if (mUseShadowController) {
+                ActionBarShadowController.attachToView(
+                        getActivity(), getLifecycle(), getListView());
+            }
+        }
     }
 
     // initialize all action listeners

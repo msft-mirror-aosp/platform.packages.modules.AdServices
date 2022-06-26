@@ -22,7 +22,6 @@ android_test {
         "src/**/*.java",
     ],
     static_libs: [
-        "adservices-clients",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
