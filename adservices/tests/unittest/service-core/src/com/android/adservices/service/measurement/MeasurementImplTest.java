@@ -518,6 +518,22 @@ public final class MeasurementImplTest {
         assertEquals(MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED, result);
     }
 
+    @Test
+    public void testDeleteAllMeasurementData() throws DatastoreException {
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        // Execution
+        measurement.deleteAllMeasurementData(Collections.emptyList());
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+        verify(mMeasurementDao, times(1)).deleteAllMeasurementData(any());
+    }
+
     private void verifyInsertSource(RegistrationRequest registrationRequest,
             SourceRegistration sourceRegistration,
             long eventTime,
