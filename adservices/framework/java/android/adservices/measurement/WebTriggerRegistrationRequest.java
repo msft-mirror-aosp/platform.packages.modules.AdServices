@@ -54,7 +54,6 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
         mDestination = destination;
     }
 
-    /** Unpack parcel of OSAttributionTriggerRegistrationRequest. */
     private WebTriggerRegistrationRequest(Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<WebTriggerParams> webTriggerParams = new ArrayList<>();
