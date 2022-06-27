@@ -37,19 +37,19 @@ public class WebTriggerRegistrationRequestInternalTest {
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
 
-    private static final TriggerParams TRIGGER_REGISTRATION_1 =
-            new TriggerParams.Builder()
+    private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
+            new WebTriggerParams.Builder()
                     .setRegistrationUri(REGISTRATION_URI_1)
-                    .setDebugEnabled(true)
+                    .setAllowDebugKey(true)
                     .build();
 
-    private static final TriggerParams TRIGGER_REGISTRATION_2 =
-            new TriggerParams.Builder()
+    private static final WebTriggerParams TRIGGER_REGISTRATION_2 =
+            new WebTriggerParams.Builder()
                     .setRegistrationUri(REGISTRATION_URI_2)
-                    .setDebugEnabled(false)
+                    .setAllowDebugKey(false)
                     .build();
 
-    private static final List<TriggerParams> TRIGGER_REGISTRATIONS =
+    private static final List<WebTriggerParams> TRIGGER_REGISTRATIONS =
             Arrays.asList(TRIGGER_REGISTRATION_1, TRIGGER_REGISTRATION_2);
 
     private static final WebTriggerRegistrationRequest EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST =
