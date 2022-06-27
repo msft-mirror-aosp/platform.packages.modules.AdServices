@@ -18,25 +18,13 @@ package com.android.adservices.data.measurement.migration;
 
 import static com.android.adservices.data.measurement.MeasurementTables.INDEX_PREFIX;
 
-import android.content.ContentValues;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Pair;
 
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.data.measurement.SqliteObjectMapper;
 import com.android.adservices.service.measurement.Trigger;
 
-import com.google.common.collect.ImmutableMap;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Migrates Measurement DB from user version 2 to 3. */
@@ -88,6 +76,18 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + MeasurementTables.SourceContract.STATUS + " INTEGER "
                     + ")";
 
+    private static final String TRIGGER_V3_COLUMNS =
+            String.join(",", List.of(
+                    MeasurementTables.TriggerContract.ID,
+                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                    MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                    MeasurementTables.TriggerContract.TRIGGER_TIME,
+                    MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                    MeasurementTables.TriggerContract.STATUS,
+                    MeasurementTables.TriggerContract.REGISTRANT,
+                    MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                    MeasurementTables.TriggerContract.AGGREGATE_VALUES));
+
     private static final String AGGREGATE_REPORT_V3_COLUMNS =
             String.join(",", List.of(
                     MeasurementTables.AggregateReport.ID,
@@ -99,7 +99,30 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                     MeasurementTables.SourceContract.STATUS));
 
-    private static final String COPY_AGGREGATE_REPORT_DATA =
+    private static final String TRIGGER_MIGRATION_SELECT_STATEMENT =
+            String.format("%1$s, %2$s, %3$s, %4$s, (%5$s), %6$s, %7$s, %8$s, %9$s",
+                    MeasurementTables.TriggerContract.ID,
+                    MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
+                    MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
+                    MeasurementTables.TriggerContract.TRIGGER_TIME,
+                    getJSONString(
+                            Trigger.EventTriggerContract.DEDUPLICATION_KEY,
+                            MeasurementTables.TriggerContract.DEPRECATED_DEDUP_KEY,
+                            Trigger.EventTriggerContract.TRIGGER_DATA,
+                            MeasurementTables.TriggerContract.DEPRECATED_EVENT_TRIGGER_DATA,
+                            Trigger.EventTriggerContract.PRIORITY,
+                            MeasurementTables.TriggerContract.DEPRECATED_PRIORITY),
+                    MeasurementTables.TriggerContract.STATUS,
+                    MeasurementTables.TriggerContract.REGISTRANT,
+                    MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                    MeasurementTables.TriggerContract.AGGREGATE_VALUES);
+
+    private static final String MIGRATE_TRIGGER_DATA =
+            String.format("INSERT INTO %s(%s) SELECT %s FROM %s;",
+                    TRIGGER_BACKUP_TABLE_V3, TRIGGER_V3_COLUMNS, TRIGGER_MIGRATION_SELECT_STATEMENT,
+                    MeasurementTables.TriggerContract.TABLE);
+
+    private static final String MIGRATE_AGGREGATE_REPORT_DATA =
             String.format("INSERT INTO %1$s(%2$s) SELECT %2$s FROM %3$s;",
                     AGGREGATE_REPORT_BACKUP_TABLE_V3, AGGREGATE_REPORT_V3_COLUMNS,
                     MeasurementTables.AggregateReport.TABLE);
@@ -191,136 +214,25 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
             db.execSQL(sql);
         }
 
-        // transfer data to new table
-        db.execSQL(COPY_AGGREGATE_REPORT_DATA);
-        migrateData(db);
+        // Transfer data to the new tables
+        db.execSQL(MIGRATE_TRIGGER_DATA);
+        db.execSQL(MIGRATE_AGGREGATE_REPORT_DATA);
 
         for (String sql : migrationScriptV3PostDataTransfer()) {
             db.execSQL(sql);
         }
     }
 
-    private void migrateData(SQLiteDatabase sqLiteDatabase) {
-        List<Pair<Trigger, TriggerV2Extension>> v2Triggers = new ArrayList<>();
-        try (Cursor cursor =
-                sqLiteDatabase.query(
-                        MeasurementTables.TriggerContract.TABLE,
-                        /*columns=*/ null,
-                        /*selection=*/ null,
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
-            while (cursor.moveToNext()) {
-                Pair<Trigger, TriggerV2Extension> triggerAndExtension =
-                        new Pair<>(
-                                SqliteObjectMapper.constructTriggerFromCursor(cursor),
-                                buildTriggerExtensionFromCursor(cursor));
-                v2Triggers.add(triggerAndExtension);
+    private static String getJSONString(String... strs) {
+        StringBuilder result = new StringBuilder("'[{'");
+        for (int i = 0; i < strs.length; i += 2) {
+            result.append(String.format(" || '\"%s\":' || ifnull(%s, 'null')",
+                    strs[i], strs[i + 1]));
+            if (i < strs.length - 2) {
+                result.append(" || ','");
             }
         }
-
-        v2Triggers.forEach(
-                (v2TriggerAndExtension) -> {
-                    Trigger v2Trigger = v2TriggerAndExtension.first;
-                    TriggerV2Extension v2TriggerExtension = v2TriggerAndExtension.second;
-                    ContentValues values = new ContentValues();
-                    values.put(MeasurementTables.TriggerContract.ID, v2Trigger.getId());
-                    values.put(
-                            MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
-                            v2Trigger.getAttributionDestination().toString());
-                    values.put(
-                            MeasurementTables.TriggerContract.TRIGGER_TIME,
-                            v2Trigger.getTriggerTime());
-                    values.put(
-                            MeasurementTables.TriggerContract.EVENT_TRIGGERS,
-                            v2TriggerExtension.serializeEventTriggers());
-                    values.put(MeasurementTables.TriggerContract.STATUS, v2Trigger.getStatus());
-                    values.put(
-                            MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
-                            v2Trigger.getAdTechDomain().toString());
-                    values.put(
-                            MeasurementTables.TriggerContract.REGISTRANT,
-                            v2Trigger.getRegistrant().toString());
-                    values.put(
-                            MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
-                            v2Trigger.getAggregateTriggerData());
-                    values.put(
-                            MeasurementTables.TriggerContract.AGGREGATE_VALUES,
-                            v2Trigger.getAggregateValues());
-                    values.put(MeasurementTables.TriggerContract.FILTERS, v2Trigger.getFilters());
-
-                    sqLiteDatabase.insert(
-                            TRIGGER_BACKUP_TABLE_V3, /*nullColumnHack=*/ null, values);
-                });
-    }
-
-    private TriggerV2Extension buildTriggerExtensionFromCursor(Cursor cursor) {
-        return new TriggerV2Extension(
-                getLongColumnValueFromCursor(
-                                cursor, MeasurementTables.TriggerContract.DEPRECATED_DEDUP_KEY)
-                        .orElse(null),
-                getLongColumnValueFromCursor(
-                                cursor,
-                                MeasurementTables.TriggerContract.DEPRECATED_EVENT_TRIGGER_DATA)
-                        .orElse(0L),
-                getLongColumnValueFromCursor(
-                                cursor, MeasurementTables.TriggerContract.DEPRECATED_PRIORITY)
-                        .orElse(0L));
-    }
-
-    private Optional<Long> getLongColumnValueFromCursor(Cursor cursor, String columnName) {
-        int columnIndex = cursor.getColumnIndex(columnName);
-        if (columnIndex != -1 && !cursor.isNull(columnIndex)) {
-            return Optional.of(cursor.getLong(columnIndex));
-        }
-
-        return Optional.empty();
-    }
-
-    static class TriggerV2Extension {
-        private final Long mDedupKey;
-        private final long mEventTriggerData;
-        private final long mPriority;
-
-        TriggerV2Extension(Long dedupKey, long eventTriggerData, long priority) {
-            mDedupKey = dedupKey;
-            mEventTriggerData = eventTriggerData;
-            mPriority = priority;
-        }
-
-        Long getDedupKey() {
-            return mDedupKey;
-        }
-
-        Long getEventTriggerData() {
-            return mEventTriggerData;
-        }
-
-        Long getPriority() {
-            return mPriority;
-        }
-
-        /**
-         * To be used for V2 -> V3 DB migration purpose. Prior to V3, trigger data, de-dup key and
-         * priority existed as separate columns in the DB. They are combined to form a single blob
-         * starting from DB version 3.
-         *
-         * @return serialized event triggers string
-         */
-        String serializeEventTriggers() {
-            Map<String, Long> eventTriggersDataV2 =
-                    ImmutableMap.of(
-                            Trigger.EventTriggerContract.DEDUPLICATION_KEY, mDedupKey,
-                            Trigger.EventTriggerContract.TRIGGER_DATA, mEventTriggerData,
-                            Trigger.EventTriggerContract.PRIORITY, mPriority);
-
-            JSONObject eventTrigger = new JSONObject(eventTriggersDataV2);
-            JSONArray eventTriggers = new JSONArray();
-            eventTriggers.put(eventTrigger);
-
-            return eventTriggers.toString();
-        }
+        result.append(" || '}]'");
+        return result.toString();
     }
 }
