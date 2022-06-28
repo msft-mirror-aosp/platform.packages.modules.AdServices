@@ -22,6 +22,7 @@ package android.app.sdksandbox {
   }
 
   public final class SdkSandboxManager {
+    method @NonNull public java.util.List<android.content.pm.SharedLibraryInfo> getLoadedSdkLibrariesInfo();
     method public static int getSdkSandboxState();
     method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback);
     method public void requestSurfacePackage(@NonNull String, int, int, int, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.RequestSurfacePackageCallback);

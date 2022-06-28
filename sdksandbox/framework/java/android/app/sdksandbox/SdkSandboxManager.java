@@ -23,6 +23,7 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.SystemService;
 import android.content.Context;
+import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -30,6 +31,7 @@ import android.view.SurfaceControlViewHost.SurfacePackage;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
@@ -188,6 +190,19 @@ public final class SdkSandboxManager {
                 new LoadSdkCallbackProxy(callbackExecutor, callback);
         try {
             mService.loadSdk(mContext.getPackageName(), sdkName, params, callbackProxy);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Fetches information about Sdks that are loaded in the sandbox.
+     *
+     * @return List of {@link SharedLibraryInfo} containing all currently loaded sdks
+     */
+    public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
+        try {
+            return mService.getLoadedSdkLibrariesInfo(mContext.getPackageName());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
