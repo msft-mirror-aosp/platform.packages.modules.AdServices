@@ -16,16 +16,19 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.measurement.MeasurementManager.RESULT_OK;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
-import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.MeasurementApiUtil;
+import android.adservices.measurement.MeasurementErrorResponse;
 import android.adservices.measurement.RegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
@@ -55,7 +58,7 @@ public final class MeasurementServiceImplTest {
     public void setUp() {
         mMockMeasurementImpl = Mockito.mock(MeasurementImpl.class);
         when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
-                .thenReturn(IMeasurementCallback.RESULT_OK);
+                .thenReturn(RESULT_OK);
     }
 
     @Test
@@ -63,31 +66,36 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(mMockMeasurementImpl).register(
-                getDefaultRegistrationRequest(),
-                new IMeasurementCallback.Stub() {
-                    @Override
-                    public void onResult(int result) throws RemoteException {
-                        list.add(result);
-                        countDownLatch.countDown();
-                    }
-                }
-        );
+        new MeasurementServiceImpl(mMockMeasurementImpl)
+                .register(
+                        getDefaultRegistrationRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() throws RemoteException {
+                                list.add(RESULT_OK);
+                                countDownLatch.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {}
+                        });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(IMeasurementCallback.RESULT_OK);
+        assertThat(list.get(0)).isEqualTo(RESULT_OK);
     }
 
     @Test(expected = NullPointerException.class)
     public void testRegister_invalidRequest() throws Exception {
-        new MeasurementServiceImpl(mMockMeasurementImpl).register(
-                null,
-                new IMeasurementCallback.Stub() {
-                    @Override
-                    public void onResult(int result) throws RemoteException {
-                    }
-                }
-        );
+        new MeasurementServiceImpl(mMockMeasurementImpl)
+                .register(
+                        null,
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() throws RemoteException {}
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {}
+                        });
     }
 
     @Test(expected = NullPointerException.class)
@@ -103,31 +111,36 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(mMockMeasurementImpl).deleteRegistrations(
-                getDefaultDeletionRequest(),
-                new IMeasurementCallback.Stub() {
-                    @Override
-                    public void onResult(int result) throws RemoteException {
-                        list.add(result);
-                        countDownLatch.countDown();
-                    }
-                }
-        );
+        new MeasurementServiceImpl(mMockMeasurementImpl)
+                .deleteRegistrations(
+                        getDefaultDeletionRequest(),
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() throws RemoteException {
+                                list.add(RESULT_OK);
+                                countDownLatch.countDown();
+                            }
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {}
+                        });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(IMeasurementCallback.RESULT_OK);
+        assertThat(list.get(0)).isEqualTo(RESULT_OK);
     }
 
     @Test(expected = NullPointerException.class)
     public void testDeleteRegistrations_invalidRequest() throws Exception {
-        new MeasurementServiceImpl(mMockMeasurementImpl).deleteRegistrations(
-                null,
-                new IMeasurementCallback.Stub() {
-                    @Override
-                    public void onResult(int result) throws RemoteException {
-                    }
-                }
-        );
+        new MeasurementServiceImpl(mMockMeasurementImpl)
+                .deleteRegistrations(
+                        null,
+                        new IMeasurementCallback.Stub() {
+                            @Override
+                            public void onResult() throws RemoteException {}
+
+                            @Override
+                            public void onFailure(MeasurementErrorResponse responseParcel) {}
+                        });
     }
 
     @Test(expected = NullPointerException.class)
@@ -172,8 +185,8 @@ public final class MeasurementServiceImplTest {
                 .build();
     }
 
-    private DeletionRequest getDefaultDeletionRequest() {
-        return new DeletionRequest.Builder()
+    private DeletionParam getDefaultDeletionRequest() {
+        return new DeletionParam.Builder()
                 .setAttributionSource(sContext.getAttributionSource())
                 .build();
     }

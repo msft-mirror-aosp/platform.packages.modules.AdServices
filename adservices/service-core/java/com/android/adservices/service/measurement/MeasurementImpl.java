@@ -16,12 +16,18 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.measurement.MeasurementManager.RESULT_INTERNAL_ERROR;
+import static android.adservices.measurement.MeasurementManager.RESULT_INVALID_ARGUMENT;
+import static android.adservices.measurement.MeasurementManager.RESULT_IO_ERROR;
+import static android.adservices.measurement.MeasurementManager.RESULT_OK;
+
 import static com.android.adservices.service.measurement.attribution.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
-import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.IMeasurementCallback;
+import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.MeasurementApiUtil;
+import android.adservices.measurement.MeasurementManager;
+import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
@@ -124,9 +130,8 @@ public final class MeasurementImpl {
         }
     }
 
-    /**
-     * Implement a registration request, returning a result code.
-     */
+    /** Implement a registration request, returning a {@link MeasurementManager.ResultCode}. */
+    @ResultCode
     int register(@NonNull RegistrationRequest request, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
@@ -136,9 +141,9 @@ public final class MeasurementImpl {
                     LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
                     if (fetch.isPresent()) {
                         insertSources(request, fetch.get(), requestTime);
-                        return IMeasurementCallback.RESULT_OK;
+                        return RESULT_OK;
                     } else {
-                        return IMeasurementCallback.RESULT_IO_ERROR;
+                        return RESULT_IO_ERROR;
                     }
                 }
 
@@ -148,14 +153,14 @@ public final class MeasurementImpl {
                     LogUtil.d("MeasurementImpl: register: success=" + fetch.isPresent());
                     if (fetch.isPresent()) {
                         insertTriggers(request, fetch.get(), requestTime);
-                        return IMeasurementCallback.RESULT_OK;
+                        return RESULT_OK;
                     } else {
-                        return IMeasurementCallback.RESULT_IO_ERROR;
+                        return RESULT_IO_ERROR;
                     }
                 }
 
                 default:
-                    return IMeasurementCallback.RESULT_INVALID_ARGUMENT;
+                    return MeasurementManager.RESULT_INVALID_ARGUMENT;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -163,9 +168,10 @@ public final class MeasurementImpl {
     }
 
     /**
-     * Implement a deleteRegistrations request, returning a result code.
+     * Implement a deleteRegistrations request, returning a r{@link MeasurementManager.ResultCode}.
      */
-    int deleteRegistrations(@NonNull DeletionRequest request) {
+    @ResultCode
+    int deleteRegistrations(@NonNull DeletionParam request) {
         mReadWriteLock.readLock().lock();
         try {
             final boolean deleteResult = mDatastoreManager.runInTransaction((dao) ->
@@ -176,11 +182,10 @@ public final class MeasurementImpl {
                             request.getEnd()
                     )
             );
-            return deleteResult
-                    ? IMeasurementCallback.RESULT_OK : IMeasurementCallback.RESULT_INTERNAL_ERROR;
+            return deleteResult ? RESULT_OK : RESULT_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");
-            return IMeasurementCallback.RESULT_INVALID_ARGUMENT;
+            return RESULT_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
         }
