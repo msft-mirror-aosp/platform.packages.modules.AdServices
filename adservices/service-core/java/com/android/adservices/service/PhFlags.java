@@ -90,6 +90,12 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_thread_pool_size";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S =
             "fledge_background_fetch_eligible_update_base_interval_s";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
+            "fledge_background_fetch_network_connect_timeout_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS =
+            "fledge_background_fetch_network_read_timeout_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B =
+            "fledge_background_fetch_max_response_size_b";
 
     // FLEDGE Ad Selection keys
     static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
@@ -390,6 +396,33 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeBackgroundFetchMaxResponseSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B);
+    }
+
+    @Override
     public int getAdSelectionConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -541,6 +574,21 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S
                         + " = "
                         + getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getFledgeBackgroundFetchNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getFledgeBackgroundFetchNetworkReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B
+                        + " = "
+                        + getFledgeBackgroundFetchMaxResponseSizeB());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
