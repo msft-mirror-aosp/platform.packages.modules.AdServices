@@ -28,7 +28,7 @@ public class AggregateReportBodyTest {
     private static final String ATTRIBUTION_DESTINATION = "https://attribution.destination";
     private static final String SOURCE_REGISTRATION_TIME = "1246174152155";
     private static final String SCHEDULED_REPORT_TIME = "1246174158155";
-    private static final String VERSION = "1";
+    private static final String VERSION = "12";
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
@@ -40,7 +40,7 @@ public class AggregateReportBodyTest {
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(SCHEDULED_REPORT_TIME)
-                .setVersion(VERSION)
+                .setApiVersion(VERSION)
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)

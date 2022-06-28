@@ -1018,6 +1018,8 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getDebugCleartextPayload());
         values.put(MeasurementTables.AggregateReport.STATUS,
                 aggregateReport.getStatus());
+        values.put(MeasurementTables.AggregateReport.API_VERSION,
+                aggregateReport.getApiVersion());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);
