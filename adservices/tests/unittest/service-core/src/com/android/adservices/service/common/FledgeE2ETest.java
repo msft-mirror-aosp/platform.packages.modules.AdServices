@@ -55,6 +55,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
@@ -118,6 +119,7 @@ public class FledgeE2ETest {
     private ExecutorService mExecutorService;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
+    private Flags mFlags;
 
     @Before
     public void setUp() throws Exception {
@@ -156,6 +158,8 @@ public class FledgeE2ETest {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
+        mFlags = FlagsFactory.getFlagsForTest();
+
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -165,7 +169,8 @@ public class FledgeE2ETest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mFlags);
     }
 
     @After

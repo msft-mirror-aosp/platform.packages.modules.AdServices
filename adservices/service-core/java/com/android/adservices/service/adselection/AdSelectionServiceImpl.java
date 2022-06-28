@@ -36,6 +36,8 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -63,6 +65,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final Context mContext;
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final Flags mFlags;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -76,7 +79,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull Flags flags) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adServicesLogger);
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -86,6 +90,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mExecutor = executorService;
         mContext = context;
         mAdServicesLogger = adServicesLogger;
+        mFlags = flags;
     }
 
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
@@ -97,7 +102,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                FlagsFactory.getFlags());
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
@@ -124,7 +130,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdSelectionEntryDao,
                         mExecutor,
                         mAdServicesLogger,
-                        devContext);
+                        devContext,
+                        mFlags);
 
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
