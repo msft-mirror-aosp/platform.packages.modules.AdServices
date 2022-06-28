@@ -25,11 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Class to hold input to measurement trigger registration calls from embedded web context.
- *
- * @hide
- */
+/** Class to hold input to measurement trigger registration calls from web context. */
 public final class WebTriggerRegistrationRequest implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
@@ -46,24 +42,25 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
                 }
             };
     /** Registration info to fetch sources. */
-    @NonNull private final List<TriggerParams> mTriggerParams;
+    @NonNull private final List<WebTriggerParams> mWebTriggerParams;
 
     /** Destination {@link Uri}. */
     @NonNull private final Uri mDestination;
 
     /** Constructor for {@link WebTriggerRegistrationRequest}. */
     private WebTriggerRegistrationRequest(
-            @NonNull List<TriggerParams> triggerParams, @NonNull Uri destination) {
-        mTriggerParams = triggerParams;
+            @NonNull List<WebTriggerParams> webTriggerParams, @NonNull Uri destination) {
+        mWebTriggerParams = webTriggerParams;
         mDestination = destination;
     }
 
     /** Unpack parcel of OSAttributionTriggerRegistrationRequest. */
     private WebTriggerRegistrationRequest(Parcel in) {
         Objects.requireNonNull(in);
-        ArrayList<TriggerParams> triggerParams = new ArrayList<>();
-        in.readList(triggerParams, TriggerParams.class.getClassLoader(), TriggerParams.class);
-        mTriggerParams = triggerParams;
+        ArrayList<WebTriggerParams> webTriggerParams = new ArrayList<>();
+        in.readList(
+                webTriggerParams, WebTriggerParams.class.getClassLoader(), WebTriggerParams.class);
+        mWebTriggerParams = webTriggerParams;
         mDestination = Uri.CREATOR.createFromParcel(in);
     }
 
@@ -72,19 +69,19 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof WebTriggerRegistrationRequest)) return false;
         WebTriggerRegistrationRequest that = (WebTriggerRegistrationRequest) o;
-        return Objects.equals(mTriggerParams, that.mTriggerParams)
+        return Objects.equals(mWebTriggerParams, that.mWebTriggerParams)
                 && Objects.equals(mDestination, that.mDestination);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerParams, mDestination);
+        return Objects.hash(mWebTriggerParams, mDestination);
     }
 
     /** Getter for trigger params. */
     @NonNull
-    public List<TriggerParams> getTriggerParams() {
-        return mTriggerParams;
+    public List<WebTriggerParams> getTriggerParams() {
+        return mWebTriggerParams;
     }
 
     /** Getter for destination. */
@@ -101,7 +98,7 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
-        out.writeList(mTriggerParams);
+        out.writeList(mWebTriggerParams);
         mDestination.writeToParcel(out, flags);
     }
 
@@ -111,24 +108,25 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
          * Registration info to fetch triggers. Maximum 20 registrations allowed at once, to be in
          * sync with Chrome platform.
          */
-        @NonNull private List<TriggerParams> mTriggerParams;
+        @NonNull private List<WebTriggerParams> mWebTriggerParams;
         /** Top level origin of publisher app. */
         @NonNull private Uri mDestination;
 
         /**
-         * Setter for trigger params.
+         * Setter for trigger params. It is a required parameter and the provided list should not be
+         * empty.
          *
-         * @param triggerParams source registrations
+         * @param webTriggerParams source registrations
          * @return builder
          */
         @NonNull
-        public Builder setTriggerParams(@NonNull List<TriggerParams> triggerParams) {
-            mTriggerParams = triggerParams;
+        public Builder setTriggerParams(@NonNull List<WebTriggerParams> webTriggerParams) {
+            mWebTriggerParams = webTriggerParams;
             return this;
         }
 
         /**
-         * Setter for destination.
+         * Setter for destination. It is a required parameter.
          *
          * @param destination destination top origin {@link Uri}
          * @return builder
@@ -142,13 +140,13 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
         /** Pre-validates parameters and builds {@link WebTriggerRegistrationRequest}. */
         @NonNull
         public WebTriggerRegistrationRequest build() {
-            if (mTriggerParams == null || mTriggerParams.isEmpty()) {
+            if (mWebTriggerParams == null || mWebTriggerParams.isEmpty()) {
                 throw new IllegalArgumentException("registration URI unset");
             }
 
             Objects.requireNonNull(mDestination);
 
-            return new WebTriggerRegistrationRequest(mTriggerParams, mDestination);
+            return new WebTriggerRegistrationRequest(mWebTriggerParams, mDestination);
         }
     }
 }

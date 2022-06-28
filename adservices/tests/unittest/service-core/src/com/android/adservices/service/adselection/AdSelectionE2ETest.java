@@ -659,6 +659,75 @@ public class AdSelectionE2ETest {
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
     }
 
+    @Test
+    public void testRunAdSelectionJSTimesOut() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        String readBidFromAdMetadataWithDelayJs =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " custom_audience_signals) { \n"
+                        + "    const wait = (ms) => {\n"
+                        + "       var start = new Date().getTime();\n"
+                        + "       var end = start;\n"
+                        + "       while(end < start + ms) {\n"
+                        + "         end = new Date().getTime();\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "    wait(15000);\n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}";
+
+        // In this case the one buyer's logic takes more than the bidding time limit
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+
+                        switch (request.getPath()) {
+                            case SELLER_DECISION_LOGIC_URL:
+                                return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
+                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
+                                return new MockResponse().setBody(readBidFromAdMetadataWithDelayJs);
+                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                                return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+
+        mMockWebServerRule.startMockWebServer(dispatcher);
+        // buyer1/ad3 is clear winner but will time out
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2, 15.0);
+        // due to timeout buyer2/ad3 will win
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        Assert.assertTrue(resultsCallback.mIsSuccess);
+        Assert.assertEquals(
+                AD_URL_PREFIX + "buyer2/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+    }
+
     /**
      * @param buyer The name of the buyer for this Custom Audience
      * @param biddingUri path from where the bidding logic for this CA can be fetched from

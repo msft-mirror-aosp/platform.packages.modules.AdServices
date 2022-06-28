@@ -219,8 +219,8 @@ public class DbState {
                 .setId(sJSON.getString("id"))
                 .setEventId(sJSON.getLong("eventId"))
                 .setSourceType(
-                        Source.SourceType.valueOf(sJSON.getString("sourceType").toUpperCase(
-                                Locale.ENGLISH)))
+                        Source.SourceType.valueOf(
+                                sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setAttributionDestination(Uri.parse(sJSON.getString("attributionDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
@@ -229,13 +229,13 @@ public class DbState {
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
-                .setInstallAttributionWindow(sJSON.optLong("installAttributionWindow",
-                        TimeUnit.DAYS.toMillis(30)))
-                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow",
-                        0))
+                .setInstallAttributionWindow(
+                        sJSON.optLong("installAttributionWindow", TimeUnit.DAYS.toMillis(30)))
+                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow", 0))
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
-                .setAttributionMode(sJSON.optInt("attribution_mode",
-                        Source.AttributionMode.TRUTHFULLY))
+                .setAttributionMode(
+                        sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
+                .setAggregateFilterData(sJSON.optString("aggregateFilterData", null))
                 .build();
     }
 
@@ -248,6 +248,7 @@ public class DbState {
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
+                .setFilters(tJSON.optString("filters", null))
                 .build();
     }
 
