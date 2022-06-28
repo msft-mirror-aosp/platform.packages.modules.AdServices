@@ -48,7 +48,10 @@ public class AdSelectionManagerDebuggableTest {
             AdSelectionConfigFixture.anAdSelectionConfig();
 
     private AdSelectionClient mAdSelectionClient;
-    private boolean mIsDebugMode;
+
+    private boolean mHasAccessToDevOverrides;
+
+    private String mAccessStatus;
 
     @Before
     public void setup() {
@@ -57,13 +60,19 @@ public class AdSelectionManagerDebuggableTest {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
+        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = devContext.getDevOptionsEnabled();
+        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
+        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
+        mAccessStatus =
+                String.format("Debuggable: %b\n", isDebuggable)
+                        + String.format("Developer options on: %b", isDeveloperMode);
     }
 
     @Test
     public void testAddOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest.Builder()
@@ -80,7 +89,7 @@ public class AdSelectionManagerDebuggableTest {
 
     @Test
     public void testRemoveNotExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         RemoveAdSelectionOverrideRequest request =
                 new RemoveAdSelectionOverrideRequest.Builder()
@@ -96,7 +105,7 @@ public class AdSelectionManagerDebuggableTest {
 
     @Test
     public void testRemoveExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddAdSelectionOverrideRequest addRequest =
                 new AddAdSelectionOverrideRequest.Builder()
@@ -124,7 +133,7 @@ public class AdSelectionManagerDebuggableTest {
 
     @Test
     public void testResetAllOverridesSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()

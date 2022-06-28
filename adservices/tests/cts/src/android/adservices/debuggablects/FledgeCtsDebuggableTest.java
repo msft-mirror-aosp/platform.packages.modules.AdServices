@@ -67,6 +67,9 @@ public class FledgeCtsDebuggableTest {
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
+    private static final String APP_NOT_DEBUGGABLE = "App is not debuggable!";
+    private static final String DEVELOPER_OPTIONS_OFF = "Developer options are off!";
+
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
@@ -76,7 +79,10 @@ public class FledgeCtsDebuggableTest {
     private AdSelectionClient mAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private DevContext mDevContext;
-    private boolean mIsDebugMode;
+
+    private boolean mHasAccessToDevOverrides;
+
+    private String mAccessStatus;
 
     @Before
     public void setup() {
@@ -90,13 +96,20 @@ public class FledgeCtsDebuggableTest {
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
+        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = mDevContext.getDevOptionsEnabled();
+        boolean isDebuggable =
+                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
+        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        mHasAccessToDevOverrides = mDevContext.getDevOptionsEnabled();
+        mAccessStatus =
+                String.format("Debuggable: %b\n", isDebuggable)
+                        + String.format("Developer options on: %b", isDeveloperMode);
     }
 
     @Test
     public void testFledgeFlowSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
