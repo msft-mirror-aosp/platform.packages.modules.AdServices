@@ -27,11 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Class to hold input to measurement source registration calls from embedded web context.
- *
- * @hide
- */
+/** Class to hold input to measurement source registration calls from web context. */
 public final class WebSourceRegistrationRequest implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
@@ -48,7 +44,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
                 }
             };
     /** Registration info to fetch sources. */
-    @NonNull private final List<SourceParams> mSourceParams;
+    @NonNull private final List<WebSourceParams> mWebSourceParams;
 
     /** User interaction input event. */
     @Nullable private final InputEvent mInputEvent;
@@ -67,13 +63,13 @@ public final class WebSourceRegistrationRequest implements Parcelable {
 
     /** Constructor for {@link WebSourceRegistrationRequest}. */
     private WebSourceRegistrationRequest(
-            @NonNull List<SourceParams> sourceParams,
+            @NonNull List<WebSourceParams> webSourceParams,
             @Nullable InputEvent inputEvent,
             @NonNull Uri topOriginUri,
             @Nullable Uri osDestination,
             @Nullable Uri webDestination,
             @Nullable Uri verifiedDestination) {
-        mSourceParams = sourceParams;
+        mWebSourceParams = webSourceParams;
         mInputEvent = inputEvent;
         mTopOriginUri = topOriginUri;
         mOsDestination = osDestination;
@@ -81,16 +77,12 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         mVerifiedDestination = verifiedDestination;
     }
 
-    /**
-     * Unpack OSAttributionSourceRegistrationRequest from parcel.
-     *
-     * @param in parcel
-     */
     private WebSourceRegistrationRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
-        ArrayList<SourceParams> sourceRegistrations = new ArrayList<>();
-        in.readList(sourceRegistrations, SourceParams.class.getClassLoader(), SourceParams.class);
-        mSourceParams = sourceRegistrations;
+        ArrayList<WebSourceParams> sourceRegistrations = new ArrayList<>();
+        in.readList(
+                sourceRegistrations, WebSourceParams.class.getClassLoader(), WebSourceParams.class);
+        mWebSourceParams = sourceRegistrations;
         if (in.readBoolean()) {
             mInputEvent = InputEvent.CREATOR.createFromParcel(in);
         } else {
@@ -119,7 +111,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof WebSourceRegistrationRequest)) return false;
         WebSourceRegistrationRequest that = (WebSourceRegistrationRequest) o;
-        return Objects.equals(mSourceParams, that.mSourceParams)
+        return Objects.equals(mWebSourceParams, that.mWebSourceParams)
                 && Objects.equals(mInputEvent, that.mInputEvent)
                 && Objects.equals(mTopOriginUri, that.mTopOriginUri)
                 && Objects.equals(mOsDestination, that.mOsDestination)
@@ -130,7 +122,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     @Override
     public int hashCode() {
         return Objects.hash(
-                mSourceParams,
+                mWebSourceParams,
                 mInputEvent,
                 mTopOriginUri,
                 mOsDestination,
@@ -140,8 +132,8 @@ public final class WebSourceRegistrationRequest implements Parcelable {
 
     /** Getter for source params. */
     @NonNull
-    public List<SourceParams> getSourceParams() {
-        return mSourceParams;
+    public List<WebSourceParams> getSourceParams() {
+        return mWebSourceParams;
     }
 
     /** Getter for input event. */
@@ -182,7 +174,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
-        out.writeList(mSourceParams);
+        out.writeList(mWebSourceParams);
         if (mInputEvent != null) {
             out.writeBoolean(true);
             mInputEvent.writeToParcel(out, flags);
@@ -213,7 +205,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     /** Builder for {@link WebSourceRegistrationRequest}. */
     public static final class Builder {
         /** Registration info to fetch sources. */
-        @NonNull private List<SourceParams> mSourceParams;
+        @NonNull private List<WebSourceParams> mWebSourceParams;
         /** User interaction input event. */
         @Nullable private InputEvent mInputEvent;
         /** Top level origin of publisher. */
@@ -228,14 +220,15 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         @Nullable private Uri mVerifiedDestination;
 
         /**
-         * Setter for source params.
+         * Setter for source params. It is a required parameter and the provided list should not be
+         * empty.
          *
-         * @param sourceParams source sourceParams
+         * @param webSourceParams source sourceParams
          * @return builder
          */
         @NonNull
-        public Builder setSourceParams(@NonNull List<SourceParams> sourceParams) {
-            mSourceParams = sourceParams;
+        public Builder setSourceParams(@NonNull List<WebSourceParams> webSourceParams) {
+            mWebSourceParams = webSourceParams;
             return this;
         }
 
@@ -252,7 +245,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for top origin Uri.
+         * Setter for top origin Uri. It is a required parameter.
          *
          * @param topOriginUri publisher top origin {@link Uri}
          * @return builder
@@ -264,7 +257,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for OS destination.
+         * Setter for OS destination. At least one of OS destination or web destination is required.
          *
          * @param osDestination app destination {@link Uri}
          * @return builder
@@ -276,7 +269,8 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for web destination.
+         * Setter for web destination. At least one of OS destination or web destination is
+         * required.
          *
          * @param webDestination web destination {@link Uri}
          * @return builder
@@ -302,7 +296,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequest}. */
         @NonNull
         public WebSourceRegistrationRequest build() {
-            if (mSourceParams == null || mSourceParams.isEmpty()) {
+            if (mWebSourceParams == null || mWebSourceParams.isEmpty()) {
                 throw new IllegalArgumentException("source params not provided");
             }
 
@@ -314,7 +308,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
             Objects.requireNonNull(mTopOriginUri);
 
             return new WebSourceRegistrationRequest(
-                    mSourceParams,
+                    mWebSourceParams,
                     mInputEvent,
                     mTopOriginUri,
                     mOsDestination,

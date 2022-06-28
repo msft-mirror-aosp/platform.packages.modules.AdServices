@@ -19,6 +19,10 @@ package android.adservices.cts;
 import android.adservices.exceptions.AdServicesException;
 import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
+import android.adservices.measurement.WebSourceParams;
+import android.adservices.measurement.WebSourceRegistrationRequest;
+import android.adservices.measurement.WebTriggerParams;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
@@ -32,6 +36,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,6 +46,10 @@ import java.util.concurrent.Executors;
 public class CtsMeasurementManagerTest {
 
     private static final String INVALID_SERVER_ADDRESS = "http://example.com";
+    private static final Uri SOURCE_ORIGIN = Uri.parse("http://source-origin.com");
+    private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
+    private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
+    private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     @Test
@@ -123,5 +132,119 @@ public class CtsMeasurementManagerTest {
 
         Assert.assertEquals(Integer.valueOf(
                 MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
+    }
+
+    @Test
+    public void registerWebSource_withCallback_NoErrors() throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        WebSourceParams webSourceParams =
+                new WebSourceParams.Builder()
+                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setAllowDebugKey(false)
+                        .build();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+
+        manager.registerWebSource(
+                new WebSourceRegistrationRequest.Builder()
+                        .setSourceParams(Collections.singletonList(webSourceParams))
+                        .setTopOriginUri(SOURCE_ORIGIN)
+                        .setInputEvent(null)
+                        .setOsDestination(OS_DESTINATION)
+                        .setWebDestination(WEB_DESTINATION)
+                        .setVerifiedDestination(null)
+                        .build(),
+                mExecutorService,
+                callback);
+
+        Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void registerWebSource_withSourceOsDestinationNoCallback_NoErrors() {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+        WebSourceParams webSourceParams =
+                new WebSourceParams.Builder()
+                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setAllowDebugKey(false)
+                        .build();
+        manager.registerWebSource(
+                new WebSourceRegistrationRequest.Builder()
+                        .setSourceParams(Collections.singletonList(webSourceParams))
+                        .setTopOriginUri(SOURCE_ORIGIN)
+                        .setInputEvent(null)
+                        .setOsDestination(OS_DESTINATION)
+                        .setWebDestination(WEB_DESTINATION)
+                        .setVerifiedDestination(null)
+                        .build(),
+                /* executor */ null,
+                /* callback */ null);
+    }
+
+    @Test
+    public void registerWebTrigger_withCallback_NoErrors() throws Exception {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        WebTriggerParams webTriggerParams =
+                new WebTriggerParams.Builder()
+                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setAllowDebugKey(false)
+                        .build();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
+                    @Override
+                    public void onResult(@NonNull Void result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+        manager.registerWebTrigger(
+                new WebTriggerRegistrationRequest.Builder()
+                        .setTriggerParams(Collections.singletonList(webTriggerParams))
+                        .setDestination(DESTINATION)
+                        .build(),
+                mExecutorService,
+                callback);
+
+        Assert.assertNull(future.get());
+    }
+
+    @Test
+    public void registerWebTrigger_withNoCallback_NoErrors() {
+        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+
+        WebTriggerParams webTriggerParams =
+                new WebTriggerParams.Builder()
+                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setAllowDebugKey(false)
+                        .build();
+        manager.registerWebTrigger(
+                new WebTriggerRegistrationRequest.Builder()
+                        .setTriggerParams(Collections.singletonList(webTriggerParams))
+                        .setDestination(DESTINATION)
+                        .build(),
+                mExecutorService,
+                /* callback */ null);
     }
 }

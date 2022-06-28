@@ -18,36 +18,20 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.app.sdksandbox.SdkSandboxManager.RemoteSdkCallback;
+import android.app.sdksandbox.SdkSandboxManager.RequestSurfacePackageCallback;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class FakeRemoteSdkCallback implements RemoteSdkCallback {
-    private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
+public class FakeRequestSurfacePackageCallback implements RequestSurfacePackageCallback {
     private CountDownLatch mSurfacePackageLatch = new CountDownLatch(1);
 
-    private boolean mLoadSdkSuccess;
     private boolean mSurfacePackageSuccess;
 
     private int mErrorCode;
     private String mErrorMsg;
-
-    @Override
-    public void onLoadSdkSuccess(Bundle params) {
-        mLoadSdkSuccess = true;
-        mLoadSdkLatch.countDown();
-    }
-
-    @Override
-    public void onLoadSdkFailure(int errorCode, String errorMsg) {
-        mLoadSdkSuccess = false;
-        mErrorCode = errorCode;
-        mErrorMsg = errorMsg;
-        mLoadSdkLatch.countDown();
-    }
 
     @Override
     public void onSurfacePackageError(int errorCode, String errorMsg) {
@@ -58,26 +42,12 @@ public class FakeRemoteSdkCallback implements RemoteSdkCallback {
     }
 
     @Override
-    public void onSurfacePackageReady(SurfaceControlViewHost.SurfacePackage surfacePackage,
-                int surfacePackageId, Bundle params) {
+    public void onSurfacePackageReady(
+            SurfaceControlViewHost.SurfacePackage surfacePackage,
+            int surfacePackageId,
+            Bundle params) {
         mSurfacePackageSuccess = true;
         mSurfacePackageLatch.countDown();
-    }
-
-    public boolean isLoadSdkSuccessful() {
-        waitForLatch(mLoadSdkLatch);
-        return mLoadSdkSuccess;
-    }
-
-    public int getLoadSdkErrorCode() {
-        waitForLatch(mLoadSdkLatch);
-        assertThat(mLoadSdkSuccess).isFalse();
-        return mErrorCode;
-    }
-
-    public String getLoadSdkErrorMsg() {
-        waitForLatch(mLoadSdkLatch);
-        return mErrorMsg;
     }
 
     public boolean isRequestSurfacePackageSuccessful() {
@@ -97,17 +67,13 @@ public class FakeRemoteSdkCallback implements RemoteSdkCallback {
         return mErrorMsg;
     }
 
-    public void setSurfacePackageLatch(CountDownLatch latch) {
-        mSurfacePackageLatch = latch;
-    }
-
     private void waitForLatch(CountDownLatch latch) {
         try {
             // Wait for callback to be called
             final int waitTime = 5;
             if (!latch.await(waitTime, TimeUnit.SECONDS)) {
                 throw new IllegalStateException(
-                    "Callback not called within " + waitTime + " seconds");
+                        "Callback not called within " + waitTime + " seconds");
             }
         } catch (InterruptedException e) {
             throw new IllegalStateException(

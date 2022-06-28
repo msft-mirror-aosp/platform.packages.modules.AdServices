@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
+    private static final String API_VERSION = "0.1";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
@@ -205,7 +206,9 @@ class AttributionJobHandler {
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
                                                     .setContributions(contributions.get()).build())
-                                    .setStatus(AggregateReport.Status.PENDING).build();
+                                    .setStatus(AggregateReport.Status.PENDING)
+                                    .setApiVersion(API_VERSION)
+                                    .build();
 
                     measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);

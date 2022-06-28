@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3.TriggerV2Extension;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -25,15 +23,18 @@ import static org.junit.Assert.fail;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SqliteObjectMapperWrapper;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -44,31 +45,11 @@ import java.util.UUID;
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTestBase {
 
-    private static final String TOP_LEVEL_FILTERS_JSON_STRING =
-            "{\n"
-                    + "  \"key_1x\": [\"value_1\", \"value_2\"],\n"
-                    + "  \"key_2x\": [\"value_1\", \"value_2\"]\n"
-                    + "}\n";
-
-    private static final String EVENT_TRIGGERS =
-            "[{\"deduplication_key\":2345678,\"priority\":345678,\"trigger_data\":1}]";
-
-    private static final TriggerV2Extension V2_TRIGGER_EXTENSION =
-            new TriggerV2Extension(2345678L, 1L, 345678L);
-
-    private static final Trigger TRIGGER =
-            new Trigger.Builder()
-                    .setAdTechDomain(Uri.parse("https://example.com"))
-                    .setAttributionDestination(Uri.parse("https://example.com/aD"))
-                    .setId("1")
-                    .setTriggerTime(5L)
-                    .setStatus(Trigger.Status.PENDING)
-                    .setRegistrant(Uri.parse("android-app://com.example.abc"))
-                    .setAggregateTriggerData("[{\"key11\": \"val11\"}]")
-                    .setAggregateValues("[{\"key12\": \"val12\"}]")
-                    .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
-                    .setEventTriggers(EVENT_TRIGGERS)
-                    .build();
+    private static final Trigger TRIGGER = TriggerFixture.getValidTrigger();
+    private static final String TRIGGER_ID = UUID.randomUUID().toString();
+    private static final Long DEDUP_KEY = null;
+    private static final long TRIGGER_DATA = 1L;
+    private static final long PRIORITY = 345678L;
 
     private static final AggregateReport AGGREGATE_REPORT =
             AggregateReportFixture.getValidAggregateReport();
@@ -80,7 +61,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         // Setup
         DbHelper dbHelper = getDbHelper(2);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
-        insertTriggerV2(db, TRIGGER, V2_TRIGGER_EXTENSION);
+        insertTriggerV2(db, TRIGGER);
         insertAggregateReportV2(db);
 
         // Execution
@@ -108,7 +89,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
 
     private void compareCursorValues(Trigger trigger, Cursor cursor) {
         assertEquals(
-                trigger.getId(),
+                TRIGGER_ID,
                 cursor.getString(cursor.getColumnIndex(MeasurementTables.TriggerContract.ID)));
         assertEquals(
                 trigger.getAttributionDestination().toString(),
@@ -139,7 +120,7 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 trigger.getAggregateValues(),
                 cursor.getString(
                         cursor.getColumnIndex(MeasurementTables.TriggerContract.AGGREGATE_VALUES)));
-        assertEventTriggersDataDisregardOrder(
+        assertEventTriggersData(
                 cursor.getString(
                         cursor.getColumnIndex(MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
     }
@@ -153,23 +134,19 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
                 SqliteObjectMapperWrapper.constructAggregateReport(cursor)));
     }
 
-    private void insertTriggerV2(
-            SQLiteDatabase db, Trigger trigger, TriggerV2Extension triggerV2Extension) {
+    private void insertTriggerV2(SQLiteDatabase db, Trigger trigger) {
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.TriggerContract.ID, trigger.getId());
+        values.put(MeasurementTables.TriggerContract.ID, TRIGGER_ID);
         values.put(
                 MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 trigger.getAttributionDestination().toString());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
         values.put(
-                MeasurementTables.TriggerContract.DEPRECATED_EVENT_TRIGGER_DATA,
-                triggerV2Extension.getEventTriggerData());
+                MeasurementTables.TriggerContract.DEPRECATED_EVENT_TRIGGER_DATA, TRIGGER_DATA);
         values.put(
-                MeasurementTables.TriggerContract.DEPRECATED_DEDUP_KEY,
-                triggerV2Extension.getDedupKey());
+                MeasurementTables.TriggerContract.DEPRECATED_DEDUP_KEY, DEDUP_KEY);
         values.put(
-                MeasurementTables.TriggerContract.DEPRECATED_PRIORITY,
-                triggerV2Extension.getPriority());
+                MeasurementTables.TriggerContract.DEPRECATED_PRIORITY, PRIORITY);
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(
                 MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
@@ -224,10 +201,16 @@ public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTe
         return new MeasurementDbMigratorV3();
     }
 
-    private void assertEventTriggersDataDisregardOrder(String eventTriggers) {
-        assertTrue(
-                eventTriggers.contains("\"deduplication_key\":2345678")
-                        && eventTriggers.contains("\"priority\":345678")
-                        && eventTriggers.contains("\"trigger_data\":1"));
+    private void assertEventTriggersData(String eventTriggers) {
+        try {
+            JSONArray arr = new JSONArray(eventTriggers);
+            JSONObject obj = arr.getJSONObject(0);
+            long dedupKey = obj.optLong("deduplication_key");
+            assertTrue(obj.has("deduplication_key") && dedupKey == 0);
+            assertTrue(obj.optLong("priority") == PRIORITY);
+            assertTrue(obj.optLong("trigger_data") == TRIGGER_DATA);
+        } catch (JSONException e) {
+            assertTrue("Parsing eventTriggers failed! eventTriggers: " + eventTriggers, false);
+        }
     }
 }
