@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 
 import android.content.ContentValues;
@@ -27,6 +29,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -44,6 +47,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -67,8 +71,9 @@ public class MeasurementDaoTest {
     @After
     public void cleanup() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
-        db.delete("msmt_source", null, null);
-        db.delete("msmt_trigger", null, null);
+        for (String table : MeasurementTables.ALL_MSMT_TABLES) {
+            db.delete(table, null, null);
+        }
     }
 
     @Test
@@ -591,6 +596,187 @@ public class MeasurementDaoTest {
             Assert.assertNotNull(aggregateReport);
             Assert.assertNotNull(aggregateReport.getId());
             Assert.assertTrue(Objects.equals(validAggregateReport, aggregateReport));
+        }
+    }
+
+    @Test
+    public void testDeleteAllMeasurementDataWithEmptyList() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        Source source = SourceFixture.getValidSourceBuilder().setId("S1").build();
+        ContentValues sourceValue = new ContentValues();
+        sourceValue.put("_id", source.getId());
+        db.insert(MeasurementTables.SourceContract.TABLE, null, sourceValue);
+
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder().setId("T1").build();
+        ContentValues triggerValue = new ContentValues();
+        triggerValue.put("_id", trigger.getId());
+        db.insert(MeasurementTables.TriggerContract.TABLE, null, triggerValue);
+
+        EventReport eventReport = new EventReport.Builder().setId("E1").build();
+        ContentValues eventReportValue = new ContentValues();
+        eventReportValue.put("_id", eventReport.getId());
+        db.insert(MeasurementTables.EventReportContract.TABLE, null, eventReportValue);
+
+        AggregateReport aggregateReport = new AggregateReport.Builder().setId("A1").build();
+        ContentValues aggregateReportValue = new ContentValues();
+        aggregateReportValue.put("_id", aggregateReport.getId());
+        db.insert(MeasurementTables.AggregateReport.TABLE, null, aggregateReportValue);
+
+        AttributionRateLimit rateLimit = new AttributionRateLimit.Builder().setId("ARL1").build();
+        ContentValues rateLimitValue = new ContentValues();
+        rateLimitValue.put("_id", rateLimit.getId());
+        db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, rateLimitValue);
+
+        AdtechUrl adTechUrl =
+                new AdtechUrl.Builder()
+                        .setPostbackUrl("https://example.com")
+                        .setAdtechId("AD1")
+                        .build();
+        ContentValues adTechUrlValues = new ContentValues();
+        adTechUrlValues.put("postback_url", adTechUrl.getPostbackUrl());
+        adTechUrlValues.put("ad_tech_id", adTechUrl.getAdtechId());
+        db.insert(MeasurementTables.AdTechUrlsContract.TABLE, null, adTechUrlValues);
+
+        AggregateEncryptionKey key =
+                new AggregateEncryptionKey.Builder()
+                        .setId("K1")
+                        .setKeyId("keyId")
+                        .setPublicKey("publicKey")
+                        .setExpiry(1)
+                        .build();
+        ContentValues keyValues = new ContentValues();
+        keyValues.put("_id", key.getId());
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
+
+        for (String table : MeasurementTables.ALL_MSMT_TABLES) {
+            assertThat(
+                            db.query(
+                                            /* table */ table,
+                                            /* columns */ null,
+                                            /* selection */ null,
+                                            /* selectionArgs */ null,
+                                            /* groupBy */ null,
+                                            /* having */ null,
+                                            /* orderedBy */ null)
+                                    .getCount())
+                    .isEqualTo(0);
+        }
+    }
+
+    @Test
+    public void testDeleteAllMeasurementDataWithNonEmptyList() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+
+        Source source = SourceFixture.getValidSourceBuilder().setId("S1").build();
+        ContentValues sourceValue = new ContentValues();
+        sourceValue.put("_id", source.getId());
+        db.insert(MeasurementTables.SourceContract.TABLE, null, sourceValue);
+
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder().setId("T1").build();
+        ContentValues triggerValue = new ContentValues();
+        triggerValue.put("_id", trigger.getId());
+        db.insert(MeasurementTables.TriggerContract.TABLE, null, triggerValue);
+
+        EventReport eventReport = new EventReport.Builder().setId("E1").build();
+        ContentValues eventReportValue = new ContentValues();
+        eventReportValue.put("_id", eventReport.getId());
+        db.insert(MeasurementTables.EventReportContract.TABLE, null, eventReportValue);
+
+        AggregateReport aggregateReport = new AggregateReport.Builder().setId("A1").build();
+        ContentValues aggregateReportValue = new ContentValues();
+        aggregateReportValue.put("_id", aggregateReport.getId());
+        db.insert(MeasurementTables.AggregateReport.TABLE, null, aggregateReportValue);
+
+        AttributionRateLimit rateLimit = new AttributionRateLimit.Builder().setId("ARL1").build();
+        ContentValues rateLimitValue = new ContentValues();
+        rateLimitValue.put("_id", rateLimit.getId());
+        db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, rateLimitValue);
+
+        AdtechUrl adTechUrl =
+                new AdtechUrl.Builder()
+                        .setPostbackUrl("https://example.com")
+                        .setAdtechId("AD1")
+                        .build();
+        ContentValues adTechUrlValues = new ContentValues();
+        adTechUrlValues.put("postback_url", adTechUrl.getPostbackUrl());
+        adTechUrlValues.put("ad_tech_id", adTechUrl.getAdtechId());
+        db.insert(MeasurementTables.AdTechUrlsContract.TABLE, null, adTechUrlValues);
+
+        AggregateEncryptionKey key =
+                new AggregateEncryptionKey.Builder()
+                        .setId("K1")
+                        .setKeyId("keyId")
+                        .setPublicKey("publicKey")
+                        .setExpiry(1)
+                        .build();
+        ContentValues keyValues = new ContentValues();
+        keyValues.put("_id", key.getId());
+
+        List<String> excludedTables = List.of(MeasurementTables.SourceContract.TABLE);
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction((dao) -> dao.deleteAllMeasurementData(excludedTables));
+
+        for (String table : MeasurementTables.ALL_MSMT_TABLES) {
+            if (!excludedTables.contains(table)) {
+                assertThat(
+                                db.query(
+                                                /* table */ table,
+                                                /* columns */ null,
+                                                /* selection */ null,
+                                                /* selectionArgs */ null,
+                                                /* groupBy */ null,
+                                                /* having */ null,
+                                                /* orderedBy */ null)
+                                        .getCount())
+                        .isEqualTo(0);
+            } else {
+                assertThat(
+                                db.query(
+                                                /* table */ table,
+                                                /* columns */ null,
+                                                /* selection */ null,
+                                                /* selectionArgs */ null,
+                                                /* groupBy */ null,
+                                                /* having */ null,
+                                                /* orderedBy */ null)
+                                        .getCount())
+                        .isNotEqualTo(0);
+            }
+        }
+    }
+
+    /** Test that the variable ALL_MSMT_TABLES actually has all the measurement related tables. */
+    @Test
+    public void testAllMsmtTables() {
+        SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Cursor cursor =
+                db.query(
+                        "sqlite_master",
+                        /* columns */ null,
+                        /* selection */ "type = ? AND name like ?",
+                        /* selectionArgs*/ new String[] {
+                            "table", MeasurementTables.MSMT_TABLE_PREFIX + "%"
+                        },
+                        /* groupBy */ null,
+                        /* having */ null,
+                        /* orderBy */ null);
+
+        List<String> tableNames = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            String tableName = cursor.getString(cursor.getColumnIndex("name"));
+            if (!tableName.equals(MeasurementTables.AdTechUrlsContract.TABLE)) {
+                // The AdTechUrls table is not included in the Measurement tables because it will be
+                // used for a more general purpose.
+                tableNames.add(tableName);
+            }
+        }
+        assertThat(tableNames.size()).isEqualTo(MeasurementTables.ALL_MSMT_TABLES.length);
+        for (String tableName : tableNames) {
+            assertThat(MeasurementTables.ALL_MSMT_TABLES).asList().contains(tableName);
         }
     }
 
