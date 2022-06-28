@@ -142,6 +142,7 @@ public final class MeasurementTables {
         String REPORTING_ORIGIN = "reporting_origin";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
+        String API_VERSION = "api_version";
     }
 
     /** Contract for aggregate encryption key. */
