@@ -42,6 +42,7 @@ public final class AggregateReportTest {
                 .setAggregateAttributionData(
                         new AggregateAttributionData.Builder().build())
                 .setStatus(AggregateReport.Status.PENDING)
+                .setApiVersion("1452")
                 .build();
     }
 
@@ -59,6 +60,7 @@ public final class AggregateReportTest {
                 attributionReport.getDebugCleartextPayload());
         assertNotNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
+        assertEquals("1452", attributionReport.getApiVersion());
     }
 
     @Test
@@ -74,5 +76,6 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getDebugCleartextPayload());
         assertNull(attributionReport.getAggregateAttributionData());
         assertEquals(AggregateReport.Status.PENDING, attributionReport.getStatus());
+        assertNull(attributionReport.getApiVersion());
     }
 }

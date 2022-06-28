@@ -44,7 +44,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
                     return new WebSourceRegistrationRequestInternal[size];
                 }
             };
-    /** Holds input to measurement source registration calls from embedded web context. */
+    /** Holds input to measurement source registration calls from web context. */
     @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
     /** Holds package info of where the request is coming from. */
     @NonNull private final AttributionSource mAttributionSource;

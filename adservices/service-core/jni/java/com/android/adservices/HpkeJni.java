@@ -41,4 +41,15 @@ public class HpkeJni {
      */
     public static synchronized native byte[] encrypt(
             @NonNull byte[] publicKey, @NonNull byte[] plainText, @NonNull byte[] associatedData);
+
+    /**
+     * Decryption operation using Hybrid Public Key Encryption (HPKE)
+     *
+     * @param privateKey used to decrypt the ciphertext.
+     * @param ciphertext the encrypted message to be decrypted.
+     * @param associatedData used on encryption providing additional data keeping message integrity.
+     * @return plaintext decrypted result, plaintext would be null if decryption fails.
+     */
+    public static synchronized native byte[] decrypt(
+            @NonNull byte[] privateKey, @NonNull byte[] ciphertext, @NonNull byte[] associatedData);
 }

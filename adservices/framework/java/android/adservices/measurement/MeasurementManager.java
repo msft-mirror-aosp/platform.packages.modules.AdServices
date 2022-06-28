@@ -17,7 +17,9 @@ package android.adservices.measurement;
 
 import android.adservices.AdServicesApiUtil;
 import android.adservices.exceptions.AdServicesException;
+import android.adservices.exceptions.MeasurementException;
 import android.annotation.CallbackExecutor;
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -31,6 +33,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -40,6 +44,46 @@ import java.util.concurrent.Executor;
  *
  */
 public class MeasurementManager {
+    /**
+     * Result codes from {@link MeasurementManager} methods.
+     *
+     * @hide
+     */
+    @IntDef(
+            value = {
+                RESULT_OK,
+                RESULT_INTERNAL_ERROR,
+                RESULT_INVALID_ARGUMENT,
+                RESULT_IO_ERROR,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ResultCode {}
+
+    /** The call was successful. */
+    public static final int RESULT_OK = 0;
+
+    /**
+     * An internal error occurred within Measurement API, which the caller cannot address. A retry
+     * might succeed.
+     *
+     * <p>This error may be considered similar to {@link IllegalStateException}
+     */
+    public static final int RESULT_INTERNAL_ERROR = 1;
+
+    /**
+     * The caller supplied invalid arguments to the call.
+     *
+     * <p>This error may be considered similar to {@link IllegalArgumentException}.
+     */
+    public static final int RESULT_INVALID_ARGUMENT = 2;
+
+    /**
+     * An issue occurred reading or writing to storage. A retry might succeed.
+     *
+     * <p>This error may be considered similar to {@link java.io.IOException}.
+     */
+    public static final int RESULT_IO_ERROR = 3;
+
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
 
@@ -131,19 +175,22 @@ public class MeasurementManager {
     }
 
     /**
-     * Register an attribution source(click or view) from an embedded web context. This API will not
-     * process any redirects, all registration URLs should be supplied with the request. At least
-     * one of osDestination or webDestination parameters are required to be provided.
+     * Register an attribution source(click or view) from web context. This API will not process any
+     * redirects, all registration URLs should be supplied with the request. At least one of
+     * osDestination or webDestination parameters are required to be provided. If the registration
+     * is successful, {@code callback}'s {@link OutcomeReceiver#onResult} is invoked with null. In
+     * case of failure, a {@link MeasurementException} is sent through {@code callback}'s {@link
+     * OutcomeReceiver#onError}. Both success and failure feedback are executed on the provided
+     * {@link Executor}.
      *
      * @param request source registration request
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     * @hide
      */
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequest request,
             @Nullable Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
@@ -164,24 +211,31 @@ public class MeasurementManager {
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
             if (callback != null && executor != null) {
-                executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
+                executor.execute(
+                        () ->
+                                callback.onError(
+                                        new MeasurementException(
+                                                RESULT_INTERNAL_ERROR, "Internal Error")));
             }
         }
     }
 
     /**
-     * Register an attribution trigger(click or view) from an embedded web context. This API will
-     * not process any redirects, all registration URLs should be supplied with the request.
+     * Register an attribution trigger(click or view) from web context. This API will not process
+     * any redirects, all registration URLs should be supplied with the request. If the registration
+     * is successful, {@code callback}'s {@link OutcomeReceiver#onResult} is invoked with null. In
+     * case of failure, a {@link MeasurementException} is sent through {@code callback}'s {@link
+     * OutcomeReceiver#onError}. Both success and failure feedback are executed on the provided
+     * {@link Executor}.
      *
      * @param request trigger registration request
      * @param executor used by callback to dispatch results
      * @param callback intended to notify asynchronously the API result
-     * @hide
      */
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequest request,
             @Nullable Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
@@ -202,7 +256,11 @@ public class MeasurementManager {
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
             if (callback != null && executor != null) {
-                executor.execute(() -> callback.onError(new AdServicesException("Internal Error")));
+                executor.execute(
+                        () ->
+                                callback.onError(
+                                        new MeasurementException(
+                                                RESULT_INTERNAL_ERROR, "Internal Error")));
             }
         }
     }

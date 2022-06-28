@@ -39,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 public class AggregateReportingJobHandler {
 
     private final DatastoreManager mDatastoreManager;
-    private static final String API_VERSION_PLACEHOLDER = "1";
 
     AggregateReportingJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
@@ -161,7 +160,7 @@ public class AggregateReportingJobHandler {
                 .setScheduledReportTime(
                         String.valueOf(TimeUnit.MILLISECONDS.toSeconds(
                                 aggregateReport.getScheduledReportTime())))
-                .setVersion(API_VERSION_PLACEHOLDER) // For now this is just 1 as a placeholder
+                .setApiVersion(aggregateReport.getApiVersion())
                 .setReportingOrigin(aggregateReport.getReportingOrigin().toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .build()

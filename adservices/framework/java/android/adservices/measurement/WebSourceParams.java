@@ -23,60 +23,56 @@ import android.os.Parcelable;
 
 import java.util.Objects;
 
-/**
- * Class holding source registration parameters.
- *
- * @hide
- */
-public final class SourceParams implements Parcelable {
+/** Class holding source registration parameters. */
+public final class WebSourceParams implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
-    public static final Parcelable.Creator<SourceParams> CREATOR =
-            new Parcelable.Creator<SourceParams>() {
+    public static final Parcelable.Creator<WebSourceParams> CREATOR =
+            new Parcelable.Creator<WebSourceParams>() {
                 @Override
-                public SourceParams createFromParcel(Parcel in) {
-                    return new SourceParams(in);
+                public WebSourceParams createFromParcel(Parcel in) {
+                    return new WebSourceParams(in);
                 }
 
                 @Override
-                public SourceParams[] newArray(int size) {
-                    return new SourceParams[size];
+                public WebSourceParams[] newArray(int size) {
+                    return new WebSourceParams[size];
                 }
             };
     /** Used to fetch registration metadata. */
     @NonNull private final Uri mRegistrationUri;
     /** True, if debugKey should be allowed in reports. */
-    private final boolean mDebugEnabled;
+    private final boolean mAllowDebugKey;
 
     /**
-     * Constructor for {@link SourceParams}.
+     * Constructor for {@link WebSourceParams}.
      *
      * @param registrationUri registration URI
-     * @param debugEnabled flag for enabling or disabling debug keys
+     * @param allowDebugKey flag to allow or disallow debug keys
      */
-    private SourceParams(@NonNull Uri registrationUri, boolean debugEnabled) {
+    private WebSourceParams(@NonNull Uri registrationUri, boolean allowDebugKey) {
         mRegistrationUri = registrationUri;
-        mDebugEnabled = debugEnabled;
+        mAllowDebugKey = allowDebugKey;
     }
 
     /** Unpack a SourceRegistration from a Parcel. */
-    private SourceParams(@NonNull Parcel in) {
+    private WebSourceParams(@NonNull Parcel in) {
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
-        mDebugEnabled = in.readBoolean();
+        mAllowDebugKey = in.readBoolean();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof SourceParams)) return false;
-        SourceParams that = (SourceParams) o;
-        return mDebugEnabled == that.mDebugEnabled
+        if (!(o instanceof WebSourceParams)) return false;
+        WebSourceParams that = (WebSourceParams) o;
+        return mAllowDebugKey == that.mAllowDebugKey
                 && Objects.equals(mRegistrationUri, that.mRegistrationUri);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mRegistrationUri, mDebugEnabled);
+        return Objects.hash(mRegistrationUri, mAllowDebugKey);
     }
 
     /** Getter for registration Uri. */
@@ -85,9 +81,12 @@ public final class SourceParams implements Parcelable {
         return mRegistrationUri;
     }
 
-    /** Getter for debug enablement flag. */
-    public boolean isDebugEnabled() {
-        return mDebugEnabled;
+    /**
+     * Getter for debug allowed/disallowed flag. Its value as {@code true} means to allow parsing
+     * debug keys from registration responses and their addition in the generated reports.
+     */
+    public boolean isAllowDebugKey() {
+        return mAllowDebugKey;
     }
 
     @Override
@@ -99,23 +98,23 @@ public final class SourceParams implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mRegistrationUri.writeToParcel(out, flags);
-        out.writeBoolean(mDebugEnabled);
+        out.writeBoolean(mAllowDebugKey);
     }
 
-    /** A builder for {@link SourceParams}. */
+    /** A builder for {@link WebSourceParams}. */
     public static final class Builder {
         /** Used to fetch registration metadata. */
         private Uri mRegistrationUri;
         /** True, if debugKey should be allowed in reports. */
-        private boolean mDebugEnabled;
+        private boolean mAllowDebugKey;
 
-        /** Builder for {@link SourceParams}. */
+        /** Builder for {@link WebSourceParams}. */
         public Builder() {
-            mDebugEnabled = false;
+            mAllowDebugKey = false;
         }
 
         /**
-         * Setter for registration Uri.
+         * Setter for registration Uri. It is a required parameter.
          *
          * @param registrationUri registration URI
          * @return builder
@@ -127,29 +126,30 @@ public final class SourceParams implements Parcelable {
         }
 
         /**
-         * Setter for debug enablement flag.
+         * Setter for debug allow/disallow flag. Setting it to true will allow parsing debug keys
+         * from registration responses and their addition in the generated reports.
          *
-         * @param debugEnabled debug enabler flag
+         * @param allowDebugKey debug allow/disallow flag
          * @return builder
          */
         @NonNull
-        public Builder setDebugEnabled(boolean debugEnabled) {
-            mDebugEnabled = debugEnabled;
+        public Builder setAllowDebugKey(boolean allowDebugKey) {
+            mAllowDebugKey = allowDebugKey;
             return this;
         }
 
         /**
-         * Built immutable {@link SourceParams}.
+         * Built immutable {@link WebSourceParams}.
          *
-         * @return immutable {@link SourceParams}
+         * @return immutable {@link WebSourceParams}
          */
         @NonNull
-        public SourceParams build() {
+        public WebSourceParams build() {
             if (mRegistrationUri == null) {
                 throw new IllegalArgumentException("registration URI unset");
             }
 
-            return new SourceParams(mRegistrationUri, mDebugEnabled);
+            return new WebSourceParams(mRegistrationUri, mAllowDebugKey);
         }
     }
 }

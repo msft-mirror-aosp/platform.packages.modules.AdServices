@@ -23,60 +23,56 @@ import android.os.Parcelable;
 
 import java.util.Objects;
 
-/**
- * Class holding trigger registration parameters.
- *
- * @hide
- */
-public final class TriggerParams implements Parcelable {
+/** Class holding trigger registration parameters. */
+public final class WebTriggerParams implements Parcelable {
     /** Creator for Paracelable (via reflection). */
     @NonNull
-    public static final Creator<TriggerParams> CREATOR =
-            new Creator<TriggerParams>() {
+    public static final Creator<WebTriggerParams> CREATOR =
+            new Creator<WebTriggerParams>() {
                 @Override
-                public TriggerParams createFromParcel(Parcel in) {
-                    return new TriggerParams(in);
+                public WebTriggerParams createFromParcel(Parcel in) {
+                    return new WebTriggerParams(in);
                 }
 
                 @Override
-                public TriggerParams[] newArray(int size) {
-                    return new TriggerParams[size];
+                public WebTriggerParams[] newArray(int size) {
+                    return new WebTriggerParams[size];
                 }
             };
     /** Used to fetch registration metadata. */
     @NonNull private final Uri mRegistrationUri;
     /** True, if debugKey should be allowed in reports. */
-    private final boolean mDebugEnabled;
+    private final boolean mAllowDebugKey;
 
     /**
-     * Constructor for {@link TriggerParams}.
+     * Constructor for {@link WebTriggerParams}.
      *
      * @param registrationUri registration URI
-     * @param debugEnabled flag for enabling or disabling debug keys
+     * @param allowDebugKey flag for allowing or disallowing debug keys in reports
      */
-    private TriggerParams(@NonNull Uri registrationUri, boolean debugEnabled) {
+    private WebTriggerParams(@NonNull Uri registrationUri, boolean allowDebugKey) {
         mRegistrationUri = registrationUri;
-        mDebugEnabled = debugEnabled;
+        mAllowDebugKey = allowDebugKey;
     }
 
     /** Unpack a TriggerRegistration from a Parcel. */
-    private TriggerParams(@NonNull Parcel in) {
+    private WebTriggerParams(@NonNull Parcel in) {
         mRegistrationUri = Uri.CREATOR.createFromParcel(in);
-        mDebugEnabled = in.readBoolean();
+        mAllowDebugKey = in.readBoolean();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TriggerParams)) return false;
-        TriggerParams that = (TriggerParams) o;
-        return mDebugEnabled == that.mDebugEnabled
+        if (!(o instanceof WebTriggerParams)) return false;
+        WebTriggerParams that = (WebTriggerParams) o;
+        return mAllowDebugKey == that.mAllowDebugKey
                 && Objects.equals(mRegistrationUri, that.mRegistrationUri);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mRegistrationUri, mDebugEnabled);
+        return Objects.hash(mRegistrationUri, mAllowDebugKey);
     }
 
     /** Getter for registration Uri. */
@@ -85,9 +81,12 @@ public final class TriggerParams implements Parcelable {
         return mRegistrationUri;
     }
 
-    /** Getter for debug enablement flag. */
-    public boolean isDebugEnabled() {
-        return mDebugEnabled;
+    /**
+     * Getter for debug allowed/disallowed flag. Its value as {@code true} means to allow parsing
+     * debug keys from registration responses and their addition in the generated reports.
+     */
+    public boolean isAllowDebugKey() {
+        return mAllowDebugKey;
     }
 
     @Override
@@ -99,23 +98,23 @@ public final class TriggerParams implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mRegistrationUri.writeToParcel(out, flags);
-        out.writeBoolean(mDebugEnabled);
+        out.writeBoolean(mAllowDebugKey);
     }
 
-    /** A builder for {@link TriggerParams}. */
+    /** A builder for {@link WebTriggerParams}. */
     public static final class Builder {
         /** Used to fetch registration metadata. */
         private Uri mRegistrationUri;
         /** True, if debugKey should be allowed in reports. */
-        private boolean mDebugEnabled;
+        private boolean mAllowDebugKey;
 
-        /** Builder for {@link TriggerParams}. */
+        /** Builder for {@link WebTriggerParams}. */
         public Builder() {
-            mDebugEnabled = false;
+            mAllowDebugKey = false;
         }
 
         /**
-         * Setter for registration Uri.
+         * Setter for registration Uri. It is a required parameter.
          *
          * @param registrationUri registration URI
          * @return builder
@@ -127,29 +126,30 @@ public final class TriggerParams implements Parcelable {
         }
 
         /**
-         * Setter for debug enablement flag.
+         * Setter for debug allow/disallow flag. Setting it to true will allow parsing debug keys
+         * from registration responses and their addition in the generated reports.
          *
-         * @param debugEnabled debug enablement flag
+         * @param allowDebugKey debug allow/disallow flag
          * @return builder
          */
         @NonNull
-        public Builder setDebugEnabled(boolean debugEnabled) {
-            mDebugEnabled = debugEnabled;
+        public Builder setAllowDebugKey(boolean allowDebugKey) {
+            mAllowDebugKey = allowDebugKey;
             return this;
         }
 
         /**
-         * Built immutable {@link TriggerParams}.
+         * Built immutable {@link WebTriggerParams}.
          *
-         * @return immutable {@link TriggerParams}
+         * @return immutable {@link WebTriggerParams}
          */
         @NonNull
-        public TriggerParams build() {
+        public WebTriggerParams build() {
             if (mRegistrationUri == null) {
                 throw new IllegalArgumentException("registration URI unset");
             }
 
-            return new TriggerParams(mRegistrationUri, mDebugEnabled);
+            return new WebTriggerParams(mRegistrationUri, mAllowDebugKey);
         }
     }
 }
