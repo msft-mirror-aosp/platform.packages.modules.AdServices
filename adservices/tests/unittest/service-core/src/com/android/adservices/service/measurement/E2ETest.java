@@ -16,10 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.measurement.MeasurementManager.RESULT_OK;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
-import android.adservices.measurement.IMeasurementCallback;
 import android.content.AttributionSource;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -598,16 +598,22 @@ public abstract class E2ETest {
 
     void processAction(RegisterSource sourceRegistration) throws IOException {
         prepareRegistrationServer(sourceRegistration);
-        Assert.assertTrue("MeasurementImpl.register source failed",
-                mMeasurementImpl.register(sourceRegistration.mRegistrationRequest,
-                    sourceRegistration.mTimestamp) == IMeasurementCallback.RESULT_OK);
+        Assert.assertTrue(
+                "MeasurementImpl.register source failed",
+                mMeasurementImpl.register(
+                                sourceRegistration.mRegistrationRequest,
+                                sourceRegistration.mTimestamp)
+                        == RESULT_OK);
     }
 
     void processAction(RegisterTrigger triggerRegistration) throws IOException {
         prepareRegistrationServer(triggerRegistration);
-        Assert.assertTrue("MeasurementImpl.register trigger failed",
-                mMeasurementImpl.register(triggerRegistration.mRegistrationRequest,
-                    triggerRegistration.mTimestamp) == IMeasurementCallback.RESULT_OK);
+        Assert.assertTrue(
+                "MeasurementImpl.register trigger failed",
+                mMeasurementImpl.register(
+                                triggerRegistration.mRegistrationRequest,
+                                triggerRegistration.mTimestamp)
+                        == RESULT_OK);
         Assert.assertTrue("AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
     }
