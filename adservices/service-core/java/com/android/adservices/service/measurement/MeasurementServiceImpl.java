@@ -15,10 +15,14 @@
  */
 package com.android.adservices.service.measurement;
 
-import android.adservices.measurement.DeletionRequest;
+import static com.android.adservices.ResultCode.RESULT_OK;
+
+import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.IMeasurementService;
+import android.adservices.measurement.MeasurementErrorResponse;
+import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
@@ -61,8 +65,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 () -> {
                     try {
                         LogUtil.d("MeasurementServiceImpl: register: ");
-                        callback.onResult(
-                                mMeasurementImpl.register(request, System.currentTimeMillis()));
+                        mMeasurementImpl.register(request, System.currentTimeMillis());
+                        callback.onResult();
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                     }
@@ -80,7 +84,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     try {
                         LogUtil.d("MeasurementServiceImpl: registerWebSource: ");
                         // TODO: call measurement Impl and remove the callback invocation below
-                        iMeasurementCallback.onResult(IMeasurementCallback.RESULT_OK);
+                        iMeasurementCallback.onResult();
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                     }
@@ -96,7 +100,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     try {
                         LogUtil.d("MeasurementServiceImpl: registerWebTrigger: ");
                         // TODO: call measurement Impl and remove the callback invocation below
-                        iMeasurementCallback.onResult(IMeasurementCallback.RESULT_OK);
+                        iMeasurementCallback.onResult();
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                     }
@@ -105,14 +109,26 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
     @Override
     public void deleteRegistrations(
-            @NonNull DeletionRequest request, @NonNull IMeasurementCallback callback) {
+            @NonNull DeletionParam request, @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-                        callback.onResult(mMeasurementImpl.deleteRegistrations(request));
+
+                        @ResultCode int resultCode = mMeasurementImpl.deleteRegistrations(request);
+                        if (resultCode == RESULT_OK) {
+                            callback.onResult();
+                        } else {
+                            callback.onFailure(
+                                    new MeasurementErrorResponse.Builder()
+                                            .setResultCode(resultCode)
+                                            .setErrorMessage(
+                                                    "Encountered failure during "
+                                                            + "Measurement deletion.")
+                                            .build());
+                        }
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                     }

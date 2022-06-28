@@ -13,80 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package android.adservices.measurement;
 
-import android.content.Context;
+import static com.google.common.truth.Truth.assertThat;
+
 import android.net.Uri;
-import android.os.Parcel;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
 import java.time.Instant;
 
-
-/**
- * Unit tests for {@link android.adservices.measurement.DeletionRequest}
- */
+/** Unit test for {@link android.adservices.measurement.DeletionRequest} */
 @SmallTest
-public final class DeletionRequestTest {
-    private static final String TAG = "DeletionRequestTest";
+public class DeletionRequestTest {
+    private static final String ORIGIN_URI = "http://foo.com";
+    private static final Instant START = Instant.ofEpochSecond(0);
+    private static final Instant END = Instant.now();
 
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    @Test
+    public void testNonNullParams() {
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setOriginUri(Uri.parse(ORIGIN_URI))
+                        .setStart(START)
+                        .setEnd(END)
+                        .build();
 
-    private DeletionRequest createExample() {
-        return new DeletionRequest.Builder()
-            .setOriginUri(Uri.parse("http://foo.com"))
-            .setStart(Instant.ofEpochMilli(1642060000000L))
-            .setEnd(Instant.ofEpochMilli(1642060538000L))
-            .setAttributionSource(sContext.getAttributionSource())
-            .build();
-    }
-
-    void verifyExample(DeletionRequest request) {
-        assertEquals("http://foo.com", request.getOriginUri().toString());
-        assertEquals(1642060000000L, request.getStart().toEpochMilli());
-        assertEquals(1642060538000L, request.getEnd().toEpochMilli());
-        assertNotNull(request.getAttributionSource());
+        assertThat(request.getOriginUri()).isEqualTo(Uri.parse(ORIGIN_URI));
+        assertThat(request.getStart()).isEqualTo(START);
+        assertThat(request.getEnd()).isEqualTo(END);
     }
 
     @Test
-    public void testNoAttributionSource() throws Exception {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new DeletionRequest.Builder().build();
-                });
+    public void testNullParams() {
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setOriginUri(null)
+                        .setStart(null)
+                        .setEnd(null)
+                        .build();
+
+        assertThat(request.getOriginUri()).isEqualTo(null);
+        assertThat(request.getStart()).isEqualTo(null);
+        assertThat(request.getEnd()).isEqualTo(null);
     }
 
     @Test
-    public void testDefaults() throws Exception {
-        DeletionRequest request = new DeletionRequest.Builder()
-                .setAttributionSource(sContext.getAttributionSource()).build();
-        assertEquals("", request.getOriginUri().toString());
-        assertNull(request.getStart());
-        assertNull(request.getEnd());
-        assertNotNull(request.getAttributionSource());
-    }
+    public void testDefaultParams() {
+        DeletionRequest request = new DeletionRequest.Builder().build();
 
-    @Test
-    public void testCreation() throws Exception {
-        verifyExample(createExample());
-    }
-
-    @Test
-    public void testParcelingDelete() throws Exception {
-        Parcel p = Parcel.obtain();
-        createExample().writeToParcel(p, 0);
-        p.setDataPosition(0);
-        verifyExample(DeletionRequest.CREATOR.createFromParcel(p));
-        p.recycle();
+        assertThat(request.getOriginUri()).isEqualTo(null);
+        assertThat(request.getStart()).isEqualTo(null);
+        assertThat(request.getEnd()).isEqualTo(null);
     }
 }

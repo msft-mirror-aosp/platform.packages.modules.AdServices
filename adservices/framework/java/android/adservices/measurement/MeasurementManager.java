@@ -35,15 +35,16 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
  * MeasurementManager.
- *
  */
 public class MeasurementManager {
+
+    // TODO (b/237295093): Remove the codes and just surface the corresponding Java standatd
+    //  exceptions.
     /**
      * Result codes from {@link MeasurementManager} methods.
      *
@@ -129,13 +130,17 @@ public class MeasurementManager {
                     registrationRequest,
                     new IMeasurementCallback.Stub() {
                         @Override
-                        public void onResult(int result) {
+                        public void onResult() {
                             if (callback != null && executor != null) {
-                                executor.execute(() -> {
-                                    callback.onResult(null);
-                                });
+                                executor.execute(
+                                        () -> {
+                                            callback.onResult(null);
+                                        });
                             }
                         }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse failureParcel) {}
                     });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
@@ -202,11 +207,14 @@ public class MeasurementManager {
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
-                        public void onResult(int result) {
+                        public void onResult() {
                             if (callback != null && executor != null) {
                                 executor.execute(() -> callback.onResult(null));
                             }
                         }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse failureParcel) {}
                     });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
@@ -247,11 +255,14 @@ public class MeasurementManager {
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
-                        public void onResult(int result) {
+                        public void onResult() {
                             if (callback != null && executor != null) {
                                 executor.execute(() -> callback.onResult(null));
                             }
                         }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse failureParcel) {}
                     });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
@@ -290,70 +301,78 @@ public class MeasurementManager {
 
     /**
      * Delete previously registered data.
+     *
      * @hide
      */
-    public void deleteRegistrations(
-            @NonNull DeletionRequest deletionRequest,
-            @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
-        Objects.requireNonNull(deletionRequest);
+    private void deleteRegistrations(
+            @NonNull DeletionParam deletionParam,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Void, Exception> callback) {
+        Objects.requireNonNull(deletionParam);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
         final IMeasurementService service = getService();
 
         try {
             service.deleteRegistrations(
-                    deletionRequest,
+                    deletionParam,
                     new IMeasurementCallback.Stub() {
                         @Override
-                        public void onResult(int result) {
-                            if (callback != null && executor != null) {
-                                executor.execute(() -> {
-                                    callback.onResult(null);
-                                });
-                            }
+                        public void onResult() {
+                            executor.execute(() -> callback.onResult(null));
+                        }
+
+                        @Override
+                        public void onFailure(MeasurementErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onError(failureParcel.asException());
+                                    });
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e("RemoteException", e);
-            if (callback != null && executor != null) {
-                executor.execute(() ->
-                        callback.onError(new AdServicesException("Internal Error"))
-                );
-            }
+            executor.execute(
+                    () -> callback.onError(new MeasurementException(RESULT_INTERNAL_ERROR)));
         }
     }
 
     /**
-     * Delete previous registrations.
-     * @hide
+     * Delete previous registrations. If the deletion is successful, the callback's {@link
+     * OutcomeReceiver#onResult} is invoked with null. In case of failure, a {@link Exception} is
+     * sent through the callback's {@link OutcomeReceiver#onError}. Both success and failure
+     * feedback are executed on the provided {@link Executor}.
+     *
+     * @param deletionRequest The request for deleting data.
+     * @param executor The executor to run callback.
+     * @param callback intended to notify asynchronously the API result.
      */
     public void deleteRegistrations(
-            @NonNull Uri origin,
-            @Nullable Instant start,
-            @Nullable Instant end,
-            @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
-        Objects.requireNonNull(origin);
+            @NonNull DeletionRequest deletionRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Void, Exception> callback) {
         deleteRegistrations(
-                new DeletionRequest.Builder()
-                .setOriginUri(origin)
-                .setStart(start)
-                .setEnd(end)
-                .setAttributionSource(mContext.getAttributionSource())
-                .build(),
-                executor, callback);
+                new DeletionParam.Builder()
+                        .setOriginUri(deletionRequest.getOriginUri())
+                        .setStart(deletionRequest.getStart())
+                        .setEnd(deletionRequest.getEnd())
+                        .setAttributionSource(mContext.getAttributionSource())
+                        .build(),
+                executor,
+                callback);
     }
 
     /**
      * Get Measurement API status.
      *
+     * <p>The callback's {@code Integer} value is one of {@code MeasurementApiState}.
+     *
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
-     *
-     * The callback's {@code Integer} value is one of {@code MeasurementApiState}.
      */
     public void getMeasurementApiStatus(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Integer, AdServicesException> callback) {
+            @NonNull OutcomeReceiver<Integer, Exception> callback) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
