@@ -20,6 +20,9 @@
         xmlns:tools="http://schemas.android.com/tools"
         package="com.android.adservices.tests.ui">
 
+    <!-- New permission introduced in T+ devices needed to show notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
             android:debuggable="true"
             android:label="AdServices UI Test Cases"
