@@ -32,8 +32,6 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFrag
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * View model for the topics view and blocked topics view of the AdServices Settings App. This view
@@ -83,7 +81,7 @@ public class TopicsViewModel extends AndroidViewModel {
      * @param topic the topic to be blocked.
      */
     public void revokeTopicConsent(Topic topic) {
-        // TODO(b/232417846): mConsentManager.revokeConsentForTopic(topic);
+        mConsentManager.revokeConsentForTopic(topic);
         mTopics.postValue(getTopicsFromConsentManager());
         mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
     }
@@ -113,7 +111,7 @@ public class TopicsViewModel extends AndroidViewModel {
      * @param topic the topic to be restored.
      */
     public void restoreTopicConsent(Topic topic) {
-        // TODO(b/232417846): mConsentManager.restoreConsentForTopic(topic);
+        mConsentManager.restoreConsentForTopic(topic);
         mTopics.postValue(getTopicsFromConsentManager());
         mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
     }
@@ -168,19 +166,10 @@ public class TopicsViewModel extends AndroidViewModel {
     }
 
     private ImmutableList<Topic> getTopicsFromConsentManager() {
-        // TODO(b/232417846): return mConsentManager.getKnownTopicsWithConsent();
-        List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(1, 1, 1));
-        tempList.add(Topic.create(2, 1, 1));
-        tempList.add(Topic.create(3, 1, 1));
-        return ImmutableList.copyOf(tempList);
+        return mConsentManager.getKnownTopicsWithConsent();
     }
 
     private ImmutableList<Topic> getBlockedTopicsFromConsentManager() {
-        // TODO(b/232417846): return mConsentManager.getTopicsWithRevokedConsent();
-        List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(4, 1, 1));
-        tempList.add(Topic.create(5, 1, 1));
-        return ImmutableList.copyOf(tempList);
+        return mConsentManager.getTopicsWithRevokedConsent();
     }
 }

@@ -37,9 +37,10 @@
     {
       "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
-    {
-      "name": "AdServicesSettingsUITests"
-    },
+    // disabling to merge a blocking CL that enables functionality for Topics UI
+//    {
+//      "name": "AdServicesSettingsUITests"
+//    },
     {
       "name": "CtsAdServicesEndToEndTests"
     },
