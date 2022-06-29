@@ -35,6 +35,8 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -351,9 +353,16 @@ public class MeasurementManager {
             @NonNull DeletionRequest deletionRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, Exception> callback) {
+        List<Uri> origins =
+                deletionRequest.getOriginUri() == null
+                        ? Collections.emptyList()
+                        : Collections.singletonList(deletionRequest.getOriginUri());
         deleteRegistrations(
                 new DeletionParam.Builder()
-                        .setOriginUri(deletionRequest.getOriginUri())
+                        .setOriginUris(origins)
+                        .setDomainUris(Collections.emptyList())
+                        .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                         .setStart(deletionRequest.getStart())
                         .setEnd(deletionRequest.getEnd())
                         .setAttributionSource(mContext.getAttributionSource())

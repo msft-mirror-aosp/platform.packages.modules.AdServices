@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
+import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -227,15 +228,22 @@ public interface IMeasurementDao {
      * and/or a range of dates.
      *
      * @param registrant who owns the data
-     * @param origin uri for deletion. May be null
      * @param start time for deletion range. May be null. If null, end must be null as well
      * @param end time for deletion range. May be null. If null, start must be null as well
+     * @param origins list of origins which should be used for matching
+     * @param domains list of domains which should be used for matching
+     * @param matchBehavior {@link DeletionRequest.MatchBehavior} to be used for matching
+     * @param deletionMode {@link DeletionRequest.DeletionMode} for selecting data to be deleted
      */
     void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Uri origin,
             @Nullable Instant start,
-            @Nullable Instant end) throws DatastoreException;
+            @Nullable Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior,
+            @DeletionRequest.DeletionMode int deletionMode)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
