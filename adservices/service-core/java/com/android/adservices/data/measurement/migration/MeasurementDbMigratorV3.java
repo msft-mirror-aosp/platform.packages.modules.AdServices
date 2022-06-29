@@ -30,6 +30,8 @@ import java.util.stream.Stream;
 /** Migrates Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
 
+    private static final String API_VERSION = "0.1";
+
     private static final String TRIGGER_BACKUP_TABLE_V3 =
             MeasurementTables.TriggerContract.TABLE + "_backup_v3";
 
@@ -73,7 +75,8 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME + " INTEGER, "
                     + MeasurementTables.AggregateReport.REPORTING_ORIGIN + " TEXT, "
                     + MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD + " TEXT, "
-                    + MeasurementTables.SourceContract.STATUS + " INTEGER "
+                    + MeasurementTables.SourceContract.STATUS + " INTEGER, "
+                    + MeasurementTables.AggregateReport.API_VERSION + " TEXT "
                     + ")";
 
     private static final String TRIGGER_V3_COLUMNS =
@@ -171,6 +174,11 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 + ")"
     };
 
+    private static final String[] MIGRATE_API_VERSION = {
+        String.format("UPDATE %1$s SET %2$s = '%3$s'", MeasurementTables.AggregateReport.TABLE,
+                MeasurementTables.AggregateReport.API_VERSION, API_VERSION)
+    };
+
     public MeasurementDbMigratorV3() {
         super(3);
     }
@@ -203,7 +211,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     }
 
     private static String[] migrationScriptV3PostDataTransfer() {
-        return Stream.of(DROP_TABLES_V3, ALTER_TABLES_V3, CREATE_INDEXES_V3)
+        return Stream.of(DROP_TABLES_V3, ALTER_TABLES_V3, CREATE_INDEXES_V3, MIGRATE_API_VERSION)
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
     }

@@ -46,7 +46,9 @@ public class CustomAudienceCtsDebuggableTest {
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
 
-    private boolean mIsDebugMode;
+    private boolean mHasAccessToDevOverrides;
+
+    private String mAccessStatus;
 
     @Before
     public void setup() {
@@ -56,13 +58,19 @@ public class CustomAudienceCtsDebuggableTest {
                         .setContext(context)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
+        DevContextFilter devContextFilter = DevContextFilter.create(context);
         DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
-        mIsDebugMode = devContext.getDevOptionsEnabled();
+        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
+        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
+        mAccessStatus =
+                String.format("Debuggable: %b\n", isDebuggable)
+                        + String.format("Developer options on: %b", isDeveloperMode);
     }
 
     @Test
     public void testAddOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
@@ -81,7 +89,7 @@ public class CustomAudienceCtsDebuggableTest {
 
     @Test
     public void testRemoveNotExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
@@ -98,7 +106,7 @@ public class CustomAudienceCtsDebuggableTest {
 
     @Test
     public void testRemoveExistingOverrideSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddCustomAudienceOverrideRequest addRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
@@ -130,7 +138,7 @@ public class CustomAudienceCtsDebuggableTest {
 
     @Test
     public void testResetAllOverridesSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         ListenableFuture<Void> result = mClient.resetAllCustomAudienceOverrides();
 

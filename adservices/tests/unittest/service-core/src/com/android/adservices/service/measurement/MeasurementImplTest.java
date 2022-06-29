@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.measurement.MeasurementManager.RESULT_INTERNAL_ERROR;
+import static android.adservices.measurement.MeasurementManager.RESULT_INVALID_ARGUMENT;
+import static android.adservices.measurement.MeasurementManager.RESULT_IO_ERROR;
+import static android.adservices.measurement.MeasurementManager.RESULT_OK;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
 import static com.android.adservices.data.measurement.DatastoreManager.ThrowingCheckedConsumer;
@@ -32,8 +36,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.IMeasurementCallback;
+import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.RegistrationRequest;
 import android.content.ContentProviderClient;
@@ -212,7 +215,7 @@ public final class MeasurementImplTest {
         final int result = measurement.register(registrationRequest, eventTime);
 
         // Assert
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        assertEquals(RESULT_OK, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mDatastoreManager, times(2))
@@ -241,7 +244,7 @@ public final class MeasurementImplTest {
         doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
         final int result = measurement.register(SOURCE_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
-        assertEquals(IMeasurementCallback.RESULT_IO_ERROR, result);
+        assertEquals(RESULT_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
     }
@@ -270,7 +273,7 @@ public final class MeasurementImplTest {
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
 
         // Assertions
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        assertEquals(RESULT_OK, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
@@ -295,7 +298,7 @@ public final class MeasurementImplTest {
                 mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
-        assertEquals(IMeasurementCallback.RESULT_IO_ERROR, result);
+        assertEquals(RESULT_IO_ERROR, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
@@ -304,75 +307,75 @@ public final class MeasurementImplTest {
     @Test
     public void testDeleteRegistrations_successfulNoOptionalParameters() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .build());
+        assertEquals(RESULT_OK, result);
     }
 
     @Test
     public void testDeleteRegistrations_successfulWithRange() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .setStart(Instant.now().minusSeconds(1))
-                        .setEnd(Instant.now())
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setStart(Instant.now().minusSeconds(1))
+                                .setEnd(Instant.now())
+                                .build());
+        assertEquals(RESULT_OK, result);
     }
 
     @Test
     public void testDeleteRegistrations_successfulWithOrigin() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .setOriginUri(DEFAULT_URI)
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setOriginUri(DEFAULT_URI)
+                                .build());
+        assertEquals(RESULT_OK, result);
     }
 
     @Test
     public void testDeleteRegistrations_successfulWithRangeAndOrigin() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .setStart(Instant.now().minusSeconds(1))
-                        .setEnd(Instant.now())
-                        .setOriginUri(DEFAULT_URI)
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setStart(Instant.now().minusSeconds(1))
+                                .setEnd(Instant.now())
+                                .setOriginUri(DEFAULT_URI)
+                                .build());
+        assertEquals(RESULT_OK, result);
     }
 
     @Test
     public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .setStart(Instant.now())
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_INVALID_ARGUMENT, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setStart(Instant.now())
+                                .build());
+        assertEquals(RESULT_INVALID_ARGUMENT, result);
     }
 
     @Test
     public void testDeleteRegistrations_invalidParameterEndButNoStart() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .setEnd(Instant.now())
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_INVALID_ARGUMENT, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setEnd(Instant.now())
+                                .build());
+        assertEquals(RESULT_INVALID_ARGUMENT, result);
     }
 
     @Test
@@ -381,12 +384,12 @@ public final class MeasurementImplTest {
                 mContentResolver, mDatastoreManager, new SourceFetcher(), new TriggerFetcher());
         Mockito.when(mDatastoreManager.runInTransaction(ArgumentMatchers.any()))
                 .thenReturn(false);
-        final int result = measurement.deleteRegistrations(
-                new DeletionRequest.Builder()
-                        .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                        .build()
-        );
-        assertEquals(IMeasurementCallback.RESULT_INTERNAL_ERROR, result);
+        final int result =
+                measurement.deleteRegistrations(
+                        new DeletionParam.Builder()
+                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .build());
+        assertEquals(RESULT_INTERNAL_ERROR, result);
     }
 
     @Test
@@ -429,7 +432,7 @@ public final class MeasurementImplTest {
                         .build(),
                 eventTime
         );
-        assertEquals(IMeasurementCallback.RESULT_OK, result);
+        assertEquals(RESULT_OK, result);
         ArgumentCaptor<Source> sourceArgs = ArgumentCaptor.forClass(Source.class);
         verify(measurement).getSourceEventReports(sourceArgs.capture());
         Source capturedSource = sourceArgs.getValue();
@@ -516,6 +519,22 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
         final int result = measurement.getMeasurementApiStatus();
         assertEquals(MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED, result);
+    }
+
+    @Test
+    public void testDeleteAllMeasurementData() throws DatastoreException {
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
+                ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
+
+        // Execution
+        measurement.deleteAllMeasurementData(Collections.emptyList());
+        verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
+
+        consumerArgumentCaptor.getValue().accept(mMeasurementDao);
+        verify(mMeasurementDao, times(1)).deleteAllMeasurementData(any());
     }
 
     private void verifyInsertSource(RegistrationRequest registrationRequest,

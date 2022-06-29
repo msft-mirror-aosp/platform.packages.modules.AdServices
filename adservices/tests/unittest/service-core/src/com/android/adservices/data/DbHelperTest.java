@@ -49,7 +49,7 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_adtech_urls", 2));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 12));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution_rate_limit", 6));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 8));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 9));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesIndexExist(db, "idx_msmt_source_ad_rt_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_rt_tt"));

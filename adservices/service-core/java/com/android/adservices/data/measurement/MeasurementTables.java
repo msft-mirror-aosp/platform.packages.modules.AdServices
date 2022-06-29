@@ -27,6 +27,21 @@ public final class MeasurementTables {
     public static final String MSMT_TABLE_PREFIX = "msmt_";
     public static final String INDEX_PREFIX = "idx_";
 
+    /**
+     * Array of all Measurement related tables. The AdTechUrls table is not included in the
+     * Measurement tables because it will be used for a more general purpose.
+     */
+    // TODO(b/237306788): Move AdTechUrls tables to common tables and add method to delete common
+    //  tables.
+    public static final String[] ALL_MSMT_TABLES = {
+        MeasurementTables.SourceContract.TABLE,
+        MeasurementTables.TriggerContract.TABLE,
+        MeasurementTables.EventReportContract.TABLE,
+        MeasurementTables.AggregateReport.TABLE,
+        MeasurementTables.AggregateEncryptionKey.TABLE,
+        MeasurementTables.AttributionRateLimitContract.TABLE
+    };
+
     /** Contract for Source. */
     public interface SourceContract {
         String TABLE = MSMT_TABLE_PREFIX + "source";
@@ -142,6 +157,7 @@ public final class MeasurementTables {
         String REPORTING_ORIGIN = "reporting_origin";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
         String STATUS = "status";
+        String API_VERSION = "api_version";
     }
 
     /** Contract for aggregate encryption key. */

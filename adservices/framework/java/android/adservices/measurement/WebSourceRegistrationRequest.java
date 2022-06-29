@@ -77,11 +77,6 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         mVerifiedDestination = verifiedDestination;
     }
 
-    /**
-     * Unpack OSAttributionSourceRegistrationRequest from parcel.
-     *
-     * @param in parcel
-     */
     private WebSourceRegistrationRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<WebSourceParams> sourceRegistrations = new ArrayList<>();

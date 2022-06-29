@@ -31,13 +31,12 @@ public class AggregateReportBody {
     private String mAttributionDestination;
     private String mSourceRegistrationTime;
     private String mScheduledReportTime;
-    private String mVersion;
+    private String mApiVersion;
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
 
     private static final String API_NAME = "attribution-reporting";
-    private static final String API_VERSION = "1";
 
     private interface PayloadBodyKeys {
         String SHARED_INFO = "shared_info";
@@ -61,13 +60,13 @@ public class AggregateReportBody {
     private AggregateReportBody() { };
 
     private AggregateReportBody(AggregateReportBody other) {
-        this.mAttributionDestination = other.mAttributionDestination;
-        this.mSourceRegistrationTime = other.mSourceRegistrationTime;
-        this.mScheduledReportTime = other.mScheduledReportTime;
-        this.mVersion = other.mVersion;
-        this.mReportId = other.mReportId;
-        this.mReportingOrigin = other.mReportingOrigin;
-        this.mDebugCleartextPayload = other.mDebugCleartextPayload;
+        mAttributionDestination = other.mAttributionDestination;
+        mSourceRegistrationTime = other.mSourceRegistrationTime;
+        mScheduledReportTime = other.mScheduledReportTime;
+        mApiVersion = other.mApiVersion;
+        mReportId = other.mReportId;
+        mReportingOrigin = other.mReportingOrigin;
+        mDebugCleartextPayload = other.mDebugCleartextPayload;
     }
 
     /**
@@ -89,12 +88,12 @@ public class AggregateReportBody {
         JSONObject sharedInfoJson = new JSONObject();
 
         sharedInfoJson.put(SharedInfoKeys.API_NAME, API_NAME);
-        sharedInfoJson.put(SharedInfoKeys.ATTRIBUTION_DESTINATION, this.mAttributionDestination);
-        sharedInfoJson.put(SharedInfoKeys.REPORT_ID, this.mReportId);
-        sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, this.mReportingOrigin);
-        sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, this.mScheduledReportTime);
-        sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, this.mSourceRegistrationTime);
-        sharedInfoJson.put(SharedInfoKeys.API_VERSION, API_VERSION);
+        sharedInfoJson.put(SharedInfoKeys.ATTRIBUTION_DESTINATION, mAttributionDestination);
+        sharedInfoJson.put(SharedInfoKeys.REPORT_ID, mReportId);
+        sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, mReportingOrigin);
+        sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
+        sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, mSourceRegistrationTime);
+        sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 
         return sharedInfoJson;
     }
@@ -108,7 +107,7 @@ public class AggregateReportBody {
 
         JSONObject debugCleartextPayloadJson = new JSONObject();
         debugCleartextPayloadJson.put(DebugCleartextPayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                this.mDebugCleartextPayload);
+                mDebugCleartextPayload);
 
         aggregationServicePayloadsJson.put(debugCleartextPayloadJson);
 
@@ -152,8 +151,8 @@ public class AggregateReportBody {
         /**
          * The version of the API used to generate the aggregate report.
          */
-        public @NonNull Builder setVersion(@NonNull String version) {
-            mBuilding.mVersion = version;
+        public @NonNull Builder setApiVersion(@NonNull String version) {
+            mBuilding.mApiVersion = version;
             return this;
         }
 
