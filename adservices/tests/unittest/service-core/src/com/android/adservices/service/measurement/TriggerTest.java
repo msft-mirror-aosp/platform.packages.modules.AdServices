@@ -176,8 +176,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.buildAggregateTriggerData(),
-                TriggerFixture.ValidTriggerParams.buildAggregateValues(),
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
@@ -185,8 +185,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.buildAggregateTriggerData(),
-                TriggerFixture.ValidTriggerParams.buildAggregateValues(),
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
@@ -198,8 +198,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.buildAggregateTriggerData(),
-                TriggerFixture.ValidTriggerParams.buildAggregateValues(),
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
@@ -207,8 +207,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.REGISTRANT,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.buildAggregateTriggerData(),
-                TriggerFixture.ValidTriggerParams.buildAggregateValues(),
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
@@ -220,8 +220,8 @@ public class TriggerTest {
                 null,
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.buildAggregateTriggerData(),
-                TriggerFixture.ValidTriggerParams.buildAggregateValues(),
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
@@ -229,8 +229,8 @@ public class TriggerTest {
                 Uri.parse("com.registrant"),
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
-                TriggerFixture.ValidTriggerParams.buildAggregateTriggerData(),
-                TriggerFixture.ValidTriggerParams.buildAggregateValues(),
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING);
     }
 
