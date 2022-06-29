@@ -61,6 +61,8 @@ import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -110,6 +112,7 @@ public class AdSelectionServiceImplTest {
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
     private final String mContextualSignals = "{\"contextual_signals\":1}";
     private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
 
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -213,7 +216,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -308,7 +312,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -400,7 +405,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -490,7 +496,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -558,7 +565,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -670,7 +678,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -713,7 +722,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -751,7 +761,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -794,7 +805,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -848,7 +860,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -906,7 +919,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -965,7 +979,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -1058,7 +1073,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -1148,7 +1164,8 @@ public class AdSelectionServiceImplTest {
                         mDevContextFilter,
                         mExecutorService,
                         CONTEXT,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionConfig adSelectionConfig1 = AdSelectionConfigFixture.anAdSelectionConfig();
         AdSelectionConfig adSelectionConfig2 =
@@ -1234,7 +1251,8 @@ public class AdSelectionServiceImplTest {
                             mDevContextFilter,
                             mExecutorService,
                             CONTEXT,
-                            mAdServicesLoggerSpy);
+                            mAdServicesLoggerSpy,
+                            mFlags);
 
             adSelectionService.destroy();
 
