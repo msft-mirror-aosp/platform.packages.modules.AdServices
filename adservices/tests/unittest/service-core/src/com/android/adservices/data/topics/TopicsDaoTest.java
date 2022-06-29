@@ -71,6 +71,7 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.EpochOriginContract.TABLE);
     }
 
     @Test
@@ -837,5 +838,38 @@ public final class TopicsDaoTest {
                 List.of(app1));
         // Nothing will happen as no satisfied entry to delete
         assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
+    }
+
+    @Test
+    public void testPersistAndRetrieveEpochOrigin() {
+        final long epochOrigin = 1234567890L;
+
+        mTopicsDao.persistEpochOrigin(epochOrigin);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin);
+    }
+
+    // TODO(b/230669931): Add test to check SQLException when it's enabled in TopicsDao.
+    @Test
+    public void testPersistAndRetrieveEpochOrigin_multipleInsertion() {
+        final long epochOrigin1 = 1L;
+        final long epochOrigin2 = 2L;
+
+        mTopicsDao.persistEpochOrigin(epochOrigin1);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
+
+        // Persist a different origin when there is an existing origin will not change the existing
+        // origin.
+        mTopicsDao.persistEpochOrigin(epochOrigin2);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
+
+        // Persist same origin
+        mTopicsDao.persistEpochOrigin(epochOrigin1);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
+    }
+
+    @Test
+    public void testPersistAndRetrieveEpochOrigin_EmptyTable() {
+        // Should return -1 if no origin is persisted
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(-1);
     }
 }
