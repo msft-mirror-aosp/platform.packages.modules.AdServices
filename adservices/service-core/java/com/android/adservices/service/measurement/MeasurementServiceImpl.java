@@ -56,8 +56,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     }
 
     @Override
-    public void register(@NonNull RegistrationRequest request,
-                         @NonNull IMeasurementCallback callback) {
+    public void register(
+            @NonNull RegistrationRequest request, @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
@@ -75,16 +75,16 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
     @Override
     public void registerWebSource(
-            @NonNull WebSourceRegistrationRequestInternal registrationRequest,
-            @NonNull IMeasurementCallback iMeasurementCallback) {
-        Objects.requireNonNull(registrationRequest);
-        Objects.requireNonNull(iMeasurementCallback);
+            @NonNull WebSourceRegistrationRequestInternal request,
+            @NonNull IMeasurementCallback callback) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(callback);
         sBackgroundExecutor.execute(
                 () -> {
                     try {
                         LogUtil.d("MeasurementServiceImpl: registerWebSource: ");
-                        // TODO: call measurement Impl and remove the callback invocation below
-                        iMeasurementCallback.onResult();
+                        mMeasurementImpl.registerWebSource(request, System.currentTimeMillis());
+                        callback.onResult();
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                     }
@@ -93,14 +93,16 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
     @Override
     public void registerWebTrigger(
-            @NonNull WebTriggerRegistrationRequestInternal registrationRequest,
-            @NonNull IMeasurementCallback iMeasurementCallback) {
+            @NonNull WebTriggerRegistrationRequestInternal request,
+            @NonNull IMeasurementCallback callback) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(callback);
         sBackgroundExecutor.execute(
                 () -> {
                     try {
                         LogUtil.d("MeasurementServiceImpl: registerWebTrigger: ");
-                        // TODO: call measurement Impl and remove the callback invocation below
-                        iMeasurementCallback.onResult();
+                        mMeasurementImpl.registerWebTrigger(request, System.currentTimeMillis());
+                        callback.onResult();
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                     }
