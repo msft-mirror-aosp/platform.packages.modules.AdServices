@@ -106,12 +106,10 @@ public class OnDeviceClassifier implements Classifier {
             mLoaded = load();
         }
 
-        // Load app info if not loaded already.
+        // Load latest app info for every call.
+        mAppInfoMap = mPackageManagerUtil.getAppInformation(appPackageNames);
         if (mAppInfoMap.isEmpty()) {
-            mAppInfoMap = mPackageManagerUtil.getAppInformation(appPackageNames);
-            if (mAppInfoMap.isEmpty()) {
-                LogUtil.w("Loaded app description map is empty.");
-            }
+            LogUtil.w("Loaded app description map is empty.");
         }
 
         ImmutableMap.Builder<String, List<Integer>> packageNameToTopicIds = ImmutableMap.builder();
