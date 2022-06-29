@@ -20,8 +20,10 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
+import java.util.Objects;
 
 /**
  * A registration for an attribution source.
@@ -30,6 +32,7 @@ public final class SourceRegistration {
     private final Uri mTopOrigin;
     private final Uri mReportingOrigin;
     private final Uri mDestination;
+    private final Uri mWebDestination;
     private final long mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
@@ -38,13 +41,12 @@ public final class SourceRegistration {
     private final String mAggregateSource;
     private final String mAggregateFilterData;
 
-    /**
-     * Create a new source registration.
-     */
+    /** Create a new source registration. */
     private SourceRegistration(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
-            @NonNull Uri destination,
+            @Nullable Uri destination,
+            @Nullable Uri webDestination,
             long sourceEventId,
             long expiry,
             long sourcePriority,
@@ -55,6 +57,7 @@ public final class SourceRegistration {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mDestination = destination;
+        mWebDestination = webDestination;
         mSourceEventId = sourceEventId;
         mExpiry = expiry;
         mSourcePriority = sourcePriority;
@@ -62,6 +65,40 @@ public final class SourceRegistration {
         mInstallCooldownWindow = installCooldownWindow;
         mAggregateSource = aggregateSource;
         mAggregateFilterData = aggregateFilterData;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SourceRegistration)) return false;
+        SourceRegistration that = (SourceRegistration) o;
+        return mSourceEventId == that.mSourceEventId
+                && mExpiry == that.mExpiry
+                && mSourcePriority == that.mSourcePriority
+                && mInstallAttributionWindow == that.mInstallAttributionWindow
+                && mInstallCooldownWindow == that.mInstallCooldownWindow
+                && Objects.equals(mTopOrigin, that.mTopOrigin)
+                && Objects.equals(mReportingOrigin, that.mReportingOrigin)
+                && Objects.equals(mDestination, that.mDestination)
+                && Objects.equals(mWebDestination, that.mWebDestination)
+                && Objects.equals(mAggregateSource, that.mAggregateSource)
+                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mTopOrigin,
+                mReportingOrigin,
+                mDestination,
+                mWebDestination,
+                mSourceEventId,
+                mExpiry,
+                mSourcePriority,
+                mInstallAttributionWindow,
+                mInstallCooldownWindow,
+                mAggregateSource,
+                mAggregateFilterData);
     }
 
     /**
@@ -78,11 +115,14 @@ public final class SourceRegistration {
         return mReportingOrigin;
     }
 
-    /**
-     * Destination Uri.
-     */
-    public @NonNull Uri getDestination() {
+    /** OS (app) destination Uri. */
+    public @Nullable Uri getDestination() {
         return mDestination;
+    }
+
+    /** Web destination Uri. */
+    public @Nullable Uri getWebDestination() {
+        return mWebDestination;
     }
 
     /**
@@ -141,6 +181,7 @@ public final class SourceRegistration {
         private Uri mTopOrigin;
         private Uri mReportingOrigin;
         private Uri mDestination;
+        private Uri mWebDestination;
         private long mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
@@ -153,6 +194,7 @@ public final class SourceRegistration {
             mTopOrigin = Uri.EMPTY;
             mReportingOrigin = Uri.EMPTY;
             mDestination = Uri.EMPTY;
+            mWebDestination = Uri.EMPTY;
             mExpiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             mInstallAttributionWindow = MAX_INSTALL_ATTRIBUTION_WINDOW;
             mInstallCooldownWindow = MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
@@ -175,10 +217,20 @@ public final class SourceRegistration {
         }
 
         /**
-         * See {@link SourceRegistration#getDestination}.
+         * See {@link SourceRegistration#getDestination}. At least one of destination or web
+         * destination is required.
          */
-        public @NonNull Builder setDestination(@NonNull Uri destination) {
+        public @NonNull Builder setDestination(@Nullable Uri destination) {
             mDestination = destination;
+            return this;
+        }
+
+        /**
+         * See {@link SourceRegistration#getWebDestination()}. At least one of destination or web
+         * destination is required.
+         */
+        public @NonNull Builder setWebDestination(@Nullable Uri webDestination) {
+            mWebDestination = webDestination;
             return this;
         }
 
@@ -242,15 +294,20 @@ public final class SourceRegistration {
          * Build the SourceRegistration.
          */
         public @NonNull SourceRegistration build() {
-            if (mTopOrigin == null
-                    || mReportingOrigin == null
-                    || mDestination == null) {
+            if (mTopOrigin == null || mReportingOrigin == null) {
                 throw new IllegalArgumentException("uninitialized fields");
             }
+
+            if (mDestination == null && mWebDestination == null) {
+                throw new IllegalArgumentException(
+                        "At least one of destination or web destination is required.");
+            }
+
             return new SourceRegistration(
                     mTopOrigin,
                     mReportingOrigin,
                     mDestination,
+                    mWebDestination,
                     mSourceEventId,
                     mExpiry,
                     mSourcePriority,
