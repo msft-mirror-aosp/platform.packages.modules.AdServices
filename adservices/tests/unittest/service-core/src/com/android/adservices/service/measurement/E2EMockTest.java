@@ -39,9 +39,12 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -49,11 +52,18 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
+
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
- * Consider @RunWith(Parameterized.class)
+ * <p>Consider @RunWith(Parameterized.class)
  */
 public abstract class E2EMockTest extends E2ETest {
     SourceFetcher mSourceFetcher;
@@ -166,24 +176,54 @@ public abstract class E2EMockTest extends E2ETest {
 
     private static JSONObject getAggregatablePayloadForTest(
             JSONObject sharedInfo, JSONObject data) throws JSONException {
-        String payloadJson = data.getJSONArray("aggregation_service_payloads")
-                .getJSONObject(0)
-                .getString("debug_cleartext_payload");
-        JSONArray histograms = new JSONObject(payloadJson).getJSONArray("data");
+        String payload =
+                data.getJSONArray("aggregation_service_payloads")
+                        .getJSONObject(0)
+                        .getString("debug_cleartext_payload");
         return new JSONObject()
-                .put(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
+                .put(
+                        AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
                         sharedInfo.getString("attribution_destination"))
-                .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(histograms));
+                .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(payload));
     }
 
-    private static JSONArray getAggregateHistograms(JSONArray histograms) throws JSONException {
+    private static JSONArray getAggregateHistograms(String payloadJsonBase64) throws JSONException {
         List<JSONObject> result = new ArrayList<>();
-        for (int i = 0; i < histograms.length(); i++) {
-            JSONObject obj = histograms.getJSONObject(i);
-            result.add(new JSONObject()
-                    .put(AggregateHistogramKeys.BUCKET, obj.getString("bucket"))
-                    .put(AggregateHistogramKeys.VALUE, obj.getInt("value")));
+
+        try {
+            final byte[] payloadJson = Base64.getDecoder().decode(payloadJsonBase64);
+            final List<DataItem> dataItems =
+                    new CborDecoder(new ByteArrayInputStream(payloadJson)).decode();
+            final co.nstant.in.cbor.model.Map payload =
+                    (co.nstant.in.cbor.model.Map) dataItems.get(0);
+            final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+            for (DataItem i : payloadArray.getDataItems()) {
+                co.nstant.in.cbor.model.Map m = (co.nstant.in.cbor.model.Map) i;
+                result.add(
+                        new JSONObject()
+                                .put(
+                                        AggregateHistogramKeys.BUCKET,
+                                        new BigInteger(
+                                                        ((ByteString)
+                                                                        m.get(
+                                                                                new UnicodeString(
+                                                                                        "bucket")))
+                                                                .getBytes())
+                                                .toString())
+                                .put(
+                                        AggregateHistogramKeys.VALUE,
+                                        new BigInteger(
+                                                        ((ByteString)
+                                                                        m.get(
+                                                                                new UnicodeString(
+                                                                                        "value")))
+                                                                .getBytes())
+                                                .toString()));
+            }
+        } catch (CborException e) {
+            throw new JSONException(e);
         }
+
         return new JSONArray(result);
     }
 }

@@ -53,6 +53,7 @@ android_test {
     ],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     jni_libs: [
+        "libhpke_jni",
         "libtflite_support_classifiers_native",
     ],
     aaptflags: [
