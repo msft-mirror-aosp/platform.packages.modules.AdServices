@@ -62,6 +62,8 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_thread_pool_size";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S =
             "fledge_background_fetch_eligible_update_base_interval_s";
+    static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
+            "fledge_ad_selection_concurrent_bidding_count";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -260,6 +262,13 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S);
     }
 
+    public int getAdSelectionConcurrentBiddingCount() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
+                /* defaultValue */ FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -293,7 +302,7 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println("\t" + KEY_MEASUREMENT_APP_NAME + " = " + getMeasurementAppName());
 
-        writer.println("==== AdServices PH Flags Dump FLEDGE ====");
+        writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS
@@ -319,5 +328,10 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S
                         + " = "
                         + getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
+                        + " = "
+                        + getAdSelectionConcurrentBiddingCount());
     }
 }
