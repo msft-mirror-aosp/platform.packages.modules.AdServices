@@ -69,6 +69,7 @@ import com.android.server.SystemService;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -174,7 +175,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // Ensure we are not already loading sdk for this sdkToken. That's determined by
         // checking if we already have an AppAndRemoteCodeLink for the sdkToken.
-        final AppAndRemoteSdkLink link = new AppAndRemoteSdkLink(sdkToken, callback);
+        final AppAndRemoteSdkLink link = new AppAndRemoteSdkLink(callingInfo, sdkToken, callback);
         synchronized (mLock) {
             if (mAppAndRemoteSdkLinks.putIfAbsent(sdkToken, link) != null) {
                 link.handleLoadSdkError(SdkSandboxManager.LOAD_SDK_ALREADY_LOADED,
@@ -412,6 +413,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 new SandboxServiceConnection.Callback() {
                     @Override
                     public void onBindingSuccessful(ISdkSandboxService service) {
+                        try {
+                            service.asBinder().linkToDeath(() -> cleanUp(callingInfo), 0);
+                        } catch (RemoteException re) {
+                            // Sandbox had already died, cleanup sdk token and link.
+                            cleanUp(sdkToken);
+                        }
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
@@ -472,6 +479,25 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         // Now clean up rest of the state which is using an obsolete sdkToken
         synchronized (mLock) {
             mAppAndRemoteSdkLinks.remove(sdkToken);
+        }
+    }
+
+    /** Clean up all internal data structures related to {@code callingInfo} of the app */
+    private void cleanUp(CallingInfo callingInfo) {
+        // Destroy all sdkTokens related to the app
+        mSdkTokenManager.destroy(callingInfo);
+
+        synchronized (mLock) {
+            // Now clean up rest of the state which is using obsolete sdkTokens
+            Iterator<Map.Entry<IBinder, AppAndRemoteSdkLink>> it =
+                    mAppAndRemoteSdkLinks.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<IBinder, AppAndRemoteSdkLink> entry = it.next();
+                AppAndRemoteSdkLink link = entry.getValue();
+                if (link.mCallingInfo.equals(callingInfo)) {
+                    mAppAndRemoteSdkLinks.remove(entry.getKey());
+                }
+            }
         }
     }
 
@@ -600,6 +626,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        public void destroy(CallingInfo callingInfo) {
+            synchronized (mSdkTokens) {
+                for (int i = 0; i < mSdkTokens.size(); i++) {
+                    Pair<CallingInfo, String> pair = mSdkTokens.keyAt(i);
+                    if (pair.first.equals(callingInfo)) {
+                        destroy(mSdkTokens.get(pair));
+                    }
+                }
+            }
+        }
+
         void dump(PrintWriter writer) {
             synchronized (mSdkTokens) {
                 if (mSdkTokens.isEmpty()) {
@@ -642,6 +679,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
      * codeToken}.
      */
     private class AppAndRemoteSdkLink extends ILoadSdkInSandboxCallback.Stub {
+        private final CallingInfo mCallingInfo;
         // The codeToken for which this channel has been created
         private final IBinder mSdkToken;
         private final ILoadSdkCallback mManagerToAppCallback;
@@ -649,7 +687,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         @GuardedBy("this")
         private ISdkSandboxManagerToSdkSandboxCallback mManagerToCodeCallback;
 
-        AppAndRemoteSdkLink(IBinder sdkToken, ILoadSdkCallback managerToAppCallback) {
+        AppAndRemoteSdkLink(
+                CallingInfo callingInfo, IBinder sdkToken, ILoadSdkCallback managerToAppCallback) {
+            mCallingInfo = callingInfo;
             mSdkToken = sdkToken;
             mManagerToAppCallback = managerToAppCallback;
         }
