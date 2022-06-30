@@ -64,6 +64,8 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_eligible_update_base_interval_s";
     static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
             "fledge_ad_selection_concurrent_bidding_count";
+    static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
+            "fledge_ad_selection_bidding_timeout_per_ca_ms";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -262,11 +264,20 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S);
     }
 
+    @Override
     public int getAdSelectionConcurrentBiddingCount() {
         return DeviceConfig.getInt(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
                 /* defaultValue */ FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+    }
+
+    @Override
+    public long getAdSelectionBiddingTimeoutPerCaMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS);
     }
 
     @VisibleForTesting
@@ -333,5 +344,10 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
                         + " = "
                         + getAdSelectionConcurrentBiddingCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS
+                        + " = "
+                        + getAdSelectionBiddingTimeoutPerCaMs());
     }
 }
