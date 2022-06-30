@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement;
 
+import android.content.res.AssetManager;
 import android.net.Uri;
 
 import org.json.JSONException;
@@ -26,13 +27,16 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Tests for {@link MeasurementDao} browser deletion that affect the database.
  */
 @RunWith(Parameterized.class)
 public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
+    private static final String TEST_DIR = "msmt_browser_deletion_tests";
     private final JSONObject mParam;
 
     // The 'name' parameter is needed for the JUnit parameterized
@@ -46,10 +50,14 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
-        InputStream inputStream = sContext.getAssets().open(
-                "measurement_browser_deletion_test.json");
-        return AbstractDbIntegrationTest.getTestCasesFrom(inputStream, (testObj) ->
-                ((JSONObject) testObj).getJSONObject("param"));
+        AssetManager assetManager = sContext.getAssets();
+        List<InputStream> inputStreams = new ArrayList<>();
+        String[] testFileList = assetManager.list(TEST_DIR);
+        for (String testFile : testFileList) {
+            inputStreams.add(assetManager.open(TEST_DIR + "/" + testFile));
+        }
+        return AbstractDbIntegrationTest.getTestCasesFromMultipleStreams(
+                inputStreams, (testObj) -> testObj.getJSONObject("param"));
     }
 
     public void runActionToTest() {
