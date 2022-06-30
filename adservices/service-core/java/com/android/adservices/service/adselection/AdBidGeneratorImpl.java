@@ -30,6 +30,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -56,20 +57,19 @@ import java.util.stream.Collectors;
  * call
  */
 public class AdBidGeneratorImpl implements AdBidGenerator {
-    // TODO(b/237102751): Move this to the Flags.java
-    public static final long AD_BIDDING_TIME_OUT_PER_CA_IN_MILLISECONDS = 5000;
-
     @NonNull private final Context mContext;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
+    @NonNull private final Flags mFlags;
 
     public AdBidGeneratorImpl(
             @NonNull Context context,
             @NonNull ExecutorService listeningExecutorService,
             @NonNull DevContext devContext,
-            @NonNull CustomAudienceDao customAudienceDao) {
+            @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(listeningExecutorService);
 
@@ -79,6 +79,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mAdServicesHttpsClient = new AdServicesHttpsClient(listeningExecutorService);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
+        mFlags = flags;
     }
 
     @VisibleForTesting
@@ -87,18 +88,21 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull ListeningExecutorService listeningExecutorService,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper) {
+            @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
+            @NonNull Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(listeningExecutorService);
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
+        Objects.requireNonNull(flags);
 
         mContext = context;
         mListeningExecutorService = listeningExecutorService;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
+        mFlags = flags;
     }
 
     @Override
@@ -176,7 +180,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         },
                         mListeningExecutorService)
                 .withTimeout(
-                        AD_BIDDING_TIME_OUT_PER_CA_IN_MILLISECONDS,
+                        mFlags.getAdSelectionBiddingTimeoutPerCaMs(),
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Compile with thread usage policy for AdServices;
                         //  use a global scheduled executor
