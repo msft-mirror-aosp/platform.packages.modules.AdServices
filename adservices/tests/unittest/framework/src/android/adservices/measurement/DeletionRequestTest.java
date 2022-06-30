@@ -16,20 +16,21 @@
 
 package android.adservices.measurement;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 
 /** Unit test for {@link android.adservices.measurement.DeletionRequest} */
 @SmallTest
 public class DeletionRequestTest {
-    private static final String ORIGIN_URI = "http://foo.com";
+    private static final Uri ORIGIN_URI = Uri.parse("https://a.foo.com");
+    private static final Uri DOMAIN_URI = Uri.parse("https://foo.com");
     private static final Instant START = Instant.ofEpochSecond(0);
     private static final Instant END = Instant.now();
 
@@ -37,36 +38,50 @@ public class DeletionRequestTest {
     public void testNonNullParams() {
         DeletionRequest request =
                 new DeletionRequest.Builder()
-                        .setOriginUri(Uri.parse(ORIGIN_URI))
+                        .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .setStart(START)
                         .setEnd(END)
                         .build();
 
-        assertThat(request.getOriginUri()).isEqualTo(Uri.parse(ORIGIN_URI));
-        assertThat(request.getStart()).isEqualTo(START);
-        assertThat(request.getEnd()).isEqualTo(END);
+        Assert.assertEquals(START, request.getStart());
+        Assert.assertEquals(END, request.getEnd());
+        Assert.assertEquals(1, request.getOriginUris().size());
+        Assert.assertEquals(ORIGIN_URI, request.getOriginUris().get(0));
+        Assert.assertEquals(1, request.getDomainUris().size());
+        Assert.assertEquals(DOMAIN_URI, request.getDomainUris().get(0));
+        Assert.assertEquals(
+                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
+        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
     }
 
     @Test
     public void testNullParams() {
         DeletionRequest request =
                 new DeletionRequest.Builder()
-                        .setOriginUri(null)
+                        .setDomainUris(null)
+                        .setOriginUris(null)
                         .setStart(null)
                         .setEnd(null)
                         .build();
-
-        assertThat(request.getOriginUri()).isEqualTo(null);
-        assertThat(request.getStart()).isEqualTo(null);
-        assertThat(request.getEnd()).isEqualTo(null);
+        Assert.assertNull(request.getStart());
+        Assert.assertNull(request.getEnd());
+        Assert.assertTrue(request.getOriginUris().isEmpty());
+        Assert.assertTrue(request.getDomainUris().isEmpty());
+        Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
+        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
     }
 
     @Test
     public void testDefaultParams() {
         DeletionRequest request = new DeletionRequest.Builder().build();
-
-        assertThat(request.getOriginUri()).isEqualTo(null);
-        assertThat(request.getStart()).isEqualTo(null);
-        assertThat(request.getEnd()).isEqualTo(null);
+        Assert.assertNull(request.getStart());
+        Assert.assertNull(request.getEnd());
+        Assert.assertTrue(request.getOriginUris().isEmpty());
+        Assert.assertTrue(request.getDomainUris().isEmpty());
+        Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
+        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
     }
 }

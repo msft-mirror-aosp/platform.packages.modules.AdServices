@@ -45,7 +45,7 @@ public final class DeletionParamTest {
                 .setOriginUris(Collections.singletonList(Uri.parse("http://foo.com")))
                 .setDomainUris(Collections.emptyList())
                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
-                .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_RATE_LIMITS)
+                .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
                 .setStart(Instant.ofEpochMilli(1642060000000L))
                 .setEnd(Instant.ofEpochMilli(1642060538000L))
                 .setAttributionSource(sContext.getAttributionSource())
@@ -67,7 +67,8 @@ public final class DeletionParamTest {
         assertEquals("http://foo.com", request.getOriginUris().get(0).toString());
         assertTrue(request.getDomainUris().isEmpty());
         assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
-        assertEquals(DeletionRequest.DELETION_MODE_EXCLUDE_RATE_LIMITS, request.getDeletionMode());
+        assertEquals(
+                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
         assertEquals(1642060000000L, request.getStart().toEpochMilli());
         assertEquals(1642060538000L, request.getEnd().toEpochMilli());
         assertNotNull(request.getAttributionSource());
