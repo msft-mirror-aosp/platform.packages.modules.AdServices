@@ -27,9 +27,14 @@ import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
+
+import java.util.List;
 
 public class CustomAudienceUpdatableDataTest {
     @Test
@@ -271,5 +276,194 @@ public class CustomAudienceUpdatableDataTest {
                 BackgroundFetchRunner.UpdateResultType.SUCCESS,
                 updatableData.getInitialUpdateResult());
         assertFalse(updatableData.getContainsSuccessfulUpdate());
+    }
+
+    @Test
+    public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {
+        String validUserBiddingSignalsAsJsonObjectString =
+                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, validUserBiddingSignalsAsJsonObjectString, false);
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(responseObject));
+    }
+
+    @Test
+    public void testGetUserBiddingSignalsFromFullJsonObjectWithHarmlessJunkSuccess()
+            throws JSONException {
+        String validUserBiddingSignalsAsJsonObjectString =
+                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, validUserBiddingSignalsAsJsonObjectString, true);
+
+        assertEquals(
+                validUserBiddingSignalsAsJsonObjectString,
+                CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(responseObject));
+    }
+
+    @Test
+    public void testGetUserBiddingSignalsFromEmptyJsonObject() throws JSONException {
+        String missingUserBiddingSignalsAsJsonObjectString = null;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, missingUserBiddingSignalsAsJsonObjectString, false);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(
+                                responseObject));
+    }
+
+    @Test
+    public void testGetUserBiddingSignalsFromJsonObjectMismatchedSchema() {
+        assertThrows(
+                JSONException.class,
+                () ->
+                        CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(
+                                CustomAudienceUpdatableDataFixture.getMalformedJsonObject()));
+    }
+
+    @Test
+    public void testGetUserBiddingSignalsFromJsonObjectMismatchedNullSchema() {
+        assertThrows(
+                JSONException.class,
+                () ->
+                        CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(
+                                CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject()));
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromFullJsonObjectSuccess() throws JSONException {
+        DBTrustedBiddingData expectedTrustedBiddingData =
+                DBTrustedBiddingDataFixture.getValidBuilder().build();
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, expectedTrustedBiddingData, false);
+
+        assertEquals(
+                expectedTrustedBiddingData,
+                CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
+                        responseObject, "[1]"));
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromFullJsonObjectWithHarmlessJunkSuccess()
+            throws JSONException {
+        DBTrustedBiddingData expectedTrustedBiddingData =
+                DBTrustedBiddingDataFixture.getValidBuilder().build();
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, expectedTrustedBiddingData, true);
+
+        assertEquals(
+                "responseObject = " + responseObject.toString(4),
+                expectedTrustedBiddingData,
+                CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
+                        responseObject, "[1]"));
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromEmptyJsonObject() throws JSONException {
+        String missingTrustedBiddingDataAsJsonObjectString = null;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, missingTrustedBiddingDataAsJsonObjectString, false);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
+                                responseObject, "[1]"));
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromJsonObjectMismatchedSchema() {
+        assertThrows(
+                JSONException.class,
+                () ->
+                        CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
+                                CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
+                                "[1]"));
+    }
+
+    @Test
+    public void testGetTrustedBiddingDataFromJsonObjectMismatchedNullSchema() {
+        assertThrows(
+                JSONException.class,
+                () ->
+                        CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
+                                CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
+                                "[1]"));
+    }
+
+    @Test
+    public void testGetAdsFromFullJsonObjectSuccess() throws JSONException {
+        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, false);
+
+        assertEquals(
+                expectedAds,
+                CustomAudienceUpdatableData.getAdsFromJsonObject(responseObject, "[1]"));
+    }
+
+    @Test
+    public void testGetAdsFromFullJsonObjectWithHarmlessJunkSuccess() throws JSONException {
+        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, true);
+
+        assertEquals(
+                "responseObject = " + responseObject.toString(4),
+                expectedAds,
+                CustomAudienceUpdatableData.getAdsFromJsonObject(responseObject, "[1]"));
+    }
+
+    @Test
+    public void testGetAdsFromEmptyJsonObject() throws JSONException {
+        String missingAdsAsJsonObjectString = null;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addToJsonObject(
+                        null, missingAdsAsJsonObjectString, false);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CustomAudienceUpdatableData.getAdsFromJsonObject(responseObject, "[1]"));
+    }
+
+    @Test
+    public void testGetAdsFromJsonObjectMismatchedSchema() {
+        assertThrows(
+                JSONException.class,
+                () ->
+                        CustomAudienceUpdatableData.getAdsFromJsonObject(
+                                CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
+                                "[1]"));
+    }
+
+    @Test
+    public void testGetAdsFromJsonObjectMismatchedNullSchema() {
+        assertThrows(
+                JSONException.class,
+                () ->
+                        CustomAudienceUpdatableData.getAdsFromJsonObject(
+                                CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
+                                "[1]"));
     }
 }
