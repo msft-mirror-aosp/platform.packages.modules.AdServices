@@ -116,7 +116,8 @@ public final class AdSelectionRunner {
                         devContext,
                         mAdSelectionEntryDao);
         mAdBidGenerator =
-                new AdBidGeneratorImpl(context, executorService, devContext, mCustomAudienceDao);
+                new AdBidGeneratorImpl(
+                        context, executorService, devContext, mCustomAudienceDao, flags);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;

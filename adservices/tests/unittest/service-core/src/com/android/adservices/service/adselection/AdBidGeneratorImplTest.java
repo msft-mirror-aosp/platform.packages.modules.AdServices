@@ -41,6 +41,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -115,6 +117,7 @@ public class AdBidGeneratorImplTest {
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
     private Context mContext = ApplicationProvider.getApplicationContext();
+    private Flags mFlags;
 
     private ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
     private ListeningExecutorService mListeningExecutorService =
@@ -157,6 +160,8 @@ public class AdBidGeneratorImplTest {
         mCustomAudienceBiddingInfo =
                 CustomAudienceBiddingInfo.create(
                         mDecisionLogicUri, mBuyerDecisionLogicJs, mCustomAudienceSignals);
+
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     @Test
@@ -179,7 +184,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
 
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
@@ -258,7 +264,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
 
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
@@ -321,7 +328,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
 
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
@@ -374,7 +382,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
                                 mBuyerDecisionLogicJs,
@@ -426,7 +435,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
 
         JSONException jsonException = new JSONException("");
         Mockito.when(
@@ -470,7 +480,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
 
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
@@ -512,7 +523,8 @@ public class AdBidGeneratorImplTest {
                         mListeningExecutorService,
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
-                        customAudienceDevOverridesHelper);
+                        customAudienceDevOverridesHelper,
+                        mFlags);
 
         FluentFuture<AdBiddingOutcome> result =
                 mAdBidGenerator.runAdBiddingPerCA(
@@ -529,8 +541,7 @@ public class AdBidGeneratorImplTest {
     private ListenableFuture<List<AdWithBid>> generateBidsWithDelay() {
         return mListeningExecutorService.submit(
                 () -> {
-                    Thread.sleep(
-                            AdBidGeneratorImpl.AD_BIDDING_TIME_OUT_PER_CA_IN_MILLISECONDS + 5000);
+                    Thread.sleep(mFlags.getAdSelectionBiddingTimeoutPerCaMs() + 5000);
                     return AD_WITH_BIDS;
                 });
     }
