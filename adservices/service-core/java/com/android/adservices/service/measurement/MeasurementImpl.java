@@ -75,6 +75,7 @@ public final class MeasurementImpl {
     private static volatile MeasurementImpl sMeasurementImpl;
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
+    private final ConsentManager mConsentManager;
     private final DatastoreManager mDatastoreManager;
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
@@ -82,6 +83,7 @@ public final class MeasurementImpl {
 
     private MeasurementImpl(Context context) {
         mContext = context;
+        mConsentManager = ConsentManager.getInstance(context);
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
@@ -89,9 +91,11 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    MeasurementImpl(ContentResolver contentResolver, DatastoreManager datastoreManager,
-            SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
-        mContext = null;
+    MeasurementImpl(Context context, ConsentManager consentManager, ContentResolver contentResolver,
+            DatastoreManager datastoreManager, SourceFetcher sourceFetcher,
+            TriggerFetcher triggerFetcher) {
+        mContext = context;
+        mConsentManager = consentManager;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
@@ -238,8 +242,7 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementApiUtil.MeasurementApiState int getMeasurementApiStatus() {
-        ConsentManager consentManager = ConsentManager.getInstance(mContext);
-        AdServicesApiConsent consent = consentManager.getConsent(mContext.getPackageManager());
+        AdServicesApiConsent consent = mConsentManager.getConsent(mContext.getPackageManager());
         if (consent.isGiven()) {
             return MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED;
         } else {
