@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 /** Migrates Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
 
+    private static final int MIGRATION_TARGET_VERSION = 3;
     private static final String API_VERSION = "0.1";
 
     private static final String TRIGGER_BACKUP_TABLE_V3 =
@@ -149,7 +150,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     };
 
     private static final String[] CREATE_INDEXES_V3 = {
-        // Reinstate the index created in v2, since that table is dropped
+        // Reinstate the index created in v2, since that table was dropped and recreated
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + MeasurementTables.TriggerContract.TABLE
@@ -180,7 +181,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     };
 
     public MeasurementDbMigratorV3() {
-        super(3);
+        super(MIGRATION_TARGET_VERSION);
     }
 
     /**
