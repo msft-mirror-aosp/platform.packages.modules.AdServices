@@ -1,0 +1,106 @@
+// Copyright (C) 2021 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+java_defaults {
+    name: "SdkSandboxUnitTestsDefault",
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "current",
+    test_suites: [
+        "mts-adservices",
+        "general-tests"
+    ],
+    static_libs: [
+        "androidx.test.runner",
+        "truth-prebuilt",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.mock",
+        "android.test.runner",
+    ],
+}
+
+android_test {
+    name: "SdkSandboxUnitTests",
+    srcs: [
+        "src/com/android/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
+        ":sdksandbox_aidl",
+        ":sdksandbox-sources",
+    ],
+    defaults: ["SdkSandboxUnitTestsDefault"],
+    manifest: "SdkSandboxManifest.xml",
+    test_config: "SdkSandboxTest.xml",
+    data: [
+        ":TestProviderApp",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.rules",
+        "androidx.test.ext.truth",
+        "androidx.test.ext.junit",
+    ],
+}
+
+android_test {
+    name: "SdkSandboxManagerServiceUnitTests",
+    srcs: [
+        "src/com/android/server/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
+    ],
+    defaults: ["SdkSandboxUnitTestsDefault"],
+    manifest: "SdkSandboxManagerServiceManifest.xml",
+    test_config: "SdkSandboxManagerServiceTest.xml",
+    static_libs: [
+        "service-sdksandbox.impl",
+        "mockito-target-extended-minus-junit4",
+        "SdkSandboxTestUtils",
+        "services.core",
+    ],
+    jni_libs: [
+        // Required for ExtendedMockito
+        "libdexmakerjvmtiagent",
+        "libstaticjvmtiagent",
+    ],
+    data: [
+      ":SampleCodeProviderApp",
+      ":SampleServiceApp",
+      ":CodeProviderWithResources",
+    ],
+    // Add below line to address ATM post commit test module error
+    // See b/233124651 for details.
+    compile_multilib: "both",
+}
+
+android_test {
+    name: "SdkSandboxFrameworkUnitTests",
+    srcs: [
+        "src/android/app/sdksandbox/*.java",
+        ":framework-sdksandbox-sources",
+    ],
+    defaults: ["SdkSandboxUnitTestsDefault"],
+    manifest: "SdkSandboxFrameworkManifest.xml",
+    test_config: "SdkSandboxFrameworkTest.xml",
+    static_libs: [
+        "framework-sdksandbox.impl",
+    ],
+    data: [
+      ":CodeProviderWithResources",
+    ],
+}
+

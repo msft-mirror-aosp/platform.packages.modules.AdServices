@@ -20,19 +20,29 @@ android_test {
     name: "AdServicesFrameworkUnitTests",
     srcs: [
         "src/**/*.java",
-        ":framework-adservices-sources",
     ],
     static_libs: [
         "androidx.test.runner",
+        "androidx.test.core",
         "truth-prebuilt",
         "mockito-target-extended-minus-junit4",
+        "ub-uiautomator",
+        "adservices-service-core",
+        "adservices-test-fixtures",
     ],
     libs: [
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
+        "framework-adservices.impl",
+        "framework-sdksandbox.impl"
     ],
-    min_sdk_version: "Tiramisu", // TODO(b/217941602): update this.
+    sdk_version: "module_current",
+    min_sdk_version: "Tiramisu",
     target_sdk_version: "current",
-    test_suites: ["general-tests"],
+    test_suites: [
+        "general-tests",
+        "mts-adservices"
+    ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

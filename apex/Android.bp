@@ -30,25 +30,45 @@ android_app_certificate {
 apex {
     name: "com.android.adservices",
     manifest: "manifest.json",
+    apps: ["AdServicesApk", "SdkSandbox"],
     file_contexts: ":com.android.adservices-file_contexts",
     key: "com.android.adservices.key",
     bootclasspath_fragments: ["com.android.adservices-bootclasspath-fragment"],
     systemserverclasspath_fragments: ["com.android.adservices-systemserverclasspath-fragment"],
+    prebuilts: [
+        "current_sdkinfo",
+        "privapp_allowlist_com.android.adservices.api.xml"
+    ],
     certificate: ":com.android.adservices.certificate",
-    min_sdk_version: "Tiramisu",
-    updatable: true,
+    defaults: ["t-launched-apex-module"],
+    // Indicates that pre-installed version of this apex can be compressed.
+    // Whether it actually will be compressed is controlled on per-device basis.
+    compressible: true,
+    jni_libs: ["libtflite_support_classifiers_native", "libhpke_jni"],
+}
+
+sdk {
+    name: "adservices-module-sdk",
+    bootclasspath_fragments: ["com.android.adservices-bootclasspath-fragment"],
+    systemserverclasspath_fragments: ["com.android.adservices-systemserverclasspath-fragment"],
 }
 
 systemserverclasspath_fragment {
     name: "com.android.adservices-systemserverclasspath-fragment",
-    contents: ["service-adservices"],
+    contents: [
+        "service-adservices",
+        "service-sdksandbox",
+    ],
     apex_available: ["com.android.adservices"],
 }
 
 // Encapsulate the contributions made by com.android.adservices to the bootclasspath.
 bootclasspath_fragment {
     name: "com.android.adservices-bootclasspath-fragment",
-    contents: ["framework-adservices"],
+    contents: [
+        "framework-adservices",
+        "framework-sdksandbox",
+    ],
     apex_available: ["com.android.adservices"],
 
     // The bootclasspath_fragments that provide APIs on which this depends.
@@ -64,4 +84,22 @@ bootclasspath_fragment {
     additional_stubs: [
         "android-non-updatable",
     ],
+
+    hidden_api: {
+
+        // This module does not contain any split packages.
+        split_packages: [],
+
+        // The following packages and all their subpackages currently only
+        // contain classes from this bootclasspath_fragment. Listing a package
+        // here won't prevent other bootclasspath modules from adding classes in
+        // any of those packages but it will prevent them from adding those
+        // classes into an API surface, e.g. public, system, etc.. Doing so will
+        // result in a build failure due to inconsistent flags.
+        package_prefixes: [
+            "android.adservices",
+            "android.app.sdksandbox",
+            "com.android.adservices",
+        ],
+    },
 }

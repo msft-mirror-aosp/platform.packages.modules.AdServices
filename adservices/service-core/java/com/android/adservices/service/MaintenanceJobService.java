@@ -18,6 +18,8 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.AdServicesConfig.MAINTENANCE_JOB_ID;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -26,16 +28,42 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.topics.TopicsWorker;
 
-/**
- * Maintenance job to clean up.
- */
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
+/** Maintenance job to clean up. */
 public final class MaintenanceJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("MaintenanceJobService.onStartJob");
-        return false;
+
+        ListenableFuture<Void> appReconciliationFuture =
+                Futures.submit(
+                        () -> TopicsWorker.getInstance(this).reconcileUninstalledApps(this),
+                        AdServicesExecutors.getBackgroundExecutor());
+
+        Futures.addCallback(
+                appReconciliationFuture,
+                new FutureCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        LogUtil.d("App Unhandled Uninstallation Reconciliation is done!");
+                        jobFinished(params, /* wantsReschedule = */ false);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        LogUtil.e(
+                                "Failed to handle MaintenanceJobService: " + params.getJobId(), t);
+                        jobFinished(params, /* wantsReschedule = */ false);
+                    }
+                },
+                directExecutor());
+        return true;
     }
 
     @Override
@@ -47,12 +75,15 @@ public final class MaintenanceJobService extends JobService {
     /** Schedule the Job */
     public static void schedule(Context context) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        final JobInfo job = new JobInfo.Builder(MAINTENANCE_JOB_ID,
-                new ComponentName(context, MaintenanceJobService.class))
-                .setRequiresCharging(true)
-                .setPeriodic(AdServicesConfig.getMaintenanceJobPeriodMs(),
-                        AdServicesConfig.getMaintenanceJobFlexMs())
-                .build();
+        final JobInfo job =
+                new JobInfo.Builder(
+                                MAINTENANCE_JOB_ID,
+                                new ComponentName(context, MaintenanceJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(
+                                FlagsFactory.getFlags().getMaintenanceJobPeriodMs(),
+                                FlagsFactory.getFlags().getMaintenanceJobFlexMs())
+                        .build();
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling maintenance job ...");
     }

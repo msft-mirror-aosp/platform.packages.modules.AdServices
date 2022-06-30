@@ -1,0 +1,51 @@
+{
+  "mainline-presubmit": [
+    {
+      // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
+      "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesServiceCoreUnitTests.
+      "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
+      "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
+      "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesEndToEndTests.
+      "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
+    }
+  ],
+  "presubmit": [
+    {
+      "name": "AdServicesFrameworkUnitTests"
+    },
+    {
+      "name": "AdServicesServiceCoreUnitTests"
+    },
+    {
+      "name": "AdServicesEndToEndTests"
+    },
+    {
+      "name": "CtsAdServicesDeviceTestCases"
+    },
+    {
+      "name": "CtsAdServicesDebuggableDeviceTestCases"
+    },
+    // disabling to merge a blocking CL that enables functionality for Topics UI
+//    {
+//      "name": "AdServicesSettingsUITests"
+//    },
+    {
+      "name": "CtsAdServicesEndToEndTests"
+    },
+    {
+      "name": "AdServicesManagerServiceTests"
+    }
+  ]
+}
