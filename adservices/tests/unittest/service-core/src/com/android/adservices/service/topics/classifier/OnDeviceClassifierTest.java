@@ -21,6 +21,7 @@ import static com.android.adservices.service.topics.classifier.OnDeviceClassifie
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -117,6 +118,51 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).containsAtLeast(43, 140, 151, 189, 193);
         // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
         assertThat(classifications.get(appPackage2)).containsAtLeast(93, 88, 90, 99, 101);
+    }
+
+    @Test
+    public void testClassify_successfulClassificationsForUpdatedAppDescription() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> oldAppInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableMap<String, AppInfo> newAppInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(
+                                appPackage1,
+                                new AppInfo(
+                                        "appName1",
+                                        "This xyz game is the best adventure game to thrill our"
+                                                + " users! Play, win and share with your friends to"
+                                                + " win more coins."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        // Return old description first and then the new description.
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages)))
+                .thenReturn(oldAppInfoMap)
+                .thenReturn(newAppInfoMap);
+
+        ImmutableMap<String, List<Integer>> firstClassifications =
+                sOnDeviceClassifier.classify(appPackages);
+        ImmutableMap<String, List<Integer>> secondClassifications =
+                sOnDeviceClassifier.classify(appPackages);
+
+        // Verify two calls to packageManagerUtil.
+        verify(mPackageManagerUtil, times(2)).getAppInformation(eq(appPackages));
+        // Two values for two input package names.
+        assertThat(secondClassifications).hasSize(1);
+        // Verify size of the labels returned is MAX_LABELS_PER_APP.
+        assertThat(secondClassifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
+
+        // Check if the first 10 categories contains at least the top 5.
+        // Scores can differ a little on devices. Using this to reduce flakiness.
+        // Check different expected scores for different descriptions.
+        // Expected top 10: 43, 140, 151, 189, 193, 208, 271, 262, 6, 136
+        assertThat(firstClassifications.get(appPackage1)).containsAtLeast(43, 140, 151, 189, 193);
+        // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
+        assertThat(secondClassifications.get(appPackage1)).containsAtLeast(93, 88, 90, 99, 101);
     }
 
     @Test
