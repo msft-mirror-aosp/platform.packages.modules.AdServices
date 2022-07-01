@@ -38,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
+import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
@@ -375,6 +376,8 @@ public final class MeasurementImplTest {
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setDomainUris(Collections.emptyList())
+                                .setOriginUris(Collections.emptyList())
                                 .build());
         assertEquals(RESULT_OK, result);
     }
@@ -386,6 +389,10 @@ public final class MeasurementImplTest {
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setDomainUris(Collections.emptyList())
+                                .setOriginUris(Collections.emptyList())
+                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setStart(Instant.now().minusSeconds(1))
                                 .setEnd(Instant.now())
                                 .build());
@@ -399,25 +406,13 @@ public final class MeasurementImplTest {
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                                .setOriginUri(DEFAULT_URI)
+                                .setDomainUris(Collections.emptyList())
+                                .setOriginUris(Collections.singletonList(DEFAULT_URI))
+                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
         assertEquals(RESULT_OK, result);
     }
-
-    @Test
-    public void testDeleteRegistrations_successfulWithRangeAndOrigin() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result =
-                measurement.deleteRegistrations(
-                        new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
-                                .setStart(Instant.now().minusSeconds(1))
-                                .setEnd(Instant.now())
-                                .setOriginUri(DEFAULT_URI)
-                                .build());
-        assertEquals(RESULT_OK, result);
-    }
-
     @Test
     public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
@@ -425,6 +420,10 @@ public final class MeasurementImplTest {
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setDomainUris(Collections.emptyList())
+                                .setOriginUris(Collections.emptyList())
+                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setStart(Instant.now())
                                 .build());
         assertEquals(RESULT_INVALID_ARGUMENT, result);
@@ -437,6 +436,10 @@ public final class MeasurementImplTest {
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setDomainUris(Collections.emptyList())
+                                .setOriginUris(Collections.emptyList())
+                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setEnd(Instant.now())
                                 .build());
         assertEquals(RESULT_INVALID_ARGUMENT, result);
@@ -452,6 +455,10 @@ public final class MeasurementImplTest {
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setDomainUris(Collections.emptyList())
+                                .setOriginUris(Collections.emptyList())
+                                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
         assertEquals(RESULT_INTERNAL_ERROR, result);
     }
