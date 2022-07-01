@@ -53,7 +53,9 @@ public class JSScriptEngine {
     public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
 
     private static final String TAG = JSScriptEngine.class.getSimpleName();
-    private static final JsSandboxProvider sJsSandboxProvider = new JsSandboxProvider();
+
+    @SuppressLint("StaticFieldLeak")
+    private static JSScriptEngine sSingleton;
 
     private final Context mContext;
     private final JsSandboxProvider mJsSandboxProvider;
@@ -64,8 +66,8 @@ public class JSScriptEngine {
      * {@code evaluate} for existing instance will cause the connection to WV to be restored if
      * necessary.
      */
-    public static void shutdown() {
-        sJsSandboxProvider.destroyCurrentInstance();
+    public void shutdown() {
+        mJsSandboxProvider.destroyCurrentInstance();
     }
 
     /**
@@ -137,14 +139,31 @@ public class JSScriptEngine {
         }
     }
 
+    @VisibleForTesting
     @SuppressLint("SetJavaScriptEnabled")
     public JSScriptEngine(@NonNull Context context) {
-        this(context, sJsSandboxProvider);
+        this(context, new JsSandboxProvider());
+    }
+
+    /** @return JSScriptEngine instance */
+    public static JSScriptEngine getInstance(@NonNull Context context) {
+        synchronized (JSScriptEngine.class) {
+            if (sSingleton == null) {
+                sSingleton = new JSScriptEngine(context, new JsSandboxProvider());
+            }
+
+            return sSingleton;
+        }
+    }
+
+    @VisibleForTesting
+    public static JSScriptEngine getInstanceForTesting(
+            Context context, JsSandboxProvider jsSandboxProvider) {
+        return new JSScriptEngine(context, jsSandboxProvider);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    @VisibleForTesting
-    JSScriptEngine(@NonNull Context context, @NonNull JsSandboxProvider jsSandboxProvider) {
+    private JSScriptEngine(@NonNull Context context, @NonNull JsSandboxProvider jsSandboxProvider) {
         this.mContext = context;
         this.mJsSandboxProvider = jsSandboxProvider;
         // Forcing initialization of WebView
