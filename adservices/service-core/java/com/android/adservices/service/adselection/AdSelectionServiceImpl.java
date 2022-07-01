@@ -265,6 +265,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /** Close down method to be invoked when the PPAPI process is shut down. */
     public void destroy() {
         LogUtil.i("Shutting down AdSelectionService");
-        JSScriptEngine.shutdown();
+        JSScriptEngine.getInstance(mContext).shutdown();
     }
 }
