@@ -41,6 +41,7 @@ public class AggregateReport {
     private String mDebugCleartextPayload;
     private AggregateAttributionData mAggregateAttributionData;
     private @Status int mStatus;
+    private String mApiVersion;
 
     @IntDef(value = {
             Status.PENDING,
@@ -78,7 +79,8 @@ public class AggregateReport {
                 && Objects.equals(mDebugCleartextPayload, aggregateReport.mDebugCleartextPayload)
                 && Objects.equals(mAggregateAttributionData,
                         aggregateReport.mAggregateAttributionData)
-                && mStatus == aggregateReport.mStatus;
+                && mStatus == aggregateReport.mStatus
+                && Objects.equals(mApiVersion, aggregateReport.mApiVersion);
     }
 
     @Override
@@ -149,6 +151,13 @@ public class AggregateReport {
      */
     public @Status int getStatus() {
         return mStatus;
+    }
+
+    /**
+     * Api version when the report was issued.
+     */
+    public String getApiVersion() {
+        return mApiVersion;
     }
 
     /**
@@ -258,6 +267,14 @@ public class AggregateReport {
          */
         public Builder setStatus(@Status int status) {
             mAttributionReport.mStatus = status;
+            return this;
+        }
+
+        /**
+         * See {@link AggregateReport#getApiVersion()}
+         */
+        public Builder setApiVersion(String version) {
+            mAttributionReport.mApiVersion = version;
             return this;
         }
 

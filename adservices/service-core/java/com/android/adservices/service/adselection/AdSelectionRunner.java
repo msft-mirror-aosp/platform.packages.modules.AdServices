@@ -35,6 +35,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -54,7 +55,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 /**
@@ -90,6 +93,7 @@ public final class AdSelectionRunner {
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull private final Clock mClock;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final Flags mFlags;
 
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -97,7 +101,8 @@ public final class AdSelectionRunner {
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService executorService,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final DevContext devContext) {
+            @NonNull final DevContext devContext,
+            @NonNull final Flags flags) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -111,9 +116,11 @@ public final class AdSelectionRunner {
                         devContext,
                         mAdSelectionEntryDao);
         mAdBidGenerator =
-                new AdBidGeneratorImpl(context, executorService, devContext, mCustomAudienceDao);
+                new AdBidGeneratorImpl(
+                        context, executorService, devContext, mCustomAudienceDao, flags);
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
+        mFlags = flags;
     }
 
     @VisibleForTesting
@@ -126,7 +133,8 @@ public final class AdSelectionRunner {
             @NonNull final AdBidGenerator adBidGenerator,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
-            @NonNull final AdServicesLogger adServicesLogger) {
+            @NonNull final AdServicesLogger adServicesLogger,
+            @NonNull final Flags flags) {
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -136,6 +144,7 @@ public final class AdSelectionRunner {
         mAdSelectionIdGenerator = adSelectionIdGenerator;
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
+        mFlags = flags;
     }
 
     /**
@@ -295,22 +304,56 @@ public final class AdSelectionRunner {
 
     private ListenableFuture<List<AdBiddingOutcome>> runAdBidding(
             @NonNull final List<DBCustomAudience> customAudiences,
-            @NonNull final AdSelectionConfig adSelectionConfig) {
+            @NonNull final AdSelectionConfig adSelectionConfig)
+            throws InterruptedException, ExecutionException {
         if (customAudiences.isEmpty()) {
             return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
         }
 
-        List<ListenableFuture<AdBiddingOutcome>> bidWinningAds = new ArrayList<>();
-        for (DBCustomAudience customAudience : customAudiences) {
-            bidWinningAds.add(runAdBiddingPerCA(customAudience, adSelectionConfig));
-        }
+        // TODO(b/237004875) : Use common thread pool for parallel execution if possible
+        ForkJoinPool customThreadPool = new ForkJoinPool(getParallelBiddingCount());
+        final List<ListenableFuture<AdBiddingOutcome>>[] bidWinningAds =
+                new List[] {new ArrayList<>()};
 
-        return Futures.successfulAsList(bidWinningAds);
+        try {
+            customThreadPool
+                    .submit(
+                            () -> {
+                                bidWinningAds[0] =
+                                        customAudiences.parallelStream()
+                                                .map(
+                                                        customAudience -> {
+                                                            return runAdBiddingPerCA(
+                                                                    customAudience,
+                                                                    adSelectionConfig);
+                                                        })
+                                                .collect(Collectors.toList());
+                            })
+                    .get();
+        } catch (InterruptedException e) {
+            final String exceptionReason = "Bidding Interrupted Exception";
+            LogUtil.e(exceptionReason, e);
+            throw new InterruptedException(exceptionReason);
+        } catch (ExecutionException e) {
+            final String exceptionReason = "Bidding Execution Exception";
+            LogUtil.e(exceptionReason, e);
+            throw new ExecutionException(e.getCause());
+        } finally {
+            customThreadPool.shutdownNow();
+        }
+        return Futures.successfulAsList(bidWinningAds[0]);
+    }
+
+    private int getParallelBiddingCount() {
+        int parallelBiddingCountConfigValue = mFlags.getAdSelectionConcurrentBiddingCount();
+        int numberOfAvailableProcessors = Runtime.getRuntime().availableProcessors();
+        return Math.min(parallelBiddingCountConfigValue, numberOfAvailableProcessors);
     }
 
     private ListenableFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig) {
+        LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
         String buyerSignal =

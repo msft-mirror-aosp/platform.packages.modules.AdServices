@@ -136,7 +136,8 @@
                         android:text="@string/notificationUI_container2_control_text_eu"
                         android:textSize="16sp" />
 
-                <!-- TODO(b/230372892): Change to correct text with styles and the correct component or animation to display and hide the text -->
+                <!-- TODO(b/230372892): Change to correct text with styles and the correct component
+                or animation to display and hide the text -->
                 <TextView
                         android:id="@+id/how_it_works_expanded_text"
                         android:layout_width="match_parent"

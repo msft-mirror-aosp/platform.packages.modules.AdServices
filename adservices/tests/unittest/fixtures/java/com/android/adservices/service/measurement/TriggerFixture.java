@@ -18,14 +18,6 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Arrays;
-
 public final class TriggerFixture {
     private TriggerFixture() { }
 
@@ -47,15 +39,14 @@ public final class TriggerFixture {
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
                 .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
-                .setAggregateTriggerData(ValidTriggerParams.buildAggregateTriggerData())
-                .setAggregateValues(ValidTriggerParams.buildAggregateValues())
+                .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .build();
     }
 
     public static class ValidTriggerParams {
         public static final Long TRIGGER_TIME = 8640000000L;
-        public static final Long TRIGGER_DATA = 3L;
         public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
@@ -86,30 +77,18 @@ public final class TriggerFixture {
                         + "}\n"
                         + "]\n";
 
-        public static final String buildAggregateTriggerData() {
-            try {
-                JSONArray triggerData = new JSONArray();
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("key_piece", "0xA80");
-                jsonObject.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
-                triggerData.put(jsonObject);
-                return triggerData.toString();
-            } catch (JSONException e) {
-                LogUtil.e("JSONException when building aggregate trigger data.");
-            }
-            return null;
-        }
+        public static final String AGGREGATE_TRIGGER_DATA =
+                "["
+                    + "{"
+                        + "\"key_piece\":\"0xA80\","
+                        + "\"source_keys\":[\"geoValue\",\"noMatch\"]"
+                    + "}"
+                + "]";
 
-        public static final String buildAggregateValues() {
-            try {
-                JSONObject values = new JSONObject();
-                values.put("campaignCounts", 32768);
-                values.put("geoValue", 1664);
-                return values.toString();
-            } catch (JSONException e) {
-                LogUtil.e("JSONException when building aggregate values.");
-            }
-            return null;
-        }
+        public static final String AGGREGATE_VALUES =
+                "{"
+                    + "\"campaignCounts\":32768,"
+                    + "\"geoValue\":1664"
+                + "}";
     }
 }

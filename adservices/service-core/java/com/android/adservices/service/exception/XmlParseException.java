@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data.measurement;
+package com.android.adservices.service.exception;
 
-import android.database.Cursor;
+import android.annotation.NonNull;
 
-import com.android.adservices.service.measurement.aggregation.AggregateReport;
+/** Exception thrown when there is an error parsing the Safety Center configuration. */
+public final class XmlParseException extends Exception {
 
-/** Helper class for SQLite operations. */
-public final class SqliteObjectMapperWrapper {
-    /**
-     * Create {@link AggregateReport} object from SQLite datastore.
-     */
-    public static AggregateReport constructAggregateReport(Cursor cursor) {
-        return SqliteObjectMapper.constructAggregateReport(cursor);
+    public XmlParseException(@NonNull String message) {
+        super(message);
+    }
+
+    public XmlParseException(@NonNull String message, @NonNull Throwable ex) {
+        super(message, ex);
     }
 }

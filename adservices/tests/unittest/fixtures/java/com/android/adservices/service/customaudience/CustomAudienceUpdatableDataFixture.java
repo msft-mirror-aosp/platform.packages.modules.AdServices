@@ -65,6 +65,14 @@ public class CustomAudienceUpdatableDataFixture {
      * of ads, malforms the expected schema, and returns it as a serialized string.
      */
     public static String getMalformedJsonResponseString() throws JSONException {
+        return getMalformedJsonObject().toString();
+    }
+
+    /**
+     * Gets a valid JSON object with keys for user bidding signals, trusted bidding data, and a list
+     * of ads, malforms the expected schema, and returns it.
+     */
+    public static JSONObject getMalformedJsonObject() throws JSONException {
         JSONObject jsonResponse = new JSONObject();
 
         jsonResponse.put(
@@ -73,7 +81,21 @@ public class CustomAudienceUpdatableDataFixture {
         jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, 0);
         jsonResponse.put(ADS_KEY, "mismatched schema");
 
-        return jsonResponse.toString();
+        return jsonResponse;
+    }
+
+    /**
+     * Gets a valid JSON object with keys for user bidding signals, trusted bidding data, and a list
+     * of ads, malforms the expected schema to null, and returns it.
+     */
+    public static JSONObject getMalformedNullJsonObject() throws JSONException {
+        JSONObject jsonResponse = new JSONObject();
+
+        jsonResponse.put(USER_BIDDING_SIGNALS_KEY, JSONObject.NULL);
+        jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, JSONObject.NULL);
+        jsonResponse.put(ADS_KEY, JSONObject.NULL);
+
+        return jsonResponse;
     }
 
     /**
@@ -100,6 +122,26 @@ public class CustomAudienceUpdatableDataFixture {
             throws JSONException {
         JSONObject jsonResponse = new JSONObject();
 
+        jsonResponse = addToJsonObject(jsonResponse, userBiddingSignals, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, trustedBiddingData, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, ads, shouldAddHarmlessJunk);
+
+        return jsonResponse.toString();
+    }
+
+    /**
+     * Converts a string representation of a JSON object into a JSONObject with a keyed field for
+     * user bidding signals.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addToJsonObject(
+            JSONObject jsonResponse, String userBiddingSignals, boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
+        }
+
         if (shouldAddHarmlessJunk) {
             addHarmlessJunkValues(jsonResponse);
         }
@@ -107,6 +149,24 @@ public class CustomAudienceUpdatableDataFixture {
         if (userBiddingSignals != null) {
             JSONObject userBiddingSignalsJson = new JSONObject(userBiddingSignals);
             jsonResponse.put(USER_BIDDING_SIGNALS_KEY, userBiddingSignalsJson);
+        }
+
+        return jsonResponse;
+    }
+
+    /**
+     * Converts {@link DBTrustedBiddingData} into a JSONObject with a keyed field for trusted
+     * bidding data.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addToJsonObject(
+            JSONObject jsonResponse,
+            DBTrustedBiddingData trustedBiddingData,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
         }
 
         if (trustedBiddingData != null) {
@@ -124,6 +184,21 @@ public class CustomAudienceUpdatableDataFixture {
             trustedBiddingDataJson.put(TRUSTED_BIDDING_KEYS_KEY, trustedBiddingKeysJson);
 
             jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, trustedBiddingDataJson);
+        }
+
+        return jsonResponse;
+    }
+
+    /**
+     * Converts a list of {@link DBAdData} into a JSONObject with a keyed field for ads.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addToJsonObject(
+            JSONObject jsonResponse, List<DBAdData> ads, boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
         }
 
         if (ads != null) {
@@ -147,7 +222,7 @@ public class CustomAudienceUpdatableDataFixture {
             jsonResponse.put(ADS_KEY, adsJson);
         }
 
-        return jsonResponse.toString();
+        return jsonResponse;
     }
 
     /** Modifies the target JSONObject in-place to add harmless junk values. */
@@ -155,7 +230,7 @@ public class CustomAudienceUpdatableDataFixture {
         target.put("junk_int", 1);
         target.put("junk_boolean", true);
         target.put("junk_string", "harmless junk");
-        target.put("junk_null", null);
+        target.put("junk_null", JSONObject.NULL);
         target.put("junk_object", new JSONObject("{'harmless':true,'object':1}"));
     }
 
@@ -163,8 +238,7 @@ public class CustomAudienceUpdatableDataFixture {
     private static void addHarmlessJunkValues(JSONArray target) throws JSONException {
         target.put(1);
         target.put(true);
-        target.put("harmless junk");
-        target.put(null);
+        target.put(JSONObject.NULL);
         target.put(new JSONObject("{'harmless':true,'object':1}"));
     }
 

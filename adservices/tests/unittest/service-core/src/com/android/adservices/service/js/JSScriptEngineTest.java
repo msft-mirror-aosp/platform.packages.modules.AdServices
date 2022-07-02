@@ -65,7 +65,7 @@ public class JSScriptEngineTest {
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
-    private final JSScriptEngine mJSScriptEngine = new JSScriptEngine(sContext);
+    private final JSScriptEngine mJSScriptEngine = JSScriptEngine.getInstance(sContext);
 
     @Test
     public void testCanRunSimpleScriptWithNoArgs() throws Exception {
@@ -184,7 +184,7 @@ public class JSScriptEngineTest {
     @Test
     public void testCanCreateMultipleInstancesOfScriptEngine()
             throws InterruptedException, ExecutionException {
-        JSScriptEngine otherEngine = new JSScriptEngine(sContext);
+        JSScriptEngine otherEngine = JSScriptEngine.getInstance(sContext);
         CountDownLatch resultsLatch = new CountDownLatch(2);
         final ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.of(recordArg("jsonArg", stringArg("name", "Stefano")));
@@ -246,7 +246,7 @@ public class JSScriptEngineTest {
                                 "test"))
                 .isEqualTo("\"hello world\"");
 
-        JSScriptEngine.shutdown();
+        JSScriptEngine.getInstance(sContext).shutdown();
 
         assertThat(
                         callJSEngine(
@@ -265,9 +265,9 @@ public class JSScriptEngineTest {
                                 "test"))
                 .isEqualTo("\"hello world\"");
 
-        JSScriptEngine.shutdown();
+        JSScriptEngine.getInstance(sContext).shutdown();
 
-        JSScriptEngine newEngine = new JSScriptEngine(sContext);
+        JSScriptEngine newEngine = JSScriptEngine.getInstance(sContext);
 
         assertThat(
                         callJSEngine(
@@ -280,17 +280,16 @@ public class JSScriptEngineTest {
 
     @Test
     public void testConnectionIsResetIfJSProcessIsTerminated() {
-        JSScriptEngine.JsSandboxProvider mockSandboxProvider =
-                mock(JSScriptEngine.JsSandboxProvider.class);
-
         AwJsSandbox throwingSandbox = mock(AwJsSandbox.class);
         when(throwingSandbox.createIsolate())
                 .thenThrow(
                         new IllegalStateException(
                                 "simulating a failure caused by AwJsSandbox being disconnected"));
-
         FluentFuture<AwJsSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(throwingSandbox));
+
+        JSScriptEngine.JsSandboxProvider mockSandboxProvider =
+                mock(JSScriptEngine.JsSandboxProvider.class);
         when(mockSandboxProvider.getFutureInstance(Mockito.any(Context.class)))
                 .thenReturn(futureInstance);
 
@@ -299,7 +298,7 @@ public class JSScriptEngineTest {
                         ExecutionException.class,
                         () ->
                                 callJSEngine(
-                                        new JSScriptEngine(
+                                        JSScriptEngine.getInstanceForTesting(
                                                 ApplicationProvider.getApplicationContext(),
                                                 mockSandboxProvider),
                                         "function test() { return \"hello world\"; }",
