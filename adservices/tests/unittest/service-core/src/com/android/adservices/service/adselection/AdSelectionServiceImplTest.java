@@ -34,6 +34,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -1240,7 +1241,9 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         MockitoSession staticMockitoSession =
-                ExtendedMockito.mockitoSession().mockStatic(JSScriptEngine.class).startMocking();
+                ExtendedMockito.mockitoSession().spyStatic(JSScriptEngine.class).startMocking();
+        JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
+        when(JSScriptEngine.getInstance(any())).thenReturn(jsScriptEngineMock);
 
         try {
             AdSelectionServiceImpl adSelectionService =
@@ -1255,8 +1258,7 @@ public class AdSelectionServiceImplTest {
                             mFlags);
 
             adSelectionService.destroy();
-
-            ExtendedMockito.verify(JSScriptEngine::shutdown);
+            verify(jsScriptEngineMock).shutdown();
         } finally {
             staticMockitoSession.finishMocking();
         }

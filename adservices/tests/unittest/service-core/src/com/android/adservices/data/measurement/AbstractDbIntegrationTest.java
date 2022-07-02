@@ -152,6 +152,34 @@ public abstract class AbstractDbIntegrationTest {
         return testCases;
     }
 
+    public static Collection<Object[]> getTestCasesFromMultipleStreams(
+            List<InputStream> inputStreams, CheckedJsonFunction prepareAdditionalData)
+            throws IOException, JSONException {
+        List<Object[]> testCases = new ArrayList<>();
+        for (InputStream inputStream : inputStreams) {
+            int size = inputStream.available();
+            byte[] buffer = new byte[size];
+            inputStream.read(buffer);
+            inputStream.close();
+            String json = new String(buffer, StandardCharsets.UTF_8);
+            JSONObject testObj = new JSONObject(json);
+            String name = testObj.getString("name");
+            JSONObject input = testObj.getJSONObject("input");
+            JSONObject output = testObj.getJSONObject("output");
+            DbState inputState = new DbState(input);
+            DbState outputState = new DbState(output);
+            if (prepareAdditionalData != null) {
+                testCases.add(
+                        new Object[] {
+                            inputState, outputState, prepareAdditionalData.apply(testObj), name
+                        });
+            } else {
+                testCases.add(new Object[] {inputState, outputState, name});
+            }
+        }
+        return testCases;
+    }
+
     /**
      * Compares two lists of the same measurement record type.
      * (Caller enforces the element types.)
