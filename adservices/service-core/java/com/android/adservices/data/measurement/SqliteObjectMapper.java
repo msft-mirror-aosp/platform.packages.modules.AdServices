@@ -177,6 +177,8 @@ public class SqliteObjectMapper {
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
+                builder::setApiVersion);
         return builder.build();
     }
 

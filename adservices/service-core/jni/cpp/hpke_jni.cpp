@@ -95,3 +95,82 @@ JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_HpkeJni_encrypt
                           reinterpret_cast<const jbyte*>(payload.data()));
   return payload_byte_array;
 }
+
+// Hybrid Public Key Encryption (HPKE) decryption operation
+// RFC: https://datatracker.ietf.org/doc/rfc9180
+//
+// Based from chromium's boringSSL implementation
+// https://source.chromium.org/chromium/chromium/src/+/main:content/browser/aggregation_service/aggregation_service_test_utils.cc;l=305
+JNIEXPORT jbyteArray JNICALL Java_com_android_adservices_HpkeJni_decrypt
+  (JNIEnv* env, jobject object,
+   jbyteArray privateKey, jbyteArray ciphertext, jbyteArray associatedData) {
+
+  if (privateKey == NULL || ciphertext == NULL || associatedData == NULL) {
+      return {};
+  }
+
+  if (env->GetArrayLength(privateKey) != X25519_PRIVATE_KEY_LEN) {
+      return {};
+  }
+
+  bssl::ScopedEVP_HPKE_KEY hpke_key;
+  jbyte* private_key = env->GetByteArrayElements(privateKey, 0);
+  if (!EVP_HPKE_KEY_init(hpke_key.get(),
+                         EVP_hpke_x25519_hkdf_sha256(),
+                         reinterpret_cast<const uint8_t*>(private_key),
+                         env->GetArrayLength(privateKey))) {
+    env->ReleaseByteArrayElements(privateKey, private_key, JNI_ABORT);
+    return {};
+  }
+
+  env->ReleaseByteArrayElements(privateKey, private_key, JNI_ABORT);
+
+  std::vector<uint8_t> payload(env->GetArrayLength(ciphertext));
+  env->GetByteArrayRegion(ciphertext,
+                          0,
+                          env->GetArrayLength(ciphertext),
+                          reinterpret_cast<jbyte*>(payload.data()));
+
+  bssl::Span<uint8_t> payload_span = bssl::MakeSpan(payload);
+  bssl::Span<uint8_t> enc = payload_span.subspan(0, X25519_PUBLIC_VALUE_LEN);
+  bssl::ScopedEVP_HPKE_CTX recipient_context;
+  jbyte* associated_data = env->GetByteArrayElements(associatedData, 0);
+  if (!EVP_HPKE_CTX_setup_recipient(
+          /*ctx=*/ recipient_context.get(),
+          /*key=*/ hpke_key.get(),
+          /*kdf=*/ EVP_hpke_hkdf_sha256(),
+          /*aead=*/ EVP_hpke_chacha20_poly1305(),
+          /*enc=*/ enc.data(),
+          /*enc_len=*/ enc.size(),
+          /*info=*/ reinterpret_cast<const uint8_t*>(associated_data),
+          /*info_len=*/ env->GetArrayLength(associatedData))) {
+    env->ReleaseByteArrayElements(associatedData, associated_data, JNI_ABORT);
+    return {};
+  }
+
+  env->ReleaseByteArrayElements(associatedData, associated_data, JNI_ABORT);
+
+  bssl::Span<const uint8_t> ciphertext_span = payload_span.subspan(X25519_PUBLIC_VALUE_LEN);
+  std::vector<uint8_t> plaintext(ciphertext_span.size());
+  size_t plaintext_len;
+  if (!EVP_HPKE_CTX_open(
+          /*ctx=*/ recipient_context.get(),
+          /*out=*/ plaintext.data(),
+          /*out_len*/ &plaintext_len,
+          /*max_out_len=*/ plaintext.size(),
+          /*in=*/ ciphertext_span.data(),
+          /*in_len=*/ ciphertext_span.size(),
+          /*ad=*/ nullptr,
+          /*ad_len=*/ 0)) {
+      return {};
+  }
+
+  plaintext.resize(plaintext_len);
+
+  jbyteArray payload_byte_array = env->NewByteArray(plaintext.size());
+  env->SetByteArrayRegion(payload_byte_array,
+                          0,
+                          plaintext.size(),
+                          reinterpret_cast<const jbyte*>(plaintext.data()));
+  return payload_byte_array;
+}
