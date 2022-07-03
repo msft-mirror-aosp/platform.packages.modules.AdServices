@@ -51,7 +51,8 @@ public class TopicsDao {
         TopicsTables.CallerCanLearnTopicsContract.TABLE,
         TopicsTables.ReturnedTopicContract.TABLE,
         TopicsTables.TopTopicsContract.TABLE,
-        TopicsTables.BlockedTopicsContract.TABLE
+        TopicsTables.BlockedTopicsContract.TABLE,
+        TopicsTables.EpochOriginContract.TABLE,
     };
 
     private final DbHelper mDbHelper; // Used in tests.
@@ -962,5 +963,67 @@ public class TopicsDao {
         } catch (SQLException e) {
             LogUtil.e(e, String.format("Failed to delete %s in table %s.", appNames, tableName));
         }
+    }
+
+    /**
+     * Persist the origin's timestamp of epoch service in milliseconds into database.
+     *
+     * @param originTimestampMs the timestamp user first calls Topics API
+     */
+    public void persistEpochOrigin(long originTimestampMs) {
+        SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
+        if (db == null) {
+            return;
+        }
+
+        ContentValues values = new ContentValues();
+        values.put(TopicsTables.EpochOriginContract.ORIGIN, originTimestampMs);
+
+        try {
+            db.insert(TopicsTables.EpochOriginContract.TABLE, /* nullColumnHack */ null, values);
+        } catch (SQLException e) {
+            LogUtil.e("Failed to persist epoch origin." + e.getMessage());
+        }
+    }
+
+    /**
+     * Retrieve origin's timestamp of epoch service in milliseconds. If there is no origin persisted
+     * in database, return -1;
+     *
+     * @return the origin's timestamp of epoch service in milliseconds. Return -1 if no origin is
+     *     persisted.
+     */
+    public long retrieveEpochOrigin() {
+        long origin = -1L;
+
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return origin;
+        }
+
+        String[] projection = {
+            TopicsTables.EpochOriginContract.ORIGIN,
+        };
+
+        try (Cursor cursor =
+                db.query(
+                        TopicsTables.EpochOriginContract.TABLE, // The table to query
+                        projection, // The array of columns to return (pass null to get all)
+                        null, // The columns for the WHERE clause
+                        null, // The values for the WHERE clause
+                        null, // don't group the rows
+                        null, // don't filter by row groups
+                        null // The sort order
+                        )) {
+            // Return the only entry in this table if existed.
+            if (cursor.moveToNext()) {
+                origin =
+                        cursor.getLong(
+                                cursor.getColumnIndexOrThrow(
+                                        TopicsTables.EpochOriginContract.ORIGIN));
+            }
+        }
+
+        return origin;
     }
 }

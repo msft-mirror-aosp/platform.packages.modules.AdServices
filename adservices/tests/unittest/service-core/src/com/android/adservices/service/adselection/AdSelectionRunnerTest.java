@@ -60,6 +60,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -107,6 +108,7 @@ public class AdSelectionRunnerTest {
     @Mock private AdBidGenerator mMockAdBidGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private Clock mClock;
+    @Mock private Flags mFlags;
 
     private Context mContext;
     private ExecutorService mExecutorService;
@@ -175,6 +177,7 @@ public class AdSelectionRunnerTest {
         mAdScoringOutcomeList =
                 Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        when(mFlags.getAdSelectionConcurrentBiddingCount()).thenReturn(4);
     }
 
     private DBCustomAudience createDBCustomAudience(final String buyer) {
@@ -278,7 +281,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -400,7 +404,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -457,6 +462,9 @@ public class AdSelectionRunnerTest {
         // If there was no bidding then we should not even attempt to run scoring
         verifyZeroInteractions(mMockAdsScoreGenerator);
 
+        // We won't get to the part where we need to get the concurrent bidding count
+        Mockito.lenient().when(mFlags.getAdSelectionConcurrentBiddingCount()).thenReturn(4);
+
         mAdSelectionRunner =
                 new AdSelectionRunner(
                         mContext,
@@ -467,7 +475,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
 
@@ -543,7 +552,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -663,7 +673,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -753,7 +764,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -851,7 +863,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
@@ -951,7 +964,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
@@ -1073,7 +1087,8 @@ public class AdSelectionRunnerTest {
                         mMockAdBidGenerator,
                         mMockAdSelectionIdGenerator,
                         mClock,
-                        mAdServicesLoggerSpy);
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);

@@ -45,7 +45,6 @@ public final class AggregateReportFixture {
                 .setReportingOrigin(ValidAggregateReportParams.REPORTING_ORIGIN)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
                 .setStatus(EventReport.Status.PENDING)
-                .setApiVersion(ValidAggregateReportParams.API_VERSION)
                 .build();
     }
 
@@ -56,7 +55,6 @@ public final class AggregateReportFixture {
         public static final long SOURCE_REGISTRATION_TIME = 8640000000L;
         public static final long TRIGGER_TIME = 8640000000L;
         public static final Uri REPORTING_ORIGIN = Uri.parse("https://com.example");
-        public static final String API_VERSION = "0.1";
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

@@ -644,6 +644,17 @@ class MeasurementDao implements IMeasurementDao {
         deleteMeasurementData(db, registrant, origin, start, end);
     }
 
+    @Override
+    public void deleteAllMeasurementData(@NonNull List<String> tablesToExclude)
+            throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        for (String table : MeasurementTables.ALL_MSMT_TABLES) {
+            if (!tablesToExclude.contains(table)) {
+                db.delete(table, /* whereClause */ null, /* whereArgs */ null);
+            }
+        }
+    }
+
     private void validateOptionalRange(Instant start, Instant end) {
         if (start == null ^ end == null) {
             throw new IllegalArgumentException(

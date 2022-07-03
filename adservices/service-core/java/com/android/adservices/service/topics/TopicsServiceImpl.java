@@ -34,6 +34,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -82,7 +83,10 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         final String sdkName = topicsParam.getSdkName();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
-        boolean permitted = PermissionHelper.hasTopicsPermission(mContext);
+        boolean permitted =
+                PermissionHelper.hasTopicsPermission(mContext)
+                        && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                mContext, packageName, sdkName);
 
         // We need to save the Calling Uid before offloading to the background executor. Otherwise
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
