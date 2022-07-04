@@ -48,7 +48,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     private InitSdkCallback mCallback;
 
     @Override
-    public void initSdk(
+    public void onLoadSdk(
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,

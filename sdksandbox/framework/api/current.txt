@@ -7,8 +7,8 @@ package android.app.sdksandbox {
   public abstract class SandboxedSdkProvider {
     ctor public SandboxedSdkProvider();
     method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle);
-    method public abstract void initSdk(@NonNull android.app.sdksandbox.SandboxedSdkContext, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.InitSdkCallback);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);
+    method public abstract void onLoadSdk(@NonNull android.app.sdksandbox.SandboxedSdkContext, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.InitSdkCallback);
   }
 
   public static interface SandboxedSdkProvider.DataReceivedCallback {
