@@ -39,8 +39,8 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
-        callback.onInitSdkFinished(null);
+            OnLoadSdkCallback callback) {
+        callback.onLoadSdkFinished(null);
         mContext = context;
     }
 

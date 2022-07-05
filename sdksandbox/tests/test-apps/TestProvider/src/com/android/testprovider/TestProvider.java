@@ -31,8 +31,8 @@ public class TestProvider extends SandboxedSdkProvider {
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
-        callback.onInitSdkFinished(params);
+            OnLoadSdkCallback callback) {
+        callback.onLoadSdkFinished(params);
     }
 
     @Override
