@@ -69,12 +69,8 @@ import com.android.server.SystemService;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -104,9 +100,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private final Map<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
     @GuardedBy("mLock")
-    private final ArrayMap<CallingInfo, HashSet<Integer>> mSandboxLoadedSdkUids =
-            new ArrayMap<>();
-    @GuardedBy("mLock")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
 
     private final SdkSandboxManagerLocal mLocalManager;
@@ -130,26 +123,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void registerBroadcastReceivers() {
-        // Register for package removal
-        final IntentFilter packageRemovedIntentFilter = new IntentFilter();
-        packageRemovedIntentFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
-        packageRemovedIntentFilter.addDataScheme("package");
-        BroadcastReceiver packageRemovedIntentReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                final int sdkUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
-                if (sdkUid == -1) {
-                    return;
-                }
-                final boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
-                if (replacing) {
-                    mHandler.post(() -> onSdkUpdating(sdkUid));
-                }
-            }
-        };
-        mContext.registerReceiver(packageRemovedIntentReceiver, packageRemovedIntentFilter,
-                /*broadcastPermission=*/null, mHandler);
-
         // Register for package addition and update
         final IntentFilter packageAddedIntentFilter = new IntentFilter();
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -168,25 +141,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         };
         mContext.registerReceiver(packageAddedIntentReceiver, packageAddedIntentFilter,
                 /*broadcastPermission=*/null, mHandler);
-    }
-
-    private void onSdkUpdating(int sdkUid) {
-        final ArrayList<Integer> appUids = new ArrayList<>();
-        synchronized (mLock) {
-            for (int i = 0; i < mSandboxLoadedSdkUids.size(); i++) {
-                final CallingInfo callingInfo = mSandboxLoadedSdkUids.keyAt(i);
-                final HashSet<Integer> loadedCodeUids = mSandboxLoadedSdkUids.get(callingInfo);
-                if (Objects.requireNonNull(loadedCodeUids).contains(sdkUid)) {
-                    appUids.add(callingInfo.getUid());
-                }
-            }
-        }
-        for (int i = 0; i < appUids.size(); i++) {
-            final int appUid = appUids.get(i);
-            Log.i(TAG, "Killing app " + appUid + " containing code " + sdkUid);
-            // TODO(b/230839879): Avoid killing by uid
-            mActivityManager.killUid(appUid, "Package updating");
-        }
     }
 
     @Override
@@ -473,9 +427,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     void stopSdkSandboxService(CallingInfo callingInfo, String reason) {
         mServiceProvider.unbindService(callingInfo);
-        synchronized (mLock) {
-            mSandboxLoadedSdkUids.remove(callingInfo);
-        }
         final int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
         Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
         // TODO(b/230839879): Avoid killing by uid
@@ -504,26 +455,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     sdkDataInfo.getDeDataDir(),
                     params,
                     link);
-
-            onSdkLoaded(callingInfo, sdkProviderInfo.getApplicationInfo().uid);
         } catch (RemoteException e) {
             String errorMsg = "Failed to load code";
             Log.w(TAG, errorMsg, e);
             link.handleLoadSdkError(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, errorMsg,
                     /*cleanupInternalState=*/ true);
-        }
-    }
-
-    private void onSdkLoaded(CallingInfo callingInfo, int sdkUid) {
-        synchronized (mLock) {
-            final HashSet<Integer> sdkUids = mSandboxLoadedSdkUids.get(callingInfo);
-            if (sdkUids != null) {
-                sdkUids.add(sdkUid);
-            } else {
-                mSandboxLoadedSdkUids.put(
-                        callingInfo, new HashSet<>(Collections.singletonList(sdkUid))
-                );
-            }
         }
     }
 
