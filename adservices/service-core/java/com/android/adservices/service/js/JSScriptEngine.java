@@ -17,6 +17,7 @@
 package com.android.adservices.service.js;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
 
@@ -28,6 +29,7 @@ import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ClosingFuture;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -55,7 +57,10 @@ import javax.annotation.concurrent.GuardedBy;
  */
 public class JSScriptEngine {
     public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
-    public static final String TAG = JSScriptEngine.class.getSimpleName();
+
+    @VisibleForTesting public static final String TAG = JSScriptEngine.class.getSimpleName();
+    public static final String WASM_MODULE_BYTES_ID = "__wasmModuleBytes";
+    public static final String WASM_MODULE_ARG_NAME = "wasmModule";
 
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
@@ -279,55 +284,148 @@ public class JSScriptEngine {
      *     {@code entryFunctionName}'s invocation
      */
     @NonNull
-    @SuppressLint("SetJavaScriptEnabled")
     public ListenableFuture<String> evaluate(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
+        return evaluateInternal(jsScript, args, entryFunctionName, null);
+    }
+
+    /**
+     * Loads the WASM module defined by {@code wasmBinary}, invokes the function {@code
+     * entryFunctionName} defined by the JS code in {@code jsScript} and return the result. It will
+     * reset the WebView status after evaluating the script. The function is expected to accept all
+     * the arguments defined in {@code args} plus an extra final parameter of type {@code
+     * WebAssembly.Module}.
+     *
+     * @param jsScript The JS script
+     * @param args The arguments to pass when invoking {@code entryFunctionName}
+     * @param entryFunctionName The name of a function defined in {@code jsScript} that should be
+     *     invoked.
+     * @return A {@link ListenableFuture} containing the JS string representation of the result of
+     *     {@code entryFunctionName}'s invocation
+     */
+    @NonNull
+    public ListenableFuture<String> evaluate(
+            @NonNull String jsScript,
+            @NonNull byte[] wasmBinary,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName) {
+        Objects.requireNonNull(wasmBinary);
+
+        return evaluateInternal(jsScript, args, entryFunctionName, wasmBinary);
+    }
+
+    @NonNull
+    private ListenableFuture<String> evaluateInternal(
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @Nullable byte[] wasmBinary) {
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
 
         return ClosingFuture.from(mJsSandboxProvider.getFutureInstance(mContext))
                 .transformAsync(
-                        (closer, jsSandbox) -> {
-                            LogUtil.v(
-                                    "Creating new isolate on thread %s",
-                                    Thread.currentThread().getName());
-
-                            JsIsolate jsIsolate = createIsolate(jsSandbox);
-                            closer.eventuallyClose(
-                                    new CloseableIsolateWrapper(jsIsolate), mExecutorService);
-                            LogUtil.v(
-                                    "Evaluating JS script on thread %s",
-                                    Thread.currentThread().getName());
-                            String entryPointCall = callEntryPoint(args, entryFunctionName);
-
-                            String fullScript = jsScript + "\n" + entryPointCall;
-                            LogUtil.d("Calling WebView for script %s", fullScript);
-
-                            StopWatch jsExecutionStopWatch =
-                                    mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
-                            return ClosingFuture.from(jsIsolate.evaluateJavascriptAsync(fullScript))
-                                    .transform(
-                                            (ignoredCloser, result) -> {
-                                                jsExecutionStopWatch.stop();
-                                                return result;
-                                            },
-                                            mExecutorService)
-                                    .catching(
-                                            Exception.class,
-                                            (ignoredCloser, exception) -> {
-                                                jsExecutionStopWatch.stop();
-                                                throw new JSExecutionException(
-                                                        "Failure running JS in WebView: "
-                                                                + exception.getMessage(),
-                                                        exception);
-                                            },
-                                            mExecutorService);
-                        },
+                        (closer, jsSandbox) ->
+                                evaluateOnSandbox(
+                                        closer,
+                                        jsSandbox,
+                                        jsScript,
+                                        args,
+                                        entryFunctionName,
+                                        wasmBinary),
                         mExecutorService)
                 .finishToFuture();
+    }
+
+    @NonNull
+    private ClosingFuture<String> evaluateOnSandbox(
+            @NonNull ClosingFuture.DeferredCloser closer,
+            @NonNull JsSandbox jsSandbox,
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            @Nullable byte[] wasmBinary) {
+
+        boolean hasWasmModule = wasmBinary != null;
+        if (hasWasmModule) {
+            Preconditions.checkState(
+                    isWasmSupported(jsSandbox),
+                    "Cannot evaluate a JS script depending on WASM on the JS"
+                            + " Sandbox available on this device");
+        }
+
+        JsIsolate jsIsolate = createIsolate(jsSandbox);
+        closer.eventuallyClose(new CloseableIsolateWrapper(jsIsolate), mExecutorService);
+
+        if (hasWasmModule) {
+            LogUtil.d(
+                    "Evaluating JS script with associated WASM on thread %s",
+                    Thread.currentThread().getName());
+
+            if (!jsIsolate.provideNamedData(WASM_MODULE_BYTES_ID, wasmBinary)) {
+                throw new JSExecutionException("Unable to pass WASM byte array to JS Isolate");
+            }
+        } else {
+            LogUtil.d("Evaluating JS script on thread %s", Thread.currentThread().getName());
+        }
+
+        String entryPointCall = callEntryPoint(args, entryFunctionName, hasWasmModule);
+
+        String fullScript = jsScript + "\n" + entryPointCall;
+        LogUtil.d("Calling WebView for script %s", fullScript);
+
+        StopWatch jsExecutionStopWatch =
+                mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
+        return ClosingFuture.from(jsIsolate.evaluateJavascriptAsync(fullScript))
+                .transform(
+                        (ignoredCloser, result) -> {
+                            jsExecutionStopWatch.stop();
+                            return result;
+                        },
+                        mExecutorService)
+                .catching(
+                        Exception.class,
+                        (ignoredCloser, exception) -> {
+                            jsExecutionStopWatch.stop();
+                            throw new JSExecutionException(
+                                    "Failure running JS in WebView: " + exception.getMessage(),
+                                    exception);
+                        },
+                        mExecutorService);
+    }
+
+    private boolean isWasmSupported(JsSandbox jsSandbox) {
+        boolean wasmCompilationSupported = jsSandbox.isFeatureSupported(JsSandbox.WASM_COMPILATION);
+        // We will pass the WASM binary via `provideNamesData`
+        // The JS will read the data using android.consumeNamedDataAsArrayBuffer
+        boolean provideConsumeArrayBufferSupported =
+                jsSandbox.isFeatureSupported(JsSandbox.PROVIDE_CONSUME_ARRAY_BUFFER);
+        // The call android.consumeNamedDataAsArrayBuffer to read the WASM byte array
+        // returns a promises so all our code will be in a promise chain
+        boolean promiseReturnSupported = jsSandbox.isFeatureSupported(JsSandbox.PROMISE_RETURN);
+        LogUtil.d(
+                String.format(
+                        "Is WASM supported? WASM_COMPILATION: %b  PROVIDE_CONSUME_ARRAY_BUFFER: %b,"
+                                + " PROMISE_RETURN: %b",
+                        wasmCompilationSupported,
+                        provideConsumeArrayBufferSupported,
+                        promiseReturnSupported));
+        return wasmCompilationSupported
+                && provideConsumeArrayBufferSupported
+                && promiseReturnSupported;
+    }
+
+    /**
+     * @return a future value inidicating if the JS Sandbox installed on the device supports WASM
+     *     execution or an error if the connection to the JS Sandbox failed.
+     */
+    public ListenableFuture<Boolean> isWasmSupported() {
+        return mJsSandboxProvider
+                .getFutureInstance(mContext)
+                .transform(jsSandbox -> isWasmSupported(jsSandbox), mExecutorService);
     }
 
     /**
@@ -354,12 +452,16 @@ public class JSScriptEngine {
 
     /**
      * @return The JS code for the definition an anonymous function containing the declaration of
-     *     the value of {@code args} and the invocation of the given {@code entryFunctionName}. Ex.
-     *     (function() { const name = "Stefano"; return helloPerson(name); })();
+     *     the value of {@code args} and the invocation of the given {@code entryFunctionName}. If
+     *     the {@code addWasmBinary} parameter is true, the target function is expected to accept an
+     *     extra final parameter 'wasmModule' of type {@code WebAssembly.Module} and the method will
+     *     return a promise.
      */
     @NonNull
     private String callEntryPoint(
-            @NonNull List<JSScriptArgument> args, @NonNull String entryFunctionName) {
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName,
+            boolean addWasmBinary) {
         StringBuilder resultBuilder = new StringBuilder("(function() {\n");
         // Declare args as constant inside this function closure to avoid any direct access by
         // the functions in the script we are calling.
@@ -370,14 +472,26 @@ public class JSScriptEngine {
             resultBuilder.append("\n");
         }
 
+        String argumentPassing =
+                args.stream().map(JSScriptArgument::name).collect(Collectors.joining(","));
+        if (addWasmBinary) {
+            argumentPassing += "," + WASM_MODULE_ARG_NAME;
+            resultBuilder.append(
+                    String.format(
+                            "return android.consumeNamedDataAsArrayBuffer(\"%s\")"
+                                    + ".then((__value) => {\n"
+                                    + " return WebAssembly.compile(__value).then((%s) => {\n",
+                            WASM_MODULE_BYTES_ID, WASM_MODULE_ARG_NAME));
+        }
+
         // Call entryFunctionName with the constants just declared as parameters
         resultBuilder.append(
                 String.format(
-                        "return JSON.stringify(%s(%s));\n",
-                        entryFunctionName,
-                        args.stream()
-                                .map(JSScriptArgument::name)
-                                .collect(Collectors.joining(","))));
+                        "return JSON.stringify(%s(%s));\n", entryFunctionName, argumentPassing));
+
+        if (addWasmBinary) {
+            resultBuilder.append("})});\n");
+        }
         resultBuilder.append("})();\n");
 
         return resultBuilder.toString();
