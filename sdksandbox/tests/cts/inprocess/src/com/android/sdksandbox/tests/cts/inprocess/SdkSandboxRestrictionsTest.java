@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -114,6 +115,17 @@ public class SdkSandboxRestrictionsTest {
         assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
     }
 
+    /** Tests that the sandbox cannot send broadcasts. */
+    @Test
+    public void testNoBroadcasts() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        SecurityException thrown =
+                assertThrows(SecurityException.class, () -> context.sendBroadcast(intent));
+        assertThat(thrown).hasMessageThat().contains("may not be broadcast from an SDK sandbox");
+    }
+
     /**
      * Tests that sandbox can open URLs in a browser.
      */
@@ -127,6 +139,22 @@ public class SdkSandboxRestrictionsTest {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         ctx.startActivity(intent);
+    }
+
+    /** Tests that the sandbox cannot send explicit intents by specifying a package or component. */
+    @Test
+    public void testNoExplicitIntents() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        Intent packageIntent = new Intent(Intent.ACTION_VIEW);
+        packageIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        packageIntent.setPackage("test.package");
+        assertThrows(SecurityException.class, () -> context.startActivity(packageIntent));
+
+        Intent componentIntent = new Intent(Intent.ACTION_VIEW);
+        componentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        componentIntent.setComponent(new ComponentName("test.package", "TestClass"));
+        assertThrows(SecurityException.class, () -> context.startActivity(componentIntent));
     }
 
     /**

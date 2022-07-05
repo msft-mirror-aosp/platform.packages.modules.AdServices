@@ -455,8 +455,6 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testEnforceAllowedToSendBroadcast() {
         SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
-        Intent allowedIntent = new Intent(Intent.ACTION_VIEW);
-        mSdkSandboxManagerLocal.enforceAllowedToSendBroadcast(allowedIntent);
 
         Intent disallowedIntent = new Intent(Intent.ACTION_SCREEN_ON);
         assertThrows(SecurityException.class,
