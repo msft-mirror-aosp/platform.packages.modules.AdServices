@@ -16,11 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.measurement.MeasurementManager.RESULT_INTERNAL_ERROR;
-import static android.adservices.measurement.MeasurementManager.RESULT_INVALID_ARGUMENT;
-import static android.adservices.measurement.MeasurementManager.RESULT_IO_ERROR;
-import static android.adservices.measurement.MeasurementManager.RESULT_OK;
-
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
+import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.service.measurement.attribution.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
@@ -150,7 +149,7 @@ public final class MeasurementImpl {
                     return fetchAndInsertTriggers(request, requestTime);
 
                 default:
-                    return MeasurementManager.RESULT_INVALID_ARGUMENT;
+                    return RESULT_INVALID_ARGUMENT;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -204,9 +203,9 @@ public final class MeasurementImpl {
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
                         getRegistrant(request.getAttributionSource()));
-                return MeasurementManager.RESULT_OK;
+                return RESULT_OK;
             } else {
-                return MeasurementManager.RESULT_IO_ERROR;
+                return RESULT_IO_ERROR;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -298,9 +297,9 @@ public final class MeasurementImpl {
                     requestTime,
                     request.getTopOriginUri(),
                     getRegistrant(request.getAttributionSource()));
-            return MeasurementManager.RESULT_OK;
+            return RESULT_OK;
         } else {
-            return MeasurementManager.RESULT_IO_ERROR;
+            return RESULT_IO_ERROR;
         }
     }
 
@@ -314,9 +313,9 @@ public final class MeasurementImpl {
                     request.getTopOriginUri(),
                     getRegistrant(request.getAttributionSource()),
                     getSourceType(request.getInputEvent()));
-            return MeasurementManager.RESULT_OK;
+            return RESULT_OK;
         } else {
-            return MeasurementManager.RESULT_IO_ERROR;
+            return RESULT_IO_ERROR;
         }
     }
 

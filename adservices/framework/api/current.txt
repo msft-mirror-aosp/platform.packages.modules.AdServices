@@ -263,10 +263,9 @@ package android.adservices.exceptions {
   }
 
   public class MeasurementException extends android.adservices.exceptions.AdServicesException {
-    ctor public MeasurementException(int);
-    ctor public MeasurementException(int, @NonNull String);
-    ctor public MeasurementException(int, @NonNull String, @NonNull Throwable);
-    method public int getResultCode();
+    ctor public MeasurementException();
+    ctor public MeasurementException(@NonNull String);
+    ctor public MeasurementException(@NonNull String, @NonNull Throwable);
   }
 
 }
@@ -306,10 +305,6 @@ package android.adservices.measurement {
     method public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Void,java.lang.Exception>);
     field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
     field public static final int MEASUREMENT_API_STATE_ENABLED = 1; // 0x1
-    field public static final int RESULT_INTERNAL_ERROR = 1; // 0x1
-    field public static final int RESULT_INVALID_ARGUMENT = 2; // 0x2
-    field public static final int RESULT_IO_ERROR = 3; // 0x3
-    field public static final int RESULT_OK = 0; // 0x0
   }
 
   public final class WebSourceParams implements android.os.Parcelable {
