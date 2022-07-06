@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
+import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.MeasurementApiUtil;
@@ -330,6 +331,10 @@ public final class MeasurementServiceImplTest {
     private DeletionParam getDefaultDeletionRequest() {
         return new DeletionParam.Builder()
                 .setAttributionSource(sContext.getAttributionSource())
+                .setDomainUris(Collections.emptyList())
+                .setOriginUris(Collections.emptyList())
+                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                 .build();
     }
 }
