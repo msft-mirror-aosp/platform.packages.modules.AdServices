@@ -16,14 +16,64 @@
 
 package android.adservices.measurement;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.time.Instant;
 
 /** Get Deletion Request. */
 public class DeletionRequest {
+
+    /**
+     * Deletion modes for matched records.
+     *
+     * @hide
+     */
+    @IntDef(value = {DELETION_MODE_ALL, DELETION_MODE_EXCLUDE_RATE_LIMITS})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DeletionMode {}
+
+    /**
+     * Matching Behaviors for params.
+     *
+     * @hide
+     */
+    @IntDef(value = {MATCH_BEHAVIOR_DELETE, MATCH_BEHAVIOR_PRESERVE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface MatchBehavior {}
+
+    /**
+     * Deletion mode to delete all data associated with the selected records.
+     *
+     * @hide
+     */
+    public static final int DELETION_MODE_ALL = 0;
+
+    /**
+     * Deletion mode to delete all data except the rate limits for the selected records.
+     *
+     * @hide
+     */
+    public static final int DELETION_MODE_EXCLUDE_RATE_LIMITS = 1;
+
+    /**
+     * Match behavior option to delete the supplied params (Origin/Domains).
+     *
+     * @hide
+     */
+    public static final int MATCH_BEHAVIOR_DELETE = 0;
+
+    /**
+     * Match behavior option to preserve the supplied params (Origin/Domains).
+     *
+     * @hide
+     */
+    public static final int MATCH_BEHAVIOR_PRESERVE = 1;
+
     private final Uri mOriginUri;
     private final Instant mStart;
     private final Instant mEnd;

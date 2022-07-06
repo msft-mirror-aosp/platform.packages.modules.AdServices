@@ -192,6 +192,7 @@
   },
   "param": {
     "registrant": "android-app://com.registrant.deleteCandidate",
-    "origin": "android-app://com.site.toBeDeleted"
+    "origins": ["android-app://com.site.toBeDeleted"],
+    "domains": []
   }
 }
