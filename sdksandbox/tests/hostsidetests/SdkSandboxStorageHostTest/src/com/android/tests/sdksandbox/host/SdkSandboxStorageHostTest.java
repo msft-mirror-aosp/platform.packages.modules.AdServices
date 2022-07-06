@@ -60,7 +60,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private static final long SWITCH_USER_COMPLETED_NUMBER_OF_POLLS = 60;
     private static final long SWITCH_USER_COMPLETED_POLL_INTERVAL_IN_MILLIS = 1000;
-    private static final long WAIT_FOR_RECONCILE_MS = 5000;
+    private static final long WAIT_FOR_RECONCILE_MS = 20000;
 
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
@@ -289,11 +289,100 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest
+    public void testSdkDataPackageDirectory_IsReconciled_IncludesDifferentVolumes()
+            throws Exception {
+        try {
+            installPackage(TEST_APP_STORAGE_APK);
+
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+
+            assertSuccess(
+                    getDevice()
+                            .executeShellCommand(
+                                    "pm move-package "
+                                            + TEST_APP_STORAGE_PACKAGE
+                                            + " "
+                                            + newVolumeUuid));
+
+            final String ceSdkDataRootPath =
+                    "/mnt/expand/" + newVolumeUuid + "/misc_ce" + "/0/sdksandbox";
+            final String ceSdkDataPackagePath = ceSdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
+
+            final String deSdkDataRootPath =
+                    "/mnt/expand/" + newVolumeUuid + "/misc_ce" + "/0/sdksandbox";
+            final String deSdkDataPackagePath = deSdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
+
+            // Rename the sdk data directory to some non-existing package name
+            final String ceInvalidDir = ceSdkDataRootPath + "/" + "com.invalid.foo";
+            getDevice()
+                    .executeShellCommand(
+                            String.format("mv %s %s", ceSdkDataPackagePath, ceInvalidDir));
+            assertDirectoryExists(ceInvalidDir);
+
+            final String deInvalidDir = deSdkDataRootPath + "/" + "com.invalid.foo";
+            getDevice()
+                    .executeShellCommand(
+                            String.format("mv %s %s", deSdkDataPackagePath, deInvalidDir));
+            assertDirectoryExists(deInvalidDir);
+
+            // Reboot since reconcilation happens on user unlock only
+            getDevice().reboot();
+            Thread.sleep(WAIT_FOR_RECONCILE_MS);
+
+            // Verify invalid directory doesn't exist
+            assertDirectoryDoesNotExist(ceInvalidDir);
+            assertDirectoryDoesNotExist(deInvalidDir);
+            assertDirectoryExists(ceSdkDataPackagePath);
+            assertDirectoryExists(deSdkDataPackagePath);
+
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    @Test
+    @LargeTest
+    public void testSdkDataPackageDirectory_IsReconciled_ChecksForPackageOnWrongVolume()
+            throws Exception {
+        try {
+            installPackage(TEST_APP_STORAGE_APK);
+
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+
+            assertSuccess(
+                    getDevice()
+                            .executeShellCommand(
+                                    "pm move-package "
+                                            + TEST_APP_STORAGE_PACKAGE
+                                            + " "
+                                            + newVolumeUuid));
+
+            final String ceInvalidDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
+            final String deInvalidDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
+
+            // Create sdk package directory for testapp on null volume
+            getDevice().executeShellCommand(String.format("mkdir %s", ceInvalidDir));
+            getDevice().executeShellCommand(String.format("mkdir %s", deInvalidDir));
+
+            // Reboot since reconcilation happens on user unlock only
+            getDevice().reboot();
+            Thread.sleep(WAIT_FOR_RECONCILE_MS);
+
+            // Verify invalid directory doesn't exist
+            assertDirectoryDoesNotExist(ceInvalidDir);
+            assertDirectoryDoesNotExist(deInvalidDir);
+
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
+    }
+
+    @Test
+    @LargeTest
     public void testSdkDataPackageDirectory_IsReconciled_MissingSubDirs() throws Exception {
 
         installPackage(TEST_APP_STORAGE_APK);
 
-        // Rename the sdk data directory to some non-existing package name
         final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         // Delete the shared directory
         final String sharedDir = cePackageDir + "/shared";
@@ -317,7 +406,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Uninstall while keeping the data
         getDevice().executeShellCommand("pm uninstall -k --user 0 " + TEST_APP_STORAGE_PACKAGE);
 
-        // Rename the sdk data directory to some non-existing package name
         final String cePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePackageDir = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
         assertDirectoryExists(cePackageDir);
@@ -330,6 +418,49 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Verify sdk data are not cleaned up during reconcilation
         assertDirectoryExists(cePackageDir);
         assertDirectoryExists(dePackageDir);
+    }
+
+    @Test
+    @LargeTest
+    public void testSdkDataPackageDirectory_IsReconciled_DeleteKeepNewVolumeData()
+            throws Exception {
+
+        try {
+            installPackage(TEST_APP_STORAGE_APK);
+
+            final String newVolumeUuid = mAdoptableUtils.createNewVolume();
+
+            assertSuccess(
+                    getDevice()
+                            .executeShellCommand(
+                                    "pm move-package "
+                                            + TEST_APP_STORAGE_PACKAGE
+                                            + " "
+                                            + newVolumeUuid));
+
+            // Uninstall while keeping the data
+            getDevice().executeShellCommand("pm uninstall -k --user 0 " + TEST_APP_STORAGE_PACKAGE);
+
+            final String ceSdkDataRootPath =
+                    "/mnt/expand/" + newVolumeUuid + "/misc_ce" + "/0/sdksandbox";
+            final String ceSdkDataPackagePath = ceSdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
+
+            final String deSdkDataRootPath =
+                    "/mnt/expand/" + newVolumeUuid + "/misc_ce" + "/0/sdksandbox";
+            final String deSdkDataPackagePath = deSdkDataRootPath + "/" + TEST_APP_STORAGE_PACKAGE;
+            assertDirectoryExists(ceSdkDataPackagePath);
+            assertDirectoryExists(deSdkDataPackagePath);
+
+            // Reboot since reconcilation happens on user unlock only
+            getDevice().reboot();
+            Thread.sleep(WAIT_FOR_RECONCILE_MS);
+
+            // Verify sdk data are not cleaned up during reconcilation
+            assertDirectoryExists(ceSdkDataPackagePath);
+            assertDirectoryExists(deSdkDataPackagePath);
+        } finally {
+            mAdoptableUtils.cleanUpVolume();
+        }
     }
 
     @Test
@@ -641,43 +772,45 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify directory is created
-        assertThat(getSdkDataPerSdkPath(
-                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNotNull();
-        assertThat(getSdkDataPerSdkPath(
-                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
+        assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true)).isNotNull();
+        assertThat(getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, false)).isNotNull();
     }
 
     @Test
     @LargeTest
-    public void testSdkDataSubDirectory_IsCreatedOnInstall_DeviceLocked()
-            throws Exception {
-        assumeThat("Device is NOT encrypted with file-based encryption.",
-                getDevice().getProperty("ro.crypto.type"), equalTo("file"));
-        assumeTrue("Screen lock is not supported so skip direct boot test",
+    public void testSdkDataSubDirectory_IsCreatedOnInstall_DeviceLocked() throws Exception {
+        assumeThat(
+                "Device is NOT encrypted with file-based encryption.",
+                getDevice().getProperty("ro.crypto.type"),
+                equalTo("file"));
+        assumeTrue(
+                "Screen lock is not supported so skip direct boot test",
                 hasDeviceFeature("android.software.secure_lock_screen"));
-
-        // Store number of package directories under root path for comparison later
-        final String ceSandboxPath = getSdkDataRootPath(0, /*isCeData=*/true);
-        String[] children = getDevice().getChildren(ceSandboxPath);
 
         try {
             mDeviceLockUtils.rebootToLockedDevice();
             // Install app after installation
             installPackage(TEST_APP_STORAGE_APK);
             // De storage area should already have per-sdk directories
-            assertThat(getSdkDataPerSdkPath(
-                        0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/false)).isNotNull();
+            assertThat(
+                            getSdkDataPerSdkPath(
+                                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/ false))
+                    .isNotNull();
 
             mDeviceLockUtils.unlockDevice();
 
             // Allow some time for reconciliation task to finish
             Thread.sleep(WAIT_FOR_RECONCILE_MS);
 
-            assertThat(getSdkDataPerSdkPath(
-                        0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/false)).isNotNull();
+            assertThat(
+                            getSdkDataPerSdkPath(
+                                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/ false))
+                    .isNotNull();
             // Once device is unlocked, the per-sdk ce directories should be created
-            assertThat(getSdkDataPerSdkPath(
-                        0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/true)).isNotNull();
+            assertThat(
+                            getSdkDataPerSdkPath(
+                                    0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, /*isCeData=*/ true))
+                    .isNotNull();
         } finally {
             mDeviceLockUtils.clearScreenLock();
         }
@@ -688,8 +821,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         installPackage(TEST_APP_STORAGE_APK);
 
         // Verify that per-sdk storage exist
-        final String perSdkStorage = getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE,
-                SDK_NAME, true);
+        final String perSdkStorage =
+                getSdkDataPerSdkPath(0, TEST_APP_STORAGE_PACKAGE, SDK_NAME, true);
         assertThat(getDevice().isDirectory(perSdkStorage)).isTrue();
 
         // Write a file in the storage that code needs to read and write it back
@@ -701,8 +834,9 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSdkDataSubDirectory_PerSdkStorageIsUsable");
 
         // Assert that code was able to create file and directories
-        assertWithMessage("Failed to create directory in per-sdk storage").that(
-                getDevice().isDirectory(perSdkStorage + "/dir")).isTrue();
+        assertWithMessage("Failed to create directory in per-sdk storage")
+                .that(getDevice().isDirectory(perSdkStorage + "/dir"))
+                .isTrue();
         assertThat(getDevice().doesFileExist(perSdkStorage + "/dir/file")).isTrue();
         String content = getDevice().executeShellCommand("cat " + perSdkStorage + "/dir/file");
         assertThat(content).isEqualTo("something to read");
