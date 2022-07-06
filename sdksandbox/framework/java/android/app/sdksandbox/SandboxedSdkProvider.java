@@ -35,23 +35,26 @@ import java.util.concurrent.Executor;
 public abstract class SandboxedSdkProvider {
 
     /**
-     * Does the initialization work needed to start calling the SDK.
+     * Does the work needed for the SDK to start handling requests.
      *
-     * <p> This function is called by SDK sandbox after it loads SDK
+     * <p>This function is called by SDK sandbox after it loads SDK
      *
-     * <p> SDK should do any initialization work to be ready to handle upcoming requests. It
-     * should not include the initialization logic that depends on other SDKs being
-     * loaded into the SDK sandbox.
+     * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
+     * initialization logic that depends on other SDKs being loaded into the SDK sandbox. Any
+     * further initialization can be triggered by the client using {@link
+     * SdkSandboxManager#sendData}.
      *
-     * @param sandboxedSdkContext a {@link SandboxedSdkContext}
-     *                            which is the context of the SDK loaded in the SDK sandbox process
+     * @param sandboxedSdkContext a {@link SandboxedSdkContext} which is the context of the SDK
+     *     loaded in the SDK sandbox process
      * @param params list of params passed from App when it loads the SDK.
      * @param executor the {@link Executor} on which to invoke the {@code callback}
      * @param callback to notify App if the SDK successfully loaded
      */
-    public abstract void initSdk(
-            @NonNull SandboxedSdkContext sandboxedSdkContext, @NonNull Bundle params,
-            @NonNull Executor executor, @NonNull InitSdkCallback callback);
+    public abstract void onLoadSdk(
+            @NonNull SandboxedSdkContext sandboxedSdkContext,
+            @NonNull Bundle params,
+            @NonNull Executor executor,
+            @NonNull InitSdkCallback callback);
 
     /**
      * Requests a view to be remotely rendered to the client app process.
