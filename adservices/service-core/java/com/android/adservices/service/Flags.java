@@ -229,4 +229,30 @@ public interface Flags extends Dumpable {
     default int getNumberOfEpochsToKeepInHistory() {
         return NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
     }
+
+    /** Downloader Connection Timeout in Milliseconds. */
+    int DOWNLOADER_CONNECTION_TIMEOUT_MS = 10 * 1000; // 10 seconds.
+
+    /*
+     * Return the Downloader Connection Timeout in Milliseconds.
+     */
+    default int getDownloaderConnectionTimeoutMs() {
+        return DOWNLOADER_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Downloader Read Timeout in Milliseconds. */
+    int DOWNLOADER_READ_TIMEOUT_MS = 10 * 1000; // 10 seconds.
+
+    /** Returns the Downloader Read Timeout in Milliseconds. */
+    default int getDownloaderReadTimeoutMs() {
+        return DOWNLOADER_READ_TIMEOUT_MS;
+    }
+
+    /** Downloader max download threads. */
+    int DOWNLOADER_MAX_DOWNLOAD_THREADS = 2;
+
+    /** Returns the Downloader Read Timeout in Milliseconds. */
+    default int getDownloaderMaxDownloadThreads() {
+        return DOWNLOADER_MAX_DOWNLOAD_THREADS;
+    }
 }
