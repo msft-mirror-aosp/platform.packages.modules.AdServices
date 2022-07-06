@@ -82,7 +82,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             throws AdServicesException {
 
         ListenableFuture<String> scoreAdJs =
-                getAdSelectionLogic(adSelectionConfig.getDecisionLogicUrl(), adSelectionConfig);
+                getAdSelectionLogic(adSelectionConfig.getDecisionLogicUri(), adSelectionConfig);
 
         AsyncFunction<String, List<Double>> getScoresFromLogic =
                 adScoringLogic -> {

@@ -63,7 +63,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         }
         violations.addAll(
                 validateSellerAndSellerDecisionUrls(
-                        adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUrl()));
+                        adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUri()));
 
         return violations.build();
     }
