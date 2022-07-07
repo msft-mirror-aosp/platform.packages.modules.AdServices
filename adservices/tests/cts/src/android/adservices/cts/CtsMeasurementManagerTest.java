@@ -16,22 +16,37 @@
 
 package android.adservices.cts;
 
-import android.adservices.exceptions.AdServicesException;
+import static com.google.common.truth.Truth.assertThat;
+
+import android.adservices.clients.measurement.MeasurementClient;
+import android.adservices.exceptions.MeasurementException;
+import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
+import android.adservices.measurement.WebSourceParams;
+import android.adservices.measurement.WebSourceRegistrationRequest;
+import android.adservices.measurement.WebTriggerParams;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 import android.test.suitebuilder.annotation.SmallTest;
 
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.time.Instant;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -39,80 +54,150 @@ import java.util.concurrent.Executors;
 @RunWith(AndroidJUnit4.class)
 public class CtsMeasurementManagerTest {
 
+    private MeasurementClient mMeasurementClient;
+    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+
     private static final String INVALID_SERVER_ADDRESS = "http://example.com";
+    private static final Uri SOURCE_ORIGIN = Uri.parse("http://source-origin.com");
+    private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
+    private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
+    private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
+    private static final String ORIGIN_PACKAGE = "android-app://com.site.toBeDeleted";
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
-    @Test
-    public void testRegisterSource_withCallbackButNoServerSetup_NoErrors() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        OutcomeReceiver<Void, AdServicesException> callback =
-                new OutcomeReceiver<Void, AdServicesException>() {
-            @Override
-            public void onResult(@NonNull Void result) {
-                future.complete(result);
-            }
-
-            @Override
-            public void onError(AdServicesException error) {
-                Assert.fail();
-            }
-        };
-        manager.registerSource(
-                /* attributionSource = */ Uri.parse(INVALID_SERVER_ADDRESS),
-                /* inputEvent = */ null,
-                /* executor = */ mExecutorService,
-                /* callback = */ callback
-        );
-
-        Assert.assertNull(future.get());
+    @Before
+    public void setup() {
+        mMeasurementClient =
+                new MeasurementClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
     }
 
     @Test
-    public void testRegisterSource_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerSource(
-                /* attributionSource = */ Uri.parse(INVALID_SERVER_ADDRESS),
-                /* inputEvent = */ null
-        );
+    public void testRegisterSource_withCallbackButNoServerSetup_NoErrors() throws Exception {
+        ListenableFuture<Void> result =
+                mMeasurementClient.registerSource(
+                        Uri.parse(INVALID_SERVER_ADDRESS), /* inputEvent = */ null);
+        assertThat(result.get()).isNull();
     }
 
     @Test
     public void testRegisterTrigger_withCallbackButNoServerSetup_NoErrors() throws Exception {
+        ListenableFuture<Void> result =
+                mMeasurementClient.registerTrigger(Uri.parse(INVALID_SERVER_ADDRESS));
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void registerWebSource_withCallback_NoErrors() throws Exception {
+        WebSourceParams webSourceParams =
+                new WebSourceParams.Builder()
+                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setAllowDebugKey(false)
+                        .build();
+
+        WebSourceRegistrationRequest webSourceRegistrationRequest =
+                new WebSourceRegistrationRequest.Builder()
+                        .setSourceParams(Collections.singletonList(webSourceParams))
+                        .setTopOriginUri(SOURCE_ORIGIN)
+                        .setInputEvent(null)
+                        .setOsDestination(OS_DESTINATION)
+                        .setWebDestination(WEB_DESTINATION)
+                        .setVerifiedDestination(null)
+                        .build();
+
+        ListenableFuture<Void> result =
+                mMeasurementClient.registerWebSource(webSourceRegistrationRequest);
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void registerWebTrigger_withCallback_NoErrors() throws Exception {
+        WebTriggerParams webTriggerParams =
+                new WebTriggerParams.Builder()
+                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setAllowDebugKey(false)
+                        .build();
+        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
+                new WebTriggerRegistrationRequest.Builder()
+                        .setTriggerParams(Collections.singletonList(webTriggerParams))
+                        .setDestination(DESTINATION)
+                        .build();
+
+        ListenableFuture<Void> result =
+                mMeasurementClient.registerWebTrigger(webTriggerRegistrationRequest);
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withNoOrigin_withNoRange_withCallback_NoErrors()
+            throws Exception {
+        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withOrigin_withNoRange_withCallback_NoErrors()
+            throws Exception {
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder().setOriginUri(Uri.parse(ORIGIN_PACKAGE)).build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withNoOrigin_withRange_withCallback_NoErrors()
+            throws Exception {
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder()
+                        .setStart(Instant.ofEpochMilli(0))
+                        .setEnd(Instant.now())
+                        .build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withOrigin_withRange_withCallback_NoErrors()
+            throws Exception {
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder()
+                        .setOriginUri(Uri.parse(ORIGIN_PACKAGE))
+                        .setStart(Instant.ofEpochMilli(0))
+                        .setEnd(Instant.now())
+                        .build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertThat(result.get()).isNull();
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
+            throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-        OutcomeReceiver<Void, AdServicesException> callback =
-                new OutcomeReceiver<Void, AdServicesException>() {
+        OutcomeReceiver<Void, Exception> callback =
+                new OutcomeReceiver<Void, Exception>() {
                     @Override
                     public void onResult(@NonNull Void result) {
-                        future.complete(result);
+                        Assert.fail();
                     }
 
                     @Override
-                    public void onError(AdServicesException error) {
-                        Assert.fail();
+                    public void onError(Exception error) {
+                        future.complete(null);
+                        Assert.assertEquals(
+                                ((MeasurementException) error).getResultCode(),
+                                MeasurementManager.RESULT_INVALID_ARGUMENT);
                     }
                 };
-        manager.registerTrigger(
-                /* trigger = */ Uri.parse(INVALID_SERVER_ADDRESS),
-                /* executor = */ mExecutorService,
-                /* callback = */ callback
-        );
-
+        DeletionRequest request = new DeletionRequest.Builder().setEnd(Instant.now()).build();
+        manager.deleteRegistrations(request, mExecutorService, callback);
         Assert.assertNull(future.get());
-    }
-
-    @Test
-    public void testRegisterTrigger_withNoCallback_NoErrorsThrown() throws Exception {
-        final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
-        manager.registerTrigger(
-                /* trigger = */ Uri.parse(INVALID_SERVER_ADDRESS)
-        );
     }
 }

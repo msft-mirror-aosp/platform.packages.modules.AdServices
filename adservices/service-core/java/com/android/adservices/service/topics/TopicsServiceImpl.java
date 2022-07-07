@@ -27,11 +27,17 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Binder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -49,12 +55,18 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final TopicsWorker mTopicsWorker;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final AdServicesLogger mAdServicesLogger;
+    private final ConsentManager mConsentManager;
     private Clock mClock;
 
-    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker,
-            AdServicesLogger adServicesLogger, Clock clock) {
+    public TopicsServiceImpl(
+            Context context,
+            TopicsWorker topicsWorker,
+            ConsentManager consentManager,
+            AdServicesLogger adServicesLogger,
+            Clock clock) {
         mContext = context;
         mTopicsWorker = topicsWorker;
+        mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
     }
@@ -66,28 +78,46 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull IGetTopicsCallback callback) {
 
         final long startServiceTime = mClock.elapsedRealtime();
-        final String packageName = topicsParam.getAttributionSource().getPackageName();
+        // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
+        final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
-        boolean permitted = PermissionHelper.hasTopicsPermission(mContext);
+        boolean permitted =
+                PermissionHelper.hasTopicsPermission(mContext)
+                        && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                mContext, packageName, sdkName);
+
+        // We need to save the Calling Uid before offloading to the background executor. Otherwise
+        // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
+        // since it's used in the lambda.
+        final int callingUid = Binder.getCallingUid();
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = RESULT_OK;
 
                     try {
-                        // Check if caller has permission to invoke this API.
-                        if (!permitted) {
+                        AdServicesApiConsent userConsent =
+                                mConsentManager.getConsent(mContext.getPackageManager());
+                        // Check if caller has permission to invoke this API and user has given
+                        // a consent
+                        if (!permitted || !userConsent.isGiven()) {
                             resultCode = RESULT_UNAUTHORIZED_CALL;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);
-                        } else {
-                            callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
-
-                            mTopicsWorker.recordUsage(
-                                    topicsParam.getAttributionSource().getPackageName(),
-                                    topicsParam.getSdkName());
+                            return;
                         }
+
+                        resultCode = enforceCallingPackageBelongsToUid(packageName, callingUid);
+                        if (resultCode != RESULT_OK) {
+                            callback.onFailure(resultCode);
+                            return;
+                        }
+
+                        callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
+
+                        mTopicsWorker.recordUsage(
+                                topicsParam.getAppPackageName(), topicsParam.getSdkName());
                     } catch (RemoteException e) {
                         LogUtil.e("Unable to send result to the callback", e);
                         resultCode = RESULT_INTERNAL_ERROR;
@@ -110,6 +140,30 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    // Enforce that the callingPackage has the callingUid.
+    private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
+        int appCallingUid;
+        // Check the Calling Package Name
+        if (Process.isSdkSandboxUid(callingUid)) {
+            // The callingUid is the Sandbox UId, convert it to the app UId.
+            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
+        } else {
+            appCallingUid = callingUid;
+        }
+        int packageUid;
+        try {
+            packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, callingPackage + " not found");
+            return RESULT_UNAUTHORIZED_CALL;
+        }
+        if (packageUid != appCallingUid) {
+            LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
+            return RESULT_UNAUTHORIZED_CALL;
+        }
+        return RESULT_OK;
     }
 
     /**

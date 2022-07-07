@@ -25,6 +25,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.FilterUtil;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
@@ -36,20 +37,24 @@ import com.android.adservices.service.measurement.aggregation.AggregateAttributi
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
+    private static final String API_VERSION = "0.1";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
@@ -175,23 +180,37 @@ class AttributionJobHandler {
                                 aggregateAttributionSource.get(),
                                 aggregateAttributionTrigger.get());
                 if (contributions.isPresent()) {
+                    OptionalInt newAggregateContributions =
+                            validateAndGetUpdatedAggregateContributions(
+                                    contributions.get(), source);
+                    if (newAggregateContributions.isPresent()) {
+                        source.setAggregateContributions(newAggregateContributions.getAsInt());
+                    } else {
+                        LogUtil.d("Aggregate contributions exceeded bound. Source ID: %s ; "
+                                + "Trigger ID: %s ", source.getId(), trigger.getId());
+                        return false;
+                    }
+
                     long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
                             + MIN_TIME_MS);
-                    CleartextAggregatePayload aggregateReport =
-                            new CleartextAggregatePayload.Builder()
+                    AggregateReport aggregateReport =
+                            new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
                                     .setAttributionDestination(source.getAttributionDestination())
                                     .setSourceRegistrationTime(source.getEventTime())
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
-                                            CleartextAggregatePayload.generateDebugPayload(
+                                            AggregateReport.generateDebugPayload(
                                                     contributions.get()))
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
                                                     .setContributions(contributions.get()).build())
-                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
+                                    .setStatus(AggregateReport.Status.PENDING)
+                                    .setApiVersion(API_VERSION)
+                                    .build();
 
+                    measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);
                     // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
                     return true;
@@ -233,27 +252,38 @@ class AttributionJobHandler {
         return Optional.of(selectedSource);
     }
 
-    private boolean maybeGenerateEventReport(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean maybeGenerateEventReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         // Do not generate event reports for source which have attributionMode != Truthfully.
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
             return false;
         }
-        // Check if deduplication key clashes with existing reports.
-        if (trigger.getDedupKey() != null
-                && source.getDedupKeys().contains(trigger.getDedupKey())) {
+
+        Optional<EventTrigger> matchingEventTrigger =
+                findFirstMatchingEventTrigger(source, trigger);
+        if (!matchingEventTrigger.isPresent()) {
             return false;
         }
 
-        EventReport newEventReport = new EventReport.Builder()
-                .populateFromSourceAndTrigger(source, trigger).build();
+        EventTrigger eventTrigger = matchingEventTrigger.get();
+        // Check if deduplication key clashes with existing reports.
+        if (eventTrigger.getDedupKey() != null
+                && source.getDedupKeys().contains(eventTrigger.getDedupKey())) {
+            return false;
+        }
+
+        EventReport newEventReport =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .build();
 
         if (!provisionEventReportQuota(source, newEventReport, measurementDao)) {
             return false;
         }
 
-        finalizeEventReportCreation(source, trigger, newEventReport, measurementDao);
+        finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
         return true;
     }
 
@@ -291,10 +321,13 @@ class AttributionJobHandler {
     }
 
     private void finalizeEventReportCreation(
-            Source source, Trigger trigger, EventReport eventReport, IMeasurementDao measurementDao)
+            Source source,
+            EventTrigger eventTrigger,
+            EventReport eventReport,
+            IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (trigger.getDedupKey() != null) {
-            source.getDedupKeys().add(trigger.getDedupKey());
+        if (eventTrigger.getDedupKey() != null) {
+            source.getDedupKeys().add(eventTrigger.getDedupKey());
         }
         measurementDao.updateSourceDedupKeys(source);
 
@@ -361,10 +394,83 @@ class AttributionJobHandler {
         }
     }
 
-    private AggregateFilterData extractFilterMap(String source) throws JSONException {
-        JSONObject sourceFilterObject = new JSONObject(source);
+    private Optional<EventTrigger> findFirstMatchingEventTrigger(Source source, Trigger trigger) {
+        try {
+            String sourceFilters = source.getAggregateFilterData();
+
+            AggregateFilterData sourceFiltersData;
+            if (sourceFilters == null || sourceFilters.isEmpty()) {
+                // Initialize an empty map to add source_type to it later
+                sourceFiltersData = new AggregateFilterData.Builder().build();
+            } else {
+                sourceFiltersData = extractFilterMap(sourceFilters);
+            }
+
+            // Add source type
+            appendToAggregateFilterData(
+                    sourceFiltersData,
+                    "source_type",
+                    Collections.singletonList(source.getSourceType().getValue()));
+
+            List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+            return eventTriggers.stream()
+                    .filter(
+                            eventTrigger ->
+                                    doEventLevelFiltersMatch(sourceFiltersData, eventTrigger))
+                    .findFirst();
+        } catch (JSONException e) {
+            // If JSON is malformed, we shall consider as not matched.
+            LogUtil.e("Malformed JSON string.", e);
+            return Optional.empty();
+        }
+    }
+
+    private boolean doEventLevelFiltersMatch(
+            AggregateFilterData sourceFiltersData, EventTrigger eventTrigger) {
+        if (eventTrigger.getFilterData().isPresent()
+                && !FilterUtil.isFilterMatch(
+                        sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
+            return false;
+        }
+
+        if (eventTrigger.getNotFilterData().isPresent()
+                && !FilterUtil.isFilterMatch(
+                        sourceFiltersData, eventTrigger.getNotFilterData().get(), false)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private AggregateFilterData extractFilterMap(String object) throws JSONException {
+        JSONObject sourceFilterObject = new JSONObject(object);
         return new AggregateFilterData.Builder()
                 .buildAggregateFilterData(sourceFilterObject)
                 .build();
+    }
+
+    private void appendToAggregateFilterData(
+            AggregateFilterData filterData, String key, List<String> value) {
+        Map<String, List<String>> attributeFilterMap = filterData.getAttributionFilterMap();
+        attributeFilterMap.put(key, value);
+    }
+
+    private static OptionalInt validateAndGetUpdatedAggregateContributions(
+            List<AggregateHistogramContribution> contributions, Source source) {
+        int newAggregateContributions = source.getAggregateContributions();
+        for (AggregateHistogramContribution contribution : contributions) {
+            try {
+                newAggregateContributions =
+                        Math.addExact(newAggregateContributions, contribution.getValue());
+                if (newAggregateContributions
+                        > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                    return OptionalInt.empty();
+                }
+            } catch (ArithmeticException e) {
+                LogUtil.e("Error adding aggregate contribution values.", e);
+                return OptionalInt.empty();
+            }
+        }
+        return OptionalInt.of(newAggregateContributions);
     }
 }

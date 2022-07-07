@@ -33,6 +33,8 @@ import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;

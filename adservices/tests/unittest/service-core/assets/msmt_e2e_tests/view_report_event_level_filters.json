@@ -1,0 +1,92 @@
+{
+  "description": "One source with source type \"navigation\". Trigger with 3 event triggers - 1st one not matching even level filters, 2nd one matches, hence picked for report generation.",
+  "input": {
+    "sources": [{
+      "registration_request": {
+        "attribution_src_url": "https://www.ad-tech1.com",
+        "source_origin": "android-app://example.1s1.com",
+        "source_type": "navigation",
+        "registrant": "example.1s1.com"
+      },
+      "responses": [{
+        "url": "https://www.ad-tech1.com",
+        "response": {
+          "Attribution-Reporting-Register-Source": {
+            "source_event_id": "1",
+            "destination": "android-app://example.2d1.com",
+            "priority": "100",
+            "filter_data": {
+              "top_key_1": ["top_value_1", "top_value_2"],
+              "event_key_1": ["event_value_1", "event_value_2"]
+            }
+          },
+          "Attribution-Reporting-Register-Aggregatable-Source": null,
+          "Location": null,
+          "Attribution-Reporting-Redirect": null
+        }
+      }],
+      "timestamp": "800000000001"
+    }],
+    "triggers": [
+      {
+        "registration_request": {
+          "attribution_src_url": "https://www.ad-tech1.com",
+          "destination_origin": "android-app://example.2d1.com",
+          "registrant": "example.2d1.com"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.com",
+          "response": {
+            "Attribution-Reporting-Register-Event-Trigger": [
+              {
+                "trigger_data": "1",
+                "priority": "101",
+                "filters": {
+                  "event_key_1": ["event_value_x"]
+                }
+              },
+              {
+                "trigger_data": "2",
+                "priority": "102",
+                "filters": {
+                  "source_type": ["navigation"]
+                }
+              },
+              {
+                "trigger_data": "3",
+                "priority": "103",
+                "filters": {
+                  "source_type": ["navigation"]
+                }
+              }
+            ],
+            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+            "Location": null,
+            "Attribution-Reporting-Redirect": null,
+            "Attribution-Reporting-Filters": {
+                "top_key_1": ["top_value_1"],
+                "source_type": ["navigation"]
+            }
+          }
+        }],
+        "timestamp": "800604800000"
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "report_time": "800608400001",
+        "report_url": "https://www.ad-tech1.com",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.com",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ],
+    "aggregatable_results": []
+  }
+}

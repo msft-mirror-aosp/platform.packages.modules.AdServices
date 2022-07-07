@@ -22,6 +22,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.validation.Validation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,13 +47,11 @@ import java.util.Set;
 public class Trigger {
 
     private String mId;
-    private Long mDedupKey;
     private Uri mAttributionDestination;
     private Uri mAdTechDomain;
     private long mTriggerTime;
-    private long mPriority;
-    private long mEventTriggerData;
-    private @Status int mStatus;
+    private String mEventTriggers;
+    @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
     private String mAggregateValues;
@@ -72,7 +71,6 @@ public class Trigger {
         int ATTRIBUTED = 2;
     }
     private Trigger() {
-        mDedupKey = null;
         mStatus = Status.PENDING;
     }
 
@@ -86,10 +84,8 @@ public class Trigger {
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
-                && mEventTriggerData == trigger.mEventTriggerData
-                && mPriority == trigger.mPriority
+                && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
-                && Objects.equals(mDedupKey, trigger.mDedupKey)
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
                 && Objects.equals(mAggregateValues, trigger.mAggregateValues)
@@ -105,10 +101,8 @@ public class Trigger {
                 mAttributionDestination,
                 mAdTechDomain,
                 mTriggerTime,
-                mEventTriggerData,
-                mPriority,
+                mEventTriggers,
                 mStatus,
-                mDedupKey,
                 mAggregateTriggerData,
                 mAggregateValues,
                 mAggregatableAttributionTrigger,
@@ -120,13 +114,6 @@ public class Trigger {
      */
     public String getId() {
         return mId;
-    }
-
-    /**
-     * Deduplication key for distinguishing among different {@link Trigger} types.
-     */
-    public Long getDedupKey() {
-        return mDedupKey;
     }
 
     /**
@@ -151,6 +138,13 @@ public class Trigger {
     }
 
     /**
+     * Event triggers containing priority, de-dup key, trigger data and event-level filters info.
+     */
+    public String getEventTriggers() {
+        return mEventTriggers;
+    }
+
+    /**
      * Current state of the {@link Trigger}.
      */
     public @Status int getStatus() {
@@ -162,20 +156,6 @@ public class Trigger {
      */
     public void setStatus(@Status int status) {
         mStatus = status;
-    }
-
-    /**
-     * Priority used for selecting among {@link Trigger}.
-     */
-    public long getPriority() {
-        return mPriority;
-    }
-
-    /**
-     * Metadata for the {@link Trigger}.
-     */
-    public long getEventTriggerData() {
-        return mEventTriggerData;
     }
 
     /**
@@ -245,16 +225,6 @@ public class Trigger {
     }
 
     /**
-     * Function to truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
-     *
-     * @param source for which trigger data is being retrieved
-     * @return truncated trigger data
-     */
-    public long getTruncatedTriggerData(Source source) {
-        return mEventTriggerData % source.getTriggerDataCardinality();
-    }
-
-    /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
@@ -270,6 +240,10 @@ public class Trigger {
             String hexString = jsonObject.getString("key_piece");
             if (hexString.startsWith("0x")) {
                 hexString = hexString.substring(2);
+            }
+            // Do not process trigger if a key exceeds 128 bits.
+            if (hexString.length() > 32) {
+                return Optional.empty();
             }
             BigInteger bigInteger = new BigInteger(hexString, 16);
             JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
@@ -305,6 +279,60 @@ public class Trigger {
     }
 
     /**
+     * Parses the json array under {@link #mEventTriggers} to form a list of {@link EventTrigger}s.
+     *
+     * @return list of {@link EventTrigger}s
+     * @throws JSONException if JSON parsing fails
+     */
+    public List<EventTrigger> parseEventTriggers() throws JSONException {
+        JSONArray jsonArray = new JSONArray(this.mEventTriggers);
+        List<EventTrigger> eventTriggers = new ArrayList<>();
+
+        for (int i = 0; i < jsonArray.length(); i++) {
+            EventTrigger.Builder eventTriggerBuilder = new EventTrigger.Builder();
+            JSONObject eventTriggersJsonString = jsonArray.getJSONObject(i);
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.TRIGGER_DATA)) {
+                eventTriggerBuilder.setTriggerData(
+                        eventTriggersJsonString.getLong(EventTriggerContract.TRIGGER_DATA));
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.PRIORITY)) {
+                eventTriggerBuilder.setTriggerPriority(
+                        eventTriggersJsonString.getLong(EventTriggerContract.PRIORITY));
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.DEDUPLICATION_KEY)) {
+                eventTriggerBuilder.setDedupKey(
+                        eventTriggersJsonString.getLong(EventTriggerContract.DEDUPLICATION_KEY));
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.FILTERS)) {
+                AggregateFilterData filters =
+                        new AggregateFilterData.Builder()
+                                .buildAggregateFilterData(
+                                        eventTriggersJsonString.getJSONObject(
+                                                EventTriggerContract.FILTERS))
+                                .build();
+                eventTriggerBuilder.setFilter(filters);
+            }
+
+            if (!eventTriggersJsonString.isNull(EventTriggerContract.NOT_FILTERS)) {
+                AggregateFilterData notFilters =
+                        new AggregateFilterData.Builder()
+                                .buildAggregateFilterData(
+                                        eventTriggersJsonString.getJSONObject(
+                                                EventTriggerContract.NOT_FILTERS))
+                                .build();
+                eventTriggerBuilder.setNotFilter(notFilters);
+            }
+            eventTriggers.add(eventTriggerBuilder.build());
+        }
+
+        return eventTriggers;
+    }
+
+    /**
      * Builder for {@link Trigger}.
      */
     public static final class Builder {
@@ -313,6 +341,10 @@ public class Trigger {
 
         public Builder() {
             mBuilding = new Trigger();
+        }
+
+        public Builder(Trigger trigger) {
+            mBuilding = trigger;
         }
 
         /**
@@ -324,17 +356,10 @@ public class Trigger {
         }
 
         /**
-         * See {@link Trigger#getPriority()}.
-         */
-        public Builder setPriority(long priority) {
-            mBuilding.mPriority = priority;
-            return this;
-        }
-
-        /**
          * See {@link Trigger#getAttributionDestination()}.
          */
         public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
@@ -343,6 +368,7 @@ public class Trigger {
          * See {@link Trigger#getAdTechDomain()} ()}.
          */
         public Builder setAdTechDomain(Uri adTechDomain) {
+            Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
@@ -356,22 +382,6 @@ public class Trigger {
         }
 
         /**
-         * See {@link Trigger#getEventTriggerData()} ()}.
-         */
-        public Builder setEventTriggerData(long eventTriggerData) {
-            mBuilding.mEventTriggerData = eventTriggerData;
-            return this;
-        }
-
-        /**
-         * See {@link Trigger#getDedupKey()}.
-         */
-        public Builder setDedupKey(Long dedupKey) {
-            mBuilding.mDedupKey = dedupKey;
-            return this;
-        }
-
-        /**
          * See {@link Trigger#getTriggerTime()}.
          */
         public Builder setTriggerTime(long triggerTime) {
@@ -379,10 +389,17 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getEventTriggers()}. */
+        public Builder setEventTriggers(String eventTriggers) {
+            mBuilding.mEventTriggers = eventTriggers;
+            return this;
+        }
+
         /**
          * See {@link Trigger#getRegistrant()}
          */
         public Builder setRegistrant(Uri registrant) {
+            Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
@@ -422,7 +439,21 @@ public class Trigger {
          * Build the {@link Trigger}.
          */
         public Trigger build() {
+            Validation.validateNonNull(
+                    mBuilding.mAttributionDestination,
+                    mBuilding.mAdTechDomain,
+                    mBuilding.mRegistrant);
+
             return mBuilding;
         }
+    }
+
+    /** Event trigger field keys. */
+    public interface EventTriggerContract {
+        String TRIGGER_DATA = "trigger_data";
+        String PRIORITY = "priority";
+        String DEDUPLICATION_KEY = "deduplication_key";
+        String FILTERS = "filters";
+        String NOT_FILTERS = "not_filters";
     }
 }

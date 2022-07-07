@@ -17,15 +17,10 @@
 package com.android.adservices.service.common;
 
 import android.adservices.common.IAdServicesCommonService;
-import android.annotation.NonNull;
 import android.content.Context;
-import android.net.Uri;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.AdServicesExecutors;
-import com.android.adservices.service.measurement.MeasurementImpl;
 
-import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -35,39 +30,10 @@ import java.util.concurrent.Executor;
  */
 public class AdServicesCommonServiceImpl extends
         IAdServicesCommonService.Stub {
-    private static final String TAG = "AdServicesCommonServiceImpl";
-    private final MeasurementImpl mMeasurementImpl;
+
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     public AdServicesCommonServiceImpl(Context context) {
-        mMeasurementImpl = MeasurementImpl.getInstance(context);
-    }
 
-    @Override
-    public void onPackageFullyRemoved(@NonNull Uri packageUri) {
-        Objects.requireNonNull(packageUri);
-        measurementOnPackageFullyRemoved(packageUri);
-    }
-
-    @Override
-    public void onPackageAdded(@NonNull Uri packageUri) {
-        Objects.requireNonNull(packageUri);
-        measurementOnPackageAdded(packageUri);
-    }
-
-    private void measurementOnPackageFullyRemoved(@NonNull Uri packageUri) {
-        LogUtil.d(
-                "Deleting package measurement records for package: " + packageUri.toString());
-        sBackgroundExecutor.execute(() -> {
-            mMeasurementImpl.deletePackageRecords(packageUri);
-        });
-    }
-
-    private void measurementOnPackageAdded(Uri packageUri) {
-        LogUtil.d(
-                "Adding package install attribution records for package: " + packageUri.toString());
-        sBackgroundExecutor.execute(() -> {
-            mMeasurementImpl.doInstallAttribution(packageUri, System.currentTimeMillis());
-        });
     }
 }

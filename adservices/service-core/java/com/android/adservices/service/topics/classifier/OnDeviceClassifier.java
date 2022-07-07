@@ -57,7 +57,7 @@ public class OnDeviceClassifier implements Classifier {
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
-    private static final String LABELS_FILE_PATH = "classifier/labels_chrome_topics.txt";
+    private static final String LABELS_FILE_PATH = "classifier/labels_topics.txt";
 
     private final Preprocessor mPreprocessor;
     private final PackageManagerUtil mPackageManagerUtil;
@@ -106,12 +106,10 @@ public class OnDeviceClassifier implements Classifier {
             mLoaded = load();
         }
 
-        // Load app info if not loaded already.
+        // Load latest app info for every call.
+        mAppInfoMap = mPackageManagerUtil.getAppInformation(appPackageNames);
         if (mAppInfoMap.isEmpty()) {
-            mAppInfoMap = mPackageManagerUtil.getAppInformation(appPackageNames);
-            if (mAppInfoMap.isEmpty()) {
-                LogUtil.w("Loaded app description map is empty.");
-            }
+            LogUtil.w("Loaded app description map is empty.");
         }
 
         ImmutableMap.Builder<String, List<Integer>> packageNameToTopicIds = ImmutableMap.builder();

@@ -19,6 +19,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import java.util.Objects;
 
 /**
  * A registration for a trigger of attribution.
@@ -26,66 +27,67 @@ import android.net.Uri;
 public final class TriggerRegistration {
     private final Uri mTopOrigin;
     private final Uri mReportingOrigin;
-    private final long mTriggerData;
-    private final long mTriggerPriority;
-    private final Long mDeduplicationKey;
     private final String mAggregateTriggerData;
     private final String mAggregateValues;
     private final String mFilters;
+    private final String mEventTriggers;
 
     /** Create a trigger registration. */
     private TriggerRegistration(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
-            long triggerData,
-            long triggerPriority,
-            Long deduplicationKey,
+            @NonNull String eventTriggers,
             String aggregateTriggerData,
             String aggregateValues,
             @Nullable String filters) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
-        mTriggerData = triggerData;
-        mTriggerPriority = triggerPriority;
-        mDeduplicationKey = deduplicationKey;
         mAggregateTriggerData = aggregateTriggerData;
         mAggregateValues = aggregateValues;
         mFilters = filters;
+        mEventTriggers = eventTriggers;
     }
 
-    /**
-     * Top level origin.
-     */
-    public @NonNull Uri getTopOrigin() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TriggerRegistration)) return false;
+        TriggerRegistration that = (TriggerRegistration) o;
+        return Objects.equals(mTopOrigin, that.mTopOrigin)
+                && Objects.equals(mReportingOrigin, that.mReportingOrigin)
+                && Objects.equals(mAggregateTriggerData, that.mAggregateTriggerData)
+                && Objects.equals(mAggregateValues, that.mAggregateValues)
+                && Objects.equals(mFilters, that.mFilters)
+                && Objects.equals(mEventTriggers, that.mEventTriggers);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mTopOrigin,
+                mReportingOrigin,
+                mAggregateTriggerData,
+                mAggregateValues,
+                mFilters,
+                mEventTriggers);
+    }
+
+    /** Top level origin. */
+    @NonNull
+    public Uri getTopOrigin() {
         return mTopOrigin;
     }
 
-    /**
-     * Reporting origin.
-     */
-    public @NonNull Uri getReportingOrigin() {
+    /** Reporting origin. */
+    @NonNull
+    public Uri getReportingOrigin() {
         return mReportingOrigin;
     }
 
-    /**
-     * Trigger data.
-     */
-    public @NonNull long getTriggerData() {
-        return mTriggerData;
-    }
-
-    /**
-     * Trigger priority.
-     */
-    public @NonNull long getTriggerPriority() {
-        return mTriggerPriority;
-    }
-
-    /**
-     * De-dup key.
-     */
-    public @NonNull Long getDeduplicationKey() {
-        return mDeduplicationKey;
+    /** Event triggers - contains trigger data, priority, de-dup key and event-level filters. */
+    @NonNull
+    public String getEventTriggers() {
+        return mEventTriggers;
     }
 
     /**
@@ -113,9 +115,7 @@ public final class TriggerRegistration {
     public static final class Builder {
         private Uri mTopOrigin;
         private Uri mReportingOrigin;
-        private long mTriggerData;
-        private long mTriggerPriority;
-        private Long mDeduplicationKey;
+        private String mEventTriggers;
         private String mAggregateTriggerData;
         private String mAggregateValues;
         private String mFilters;
@@ -123,7 +123,6 @@ public final class TriggerRegistration {
         public Builder() {
             mTopOrigin = Uri.EMPTY;
             mReportingOrigin = Uri.EMPTY;
-            mDeduplicationKey = null;
         }
 
         /**
@@ -142,27 +141,9 @@ public final class TriggerRegistration {
             return this;
         }
 
-        /**
-         * See {@link TriggerRegistration#getTriggerData}.
-         */
-        public @NonNull Builder setTriggerData(long data) {
-            mTriggerData = data;
-            return this;
-        }
-
-        /**
-         * See {@link TriggerRegistration#getTriggerPriority}.
-         */
-        public @NonNull Builder setTriggerPriority(long priority) {
-            mTriggerPriority = priority;
-            return this;
-        }
-
-        /**
-         * See {@link TriggerRegistration#getDeduplicationKey}.
-         */
-        public @NonNull Builder setDeduplicationKey(long key) {
-            mDeduplicationKey = key;
+        /** See {@link TriggerRegistration#getEventTriggers()}. */
+        public @NonNull Builder setEventTriggers(@NonNull String eventTriggers) {
+            mEventTriggers = eventTriggers;
             return this;
         }
 
@@ -199,9 +180,7 @@ public final class TriggerRegistration {
             return new TriggerRegistration(
                     mTopOrigin,
                     mReportingOrigin,
-                    mTriggerData,
-                    mTriggerPriority,
-                    mDeduplicationKey,
+                    mEventTriggers,
                     mAggregateTriggerData,
                     mAggregateValues,
                     mFilters);

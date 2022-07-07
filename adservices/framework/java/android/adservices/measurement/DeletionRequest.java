@@ -13,195 +13,125 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package android.adservices.measurement;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.AttributionSource;
 import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.time.Instant;
-import java.util.Objects;
 
+/** Get Deletion Request. */
+public class DeletionRequest {
 
-/**
- * Class to hold deletion related request.
- * @hide
- */
-public final class DeletionRequest implements Parcelable {
+    /**
+     * Deletion modes for matched records.
+     *
+     * @hide
+     */
+    @IntDef(value = {DELETION_MODE_ALL, DELETION_MODE_EXCLUDE_RATE_LIMITS})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DeletionMode {}
+
+    /**
+     * Matching Behaviors for params.
+     *
+     * @hide
+     */
+    @IntDef(value = {MATCH_BEHAVIOR_DELETE, MATCH_BEHAVIOR_PRESERVE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface MatchBehavior {}
+
+    /**
+     * Deletion mode to delete all data associated with the selected records.
+     *
+     * @hide
+     */
+    public static final int DELETION_MODE_ALL = 0;
+
+    /**
+     * Deletion mode to delete all data except the rate limits for the selected records.
+     *
+     * @hide
+     */
+    public static final int DELETION_MODE_EXCLUDE_RATE_LIMITS = 1;
+
+    /**
+     * Match behavior option to delete the supplied params (Origin/Domains).
+     *
+     * @hide
+     */
+    public static final int MATCH_BEHAVIOR_DELETE = 0;
+
+    /**
+     * Match behavior option to preserve the supplied params (Origin/Domains).
+     *
+     * @hide
+     */
+    public static final int MATCH_BEHAVIOR_PRESERVE = 1;
+
     private final Uri mOriginUri;
     private final Instant mStart;
     private final Instant mEnd;
-    private final AttributionSource mAttributionSource;
 
-    /**
-     * Create a deletion request.
-     */
     private DeletionRequest(
-            @Nullable Uri originUri,
-            @Nullable Instant start,
-            @Nullable Instant end,
-            @NonNull AttributionSource attributionSource) {
-        Objects.requireNonNull(attributionSource);
+            @Nullable Uri originUri, @Nullable Instant start, @Nullable Instant end) {
         mOriginUri = originUri;
         mStart = start;
         mEnd = end;
-        mAttributionSource = attributionSource;
     }
 
-    /**
-     * Unpack an DeletionRequest from a Parcel.
-     */
-    private DeletionRequest(Parcel in) {
-        mOriginUri = Uri.CREATOR.createFromParcel(in);
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
-        boolean hasStart = in.readBoolean();
-        if (hasStart) {
-            mStart = Instant.ofEpochMilli(in.readLong());
-        } else {
-            mStart = null;
-        }
-        boolean hasEnd = in.readBoolean();
-        if (hasEnd) {
-            mEnd = Instant.ofEpochMilli(in.readLong());
-        } else {
-            mEnd = null;
-        }
-    }
-
-    /**
-     * Creator for Paracelable (via reflection).
-     */
-    public static final @NonNull Parcelable.Creator<DeletionRequest> CREATOR =
-            new Parcelable.Creator<DeletionRequest>() {
-                @Override public DeletionRequest createFromParcel(Parcel in) {
-                    return new DeletionRequest(in);
-                }
-
-                @Override public DeletionRequest[] newArray(int size) {
-                    return new DeletionRequest[size];
-                }
-            };
-
-    /**
-     * For Parcelable, no special marshalled objects.
-     */
-    public int describeContents() {
-        return 0;
-    }
-
-    /**
-     * For Parcelable, write out to a Parcel in particular order.
-     */
-    public void writeToParcel(@NonNull Parcel out, int flags) {
-        Objects.requireNonNull(out);
-        mOriginUri.writeToParcel(out, flags);
-        mAttributionSource.writeToParcel(out, flags);
-        if (mStart != null) {
-            out.writeBoolean(true);
-            out.writeLong(mStart.toEpochMilli());
-        } else {
-            out.writeBoolean(false);
-        }
-        if (mEnd != null) {
-            out.writeBoolean(true);
-            out.writeLong(mEnd.toEpochMilli());
-        } else {
-            out.writeBoolean(false);
-        }
-    }
-
-    /**
-     * Origin of the App / Publisher, or null for all origins.
-     */
-    public @Nullable Uri getOriginUri() {
+    /** Get the origin URI. */
+    @Nullable
+    public Uri getOriginUri() {
         return mOriginUri;
     }
 
-    /**
-     * Instant in time the deletion starts, or null if none.
-     */
-    public @Nullable Instant getStart() {
+    /** Get the start of the deletion range. */
+    @Nullable
+    public Instant getStart() {
         return mStart;
     }
 
-    /**
-     * Instant in time the deletion ends, or null if none.
-     */
-    public @Nullable Instant getEnd() {
+    /** Get the end of the deletion range. */
+    @Nullable
+    public Instant getEnd() {
         return mEnd;
     }
 
-    /**
-     * AttributionSource of the deletion.
-     */
-    public @NonNull AttributionSource getAttributionSource() {
-        return mAttributionSource;
-    }
-
-    /**
-     * A builder for {@link DeletionRequest}.
-     */
+    /** Builder for {@link DeletionRequest} objects. */
     public static final class Builder {
         private Uri mOriginUri;
         private Instant mStart;
         private Instant mEnd;
-        private AttributionSource mAttributionSource;
 
-        public Builder() {
-            mOriginUri = Uri.EMPTY;
-        }
+        public Builder() {}
 
-        /**
-         * See {@link DeletionRequest#getOriginUri}.
-         */
-        public @NonNull Builder setOriginUri(@NonNull Uri origin) {
-            Objects.requireNonNull(origin);
-            mOriginUri = origin;
+        /** Set the origin URI (the android source package or eTLD+1 to delete data for). */
+        public @NonNull Builder setOriginUri(@Nullable Uri originUri) {
+            mOriginUri = originUri;
             return this;
         }
 
-        /**
-         * See {@link DeletionRequest#getStart}.
-         */
+        /** Set the start of the deletion range. */
         public @NonNull Builder setStart(@Nullable Instant start) {
-            Objects.requireNonNull(start);
             mStart = start;
             return this;
         }
 
-        /**
-         * See {@link DeletionRequest#getEnd}.
-         */
+        /** Set the end of the deletion range. */
         public @NonNull Builder setEnd(@Nullable Instant end) {
-            Objects.requireNonNull(end);
             mEnd = end;
             return this;
         }
 
-        /**
-         * See {@link DeletionRequest#getAttributionSource}.
-         */
-        public @NonNull Builder setAttributionSource(
-                @NonNull AttributionSource attributionSource) {
-            Objects.requireNonNull(attributionSource);
-            mAttributionSource = attributionSource;
-            return this;
-        }
-
-        /**
-         * Build the DeletionRequest.
-         */
+        /** Builds a {@link DeletionRequest} instance. */
         public @NonNull DeletionRequest build() {
-            // Ensure attributionSource has been set,
-            // throw IllegalArgumentException if null.
-            if (mAttributionSource == null) {
-                throw new IllegalArgumentException("attributionSource unset");
-            }
-            return new DeletionRequest(
-                    mOriginUri, mStart, mEnd, mAttributionSource);
+            return new DeletionRequest(mOriginUri, mStart, mEnd);
         }
     }
 }

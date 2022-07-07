@@ -22,14 +22,12 @@ android_test {
         "src/**/*.java",
     ],
     static_libs: [
-        "adservices-clients",
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
         "ub-uiautomator",
         "adservices-test-fixtures",
         "adservices-clients",
-        "adservices-service-core",
     ],
     libs: [
         "android.test.base",

@@ -53,16 +53,18 @@ public class ConsentManagerTest {
 
     @Test
     public void testConsentIsGivenAfterEnabling() {
-        mConsentManager.enable();
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.enable(mPackageManager);
 
-        assertTrue(mConsentManager.getConsent().isGiven());
+        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
     }
 
     @Test
     public void testConsentIsRevokedAfterDisabling() {
-        mConsentManager.disable();
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.disable(mPackageManager);
 
-        assertFalse(mConsentManager.getConsent().isGiven());
+        assertFalse(mConsentManager.getConsent(mPackageManager).isGiven());
     }
 
     @Test

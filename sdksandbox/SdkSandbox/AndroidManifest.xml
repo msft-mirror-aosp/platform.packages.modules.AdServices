@@ -22,6 +22,10 @@
     android:versionCode="1"
     android:versionName="T-initial">
 
+    <uses-sdk
+        android:minSdkVersion="33"
+        android:targetSdkVersion="33" />
+
     <!-- Allows SdkSandbox to start activities. -->
     <!-- TODO(b/209599396): temporary workaround, remove once proper solution is implemented. -->
     <uses-permission android:name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
