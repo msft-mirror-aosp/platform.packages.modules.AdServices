@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String NEWLINE = "\n";
     private static final String TAG = "SampleApp1";
-    private static final String RB_SETTINg_APP_INTENT = "android.adservices.ui.SETTINGS";
+    private static final String RB_SETTING_APP_INTENT = "android.adservices.ui.SETTINGS";
     private static final List<String> SDK_NAMES = new ArrayList<>(Arrays.asList("SdkName1"));
     private Button mTopicsClientButton;
     private TextView mResultTextView;
@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         Context context = getApplicationContext();
-                        Intent activity2Intent = new Intent(RB_SETTINg_APP_INTENT);
+                        Intent activity2Intent = new Intent(RB_SETTING_APP_INTENT);
                         activity2Intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(activity2Intent);
                     }
