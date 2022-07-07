@@ -18,6 +18,8 @@ package com.android.adservices.download;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -28,6 +30,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.google.android.libraries.mobiledatadownload.AddFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.DownloadFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
+import com.google.android.libraries.mobiledatadownload.TaskScheduler;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFile;
 import com.google.mobiledatadownload.DownloadConfigProto.DataFileGroup;
@@ -37,12 +40,14 @@ import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.Devi
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
 @SmallTest
 public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
+    private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
 
     private static final String FILE_GROUP_NAME_1 = "test-group-1";
     private static final String FILE_GROUP_NAME_2 = "test-group-2";
@@ -94,6 +99,16 @@ public class MobileDataDownloadTest {
         assertThat(clientFileGroup.getVersionNumber()).isEqualTo(5);
         assertThat(clientFileGroup.getFileCount()).isEqualTo(2);
         assertThat(clientFileGroup.hasAccount()).isFalse();
+    }
+
+    @Test
+    public void testTopicsManifestFileGroupPopulator()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        MobileDataDownload mdd =
+                MobileDataDownloadFactory.getMdd(mContext, FlagsFactory.getFlagsForTest());
+
+        mdd.handleTask(TaskScheduler.WIFI_CHARGING_PERIODIC_TASK)
+                .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
     }
 
     // A helper function to create a DataFilegroup.
