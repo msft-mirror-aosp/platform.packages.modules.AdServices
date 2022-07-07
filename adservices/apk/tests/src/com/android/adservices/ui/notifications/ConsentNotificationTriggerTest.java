@@ -37,7 +37,7 @@ public class ConsentNotificationTriggerTest {
     private Context mContext;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     }
 
@@ -58,6 +58,7 @@ public class ConsentNotificationTriggerTest {
                 .isEqualTo(expectedTitle);
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                 .isEqualTo(expectedContent);
+        Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
     }
 
     @Test
@@ -78,5 +79,6 @@ public class ConsentNotificationTriggerTest {
                 .isEqualTo(expectedTitle);
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                 .isEqualTo(expectedContent);
+        Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
     }
 }
