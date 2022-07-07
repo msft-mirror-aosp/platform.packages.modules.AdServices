@@ -16,9 +16,11 @@
 
 package com.android.adservices.data.measurement;
 
+import android.adservices.measurement.DeletionRequest;
 import android.content.res.AssetManager;
 import android.net.Uri;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.runner.RunWith;
@@ -29,6 +31,7 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -62,22 +65,54 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
 
     public void runActionToTest() {
         final String registrantValue = (String) get("registrant");
-        final String originValue = (String) get("origin");
         final Long startValue = (Long) get("start");
         final Long endValue = (Long) get("end");
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
-            dao.deleteMeasurementData(
-                    Uri.parse(registrantValue),
-                    null == originValue ? null : Uri.parse(originValue),
-                    null == startValue ? null : Instant.ofEpochMilli(startValue),
-                    null == endValue ? null : Instant.ofEpochMilli(endValue)
-            );
-        });
+        final List<Uri> originList = getUriList("origins");
+        final List<Uri> domainList = getUriList("domains");
+        Integer matchBehavior = (Integer) get("matchBehavior");
+        Integer deletionMode = (Integer) get("deletionMode");
+        if (matchBehavior == null) {
+            matchBehavior = DeletionRequest.MATCH_BEHAVIOR_DELETE;
+        }
+        if (deletionMode == null) {
+            deletionMode = DeletionRequest.DELETION_MODE_ALL;
+        }
+        Integer finalMatchBehavior = matchBehavior;
+        Integer finalDeletionMode = deletionMode;
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    Uri.parse(registrantValue),
+                                    null == startValue ? null : Instant.ofEpochMilli(startValue),
+                                    null == endValue ? null : Instant.ofEpochMilli(endValue),
+                                    originList,
+                                    domainList,
+                                    finalMatchBehavior,
+                                    finalDeletionMode);
+                        });
     }
 
     private Object get(String name) {
         try {
             return mParam.has(name) ? mParam.get(name) : null;
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("error reading " + name);
+        }
+    }
+
+    private List<Uri> getUriList(String name) {
+        try {
+            if (mParam.isNull(name)) {
+                return Collections.emptyList();
+            } else {
+                JSONArray arr = mParam.getJSONArray(name);
+                List<Uri> strList = new ArrayList<>();
+                for (int i = 0; i < arr.length(); i++) {
+                    strList.add(Uri.parse(arr.getString(i)));
+                }
+                return strList;
+            }
         } catch (JSONException e) {
             throw new IllegalArgumentException("error reading " + name);
         }
