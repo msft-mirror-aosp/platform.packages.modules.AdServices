@@ -150,10 +150,7 @@ public class FledgeCtsTest {
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(decisionLogicJs)
-                        .build();
+                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, decisionLogicJs);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
@@ -165,8 +162,7 @@ public class FledgeCtsTest {
                         () -> {
                             adSelectionOverrideResult.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(adSelectionOverrideException.getCause())
-                .isInstanceOf(IllegalStateException.class);
+        assertThat(adSelectionOverrideException.getCause()).isInstanceOf(SecurityException.class);
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
@@ -189,7 +185,7 @@ public class FledgeCtsTest {
                             customAudienceOverrideResult.get(10, TimeUnit.SECONDS);
                         });
         assertThat(customAudienceOverrideException.getCause())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(SecurityException.class);
 
         // Running ad selection and asserting that a failure is returned since the fetch calls
         // should fail.

@@ -71,25 +71,14 @@ package android.adservices.adselection {
   }
 
   public class AddAdSelectionOverrideRequest {
+    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method @NonNull public String getDecisionLogicJs();
   }
 
-  public static final class AddAdSelectionOverrideRequest.Builder {
-    ctor public AddAdSelectionOverrideRequest.Builder();
-    method @NonNull public android.adservices.adselection.AddAdSelectionOverrideRequest build();
-    method @NonNull public android.adservices.adselection.AddAdSelectionOverrideRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
-    method @NonNull public android.adservices.adselection.AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(@NonNull String);
-  }
-
   public class RemoveAdSelectionOverrideRequest {
+    ctor public RemoveAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
-  }
-
-  public static final class RemoveAdSelectionOverrideRequest.Builder {
-    ctor public RemoveAdSelectionOverrideRequest.Builder();
-    method @NonNull public android.adservices.adselection.RemoveAdSelectionOverrideRequest build();
-    method @NonNull public android.adservices.adselection.RemoveAdSelectionOverrideRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
   }
 
   public final class ReportImpressionInput implements android.os.Parcelable {
@@ -262,12 +251,6 @@ package android.adservices.exceptions {
   public class AdServicesException extends java.lang.Exception {
     ctor public AdServicesException(@Nullable String, @Nullable Throwable);
     ctor public AdServicesException(@Nullable String);
-  }
-
-  public class ApiNotAuthorizedException extends java.lang.RuntimeException {
-    ctor public ApiNotAuthorizedException(@Nullable String, @Nullable Throwable);
-    ctor public ApiNotAuthorizedException(@Nullable String);
-    ctor public ApiNotAuthorizedException();
   }
 
   public class GetTopicsException extends android.adservices.exceptions.AdServicesException {

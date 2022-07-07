@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.devapi;
 
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -75,8 +74,8 @@ public class CustomAudienceDevOverridesHelper {
      * {@link DevContext#getCallingAppPackageName()} for the given combination of {@code owner},
      * {@code buyer}, and {@code name}.
      *
-     * @throws ApiNotAuthorizedException if {@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if {@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void addOverride(
             @NonNull String owner,
@@ -91,7 +90,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(trustedBiddingData);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         String appPackageName = mDevContext.getCallingAppPackageName();
@@ -113,8 +112,8 @@ public class CustomAudienceDevOverridesHelper {
      * Removes an override for the given combination of {@code owner}, {@code buyer}, and {@code
      * name}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeOverride(@NonNull String owner, @NonNull String buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
@@ -122,7 +121,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(name);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         String appPackageName = mDevContext.getCallingAppPackageName();
@@ -135,12 +134,12 @@ public class CustomAudienceDevOverridesHelper {
      * Removes all custom audience overrides that match {@link
      * DevContext#getCallingAppPackageName()}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeAllOverrides() {
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         mCustomAudienceDao.removeAllCustomAudienceOverrides(mDevContext.getCallingAppPackageName());
