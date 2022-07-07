@@ -45,6 +45,7 @@ import org.junit.runner.RunWith;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -62,7 +63,8 @@ public class CtsMeasurementManagerTest {
     private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os.destination");
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
-    private static final String ORIGIN_PACKAGE = "android-app://com.site.toBeDeleted";
+    private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
+    private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -137,41 +139,47 @@ public class CtsMeasurementManagerTest {
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertThat(result.get()).isNull();
+        Assert.assertNull(result.get());
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withOrigin_withNoRange_withCallback_NoErrors()
-            throws Exception {
-        DeletionRequest deletionRequest =
-                new DeletionRequest.Builder().setOriginUri(Uri.parse(ORIGIN_PACKAGE)).build();
-        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertThat(result.get()).isNull();
-    }
-
-    @Test
-    public void testDeleteRegistrations_withRequest_withNoOrigin_withRange_withCallback_NoErrors()
+    public void testDeleteRegistrations_withRequest_withNoRange_withCallback_NoErrors()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        Assert.assertNull(result.get());
+    }
+
+    @Test
+    public void testDeleteRegistrations_withRequest_withEmptyLists_withRange_withCallback_NoErrors()
+            throws Exception {
+        DeletionRequest deletionRequest =
+                new DeletionRequest.Builder()
+                        .setOriginUris(Collections.emptyList())
+                        .setDomainUris(Collections.emptyList())
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertThat(result.get()).isNull();
+        Assert.assertNull(result.get());
     }
 
     @Test
-    public void testDeleteRegistrations_withRequest_withOrigin_withRange_withCallback_NoErrors()
+    public void testDeleteRegistrations_withRequest_withUris_withRange_withCallback_NoErrors()
             throws Exception {
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
-                        .setOriginUri(Uri.parse(ORIGIN_PACKAGE))
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
-        assertThat(result.get()).isNull();
+        Assert.assertNull(result.get());
     }
 
     @Test
@@ -179,6 +187,7 @@ public class CtsMeasurementManagerTest {
             throws Exception {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         final MeasurementManager manager = context.getSystemService(MeasurementManager.class);
+        Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
         OutcomeReceiver<Void, Exception> callback =
@@ -196,7 +205,12 @@ public class CtsMeasurementManagerTest {
                                 MeasurementManager.RESULT_INVALID_ARGUMENT);
                     }
                 };
-        DeletionRequest request = new DeletionRequest.Builder().setEnd(Instant.now()).build();
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .setEnd(Instant.now())
+                        .build();
         manager.deleteRegistrations(request, mExecutorService, callback);
         Assert.assertNull(future.get());
     }
