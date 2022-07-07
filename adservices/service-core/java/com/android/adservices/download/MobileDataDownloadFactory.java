@@ -21,7 +21,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 
 import com.google.android.downloader.AndroidDownloaderLogger;

@@ -22,7 +22,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
