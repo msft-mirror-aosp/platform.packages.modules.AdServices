@@ -19,8 +19,12 @@ import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
+import android.adservices.topics.Topic;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -46,10 +50,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String NEWLINE = "\n";
-    private static final String TAG = "SampleApp";
+    private static final String TAG = "SampleApp1";
+    private static final String RB_SETTINg_APP_INTENT = "android.adservices.ui.SETTINGS";
     private static final List<String> SDK_NAMES = new ArrayList<>(Arrays.asList("SdkName1"));
     private Button mTopicsClientButton;
     private TextView mResultTextView;
+    private Button mSettingsAppButton;
     private AdvertisingTopicsClient mAdvertisingTopicsClient;
 
     @Override
@@ -57,8 +63,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mTopicsClientButton = findViewById(R.id.topics_client_button);
+        mSettingsAppButton = findViewById(R.id.settings_app_launch_button);
         mResultTextView = findViewById(R.id.textView);
         registerGetTopicsButton();
+        registerLauchSettingsAppButton();
     }
 
     private void registerGetTopicsButton() {
@@ -118,12 +126,26 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private String getTopics(List<Integer> arr) {
+    private String getTopics(List<Topic> arr) {
         StringBuilder sb = new StringBuilder();
         int index = 1;
-        for (int topic : arr) {
-            sb.append(index++).append(". ").append(topic).append(NEWLINE);
+        for (Topic topic : arr) {
+            sb.append(index++).append(". ").append(topic.toString()).append(NEWLINE);
         }
         return sb.toString();
+    }
+
+    private void registerLauchSettingsAppButton() {
+        mSettingsAppButton.setOnClickListener(
+                new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        Context context = getApplicationContext();
+                        Intent activity2Intent = new Intent(RB_SETTINg_APP_INTENT);
+                        activity2Intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(activity2Intent);
+                    }
+                });
     }
 }

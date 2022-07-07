@@ -18,7 +18,7 @@ package com.android.adservices.ui.settings;
 import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment.PRIVACY_SANDBOX_BETA_SWITCH_KEY;
 import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment.TOPICS_PREFERENCE_BUTTON_KEY;
 
-import android.widget.TextView;
+import android.view.View;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
@@ -186,8 +186,7 @@ public class ActionDelegate {
     }
 
     private void configureBlockedTopicsFragmentButton(AdServicesSettingsTopicsFragment fragment) {
-        TextView blockedTopicsButton =
-                fragment.requireView().findViewById(R.id.blocked_topics_button);
+        View blockedTopicsButton = fragment.requireView().findViewById(R.id.blocked_topics_button);
 
         blockedTopicsButton.setOnClickListener(
                 view -> {
@@ -196,7 +195,7 @@ public class ActionDelegate {
     }
 
     private void configureResetTopicsButton(AdServicesSettingsTopicsFragment fragment) {
-        TextView resetTopicsButton = fragment.requireView().findViewById(R.id.reset_topics_button);
+        View resetTopicsButton = fragment.requireView().findViewById(R.id.reset_topics_button);
 
         resetTopicsButton.setOnClickListener(
                 view -> {
