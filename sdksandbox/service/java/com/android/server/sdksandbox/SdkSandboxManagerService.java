@@ -416,8 +416,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         try {
                             service.asBinder().linkToDeath(() -> cleanUp(callingInfo), 0);
                         } catch (RemoteException re) {
-                            // Sandbox had already died, cleanup sdk token and link.
-                            cleanUp(sdkToken);
+                            // Sandbox had already died, cleanup sdk tokens and links.
+                            cleanUp(callingInfo);
                         }
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
