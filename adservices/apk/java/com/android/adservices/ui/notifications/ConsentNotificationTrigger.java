@@ -25,6 +25,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.ConsentManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 public class ConsentNotificationTrigger {
@@ -76,6 +77,7 @@ public class ConsentNotificationTrigger {
                 getConsentNotificationBuilder(context, isEuDevice);
 
         notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
+        ConsentManager.getInstance(context).recordNotificationDisplayed();
     }
 
     private static void createNotificationChannel(@NonNull Context context) {

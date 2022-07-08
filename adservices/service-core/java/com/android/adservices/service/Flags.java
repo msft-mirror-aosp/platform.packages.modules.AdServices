@@ -255,4 +255,25 @@ public interface Flags extends Dumpable {
     default int getDownloaderMaxDownloadThreads() {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
     }
+
+    long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
+            /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
+
+    default long getConsentNotificationIntervalBeginMs() {
+        return CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS;
+    }
+
+    long CONSENT_NOTIFICATION_INTERVAL_END_MS =
+            /* hours */ 17 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 5 PM
+
+    default long getConsentNotificationIntervalEndMs() {
+        return CONSENT_NOTIFICATION_INTERVAL_END_MS;
+    }
+
+    long CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
+            /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 1 hour
+
+    default long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
+        return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
+    }
 }

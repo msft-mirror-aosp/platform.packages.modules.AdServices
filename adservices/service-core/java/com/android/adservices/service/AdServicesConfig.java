@@ -124,4 +124,7 @@ public class AdServicesConfig {
      * com.android.adservices.service.customaudience.BackgroundFetchJobService})
      */
     public static final int FLEDGE_BACKGROUND_FETCH_JOB_ID = 9;
+
+    /** Job ID for Consent Notification Job. */
+    public static final int CONSENT_NOTIFICATION_JOB_ID = 10;
 }
