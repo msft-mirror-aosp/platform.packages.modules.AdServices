@@ -335,7 +335,7 @@ public final class MeasurementImpl {
                             registrant,
                             sourceType,
                             // Only first destination to avoid AdTechs change this
-                            sourceRegistrations.get(0).getDestination(),
+                            sourceRegistrations.get(0).getAppDestination(),
                             sourceRegistrations.get(0).getWebDestination());
             insertSource(source);
         }
@@ -352,7 +352,7 @@ public final class MeasurementImpl {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
                 .setPublisher(topOriginUri)
-                .setAttributionDestination(destination)
+                .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
@@ -394,8 +394,7 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(
-                                                source.getAttributionDestination())
+                                        .setAttributionDestination(source.getAppDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)

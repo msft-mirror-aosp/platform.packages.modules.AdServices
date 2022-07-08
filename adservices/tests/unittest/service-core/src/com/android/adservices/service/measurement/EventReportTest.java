@@ -44,7 +44,7 @@ public final class EventReportTest {
     private static final long TRIGGER_PRIORITY = 345678L;
     private static final Long TRIGGER_DEDUP_KEY = 2345678L;
     private static final Long TRIGGER_DATA = 4L;
-    private static final Uri OS_DESTINATION = Uri.parse("android-app://example1.app");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://example1.app");
     private static final Uri WEB_DESTINATION = Uri.parse("https://example1.com");
     private static final String EVENT_TRIGGERS =
             "[\n"
@@ -102,9 +102,10 @@ public final class EventReportTest {
             throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source =
-                createSourceForTest(baseTime, Source.SourceType.EVENT, false, OS_DESTINATION, null);
+                createSourceForTest(
+                        baseTime, Source.SourceType.EVENT, false, APP_DESTINATION, null);
         Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), OS_DESTINATION);
+                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -159,9 +160,9 @@ public final class EventReportTest {
             throws JSONException {
         long baseTime = System.currentTimeMillis();
         Source source =
-                createSourceForTest(baseTime, Source.SourceType.EVENT, true, OS_DESTINATION, null);
+                createSourceForTest(baseTime, Source.SourceType.EVENT, true, APP_DESTINATION, null);
         Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), OS_DESTINATION);
+                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -215,9 +216,9 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 createSourceForTest(
-                        baseTime, Source.SourceType.NAVIGATION, false, OS_DESTINATION, null);
+                        baseTime, Source.SourceType.NAVIGATION, false, APP_DESTINATION, null);
         Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), OS_DESTINATION);
+                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -230,7 +231,7 @@ public final class EventReportTest {
         assertEquals(trigger.getTriggerTime(), report.getTriggerTime());
         assertEquals(source.getEventId(), report.getSourceId());
         assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
-        assertEquals(OS_DESTINATION, report.getAttributionDestination());
+        assertEquals(APP_DESTINATION, report.getAttributionDestination());
         assertEquals(
                 source.getEventTime()
                         + NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
@@ -277,9 +278,9 @@ public final class EventReportTest {
         long baseTime = System.currentTimeMillis();
         Source source =
                 createSourceForTest(
-                        baseTime, Source.SourceType.NAVIGATION, true, OS_DESTINATION, null);
+                        baseTime, Source.SourceType.NAVIGATION, true, APP_DESTINATION, null);
         Trigger trigger =
-                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), OS_DESTINATION);
+                createTriggerForTest(baseTime + TimeUnit.SECONDS.toMillis(10), APP_DESTINATION);
 
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
@@ -345,7 +346,7 @@ public final class EventReportTest {
             long eventTime,
             Source.SourceType sourceType,
             boolean isInstallAttributable,
-            Uri osDestination,
+            Uri appDestination,
             Uri webDestination) {
         return SourceFixture.getValidSourceBuilder()
                 .setEventId(10)
@@ -353,7 +354,7 @@ public final class EventReportTest {
                 .setInstallCooldownWindow(isInstallAttributable ? 100 : 0)
                 .setEventTime(eventTime)
                 .setAdTechDomain(Uri.parse("https://example-adtech1.com"))
-                .setAttributionDestination(osDestination)
+                .setAppDestination(appDestination)
                 .setWebDestination(webDestination)
                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(10))
                 .build();

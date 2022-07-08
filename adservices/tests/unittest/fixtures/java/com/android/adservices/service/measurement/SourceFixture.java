@@ -34,10 +34,10 @@ public final class SourceFixture {
     // {@link ValidSourceParams}
     public static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
-            .setPublisher(ValidSourceParams.PUBLISHER)
-            .setAttributionDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
-            .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
-            .setRegistrant(ValidSourceParams.REGISTRANT);
+                .setPublisher(ValidSourceParams.PUBLISHER)
+                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
+                .setRegistrant(ValidSourceParams.REGISTRANT);
     }
 
     // Assume the field values in this Source have no relation to the field values in
@@ -46,7 +46,7 @@ public final class SourceFixture {
         return new Source.Builder()
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(ValidSourceParams.PUBLISHER)
-                .setAttributionDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
                 .setWebDestination(ValidSourceParams.WEB_DESTINATION)
                 .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
                 .setRegistrant(ValidSourceParams.REGISTRANT)

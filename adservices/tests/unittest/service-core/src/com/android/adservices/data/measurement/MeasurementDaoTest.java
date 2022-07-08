@@ -91,8 +91,7 @@ public class MeasurementDaoTest {
             Assert.assertNotNull(source);
             Assert.assertNotNull(source.getId());
             assertEquals(validSource.getPublisher(), source.getPublisher());
-            assertEquals(validSource.getAttributionDestination(),
-                    source.getAttributionDestination());
+            assertEquals(validSource.getAppDestination(), source.getAppDestination());
             assertEquals(validSource.getWebDestination(), source.getWebDestination());
             assertEquals(validSource.getAdTechDomain(), source.getAdTechDomain());
             assertEquals(validSource.getRegistrant(), source.getRegistrant());
@@ -461,7 +460,7 @@ public class MeasurementDaoTest {
                         .setId("1")
                         .setEventTime(10)
                         .setExpiryTime(20)
-                        .setAttributionDestination(appDestination)
+                        .setAppDestination(appDestination)
                         .setAdTechDomain(adTechDomain)
                         .build();
         Source sApp2 =
@@ -469,7 +468,7 @@ public class MeasurementDaoTest {
                         .setId("2")
                         .setEventTime(10)
                         .setExpiryTime(50)
-                        .setAttributionDestination(appDestination)
+                        .setAppDestination(appDestination)
                         .setAdTechDomain(adTechDomain)
                         .build();
         Source sApp3 =
@@ -477,7 +476,7 @@ public class MeasurementDaoTest {
                         .setId("3")
                         .setEventTime(20)
                         .setExpiryTime(50)
-                        .setAttributionDestination(appDestination)
+                        .setAppDestination(appDestination)
                         .setAdTechDomain(adTechDomain)
                         .build();
         Source sApp4 =
@@ -485,7 +484,7 @@ public class MeasurementDaoTest {
                         .setId("4")
                         .setEventTime(30)
                         .setExpiryTime(50)
-                        .setAttributionDestination(appDestination)
+                        .setAppDestination(appDestination)
                         .setAdTechDomain(adTechDomain)
                         .build();
         Source sWeb5 =
@@ -509,7 +508,7 @@ public class MeasurementDaoTest {
                         .setId("7")
                         .setEventTime(10)
                         .setExpiryTime(20)
-                        .setAttributionDestination(appDestination)
+                        .setAppDestination(appDestination)
                         .setWebDestination(webDestination)
                         .setAdTechDomain(adTechDomain)
                         .build();
@@ -647,10 +646,10 @@ public class MeasurementDaoTest {
         values.put(
                 MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
-        if (source.getAttributionDestination() != null) {
+        if (source.getAppDestination() != null) {
             values.put(
-                    MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                    source.getAttributionDestination().toString());
+                    MeasurementTables.SourceContract.APP_DESTINATION,
+                    source.getAppDestination().toString());
         }
         if (source.getWebDestination() != null) {
             values.put(
@@ -940,7 +939,7 @@ public class MeasurementDaoTest {
                 .setAdTechDomain(Uri.parse("https://example.com"))
                 .setExpiryTime(currentTime + TimeUnit.DAYS.toMillis(30))
                 .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(expiredIAWindow ? 0 : 30))
-                .setAttributionDestination(INSTALLED_PACKAGE)
+                .setAppDestination(INSTALLED_PACKAGE)
                 .setEventTime(
                         currentTime
                                 - TimeUnit.DAYS.toMillis(
