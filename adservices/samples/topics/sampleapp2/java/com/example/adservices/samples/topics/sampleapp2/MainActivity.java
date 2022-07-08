@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
                                     public void onSuccess(GetTopicsResponse result) {
                                         Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
                                         String topics = getTopics(result.getTopics());
+
                                         mResultTextView.append(
                                                 sdkName
                                                         + "'s topics: "
