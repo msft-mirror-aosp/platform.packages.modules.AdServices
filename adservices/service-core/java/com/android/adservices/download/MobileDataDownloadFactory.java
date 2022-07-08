@@ -21,7 +21,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
@@ -30,6 +30,7 @@ import com.google.android.downloader.DownloadConstraints;
 import com.google.android.downloader.Downloader;
 import com.google.android.downloader.PlatformUrlEngine;
 import com.google.android.downloader.UrlEngine;
+import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownloadBuilder;
 import com.google.android.libraries.mobiledatadownload.downloader.FileDownloader;
@@ -41,11 +42,16 @@ import com.google.android.libraries.mobiledatadownload.file.backends.JavaFileBac
 import com.google.android.libraries.mobiledatadownload.file.integration.downloader.DownloadMetadataStore;
 import com.google.android.libraries.mobiledatadownload.file.integration.downloader.SharedPreferencesDownloadMetadata;
 import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonitor;
+import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigFileParser;
+import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
+import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.mobiledatadownload.DownloadConfigProto.ManifestFileFlag;
+import com.google.protobuf.MessageLite;
 
 import java.util.concurrent.Executor;
 
@@ -54,6 +60,12 @@ public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingleton;
 
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
+    private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
+
+    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
+    // when we actually upload the models.
+    private static final String TOPICS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/webref-ondevice/manifest_configs/nga-dev/webref_manifest_config.pb";
 
     /** Returns a singleton of MobileDataDownload. */
     @NonNull
@@ -63,28 +75,31 @@ public class MobileDataDownloadFactory {
             if (sSingleton == null) {
                 // TODO(b/236761740): This only adds the core MDD code. We still need other
                 //  components:
-                // 1) Add FileGroupPopulators
-                // 2) Add TaskScheduler
-                // 3) Add Logger
-                // 4) Set Flags
-                // 5) Add Configurator.
+                // Add TaskScheduler
+                // Add Logger
+                // Add Configurator.
+
+                SynchronousFileStorage fileStorage = getFileStorage(context);
+                FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
+                NetworkUsageMonitor networkUsageMonitor =
+                        new NetworkUsageMonitor(context, System::currentTimeMillis);
+
                 sSingleton =
                         MobileDataDownloadBuilder.newBuilder()
                                 .setContext(context)
                                 .setControlExecutor(getControlExecutor())
-                                .setNetworkUsageMonitor(getNetworkUsageMonitor(context))
-                                .setFileStorage(getFileStorage(context))
-                                .setFileDownloaderSupplier(() -> getFileDownloader(context, flags))
+                                .setNetworkUsageMonitor(networkUsageMonitor)
+                                .setFileStorage(fileStorage)
+                                .setFileDownloaderSupplier(() -> fileDownloader)
+                                .addFileGroupPopulator(
+                                        getTopicsManifestPopulator(
+                                                context, flags, fileStorage, fileDownloader))
+                                .setLoggerOptional(Optional.absent())
                                 .build();
             }
 
             return sSingleton;
         }
-    }
-
-    @NonNull
-    private static NetworkUsageMonitor getNetworkUsageMonitor(@NonNull Context context) {
-        return new NetworkUsageMonitor(context, System::currentTimeMillis);
     }
 
     // Connectivity constraints will be checked by JobScheduler/WorkManager instead.
@@ -131,7 +146,9 @@ public class MobileDataDownloadFactory {
 
     @NonNull
     private static FileDownloader getFileDownloader(
-            @NonNull Context context, @NonNull Flags flags) {
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull SynchronousFileStorage fileStorage) {
         DownloadMetadataStore downloadMetadataStore = getDownloadMetadataStore(context);
 
         Downloader downloader =
@@ -145,7 +162,7 @@ public class MobileDataDownloadFactory {
 
         return new Offroad2FileDownloader(
                 downloader,
-                getFileStorage(context),
+                fileStorage,
                 getDownloadExecutor(),
                 /* authTokenProvider */ null,
                 downloadMetadataStore,
@@ -161,5 +178,45 @@ public class MobileDataDownloadFactory {
                 new SharedPreferencesDownloadMetadata(
                         sharedPrefs, AdServicesExecutors.getBackgroundExecutor());
         return downloadMetadataStore;
+    }
+
+    @NonNull
+    private static ManifestFileGroupPopulator getTopicsManifestPopulator(
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull SynchronousFileStorage fileStorage,
+            @NonNull FileDownloader fileDownloader) {
+
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(TOPICS_MANIFEST_ID)
+                        .setManifestFileUrl(TOPICS_MANIFEST_FILE_URL)
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/236761740): user proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
     }
 }

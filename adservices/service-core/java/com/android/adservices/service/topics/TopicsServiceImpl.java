@@ -33,7 +33,7 @@ import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.consent.AdServicesApiConsent;

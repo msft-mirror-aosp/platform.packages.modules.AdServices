@@ -30,7 +30,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 
 import org.json.JSONException;
 import org.json.JSONObject;
