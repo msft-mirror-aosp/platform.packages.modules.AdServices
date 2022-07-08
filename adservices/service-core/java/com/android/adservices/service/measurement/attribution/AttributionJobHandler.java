@@ -24,6 +24,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.DestinationType;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventTrigger;
 import com.android.adservices.service.measurement.FilterUtil;
@@ -289,10 +290,12 @@ class AttributionJobHandler {
 
     private boolean provisionEventReportQuota(Source source,
             EventReport newEventReport, IMeasurementDao measurementDao) throws DatastoreException {
-        List<EventReport> sourceEventReports =
-                measurementDao.getSourceEventReports(source);
+        List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
-        if (isWithinReportLimit(source, sourceEventReports.size())) {
+        if (isWithinReportLimit(
+                source,
+                sourceEventReports.size(),
+                DestinationType.getDestinationType(newEventReport.getAttributionDestination()))) {
             return true;
         }
 
@@ -355,8 +358,9 @@ class AttributionJobHandler {
         return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
-    private boolean isWithinReportLimit(Source source, int existingReportCount) {
-        return source.getMaxReportCount() > existingReportCount;
+    private boolean isWithinReportLimit(
+            Source source, int existingReportCount, DestinationType destinationType) {
+        return source.getMaxReportCount(destinationType) > existingReportCount;
     }
 
     private boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
