@@ -19,12 +19,11 @@ package com.android.adservices.ui.settings.viewmodels;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import android.app.Application;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -37,46 +36,38 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.IOException;
-
 /** Tests for {@link MainViewModel}. */
-public class ViewModelTest {
+public class MainViewModelTest {
 
     private MainViewModel mMainViewModel;
     @Mock
     private ConsentManager mConsentManager;
 
-    /**
-     * Setup needed before every test in this class.
-     */
+    /** Setup needed before every test in this class. */
     @Before
-    public void setup() throws IOException {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
-        Application app = ApplicationProvider.getApplicationContext();
-        mMainViewModel = new MainViewModel(app);
-        mMainViewModel.setConsentManager(mConsentManager);
-    }
-
-    /**
-     * Test if getConsent returns true if the {@link ConsentManager} always returns true.
-     */
-    @Test
-    public void testGetConsentReturnsTrue() {
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManager)
                 .getConsent(any(PackageManager.class));
+        mMainViewModel =
+                new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+    }
 
+    /** Test if getConsent returns true if the {@link ConsentManager} always returns true. */
+    @Test
+    public void testGetConsentReturnsTrue() {
         assertTrue(mMainViewModel.getConsent().getValue());
     }
 
-    /**
-     * Test if getConsent returns false if the {@link ConsentManager} always returns false.
-     */
+    /** Test if getConsent returns false if the {@link ConsentManager} always returns false. */
     @Test
     public void testGetConsentReturnsFalse() {
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManager)
                 .getConsent(any(PackageManager.class));
+        mMainViewModel =
+                new MainViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
 
         assertFalse(mMainViewModel.getConsent().getValue());
     }
@@ -84,9 +75,6 @@ public class ViewModelTest {
     /** Test if setConsent enables consent with a call to {@link ConsentManager}. */
     @Test
     public void testSetConsentTrue() {
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManager)
-                .getConsent(any(PackageManager.class));
         mMainViewModel.setConsent(true);
 
         verify(mConsentManager, times(1)).enable(any(PackageManager.class));
@@ -95,12 +83,6 @@ public class ViewModelTest {
     /** Test if setConsent revokes consent with a call to {@link ConsentManager}. */
     @Test
     public void testSetConsentFalse() {
-        // It does not matter what the ConsentManager returns because it will be overwritten
-        // immediately, and the case where setConsent is called before getConsent should not happen
-        // in practice.
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManager)
-                .getConsent(any(PackageManager.class));
         mMainViewModel.setConsent(false);
 
         verify(mConsentManager, times(1)).disable(any(PackageManager.class));
