@@ -73,25 +73,30 @@ public class ActionDelegate {
                             if (event == null) {
                                 return;
                             }
-                            switch (event) {
-                                case SWITCH_ON_PRIVACY_SANDBOX_BETA:
-                                    mMainViewModel.setConsent(true);
-                                    break;
-                                case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                    // TODO(b/235138016): confirmation for privacy sandbox consent
-                                    mMainViewModel.setConsent(false);
-                                    break;
-                                case DISPLAY_TOPICS_FRAGMENT:
-                                    mFragmentManager
-                                            .beginTransaction()
-                                            .replace(
-                                                    R.id.fragment_container_view,
-                                                    AdServicesSettingsTopicsFragment.class,
-                                                    null)
-                                            .setReorderingAllowed(true)
-                                            .addToBackStack(null)
-                                            .commit();
-                                    break;
+                            try {
+                                switch (event) {
+                                    case SWITCH_ON_PRIVACY_SANDBOX_BETA:
+                                        mMainViewModel.setConsent(true);
+                                        break;
+                                    case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
+                                        // TODO(b/235138016): confirmation for privacy sandbox
+                                        // consent
+                                        mMainViewModel.setConsent(false);
+                                        break;
+                                    case DISPLAY_TOPICS_FRAGMENT:
+                                        mFragmentManager
+                                                .beginTransaction()
+                                                .replace(
+                                                        R.id.fragment_container_view,
+                                                        AdServicesSettingsTopicsFragment.class,
+                                                        null)
+                                                .setReorderingAllowed(true)
+                                                .addToBackStack(null)
+                                                .commit();
+                                        break;
+                                }
+                            } finally {
+                                mMainViewModel.uiEventHandled();
                             }
                         });
     }
@@ -102,35 +107,46 @@ public class ActionDelegate {
                 .observe(
                         mLifecycleOwner,
                         eventTopicPair -> {
+                            if (eventTopicPair == null) {
+                                return;
+                            }
                             TopicsViewModelUiEvent event = eventTopicPair.first;
                             Topic topic = eventTopicPair.second;
                             if (event == null) {
                                 return;
                             }
-                            switch (event) {
-                                case BLOCK_TOPIC:
-                                    // TODO(b/229721429): show confirmation for blocking a topic.
-                                    mTopicsViewModel.revokeTopicConsent(topic);
-                                    break;
-                                case RESTORE_TOPIC:
-                                    // TODO(b/229721429): show confirmation for restoring a topic.
-                                    mTopicsViewModel.restoreTopicConsent(topic);
-                                    break;
-                                case RESET_TOPICS:
-                                    // TODO(b/229721429): show confirmation for resetting topics.
-                                    mTopicsViewModel.resetTopics();
-                                    break;
-                                case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
-                                    mFragmentManager
-                                            .beginTransaction()
-                                            .replace(
-                                                    R.id.fragment_container_view,
-                                                    AdServicesSettingsBlockedTopicsFragment.class,
-                                                    null)
-                                            .setReorderingAllowed(true)
-                                            .addToBackStack(null)
-                                            .commit();
-                                    break;
+                            try {
+                                switch (event) {
+                                    case BLOCK_TOPIC:
+                                        // TODO(b/229721429): show confirmation for blocking a
+                                        // topic.
+                                        mTopicsViewModel.revokeTopicConsent(topic);
+                                        break;
+                                    case RESTORE_TOPIC:
+                                        // TODO(b/229721429): show confirmation for restoring a
+                                        // topic.
+                                        mTopicsViewModel.restoreTopicConsent(topic);
+                                        break;
+                                    case RESET_TOPICS:
+                                        // TODO(b/229721429): show confirmation for resetting
+                                        // topics.
+                                        mTopicsViewModel.resetTopics();
+                                        break;
+                                    case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
+                                        mFragmentManager
+                                                .beginTransaction()
+                                                .replace(
+                                                        R.id.fragment_container_view,
+                                                        AdServicesSettingsBlockedTopicsFragment
+                                                                .class,
+                                                        null)
+                                                .setReorderingAllowed(true)
+                                                .addToBackStack(null)
+                                                .commit();
+                                        break;
+                                }
+                            } finally {
+                                mTopicsViewModel.uiEventHandled();
                             }
                         });
     }

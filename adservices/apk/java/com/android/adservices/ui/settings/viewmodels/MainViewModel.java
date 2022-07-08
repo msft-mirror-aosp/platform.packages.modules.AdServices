@@ -34,8 +34,8 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFrag
  */
 public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<MainViewModelUiEvent> mEventTrigger = new MutableLiveData<>();
-    private MutableLiveData<Boolean> mAdServicesConsent;
-    private ConsentManager mConsentManager;
+    private final MutableLiveData<Boolean> mAdServicesConsent;
+    private final ConsentManager mConsentManager;
 
     /** UI event triggered by view model */
     public enum MainViewModelUiEvent {
@@ -45,8 +45,14 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public MainViewModel(@NonNull Application application) {
+        this(application, ConsentManager.getInstance(application));
+    }
+
+    @VisibleForTesting
+    MainViewModel(@NonNull Application application, ConsentManager consentManager) {
         super(application);
-        setConsentManager(ConsentManager.getInstance(application));
+        mConsentManager = consentManager;
+        mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
     }
 
     /**
@@ -56,9 +62,6 @@ public class MainViewModel extends AndroidViewModel {
      * @return {@link mAdServicesConsent} indicates if user has consented to PP API usage.
      */
     public MutableLiveData<Boolean> getConsent() {
-        if (mAdServicesConsent == null) {
-            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
-        }
         return mAdServicesConsent;
     }
 
@@ -68,9 +71,6 @@ public class MainViewModel extends AndroidViewModel {
      * @param newConsentValue the new value that user consent should be set to for PP APIs.
      */
     public void setConsent(Boolean newConsentValue) {
-        if (mAdServicesConsent == null) {
-            mAdServicesConsent = new MutableLiveData<>(getConsentFromConsentManager());
-        }
         mAdServicesConsent.postValue(newConsentValue);
         if (newConsentValue) {
             mConsentManager.enable(getApplication().getPackageManager());
@@ -82,6 +82,14 @@ public class MainViewModel extends AndroidViewModel {
     /** Returns an observable but immutable event enum representing an view action on UI. */
     public LiveData<MainViewModelUiEvent> getUiEvents() {
         return mEventTrigger;
+    }
+
+    /**
+     * Sets the UI Event as handled so the action will not be handled again if activity is
+     * recreated.
+     */
+    public void uiEventHandled() {
+        mEventTrigger.postValue(null);
     }
 
     /** Triggers {@link AdServicesSettingsTopicsFragment}. */
@@ -96,11 +104,6 @@ public class MainViewModel extends AndroidViewModel {
         } else {
             mEventTrigger.postValue(MainViewModelUiEvent.SWITCH_OFF_PRIVACY_SANDBOX_BETA);
         }
-    }
-
-    @VisibleForTesting
-    void setConsentManager(ConsentManager consentManager) {
-        mConsentManager = consentManager;
     }
 
     private boolean getConsentFromConsentManager() {
