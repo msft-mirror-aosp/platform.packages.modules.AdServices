@@ -217,14 +217,17 @@ public final class MeasurementImpl {
     int deleteRegistrations(@NonNull DeletionParam request) {
         mReadWriteLock.readLock().lock();
         try {
-            final boolean deleteResult = mDatastoreManager.runInTransaction((dao) ->
-                    dao.deleteMeasurementData(
-                            getRegistrant(request.getAttributionSource()),
-                            request.getOriginUri(),
-                            request.getStart(),
-                            request.getEnd()
-                    )
-            );
+            final boolean deleteResult =
+                    mDatastoreManager.runInTransaction(
+                            (dao) ->
+                                    dao.deleteMeasurementData(
+                                            getRegistrant(request.getAttributionSource()),
+                                            request.getStart(),
+                                            request.getEnd(),
+                                            request.getOriginUris(),
+                                            request.getDomainUris(),
+                                            request.getMatchBehavior(),
+                                            request.getDeletionMode()));
             return deleteResult ? RESULT_OK : RESULT_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");

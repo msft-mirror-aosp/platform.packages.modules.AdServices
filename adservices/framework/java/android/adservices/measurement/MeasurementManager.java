@@ -353,7 +353,10 @@ public class MeasurementManager {
             @NonNull OutcomeReceiver<Void, Exception> callback) {
         deleteRegistrations(
                 new DeletionParam.Builder()
-                        .setOriginUri(deletionRequest.getOriginUri())
+                        .setOriginUris(deletionRequest.getOriginUris())
+                        .setDomainUris(deletionRequest.getDomainUris())
+                        .setDeletionMode(deletionRequest.getDeletionMode())
+                        .setMatchBehavior(deletionRequest.getMatchBehavior())
                         .setStart(deletionRequest.getStart())
                         .setEnd(deletionRequest.getEnd())
                         .setAttributionSource(mContext.getAttributionSource())

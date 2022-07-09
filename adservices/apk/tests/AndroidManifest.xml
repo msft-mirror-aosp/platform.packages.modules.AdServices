@@ -29,7 +29,7 @@
             tools:replace="android:label">
         <!-- Activity for Adservices Settings UI -->
         <activity
-                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
+                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivityWrapper"
                 android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

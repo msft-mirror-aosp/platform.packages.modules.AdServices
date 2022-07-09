@@ -19,7 +19,7 @@ package com.android.adservices.service.common;
 import android.adservices.common.IAdServicesCommonService;
 import android.content.Context;
 
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 
 import java.util.concurrent.Executor;
 

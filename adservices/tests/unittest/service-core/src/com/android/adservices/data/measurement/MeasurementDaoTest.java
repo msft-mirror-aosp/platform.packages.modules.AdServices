@@ -171,11 +171,18 @@ public class MeasurementDaoTest {
 
     @Test(expected = NullPointerException.class)
     public void testDeleteMeasurementData_requiredRegistrantAsNull() {
-        DatastoreManagerFactory.getDatastoreManager(sContext).runInTransaction((dao) -> {
-            dao.deleteMeasurementData(
-                    null /* registrant */, null /* origin */,
-                    null /* start */, null /* end */);
-        });
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        (dao) -> {
+                            dao.deleteMeasurementData(
+                                    null /* registrant */,
+                                    null /* start */,
+                                    null /* end */,
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    0,
+                                    0);
+                        });
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -185,9 +192,12 @@ public class MeasurementDaoTest {
                         (dao) -> {
                             dao.deleteMeasurementData(
                                     APP_ONE_SOURCE,
-                                    null /* origin */,
                                     null /* start */,
-                                    Instant.now());
+                                    Instant.now(),
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    0,
+                                    0);
                         });
     }
 
@@ -198,9 +208,12 @@ public class MeasurementDaoTest {
                         (dao) -> {
                             dao.deleteMeasurementData(
                                     APP_ONE_SOURCE,
-                                    null /* origin */,
                                     Instant.now(),
-                                    null /* end */);
+                                    null /* end */,
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    0,
+                                    0);
                         });
     }
 
@@ -211,9 +224,12 @@ public class MeasurementDaoTest {
                         (dao) -> {
                             dao.deleteMeasurementData(
                                     APP_ONE_SOURCE,
-                                    null /* origin */,
                                     Instant.now().plusMillis(1),
-                                    Instant.now());
+                                    Instant.now(),
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    0,
+                                    0);
                         });
     }
 

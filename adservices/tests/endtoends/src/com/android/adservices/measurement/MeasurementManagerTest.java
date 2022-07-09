@@ -33,6 +33,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -79,7 +80,9 @@ public class MeasurementManagerTest {
         Log.i(TAG, "Calling deleteRegistrations()");
         DeletionRequest request =
                 new DeletionRequest.Builder()
-                        .setOriginUri(Uri.parse("https://example.com"))
+                        .setOriginUris(
+                                Collections.singletonList(Uri.parse("https://a.example1.com")))
+                        .setDomainUris(Collections.singletonList(Uri.parse("https://example2.com")))
                         .setStart(Instant.ofEpochMilli(123456789L))
                         .setEnd(Instant.now())
                         .build();
