@@ -15,8 +15,8 @@
  */
 package com.android.adservices.ui.settings;
 
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment.PRIVACY_SANDBOX_BETA_SWITCH_KEY;
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment.TOPICS_PREFERENCE_BUTTON_KEY;
+import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.PRIVACY_SANDBOX_BETA_SWITCH_KEY;
+import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.TOPICS_PREFERENCE_BUTTON_KEY;
 
 import android.view.View;
 
@@ -28,7 +28,7 @@ import androidx.preference.SwitchPreference;
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
@@ -133,6 +133,7 @@ public class ActionDelegate {
                                         mTopicsViewModel.resetTopics();
                                         break;
                                     case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
+                                        mTopicsViewModel.refresh();
                                         mFragmentManager
                                                 .beginTransaction()
                                                 .replace(
@@ -156,14 +157,17 @@ public class ActionDelegate {
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Configure all UI elements in {@link AdServicesSettingsMainFragment} to handle user actions.
+     * Configure all UI elements in {@link AdServicesSettingsMainPreferenceFragment} to handle user
+     * actions.
+     *
+     * @param fragment the fragment to be initialized.
      */
-    public void initMainFragment(AdServicesSettingsMainFragment fragment) {
+    public void initMainFragment(AdServicesSettingsMainPreferenceFragment fragment) {
         configureConsentSwitch(fragment);
         configureTopicsButton(fragment);
     }
 
-    private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
+    private void configureConsentSwitch(AdServicesSettingsMainPreferenceFragment fragment) {
         SwitchPreference switchPreference =
                 Objects.requireNonNull(fragment.findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
 
@@ -177,7 +181,7 @@ public class ActionDelegate {
                 });
     }
 
-    private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {
+    private void configureTopicsButton(AdServicesSettingsMainPreferenceFragment fragment) {
         Preference topicsButton =
                 Objects.requireNonNull(fragment.findPreference(TOPICS_PREFERENCE_BUTTON_KEY));
 

@@ -72,7 +72,7 @@ public class AdServicesSettingsActivity extends FragmentActivity {
     private void initActionBar() {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(R.string.settingsUI_privacy_sandbox_beta_title);
+        actionBar.setTitle("");
     }
 
     private void initActionDelegate() {

@@ -37,15 +37,12 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.topics_fragment, container, false);
-
-        setupViewModel(rootView);
-
-        return rootView;
+        return inflater.inflate(R.layout.topics_fragment, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        setupViewModel(view);
         initActionListeners();
     }
 
@@ -67,5 +64,19 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
+
+        View noTopicsText = rootView.findViewById(R.id.no_topics_text);
+        View emptyTopicsHiddenSection = rootView.findViewById(R.id.empty_topics_hidden_section);
+
+        viewModel
+                .getTopics()
+                .observe(
+                        getViewLifecycleOwner(),
+                        topicsList -> {
+                            noTopicsText.setVisibility(
+                                    topicsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            emptyTopicsHiddenSection.setVisibility(
+                                    topicsList.isEmpty() ? View.GONE : View.VISIBLE);
+                        });
     }
 }
