@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -61,7 +60,9 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
     // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
         TopicsViewModel viewModel =
-                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
+                ((AdServicesSettingsActivity) requireActivity())
+                        .getViewModelProvider()
+                        .get(TopicsViewModel.class);
         RecyclerView recyclerView = rootView.findViewById(R.id.topics_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, false);

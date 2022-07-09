@@ -18,7 +18,6 @@ package com.android.adservices.ui.settings.fragments;
 import android.app.ActionBar;
 import android.os.Bundle;
 
-import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
@@ -52,7 +51,6 @@ public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         initActionBar();
         initActionListeners();
     }
@@ -86,7 +84,10 @@ public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
     }
 
     private void setupViewModel() {
-        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        MainViewModel model =
+                ((AdServicesSettingsActivity) requireActivity())
+                        .getViewModelProvider()
+                        .get(MainViewModel.class);
 
         SwitchPreference switchPreference =
                 Objects.requireNonNull(findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
