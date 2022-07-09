@@ -490,9 +490,9 @@ public class CommonClassifierHelperTest {
                         "taxonomy_type", "taxonomy_version", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "1.0".
+        // and its value should be "1".
         assertThat(productionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("1.0");
+                .isEqualTo("1");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome".
@@ -507,9 +507,9 @@ public class CommonClassifierHelperTest {
                 .containsExactly("asset_version", "path", "checksum", "updated_date");
 
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
-        // "1.0"
+        // "1"
         assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("1.0");
+                .isEqualTo("1");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_topics.txt"

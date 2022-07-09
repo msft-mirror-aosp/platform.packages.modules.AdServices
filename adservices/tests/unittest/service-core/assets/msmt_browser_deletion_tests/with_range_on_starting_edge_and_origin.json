@@ -306,8 +306,9 @@
   },
   "param": {
     "registrant": "android-app://com.registrant.deleteCandidate",
-    "origin": "android-app://com.site.deleteCandidate",
     "start": 1648665733600,
-    "end": 1648665733602
+    "end": 1648665733602,
+    "origins": ["android-app://com.site.deleteCandidate"],
+    "domains": []
   }
 }

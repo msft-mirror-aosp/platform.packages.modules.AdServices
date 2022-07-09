@@ -48,11 +48,16 @@ import java.util.Random;
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
 
+    private static final String CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_assets_metadata.json";
+
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static Preprocessor sPreprocessor;
     private static OnDeviceClassifier sOnDeviceClassifier;
 
     @Mock private PackageManagerUtil mPackageManagerUtil;
+
+    private static ImmutableMap<String, ImmutableMap<String, String>> sClassifierAssetsMetadata;
 
     @Before
     public void setUp() throws IOException {
@@ -62,6 +67,9 @@ public class OnDeviceClassifierTest {
         sOnDeviceClassifier =
                 new OnDeviceClassifier(
                         sPreprocessor, mPackageManagerUtil, sContext.getAssets(), new Random());
+        sClassifierAssetsMetadata =
+                CommonClassifierHelper.getAssetsMetadata(
+                        sContext.getAssets(), CLASSIFIER_ASSETS_METADATA_PATH);
     }
 
     @Test
@@ -240,5 +248,25 @@ public class OnDeviceClassifierTest {
                 .isNotEqualTo(
                         topTopics2.subList(
                                 numberOfTopTopics, numberOfTopTopics + numberOfRandomTopics));
+    }
+
+    @Test
+    public void testBertModelVersion_matchesAssetsModelVersion() {
+        assertThat(sOnDeviceClassifier.getBertModelVersion())
+                .isEqualTo(
+                        Long.parseLong(
+                                sClassifierAssetsMetadata
+                                        .get("tflite_model")
+                                        .get("asset_version")));
+    }
+
+    @Test
+    public void testBertLabelsVersion_matchesAssetsLabelsVersion() {
+        assertThat(sOnDeviceClassifier.getBertLabelsVersion())
+                .isEqualTo(
+                        Long.parseLong(
+                                sClassifierAssetsMetadata
+                                        .get("labels_topics")
+                                        .get("asset_version")));
     }
 }
