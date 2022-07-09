@@ -162,6 +162,10 @@ public final class MeasurementImpl {
     int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
+        if (!isValid(sourceRegistrationRequest)) {
+            LogUtil.e("registerWebSource received invalid parameters");
+            return RESULT_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<SourceRegistration>> fetch =
@@ -191,6 +195,10 @@ public final class MeasurementImpl {
             @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
+        if (!isValid(triggerRegistrationRequest)) {
+            LogUtil.e("registerWebTrigger received invalid parameters");
+            return RESULT_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<TriggerRegistration>> fetch =
@@ -350,7 +358,7 @@ public final class MeasurementImpl {
             Uri webDestination) {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
-                .setPublisher(topOriginUri)
+                .setPublisher(getBaseUri(topOriginUri))
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
@@ -455,5 +463,18 @@ public final class MeasurementImpl {
 
     private Uri getAppUri(Uri packageUri) {
         return Uri.parse(ANDROID_APP_SCHEME + packageUri.getEncodedSchemeSpecificPart());
+    }
+
+    private boolean isValid(WebSourceRegistrationRequest sourceRegistrationRequest) {
+        Uri webDestination = sourceRegistrationRequest.getWebDestination();
+        if (webDestination == null) {
+            return true;
+        }
+        return WebUtil.topPrivateDomainAndScheme(webDestination).isPresent();
+    }
+
+    private boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
+        Uri destination = triggerRegistrationRequest.getDestination();
+        return WebUtil.topPrivateDomainAndScheme(destination).isPresent();
     }
 }

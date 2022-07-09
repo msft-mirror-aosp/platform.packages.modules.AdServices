@@ -130,6 +130,9 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
          */
         @NonNull
         public Builder setDestination(@NonNull Uri destination) {
+            if (destination.getScheme() == null) {
+                throw new IllegalArgumentException("Destination origin must have a scheme.");
+            }
             mDestination = destination;
             return this;
         }

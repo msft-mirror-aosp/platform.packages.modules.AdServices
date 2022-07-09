@@ -37,7 +37,7 @@ public class WebSourceRegistrationRequestInternalTest {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
-    private static final Uri OS_DESTINATION_URI = Uri.parse("https://os-destination.com");
+    private static final Uri OS_DESTINATION_URI = Uri.parse("android-app://com.os-destination");
     private static final Uri WEB_DESTINATION_URI = Uri.parse("https://web-destination.com");
     private static final Uri VERIFIED_DESTINATION = Uri.parse("https://verified-dest.com");
     private static final KeyEvent INPUT_KEY_EVENT =

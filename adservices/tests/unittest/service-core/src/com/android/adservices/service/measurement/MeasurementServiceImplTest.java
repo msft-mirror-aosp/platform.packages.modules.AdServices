@@ -70,7 +70,7 @@ public final class MeasurementServiceImplTest {
 
     private static final Uri REGISTRATION_URI = Uri.parse("https://registration-uri.com");
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination-uri.com");
-    private static final Uri OS_DESTINATION = Uri.parse("https://os-destination-uri.com");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app-destination");
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final int TIMEOUT = 5_000;
     private static final WebSourceParams SOURCE_REGISTRATION =
@@ -417,7 +417,7 @@ public final class MeasurementServiceImplTest {
         return new RegistrationRequest.Builder()
                 .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setTopOriginUri(Uri.parse("android-app//com.example"))
+                .setTopOriginUri(Uri.parse("android-app://com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .build();
     }
@@ -427,8 +427,8 @@ public final class MeasurementServiceImplTest {
                 new WebSourceRegistrationRequest.Builder()
                         .setSourceParams(Collections.singletonList(SOURCE_REGISTRATION))
                         .setWebDestination(WEB_DESTINATION)
-                        .setOsDestination(OS_DESTINATION)
-                        .setTopOriginUri(Uri.parse("android-app//com.example"))
+                        .setOsDestination(APP_DESTINATION)
+                        .setTopOriginUri(Uri.parse("android-app://com.example"))
                         .build();
         return new WebSourceRegistrationRequestInternal.Builder()
                 .setSourceRegistrationRequest(sourceRegistrationRequest)
@@ -440,7 +440,7 @@ public final class MeasurementServiceImplTest {
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
                 new WebTriggerRegistrationRequest.Builder()
                         .setTriggerParams(Collections.singletonList(TRIGGER_REGISTRATION))
-                        .setDestination(Uri.parse("android-app//com.example"))
+                        .setDestination(Uri.parse("android-app://com.example"))
                         .build();
         return new WebTriggerRegistrationRequestInternal.Builder()
                 .setTriggerRegistrationRequest(webTriggerRegistrationRequest)
