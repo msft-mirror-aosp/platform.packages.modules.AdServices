@@ -191,6 +191,8 @@
   "param": {
     "registrant": "android-app://com.registrant.deleteCandidate",
     "start": 1648665733600,
-    "end": 1648665733600
+    "end": 1648665733600,
+    "origins": [],
+    "domains": []
   }
 }

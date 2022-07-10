@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
 import android.net.Uri;
@@ -30,6 +31,7 @@ import androidx.test.filters.SmallTest;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 
 /** Unit tests for {@link DeletionParam} */
 @SmallTest
@@ -40,7 +42,10 @@ public final class DeletionParamTest {
 
     private DeletionParam createExample() {
         return new DeletionParam.Builder()
-                .setOriginUri(Uri.parse("http://foo.com"))
+                .setOriginUris(Collections.singletonList(Uri.parse("http://foo.com")))
+                .setDomainUris(Collections.emptyList())
+                .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
                 .setStart(Instant.ofEpochMilli(1642060000000L))
                 .setEnd(Instant.ofEpochMilli(1642060538000L))
                 .setAttributionSource(sContext.getAttributionSource())
@@ -49,7 +54,8 @@ public final class DeletionParamTest {
 
     private DeletionParam createDefaultExample() {
         return new DeletionParam.Builder()
-                .setOriginUri(null)
+                .setOriginUris(Collections.emptyList())
+                .setDomainUris(Collections.emptyList())
                 .setStart(null)
                 .setEnd(null)
                 .setAttributionSource(sContext.getAttributionSource())
@@ -57,21 +63,29 @@ public final class DeletionParamTest {
     }
 
     void verifyExample(DeletionParam request) {
-        assertEquals("http://foo.com", request.getOriginUri().toString());
+        assertEquals(1, request.getOriginUris().size());
+        assertEquals("http://foo.com", request.getOriginUris().get(0).toString());
+        assertTrue(request.getDomainUris().isEmpty());
+        assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
+        assertEquals(
+                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
         assertEquals(1642060000000L, request.getStart().toEpochMilli());
         assertEquals(1642060538000L, request.getEnd().toEpochMilli());
         assertNotNull(request.getAttributionSource());
     }
 
     void verifyDefaultExample(DeletionParam request) {
-        assertNull(request.getOriginUri());
+        assertTrue(request.getOriginUris().isEmpty());
+        assertTrue(request.getDomainUris().isEmpty());
+        assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
+        assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
         assertNull(request.getStart());
         assertNull(request.getEnd());
         assertNotNull(request.getAttributionSource());
     }
 
     @Test
-    public void testNoAttributionSource() throws Exception {
+    public void testMissingParams() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
@@ -80,17 +94,17 @@ public final class DeletionParamTest {
     }
 
     @Test
-    public void testDefaults() throws Exception {
+    public void testDefaults() {
         verifyDefaultExample(createDefaultExample());
     }
 
     @Test
-    public void testCreation() throws Exception {
+    public void testCreation() {
         verifyExample(createExample());
     }
 
     @Test
-    public void testParcelingDelete() throws Exception {
+    public void testParcelingDelete() {
         Parcel p = Parcel.obtain();
         createExample().writeToParcel(p, 0);
         p.setDataPosition(0);
@@ -99,7 +113,7 @@ public final class DeletionParamTest {
     }
 
     @Test
-    public void testParcelingDeleteDefaults() throws Exception {
+    public void testParcelingDeleteDefaults() {
         Parcel p = Parcel.obtain();
         createDefaultExample().writeToParcel(p, 0);
         p.setDataPosition(0);

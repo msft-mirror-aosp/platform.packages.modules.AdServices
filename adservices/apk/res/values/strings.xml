@@ -58,6 +58,48 @@
     <!-- Summary of Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_switch_summary">Toggle Privacy Sandbox beta</string>
 
+    <!-- Title text of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_title">Android\'s ads privacy beta</string>
+
+    <!-- Sub title text of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_subtitle">Test the new Privacy Sandbox system that restricts cross-app tracking</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text1">How the Privacy Sandbox works</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text2">Data is collected in the Privacy Sandbox to show you ads you might like, but is shared without identifying you or your device.</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text3">What kind of data is stored in the Privacy Sandbox?</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text4">&#8226;  General interests</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text5">Android generates this data based on the apps you use, and adds it to the Privacy Sandbox. For example, one of your general interests might be “Sports.” \n\nYou can see the list of your interests in your Privacy settings, and block any you don’t like.</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text6">&#8226;  Specific interests</string>
+
+    <!-- Info text at the bottom of the main view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_main_view_info_text7">Your apps generate this data based on how you use them, and add it to the Privacy Sandbox. For example, an app you use to shop for running shoes might add the label sport_running.\n\nIn your privacy settings, you can see the list of apps doing this, and block any app from contributing data to the Privacy Sandbox.</string>
+
+    <!-- Title text of the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_title">Manage interests</string>
+
+    <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_subtitle">Android\'s Privacy Sandbox restricts cross-app tracking while still allowing apps to show you ads you might like. Android shares this data with advertisers without identifying you or your device.\n\nBased on the apps you use, Android generates and updates this list of your general ads interests. If you block an interest, it won’t be added to the list again unless you unblock it. You may still see some related ads.</string>
+
+    <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_info_text1">General ads interests</string>
+
+    <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_info_text2">Android generates these interests based on the apps you use.\n\nFor example, if you have several sports apps on your device, Android might add the interest “Sports” to the Privacy Sandbox.\n\nLater, this data is shared with advertisers without identifying you or your device.</string>
+
+    <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_no_topics_text">No interests to show right now</string>
+
     <!-- Key for the topics preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_key">topics_preference</string>
     <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
