@@ -19,7 +19,6 @@ import android.app.Application;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -29,6 +28,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -90,6 +90,15 @@ public class TopicsViewModel extends AndroidViewModel {
      */
     public void revokeTopicConsent(Topic topic) {
         mConsentManager.revokeConsentForTopic(topic);
+        refresh();
+    }
+
+    /**
+     * Reads all the data from {@link ConsentManager}.
+     *
+     * <p>TODO(b/238387560): To be moved to private when is fixed.
+     */
+    public void refresh() {
         mTopics.postValue(getTopicsFromConsentManager());
         mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
     }
@@ -120,8 +129,7 @@ public class TopicsViewModel extends AndroidViewModel {
      */
     public void restoreTopicConsent(Topic topic) {
         mConsentManager.restoreConsentForTopic(topic);
-        mTopics.postValue(getTopicsFromConsentManager());
-        mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
+        refresh();
     }
 
     // ---------------------------------------------------------------------------------------------
