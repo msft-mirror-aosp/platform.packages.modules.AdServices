@@ -26,6 +26,9 @@ import androidx.concurrent.futures.CallbackToFutureAdapter;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.exception.JSExecutionException;
+import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
+import com.android.adservices.service.profiling.Profiler;
+import com.android.adservices.service.profiling.StopWatch;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
@@ -51,12 +54,15 @@ import javax.annotation.concurrent.GuardedBy;
  */
 public class JSScriptEngine {
     public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
+    public static final String TAG = JSScriptEngine.class.getSimpleName();
 
-    private static final String TAG = JSScriptEngine.class.getSimpleName();
-    private static final JsSandboxProvider sJsSandboxProvider = new JsSandboxProvider();
+    private final JsSandboxProvider mJsSandboxProvider;
+
+    @SuppressLint("StaticFieldLeak")
+    private static JSScriptEngine sSingleton;
 
     private final Context mContext;
-    private final JsSandboxProvider mJsSandboxProvider;
+    private final Profiler mProfiler;
 
     /**
      * Closes the connection with WebView. Any running computation will be terminated. It is not
@@ -64,8 +70,8 @@ public class JSScriptEngine {
      * {@code evaluate} for existing instance will cause the connection to WV to be restored if
      * necessary.
      */
-    public static void shutdown() {
-        sJsSandboxProvider.destroyCurrentInstance();
+    public void shutdown() {
+        mJsSandboxProvider.destroyCurrentInstance();
     }
 
     /**
@@ -77,35 +83,42 @@ public class JSScriptEngine {
     @VisibleForTesting
     static class JsSandboxProvider {
         private final Object mSandboxLock = new Object();
+        private StopWatch mSandboxInitStopWatch;
+        private Profiler mProfiler;
 
         @GuardedBy("mSandboxLock")
         private FluentFuture<AwJsSandbox> mFutureSandbox;
 
+        JsSandboxProvider(Profiler profiler) {
+            mProfiler = profiler;
+        }
+
         public FluentFuture<AwJsSandbox> getFutureInstance(Context context) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
-                    mFutureSandbox =
-                            FluentFuture.from(
-                                    CallbackToFutureAdapter.getFuture(
-                                            completer -> {
-                                                LogUtil.i("Creating AwJsSandbox");
-                                                AwJsSandbox.newConnectedInstance(
-                                                        // This instance will have the same lifetime
-                                                        // of the PPAPI process
-                                                        context.getApplicationContext(),
-                                                        awJsSandbox -> {
-                                                            completer.set(awJsSandbox);
-                                                        });
-                                                LogUtil.i("JSScriptEngine created.");
+                    mSandboxInitStopWatch =
+                            mProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
+                    ListenableFuture<AwJsSandbox> future =
+                            CallbackToFutureAdapter.getFuture(
+                                    completer -> {
+                                        LogUtil.i("Creating AwJsSandbox");
+                                        AwJsSandbox.newConnectedInstance(
+                                                // This instance has the same lifetime of the PPAPI
+                                                // process.
+                                                context.getApplicationContext(),
+                                                awJsSandbox -> {
+                                                    completer.set(awJsSandbox);
+                                                    mSandboxInitStopWatch.stop();
+                                                });
+                                        LogUtil.i("JSScriptEngine created.");
 
-                                                // This value is used only for debug purposes: it
-                                                // will
-                                                // be used
-                                                // in
-                                                // toString() of returned future or error cases.
-                                                return "JSSscriptEngine constructor";
-                                            }));
+                                        // This value is used only for debug purposes: it will be
+                                        // used in toString() of returned future or error cases.
+                                        return "JSSscriptEngine constructor";
+                                    });
+                    mFutureSandbox = FluentFuture.from(future);
                 }
+
                 return mFutureSandbox;
             }
         }
@@ -137,17 +150,43 @@ public class JSScriptEngine {
         }
     }
 
+    @VisibleForTesting
     @SuppressLint("SetJavaScriptEnabled")
     public JSScriptEngine(@NonNull Context context) {
-        this(context, sJsSandboxProvider);
+        this(
+                context,
+                new JsSandboxProvider(Profiler.createNoOpInstance(TAG)),
+                Profiler.createNoOpInstance(TAG));
     }
 
-    @SuppressWarnings("FutureReturnValueIgnored")
+    /** @return JSScriptEngine instance */
+    public static JSScriptEngine getInstance(@NonNull Context context) {
+        synchronized (JSScriptEngine.class) {
+            if (sSingleton == null) {
+                Profiler profiler = Profiler.createNoOpInstance(TAG);
+                sSingleton = new JSScriptEngine(context, new JsSandboxProvider(profiler), profiler);
+            }
+
+            return sSingleton;
+        }
+    }
+
     @VisibleForTesting
-    JSScriptEngine(@NonNull Context context, @NonNull JsSandboxProvider jsSandboxProvider) {
+    public static JSScriptEngine getInstanceForTesting(Context context, Profiler profiler) {
+        return new JSScriptEngine(context, new JsSandboxProvider(profiler), profiler);
+    }
+
+    @VisibleForTesting
+    @SuppressWarnings("FutureReturnValueIgnored")
+    JSScriptEngine(
+            @NonNull Context context,
+            @NonNull JsSandboxProvider jsSandboxProvider,
+            Profiler profiler) {
         this.mContext = context;
         this.mJsSandboxProvider = jsSandboxProvider;
-        // Forcing initialization of WebView
+        this.mProfiler = profiler;
+
+        // Forcing initialization of WebView.
         jsSandboxProvider.getFutureInstance(mContext);
     }
 
@@ -197,9 +236,22 @@ public class JSScriptEngine {
                                         @Override
                                         public void onSuccess(AwJsSandbox jsSandbox) {
                                             try {
+                                                StopWatch isolateStopWatch =
+                                                        mProfiler.start(
+                                                                JSScriptEngineLogConstants
+                                                                        .ISOLATE_CREATE_TIME);
                                                 AwJsIsolate jsIsolate = createIsolate(jsSandbox);
+                                                isolateStopWatch.stop();
+
+                                                StopWatch jsExecutionStopWatch =
+                                                        mProfiler.start(
+                                                                JSScriptEngineLogConstants
+                                                                        .JAVA_EXECUTION_TIME);
                                                 evaluateJavascript(
-                                                        jsIsolate, completer, fullScript);
+                                                        jsIsolate,
+                                                        completer,
+                                                        fullScript,
+                                                        jsExecutionStopWatch);
                                             } catch (RuntimeException isolateCreationFailure) {
                                                 LogUtil.w(
                                                         "Error trying to create an isolate, it"
@@ -218,8 +270,8 @@ public class JSScriptEngine {
                                                             "Failed creating AwJsSandbox", t));
                                         }
                                     },
-                                    directExecutor()); // This just starts the JS execution in
-                    // another thread; it's a lightweight task.
+                                    // Using directExecutor() since this is a short, light task.
+                                    directExecutor());
 
                     // This value is used only for debug purposes: it will be used in toString()
                     // of returned future or error cases.
@@ -230,8 +282,10 @@ public class JSScriptEngine {
     private void evaluateJavascript(
             AwJsIsolate jsIsolate,
             CallbackToFutureAdapter.Completer<String> completer,
-            String fullScript) {
-        ExecutionCallback callback = new ExecutionCallback(jsIsolate, completer);
+            String fullScript,
+            StopWatch jsExecutionStopWatch) {
+        ExecutionCallback callback =
+                new ExecutionCallback(jsIsolate, completer, jsExecutionStopWatch);
         try {
             jsIsolate.evaluateJavascript(fullScript, callback);
         } catch (RuntimeException e) {
@@ -292,23 +346,29 @@ public class JSScriptEngine {
     private static class ExecutionCallback implements AwJsIsolate.ExecutionCallback {
         private AwJsIsolate mJsIsolate;
         private CallbackToFutureAdapter.Completer<String> mFuture;
+        private StopWatch mJsExecutionStopWatch;
 
-        ExecutionCallback(AwJsIsolate jsIsolate, CallbackToFutureAdapter.Completer<String> future) {
+        ExecutionCallback(
+                AwJsIsolate jsIsolate,
+                CallbackToFutureAdapter.Completer<String> future,
+                StopWatch jsExecutionStopWatch) {
             this.mJsIsolate = jsIsolate;
             this.mFuture = future;
+            this.mJsExecutionStopWatch = jsExecutionStopWatch;
         }
 
         @Override
         public void reportResult(String result) {
-            // TODO: trim off these quotes, just keeping it so UTs don't fail.
             mFuture.set(result);
             mJsIsolate.close();
+            mJsExecutionStopWatch.stop();
         }
 
         @Override
         public void reportError(String error) {
             mFuture.setException(new JSExecutionException(error));
             mJsIsolate.close();
+            mJsExecutionStopWatch.stop();
         }
     }
 }

@@ -37,7 +37,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateAttributi
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
+    private static final String API_VERSION = "0.1";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
@@ -192,20 +193,22 @@ class AttributionJobHandler {
 
                     long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
                             + MIN_TIME_MS);
-                    CleartextAggregatePayload aggregateReport =
-                            new CleartextAggregatePayload.Builder()
+                    AggregateReport aggregateReport =
+                            new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
                                     .setAttributionDestination(source.getAttributionDestination())
                                     .setSourceRegistrationTime(source.getEventTime())
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
-                                            CleartextAggregatePayload.generateDebugPayload(
+                                            AggregateReport.generateDebugPayload(
                                                     contributions.get()))
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
                                                     .setContributions(contributions.get()).build())
-                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
+                                    .setStatus(AggregateReport.Status.PENDING)
+                                    .setApiVersion(API_VERSION)
+                                    .build();
 
                     measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);
