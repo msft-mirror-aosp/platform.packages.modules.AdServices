@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
@@ -191,7 +192,7 @@ public class SettingsActivityTest {
 
         assertTopicsFragmentDisplayed();
 
-        onView(withId(R.id.blocked_topics_button)).perform(click());
+        onView(withId(R.id.blocked_topics_button)).perform(scrollTo(), click());
 
         assertBlockedTopicsFragmentDisplayed();
 
@@ -205,7 +206,8 @@ public class SettingsActivityTest {
     }
 
     private void assertMainFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_topics_title)).check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_summary))
+                .check(matches(isDisplayed()));
     }
 
     private void assertTopicsFragmentDisplayed() {
