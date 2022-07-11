@@ -1,0 +1,367 @@
+{
+  "name": "With multiple origin and no domain",
+  "description": "(S1,S4), (T1, T4), (E1,E2, E4, E6) AND (A1,A4) will be deleted due to origin match. S2,T2,E5,A2 skipped as they are out of time range.",
+  "input": {
+    "sources": [
+      {
+        "id": "S1",
+        "eventId": 1,
+        "sourceType": "navigation",
+        "publisher": "https://deleteCandidate1.site.com",
+        "attributionDestination": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 1648665733601,
+        "expiryTime": 1648665733611,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "S2",
+        "eventId": 2,
+        "sourceType": "navigation",
+        "publisher": "https://deleteCandidate1.site.com",
+        "attributionDestination": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 1648665733605,
+        "expiryTime": 1648665733615,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "S3",
+        "eventId": 3,
+        "sourceType": "navigation",
+        "publisher": "https://siteNotMatch.site3.com",
+        "attributionDestination": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 1648665733601,
+        "expiryTime": 1648665733611,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "S4",
+        "eventId": 1,
+        "sourceType": "navigation",
+        "publisher": "https://deleteCandidate2.site.com",
+        "attributionDestination": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 1648665733601,
+        "expiryTime": 1648665733611,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "triggers": [
+      {
+        "id": "T1",
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "priority": 101,
+        "status": 0,
+        "triggerData": 2,
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ],
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "T2",
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "priority": 101,
+        "status": 0,
+        "triggerData": 2,
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ],
+        "triggerTime": 1648665733605,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "T3",
+        "attributionDestination": "https://doNotDelete.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "priority": 101,
+        "status": 0,
+        "triggerData": 2,
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ],
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "T4",
+        "attributionDestination": "https://deleteCandidate2.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "priority": 101,
+        "status": 0,
+        "triggerData": 2,
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ],
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "event_reports": [
+      {
+        "id": "E1",
+        "sourceId": 1,
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733601,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E2",
+        "sourceId": 1,
+        "attributionDestination": "android-app://com.site.notInRangeButDeleteDueToSourceId1",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733605,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E3",
+        "sourceId": 2,
+        "attributionDestination": "https://doNotDelete.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733601,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E4",
+        "sourceId": 2,
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733601,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E5",
+        "sourceId": 2,
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733605,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E6",
+        "sourceId": 2,
+        "attributionDestination": "https://deleteCandidate2.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733601,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      }
+    ],
+    "attribution_rate_limits": [
+      {
+        "id": "A1",
+        "sourceSite": "https://deleteCandidate1.site.com",
+        "destinationSite": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "A2",
+        "sourceSite": "https://deleteCandidate1.site.com",
+        "destinationSite": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 1648665733605,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "A3",
+        "sourceSite": "https://site3.com",
+        "destinationSite": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "A4",
+        "sourceSite": "https://deleteCandidate2.site.com",
+        "destinationSite": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ]
+  },
+  "output": {
+    "sources": [
+      {
+        "id": "S2",
+        "eventId": 2,
+        "sourceType": "navigation",
+        "publisher": "https://deleteCandidate1.site.com",
+        "attributionDestination": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 1648665733605,
+        "expiryTime": 1648665733615,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "S3",
+        "eventId": 3,
+        "sourceType": "navigation",
+        "publisher": "https://siteNotMatch.site3.com",
+        "attributionDestination": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 1648665733601,
+        "expiryTime": 1648665733611,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "triggers": [
+      {
+        "id": "T2",
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "priority": 101,
+        "status": 0,
+        "triggerData": 2,
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ],
+        "triggerTime": 1648665733605,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "T3",
+        "attributionDestination": "https://doNotDelete.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "priority": 101,
+        "status": 0,
+        "triggerData": 2,
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ],
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "event_reports": [
+      {
+        "id": "E3",
+        "sourceId": 2,
+        "attributionDestination": "https://doNotDelete.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733601,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E5",
+        "sourceId": 2,
+        "attributionDestination": "https://deleteCandidate1.site.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 1648665733605,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      }
+    ],
+    "attribution_rate_limits": [
+      {
+        "id": "A2",
+        "sourceSite": "https://deleteCandidate1.site.com",
+        "destinationSite": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 1648665733605,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "A3",
+        "sourceSite": "https://site3.com",
+        "destinationSite": "https://site2.com",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 1648665733601,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ]
+  },
+  "param": {
+    "registrant": "android-app://com.registrant.deleteCandidate",
+    "start": 1648665733600,
+    "end": 1648665733602,
+    "origins": ["https://deleteCandidate1.site.com", "https://deleteCandidate2.site.com"],
+    "domains": []
+  }
+}

@@ -36,8 +36,11 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private SandboxedSdkContext mContext;
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            InitSdkCallback callback) {
         mContext = context;
         callback.onInitSdkFinished(null);
     }
@@ -48,8 +51,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private static class TestView extends View {
 

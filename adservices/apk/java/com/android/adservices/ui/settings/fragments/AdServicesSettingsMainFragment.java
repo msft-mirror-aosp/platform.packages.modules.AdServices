@@ -16,54 +16,19 @@
 package com.android.adservices.ui.settings.fragments;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-import androidx.lifecycle.ViewModelProvider;
-import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SwitchPreference;
+import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
-import com.android.adservices.ui.settings.ActionDelegate;
-import com.android.adservices.ui.settings.AdServicesSettingsActivity;
-import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 
-import java.util.Objects;
-
-/**
- * Fragment for the main view of the AdServices Settings App.
- */
-public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
-
-    public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
-            "getConsent method failed. Will not change consent value in view model.";
-    public static final String PRIVACY_SANDBOX_BETA_SWITCH_KEY = "privacy_sandbox_beta_switch";
-    public static final String TOPICS_PREFERENCE_BUTTON_KEY = "topics_preference";
-
+/** Fragment for the main view of the AdServices Settings App. */
+public class AdServicesSettingsMainFragment extends Fragment {
     @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.main_preferences, rootKey);
-
-        setupViewModel();
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        initActionListeners();
-    }
-
-    // initialize all action listeners
-    private void initActionListeners() {
-        ActionDelegate actionDelegate =
-                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
-        actionDelegate.initMainFragment(this);
-    }
-
-    private void setupViewModel() {
-        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
-
-        SwitchPreference switchPreference =
-                Objects.requireNonNull(findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
-        model.getConsent().observe(this, switchPreference::setChecked);
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.main_fragment, container, false);
     }
 }

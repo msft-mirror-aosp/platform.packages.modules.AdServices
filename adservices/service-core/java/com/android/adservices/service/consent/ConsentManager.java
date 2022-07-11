@@ -41,20 +41,23 @@ public class ConsentManager {
     public static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     private static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
+    private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
     private static final String CONSENT_ALREADY_INITIALIZED_KEY = "CONSENT-ALREADY-INITIALIZED";
     private static final String CONSENT_KEY = "CONSENT";
     private static final String ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT =
             "setConsent method failed due to IOException thrown by Datastore.";
     private static final int STORAGE_VERSION = 1;
     private static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
-    private static volatile ConsentManager sConsentManager;
-    private final TopicsWorker mTopicsWorker;
-    private BooleanFileDatastore mDatastore;
 
-    ConsentManager(@NonNull Context appContext, @NonNull TopicsWorker topicsWorker)
-            throws IOException {
+    private static volatile ConsentManager sConsentManager;
+    private volatile Boolean mInitialized = false;
+
+    private final TopicsWorker mTopicsWorker;
+    private final BooleanFileDatastore mDatastore;
+
+    ConsentManager(@NonNull Context context, @NonNull TopicsWorker topicsWorker) {
         mTopicsWorker = topicsWorker;
-        init(appContext);
+        mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
     }
 
     /**
@@ -64,7 +67,7 @@ public class ConsentManager {
      * existing instance will be returned.
      */
     @NonNull
-    public static ConsentManager getInstance(@NonNull Context context) throws IOException {
+    public static ConsentManager getInstance(@NonNull Context context) {
         if (sConsentManager == null) {
             synchronized (ConsentManager.class) {
                 if (sConsentManager == null) {
@@ -76,39 +79,13 @@ public class ConsentManager {
         return sConsentManager;
     }
 
-    @VisibleForTesting
-    void init(@NonNull Context appContext) throws IOException {
-        mDatastore = new BooleanFileDatastore(appContext, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
-        mDatastore.initialize();
-        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
-                || mDatastore.get(CONSENT_KEY) == null) {
-            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
-
-            boolean initialConsent = getInitialConsent(appContext.getPackageManager());
-            setInitialConsent(initialConsent);
-        }
-    }
-
-    private void setInitialConsent(boolean initialConsent) {
-        if (initialConsent) {
-            enable();
-        } else {
-            disable();
-        }
-    }
-
-    @VisibleForTesting
-    boolean getInitialConsent(PackageManager packageManager) {
-        // The existence of this feature means that device should be treated as EU device.
-        return !packageManager.hasSystemFeature(EEA_DEVICE);
-    }
-
     /**
      * Enables all PP API services. It gives consent to Topics, Fledge and Measurements services.
      */
-    public void enable() {
+    public void enable(@NonNull PackageManager packageManager) {
         // Enable all the APIs
         try {
+            init(packageManager);
             setConsent(AdServicesApiConsent.GIVEN);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -119,9 +96,10 @@ public class ConsentManager {
     /**
      * Disables all PP API services. It revokes consent to Topics, Fledge and Measurements services.
      */
-    public void disable() {
+    public void disable(@NonNull PackageManager packageManager) {
         // Disable all the APIs
         try {
+            init(packageManager);
             setConsent(AdServicesApiConsent.REVOKED);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -130,10 +108,11 @@ public class ConsentManager {
     }
 
     /** Retrieves the consent for all PP API services. */
-    public AdServicesApiConsent getConsent() {
+    public AdServicesApiConsent getConsent(@NonNull PackageManager packageManager) {
         try {
+            init(packageManager);
             return AdServicesApiConsent.getConsent(mDatastore.get(CONSENT_KEY));
-        } catch (NullPointerException | IllegalArgumentException e) {
+        } catch (NullPointerException | IllegalArgumentException | IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
             return AdServicesApiConsent.REVOKED;
         }
@@ -183,8 +162,66 @@ public class ConsentManager {
         mTopicsWorker.restoreConsentForTopic(topic);
     }
 
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    public void recordNotificationDisplayed() {
+        try {
+            // TODO(b/229725886): add metrics / logging
+            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        } catch (IOException e) {
+            LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+        }
+    }
+
+    /**
+     * Returns information whether Consent Notification was displayed or not.
+     *
+     * @return true if Consent Notification was displayed, otherwise false.
+     */
+    public Boolean wasNotificationDisplayed() {
+        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+    }
+
     private void setConsent(AdServicesApiConsent state)
             throws IOException {
         mDatastore.put(CONSENT_KEY, state.isGiven());
+    }
+
+    void init(PackageManager packageManager) throws IOException {
+        initializeStorage();
+        if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
+                || mDatastore.get(CONSENT_KEY) == null) {
+            boolean initialConsent = getInitialConsent(packageManager);
+            setInitialConsent(initialConsent);
+
+            mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
+        }
+    }
+
+    private void initializeStorage() throws IOException {
+        if (!mInitialized) {
+            synchronized (ConsentManager.class) {
+                if (!mInitialized) {
+                    mDatastore.initialize();
+                    mInitialized = true;
+                }
+            }
+        }
+    }
+
+    private void setInitialConsent(boolean initialConsent) throws IOException {
+        if (initialConsent) {
+            setConsent(AdServicesApiConsent.GIVEN);
+        } else {
+            setConsent(AdServicesApiConsent.REVOKED);
+        }
+    }
+
+    @VisibleForTesting
+    boolean getInitialConsent(PackageManager packageManager) {
+        // The existence of this feature means that device should be treated as EU device.
+        return !packageManager.hasSystemFeature(EEA_DEVICE);
     }
 }

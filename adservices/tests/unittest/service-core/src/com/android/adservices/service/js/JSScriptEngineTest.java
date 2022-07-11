@@ -38,6 +38,9 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.exception.JSExecutionException;
+import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
+import com.android.adservices.service.profiling.Profiler;
+import com.android.adservices.service.profiling.StopWatch;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -46,8 +49,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.chromium.android_webview.js_sandbox.client.AwJsSandbox;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +71,27 @@ public class JSScriptEngineTest {
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
-    private final JSScriptEngine mJSScriptEngine = new JSScriptEngine(sContext);
+
+    @Mock private Profiler mMockProfiler;
+    @Mock private StopWatch mSandboxInitWatch;
+    @Mock private StopWatch mIsolateCreateWatch;
+    @Mock private StopWatch mJavaExecutionWatch;
+
+    private JSScriptEngine mJSScriptEngine;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+
+        when(mMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
+                .thenReturn(mSandboxInitWatch);
+        when(mMockProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME))
+                .thenReturn(mIsolateCreateWatch);
+        when(mMockProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME))
+                .thenReturn(mJavaExecutionWatch);
+
+        mJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, mMockProfiler);
+    }
 
     @Test
     public void testCanRunSimpleScriptWithNoArgs() throws Exception {
@@ -75,6 +101,13 @@ public class JSScriptEngineTest {
                                 ImmutableList.of(),
                                 "test"))
                 .isEqualTo("\"hello world\"");
+
+        verify(mMockProfiler).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
+        verify(mMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(mMockProfiler).start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
+        verify(mSandboxInitWatch).stop();
+        verify(mIsolateCreateWatch).stop();
+        verify(mJavaExecutionWatch).stop();
     }
 
     @Test
@@ -184,7 +217,7 @@ public class JSScriptEngineTest {
     @Test
     public void testCanCreateMultipleInstancesOfScriptEngine()
             throws InterruptedException, ExecutionException {
-        JSScriptEngine otherEngine = new JSScriptEngine(sContext);
+        JSScriptEngine otherEngine = JSScriptEngine.getInstance(sContext);
         CountDownLatch resultsLatch = new CountDownLatch(2);
         final ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.of(recordArg("jsonArg", stringArg("name", "Stefano")));
@@ -210,8 +243,10 @@ public class JSScriptEngineTest {
         resultsLatch.await();
 
         assertThat(firstCallResult.get()).isEqualTo("\"hello Stefano\"");
-
         assertThat(secondCallResult.get()).isEqualTo("\"hello again Stefano\"");
+
+        // Different JSScriptEngine objects, but the same underlying sandbox.
+        verify(mMockProfiler).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
     }
 
     @Test
@@ -246,7 +281,7 @@ public class JSScriptEngineTest {
                                 "test"))
                 .isEqualTo("\"hello world\"");
 
-        JSScriptEngine.shutdown();
+        JSScriptEngine.getInstance(sContext).shutdown();
 
         assertThat(
                         callJSEngine(
@@ -265,9 +300,8 @@ public class JSScriptEngineTest {
                                 "test"))
                 .isEqualTo("\"hello world\"");
 
-        JSScriptEngine.shutdown();
-
-        JSScriptEngine newEngine = new JSScriptEngine(sContext);
+        mJSScriptEngine.shutdown();
+        JSScriptEngine newEngine = JSScriptEngine.getInstanceForTesting(sContext, mMockProfiler);
 
         assertThat(
                         callJSEngine(
@@ -276,21 +310,23 @@ public class JSScriptEngineTest {
                                 ImmutableList.of(),
                                 "test"))
                 .isEqualTo("\"hello world\"");
+
+        verify(mMockProfiler, Mockito.times(2))
+                .start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
     @Test
     public void testConnectionIsResetIfJSProcessIsTerminated() {
-        JSScriptEngine.JsSandboxProvider mockSandboxProvider =
-                mock(JSScriptEngine.JsSandboxProvider.class);
-
         AwJsSandbox throwingSandbox = mock(AwJsSandbox.class);
         when(throwingSandbox.createIsolate())
                 .thenThrow(
                         new IllegalStateException(
                                 "simulating a failure caused by AwJsSandbox being disconnected"));
-
         FluentFuture<AwJsSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(throwingSandbox));
+
+        JSScriptEngine.JsSandboxProvider mockSandboxProvider =
+                mock(JSScriptEngine.JsSandboxProvider.class);
         when(mockSandboxProvider.getFutureInstance(Mockito.any(Context.class)))
                 .thenReturn(futureInstance);
 
@@ -301,7 +337,8 @@ public class JSScriptEngineTest {
                                 callJSEngine(
                                         new JSScriptEngine(
                                                 ApplicationProvider.getApplicationContext(),
-                                                mockSandboxProvider),
+                                                mockSandboxProvider,
+                                                mMockProfiler),
                                         "function test() { return \"hello world\"; }",
                                         ImmutableList.of(),
                                         "test"));
@@ -309,12 +346,20 @@ public class JSScriptEngineTest {
         verify(mockSandboxProvider).destroyCurrentInstance();
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
+
+        verify(mMockProfiler).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
+        verify(mMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(mSandboxInitWatch).stop();
     }
 
     @Test
     public void testJsSandboxProviderCreatesOnlyOneInstance()
             throws ExecutionException, InterruptedException, TimeoutException {
-        JSScriptEngine.JsSandboxProvider jsSandboxProvider = new JSScriptEngine.JsSandboxProvider();
+        Profiler profilerMock = mock(Profiler.class);
+        when(profilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
+                .thenReturn(mSandboxInitWatch);
+        JSScriptEngine.JsSandboxProvider jsSandboxProvider =
+                new JSScriptEngine.JsSandboxProvider(profilerMock);
         Context applicationContext = ApplicationProvider.getApplicationContext();
 
         AwJsSandbox firstInstance =
@@ -323,12 +368,17 @@ public class JSScriptEngineTest {
                 jsSandboxProvider.getFutureInstance(applicationContext).get(5, TimeUnit.SECONDS);
 
         assertSame(firstInstance, secondInstance);
+        verify(profilerMock).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
     }
 
     @Test
     public void testJsSandboxProviderCreatesNewInstanceAfterFirstIsDestroyed()
             throws ExecutionException, InterruptedException, TimeoutException {
-        JSScriptEngine.JsSandboxProvider jsSandboxProvider = new JSScriptEngine.JsSandboxProvider();
+        Profiler profilerMock = mock(Profiler.class);
+        when(profilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
+                .thenReturn(mSandboxInitWatch);
+        JSScriptEngine.JsSandboxProvider jsSandboxProvider =
+                new JSScriptEngine.JsSandboxProvider(profilerMock);
         Context applicationContext = ApplicationProvider.getApplicationContext();
 
         AwJsSandbox firstInstance =
@@ -339,6 +389,7 @@ public class JSScriptEngineTest {
                 jsSandboxProvider.getFutureInstance(applicationContext).get(5, TimeUnit.SECONDS);
 
         assertNotSame(firstInstance, secondInstance);
+        verify(profilerMock, Mockito.times(2)).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
     }
 
     private String callJSEngine(

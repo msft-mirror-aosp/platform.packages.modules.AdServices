@@ -90,4 +90,9 @@ public final class TriggerRegistrationTest {
         assertNull(response.getAggregateValues());
         assertNull(response.getFilters());
     }
+
+    @Test
+    public void equals_success() {
+        assertEquals(createExampleResponse(), createExampleResponse());
+    }
 }
