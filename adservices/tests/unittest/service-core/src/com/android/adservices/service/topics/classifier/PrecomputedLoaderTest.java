@@ -36,9 +36,15 @@ public class PrecomputedLoaderTest {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_APPS_FILE_PATH =
             "classifier/precomputed_test_app_list.csv";
+    private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
+            "classifier/classifier_test_assets_metadata.json";
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final PrecomputedLoader sPrecomputedLoader =
-            new PrecomputedLoader(sContext, TEST_LABELS_FILE_PATH, TEST_APPS_FILE_PATH);
+            new PrecomputedLoader(
+                    sContext,
+                    TEST_LABELS_FILE_PATH,
+                    TEST_APPS_FILE_PATH,
+                    TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
 
     @Test
     public void testRetrieveLabels_successfulRead() {
