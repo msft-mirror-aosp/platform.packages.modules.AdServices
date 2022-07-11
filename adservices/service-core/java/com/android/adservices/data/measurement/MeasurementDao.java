@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
+import com.android.adservices.service.measurement.enrollment.EnrollmentData;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -625,6 +626,160 @@ class MeasurementDao implements IMeasurementDao {
                         new String[]{postbackUrl});
         if (rows != 1) {
             throw new DatastoreException("AdTechURL deletion failed.");
+        }
+    }
+
+    /**
+     * Queries and returns the {@link EnrollmentData}.
+     *
+     * @param enrollmentId ID provided to the adtech at the end of the enrollment process.
+     * @return the EnrollmentData; Null in case of SQL failure
+     */
+    // TODO(b/230617871): Move EnrollmentData related methods to a Dao class that is common across
+    //  for PPAPIs since Enrollment data will likely be used by others as well.
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentData(String enrollmentId) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID + " = ? ",
+                                new String[] {enrollmentId},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    /**
+     * Queries and returns the {@link EnrollmentData} given measurement registration URLs.
+     *
+     * @param url could be source registration url or trigger registration url.
+     * @return the EnrollmentData; Null in case of SQL failure.
+     */
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentDataGivenUrl(String url) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EnrollmentDataContract
+                                                .ATTRIBUTION_SOURCE_REGISTRATION_URL
+                                        + " LIKE '%"
+                                        + url
+                                        + "%' OR "
+                                        + MeasurementTables.EnrollmentDataContract
+                                                .ATTRIBUTION_TRIGGER_REGISTRATION_URL
+                                        + " LIKE '%"
+                                        + url
+                                        + "%'",
+                                null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    /**
+     * Queries and returns the {@link EnrollmentData} given AdTech SDK Name.
+     *
+     * @param sdkName List of SDKs belonging to the same enrollment.
+     * @return the EnrollmentData; Null in case of SQL failure
+     */
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EnrollmentDataContract.SDK_NAMES
+                                        + " LIKE '%"
+                                        + sdkName
+                                        + "%'",
+                                null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    @Override
+    public void insertEnrollmentData(EnrollmentData enrollmentData) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID,
+                enrollmentData.getEnrollmentId());
+        values.put(
+                MeasurementTables.EnrollmentDataContract.COMPANY_ID, enrollmentData.getCompanyId());
+        values.put(
+                MeasurementTables.EnrollmentDataContract.SDK_NAMES,
+                String.join(" ", enrollmentData.getSdkNames()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                String.join(" ", enrollmentData.getAttributionSourceRegistrationUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                String.join(" ", enrollmentData.getAttributionTriggerRegistrationUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
+                String.join(" ", enrollmentData.getAttributionReportingUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract
+                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                String.join(" ", enrollmentData.getRemarketingResponseBasedRegistrationUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
+                String.join(" ", enrollmentData.getEncryptionKeyUrl()));
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        if (rowId == -1) {
+            throw new DatastoreException("EnrollmentData insertion failed.");
+        }
+    }
+
+    @Override
+    public void deleteEnrollmentData(String enrollmentId) throws DatastoreException {
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID + " = ?",
+                                new String[] {enrollmentId});
+        if (rows != 1) {
+            throw new DatastoreException("EnrollmentData deletion failed.");
         }
     }
 
