@@ -710,9 +710,20 @@ public final class SourceFetcherTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
-                .thenReturn(Map.of("Attribution-Reporting-Register-Aggregatable-Source",
-                        List.of("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                                + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")));
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                            + "  \"destination\": \"android-app://com.myapps\",\n"
+                                            + "  \"priority\": \"123\",\n"
+                                            + "  \"expiry\": \"456789\",\n"
+                                            + "  \"source_event_id\": \"987654321\"}\n"),
+                                "Attribution-Reporting-Register-Aggregatable-Source",
+                                List.of(
+                                        "[{\"id\" : \"campaignCounts\", \"key_piece\" :"
+                                            + " \"0x159\"},{\"id\" : \"geoValue\", \"key_piece\" :"
+                                            + " \"0x5\"}]")));
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
         List<SourceRegistration> result = fetch.get();
