@@ -33,7 +33,10 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private SandboxedSdkContext mSdkContext;
 
     @Override
-    public void initSdk(SandboxedSdkContext sandboxedSdkContext, Bundle params, Executor executor,
+    public void onLoadSdk(
+            SandboxedSdkContext sandboxedSdkContext,
+            Bundle params,
+            Executor executor,
             InitSdkCallback callback) {
         mSdkContext = sandboxedSdkContext;
         callback.onInitSdkFinished(new Bundle());
@@ -47,10 +50,7 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-
-    }
-
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private void handlePhase(Bundle params) {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");

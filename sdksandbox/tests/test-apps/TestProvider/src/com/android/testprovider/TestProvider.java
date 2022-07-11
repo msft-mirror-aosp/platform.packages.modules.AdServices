@@ -27,7 +27,10 @@ import java.util.concurrent.Executor;
 public class TestProvider extends SandboxedSdkProvider {
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params, Executor executor,
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
             InitSdkCallback callback) {
         callback.onInitSdkFinished(params);
     }
@@ -38,7 +41,5 @@ public class TestProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }

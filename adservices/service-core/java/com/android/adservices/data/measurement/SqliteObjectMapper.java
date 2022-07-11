@@ -26,7 +26,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import java.util.Arrays;
 import java.util.function.Function;
@@ -157,10 +157,10 @@ public class SqliteObjectMapper {
     }
 
     /**
-     * Create {@link CleartextAggregatePayload} object from SQLite datastore.
+     * Create {@link AggregateReport} object from SQLite datastore.
      */
-    static CleartextAggregatePayload constructCleartextAggregatePayload(Cursor cursor) {
-        CleartextAggregatePayload.Builder builder = new CleartextAggregatePayload.Builder();
+    static AggregateReport constructAggregateReport(Cursor cursor) {
+        AggregateReport.Builder builder = new AggregateReport.Builder();
         setTextColumn(cursor, MeasurementTables.AggregateReport.ID,
                 builder::setId);
         setUriColumn(cursor, MeasurementTables.AggregateReport.PUBLISHER,
@@ -171,14 +171,14 @@ public class SqliteObjectMapper {
                 builder::setSourceRegistrationTime);
         setLongColumn(cursor, MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 builder::setScheduledReportTime);
-        setTextColumn(cursor, MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
-                builder::setPrivacyBudgetKey);
         setUriColumn(cursor, MeasurementTables.AggregateReport.REPORTING_ORIGIN,
                 builder::setReportingOrigin);
         setTextColumn(cursor, MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
                 builder::setDebugCleartextPayload);
         setIntColumn(cursor, MeasurementTables.AggregateReport.STATUS,
                 builder::setStatus);
+        setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
+                builder::setApiVersion);
         return builder.build();
     }
 

@@ -24,8 +24,6 @@ import java.util.Objects;
 
 /**
  * Represent input parameters to the reportImpression API.
- *
- * <p>Hiding for future implementation and review for public exposure.
  */
 public class ReportImpressionRequest {
     private static final long UNSET = 0;
