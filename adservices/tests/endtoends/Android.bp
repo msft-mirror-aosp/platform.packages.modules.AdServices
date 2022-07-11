@@ -28,7 +28,6 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
-        "adservices-service-core",
         "truth-prebuilt",
         "ub-uiautomator",
         "framework-adservices.impl",
