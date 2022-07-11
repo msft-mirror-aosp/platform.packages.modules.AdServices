@@ -55,5 +55,13 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
+
+        viewModel
+                .getBlockedTopics()
+                .observe(
+                        getViewLifecycleOwner(),
+                        topicsList -> {
+                            adapter.notifyDataSetChanged();
+                        });
     }
 }
