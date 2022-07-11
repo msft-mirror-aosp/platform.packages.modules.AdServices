@@ -143,6 +143,13 @@ package android.adservices.common {
     field public static final android.adservices.common.AdSelectionSignals EMPTY;
   }
 
+  public class AdServicesPermissions {
+    field public static final String ACCESS_ADSERVICES_ADID = "android.permission.ACCESS_ADSERVICES_ADID";
+    field public static final String ACCESS_ADSERVICES_ATTRIBUTION = "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
+    field public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE = "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
+    field public static final String ACCESS_ADSERVICES_TOPICS = "android.permission.ACCESS_ADSERVICES_TOPICS";
+  }
+
   public final class AdTechIdentifier implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String);
