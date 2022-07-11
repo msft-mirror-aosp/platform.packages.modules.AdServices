@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.attribution.BaseUriExtr
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import android.adservices.measurement.DeletionParam;
-import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
@@ -244,12 +243,12 @@ public final class MeasurementImpl {
     /**
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
-    @MeasurementApiUtil.MeasurementApiState int getMeasurementApiStatus() {
+    @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
         AdServicesApiConsent consent = mConsentManager.getConsent(mContext.getPackageManager());
         if (consent.isGiven()) {
-            return MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED;
+            return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
-            return MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED;
+            return MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 
