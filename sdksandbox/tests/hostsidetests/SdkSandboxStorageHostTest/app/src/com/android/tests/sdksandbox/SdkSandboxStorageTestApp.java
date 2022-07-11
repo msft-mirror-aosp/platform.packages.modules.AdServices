@@ -23,7 +23,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.FakeRemoteSdkCallback;
+import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
@@ -73,12 +74,17 @@ public class SdkSandboxStorageTestApp {
     private void runPhaseInsideCode(String phaseName) {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
-        mSdkSandboxManager.requestSurfacePackage(SDK_NAME, 0, 500, 500, bundle);
+
+        FakeRequestSurfacePackageCallback callback = new FakeRequestSurfacePackageCallback();
+        mSdkSandboxManager.requestSurfacePackage(
+                SDK_NAME, 0, 500, 500, bundle, Runnable::run, callback);
+        // Wait for SDK to finish handling the request
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
     }
 
     @Test
-    public void loadCode() throws Exception {
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+    public void loadSdk() throws Exception {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
@@ -91,44 +97,30 @@ public class SdkSandboxStorageTestApp {
 
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
-        // First load code
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        // First load SDK
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
-        // Run phase inside the code
+        // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataPackageDirectory_SharedStorageIsUsable");
-
-        // Wait for code to finish handling the request
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
-    }
-
-    @Test
-    public void testSdkDataPackageDirectory_CreateMissingSdkDirs() throws Exception {
-        // First load code
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
-        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        // First load code
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        // First load SDK
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
-        // Run phase inside the code
+        // Run phase inside the SDK
         runPhaseInsideCode("testSdkDataSubDirectory_PerSdkStorageIsUsable");
-
-        // Wait for code to finish handling the request
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
     }
 
     @Test
     public void testSdkDataIsAttributedToApp() throws Exception {
         // First load sdk
-        FakeRemoteSdkCallback callback = new FakeRemoteSdkCallback();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
         // Wait for sdk to finish loading
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -144,8 +136,6 @@ public class SdkSandboxStorageTestApp {
 
         runPhaseInsideCode("testSdkDataIsAttributedToApp");
 
-        // Wait for sdk to finish handling the request
-        callback.isRequestSurfacePackageSuccessful();
         final StorageStats finalAppStats = stats.queryStatsForUid(UUID_DEFAULT, uid);
         final StorageStats finalUserStats = stats.queryStatsForUser(UUID_DEFAULT, user);
 

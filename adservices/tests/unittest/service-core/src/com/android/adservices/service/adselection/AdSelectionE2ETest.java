@@ -16,7 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
-import static org.mockito.Mockito.when;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -44,11 +50,15 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.Dispatcher;
@@ -61,8 +71,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.Mockito;
+import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,11 +87,11 @@ import java.util.concurrent.Executors;
  * this test are invoked and used in real time.
  */
 public class AdSelectionE2ETest {
-
-    private static final String FAILURE_RESPONSE = "Encountered failure during Ad Selection";
+    private static final String ERROR_SCORE_AD_LOGIC_MISSING = "scoreAd is not defined";
 
     private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private static final String BUYER = "buyer";
     private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
 
     private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
@@ -101,24 +111,33 @@ public class AdSelectionE2ETest {
                     + "}";
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    private MockitoSession mStaticMockSession = null;
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
     private Context mContext;
     private ExecutorService mExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
-    private AdSelectionHttpClient mAdSelectionHttpClient;
+    private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdServicesLogger mAdServicesLogger;
+    private Flags mFlags;
 
     @Before
     public void setUp() throws Exception {
+        // Test applications don't have the required permissions to read config P/H flags, and
+        // injecting mocked flags everywhere is annoying and non-trivial for static methods
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .startMocking();
+
         // Initialize dependencies for the AdSelectionService
         mContext = ApplicationProvider.getApplicationContext();
-        mExecutorService = Executors.newSingleThreadExecutor();
+        mExecutorService = Executors.newFixedThreadPool(10);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .build()
@@ -129,22 +148,25 @@ public class AdSelectionE2ETest {
                         .build()
                         .adSelectionEntryDao();
 
-        mAdSelectionHttpClient = new AdSelectionHttpClient(mExecutorService);
+        mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
 
         mAdServicesLogger = AdServicesLoggerImpl.getInstance();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        mFlags = FlagsFactory.getFlagsForTest();
 
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mCustomAudienceDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         mDevContextFilter,
                         mExecutorService,
                         mContext,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mFlags);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -176,10 +198,15 @@ public class AdSelectionE2ETest {
     @After
     public void tearDown() {
         mExecutorService.shutdown();
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
     public void testRunAdSelectionSuccess() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -196,8 +223,10 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -211,7 +240,71 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    public void testRunAdSelectionMultipleCAsSuccess() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+        Mockito.lenient()
+                .when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        List<String> participatingBuyers = new ArrayList<>();
+        participatingBuyers.add(BUYER_1);
+        participatingBuyers.add(BUYER_2);
+
+        for (int i = 3; i <= 50; i++) {
+            DBCustomAudience dBCustomAudienceForBuyerX =
+                    createDBCustomAudience(
+                            BUYER + i,
+                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                            bidsForBuyer1);
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    dBCustomAudienceForBuyerX, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+            participatingBuyers.add(BUYER + i);
+        }
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(participatingBuyers)
+                        .setDecisionLogicUrl(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, adSelectionConfig);
+
+        Assert.assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        Assert.assertEquals(
+                AD_URL_PREFIX + "buyer2/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+    }
+
+    @Test
     public void testRunAdSelectionSucceedsWithOverride() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
@@ -263,15 +356,18 @@ public class AdSelectionE2ETest {
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
                         mCustomAudienceDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         mDevContextFilter,
                         mExecutorService,
                         mContext,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mFlags);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -292,8 +388,8 @@ public class AdSelectionE2ETest {
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
         Assert.assertFalse(resultsCallback.mIsSuccess);
-        Assert.assertEquals(
-                FAILURE_RESPONSE, resultsCallback.mFledgeErrorResponse.getErrorMessage());
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
     }
 
     @Test
@@ -309,12 +405,14 @@ public class AdSelectionE2ETest {
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
         Assert.assertFalse(resultsCallback.mIsSuccess);
-        Assert.assertEquals(
-                FAILURE_RESPONSE, resultsCallback.mFledgeErrorResponse.getErrorMessage());
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
     }
 
     @Test
     public void testRunAdSelectionPartialAdsExcludedBidding() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mMockWebServerRule.startMockWebServer(mDispatcher);
         // Setting bids which are partially non-positive
         List<Double> bidsForBuyer1 = ImmutableList.of(-1.1, 2.2);
@@ -332,8 +430,10 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -348,6 +448,8 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionMissingBiddingLogicFailure() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -383,19 +485,24 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
         Assert.assertFalse(resultsCallback.mIsSuccess);
-        Assert.assertEquals(
-                FAILURE_RESPONSE, resultsCallback.mFledgeErrorResponse.getErrorMessage());
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                ERROR_NO_VALID_BIDS_FOR_SCORING);
     }
 
     @Test
     public void testRunAdSelectionMissingScoringLogicFailure() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -431,19 +538,24 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
         Assert.assertFalse(resultsCallback.mIsSuccess);
-        Assert.assertEquals(
-                FAILURE_RESPONSE, resultsCallback.mFledgeErrorResponse.getErrorMessage());
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                ERROR_SCORE_AD_LOGIC_MISSING);
     }
 
     @Test
     public void testRunAdSelectionPartialMissingBiddingLogic() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         // Setting bids->scores
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -480,8 +592,10 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -496,6 +610,8 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionPartialNonPositiveScoring() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         // Setting bids, in this case the odd bids will be made negative by scoring logic
         List<Double> bidsForBuyer1 = ImmutableList.of(1.0, 2.0);
         List<Double> bidsForBuyer2 = ImmutableList.of(3.0, 5.0, 7.0);
@@ -538,8 +654,10 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -554,6 +672,8 @@ public class AdSelectionE2ETest {
 
     @Test
     public void testRunAdSelectionNonPositiveScoringFailure() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         // Setting bids, in this case the odd bids will be made negative by scoring logic
         List<Double> bidsForBuyer1 = ImmutableList.of(1.0, 9.0);
         List<Double> bidsForBuyer2 = ImmutableList.of(3.0, 5.0, 7.0);
@@ -596,15 +716,86 @@ public class AdSelectionE2ETest {
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer1);
-        mCustomAudienceDao.insertOrOverrideCustomAudience(dBCustomAudienceForBuyer2);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
         Assert.assertFalse(resultsCallback.mIsSuccess);
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
+    }
+
+    @Test
+    public void testRunAdSelectionJSTimesOut() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        String readBidFromAdMetadataWithDelayJs =
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals, user_signals,"
+                        + " custom_audience_signals) { \n"
+                        + "    const wait = (ms) => {\n"
+                        + "       var start = new Date().getTime();\n"
+                        + "       var end = start;\n"
+                        + "       while(end < start + ms) {\n"
+                        + "         end = new Date().getTime();\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "    wait(15000);\n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}";
+
+        // In this case the one buyer's logic takes more than the bidding time limit
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+
+                        switch (request.getPath()) {
+                            case SELLER_DECISION_LOGIC_URL:
+                                return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
+                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
+                                return new MockResponse().setBody(readBidFromAdMetadataWithDelayJs);
+                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                                return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+
+        mMockWebServerRule.startMockWebServer(dispatcher);
+        // buyer1/ad3 is clear winner but will time out
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2, 15.0);
+        // due to timeout buyer2/ad3 will win
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        Assert.assertTrue(resultsCallback.mIsSuccess);
         Assert.assertEquals(
-                FAILURE_RESPONSE, resultsCallback.mFledgeErrorResponse.getErrorMessage());
+                AD_URL_PREFIX + "buyer2/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
 
     /**
@@ -637,7 +828,6 @@ public class AdSelectionE2ETest {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
@@ -647,6 +837,20 @@ public class AdSelectionE2ETest {
                 .setBiddingLogicUrl(biddingUri)
                 .setAds(ads)
                 .build();
+    }
+
+    private void verifyErrorMessageIsCorrect(
+            final String actualErrorMassage, final String expectedErrorReason) {
+        Assert.assertTrue(
+                String.format(
+                        "Actual error [%s] does not begin with [%s]",
+                        actualErrorMassage, ERROR_AD_SELECTION_FAILURE),
+                actualErrorMassage.startsWith(ERROR_AD_SELECTION_FAILURE));
+        Assert.assertTrue(
+                String.format(
+                        "Actual error [%s] does not contain expected message: [%s]",
+                        actualErrorMassage, expectedErrorReason),
+                actualErrorMassage.contains(expectedErrorReason));
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
