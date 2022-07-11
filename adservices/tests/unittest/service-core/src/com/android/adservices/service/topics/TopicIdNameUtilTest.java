@@ -50,12 +50,11 @@ public class TopicIdNameUtilTest {
         assertThat(topicIdToName.size()).isEqualTo(349);
 
         // Check some topicIds to topicNames in the map
-        assertThat(topicIdToName.get(1013)).isEqualTo("/Autos & Vehicles/Classic Vehicles");
+        assertThat(topicIdToName.get(10)).isEqualTo("/Arts & Entertainment/Magic");
 
-        assertThat(topicIdToName.get(1299)).isEqualTo(
-                "/Science/Machine Learning & Artificial Intelligence");
+        assertThat(topicIdToName.get(100)).isEqualTo("/Books & Literature");
 
-        assertThat(topicIdToName.get(1808)).isEqualTo(
-                "/Beauty & Fitness/Face & Body Care/Antiperspirants, Deodorants & Body Sprays");
+        assertThat(topicIdToName.get(340)).isEqualTo(
+                "/Travel & Transportation/Hotels & Accommodations");
     }
 }

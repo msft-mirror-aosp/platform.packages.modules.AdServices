@@ -21,6 +21,11 @@ java_test_host {
     srcs: ["src/**/SdkSandboxHostTest.java"],
     libs: ["tradefed"],
     test_suites: ["general-tests"],
+    data: [
+        ":TestCodeProvider",
+        ":TestCodeProvider2",
+        ":SdkSandboxTestApp",
+    ],
 }
 
 java_test_host {
@@ -53,6 +58,7 @@ java_test_host {
     test_suites: ["general-tests"],
     data: [
         ":TestCodeProvider",
+        ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestDebuggableApp"
     ],
@@ -65,12 +71,14 @@ android_test_helper_app {
     platform_apis: true,
     srcs: [
         "app/src/**/SdkSandboxTestActivity.java",
+        "app/src/**/SdkSandboxTestApp.java",
         ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
     static_libs: [
         "androidx.core_core",
+        "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
     ],
 }

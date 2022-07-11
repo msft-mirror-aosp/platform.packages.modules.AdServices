@@ -19,8 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.AttributionSource;
-
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -30,74 +28,55 @@ import org.junit.Test;
 public final class GetTopicsParamTest {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private static final String SOME_ATTRIBUTION_TAG = "SomeAttributionTag";
     private static final int SOME_UID = 11;
 
     @Test
     public void test_nonNull() {
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(SOME_PACKAGE_NAME)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
         GetTopicsParam request =
                 new GetTopicsParam.Builder()
-                        .setAttributionSource(source)
+                        .setAppPackageName(SOME_PACKAGE_NAME)
                         .setSdkName(SOME_SDK_NAME)
                         .build();
 
-        AttributionSource source2 = request.getAttributionSource();
-        assertThat(source2).isNotNull();
-        assertThat(source2.getUid()).isEqualTo(SOME_UID);
-        assertThat(source2.getPackageName()).isEqualTo(SOME_PACKAGE_NAME);
-        assertThat(source2.getAttributionTag()).isEqualTo(SOME_ATTRIBUTION_TAG);
-
         assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
-
+        assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
     }
 
     @Test
-    public void test_nullProperties() {
+    public void test_nullAppPackageName_throwsIllegalArgumentException() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
                     GetTopicsParam unusedRequest =
                             new GetTopicsParam.Builder()
-                                    // Not setting AttributionSource making it null.
+                                    // Not setting AppPackagename making it null.
                                     .setSdkName(SOME_SDK_NAME)
                                     .build();
                 });
 
-        // Null PackageName.
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(null)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
+        // Null AppPackageName.
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
                     GetTopicsParam unusedRequest =
                             new GetTopicsParam.Builder()
-                                    .setAttributionSource(source)
+                                    .setAppPackageName(null)
                                     .setSdkName(SOME_SDK_NAME)
                                     .build();
                 });
     }
 
     @Test
-    public void test_notSettingSdk_getEmptyString() {
-        AttributionSource source =
-                new AttributionSource.Builder(SOME_UID)
-                        .setPackageName(SOME_PACKAGE_NAME)
-                        .setAttributionTag(SOME_ATTRIBUTION_TAG)
-                        .build();
-
-        GetTopicsParam request =
-                new GetTopicsParam.Builder()
-                        .setAttributionSource(source)
-                        // Not setting SdkName will get empty string.
-                        .build();
-        assertThat(request.getSdkName()).isEmpty();
+    public void test_notSettingAppPackageName_throwsIllegalArgumentException() {
+        // Empty AppPackageName.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    GetTopicsParam unusedRequest =
+                            new GetTopicsParam.Builder()
+                                    .setAppPackageName("")
+                                    .setSdkName(SOME_SDK_NAME)
+                                    .build();
+                });
     }
 }
