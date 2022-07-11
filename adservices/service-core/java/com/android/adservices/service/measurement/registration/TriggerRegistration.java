@@ -19,6 +19,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import java.util.Objects;
 
 /**
  * A registration for a trigger of attribution.
@@ -45,6 +46,30 @@ public final class TriggerRegistration {
         mAggregateValues = aggregateValues;
         mFilters = filters;
         mEventTriggers = eventTriggers;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TriggerRegistration)) return false;
+        TriggerRegistration that = (TriggerRegistration) o;
+        return Objects.equals(mTopOrigin, that.mTopOrigin)
+                && Objects.equals(mReportingOrigin, that.mReportingOrigin)
+                && Objects.equals(mAggregateTriggerData, that.mAggregateTriggerData)
+                && Objects.equals(mAggregateValues, that.mAggregateValues)
+                && Objects.equals(mFilters, that.mFilters)
+                && Objects.equals(mEventTriggers, that.mEventTriggers);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mTopOrigin,
+                mReportingOrigin,
+                mAggregateTriggerData,
+                mAggregateValues,
+                mFilters,
+                mEventTriggers);
     }
 
     /** Top level origin. */
