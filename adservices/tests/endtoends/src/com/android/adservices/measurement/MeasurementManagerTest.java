@@ -15,20 +15,25 @@
  */
 package com.android.adservices.measurement;
 
+import static org.junit.Assert.assertNull;
+
+import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.content.Context;
 import android.net.Uri;
+import android.os.OutcomeReceiver;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.compatibility.common.util.ShellUtils;
 
-import static org.junit.Assert.assertNull;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -56,18 +61,6 @@ public class MeasurementManagerTest {
                 + duration + " ms: " + label);
     }
 
-    private void measureRegisterAttributionSourceShort(
-            MeasurementManager mm, String label) throws Exception {
-        Log.i(TAG, "Calling registerSource() [short]");
-        final long start = System.currentTimeMillis();
-
-        mm.registerSource(Uri.parse("https://example.com"), null);
-
-        final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "registerSource() [short] took "
-                + duration + " ms: " + label);
-    }
-
     private void measureTriggerAttribution(
             MeasurementManager mm, String label) throws Exception {
         Log.i(TAG, "Calling registerTrigger()");
@@ -82,31 +75,53 @@ public class MeasurementManagerTest {
         Log.i(TAG, "registerTrigger() took " + duration + " ms: " + label);
     }
 
-    private void measureTriggerAttributionShort(
-            MeasurementManager mm, String label) throws Exception {
-        Log.i(TAG, "Calling registerTrigger() [short]");
-        final long start = System.currentTimeMillis();
-
-        mm.registerTrigger(Uri.parse("https://example.com"));
-
-        final long duration = System.currentTimeMillis() - start;
-        Log.i(TAG, "registerTrigger() [short] took " + duration + " ms: " + label);
-    }
-
     private void measureDeleteRegistrations(
             MeasurementManager mm, String label) throws Exception {
         Log.i(TAG, "Calling deleteRegistrations()");
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setOriginUris(
+                                Collections.singletonList(Uri.parse("https://a.example1.com")))
+                        .setDomainUris(Collections.singletonList(Uri.parse("https://example2.com")))
+                        .setStart(Instant.ofEpochMilli(123456789L))
+                        .setEnd(Instant.now())
+                        .build();
+
         final long start = System.currentTimeMillis();
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-        mm.deleteRegistrations(
-                Uri.parse("https://example.com"),
-                Instant.ofEpochMilli(123456789L), Instant.now(),
-                CALLBACK_EXECUTOR, future::complete);
+        mm.deleteRegistrations(request, CALLBACK_EXECUTOR, future::complete);
         assertNull(future.get());
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "deleteRegistrations() took " + duration + " ms: " + label);
+    }
+
+    private void measureGetMeasurementApiStatus(
+            MeasurementManager mm, String label) throws Exception {
+        Log.i(TAG, "Calling getMeasurementApiStatus()");
+        final long start = System.currentTimeMillis();
+
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        OutcomeReceiver<Integer, Exception> callback =
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+
+        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
+        Assert.assertEquals(Integer.valueOf(
+                MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
+
+        final long duration = System.currentTimeMillis() - start;
+        Log.i(TAG, "getMeasurementApiStatus() took " + duration + " ms: " + label);
     }
 
     @Test
@@ -118,12 +133,8 @@ public class MeasurementManagerTest {
 
         measureRegisterAttributionSource(mm, "no-kill, 1st call");
         measureRegisterAttributionSource(mm, "no-kill, 2nd call");
-        measureRegisterAttributionSourceShort(mm, "no-kill, 1st call");
-        measureRegisterAttributionSourceShort(mm, "no-kill, 2nd call");
         measureTriggerAttribution(mm, "no-kill, 1st call");
         measureTriggerAttribution(mm, "no-kill, 2nd call");
-        measureTriggerAttributionShort(mm, "no-kill, 1st call");
-        measureTriggerAttributionShort(mm, "no-kill, 2nd call");
         measureDeleteRegistrations(mm, "no-kill, 1st call");
         measureDeleteRegistrations(mm, "no-kill, 2nd call");
     }
@@ -182,5 +193,7 @@ public class MeasurementManagerTest {
         measureTriggerAttribution(mm, "no-kill, 2nd call");
         measureDeleteRegistrations(mm, "no-kill, 1st call");
         measureDeleteRegistrations(mm, "no-kill, 2nd call");
+        measureGetMeasurementApiStatus(mm, "no-kill, 1st call");
+        measureGetMeasurementApiStatus(mm, "no-kill, 2nd call");
     }
 }

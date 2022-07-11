@@ -37,8 +37,11 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String ASSET_FILE = "test-asset.txt";
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            InitSdkCallback callback) {
         Resources resources = context.getResources();
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
@@ -68,8 +71,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     /* Sends an error if the expected resource/asset does not match the read value. */
     private void sendError(InitSdkCallback callback, String expected, String actual) {

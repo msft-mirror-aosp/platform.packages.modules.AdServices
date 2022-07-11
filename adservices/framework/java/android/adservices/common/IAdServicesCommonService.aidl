@@ -19,10 +19,9 @@ package android.adservices.common;
 import android.net.Uri;
 
 /**
-  * Common AdServices service for updating data based on received Package Manager broadcasts.
+  * Common AdServices service.
   * {@hide}
   */
 interface IAdServicesCommonService {
-    oneway void onPackageFullyRemoved(in Uri packageUri);
-    oneway void onPackageAdded(in Uri packageUri);
+
 }
