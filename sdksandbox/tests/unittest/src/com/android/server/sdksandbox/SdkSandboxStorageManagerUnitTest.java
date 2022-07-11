@@ -106,6 +106,28 @@ public class SdkSandboxStorageManagerUnitTest {
                 .isEqualTo(mTestDir + "/data/misc_de/0/sdksandbox/client/sdk@sdk");
     }
 
+    @Test
+    public void test_getMountedVolumes_NewVolumeExists() throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+        createSdkStorageForTest(
+                "newVolume", /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+
+        final List<String> mountedVolumes = mSdkSandboxStorageManager.getMountedVolumes();
+
+        assertThat(mountedVolumes).containsExactly(null, "newVolume");
+    }
+
+    @Test
+    public void test_getMountedVolumes_NewVolumeDoesNotExist() throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+
+        final List<String> mountedVolumes = mSdkSandboxStorageManager.getMountedVolumes();
+
+        assertThat(mountedVolumes).containsExactly((String) null);
+    }
+
     /**
      * A helper method for create sdk storage for test purpose.
      *
