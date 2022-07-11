@@ -43,12 +43,15 @@ android_app {
     ],
     static_libs: [
         "adservices-service-core",
+        "androidx-constraintlayout_constraintlayout",
         "androidx.preference_preference",
         "androidx.fragment_fragment",
         "androidx.recyclerview_recyclerview",
         // TODO(b/230653497): Try to remove this.
         "androidx.room_room-runtime",
         "tflite_support_classifiers_java",
+        "SettingsLibActionBarShadow",
+        "SettingsLibSettingsTheme",
     ],
     resource_dirs: ["res"],
     aaptflags: [
@@ -67,6 +70,10 @@ android_app {
 android_library {
     name: "adservices-assets",
     sdk_version: "module_current",
+    static_libs: [
+        "androidx-constraintlayout_constraintlayout",
+        "SettingsLibSettingsTheme",
+    ],
     asset_dirs: [
         "assets",
     ],

@@ -33,16 +33,17 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Room based database for custom audience.
- */
+/** Room based database for custom audience. */
 @Database(
         // Set exportSchema to true to see generated schema file.
         // File location is defined in Android.bp -Aroom.schemaLocation.
         exportSchema = false,
-        entities = {DBCustomAudience.class, DBCustomAudienceOverride.class},
-        version = CustomAudienceDatabase.DATABASE_VERSION
-)
+        entities = {
+            DBCustomAudience.class,
+            DBCustomAudienceBackgroundFetchData.class,
+            DBCustomAudienceOverride.class
+        },
+        version = CustomAudienceDatabase.DATABASE_VERSION)
 @TypeConverters({CustomAudienceDatabase.Converters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();

@@ -34,6 +34,8 @@ import com.android.adservices.ServiceBinder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -142,23 +144,19 @@ public class TopicsManager {
                 .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
         final ITopicsService service = getService();
-        String sdkName = "";
-        if (mContext instanceof SandboxedSdkContext) {
-            sdkName = ((SandboxedSdkContext) mContext).getSdkName();
-            if (!sdkName.equals(getTopicsRequest.getSdkName())) {
-                callback.onError(
-                        new GetTopicsException(
-                                RESULT_INTERNAL_ERROR,
-                                "SdkName get from SandboxedSdkContext is different "
-                                        + "from SdkName get from getTopicsRequest"));
-            }
-        } else {
-            sdkName = getTopicsRequest.getSdkName();
+        String sdkName = getTopicsRequest.getSdkName();
+        String appPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        Context getTopicsRequestContext = getTopicsRequest.getContext();
+        if (getTopicsRequestContext instanceof SandboxedSdkContext) {
+            appPackageName = ((SandboxedSdkContext) getTopicsRequestContext).getClientPackageName();
+        } else { // This is the case without the Sandbox.
+            appPackageName = getTopicsRequestContext.getPackageName();
         }
         try {
             service.getTopics(
                     new GetTopicsParam.Builder()
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
                             .build(),
                     callerMetadata,
@@ -170,12 +168,7 @@ public class TopicsManager {
                                         if (resultParcel.isSuccess()) {
                                             callback.onResult(
                                                     new GetTopicsResponse.Builder()
-                                                            .setTaxonomyVersions(
-                                                                    resultParcel
-                                                                            .getTaxonomyVersions())
-                                                            .setModelVersions(
-                                                                    resultParcel.getModelVersions())
-                                                            .setTopics(resultParcel.getTopics())
+                                                            .setTopics(getTopicList(resultParcel))
                                                             .build());
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
@@ -203,6 +196,24 @@ public class TopicsManager {
             LogUtil.e("RemoteException", e);
             callback.onError(new GetTopicsException(RESULT_INTERNAL_ERROR, "Internal Error!"));
         }
+    }
+
+    private List<Topic> getTopicList(GetTopicsResult resultParcel) {
+        List<Long> taxonomyVersionsList = resultParcel.getTaxonomyVersions();
+        List<Long> modelVersionsList = resultParcel.getModelVersions();
+        List<Integer> topicsCodeList = resultParcel.getTopics();
+        List<Topic> topicList = new ArrayList<>();
+        int size = taxonomyVersionsList.size();
+        for (int i = 0; i < size; i++) {
+            Topic topic =
+                    new Topic(
+                            taxonomyVersionsList.get(i),
+                            modelVersionsList.get(i),
+                            topicsCodeList.get(i));
+            topicList.add(topic);
+        }
+
+        return topicList;
     }
 
     /**

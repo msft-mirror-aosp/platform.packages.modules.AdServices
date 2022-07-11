@@ -15,13 +15,16 @@
  */
 package android.adservices.topics;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Unit tests for {@link android.adservices.topics.GetTopicsResponse}
@@ -38,19 +41,6 @@ public final class GetTopicsResponseTest {
                     new GetTopicsResponse.Builder().setTopics(null).build();
             });
 
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setTaxonomyVersions(null).build();
-            });
-
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder().setModelVersions(null).build();
-            });
 
         // This should not throw.
         GetTopicsResponse unusedResponse =
@@ -60,39 +50,17 @@ public final class GetTopicsResponseTest {
     }
 
     @Test
-    public void testGetTopicsResponseBuilder_misMatchSizeThrows() {
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder()
-                        .setTaxonomyVersions(Arrays.asList(1L))
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList(1, 2))
-                        .build();
-            });
+    public void testGetTopicsResponseBuilder() throws Exception {
+        Topic topic =
+                new Topic(/* mTaxonomyVersion */ 1L, /* mModelVersion */ 1L, /* mTopicId */ 0);
+        List<Topic> topicList = new ArrayList<>();
+        topicList.add(topic);
 
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder()
-                        // Not setting TaxonomyVersions implies empty.
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList(1, 2))
-                        .build();
-            });
+        // Build GetTopicsResponse using topicList
+        GetTopicsResponse response = new GetTopicsResponse.Builder().setTopics(topicList).build();
 
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-                GetTopicsResponse unusedResponse =
-                    new GetTopicsResponse.Builder()
-                        .setTaxonomyVersions(Arrays.asList(1L, 2L))
-                        .setModelVersions(Arrays.asList(3L, 4L))
-                        .setTopics(Arrays.asList(1))
-                        .build();
-            });
+        // Validate the topicList is same to what we created
+        assertEquals(topicList, response.getTopics());
     }
 }
 
