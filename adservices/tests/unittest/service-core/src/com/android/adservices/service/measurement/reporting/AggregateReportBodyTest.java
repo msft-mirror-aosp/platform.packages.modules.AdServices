@@ -25,12 +25,10 @@ import org.junit.Test;
 
 public class AggregateReportBodyTest {
 
-    private static final String SOURCE_SITE = "https://source.example";
     private static final String ATTRIBUTION_DESTINATION = "https://attribution.destination";
     private static final String SOURCE_REGISTRATION_TIME = "1246174152155";
     private static final String SCHEDULED_REPORT_TIME = "1246174158155";
-    private static final String PRIVACY_BUDGET_KEY = "example-key";
-    private static final String VERSION = "1";
+    private static final String VERSION = "12";
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
@@ -39,26 +37,14 @@ public class AggregateReportBodyTest {
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
-                .setSourceSite(SOURCE_SITE)
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(SCHEDULED_REPORT_TIME)
-                .setPrivacyBudgetKey(PRIVACY_BUDGET_KEY)
-                .setVersion(VERSION)
+                .setApiVersion(VERSION)
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
                 .build();
-    }
-
-    @Test
-    public void testAggregateBodyJsonSerialization() throws JSONException {
-        AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
-        JSONObject aggregateReportJson = aggregateReport.toJson();
-
-        assertEquals(SOURCE_SITE, aggregateReportJson.get("source_site"));
-        assertEquals(ATTRIBUTION_DESTINATION, aggregateReportJson.get("attribution_destination"));
-        assertEquals(SOURCE_REGISTRATION_TIME, aggregateReportJson.get("source_registration_time"));
     }
 
     @Test
@@ -67,10 +53,11 @@ public class AggregateReportBodyTest {
         JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
 
         assertEquals(SCHEDULED_REPORT_TIME, sharedInfoJson.get("scheduled_report_time"));
-        assertEquals(PRIVACY_BUDGET_KEY, sharedInfoJson.get("privacy_budget_key"));
         assertEquals(VERSION, sharedInfoJson.get("version"));
         assertEquals(REPORT_ID, sharedInfoJson.get("report_id"));
         assertEquals(REPORTING_ORIGIN, sharedInfoJson.get("reporting_origin"));
+        assertEquals(ATTRIBUTION_DESTINATION, sharedInfoJson.get("attribution_destination"));
+        assertEquals(SOURCE_REGISTRATION_TIME, sharedInfoJson.get("source_registration_time"));
     }
 
     @Test

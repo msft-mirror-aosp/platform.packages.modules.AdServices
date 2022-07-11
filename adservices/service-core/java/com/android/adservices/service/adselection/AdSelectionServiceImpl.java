@@ -31,11 +31,14 @@ import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -57,11 +60,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
-    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final Flags mFlags;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -71,20 +75,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public AdSelectionServiceImpl(
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull Flags flags) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adServicesLogger);
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
-        mAdSelectionHttpClient = adSelectionHttpClient;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mExecutor = executorService;
         mContext = context;
         mAdServicesLogger = adServicesLogger;
+        mFlags = flags;
     }
 
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
@@ -92,11 +98,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         this(
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                new AdSelectionHttpClient(AdServicesExecutors.getBackgroundExecutor()),
+                new AdServicesHttpsClient(AdServicesExecutors.getBackgroundExecutor()),
                 DevContextFilter.create(context),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                FlagsFactory.getFlags());
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
@@ -123,7 +130,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdSelectionEntryDao,
                         mExecutor,
                         mAdServicesLogger,
-                        devContext);
+                        devContext,
+                        mFlags);
 
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
@@ -151,7 +159,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mContext,
                         mExecutor,
                         mAdSelectionEntryDao,
-                        mAdSelectionHttpClient,
+                        mAdServicesHttpsClient,
                         devContext,
                         mAdServicesLogger);
         reporter.reportImpression(requestParams, callback);
@@ -257,6 +265,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /** Close down method to be invoked when the PPAPI process is shut down. */
     public void destroy() {
         LogUtil.i("Shutting down AdSelectionService");
-        JSScriptEngine.shutdown();
+        JSScriptEngine.getInstance(mContext).shutdown();
     }
 }
