@@ -16,10 +16,13 @@
 package com.android.adservices.service.measurement.registration;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.WebTriggerParams;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -29,7 +32,10 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Download and decode Trigger registration.
@@ -37,12 +43,7 @@ import java.util.Map;
  * @hide
  */
 public class TriggerFetcher {
-    /**
-     * Provided a testing hook.
-     */
-    public @NonNull URLConnection openUrl(@NonNull URL url) throws IOException {
-        return url.openConnection();
-    }
+    private static final ExecutorService sIoExecutor = AdServicesExecutors.getBlockingExecutor();
 
     private static boolean parseTrigger(
             @NonNull Uri topOrigin,
@@ -103,10 +104,16 @@ public class TriggerFetcher {
         return false;
     }
 
+    /** Provided a testing hook. */
+    @NonNull
+    public URLConnection openUrl(@NonNull URL url) throws IOException {
+        return url.openConnection();
+    }
+
     private void fetchTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri target,
-            boolean initialFetch,
+            boolean shouldProcessRedirects,
             @NonNull List<TriggerRegistration> registrationsOut) {
         // Require https.
         if (!target.getScheme().equals("https")) {
@@ -140,19 +147,19 @@ public class TriggerFetcher {
             }
 
             final boolean parsed = parseTrigger(topOrigin, target, headers, registrationsOut);
-            if (!parsed && initialFetch) {
-                LogUtil.d("Failed to parse initial fetch");
+            if (!parsed) {
+                LogUtil.d("Failed to parse.");
                 return;
             }
 
-            ArrayList<Uri> redirects = new ArrayList();
-            ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
-            for (Uri redirect : redirects) {
-                fetchTrigger(topOrigin, redirect, false, registrationsOut);
+            if (shouldProcessRedirects) {
+                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                for (Uri redirect : redirects) {
+                    fetchTrigger(topOrigin, redirect, false, registrationsOut);
+                }
             }
         } catch (IOException e) {
             LogUtil.d("Failed to get registration response %s", e);
-            return;
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -163,16 +170,63 @@ public class TriggerFetcher {
     /**
      * Fetch a trigger type registration.
      */
-    public boolean fetchTrigger(@NonNull RegistrationRequest request,
-            @NonNull List<TriggerRegistration> out) {
-        if (request.getRegistrationType()
-                != RegistrationRequest.REGISTER_TRIGGER) {
+    public Optional<List<TriggerRegistration>> fetchTrigger(@NonNull RegistrationRequest request) {
+        if (request.getRegistrationType() != RegistrationRequest.REGISTER_TRIGGER) {
             throw new IllegalArgumentException("Expected trigger registration");
         }
-        fetchTrigger(
-                request.getTopOriginUri(),
-                request.getRegistrationUri(),
-                true, out);
-        return !out.isEmpty();
+        List<TriggerRegistration> out = new ArrayList<>();
+        fetchTrigger(request.getTopOriginUri(), request.getRegistrationUri(), true, out);
+        if (out.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(out);
+        }
+    }
+
+    /** Fetch a trigger type registration without redirects. */
+    public Optional<List<TriggerRegistration>> fetchWebTriggers(
+            WebTriggerRegistrationRequest request) {
+        List<TriggerRegistration> out = new ArrayList<>();
+        processWebTriggersFetch(request.getDestination(), request.getTriggerParams(), out);
+
+        if (out.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(out);
+        }
+    }
+
+    private void processWebTriggersFetch(
+            Uri topOrigin,
+            List<WebTriggerParams> triggerParamsList,
+            List<TriggerRegistration> registrationsOut) {
+        try {
+            CompletableFuture.allOf(
+                            triggerParamsList.stream()
+                                    .map(
+                                            triggerParams ->
+                                                    createFutureToFetchWebTrigger(
+                                                            topOrigin,
+                                                            registrationsOut,
+                                                            triggerParams))
+                                    .toArray(CompletableFuture<?>[]::new))
+                    .get();
+        } catch (InterruptedException | ExecutionException e) {
+            LogUtil.e("Failed to process source redirection", e);
+        }
+    }
+
+    private CompletableFuture<Void> createFutureToFetchWebTrigger(
+            Uri topOrigin,
+            List<TriggerRegistration> registrationsOut,
+            WebTriggerParams triggerParams) {
+        return CompletableFuture.runAsync(
+                () ->
+                        fetchTrigger(
+                                topOrigin,
+                                triggerParams.getRegistrationUri(),
+                                /* should process redirects*/ false,
+                                registrationsOut),
+                sIoExecutor);
     }
 }

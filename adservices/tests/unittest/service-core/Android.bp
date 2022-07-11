@@ -39,11 +39,12 @@ android_test {
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "adservices-test-fixtures",
+        "mobile_data_downloader_lib",
         "tflite_support_classifiers_java",
     ],
     libs: [
         "android.test.base",
-	"android.test.mock.stubs",
+	    "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
     ],

@@ -159,20 +159,20 @@ public abstract class E2EMockTest extends E2ETest {
                             sharedInfo.getLong("scheduled_report_time") * 1000)
                     .put(TestFormatJsonMapping.REPORT_TO_KEY, destinations.get(i).toString())
                     .put(TestFormatJsonMapping.PAYLOAD_KEY,
-                            getAggregatablePayloadForTest(payloads.get(i))));
+                            getAggregatablePayloadForTest(sharedInfo, payloads.get(i))));
         }
         return result;
     }
 
-    private static JSONObject getAggregatablePayloadForTest(JSONObject data) throws JSONException {
+    private static JSONObject getAggregatablePayloadForTest(
+            JSONObject sharedInfo, JSONObject data) throws JSONException {
         String payloadJson = data.getJSONArray("aggregation_service_payloads")
                 .getJSONObject(0)
                 .getString("debug_cleartext_payload");
         JSONArray histograms = new JSONObject(payloadJson).getJSONArray("data");
         return new JSONObject()
                 .put(AggregateReportPayloadKeys.ATTRIBUTION_DESTINATION,
-                        data.getString("attribution_destination"))
-                .put(AggregateReportPayloadKeys.SOURCE_SITE, data.getString("source_site"))
+                        sharedInfo.getString("attribution_destination"))
                 .put(AggregateReportPayloadKeys.HISTOGRAMS, getAggregateHistograms(histograms));
     }
 

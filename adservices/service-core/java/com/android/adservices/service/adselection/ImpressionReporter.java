@@ -34,6 +34,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -57,7 +58,7 @@ public class ImpressionReporter {
 
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
-    @NonNull private final AdSelectionHttpClient mAdSelectionHttpClient;
+    @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
@@ -67,20 +68,20 @@ public class ImpressionReporter {
             @NonNull Context context,
             @NonNull ExecutorService executor,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull AdSelectionHttpClient adSelectionHttpClient,
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(adSelectionHttpClient);
+        Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
 
         mContext = context;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdSelectionEntryDao = adSelectionEntryDao;
-        mAdSelectionHttpClient = adSelectionHttpClient;
+        mAdServicesHttpsClient = adServicesHttpsClient;
         mJsEngine = new ReportImpressionScriptEngine(mContext);
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
@@ -186,11 +187,11 @@ public class ImpressionReporter {
     @NonNull
     private ListenableFuture<List<Void>> doReport(ReportingUrls reportingUrls) {
         ListenableFuture<Void> sellerFuture =
-                mAdSelectionHttpClient.reportUrl(reportingUrls.sellerReportingUri);
+                mAdServicesHttpsClient.reportUrl(reportingUrls.sellerReportingUri);
         ListenableFuture<Void> buyerFuture;
 
         if (!Objects.isNull(reportingUrls.buyerReportingUri)) {
-            buyerFuture = mAdSelectionHttpClient.reportUrl(reportingUrls.buyerReportingUri);
+            buyerFuture = mAdServicesHttpsClient.reportUrl(reportingUrls.buyerReportingUri);
         } else {
             buyerFuture = Futures.immediateFuture(null);
         }
@@ -246,7 +247,7 @@ public class ImpressionReporter {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                return mAdSelectionHttpClient.fetchJavascript(
+                                return mAdServicesHttpsClient.fetchPayload(
                                         ctx.mAdSelectionConfig.getDecisionLogicUrl());
                             } else {
                                 LogUtil.i(

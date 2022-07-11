@@ -31,6 +31,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
+import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -75,7 +76,7 @@ public class AdsScoreGeneratorImplTest {
 
     private ListeningExecutorService mListeningExecutorService;
     private ExecutorService mExecutorService;
-    private AdSelectionHttpClient mWebClient;
+    private AdServicesHttpsClient mWebClient;
     private String mSellerDecisionLogicJs;
 
     private AdBiddingOutcome mAdBiddingOutcomeBuyer1;
@@ -95,7 +96,7 @@ public class AdsScoreGeneratorImplTest {
 
         mExecutorService = Executors.newFixedThreadPool(20);
         mListeningExecutorService = MoreExecutors.listeningDecorator(mExecutorService);
-        mWebClient = new AdSelectionHttpClient(mExecutorService);
+        mWebClient = new AdServicesHttpsClient(mExecutorService);
 
         mAdBiddingOutcomeBuyer1 =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_1, 1.0).build();

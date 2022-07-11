@@ -21,59 +21,56 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.HashSet;
-
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxHostTest extends BaseHostJUnit4Test {
 
-    private boolean mMultiuserSupported;
+    private static final String APP_PACKAGE = "com.android.sdksandbox.app";
+    private static final String APP_TEST_CLASS = APP_PACKAGE + ".SdkSandboxTestApp";
 
-    private int mInitialUserId;
-    private HashSet<Integer> mOriginalUsers;
+    private static final String SDK_APK = "TestCodeProvider.apk";
+
+    /**
+     * Runs the given phase of a test by calling into the device. Throws an exception if the test
+     * phase fails.
+     *
+     * <p>For example, <code>runPhase("testExample");</code>
+     */
+    private void runPhase(String phase) throws Exception {
+        assertThat(runDeviceTests(APP_PACKAGE, APP_TEST_CLASS, phase)).isTrue();
+    }
 
     @Before
     public void setUp() throws Exception {
-        assertThat(getBuild()).isNotNull();  // ensure build has been set before test is run
+        assertThat(getBuild()).isNotNull();
+        assertThat(getDevice()).isNotNull();
 
-        mMultiuserSupported = getDevice().isMultiUserSupported();
-        mInitialUserId = getDevice().getCurrentUser();
-        mOriginalUsers = new HashSet<>(getDevice().listUsers());
-    }
+        // Ensure the app is not currently running
+        getDevice().executeShellCommand(String.format("pm clear %s", APP_PACKAGE));
 
-    @After
-    public void teardown() throws Exception {
-        removeTestUsers();
+        // Workaround for autoTeardown which removes packages installed in test
+        if (!isPackageInstalled(SDK_APK)) {
+            installPackage(SDK_APK, "-d");
+        }
     }
 
     @Test
-    public void testSdkSandboxPackageInstallatedForAllUsers() throws Exception {
-        // Test installation for new users
-        if (mMultiuserSupported) {
-            final int testUser = getDevice().createUser("Test User");
-        }
+    public void testReloadingSdkAfterKillingSandboxIsSuccessful() throws Exception {
+        // Have the app load multiple SDKs and bring up the sandbox
+        runPhase("testLoadMultipleSdks");
 
-        for (Integer userId : getDevice().listUsers()) {
-            // TODO(b/204991850): add below code after package install is handled
-            // assertTrue(getDevice().isPackageInstalled(SUPPLEMENTAL_PROCESS_PKG,
-            //                                          Integer.toString(userId)));
-        }
-    }
+        final String sandboxProcessName = APP_PACKAGE + "_sdk_sandbox";
+        final String sandboxPid =
+                getDevice().executeShellCommand(String.format("pidof -s %s", sandboxProcessName));
+        // Kill the sandbox
+        getDevice().executeShellCommand(String.format("kill -9 %s", sandboxPid));
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).doesNotContain(sandboxProcessName);
 
-    private void removeTestUsers() throws Exception {
-        if (!mMultiuserSupported) {
-            return;
-        }
-
-        getDevice().switchUser(mInitialUserId);
-        for (Integer userId : getDevice().listUsers()) {
-            if (!mOriginalUsers.contains(userId)) {
-                getDevice().removeUser(userId);
-            }
-        }
+        // Loading both SDKs again should succeed
+        runPhase("testLoadMultipleSdks");
     }
 }
