@@ -23,6 +23,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
+import com.android.adservices.service.measurement.validation.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -568,6 +569,7 @@ public class Source {
          * See {@link Source#getPublisher()}.
          */
         public Builder setPublisher(Uri publisher) {
+            Validation.validateUri(publisher);
             mBuilding.mPublisher = publisher;
             return this;
         }
@@ -577,6 +579,7 @@ public class Source {
          */
 
         public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
@@ -585,6 +588,7 @@ public class Source {
          * See {@link Source#getAdTechDomain()} ()}.
          */
         public Builder setAdTechDomain(Uri adTechDomain) {
+            Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
@@ -641,6 +645,7 @@ public class Source {
          * See {@link Source#getRegistrant()}
          */
         public Builder setRegistrant(Uri registrant) {
+            Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
@@ -714,6 +719,13 @@ public class Source {
          * Build the {@link Source}.
          */
         public Source build() {
+            Validation.validateNonNull(
+                    mBuilding.mPublisher,
+                    mBuilding.mAttributionDestination,
+                    mBuilding.mAdTechDomain,
+                    mBuilding.mRegistrant,
+                    mBuilding.mSourceType);
+
             return mBuilding;
         }
     }

@@ -5,6 +5,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+
+  <Button
+      android:id="@+id/settings_app_launch_button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/settings_app_launchbutton_name"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintHorizontal_bias="0.497"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintVertical_bias="0.06" />
+
   <Button
       android:id="@+id/topics_client_button"
       android:layout_width="wrap_content"
@@ -15,7 +28,9 @@
       app:layout_constraintHorizontal_bias="0.497"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.06" />
+      app:layout_constraintVertical_bias="0.130" 
+      android:layout_below="@+id/settings_app_launch_button" />
+
   <TextView
       android:id="@+id/textView"
       android:layout_width="377dp"
@@ -27,6 +42,6 @@
       app:layout_constraintHorizontal_bias="0.301"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.359"
+      app:layout_constraintVertical_bias="0.400"
       android:layout_below="@+id/topics_client_button"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

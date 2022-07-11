@@ -46,9 +46,9 @@ public class PrecomputedClassifier implements Classifier {
 
     private static PrecomputedClassifier sSingleton;
     private static final String LABELS_FILE_PATH =
-            "classifier/labels_chrome_topics.txt";
+            "classifier/labels_topics.txt";
     private static final String TOP_APP_FILE_PATH =
-            "classifier/precomputed_app_list_chrome_topics.csv";
+            "classifier/precomputed_app_list.csv";
 
     private final PrecomputedLoader mPrecomputedLoader;
 
