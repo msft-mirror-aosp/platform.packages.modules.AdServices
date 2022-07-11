@@ -47,6 +47,7 @@ public class EpochJobServiceTest {
     @Mock EpochManager mMockEpochManager;
     @Mock CacheManager mMockCacheManager;
     @Mock BlockedTopicsManager mBlockedTopicsManager;
+    @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock JobParameters mMockJobParameters;
 
     @Before
@@ -63,14 +64,14 @@ public class EpochJobServiceTest {
                         mMockEpochManager,
                         mMockCacheManager,
                         mBlockedTopicsManager,
+                        mMockAppUpdateManager,
                         FlagsFactory.getFlagsForTest());
         // Add a countDownLatch to ensure background thread gets executed
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         // Start a mockitoSession to mock static method
-        MockitoSession session = ExtendedMockito.mockitoSession()
-                .spyStatic(TopicsWorker.class)
-                .startMocking();
+        MockitoSession session =
+                ExtendedMockito.mockitoSession().spyStatic(TopicsWorker.class).startMocking();
 
         try {
             // Mock static method TopicsWorker.getInstance, let it return the local topicsWorker
@@ -81,8 +82,7 @@ public class EpochJobServiceTest {
             mEpochJobService.onStartJob(mMockJobParameters);
 
             // The countDownLatch doesn't get decreased and waits until timeout.
-            assertThat(countDownLatch
-                    .await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+            assertThat(countDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                     .isFalse();
 
             // Check that processEpoch() and loadCache() are executed to justify
@@ -95,13 +95,13 @@ public class EpochJobServiceTest {
         }
     }
 
-    // TODO: Implement when the method is handled
     @Test
     public void testOnStopJob() {
+        // Verify nothing throws
+        mEpochJobService.onStopJob(mMockJobParameters);
     }
 
     // TODO: Implement after the decision between WorkManager and JobScheduler is made.
     @Test
-    public void testSchedule() {
-    }
+    public void testSchedule() {}
 }

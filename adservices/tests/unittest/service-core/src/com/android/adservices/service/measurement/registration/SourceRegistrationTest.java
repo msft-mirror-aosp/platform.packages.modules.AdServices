@@ -46,8 +46,9 @@ public final class SourceRegistrationTest {
                 .setSourceEventId(1234567)
                 .setExpiry(2345678)
                 .setSourcePriority(345678)
-                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                .setAggregateSource(
+                        "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                                + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
                 .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}")
                 .build();
     }
@@ -82,5 +83,10 @@ public final class SourceRegistrationTest {
         assertEquals(0, response.getSourcePriority());
         assertNull(response.getAggregateSource());
         assertNull(response.getAggregateFilterData());
+    }
+
+    @Test
+    public void equals_success() {
+        assertEquals(createExampleResponse(), createExampleResponse());
     }
 }

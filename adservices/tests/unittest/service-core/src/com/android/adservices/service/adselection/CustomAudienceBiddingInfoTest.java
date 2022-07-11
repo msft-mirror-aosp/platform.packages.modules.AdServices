@@ -62,7 +62,6 @@ public class CustomAudienceBiddingInfoTest {
                     .setExpirationTime(EXPIRATION_TIME)
                     .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                     .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                    .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
                     .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                     .setTrustedBiddingData(
                             new DBTrustedBiddingData.Builder()

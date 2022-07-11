@@ -20,13 +20,16 @@
         xmlns:tools="http://schemas.android.com/tools"
         package="com.android.adservices.tests.ui">
 
+    <!-- New permission introduced in T+ devices needed to show notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
             android:debuggable="true"
             android:label="AdServices UI Test Cases"
             tools:replace="android:label">
         <!-- Activity for Adservices Settings UI -->
         <activity
-                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
+                android:name="com.android.adservices.ui.settings.AdServicesSettingsActivityWrapper"
                 android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
