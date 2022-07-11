@@ -31,7 +31,6 @@
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"సమ్మతి సర్వీస్ APIకి యాక్సెస్ చేయండి"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"సమ్మతి సర్వీస్ APIని యాక్సెస్ చేయడానికి అప్లికేషన్‌ను అనుమతిస్తుంది."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ బీటా"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ బీటా"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"గోప్యతా పరిరక్షణ టెక్నాలజీల సెట్ బీటాను టోగుల్ చేయండి"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -44,4 +43,5 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"బ్లాక్ చేయండి"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"మీరు బ్లాక్ చేసిన ఆసక్తులు"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ఆసక్తులన్నింటినీ రీసెట్ చేయండి"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"అన్‌బ్లాక్ చేయండి"</string>
 </resources>

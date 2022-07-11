@@ -19,6 +19,7 @@ package com.android.sdksandbox.tests.cts.inprocess;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -42,6 +43,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -131,6 +138,33 @@ public class SdkSandboxRestrictionsTest {
                 () -> SandboxedSdkContext.class.getDeclaredMethod("getSdkName"));
     }
 
+    /** Tests that sandbox cannot execute code in read-write locations. */
+    @Test
+    public void testSandboxCannotExecute_WriteLocation() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        Path scriptPath = Paths.get(context.getDataDir().toString(), "example.sh");
+        String scriptContents = "#!/bin/bash\necho \"Should not run!\"";
+
+        Files.write(scriptPath, scriptContents.getBytes());
+        assertTrue(Files.exists(scriptPath));
+
+        Set<PosixFilePermission> permissions =
+                Set.of(
+                        PosixFilePermission.OWNER_EXECUTE,
+                        PosixFilePermission.GROUP_EXECUTE,
+                        PosixFilePermission.OTHERS_EXECUTE);
+        Files.setPosixFilePermissions(scriptPath, permissions);
+
+        assertThat(Files.getPosixFilePermissions(scriptPath)).isEqualTo(permissions);
+
+        assertThat(scriptPath.toFile().canExecute()).isFalse();
+        assertThrows(
+                String.format("Cannot run program \"%s\": error=13, Permission denied", scriptPath),
+                IOException.class,
+                () -> Runtime.getRuntime().exec(scriptPath.toString()));
+    }
+
     /**
      * Tests that Sdk Sandbox cannot access app specific external storage
      */
@@ -211,5 +245,15 @@ public class SdkSandboxRestrictionsTest {
             assertThat(thrown).hasMessageThat().contains(
                     "may not be broadcast from an SDK sandbox uid");
         }
+    }
+
+    /** Test that sdk sandbox can't grant read uri permission. */
+    @Test
+    public void testCheckUriPermission() throws Exception {
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        Uri uri = Uri.parse("content://com.example.sdk.provider/abc");
+        int ret =
+                context.checkCallingOrSelfUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        assertThat(ret).isEqualTo(PackageManager.PERMISSION_DENIED);
     }
 }
