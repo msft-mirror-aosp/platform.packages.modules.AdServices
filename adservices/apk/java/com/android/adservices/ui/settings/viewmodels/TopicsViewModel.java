@@ -103,9 +103,9 @@ public class TopicsViewModel extends AndroidViewModel {
         mBlockedTopics.postValue(getBlockedTopicsFromConsentManager());
     }
 
-    /** reset all information related to topics. */
+    /** Reset all information related to topics but blocked topics. */
     public void resetTopics() {
-        // TODO(b/232417846): reset all topics through ConsentManager.
+        mConsentManager.resetTopics();
         mTopics.postValue(getTopicsFromConsentManager());
     }
 
