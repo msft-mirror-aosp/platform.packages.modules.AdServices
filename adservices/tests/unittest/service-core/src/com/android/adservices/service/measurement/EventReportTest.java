@@ -105,7 +105,7 @@ public final class EventReportTest {
 
     private Source createSourceForTest(long eventTime, Source.SourceType sourceType,
             boolean isInstallAttributable) {
-        return new Source.Builder()
+        return SourceFixture.getValidSourceBuilder()
                 .setEventId(10)
                 .setSourceType(sourceType)
                 .setInstallCooldownWindow(isInstallAttributable ? 100 : 0)
@@ -117,7 +117,7 @@ public final class EventReportTest {
     }
 
     private Trigger createTriggerForTest(long eventTime) {
-        return new Trigger.Builder()
+        return TriggerFixture.getValidTriggerBuilder()
                 .setTriggerTime(eventTime)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setAdTechDomain(Uri.parse("https://example-adtech2.com"))

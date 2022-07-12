@@ -39,7 +39,7 @@ import java.util.Map;
 public class PrecomputedClassifierTest {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_APPS_FILE_PATH =
-            "classifier/precomputed_test_app_list_chrome_topics.csv";
+            "classifier/precomputed_test_app_list.csv";
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final PrecomputedLoader sPrecomputedLoader =
             new PrecomputedLoader(sContext, TEST_LABELS_FILE_PATH, TEST_APPS_FILE_PATH);
@@ -54,7 +54,7 @@ public class PrecomputedClassifierTest {
     @Test
     public void testClassify_existingApp() {
         // Using What's App. This app has 1 classification topic.
-        List<Integer> expectedWhatsAppTopics = Arrays.asList(1379);
+        List<Integer> expectedWhatsAppTopics = Arrays.asList(222);
 
         Map<String, List<Integer>> expectedAppTopicsResponse = new HashMap<>();
         expectedAppTopicsResponse.put("com.whatsapp", expectedWhatsAppTopics);

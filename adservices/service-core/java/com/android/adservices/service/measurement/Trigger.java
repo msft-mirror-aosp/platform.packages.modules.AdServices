@@ -22,6 +22,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.validation.Validation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -358,6 +359,7 @@ public class Trigger {
          * See {@link Trigger#getAttributionDestination()}.
          */
         public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
@@ -366,6 +368,7 @@ public class Trigger {
          * See {@link Trigger#getAdTechDomain()} ()}.
          */
         public Builder setAdTechDomain(Uri adTechDomain) {
+            Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
@@ -396,6 +399,7 @@ public class Trigger {
          * See {@link Trigger#getRegistrant()}
          */
         public Builder setRegistrant(Uri registrant) {
+            Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
@@ -435,6 +439,11 @@ public class Trigger {
          * Build the {@link Trigger}.
          */
         public Trigger build() {
+            Validation.validateNonNull(
+                    mBuilding.mAttributionDestination,
+                    mBuilding.mAdTechDomain,
+                    mBuilding.mRegistrant);
+
             return mBuilding;
         }
     }
