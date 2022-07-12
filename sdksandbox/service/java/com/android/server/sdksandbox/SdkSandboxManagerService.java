@@ -26,6 +26,7 @@ import android.annotation.RequiresPermission;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
+import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -46,6 +47,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.text.TextUtils;
@@ -108,6 +110,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @GuardedBy("mLock")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
+
+    @GuardedBy("mLock")
+    private final ArrayMap<CallingInfo, RemoteCallbackList<ISdkSandboxLifecycleCallback>>
+            mSandboxLifecycleCallbacks = new ArrayMap<>();
 
     private final SdkSandboxManagerLocal mLocalManager;
 
@@ -172,6 +178,41 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
+    public void addSdkSandboxLifecycleCallback(
+            String callingPackageName, ISdkSandboxLifecycleCallback callback) {
+        final int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+
+        synchronized (mLock) {
+            if (mSandboxLifecycleCallbacks.containsKey(callingInfo)) {
+                mSandboxLifecycleCallbacks.get(callingInfo).register(callback);
+            } else {
+                RemoteCallbackList<ISdkSandboxLifecycleCallback> sandboxLifecycleCallbacks =
+                        new RemoteCallbackList<>();
+                sandboxLifecycleCallbacks.register(callback);
+                mSandboxLifecycleCallbacks.put(callingInfo, sandboxLifecycleCallbacks);
+            }
+        }
+    }
+
+    @Override
+    public void removeSdkSandboxLifecycleCallback(
+            String callingPackageName, ISdkSandboxLifecycleCallback callback) {
+        final int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+
+        synchronized (mLock) {
+            RemoteCallbackList<ISdkSandboxLifecycleCallback> sandboxLifecycleCallbacks =
+                    mSandboxLifecycleCallbacks.get(callingInfo);
+            if (sandboxLifecycleCallbacks != null) {
+                sandboxLifecycleCallbacks.unregister(callback);
+            }
+        }
+    }
+
+    @Override
     public void loadSdk(
             String callingPackageName, String sdkName, Bundle params, ILoadSdkCallback callback) {
         final int callingUid = Binder.getCallingUid();
@@ -231,9 +272,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             return;
         }
 
-        // TODO(b/204991850): ensure requested code is included in the AndroidManifest.xml
-        invokeSdkSandboxServiceToLoadSdk(callingInfo, sdkToken, sdkProviderInfo, params, link);
-
         // Register a death recipient to clean up sdkToken and unbind its service after app dies.
         try {
             synchronized (mLock) {
@@ -245,7 +283,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         } catch (RemoteException re) {
             // App has already died, cleanup sdk token and link, and unbind its service
             onAppDeath(callingInfo);
+            return;
         }
+
+        invokeSdkSandboxServiceToLoadSdk(callingInfo, sdkToken, sdkProviderInfo, params, link);
     }
 
     @Override
@@ -299,6 +340,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void onAppDeath(CallingInfo callingInfo) {
         synchronized (mLock) {
+            mSandboxLifecycleCallbacks.remove(callingInfo);
             mCallingInfosWithDeathRecipients.remove(callingInfo);
             removeAllSdkTokensAndLinks(callingInfo);
             stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
@@ -509,6 +551,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 new SandboxBindingCallback() {
                     @Override
                     public void onBindingSuccessful(ISdkSandboxService service) {
+                        try {
+                            service.asBinder()
+                                    .linkToDeath(
+                                            () -> handleSandboxLifecycleCallbacks(callingInfo),
+                                            0);
+                        } catch (RemoteException re) {
+                            handleSandboxLifecycleCallbacks(callingInfo);
+                            return;
+                        }
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
@@ -520,6 +571,29 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 /*cleanUpInternalState=*/ true);
                     }
                 });
+    }
+
+    private void handleSandboxLifecycleCallbacks(CallingInfo callingInfo) {
+        RemoteCallbackList<ISdkSandboxLifecycleCallback> sandboxLifecycleCallbacks;
+        synchronized (mLock) {
+            sandboxLifecycleCallbacks = mSandboxLifecycleCallbacks.get(callingInfo);
+
+            if (sandboxLifecycleCallbacks == null) {
+                return;
+            }
+
+            int size = sandboxLifecycleCallbacks.beginBroadcast();
+            for (int i = 0; i < size; ++i) {
+                try {
+                    sandboxLifecycleCallbacks.getBroadcastItem(i).onSdkSandboxDied();
+                } catch (RemoteException e) {
+                    Log.w(TAG, "Unable to send sdk sandbox death event to app", e);
+                }
+            }
+            sandboxLifecycleCallbacks.finishBroadcast();
+
+            mSandboxLifecycleCallbacks.remove(callingInfo);
+        }
     }
 
     @Override
