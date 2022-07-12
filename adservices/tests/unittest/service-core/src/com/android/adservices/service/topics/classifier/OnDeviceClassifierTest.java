@@ -21,6 +21,7 @@ import static com.android.adservices.service.topics.classifier.OnDeviceClassifie
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,11 +48,16 @@ import java.util.Random;
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 public class OnDeviceClassifierTest {
 
+    private static final String CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_assets_metadata.json";
+
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static Preprocessor sPreprocessor;
     private static OnDeviceClassifier sOnDeviceClassifier;
 
     @Mock private PackageManagerUtil mPackageManagerUtil;
+
+    private static ImmutableMap<String, ImmutableMap<String, String>> sClassifierAssetsMetadata;
 
     @Before
     public void setUp() throws IOException {
@@ -61,6 +67,9 @@ public class OnDeviceClassifierTest {
         sOnDeviceClassifier =
                 new OnDeviceClassifier(
                         sPreprocessor, mPackageManagerUtil, sContext.getAssets(), new Random());
+        sClassifierAssetsMetadata =
+                CommonClassifierHelper.getAssetsMetadata(
+                        sContext.getAssets(), CLASSIFIER_ASSETS_METADATA_PATH);
     }
 
     @Test
@@ -79,7 +88,7 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
-                .containsExactly(48, 20, 241, 1579, 467, 29, 1416, 12, 138, 1049);
+                .containsExactly(20, 183, 96, 6, 13, 286, 112, 194, 242, 17);
     }
 
     @Test
@@ -113,10 +122,55 @@ public class OnDeviceClassifierTest {
 
         // Check if the first 10 categories contains at least the top 5.
         // Scores can differ a little on devices. Using this to reduce flakiness.
-        // Expected top 10: 69, 31, 374, 25, 694, 955, 216, 384, 11, 12
-        assertThat(classifications.get(appPackage1)).containsAtLeast(69, 31, 374, 25, 694);
-        // Expected top 10: 935, 1798, 529, 41, 933, 998, 39, 676, 622, 554
-        assertThat(classifications.get(appPackage2)).containsAtLeast(935, 1798, 529, 41, 933);
+        // Expected top 10: 43, 140, 151, 189, 193, 208, 271, 262, 6, 136
+        assertThat(classifications.get(appPackage1)).containsAtLeast(43, 140, 151, 189, 193);
+        // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
+        assertThat(classifications.get(appPackage2)).containsAtLeast(93, 88, 90, 99, 101);
+    }
+
+    @Test
+    public void testClassify_successfulClassificationsForUpdatedAppDescription() {
+        // Check getClassification for sample descriptions.
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> oldAppInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(appPackage1, new AppInfo("appName1", "Sample app description."))
+                        .build();
+        ImmutableMap<String, AppInfo> newAppInfoMap =
+                ImmutableMap.<String, AppInfo>builder()
+                        .put(
+                                appPackage1,
+                                new AppInfo(
+                                        "appName1",
+                                        "This xyz game is the best adventure game to thrill our"
+                                                + " users! Play, win and share with your friends to"
+                                                + " win more coins."))
+                        .build();
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        // Return old description first and then the new description.
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages)))
+                .thenReturn(oldAppInfoMap)
+                .thenReturn(newAppInfoMap);
+
+        ImmutableMap<String, List<Integer>> firstClassifications =
+                sOnDeviceClassifier.classify(appPackages);
+        ImmutableMap<String, List<Integer>> secondClassifications =
+                sOnDeviceClassifier.classify(appPackages);
+
+        // Verify two calls to packageManagerUtil.
+        verify(mPackageManagerUtil, times(2)).getAppInformation(eq(appPackages));
+        // Two values for two input package names.
+        assertThat(secondClassifications).hasSize(1);
+        // Verify size of the labels returned is MAX_LABELS_PER_APP.
+        assertThat(secondClassifications.get(appPackage1)).hasSize(MAX_LABELS_PER_APP);
+
+        // Check if the first 10 categories contains at least the top 5.
+        // Scores can differ a little on devices. Using this to reduce flakiness.
+        // Check different expected scores for different descriptions.
+        // Expected top 10: 43, 140, 151, 189, 193, 208, 271, 262, 6, 136
+        assertThat(firstClassifications.get(appPackage1)).containsAtLeast(43, 140, 151, 189, 193);
+        // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
+        assertThat(secondClassifications.get(appPackage1)).containsAtLeast(93, 88, 90, 99, 101);
     }
 
     @Test
@@ -153,7 +207,7 @@ public class OnDeviceClassifierTest {
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
         ImmutableList<Integer> expectedLabelsForCommonDescription =
-                ImmutableList.of(935, 1798, 529, 41, 933, 998, 39, 676, 622, 554);
+                ImmutableList.of(96, 1, 99, 3, 10, 251, 300, 231, 123, 56);
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }
@@ -194,5 +248,25 @@ public class OnDeviceClassifierTest {
                 .isNotEqualTo(
                         topTopics2.subList(
                                 numberOfTopTopics, numberOfTopTopics + numberOfRandomTopics));
+    }
+
+    @Test
+    public void testBertModelVersion_matchesAssetsModelVersion() {
+        assertThat(sOnDeviceClassifier.getBertModelVersion())
+                .isEqualTo(
+                        Long.parseLong(
+                                sClassifierAssetsMetadata
+                                        .get("tflite_model")
+                                        .get("asset_version")));
+    }
+
+    @Test
+    public void testBertLabelsVersion_matchesAssetsLabelsVersion() {
+        assertThat(sOnDeviceClassifier.getBertLabelsVersion())
+                .isEqualTo(
+                        Long.parseLong(
+                                sClassifierAssetsMetadata
+                                        .get("labels_topics")
+                                        .get("asset_version")));
     }
 }
