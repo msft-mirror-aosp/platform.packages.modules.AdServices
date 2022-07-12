@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -55,7 +56,7 @@ import java.util.stream.Stream;
  */
 class MeasurementDao implements IMeasurementDao {
 
-    private static final String TAG = "MeasurementDao";
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private SQLTransaction mSQLTransaction;
 
     @Override
@@ -112,7 +113,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Trigger getTrigger(String triggerId) throws DatastoreException {
+    public Trigger getTrigger(@NonNull String triggerId) throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.TriggerContract.TABLE,
                 /*columns=*/null,
@@ -128,7 +129,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public EventReport getEventReport(String eventReportId) throws DatastoreException {
+    public EventReport getEventReport(@NonNull String eventReportId) throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.EventReportContract.TABLE,
                 null,
@@ -148,7 +149,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public AggregateReport getAggregateReport(String aggregateReportId)
+    public AggregateReport getAggregateReport(@NonNull String aggregateReportId)
             throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.AggregateReport.TABLE,
@@ -174,8 +175,12 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                source.getAttributionDestination().toString());
+        values.put(
+                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
+                getNullableUriString(source.getAttributionDestination()));
+        values.put(
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                getNullableUriString(source.getWebDestination()));
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
@@ -203,26 +208,40 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException {
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.SourceContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? AND "
-                        + MeasurementTables.SourceContract.AD_TECH_DOMAIN + " = ? AND "
-                        // EventTime should be strictly less than TriggerTime as it is highly
-                        // unlikely for matching Source and Trigger to happen at same instant
-                        // in milliseconds.
-                        + MeasurementTables.SourceContract.EVENT_TIME + " < ? AND "
-                        + MeasurementTables.SourceContract.EXPIRY_TIME + " >= ? AND "
-                        + MeasurementTables.SourceContract.STATUS + " != ?",
-                new String[]{
-                        trigger.getAttributionDestination().toString(),
-                        trigger.getAdTechDomain().toString(),
-                        String.valueOf(trigger.getTriggerTime()),
-                        String.valueOf(trigger.getTriggerTime()),
-                        String.valueOf(Source.Status.IGNORED)
-                },
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+    public List<Source> getMatchingActiveSources(@NonNull Trigger trigger)
+            throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                /*columns=*/ null,
+                                getSourceDestinationColumnForTrigger(trigger)
+                                        + " = ? AND "
+                                        + MeasurementTables.SourceContract.AD_TECH_DOMAIN
+                                        + " = ? AND "
+                                        // EventTime should be strictly less than TriggerTime as it
+                                        // is highly
+                                        // unlikely for matching Source and Trigger to happen at
+                                        // same instant
+                                        // in milliseconds.
+                                        + MeasurementTables.SourceContract.EVENT_TIME
+                                        + " < ? AND "
+                                        + MeasurementTables.SourceContract.EXPIRY_TIME
+                                        + " >= ? AND "
+                                        + MeasurementTables.SourceContract.STATUS
+                                        + " != ?",
+                                new String[] {
+                                    trigger.getAttributionDestination().toString(),
+                                    trigger.getAdTechDomain().toString(),
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(Source.Status.IGNORED)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             List<Source> sources = new ArrayList<>();
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
@@ -1091,5 +1110,17 @@ class MeasurementDao implements IMeasurementDao {
             }
             return aggregateReports;
         }
+    }
+
+    private String getSourceDestinationColumnForTrigger(Trigger trigger) {
+        boolean isAppDestination =
+                trigger.getAttributionDestination().getScheme().startsWith(ANDROID_APP_SCHEME);
+        return isAppDestination
+                ? MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION
+                : MeasurementTables.SourceContract.WEB_DESTINATION;
+    }
+
+    private String getNullableUriString(@Nullable Uri uri) {
+        return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 }
