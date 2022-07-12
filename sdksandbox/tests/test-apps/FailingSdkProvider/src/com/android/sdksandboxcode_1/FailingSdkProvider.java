@@ -30,8 +30,8 @@ public class FailingSdkProvider extends SandboxedSdkProvider {
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
-        callback.onInitSdkError("Failed to initialize.");
+            OnLoadSdkCallback callback) {
+        callback.onLoadSdkError("Failed to initialize.");
     }
 
     @Override

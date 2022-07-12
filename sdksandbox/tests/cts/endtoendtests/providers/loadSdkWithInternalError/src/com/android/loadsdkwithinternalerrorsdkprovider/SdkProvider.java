@@ -31,7 +31,7 @@ public class SdkProvider extends SandboxedSdkProvider {
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
+            OnLoadSdkCallback callback) {
         throw new RuntimeException("General Exception");
     }
 
