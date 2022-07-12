@@ -56,6 +56,5 @@ public class DbHelperTest {
         assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
         assertTrue(doesIndexExist(db, "idx_msmt_attribution_rate_limit_ss_ds_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_aggregate_encryption_key_et"));
     }
 }

@@ -1,0 +1,198 @@
+{
+  "name": "With origin, but no range",
+  "input": {
+    "sources": [
+      {
+        "id": "S1",
+        "eventId": 1,
+        "sourceType": "navigation",
+        "publisher": "android-app://com.site.toBeDeleted",
+        "attributionDestination": "android-app://com.site3",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 8640000001,
+        "expiryTime": 8640000030,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "S2",
+        "eventId": 2,
+        "sourceType": "navigation",
+        "publisher": "android-app://com.site.doNotDelete",
+        "attributionDestination": "android-app://com.site1",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 8640000001,
+        "expiryTime": 8640000030,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "triggers": [
+      {
+        "id": "T1",
+        "attributionDestination": "android-app://com.site.toBeDeleted",
+        "adTechDomain": "https://ad-tech.example.com",
+        "status": 0,
+        "triggerTime": 8640000002,
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ]
+      },
+      {
+        "id": "T2",
+        "attributionDestination": "android-app://com.site.doNotDelete",
+        "adTechDomain": "https://ad-tech.example.com",
+        "status": 0,
+        "triggerTime": 8640000002,
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ]
+      }
+    ],
+    "event_reports": [
+      {
+        "id": "E1",
+        "sourceId": 1,
+        "attributionDestination": "android-app://com.site.toBeDeletedDueToSourceId1",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 8640000002,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E2",
+        "sourceId": 2,
+        "attributionDestination": "android-app://com.site.toBeDeleted",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 8640000002,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      },
+      {
+        "id": "E3",
+        "sourceId": 3,
+        "attributionDestination": "android-app://com.site.doNotDelete",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 8640000002,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      }
+    ],
+    "attribution_rate_limits": [
+      {
+        "id": "A1",
+        "sourceSite": "android-app://com.site.toBeDeleted",
+        "destinationSite": "android-app://com.site3",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 10,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "A2",
+        "sourceSite": "android-app://com.site2",
+        "destinationSite": "android-app://com.site.toBeDeleted",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 10,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      },
+      {
+        "id": "A3",
+        "sourceSite": "android-app://com.site1.doNotDelete",
+        "destinationSite": "android-app://com.site2.doNotDelete",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 10,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ]
+  },
+  "output": {
+    "sources": [
+      {
+        "id": "S2",
+        "eventId": 2,
+        "sourceType": "navigation",
+        "publisher": "android-app://com.site.doNotDelete",
+        "attributionDestination": "android-app://com.site1",
+        "adTechDomain": "https://ad-tech.example.com",
+        "eventTime": 8640000001,
+        "expiryTime": 8640000030,
+        "priority": 100,
+        "status": 0,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "triggers": [
+      {
+        "id": "T2",
+        "attributionDestination": "android-app://com.site.doNotDelete",
+        "adTechDomain": "https://ad-tech.example.com",
+        "status": 0,
+        "triggerTime": 8640000002,
+        "registrant": "android-app://com.registrant.deleteCandidate",
+        "eventTriggers": [
+          {
+            "trigger_data": 2,
+            "priority": 101,
+            "filters": {
+              "key_1": ["value_1"]
+            }
+          }
+        ]
+      }
+    ],
+    "event_reports": [
+      {
+        "id": "E3",
+        "sourceId": 3,
+        "attributionDestination": "android-app://com.site.doNotDelete",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerData": 2,
+        "triggerTime": 8640000002,
+        "status": 0,
+        "reportTime": -1,
+        "triggerPriority": 101,
+        "sourceType": "navigation"
+      }
+    ],
+    "attribution_rate_limits": [
+      {
+        "id": "A3",
+        "sourceSite": "android-app://com.site1.doNotDelete",
+        "destinationSite": "android-app://com.site2.doNotDelete",
+        "adTechDomain": "https://ad-tech.example.com",
+        "triggerTime": 10,
+        "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ]
+  },
+  "param": {
+    "registrant": "android-app://com.registrant.deleteCandidate",
+    "origins": ["android-app://com.site.toBeDeleted"],
+    "domains": []
+  }
+}
