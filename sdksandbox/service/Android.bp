@@ -32,14 +32,15 @@ java_sdk_library {
         ":sdksandbox_aidl",
     ],
     sdk_version: "system_server_current",
-    min_sdk_version: "Tiramisu",
     permitted_packages: [
         "com.android.sdksandbox",
         "com.android.server.sdksandbox",
     ],
     libs: [
+        "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "jsr305",
+        "modules-utils-shell-command-handler",
     ],
     defaults: [
         "framework-system-server-module-defaults",
@@ -50,8 +51,6 @@ java_sdk_library {
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices/sdksandbox/tests/unittest",
-        // TODO(222118402): remove once code is moved.
-        "//packages/modules/SupplementalProcess/tests/unittest",
         "//frameworks/base/services/tests/mockingservicestests",
         "//frameworks/base/services/tests/wmtests",
     ],

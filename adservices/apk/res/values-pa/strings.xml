@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  Copyright (C) 2022 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+ -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"AdServices Topics API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
+    <string name="permdesc_accessAdServicesTopics" msgid="4220466427260104683">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Topics API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_accessAdServicesAttribution" msgid="4498132091418336093">"AdServices Attribution API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
+    <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Attribution API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
+    <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Custom Audience API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API ਤੱਕ ਪਹੁੰਚ"</string>
+    <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ AdServices Consent API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
+    <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"ਕਿਸੇ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ Ad ID API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API ਤੱਕ ਪਹੁੰਚ ਮਿਲਦੀ ਹੈ"</string>
+    <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ App Set ID API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ਤੱਕ ਪਹੁੰਚ"</string>
+    <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ Consent Service API ਤੱਕ ਪਹੁੰਚ ਕਰਨ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
+    <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਬੀਟਾ"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਬੀਟਾ"</string>
+    <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ ਬੀਟਾ ਨੂੰ ਟੌਗਲ ਕਰੋ"</string>
+    <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
+    <string name="settingsUI_topics_title" msgid="4024683469932819788">"ਤੁਹਾਡੀਆਂ ਆਮ ਦਿਲਚਸਪੀਆਂ"</string>
+    <string name="settingsUI_topics_summary" msgid="3146101472984434355">"ਆਪਣੀਆਂ ਆਮ ਦਿਲਚਸਪੀਆਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ"</string>
+    <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
+    <string name="settingsUI_apps_title" msgid="2177966577556486280">"ਖਾਸ ਦਿਲਚਸਪੀਆਂ ਪੈਦਾ ਕਰਨ ਵਾਲੀਆਂ ਤੁਹਾਡੀਆਂ ਐਪਾਂ"</string>
+    <string name="settingsUI_apps_summary" msgid="2382082513059909726">"ਖਾਸ ਦਿਲਚਸਪੀਆਂ ਪੈਦਾ ਕਰਨ ਵਾਲੀਆਂ ਆਪਣੀਆਂ ਐਪਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ"</string>
+    <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"ਵਿਗਿਆਪਨਾਂ ਲਈ ਆਪਣੀਆਂ ਆਮ ਦਿਲਚਸਪੀਆਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ"</string>
+    <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ਬਲਾਕ ਕਰੋ"</string>
+    <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"ਤੁਹਾਡੇ ਵੱਲੋਂ ਬਲਾਕ ਕੀਤੀਆਂ ਗਈਆਂ ਦਿਲਚਸਪੀਆਂ"</string>
+    <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ਸਾਰੀਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ਅਣਬਲਾਕ ਕਰੋ"</string>
+</resources>
