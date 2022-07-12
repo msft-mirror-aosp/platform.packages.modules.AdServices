@@ -77,6 +77,7 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
                                     topicsList.isEmpty() ? View.VISIBLE : View.GONE);
                             emptyTopicsHiddenSection.setVisibility(
                                     topicsList.isEmpty() ? View.GONE : View.VISIBLE);
+                            adapter.notifyDataSetChanged();
                         });
     }
 }
