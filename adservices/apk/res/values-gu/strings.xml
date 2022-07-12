@@ -31,7 +31,6 @@
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"કોઈ ઍપ્લિકેશનને Consent Service API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"પ્રાઇવસી સૅન્ડબૉક્સ બીટા"</string>
-    <string name="settingsUI_privacy_sandbox_beta_switch_key" msgid="5571900954219004269">"privacy_sandbox_beta_switch"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"પ્રાઇવસી સૅન્ડબૉક્સ બીટા"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"પ્રાઇવસી સૅન્ડબૉક્સ બીટા ટૉગલ કરો"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
@@ -44,4 +43,5 @@
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"બ્લૉક કરો"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"તમે બ્લૉક કરેલી રુચિઓ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"બધી રુચિઓ રીસેટ કરો"</string>
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"અનબ્લૉક કરો"</string>
 </resources>

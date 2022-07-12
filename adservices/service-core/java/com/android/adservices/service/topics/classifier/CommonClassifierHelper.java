@@ -18,25 +18,45 @@ package com.android.adservices.service.topics.classifier;
 
 import android.annotation.NonNull;
 import android.content.res.AssetManager;
+import android.util.JsonReader;
 
 import com.android.adservices.LogUtil;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Helper methods for shared implementations of {@link Classifier}. */
 class CommonClassifierHelper {
+    // The key name of asset metadata property in classifier_assets_metadata.json
+    private static final String ASSET_PROPERTY_NAME = "property";
+    // The key name of asset element in classifier_assets_metadata.json
+    private static final String ASSET_ELEMENT_NAME = "asset_name";
+    // The attributions of assets property in classifier_assets_metadata.json
+    private static final Set<String> ASSETS_PROPERTY_ATTRIBUTIONS = new HashSet(
+            Arrays.asList("taxonomy_type", "taxonomy_version", "updated_date"));
+    // The attributions of assets metadata in classifier_assets_metadata.json
+    private static final Set<String> ASSETS_NORMAL_ATTRIBUTIONS = new HashSet(
+            Arrays.asList("asset_version", "path", "checksum", "updated_date"));
+    // The algorithm name of checksum
+    private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
 
     /**
      * Retrieve a list of topicIDs from labels file.
@@ -67,6 +87,147 @@ class CommonClassifierHelper {
         }
 
         return labels.build();
+    }
+
+    /**
+     * Retrieve the assets names and their corresponding metadata.
+     *
+     * @return The immutable map of assets metadata from {@code classifierAssetsMetadataPath}.
+     *      Empty map will be returned for {@link IOException}.
+     */
+    @NonNull
+    static ImmutableMap<String, ImmutableMap<String, String>> getAssetsMetadata(
+            @NonNull AssetManager assetManager, @NonNull String classifierAssetsMetadataPath) {
+        // Initialize a ImmutableMap.Builder to store the classifier assets metadata iteratively.
+        // classifierAssetsMetadata = ImmutableMap<AssetName, ImmutableMap<MetadataName, Value>>
+        ImmutableMap.Builder<String, ImmutableMap<String, String>> classifierAssetsMetadata =
+                new ImmutableMap.Builder<>();
+
+        try (InputStreamReader inputStreamReader =
+                     new InputStreamReader(assetManager.open(classifierAssetsMetadataPath))) {
+            JsonReader reader = new JsonReader(inputStreamReader);
+
+            reader.beginArray();
+            while (reader.hasNext()) {
+                // Use an immutable map to store the metadata of one asset.
+                // assetMetadata = ImmutableMap<MetadataName, Value>
+                ImmutableMap.Builder<String, String> assetMetadata = new ImmutableMap.Builder<>();
+
+                // Use jsonElementKey to save the key name of each array element.
+                String jsonElementKey = null;
+
+                // Begin to read one json element in the array here.
+                reader.beginObject();
+                if (reader.hasNext()) {
+                    String elementKeyName = reader.nextName();
+
+                    if (elementKeyName.equals(ASSET_PROPERTY_NAME)) {
+                        jsonElementKey = reader.nextString();
+
+                        while (reader.hasNext()) {
+                            String attribution = reader.nextName();
+                            // Check if the attribution name can be found in the property's key set.
+                            if (ASSETS_PROPERTY_ATTRIBUTIONS.contains(attribution)) {
+                                assetMetadata.put(attribution, reader.nextString());
+                            } else {
+                                // Skip the redundant metadata name if it can't be found
+                                // in the ASSETS_PROPERTY_ATTRIBUTIONS.
+                                reader.skipValue();
+                                LogUtil.e(attribution,
+                                        " is a redundant metadata attribution of "
+                                                + "metadata property.");
+                            }
+                        }
+                    } else if (elementKeyName.equals(ASSET_ELEMENT_NAME)) {
+                        jsonElementKey = reader.nextString();
+
+                        while (reader.hasNext()) {
+                            String attribution = reader.nextName();
+                            // Check if the attribution name can be found in the asset's key set.
+                            if (ASSETS_NORMAL_ATTRIBUTIONS.contains(attribution)) {
+                                assetMetadata.put(attribution, reader.nextString());
+                            } else {
+                                // Skip the redundant metadata name if it can't be found
+                                // in the ASSET_NORMAL_ATTRIBUTIONS.
+                                reader.skipValue();
+                                LogUtil.e(attribution,
+                                        " is a redundant metadata attribution of asset.");
+                            }
+                        }
+                    } else {
+                        // Skip the json element if it doesn't have key "property" or "asset_name".
+                        while (reader.hasNext()) {
+                            reader.skipValue();
+                        }
+                        LogUtil.e("Can't load this json element, "
+                                + "because \"property\" or \"asset_name\" "
+                                + "can't be found in the json element.");
+                    }
+                }
+                reader.endObject();
+
+                // Save the metadata of the asset if and only if the assetName can be retrieved
+                // correctly from the metadata json file.
+                if (jsonElementKey != null) {
+                    classifierAssetsMetadata.put(jsonElementKey, assetMetadata.build());
+                }
+            }
+            reader.endArray();
+        } catch (IOException e) {
+            LogUtil.e(e, "Unable to read classifier assets metadata file");
+            // When catching IOException -> return empty immutable map
+            return ImmutableMap.of();
+        }
+
+        return classifierAssetsMetadata.build();
+    }
+
+    /**
+     * Compute the SHA256 checksum of classifier asset.
+     *
+     * @return A string of classifier asset's SHA256 checksum.
+     */
+    static String computeClassifierAssetChecksum(
+            @NonNull AssetManager assetManager,
+            @NonNull String classifierAssetsMetadataPath) {
+        StringBuilder assetSha256CheckSum = new StringBuilder();
+        try {
+            MessageDigest sha256Digest =
+                    MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
+
+            try (InputStream inputStream =
+                         assetManager.open(classifierAssetsMetadataPath)) {
+
+                // Create byte array to read data in chunks
+                byte[] byteArray = new byte[8192];
+                int byteCount = 0;
+
+                // Read file data and update in message digest
+                while ((byteCount = inputStream.read(byteArray)) != -1) {
+                    sha256Digest.update(byteArray, 0, byteCount);
+                }
+
+                // Get the hash's bytes
+                byte[] bytes = sha256Digest.digest();
+
+                // This bytes[] has bytes in decimal format;
+                // Convert it to hexadecimal format
+                for(int i = 0; i < bytes.length; i++) {
+                    assetSha256CheckSum.append(
+                            Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+                }
+            } catch (IOException e) {
+                LogUtil.e(e, "Unable to read classifier asset file");
+                // When catching IOException -> return empty string.
+                return "";
+            }
+        } catch (NoSuchAlgorithmException e) {
+            LogUtil.e(e, "Unable to find correct message digest algorithm.");
+            // When catching NoSuchAlgorithmException -> return empty string.
+            return "";
+        }
+
+        return assetSha256CheckSum.toString();
     }
 
     /**

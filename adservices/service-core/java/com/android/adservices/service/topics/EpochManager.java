@@ -32,12 +32,14 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.OnDeviceClassifier;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,14 +51,6 @@ import java.util.stream.Collectors;
 
 /** A class to manage Epoch computation. */
 public class EpochManager implements Dumpable {
-
-    // We use this origin to compute epoch timestamp.
-    // In other words, the first epoch started at
-    // Saturday, January 1, 2022 12:00:00 AM
-    // TODO(b/221463765): get the timestamp when first access to the origin.
-    // Save in SharedPreferences or slqlite db.
-    private static final long ORIGIN_EPOCH_TIMESTAMP = 1640995200;
-
     // TODO(b/223915674): make this configurable.
     // The Top Topics will have 6 topics.
     // The first 5 topics are the Top Topics derived by ML, and the 6th is a random topic from
@@ -100,6 +94,8 @@ public class EpochManager implements Dumpable {
     private final Random mRandom;
     private final Classifier mClassifier;
     private final Flags mFlags;
+    // Use Clock.SYSTEM_CLOCK except in unit tests, which pass in a local instance of Clock to mock.
+    private final Clock mClock;
 
     @VisibleForTesting
     EpochManager(
@@ -107,12 +103,14 @@ public class EpochManager implements Dumpable {
             @NonNull DbHelper dbHelper,
             @NonNull Random random,
             @NonNull Classifier classifier,
-            Flags flags) {
+            Flags flags,
+            @NonNull Clock clock) {
         mTopicsDao = topicsDao;
         mDbHelper = dbHelper;
         mRandom = random;
         mClassifier = classifier;
         mFlags = flags;
+        mClock = clock;
     }
 
     /** Returns an instance of the EpochManager given a context. */
@@ -126,7 +124,8 @@ public class EpochManager implements Dumpable {
                                 DbHelper.getInstance(context),
                                 new Random(),
                                 OnDeviceClassifier.getInstance(context),
-                                FlagsFactory.getFlags());
+                                FlagsFactory.getFlags(),
+                                Clock.SYSTEM_CLOCK);
             }
             return sSingleton;
         }
@@ -139,10 +138,12 @@ public class EpochManager implements Dumpable {
             return;
         }
 
-        // This cross db and java boundaries multiple times so we need to have a db transaction.
+        // This cross db and java boundaries multiple times, so we need to have a db transaction.
         db.beginTransaction();
+
         long currentEpochId = getCurrentEpochId();
         LogUtil.d("EpochManager.processEpoch for the current epochId %d", currentEpochId);
+
         try {
             // Step 1: Compute the UsageMap from the UsageHistory table.
             // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
@@ -198,7 +199,7 @@ public class EpochManager implements Dumpable {
             mTopicsDao.persistTopTopics(currentEpochId, topTopics);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
-            // Currently hard-code the taxonomyVersion and the modelVersion.
+            // Currently, hard-code the taxonomyVersion and the modelVersion.
             // Return returnedAppSdkTopics = Map<Pair<App, Sdk>, Topic>
             Map<Pair<String, String>, Topic> returnedAppSdkTopics =
                     computeReturnedAppSdkTopics(callersCanLearnMap, appSdksUsageMap, topTopics);
@@ -283,13 +284,70 @@ public class EpochManager implements Dumpable {
      *     empty string.
      */
     public void recordUsageHistory(String app, String sdk) {
-        long epochID = getCurrentEpochId();
+        long epochId = getCurrentEpochId();
         // TODO(b/223159123): Do we need to filter out this log in prod build?
         LogUtil.v(
                 "EpochManager.recordUsageHistory for current EpochId = %d for %s, %s",
-                epochID, app, sdk);
-        mTopicsDao.recordUsageHistory(epochID, app, sdk);
-        mTopicsDao.recordAppUsageHistory(epochID, app);
+                epochId, app, sdk);
+        mTopicsDao.recordUsageHistory(epochId, app, sdk);
+        mTopicsDao.recordAppUsageHistory(epochId, app);
+    }
+
+    /**
+     * Determine the learn-ability of a topic to a certain caller.
+     *
+     * @param topic the topic to check the learn-ability
+     * @param caller the caller to check whether it can learn the given topic
+     * @param callersCanLearnMap the map that stores topic->caller mapping which shows a topic can
+     *     be learnt by a caller
+     * @param topTopics a {@link List} of top topics
+     * @return a {@code boolean} that indicates if the caller can learn the topic
+     */
+    // TODO(b/234444036): Enable this feature for newly installed apps
+    // TODO(b/236834213): Create a class for Top Topics
+    public boolean isTopicLearnableByCaller(
+            @NonNull Topic topic,
+            @NonNull String caller,
+            @NonNull Map<Topic, Set<String>> callersCanLearnMap,
+            @NonNull List<Topic> topTopics) {
+        // If a topic is the random topic in top topic list, it can be learnt by any caller.
+        int index = topTopics.lastIndexOf(topic);
+        // Regular top topics are placed in the front of the list. Topics after are random topics.
+        if (index >= mFlags.getTopicsNumberOfTopTopics()) {
+            return true;
+        }
+
+        return callersCanLearnMap.containsKey(topic)
+                && callersCanLearnMap.get(topic).contains(caller);
+    }
+
+    /**
+     * Get the ID of current epoch.
+     *
+     * <p>The origin's timestamp is saved in the database. If the origin doesn't exist, it means the
+     * user never calls Topics API and the origin will be returned with -1. In this case, set
+     * current time as origin and persist it into database.
+     *
+     * @return a non-negative epoch ID of current epoch.
+     */
+    // TODO(b/237119788): Cache origin in cache manager.
+    // TODO(b/237119790): Set origin to sometime after midnight to get better maintenance timing.
+    public long getCurrentEpochId() {
+        long origin = mTopicsDao.retrieveEpochOrigin();
+        long currentTimeStamp = mClock.currentTimeMillis();
+        long epochJobPeriodsMs = mFlags.getTopicsEpochJobPeriodMs();
+
+        // If origin doesn't exist in database, set current timestamp as origin.
+        if (origin == -1) {
+            origin = currentTimeStamp;
+            mTopicsDao.persistEpochOrigin(origin);
+            LogUtil.d(
+                    "Origin isn't found! Set current time %s as origin.",
+                    Instant.ofEpochMilli(origin).toString());
+        }
+
+        LogUtil.v("Epoch length is  %d", epochJobPeriodsMs);
+        return (long) Math.floor((currentTimeStamp - origin) / (double) epochJobPeriodsMs);
     }
 
     // Return a Map from Topic to set of App or Sdk that can learn about that topic.
@@ -355,34 +413,30 @@ public class EpochManager implements Dumpable {
             @NonNull List<Topic> topTopics) {
         Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
 
-        for (Map.Entry<String, List<String>> app : appSdksUsageMap.entrySet()) {
+        for (Map.Entry<String, List<String>> appSdks : appSdksUsageMap.entrySet()) {
             Topic returnedTopic = selectRandomTopic(topTopics);
-            Set<String> callersCanLearnThisTopic = callersCanLearnMap.get(returnedTopic);
-            if (callersCanLearnThisTopic == null) {
-                continue;
-            }
+            String app = appSdks.getKey();
 
             // Check if the app can learn this topic.
-            if (callersCanLearnThisTopic.contains(app.getKey())) {
+            if (isTopicLearnableByCaller(returnedTopic, app, callersCanLearnMap, topTopics)) {
                 // The app calls Topics API directly. In this case, we set the sdk == empty string.
-                returnedAppSdkTopics.put(
-                        Pair.create(app.getKey(), /* empty Sdk */ ""), returnedTopic);
+                returnedAppSdkTopics.put(Pair.create(app, /* empty Sdk */ ""), returnedTopic);
                 // TODO(b/223159123): Do we need to filter out this log in prod build?
                 LogUtil.v(
                         "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned for"
                                 + " %s",
-                        returnedTopic, app.getKey());
+                        returnedTopic, app);
             }
 
             // Then check all SDKs of the app.
-            for (String sdk : app.getValue()) {
-                if (callersCanLearnThisTopic.contains(sdk)) {
-                    returnedAppSdkTopics.put(Pair.create(app.getKey(), sdk), returnedTopic);
+            for (String sdk : appSdks.getValue()) {
+                if (isTopicLearnableByCaller(returnedTopic, sdk, callersCanLearnMap, topTopics)) {
+                    returnedAppSdkTopics.put(Pair.create(app, sdk), returnedTopic);
                     // TODO(b/223159123): Do we need to filter out this log in prod build?
                     LogUtil.v(
                             "CacheManager.computeReturnedAppSdkTopics. Topic %s is returned"
                                     + " for %s, %s",
-                            returnedTopic, app.getKey(), sdk);
+                            returnedTopic, app, sdk);
                 }
             }
         }
@@ -422,21 +476,6 @@ public class EpochManager implements Dumpable {
             mTopicsDao.deleteDataOfOldEpochs(
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
-    }
-
-    // Return the current epochId.
-    // Each Epoch will have an Id. The first epoch has Id = 0.
-    // For Alpha 1, we assume a fixed origin epoch starting from
-    // Saturday, January 1, 2022 12:00:00 AM.
-    // Later, we will use per device starting origin.
-    @VisibleForTesting
-    public long getCurrentEpochId() {
-        // TODO(b/221463765): Don't use a fix epoch origin like this. This is for Alpha 1 only.
-        LogUtil.v("Epoch length is  %d", mFlags.getTopicsEpochJobPeriodMs());
-        return (long)
-                Math.floor(
-                        (System.currentTimeMillis() - ORIGIN_EPOCH_TIMESTAMP)
-                                / mFlags.getTopicsEpochJobPeriodMs());
     }
 
     @Override

@@ -58,19 +58,25 @@ public class CustomAudienceImplTest {
 
         mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE);
 
-        verify(mCustomAudienceDao).insertOrOverrideCustomAudience(VALID_DB_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceDao)
+                .insertOrOverwriteCustomAudience(
+                        VALID_DB_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
         verify(mClock).instant();
         verifyNoMoreInteractions(mClock, mCustomAudienceDao);
     }
 
     @Test
     public void testLeaveCustomAudience_runNormally() {
-        mImpl.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
-
-        verify(mCustomAudienceDao).deleteCustomAudienceByPrimaryKey(
-                CustomAudienceFixture.VALID_OWNER, CustomAudienceFixture.VALID_BUYER,
+        mImpl.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CustomAudienceFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME);
+
+        verify(mCustomAudienceDao)
+                .deleteAllCustomAudienceDataByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CustomAudienceFixture.VALID_BUYER,
+                        CustomAudienceFixture.VALID_NAME);
         verifyNoMoreInteractions(mClock, mCustomAudienceDao);
     }
 }
