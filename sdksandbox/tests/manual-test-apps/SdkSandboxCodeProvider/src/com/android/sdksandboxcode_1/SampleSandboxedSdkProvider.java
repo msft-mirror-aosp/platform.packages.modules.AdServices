@@ -40,9 +40,9 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
+            OnLoadSdkCallback callback) {
         mContext = context;
-        callback.onInitSdkFinished(null);
+        callback.onLoadSdkFinished(null);
     }
 
     @Override
