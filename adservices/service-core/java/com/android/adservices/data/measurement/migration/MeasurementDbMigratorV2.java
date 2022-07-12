@@ -189,7 +189,7 @@ public class MeasurementDbMigratorV2 extends AbstractMeasurementDbMigrator {
                         DROP_INDEXES_VER_2,
                         ALTER_STATEMENTS_VER_2,
                         CREATE_INDEXES_VER_2,
-                        new String[] {MeasurementTables.CREATE_TABLE_AGGREGATE_PAYLOAD})
+                        new String[] {MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT})
                 .flatMap(Arrays::stream)
                 .toArray(String[]::new);
     }

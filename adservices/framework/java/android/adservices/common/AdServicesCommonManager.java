@@ -18,11 +18,8 @@ package android.adservices.common;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.net.Uri;
-import android.os.RemoteException;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
 /**
@@ -58,35 +55,5 @@ public class AdServicesCommonManager {
             throw new IllegalStateException("Unable to find the service");
         }
         return service;
-    }
-
-    /**
-     * Delete a package's records.
-     * @hide
-     */
-    public void onPackageFullyRemoved(@NonNull Uri packageUri) {
-        final IAdServicesCommonService service = getService();
-        try {
-            service.onPackageFullyRemoved(packageUri);
-        } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-        } finally {
-            mAdServicesCommonServiceBinder.unbindFromService();
-        }
-    }
-
-    /**
-     * Notify adservices that this app was installed for attribution purposes.
-     * @param packageUri installed package URI.
-     */
-    public void onPackageAdded(@NonNull Uri packageUri) {
-        final IAdServicesCommonService service = getService();
-        try {
-            service.onPackageAdded(packageUri);
-        } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-        } finally {
-            mAdServicesCommonServiceBinder.unbindFromService();
-        }
     }
 }

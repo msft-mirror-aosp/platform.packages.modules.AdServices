@@ -22,7 +22,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,15 +37,12 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.topics_fragment, container, false);
-
-        setupViewModel(rootView);
-
-        return rootView;
+        return inflater.inflate(R.layout.topics_fragment, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        setupViewModel(view);
         initActionListeners();
     }
 
@@ -61,10 +57,27 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
     // (Action listeners for each item in the list will be handled by the adapter)
     private void setupViewModel(View rootView) {
         TopicsViewModel viewModel =
-                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
+                ((AdServicesSettingsActivity) requireActivity())
+                        .getViewModelProvider()
+                        .get(TopicsViewModel.class);
         RecyclerView recyclerView = rootView.findViewById(R.id.topics_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
+
+        View noTopicsText = rootView.findViewById(R.id.no_topics_text);
+        View emptyTopicsHiddenSection = rootView.findViewById(R.id.empty_topics_hidden_section);
+
+        viewModel
+                .getTopics()
+                .observe(
+                        getViewLifecycleOwner(),
+                        topicsList -> {
+                            noTopicsText.setVisibility(
+                                    topicsList.isEmpty() ? View.VISIBLE : View.GONE);
+                            emptyTopicsHiddenSection.setVisibility(
+                                    topicsList.isEmpty() ? View.GONE : View.VISIBLE);
+                            adapter.notifyDataSetChanged();
+                        });
     }
 }
