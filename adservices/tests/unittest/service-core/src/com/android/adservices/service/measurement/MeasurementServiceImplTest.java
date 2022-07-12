@@ -28,7 +28,6 @@ import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
-import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementErrorResponse;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
@@ -195,7 +194,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED);
+        assertThat(list.get(0)).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
     }
 
     @Test(expected = NullPointerException.class)

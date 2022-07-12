@@ -88,6 +88,25 @@ public class MeasurementManager {
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
 
+     /**
+     * This state indicates that Measurement APIs are unavailable.
+     * Invoking them will result in an {@link UnsupportedOperationException}.
+     */
+    public static final int MEASUREMENT_API_STATE_DISABLED = 0;
+
+    /**
+     * This state indicates that Measurement APIs are enabled.
+     */
+    public static final int MEASUREMENT_API_STATE_ENABLED = 1;
+
+    /** @hide */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(prefix = "MEASUREMENT_API_STATE_", value = {
+            MEASUREMENT_API_STATE_DISABLED,
+            MEASUREMENT_API_STATE_ENABLED,
+    })
+    public @interface MeasurementApiState {}
+
     private final Context mContext;
     private final ServiceBinder<IMeasurementService> mServiceBinder;
 
@@ -383,7 +402,7 @@ public class MeasurementManager {
         if (AdServicesApiUtil.getAdServicesApiState()
                 == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
             executor.execute(() -> {
-                callback.onResult(MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED);
+                callback.onResult(MEASUREMENT_API_STATE_DISABLED);
             });
             return;
         }
