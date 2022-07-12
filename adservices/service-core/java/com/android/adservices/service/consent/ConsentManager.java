@@ -26,11 +26,13 @@ import androidx.annotation.VisibleForTesting;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.topics.TopicsWorker;
 
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Manager to handle user's consent.
@@ -160,6 +162,11 @@ public class ConsentManager {
     @NonNull
     public void restoreConsentForTopic(@NonNull Topic topic) {
         mTopicsWorker.restoreConsentForTopic(topic);
+    }
+
+    /** Wipes out all the data gathered by Topics API but blocked topics. */
+    public void resetTopics() {
+        mTopicsWorker.clearAllTopicsData(List.of(TopicsTables.BlockedTopicsContract.TABLE));
     }
 
     /**
