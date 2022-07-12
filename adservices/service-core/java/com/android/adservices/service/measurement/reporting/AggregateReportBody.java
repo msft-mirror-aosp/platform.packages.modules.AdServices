@@ -28,43 +28,45 @@ import org.json.JSONObject;
  * Class for constructing the report body of an aggregate report.
  */
 public class AggregateReportBody {
-    private String mSourceSite;
     private String mAttributionDestination;
     private String mSourceRegistrationTime;
     private String mScheduledReportTime;
-    private String mPrivacyBudgetKey;
-    private String mVersion;
+    private String mApiVersion;
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
 
-    private static final String API_VERSION = "1";
-    private static final String SOURCE_SITE_KEY = "source_site";
-    private static final String ATTRIBUTION_DESTINATION = "attribution_destination";
-    private static final String SOURCE_REGISTRATION_TIME = "source_registration_time";
-    private static final String SHARED_INFO_KEY = "shared_info";
-    private static final String SCHEDULED_REPORT_TIME_KEY = "scheduled_report_time";
-    private static final String PRIVACY_BUDGET_KEY_KEY = "privacy_budget_key";
-    private static final String VERSION_KEY = "version";
-    private static final String REPORT_ID_KEY = "report_id";
-    private static final String REPORTING_ORIGIN_KEY = "reporting_origin";
-    private static final String AGGREGATION_SERVICE_PAYLOADS_KEY = "aggregation_service_payloads";
-    private static final String DEBUG_CLEARTEXT_PAYLOAD_KEY = "debug_cleartext_payload";
+    private static final String API_NAME = "attribution-reporting";
 
-    private AggregateReportBody() {
+    private interface PayloadBodyKeys {
+        String SHARED_INFO = "shared_info";
+        String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
+    }
 
-    };
+    private interface DebugCleartextPayloadKeys {
+        String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
+    }
+
+    private interface SharedInfoKeys {
+        String API_NAME = "api";
+        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String REPORT_ID = "report_id";
+        String REPORTING_ORIGIN = "reporting_origin";
+        String SCHEDULED_REPORT_TIME = "scheduled_report_time";
+        String SOURCE_REGISTRATION_TIME = "source_registration_time";
+        String API_VERSION = "version";
+    }
+
+    private AggregateReportBody() { };
 
     private AggregateReportBody(AggregateReportBody other) {
-        this.mSourceSite = other.mSourceSite;
-        this.mAttributionDestination = other.mAttributionDestination;
-        this.mSourceRegistrationTime = other.mSourceRegistrationTime;
-        this.mScheduledReportTime = other.mScheduledReportTime;
-        this.mPrivacyBudgetKey = other.mPrivacyBudgetKey;
-        this.mVersion = other.mVersion;
-        this.mReportId = other.mReportId;
-        this.mReportingOrigin = other.mReportingOrigin;
-        this.mDebugCleartextPayload = other.mDebugCleartextPayload;
+        mAttributionDestination = other.mAttributionDestination;
+        mSourceRegistrationTime = other.mSourceRegistrationTime;
+        mScheduledReportTime = other.mScheduledReportTime;
+        mApiVersion = other.mApiVersion;
+        mReportId = other.mReportId;
+        mReportingOrigin = other.mReportingOrigin;
+        mDebugCleartextPayload = other.mDebugCleartextPayload;
     }
 
     /**
@@ -72,15 +74,9 @@ public class AggregateReportBody {
      */
     public JSONObject toJson() throws JSONException {
         JSONObject aggregateBodyJson = new JSONObject();
-
-        aggregateBodyJson.put(SOURCE_SITE_KEY, this.mSourceSite);
-        aggregateBodyJson.put(ATTRIBUTION_DESTINATION, this.mAttributionDestination);
-        aggregateBodyJson.put(SOURCE_REGISTRATION_TIME, this.mSourceRegistrationTime);
-
-        aggregateBodyJson.put(SHARED_INFO_KEY, sharedInfoToJson().toString());
-
-        aggregateBodyJson.put(AGGREGATION_SERVICE_PAYLOADS_KEY, aggregationServicePayloadsToJson());
-
+        aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfoToJson().toString());
+        aggregateBodyJson.put(PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
+                aggregationServicePayloadsToJson());
         return aggregateBodyJson;
     }
 
@@ -91,11 +87,13 @@ public class AggregateReportBody {
     JSONObject sharedInfoToJson() throws JSONException {
         JSONObject sharedInfoJson = new JSONObject();
 
-        sharedInfoJson.put(SCHEDULED_REPORT_TIME_KEY, this.mScheduledReportTime);
-        sharedInfoJson.put(PRIVACY_BUDGET_KEY_KEY, this.mPrivacyBudgetKey);
-        sharedInfoJson.put(VERSION_KEY, API_VERSION);
-        sharedInfoJson.put(REPORT_ID_KEY, this.mReportId);
-        sharedInfoJson.put(REPORTING_ORIGIN_KEY, this.mReportingOrigin);
+        sharedInfoJson.put(SharedInfoKeys.API_NAME, API_NAME);
+        sharedInfoJson.put(SharedInfoKeys.ATTRIBUTION_DESTINATION, mAttributionDestination);
+        sharedInfoJson.put(SharedInfoKeys.REPORT_ID, mReportId);
+        sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, mReportingOrigin);
+        sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
+        sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, mSourceRegistrationTime);
+        sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 
         return sharedInfoJson;
     }
@@ -107,9 +105,9 @@ public class AggregateReportBody {
     JSONArray aggregationServicePayloadsToJson() throws JSONException {
         JSONArray aggregationServicePayloadsJson = new JSONArray();
 
-
         JSONObject debugCleartextPayloadJson = new JSONObject();
-        debugCleartextPayloadJson.put(DEBUG_CLEARTEXT_PAYLOAD_KEY, this.mDebugCleartextPayload);
+        debugCleartextPayloadJson.put(DebugCleartextPayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                mDebugCleartextPayload);
 
         aggregationServicePayloadsJson.put(debugCleartextPayloadJson);
 
@@ -124,14 +122,6 @@ public class AggregateReportBody {
 
         public Builder() {
             mBuilding = new AggregateReportBody();
-        }
-
-        /**
-         * The attribution source.
-         */
-        public @NonNull Builder setSourceSite(@NonNull String sourceSite) {
-            mBuilding.mSourceSite = sourceSite;
-            return this;
         }
 
         /**
@@ -159,18 +149,10 @@ public class AggregateReportBody {
         }
 
         /**
-         * The privacy budget key for the report.
-         */
-        public @NonNull Builder setPrivacyBudgetKey(@NonNull String privacyBudgetKey) {
-            mBuilding.mPrivacyBudgetKey = privacyBudgetKey;
-            return this;
-        }
-
-        /**
          * The version of the API used to generate the aggregate report.
          */
-        public @NonNull Builder setVersion(@NonNull String version) {
-            mBuilding.mVersion = version;
+        public @NonNull Builder setApiVersion(@NonNull String version) {
+            mBuilding.mApiVersion = version;
             return this;
         }
 
