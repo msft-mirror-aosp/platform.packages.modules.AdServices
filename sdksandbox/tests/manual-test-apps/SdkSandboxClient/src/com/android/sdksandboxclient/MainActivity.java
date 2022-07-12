@@ -17,12 +17,11 @@
 package com.android.sdksandboxclient;
 
 import android.app.Activity;
-import android.app.sdksandbox.IRemoteSdkCallback;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.os.Binder;
+import android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback;
+import android.app.sdksandbox.SdkSandboxManager.RequestSurfacePackageCallback;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.view.SurfaceControlViewHost;
 import android.view.SurfaceView;
@@ -30,14 +29,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.android.sdksandbox.SdkSandboxServiceImpl;
-
 public class MainActivity extends Activity {
+    private static final String SDK_NAME = "com.android.sdksandboxcode";
 
     private boolean mSdkLoaded = false;
     private SdkSandboxManager mSdkSandboxManager;
 
-    private IBinder mToken;
     private Button mLoadButton;
     private Button mRenderButton;
     private SurfaceView mRenderedView;
@@ -59,16 +56,44 @@ public class MainActivity extends Activity {
         registerLoadSurfacePackageButton();
     }
 
+    private void registerLoadSdkProviderButton() {
+        mLoadButton.setOnClickListener(
+                v -> {
+                    Bundle params = new Bundle();
+                    final LoadSdkCallbackImpl callback = new LoadSdkCallbackImpl();
+                    mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
+                });
+    }
 
-    private class RemoteSdkCallbackImpl extends IRemoteSdkCallback.Stub {
+    private void registerLoadSurfacePackageButton() {
+        mRenderButton.setOnClickListener(
+                v -> {
+                    if (mSdkLoaded) {
+                        new Handler(Looper.getMainLooper())
+                                .post(
+                                        () ->
+                                                mSdkSandboxManager.requestSurfacePackage(
+                                                        SDK_NAME,
+                                                        getDisplay().getDisplayId(),
+                                                        mRenderedView.getWidth(),
+                                                        mRenderedView.getHeight(),
+                                                        new Bundle(),
+                                                        Runnable::run,
+                                                        new RequestSurfacePackageCallbackImpl()));
+                    } else {
+                        makeToast("Sdk is not loaded");
+                    }
+                });
+    }
 
-        private RemoteSdkCallbackImpl() {
-        }
+    private void makeToast(String message) {
+        runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
+    }
 
+    private class LoadSdkCallbackImpl implements LoadSdkCallback {
         @Override
-        public void onLoadSdkSuccess(IBinder token, Bundle bundle) {
+        public void onLoadSdkSuccess(Bundle bundle) {
             mSdkLoaded = true;
-            mToken = token;
             makeToast("Loaded successfully!");
         }
 
@@ -76,7 +101,9 @@ public class MainActivity extends Activity {
         public void onLoadSdkFailure(int errorCode, String errorMessage) {
             makeToast("Failed: " + errorMessage);
         }
+    }
 
+    private class RequestSurfacePackageCallbackImpl implements RequestSurfacePackageCallback {
         @Override
         public void onSurfacePackageReady(SurfaceControlViewHost.SurfacePackage surfacePackage,
                 int i, Bundle bundle) {
@@ -92,35 +119,4 @@ public class MainActivity extends Activity {
             makeToast("Failed: " + errorMessage);
         }
     }
-
-
-    private void registerLoadSdkProviderButton() {
-        mLoadButton.setOnClickListener(v -> {
-            Bundle params = new Bundle();
-            params.putString(SdkSandboxServiceImpl.SDK_PROVIDER_KEY,
-                    "com.android.sdksandboxcode.SampleSandboxedSdkProvider");
-            params.putInt(SdkSandboxServiceImpl.WIDTH_KEY, mRenderedView.getWidth());
-            params.putInt(SdkSandboxServiceImpl.HEIGHT_KEY, mRenderedView.getHeight());
-            final RemoteSdkCallbackImpl callback = new RemoteSdkCallbackImpl();
-            mSdkSandboxManager.loadSdk(
-                    "com.android.sdksandboxcode.v1",  params, callback);
-        });
-    }
-
-    private void registerLoadSurfacePackageButton() {
-        mRenderButton.setOnClickListener(v -> {
-            if (mSdkLoaded) {
-                new Handler(Looper.getMainLooper()).post(
-                        () -> mSdkSandboxManager.requestSurfacePackage(
-                                mToken, new Binder(), getDisplay().getDisplayId(), new Bundle()));
-            } else {
-                makeToast("Sdk is not loaded");
-            }
-        });
-    }
-
-    private void makeToast(String message) {
-        runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
-    }
-
 }
