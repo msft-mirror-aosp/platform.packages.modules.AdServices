@@ -1,0 +1,61 @@
+{
+  "description": "One source with filter data. Trigger also has filters. Trigger's top level filters don't match with source's, so no report is generated.",
+  "input": {
+    "sources": [{
+      "registration_request": {
+        "attribution_src_url": "https://www.ad-tech1.com",
+        "source_origin": "android-app://example.1s1.com",
+        "source_type": "event",
+        "registrant": "example.1s1.com"
+      },
+      "responses": [{
+        "url": "https://www.ad-tech1.com",
+        "response": {
+          "Attribution-Reporting-Register-Source": {
+            "source_event_id": "1",
+            "destination": "android-app://example.2d1.com",
+            "priority": "100",
+            "filter_data": {
+              "key_1": ["value_11", "value_12"],
+              "key_2": ["value_21", "value_22"]
+            }
+          },
+          "Attribution-Reporting-Register-Aggregatable-Source": null,
+          "Location": null,
+          "Attribution-Reporting-Redirect": null
+        }
+      }],
+      "timestamp": "800000000001"
+    }],
+    "triggers": [
+      {
+        "registration_request": {
+          "attribution_src_url": "https://www.ad-tech1.com",
+          "destination_origin": "android-app://example.2d1.com",
+          "registrant": "example.2d1.com"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.com",
+          "response": {
+            "Attribution-Reporting-Register-Event-Trigger": [{
+              "trigger_data": "1",
+              "priority": "101"
+            }],
+            "Attribution-Reporting-Register-Aggregatable-Trigger-Data": null,
+            "Location": null,
+            "Attribution-Reporting-Redirect": null,
+            "Attribution-Reporting-Filters": [{
+                "key_1": ["value_11_x", "value_12_x"],
+                "key_2": ["value_21_x", "value_22_x"]
+            }]
+          }
+        }],
+        "timestamp": "800604800000"
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [],
+    "aggregatable_results": []
+  }
+}
