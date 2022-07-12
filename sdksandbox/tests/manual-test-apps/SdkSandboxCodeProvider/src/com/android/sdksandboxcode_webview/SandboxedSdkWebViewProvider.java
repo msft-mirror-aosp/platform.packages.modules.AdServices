@@ -33,8 +33,11 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
     private SandboxedSdkContext mContext;
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            InitSdkCallback callback) {
         mContext = context;
         callback.onInitSdkFinished(null);
     }
