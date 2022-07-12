@@ -21,15 +21,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
-/** Fragment for the topics view of the AdServices Settings App. */
+/** Fragment for the blocked topics view of the AdServices Settings App. */
 public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
 
     @Override
@@ -48,10 +48,20 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
      */
     private void setupViewModel(View rootView) {
         TopicsViewModel viewModel =
-                new ViewModelProvider(requireActivity()).get(TopicsViewModel.class);
+                ((AdServicesSettingsActivity) requireActivity())
+                        .getViewModelProvider()
+                        .get(TopicsViewModel.class);
         RecyclerView recyclerView = rootView.findViewById(R.id.blocked_topics_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
+
+        viewModel
+                .getBlockedTopics()
+                .observe(
+                        getViewLifecycleOwner(),
+                        topicsList -> {
+                            adapter.notifyDataSetChanged();
+                        });
     }
 }

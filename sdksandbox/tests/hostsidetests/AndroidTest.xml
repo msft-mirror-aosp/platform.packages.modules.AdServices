@@ -15,14 +15,33 @@
   ~ limitations under the License.
   -->
 <configuration description="Runs sdk sandbox host tests">
-    <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="test-suite-tag" value="SdkSandboxHostTest" />
 
-    <system_checker class="com.android.tradefed.suite.checker.UserChecker" >
-        <option name="user-cleanup" value="true" />
-    </system_checker>
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="TestCodeProvider.apk" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="TestCodeProvider2.apk" />
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="SdkSandboxTestApp.apk" />
+    </target_preparer>
 
     <test class="com.android.tradefed.testtype.HostTest" >
         <option name="class"
                 value="com.android.tests.sdksandbox.host.SdkSandboxHostTest" />
     </test>
+
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
+        <option name="mainline-module-package-name" value="com.google.android.adservices" />
+    </object>
+
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.adservices.apex" />
 </configuration>

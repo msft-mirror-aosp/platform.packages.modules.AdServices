@@ -71,6 +71,7 @@ public final class TopicsDaoTest {
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.EpochOriginContract.TABLE);
     }
 
     @Test
@@ -352,6 +353,51 @@ public final class TopicsDaoTest {
     }
 
     @Test
+    public void testRetrieveDistinctAppsFromTable() {
+        // Persist usages of different apps in different epochs
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app1");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 2L, "app1");
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 2L, "app3");
+
+        assertThat(
+                        mTopicsDao.retrieveDistinctAppsFromTable(
+                                TopicsTables.AppUsageHistoryContract.TABLE,
+                                TopicsTables.AppUsageHistoryContract.APP))
+                .isEqualTo(Set.of("app1", "app2", "app3"));
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+
+        // Persist entries into ReturnedTopic Table
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch1 = new HashMap<>();
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", ""), topic1);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", "sdk1"), topic1);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", "sdk2"), topic2);
+
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", ""), topic1);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app3", ""), topic2);
+
+        // Setup for EpochId 2
+        Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch2 = new HashMap<>();
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", ""), topic1);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", "sdk1"), topic1);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", "sdk2"), topic2);
+
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app2", ""), topic1);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app3", ""), topic2);
+
+        mTopicsDao.persistReturnedAppTopicsMap(/* epoch Id */ 1L, returnedAppSdkTopicsForEpoch1);
+        mTopicsDao.persistReturnedAppTopicsMap(/* epoch Id */ 2L, returnedAppSdkTopicsForEpoch2);
+
+        assertThat(
+                        (mTopicsDao.retrieveDistinctAppsFromTable(
+                                TopicsTables.ReturnedTopicContract.TABLE,
+                                TopicsTables.ReturnedTopicContract.APP)))
+                .isEqualTo(Set.of("app1", "app2", "app3"));
+    }
+
+    @Test
     public void testPersistCallerCanLearnTopics() {
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -544,7 +590,7 @@ public final class TopicsDaoTest {
         mTopicsDao.removeBlockedTopic(topicToBlock);
         blockedTopics = mTopicsDao.retrieveAllBlockedTopics();
 
-        // Make sure that blocked topics table is empty.
+        // Make sure that blockedTopics table is empty.
         assertThat(blockedTopics).isEmpty();
     }
 
@@ -666,5 +712,164 @@ public final class TopicsDaoTest {
 
         mTopicsDao.deleteAllTopicsTables(Collections.emptyList());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+    }
+
+    @Test
+    public void testDeleteAppFromTable() {
+        // Test with AppClassificationTopics Contract
+        final long epochId = 1L;
+
+        final String app1 = "app1";
+        final String app2 = "app2";
+        final String app3 = "app3";
+        final String sdk = "sdk";
+
+        // Initialize appClassificationTopicsMap and topics
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+
+        appClassificationTopicsMap.put(app1, List.of(topic1, topic2));
+        appClassificationTopicsMap.put(app2, List.of(topic1));
+        appClassificationTopicsMap.put(app3, List.of(topic1));
+        mTopicsDao.persistAppClassificationTopics(epochId, appClassificationTopicsMap);
+
+        // Justify the status before erasing data
+        // MapEpoch1: app1 -> topic1, topic2; app2 -> topic1; app3 -> topic1
+        Map<String, List<Topic>> expectedTopicsMap = new HashMap<>();
+        expectedTopicsMap.put(app1, List.of(topic1, topic2));
+        expectedTopicsMap.put(app2, List.of(topic1));
+        expectedTopicsMap.put(app3, List.of(topic1));
+
+        assertThat(mTopicsDao.retrieveAppClassificationTopics(epochId))
+                .isEqualTo(expectedTopicsMap);
+
+        // Erase Data for app1, app2
+        mTopicsDao.deleteAppFromTable(
+                TopicsTables.AppClassificationTopicsContract.TABLE,
+                TopicsTables.AppClassificationTopicsContract.APP,
+                List.of(app1, app2));
+
+        expectedTopicsMap.remove(app1);
+        expectedTopicsMap.remove(app2);
+        assertThat(mTopicsDao.retrieveAppClassificationTopics(epochId))
+                .isEqualTo(expectedTopicsMap);
+
+        // Verify ReturnedTopicContract
+        Map<Pair<String, String>, Topic> returnedAppSdkTopics = new HashMap<>();
+        returnedAppSdkTopics.put(Pair.create(app1, sdk), topic1);
+        returnedAppSdkTopics.put(Pair.create(app1, ""), topic2);
+        returnedAppSdkTopics.put(Pair.create(app2, sdk), topic1);
+        mTopicsDao.persistReturnedAppTopicsMap(epochId, returnedAppSdkTopics);
+
+        mTopicsDao.deleteAppFromTable(
+                TopicsTables.ReturnedTopicContract.TABLE,
+                TopicsTables.ReturnedTopicContract.APP,
+                List.of(app1, app2));
+
+        assertThat(mTopicsDao.retrieveReturnedTopics(epochId, /* numberOfLookBackEpochs */ 1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testDeleteAppFromTable_nullArguments() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteAppFromTable(
+                                /* tableName */ null,
+                                TopicsTables.AppClassificationTopicsContract.APP,
+                                List.of("app ")));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteAppFromTable(
+                                TopicsTables.AppClassificationTopicsContract.TABLE,
+                                /* appColumnName */ null,
+                                List.of("app ")));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mTopicsDao.deleteAppFromTable(
+                                TopicsTables.AppClassificationTopicsContract.TABLE,
+                                TopicsTables.AppClassificationTopicsContract.APP,
+                                /* app */ null));
+    }
+
+    @Test
+    public void testDeleteAppFromTable_mismatchedTableAndColumnName() {
+        // Test with AppClassificationTopics Contract
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        final long epochId1 = 1L;
+        final String app1 = "app1";
+
+        Topic topic1 = Topic.create(/* topic */ 1, taxonomyVersion, modelVersion);
+
+        // Initialize appClassificationTopicsMap and topics
+        Map<String, List<Topic>> appClassificationTopicsMap1 = new HashMap<>();
+
+        // Insert epoch 1 with app1
+        appClassificationTopicsMap1.put(app1, List.of(topic1));
+
+        mTopicsDao.persistAppClassificationTopics(epochId1, appClassificationTopicsMap1);
+
+        // Justify the status before erasing data
+        // MapEpoch1: app1 -> topic1
+        Map<String, List<Topic>> expectedTopicsMap1 = new HashMap<>();
+        expectedTopicsMap1.put(app1, List.of(topic1));
+
+        Map<String, List<Topic>> topicsMapFromDb1 =
+                mTopicsDao.retrieveAppClassificationTopics(epochId1);
+        assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
+
+        // To Test a table that doesn't have "app" column
+        mTopicsDao.deleteAppFromTable(
+                TopicsTables.TaxonomyContract.TABLE,
+                TopicsTables.AppClassificationTopicsContract.APP,
+                List.of(app1));
+        // Nothing will happen as no satisfied entry to delete
+        assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
+
+        // To Test table with wrong app column name
+        mTopicsDao.deleteAppFromTable(
+                TopicsTables.AppClassificationTopicsContract.TABLE,
+                "wrong app column name",
+                List.of(app1));
+        // Nothing will happen as no satisfied entry to delete
+        assertThat(topicsMapFromDb1).isEqualTo(expectedTopicsMap1);
+    }
+
+    @Test
+    public void testPersistAndRetrieveEpochOrigin() {
+        final long epochOrigin = 1234567890L;
+
+        mTopicsDao.persistEpochOrigin(epochOrigin);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin);
+    }
+
+    // TODO(b/230669931): Add test to check SQLException when it's enabled in TopicsDao.
+    @Test
+    public void testPersistAndRetrieveEpochOrigin_multipleInsertion() {
+        final long epochOrigin1 = 1L;
+        final long epochOrigin2 = 2L;
+
+        mTopicsDao.persistEpochOrigin(epochOrigin1);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
+
+        // Persist a different origin when there is an existing origin will not change the existing
+        // origin.
+        mTopicsDao.persistEpochOrigin(epochOrigin2);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
+
+        // Persist same origin
+        mTopicsDao.persistEpochOrigin(epochOrigin1);
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(epochOrigin1);
+    }
+
+    @Test
+    public void testPersistAndRetrieveEpochOrigin_EmptyTable() {
+        // Should return -1 if no origin is persisted
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(-1);
     }
 }
