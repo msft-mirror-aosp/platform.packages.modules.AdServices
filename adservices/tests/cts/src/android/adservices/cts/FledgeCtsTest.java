@@ -67,13 +67,16 @@ public class FledgeCtsTest {
     private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URL_PREFIX = "/buyer/bidding/logic/";
 
+    private static final String SELLER = "developer.android.com";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                    .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
+                    .setSeller(SELLER)
+                    .setDecisionLogicUrl(
+                            Uri.parse("https://" + SELLER + "/" + SELLER_DECISION_LOGIC_URL))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
