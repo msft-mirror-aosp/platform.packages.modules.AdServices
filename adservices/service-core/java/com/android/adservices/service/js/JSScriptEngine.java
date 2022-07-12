@@ -25,19 +25,23 @@ import android.content.Context;
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ClosingFuture;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.chromium.android_webview.js_sandbox.client.AwJsIsolate;
 import org.chromium.android_webview.js_sandbox.client.AwJsSandbox;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -56,12 +60,12 @@ public class JSScriptEngine {
     public static final String ENTRY_POINT_FUNC_NAME = "__rb_entry_point";
     public static final String TAG = JSScriptEngine.class.getSimpleName();
 
-    private final JsSandboxProvider mJsSandboxProvider;
-
     @SuppressLint("StaticFieldLeak")
     private static JSScriptEngine sSingleton;
 
     private final Context mContext;
+    private final JsSandboxProvider mJsSandboxProvider;
+    private final ListeningExecutorService mExecutorService;
     private final Profiler mProfiler;
 
     /**
@@ -156,7 +160,8 @@ public class JSScriptEngine {
         this(
                 context,
                 new JsSandboxProvider(Profiler.createNoOpInstance(TAG)),
-                Profiler.createNoOpInstance(TAG));
+                Profiler.createNoOpInstance(TAG),
+                AdServicesExecutors.getLightWeightExecutor());
     }
 
     /** @return JSScriptEngine instance */
@@ -164,16 +169,38 @@ public class JSScriptEngine {
         synchronized (JSScriptEngine.class) {
             if (sSingleton == null) {
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
-                sSingleton = new JSScriptEngine(context, new JsSandboxProvider(profiler), profiler);
+                sSingleton =
+                        new JSScriptEngine(
+                                context,
+                                new JsSandboxProvider(profiler),
+                                profiler,
+                                // There is no blocking call or IO code in the service logic
+                                AdServicesExecutors.getLightWeightExecutor());
             }
 
             return sSingleton;
         }
     }
 
+    /** @return JSScriptEngine instance */
     @VisibleForTesting
-    public static JSScriptEngine getInstanceForTesting(Context context, Profiler profiler) {
-        return new JSScriptEngine(context, new JsSandboxProvider(profiler), profiler);
+    public static JSScriptEngine getInstanceForTesting(
+            @NonNull Context context, @NonNull Profiler profiler) {
+        return new JSScriptEngine(
+                context,
+                new JsSandboxProvider(profiler),
+                profiler,
+                AdServicesExecutors.getLightWeightExecutor());
+    }
+
+    /** @return JSScriptEngine instance */
+    @VisibleForTesting
+    public static JSScriptEngine getInstanceForTesting(
+            @NonNull Context context,
+            @NonNull JsSandboxProvider jsSandboxProvider,
+            @NonNull Profiler profiler) {
+        return new JSScriptEngine(
+                context, jsSandboxProvider, profiler, AdServicesExecutors.getLightWeightExecutor());
     }
 
     @VisibleForTesting
@@ -181,12 +208,15 @@ public class JSScriptEngine {
     JSScriptEngine(
             @NonNull Context context,
             @NonNull JsSandboxProvider jsSandboxProvider,
-            Profiler profiler) {
+            @NonNull Profiler profiler,
+            @NonNull ListeningExecutorService executorService) {
         this.mContext = context;
         this.mJsSandboxProvider = jsSandboxProvider;
         this.mProfiler = profiler;
 
         // Forcing initialization of WebView.
+        this.mExecutorService = executorService;
+        // Forcing initialization of WebView
         jsSandboxProvider.getFutureInstance(mContext);
     }
 
@@ -217,11 +247,35 @@ public class JSScriptEngine {
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String entryFunctionName) {
+
+        return ClosingFuture.from(mJsSandboxProvider.getFutureInstance(mContext))
+                .transformAsync(
+                        (closer, jsSandbox) -> {
+                            StopWatch isolateStopWatch =
+                                    mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+                            AwJsIsolate jsIsolate = createIsolate(jsSandbox);
+                            isolateStopWatch.stop();
+                            closer.eventuallyClose(
+                                    new CloseableIsolateWrapper(jsIsolate), mExecutorService);
+                            return ClosingFuture.from(
+                                    evaluate(jsIsolate, jsScript, args, entryFunctionName));
+                        },
+                        mExecutorService)
+                .finishToFuture();
+    }
+
+    @NonNull
+    private ListenableFuture<String> evaluate(
+            @NonNull AwJsIsolate jsIsolate,
+            @NonNull String jsScript,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String entryFunctionName) {
+        Objects.requireNonNull(jsIsolate);
         Objects.requireNonNull(jsScript);
         Objects.requireNonNull(args);
         Objects.requireNonNull(entryFunctionName);
 
-        LogUtil.d(TAG, "Evaluating JS script on thread %s", Thread.currentThread().getName());
+        LogUtil.d("Evaluating JS script on thread %s", Thread.currentThread().getName());
         String entryPointCall = callEntryPoint(args, entryFunctionName);
 
         String fullScript = jsScript + "\n" + entryPointCall;
@@ -229,68 +283,33 @@ public class JSScriptEngine {
 
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mJsSandboxProvider
-                            .getFutureInstance(mContext)
-                            .addCallback(
-                                    new FutureCallback<AwJsSandbox>() {
-                                        @Override
-                                        public void onSuccess(AwJsSandbox jsSandbox) {
-                                            try {
-                                                StopWatch isolateStopWatch =
-                                                        mProfiler.start(
-                                                                JSScriptEngineLogConstants
-                                                                        .ISOLATE_CREATE_TIME);
-                                                AwJsIsolate jsIsolate = createIsolate(jsSandbox);
-                                                isolateStopWatch.stop();
+                    try {
+                        StopWatch jsExecutionStopWatch =
+                                mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
+                        jsIsolate.evaluateJavascript(
+                                fullScript,
+                                new AwJsIsolate.ExecutionCallback() {
+                                    @Override
+                                    public void reportResult(String result) {
+                                        jsExecutionStopWatch.stop();
+                                        completer.set(result);
+                                    }
 
-                                                StopWatch jsExecutionStopWatch =
-                                                        mProfiler.start(
-                                                                JSScriptEngineLogConstants
-                                                                        .JAVA_EXECUTION_TIME);
-                                                evaluateJavascript(
-                                                        jsIsolate,
-                                                        completer,
-                                                        fullScript,
-                                                        jsExecutionStopWatch);
-                                            } catch (RuntimeException isolateCreationFailure) {
-                                                LogUtil.w(
-                                                        "Error trying to create an isolate, it"
-                                                            + " looks like the WebView process is"
-                                                            + " not available.",
-                                                        isolateCreationFailure);
-                                                completer.setException(isolateCreationFailure);
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onFailure(Throwable t) {
-                                            LogUtil.w("Failure creating AwJsSandbox", t);
-                                            completer.setException(
-                                                    new JSExecutionException(
-                                                            "Failed creating AwJsSandbox", t));
-                                        }
-                                    },
-                                    // Using directExecutor() since this is a short, light task.
-                                    directExecutor());
-
+                                    @Override
+                                    public void reportError(String error) {
+                                        jsExecutionStopWatch.stop();
+                                        completer.setException(new JSExecutionException(error));
+                                    }
+                                });
+                    } catch (RuntimeException e) {
+                        completer.setException(
+                                new JSExecutionException(
+                                        "Exception while evaluating JS in WebView ", e));
+                    }
                     // This value is used only for debug purposes: it will be used in toString()
                     // of returned future or error cases.
                     return "AwJsSandbox.addCallback operation";
                 });
-    }
-
-    private void evaluateJavascript(
-            AwJsIsolate jsIsolate,
-            CallbackToFutureAdapter.Completer<String> completer,
-            String fullScript,
-            StopWatch jsExecutionStopWatch) {
-        ExecutionCallback callback =
-                new ExecutionCallback(jsIsolate, completer, jsExecutionStopWatch);
-        try {
-            jsIsolate.evaluateJavascript(fullScript, callback);
-        } catch (RuntimeException e) {
-            callback.reportError("Exception while evaluating JS in WebView: " + e);
-        }
     }
 
     /**
@@ -343,32 +362,27 @@ public class JSScriptEngine {
         return resultBuilder.toString();
     }
 
-    private static class ExecutionCallback implements AwJsIsolate.ExecutionCallback {
-        private AwJsIsolate mJsIsolate;
-        private CallbackToFutureAdapter.Completer<String> mFuture;
-        private StopWatch mJsExecutionStopWatch;
+    /**
+     * Wrapper class required to convert an {@link java.lang.AutoCloseable} {@link AwJsIsolate} into
+     * a {@link Closeable} type.
+     */
+    private static class CloseableIsolateWrapper implements Closeable {
+        @NonNull final AwJsIsolate mIsolate;
 
-        ExecutionCallback(
-                AwJsIsolate jsIsolate,
-                CallbackToFutureAdapter.Completer<String> future,
-                StopWatch jsExecutionStopWatch) {
-            this.mJsIsolate = jsIsolate;
-            this.mFuture = future;
-            this.mJsExecutionStopWatch = jsExecutionStopWatch;
+        CloseableIsolateWrapper(@NonNull AwJsIsolate isolate) {
+            Objects.requireNonNull(isolate);
+            mIsolate = isolate;
         }
 
         @Override
-        public void reportResult(String result) {
-            mFuture.set(result);
-            mJsIsolate.close();
-            mJsExecutionStopWatch.stop();
-        }
-
-        @Override
-        public void reportError(String error) {
-            mFuture.setException(new JSExecutionException(error));
-            mJsIsolate.close();
-            mJsExecutionStopWatch.stop();
+        public void close() {
+            LogUtil.d("Closing WebView isolate");
+            // Closing the isolate will also cause the thread in WebView to be terminated if
+            // still running.
+            // There is no need to verify if ISOLATE_TERMINATION is supported by WebView
+            // because there is no new API but just new capability on the WebView side for
+            // existing API.
+            mIsolate.close();
         }
     }
 }
