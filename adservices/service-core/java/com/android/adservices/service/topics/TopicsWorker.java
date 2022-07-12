@@ -22,6 +22,7 @@ import android.adservices.topics.GetTopicsResult;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
+import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -60,17 +61,20 @@ public class TopicsWorker {
     private final EpochManager mEpochManager;
     private final CacheManager mCacheManager;
     private final BlockedTopicsManager mBlockedTopicsManager;
+    private final AppUpdateManager mAppUpdateManager;
     private final Flags mFlags;
 
-    @VisibleForTesting
-    TopicsWorker(
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
+    public TopicsWorker(
             @NonNull EpochManager epochManager,
             @NonNull CacheManager cacheManager,
             @NonNull BlockedTopicsManager blockedTopicsManager,
+            @NonNull AppUpdateManager appUpdateManager,
             Flags flags) {
         mEpochManager = epochManager;
         mCacheManager = cacheManager;
         mBlockedTopicsManager = blockedTopicsManager;
+        mAppUpdateManager = appUpdateManager;
         mFlags = flags;
     }
 
@@ -90,6 +94,7 @@ public class TopicsWorker {
                                     EpochManager.getInstance(context),
                                     CacheManager.getInstance(context),
                                     BlockedTopicsManager.getInstance(context),
+                                    AppUpdateManager.getInstance(context),
                                     FlagsFactory.getFlags());
                 }
             }
@@ -273,6 +278,38 @@ public class TopicsWorker {
             LogUtil.v(
                     "All derived data are cleaned for Topics API except: %s",
                     tablesToExclude.toString());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Reconcile app installation info
+     *
+     * @param context the context
+     */
+    public void reconcileUninstalledApps(Context context) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.reconcileUninstalledApps(context);
+
+            loadCache();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Delete derived data for a specific app
+     *
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     */
+    public void deletePackageData(@NonNull Uri packageUri) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.deleteAppDataByUri(packageUri);
+
+            loadCache();
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

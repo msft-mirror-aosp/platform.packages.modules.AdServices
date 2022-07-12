@@ -14,16 +14,31 @@
  * limitations under the License.
  */
 package android.adservices.topics;
+
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
+
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
+import android.content.Context;
+
 /**
  * Get Topics Request.
  */
 public class GetTopicsRequest {
+    private final Context mContext;
     private final String mSdkName;
-    private GetTopicsRequest(@NonNull String sdkName) {
+
+    private GetTopicsRequest(@NonNull Context context, @NonNull String sdkName) {
+        mContext = context;
         mSdkName = sdkName;
     }
+
+    /** Get the Context. */
+    @NonNull
+    public Context getContext() {
+        return mContext;
+    }
+
     /**
      * Get the Sdk Name.
      */
@@ -31,12 +46,18 @@ public class GetTopicsRequest {
     public String getSdkName() {
         return mSdkName;
     }
+
     /**
      * Builder for {@link GetTopicsRequest} objects.
      */
     public static final class Builder {
+        private final Context mContext;
         private String mSdkName;
-        public Builder() {}
+
+        public Builder(@NonNull Context context) {
+            mContext = context;
+        }
+
         /**
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
          * set this field.
@@ -47,14 +68,35 @@ public class GetTopicsRequest {
             mSdkName = sdkName;
             return this;
         }
+
         /** Builds a {@link GetTopicsRequest} instance. */
         public @NonNull GetTopicsRequest build() {
-            if (mSdkName == null) {
-                // When Sdk name is not set, we assume the App calls the Topics API directly.
-                // We set the Sdk name to empty to mark this.
-                mSdkName = EMPTY_SDK;
+            if (null == mContext) {
+                throw new IllegalArgumentException("Must set the context for GetTopicsRequest");
             }
-            return new GetTopicsRequest(mSdkName);
+
+            // First check if context is SandboxedSdkContext or not
+            if (mContext instanceof SandboxedSdkContext) {
+                String sdkNameFromSandboxedContext = ((SandboxedSdkContext) mContext).getSdkName();
+                if (null == sdkNameFromSandboxedContext || sdkNameFromSandboxedContext.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "sdkNameFromSandboxedContext should not be null or empty");
+                }
+                if (mSdkName != null) {
+                    throw new IllegalArgumentException(
+                            "When calling PPAPI from Sandbox, caller should not set mSdkName");
+                }
+                mSdkName = sdkNameFromSandboxedContext;
+            } else { // This is the case without the Sandbox.
+                // Check if the caller set the mSdkName
+                if (mSdkName == null) {
+                    // When Sdk name is not set, we assume the App calls the Topics API directly.
+                    // We set the Sdk name to empty to mark this.
+                    mSdkName = EMPTY_SDK;
+                }
+            }
+
+            return new GetTopicsRequest(mContext, mSdkName);
         }
     }
 }

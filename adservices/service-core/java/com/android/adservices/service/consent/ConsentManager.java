@@ -26,11 +26,13 @@ import androidx.annotation.VisibleForTesting;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.topics.TopicsWorker;
 
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Manager to handle user's consent.
@@ -41,6 +43,7 @@ public class ConsentManager {
     public static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     private static final String ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT =
             "getConsent method failed. Revoked consent is returned as fallback.";
+    private static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
     private static final String CONSENT_ALREADY_INITIALIZED_KEY = "CONSENT-ALREADY-INITIALIZED";
     private static final String CONSENT_KEY = "CONSENT";
     private static final String ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT =
@@ -159,6 +162,33 @@ public class ConsentManager {
     @NonNull
     public void restoreConsentForTopic(@NonNull Topic topic) {
         mTopicsWorker.restoreConsentForTopic(topic);
+    }
+
+    /** Wipes out all the data gathered by Topics API but blocked topics. */
+    public void resetTopics() {
+        mTopicsWorker.clearAllTopicsData(List.of(TopicsTables.BlockedTopicsContract.TABLE));
+    }
+
+    /**
+     * Saves information to the storage that notification was displayed for the first time to the
+     * user.
+     */
+    public void recordNotificationDisplayed() {
+        try {
+            // TODO(b/229725886): add metrics / logging
+            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        } catch (IOException e) {
+            LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+        }
+    }
+
+    /**
+     * Returns information whether Consent Notification was displayed or not.
+     *
+     * @return true if Consent Notification was displayed, otherwise false.
+     */
+    public Boolean wasNotificationDisplayed() {
+        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
     }
 
     private void setConsent(AdServicesApiConsent state)
