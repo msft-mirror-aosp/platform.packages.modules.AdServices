@@ -33,10 +33,13 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
     private SandboxedSdkContext mContext;
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            OnLoadSdkCallback callback) {
         mContext = context;
-        callback.onInitSdkFinished(null);
+        callback.onLoadSdkFinished(null);
     }
 
     @Override
@@ -51,10 +54,9 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
             return null;
         }
     }
-    @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
 
+    @Override
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     private class TestWebView {
 

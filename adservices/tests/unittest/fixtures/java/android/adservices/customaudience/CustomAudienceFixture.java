@@ -47,11 +47,16 @@ public final class CustomAudienceFixture {
             VALID_DELAYED_ACTIVATION_TIME.plusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEFORE_NOW_EXPIRATION_TIME =
             VALID_ACTIVATION_TIME.minusSeconds(DAY_IN_SECONDS);
+    public static final Instant INVALID_NOW_EXPIRATION_TIME =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEFORE_DELAYED_EXPIRATION_TIME =
             VALID_DELAYED_ACTIVATION_TIME.minusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEYOND_MAX_EXPIRATION_TIME =
             VALID_ACTIVATION_TIME.plus(DBCustomAudience.getMaxExpireIn().multipliedBy(2));
-
+    public static final Instant VALID_LAST_UPDATE_TIME_24_HRS_BEFORE =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS);
+    public static final Instant INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 3);
     public static final Uri VALID_DAILY_UPDATE_URL =
             new Uri.Builder().path("valid-update-url.example.com").build();
     public static final String VALID_USER_BIDDING_SIGNALS =

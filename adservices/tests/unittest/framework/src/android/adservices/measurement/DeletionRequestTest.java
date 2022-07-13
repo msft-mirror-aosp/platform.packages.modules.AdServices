@@ -13,80 +13,75 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package android.adservices.measurement;
 
-import android.content.Context;
 import android.net.Uri;
-import android.os.Parcel;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 
-
-/**
- * Unit tests for {@link android.adservices.measurement.DeletionRequest}
- */
+/** Unit test for {@link android.adservices.measurement.DeletionRequest} */
 @SmallTest
-public final class DeletionRequestTest {
-    private static final String TAG = "DeletionRequestTest";
+public class DeletionRequestTest {
+    private static final Uri ORIGIN_URI = Uri.parse("https://a.foo.com");
+    private static final Uri DOMAIN_URI = Uri.parse("https://foo.com");
+    private static final Instant START = Instant.ofEpochSecond(0);
+    private static final Instant END = Instant.now();
 
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    @Test
+    public void testNonNullParams() {
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                        .setOriginUris(Collections.singletonList(ORIGIN_URI))
+                        .setDomainUris(Collections.singletonList(DOMAIN_URI))
+                        .setStart(START)
+                        .setEnd(END)
+                        .build();
 
-    private DeletionRequest createExample() {
-        return new DeletionRequest.Builder()
-            .setOriginUri(Uri.parse("http://foo.com"))
-            .setStart(Instant.ofEpochMilli(1642060000000L))
-            .setEnd(Instant.ofEpochMilli(1642060538000L))
-            .setAttributionSource(sContext.getAttributionSource())
-            .build();
-    }
-
-    void verifyExample(DeletionRequest request) {
-        assertEquals("http://foo.com", request.getOriginUri().toString());
-        assertEquals(1642060000000L, request.getStart().toEpochMilli());
-        assertEquals(1642060538000L, request.getEnd().toEpochMilli());
-        assertNotNull(request.getAttributionSource());
+        Assert.assertEquals(START, request.getStart());
+        Assert.assertEquals(END, request.getEnd());
+        Assert.assertEquals(1, request.getOriginUris().size());
+        Assert.assertEquals(ORIGIN_URI, request.getOriginUris().get(0));
+        Assert.assertEquals(1, request.getDomainUris().size());
+        Assert.assertEquals(DOMAIN_URI, request.getDomainUris().get(0));
+        Assert.assertEquals(
+                DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
+        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_PRESERVE, request.getMatchBehavior());
     }
 
     @Test
-    public void testNoAttributionSource() throws Exception {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new DeletionRequest.Builder().build();
-                });
+    public void testNullParams() {
+        DeletionRequest request =
+                new DeletionRequest.Builder()
+                        .setDomainUris(null)
+                        .setOriginUris(null)
+                        .setStart(null)
+                        .setEnd(null)
+                        .build();
+        Assert.assertNull(request.getStart());
+        Assert.assertNull(request.getEnd());
+        Assert.assertTrue(request.getOriginUris().isEmpty());
+        Assert.assertTrue(request.getDomainUris().isEmpty());
+        Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
+        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
     }
 
     @Test
-    public void testDefaults() throws Exception {
-        DeletionRequest request = new DeletionRequest.Builder()
-                .setAttributionSource(sContext.getAttributionSource()).build();
-        assertEquals("", request.getOriginUri().toString());
-        assertNull(request.getStart());
-        assertNull(request.getEnd());
-        assertNotNull(request.getAttributionSource());
-    }
-
-    @Test
-    public void testCreation() throws Exception {
-        verifyExample(createExample());
-    }
-
-    @Test
-    public void testParcelingDelete() throws Exception {
-        Parcel p = Parcel.obtain();
-        createExample().writeToParcel(p, 0);
-        p.setDataPosition(0);
-        verifyExample(DeletionRequest.CREATOR.createFromParcel(p));
-        p.recycle();
+    public void testDefaultParams() {
+        DeletionRequest request = new DeletionRequest.Builder().build();
+        Assert.assertNull(request.getStart());
+        Assert.assertNull(request.getEnd());
+        Assert.assertTrue(request.getOriginUris().isEmpty());
+        Assert.assertTrue(request.getDomainUris().isEmpty());
+        Assert.assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
+        Assert.assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, request.getMatchBehavior());
     }
 }

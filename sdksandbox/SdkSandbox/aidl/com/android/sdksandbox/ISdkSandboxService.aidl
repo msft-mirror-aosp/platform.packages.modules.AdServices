@@ -20,7 +20,7 @@ import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 
-import com.android.sdksandbox.ISdkSandboxToSdkSandboxManagerCallback;
+import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 
 /** @hide */
 oneway interface ISdkSandboxService {
@@ -28,5 +28,5 @@ oneway interface ISdkSandboxService {
     void loadSdk(in String callingPackageName, IBinder sdkToken, in ApplicationInfo info,
                   in String sdkName, in String sdkProviderClassName,
                   in String sdkCeDataDir, in String sdkDeDataDir,
-                  in Bundle params, in ISdkSandboxToSdkSandboxManagerCallback callback);
+                  in Bundle params, in ILoadSdkInSandboxCallback callback);
 }

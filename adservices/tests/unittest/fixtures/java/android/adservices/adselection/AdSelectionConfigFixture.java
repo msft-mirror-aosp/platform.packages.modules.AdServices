@@ -35,11 +35,11 @@ public class AdSelectionConfigFixture {
     public static final String SSP = "testSSP";
     public static final String FRAGMENT = "testFragment";
 
-    public static final Uri DECISION_LOGIC_URL = Uri.fromParts(SCHEME, SSP, FRAGMENT);
+    public static final Uri DECISION_LOGIC_URI = Uri.fromParts(SCHEME, SSP, FRAGMENT);
 
     public static final String BUYER_1 = "buyer1";
     public static final String BUYER_2 = "buyer2";
-
+    public static final String BUYER_3 = "buyer3";
     public static final List<String> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList("buyer1", "buyer2", "buyer3");
 
@@ -73,8 +73,8 @@ public class AdSelectionConfigFixture {
     public static final List<AdWithBid> CONTEXTUAL_ADS =
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
 
-    private static AdWithBid createAdsWithBid(Uri renderUrl, String metaData, double bid) {
-        AdData asData = new AdData(renderUrl, metaData);
+    private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
+        AdData asData = new AdData(renderUri, metaData);
         return new AdWithBid(asData, bid);
     }
 
@@ -90,7 +90,7 @@ public class AdSelectionConfigFixture {
     public static AdSelectionConfig.Builder anAdSelectionConfigBuilder() {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
-                .setDecisionLogicUrl(DECISION_LOGIC_URL)
+                .setDecisionLogicUri(DECISION_LOGIC_URI)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
@@ -99,13 +99,13 @@ public class AdSelectionConfigFixture {
     }
 
     /**
-     * Creates an AdSelectionConfig object to be used in unit and integration tests
-     * Accepts a Uri decisionLogicUrl to be used instead of the default
+     * Creates an AdSelectionConfig object to be used in unit and integration tests Accepts a Uri
+     * decisionLogicUri to be used instead of the default
      */
-    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUrl) {
+    public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUri) {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
-                .setDecisionLogicUrl(decisionLogicUrl)
+                .setDecisionLogicUri(decisionLogicUri)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)

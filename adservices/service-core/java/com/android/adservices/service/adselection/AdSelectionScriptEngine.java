@@ -124,7 +124,7 @@ public class AdSelectionScriptEngine {
     private final Executor mExecutor = MoreExecutors.directExecutor();
 
     public AdSelectionScriptEngine(Context context) {
-        mJsEngine = new JSScriptEngine(context);
+        mJsEngine = JSScriptEngine.getInstance(context);
     }
 
     /**
@@ -159,8 +159,9 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(TRUSTED_BIDDING_SIGNALS_ARG_NAME, trustedBiddingSignals))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
                         .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals))
-                        .add(CustomAudienceSignalsArgument.asScriptArgument(
-                                customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                        .add(
+                                CustomAudienceSignalsArgument.asScriptArgument(
+                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
@@ -205,8 +206,9 @@ public class AdSelectionScriptEngine {
                         .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals))
                         .add(jsonArg(TRUSTED_SCORING_SIGNALS_ARG_NAME, trustedScoringSignals))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
-                        .add(CustomAudienceSignalsArgument.asScriptArgument(
-                                customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                        .add(
+                                CustomAudienceSignalsArgument.asScriptArgument(
+                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adWithBidArguments = new ImmutableList.Builder<>();
@@ -241,7 +243,8 @@ public class AdSelectionScriptEngine {
                 }
                 return result.build();
             } catch (IllegalArgumentException e) {
-                LogUtil.w("Invalid ad with bid returned by a generateBid script %s. Returning"
+                LogUtil.w(
+                        "Invalid ad with bid returned by a generateBid script %s. Returning"
                                 + " empty list of ad with bids.",
                         e);
                 return ImmutableList.of();

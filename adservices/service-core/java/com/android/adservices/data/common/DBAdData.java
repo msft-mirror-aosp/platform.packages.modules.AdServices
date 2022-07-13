@@ -31,13 +31,12 @@ import java.util.Objects;
  * @hide
  */
 public class DBAdData {
-    @NonNull
-    private final Uri mRenderUrl;
+    @NonNull private final Uri mRenderUri;
     @NonNull
     private final String mMetadata;
 
-    public DBAdData(Uri renderUrl, String metadata) {
-        mRenderUrl = renderUrl;
+    public DBAdData(Uri renderUri, String metadata) {
+        mRenderUri = renderUri;
         mMetadata = metadata;
     }
 
@@ -49,13 +48,13 @@ public class DBAdData {
      */
     @NonNull
     public static DBAdData fromServiceObject(@NonNull AdData parcelable) {
-        return new DBAdData(parcelable.getRenderUrl(), parcelable.getMetadata());
+        return new DBAdData(parcelable.getRenderUri(), parcelable.getMetadata());
     }
 
-    /** Gets the URL that points to the ad's rendering assets. */
+    /** Gets the URI that points to the ad's rendering assets. */
     @NonNull
-    public Uri getRenderUrl() {
-        return mRenderUrl;
+    public Uri getRenderUri() {
+        return mRenderUri;
     }
 
     /**
@@ -79,20 +78,17 @@ public class DBAdData {
         if (this == o) return true;
         if (!(o instanceof DBAdData)) return false;
         DBAdData adData = (DBAdData) o;
-        return mRenderUrl.equals(adData.mRenderUrl) && mMetadata.equals(adData.mMetadata);
+        return mRenderUri.equals(adData.mRenderUri) && mMetadata.equals(adData.mMetadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mRenderUrl, mMetadata);
+        return Objects.hash(mRenderUri, mMetadata);
     }
 
     @Override
     public String toString() {
-        return "DBAdData{"
-                + "mRenderUrl=" + mRenderUrl
-                + ", mMetadata='" + mMetadata + '\''
-                + '}';
+        return "DBAdData{" + "mRenderUri=" + mRenderUri + ", mMetadata='" + mMetadata + '\'' + '}';
     }
 
 
@@ -100,17 +96,15 @@ public class DBAdData {
      * Builder to construct a {@link DBAdData}.
      */
     public static class Builder {
-        private Uri mRenderUrl;
+        private Uri mRenderUri;
         private String mMetadata;
 
         public Builder() {
         }
 
-        /**
-         * See {@link #getRenderUrl()} for detail.
-         */
-        public Builder setRenderUrl(@NonNull Uri renderUrl) {
-            this.mRenderUrl = renderUrl;
+        /** See {@link #getRenderUri()} for detail. */
+        public Builder setRenderUri(@NonNull Uri renderUri) {
+            this.mRenderUri = renderUri;
             return this;
         }
 
@@ -128,7 +122,7 @@ public class DBAdData {
          * @return the built {@link DBAdData}.
          */
         public DBAdData build() {
-            return new DBAdData(mRenderUrl, mMetadata);
+            return new DBAdData(mRenderUri, mMetadata);
         }
     }
 }

@@ -20,8 +20,13 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.validation.Validation;
+
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * A registration for an attribution source.
@@ -30,6 +35,7 @@ public final class SourceRegistration {
     private final Uri mTopOrigin;
     private final Uri mReportingOrigin;
     private final Uri mDestination;
+    private final Uri mWebDestination;
     private final long mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
@@ -38,23 +44,23 @@ public final class SourceRegistration {
     private final String mAggregateSource;
     private final String mAggregateFilterData;
 
-    /**
-     * Create a new source registration.
-     */
+    /** Create a new source registration. */
     private SourceRegistration(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
-            @NonNull Uri destination,
+            @Nullable Uri destination,
+            @Nullable Uri webDestination,
             long sourceEventId,
             long expiry,
             long sourcePriority,
             long installAttributionWindow,
             long installCooldownWindow,
-            String aggregateSource,
-            String aggregateFilterData) {
+            @Nullable String aggregateSource,
+            @Nullable String aggregateFilterData) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
         mDestination = destination;
+        mWebDestination = webDestination;
         mSourceEventId = sourceEventId;
         mExpiry = expiry;
         mSourcePriority = sourcePriority;
@@ -64,45 +70,79 @@ public final class SourceRegistration {
         mAggregateFilterData = aggregateFilterData;
     }
 
-    /**
-     * Top level origin.
-     */
-    public @NonNull Uri getTopOrigin() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof SourceRegistration)) return false;
+        SourceRegistration that = (SourceRegistration) o;
+        return mSourceEventId == that.mSourceEventId
+                && mExpiry == that.mExpiry
+                && mSourcePriority == that.mSourcePriority
+                && mInstallAttributionWindow == that.mInstallAttributionWindow
+                && mInstallCooldownWindow == that.mInstallCooldownWindow
+                && Objects.equals(mTopOrigin, that.mTopOrigin)
+                && Objects.equals(mReportingOrigin, that.mReportingOrigin)
+                && Objects.equals(mDestination, that.mDestination)
+                && Objects.equals(mWebDestination, that.mWebDestination)
+                && Objects.equals(mAggregateSource, that.mAggregateSource)
+                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mTopOrigin,
+                mReportingOrigin,
+                mDestination,
+                mWebDestination,
+                mSourceEventId,
+                mExpiry,
+                mSourcePriority,
+                mInstallAttributionWindow,
+                mInstallCooldownWindow,
+                mAggregateSource,
+                mAggregateFilterData);
+    }
+
+    /** Top level origin. */
+    @NonNull
+    public Uri getTopOrigin() {
         return mTopOrigin;
     }
 
-    /**
-     * Reporting origin.
-     */
-    public @NonNull Uri getReportingOrigin() {
+    /** Reporting origin. */
+    @NonNull
+    public Uri getReportingOrigin() {
         return mReportingOrigin;
     }
 
-    /**
-     * Destination Uri.
-     */
-    public @NonNull Uri getDestination() {
+    /** OS (app) destination Uri. */
+    @Nullable
+    public Uri getDestination() {
         return mDestination;
     }
 
-    /**
-     * Source event id.
-     */
-    public @NonNull long getSourceEventId() {
+    /** Web destination Uri. */
+    @Nullable
+    public Uri getWebDestination() {
+        return mWebDestination;
+    }
+
+    /** Source event id. */
+    @NonNull
+    public long getSourceEventId() {
         return mSourceEventId;
     }
 
-    /**
-     * Expiration.
-     */
-    public @NonNull long getExpiry() {
+    /** Expiration. */
+    @NonNull
+    public long getExpiry() {
         return mExpiry;
     }
 
-    /**
-     * Source priority.
-     */
-    public @NonNull long getSourcePriority() {
+    /** Source priority. */
+    @NonNull
+    public long getSourcePriority() {
         return mSourcePriority;
     }
 
@@ -141,6 +181,7 @@ public final class SourceRegistration {
         private Uri mTopOrigin;
         private Uri mReportingOrigin;
         private Uri mDestination;
+        private Uri mWebDestination;
         private long mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
@@ -150,107 +191,113 @@ public final class SourceRegistration {
         private String mAggregateFilterData;
 
         public Builder() {
-            mTopOrigin = Uri.EMPTY;
-            mReportingOrigin = Uri.EMPTY;
-            mDestination = Uri.EMPTY;
             mExpiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             mInstallAttributionWindow = MAX_INSTALL_ATTRIBUTION_WINDOW;
             mInstallCooldownWindow = MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
         }
 
-        /**
-         * See {@link SourceRegistration#getTopOrigin}.
-         */
-        public @NonNull Builder setTopOrigin(@NonNull Uri origin) {
+        /** See {@link SourceRegistration#getTopOrigin}. */
+        @NonNull
+        public Builder setTopOrigin(@NonNull Uri origin) {
+            Validation.validateUri(origin);
             mTopOrigin = origin;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getReportingOrigin}.
-         */
-        public @NonNull Builder setReportingOrigin(@NonNull Uri origin) {
+        /** See {@link SourceRegistration#getReportingOrigin}. */
+        @NonNull
+        public Builder setReportingOrigin(@NonNull Uri origin) {
+            Validation.validateUri(origin);
             mReportingOrigin = origin;
             return this;
         }
 
         /**
-         * See {@link SourceRegistration#getDestination}.
+         * See {@link SourceRegistration#getDestination}. At least one of destination or web
+         * destination is required.
          */
-        public @NonNull Builder setDestination(@NonNull Uri destination) {
+        @NonNull
+        public Builder setDestination(@Nullable Uri destination) {
+            Optional.ofNullable(destination).ifPresent(Validation::validateUri);
             mDestination = destination;
             return this;
         }
 
         /**
-         * See {@link SourceRegistration#getSourceEventId}.
+         * See {@link SourceRegistration#getWebDestination()}. At least one of destination or web
+         * destination is required.
          */
-        public @NonNull Builder setSourceEventId(long sourceEventId) {
+        @NonNull
+        public Builder setWebDestination(@Nullable Uri webDestination) {
+            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
+            mWebDestination = webDestination;
+            return this;
+        }
+
+        /** See {@link SourceRegistration#getSourceEventId}. */
+        @NonNull
+        public Builder setSourceEventId(long sourceEventId) {
             mSourceEventId = sourceEventId;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getExpiry}.
-         */
-        public @NonNull Builder setExpiry(long expiry) {
+        /** See {@link SourceRegistration#getExpiry}. */
+        @NonNull
+        public Builder setExpiry(long expiry) {
             mExpiry = expiry;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getSourcePriority}.
-         */
-        public @NonNull Builder setSourcePriority(long priority) {
+        /** See {@link SourceRegistration#getSourcePriority}. */
+        @NonNull
+        public Builder setSourcePriority(long priority) {
             mSourcePriority = priority;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getInstallAttributionWindow()}.
-         */
-        public @NonNull Builder setInstallAttributionWindow(long installAttributionWindow) {
+        /** See {@link SourceRegistration#getInstallAttributionWindow()}. */
+        @NonNull
+        public Builder setInstallAttributionWindow(long installAttributionWindow) {
             mInstallAttributionWindow = installAttributionWindow;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getInstallCooldownWindow()}.
-         */
-        public @NonNull Builder setInstallCooldownWindow(long installCooldownWindow) {
+        /** See {@link SourceRegistration#getInstallCooldownWindow()}. */
+        @NonNull
+        public Builder setInstallCooldownWindow(long installCooldownWindow) {
             mInstallCooldownWindow = installCooldownWindow;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getAggregateSource()}.
-         */
-        public Builder setAggregateSource(String aggregateSource) {
+        /** See {@link SourceRegistration#getAggregateSource()}. */
+        @NonNull
+        public Builder setAggregateSource(@Nullable String aggregateSource) {
             mAggregateSource = aggregateSource;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getAggregateFilterData()}.
-         */
-        public Builder setAggregateFilterData(String aggregateFilterData) {
+        /** See {@link SourceRegistration#getAggregateFilterData()}. */
+        @NonNull
+        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
             mAggregateFilterData = aggregateFilterData;
             return this;
         }
 
-        /**
-         * Build the SourceRegistration.
-         */
-        public @NonNull SourceRegistration build() {
-            if (mTopOrigin == null
-                    || mReportingOrigin == null
-                    || mDestination == null) {
-                throw new IllegalArgumentException("uninitialized fields");
+        /** Build the SourceRegistration. */
+        @NonNull
+        public SourceRegistration build() {
+            Validation.validateNonNull(mTopOrigin, mReportingOrigin);
+
+            if (mDestination == null && mWebDestination == null) {
+                throw new IllegalArgumentException(
+                        "At least one of destination or web destination is required.");
             }
+
             return new SourceRegistration(
                     mTopOrigin,
                     mReportingOrigin,
                     mDestination,
+                    mWebDestination,
                     mSourceEventId,
                     mExpiry,
                     mSourcePriority,

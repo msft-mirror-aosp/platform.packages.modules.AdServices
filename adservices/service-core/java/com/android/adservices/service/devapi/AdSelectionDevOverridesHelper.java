@@ -64,7 +64,7 @@ public class AdSelectionDevOverridesHelper {
         // See go/hashing#java
         Hasher hasher = sHashFunction.newHasher();
         hasher.putUnencodedChars(adSelectionConfig.getSeller())
-                .putUnencodedChars(adSelectionConfig.getDecisionLogicUrl().toString())
+                .putUnencodedChars(adSelectionConfig.getDecisionLogicUri().toString())
                 .putUnencodedChars(adSelectionConfig.getAdSelectionSignals())
                 .putUnencodedChars(adSelectionConfig.getSellerSignals());
 
@@ -73,7 +73,7 @@ public class AdSelectionDevOverridesHelper {
                 .forEach(
                         adWithBid -> {
                             hasher.putUnencodedChars(
-                                            adWithBid.getAdData().getRenderUrl().toString())
+                                            adWithBid.getAdData().getRenderUri().toString())
                                     .putUnencodedChars(adWithBid.getAdData().getMetadata())
                                     .putDouble(adWithBid.getBid());
                         });

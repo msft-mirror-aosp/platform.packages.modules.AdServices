@@ -27,8 +27,11 @@ import java.util.concurrent.Executor;
 public class SdkProvider extends SandboxedSdkProvider {
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            OnLoadSdkCallback callback) {
         throw new RuntimeException("General Exception");
     }
 
@@ -38,6 +41,5 @@ public class SdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }
