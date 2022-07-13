@@ -77,6 +77,7 @@ android_library {
         "js-sandbox-client",
         "androidx.concurrent_concurrent-futures",
         "androidx.annotation_annotation",
+        "cbor-java",
         "guava",
         "modules-utils-preconditions",
         "tflite_support_classifiers_java",

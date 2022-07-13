@@ -16,23 +16,32 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.DbState;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /** Integration tests for {@link AggregateReportingJobHandler} */
 @RunWith(Parameterized.class)
@@ -65,9 +74,20 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         final Integer returnCode = (Integer) get("responseCode");
         final String action = (String) get("action");
 
+        AggregateEncryptionKeyManager mockKeyManager = mock(AggregateEncryptionKeyManager.class);
+        ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
+        when(mockKeyManager.getAggregateEncryptionKeys(captorNumberOfKeys.capture()))
+                .thenAnswer(
+                        invocation -> {
+                            List<AggregateEncryptionKey> keys = new ArrayList<>();
+                            for (int i = 0; i < captorNumberOfKeys.getValue(); i++) {
+                                keys.add(AggregateCryptoFixture.getKey());
+                            }
+                            return keys;
+                        });
         DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
         AggregateReportingJobHandler spyReportingService =
-                Mockito.spy(new AggregateReportingJobHandler(datastoreManager));
+                Mockito.spy(new AggregateReportingJobHandler(datastoreManager, mockKeyManager));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
@@ -97,7 +117,9 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 (String) get("result"));
                 final String id = (String) get("id");
                 Assert.assertEquals(
-                        "Aggregate report failed.", result, spyReportingService.performReport(id));
+                        "Aggregate report failed.",
+                        result,
+                        spyReportingService.performReport(id, AggregateCryptoFixture.getKey()));
                 break;
         }
     }
