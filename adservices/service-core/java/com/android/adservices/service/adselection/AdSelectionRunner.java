@@ -68,6 +68,7 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
+    @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
 
     @VisibleForTesting
     static final String ERROR_AD_SELECTION_FAILURE = "Encountered failure during Ad Selection";
@@ -83,7 +84,6 @@ public final class AdSelectionRunner {
     static final String ERROR_NO_BUYERS_AVAILABLE =
             "The list of the custom audience buyers should not be empty.";
 
-    private static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;

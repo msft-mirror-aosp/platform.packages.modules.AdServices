@@ -38,6 +38,7 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -85,6 +86,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -102,6 +104,7 @@ public class AdSelectionE2ETest {
 
     private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private static final String BUYER_3 = AdSelectionConfigFixture.BUYER_3;
     private static final String BUYER = "buyer";
     private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
 
@@ -202,7 +205,7 @@ public class AdSelectionE2ETest {
         // the url points to a JS with score generation logic
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
                         .setDecisionLogicUrl(
@@ -395,6 +398,110 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+    }
+
+    @Test
+    public void testRunAdSelectionActiveCAs() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(0.9, 0.45);
+        List<Double> bidsForBuyer2 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer3 = ImmutableList.of(10.0, 100.0);
+        DBCustomAudience dbCustomAudienceActive =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceInactive =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        bidsForBuyer2,
+                        CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
+                        CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.VALID_LAST_UPDATE_TIME_24_HRS_BEFORE);
+        DBCustomAudience dBCustomAudienceExpired =
+                createDBCustomAudience(
+                        BUYER_3,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_3),
+                        bidsForBuyer3,
+                        CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                        CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
+                        CustomAudienceFixture.VALID_LAST_UPDATE_TIME_24_HRS_BEFORE);
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dbCustomAudienceActive, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceInactive, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceExpired, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                AD_URL_PREFIX + "buyer1/ad1",
+                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+    }
+
+    @Test
+    public void testRunAdSelectionNoCAsActive() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+        List<Double> bidsForBuyer3 = ImmutableList.of(4.3, 6.0, 10.0);
+
+        DBCustomAudience dBCustomAudienceInactive =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        bidsForBuyer1,
+                        CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
+                        CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.VALID_LAST_UPDATE_TIME_24_HRS_BEFORE);
+        DBCustomAudience dBCustomAudienceExpired =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        bidsForBuyer2,
+                        CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                        CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
+                        CustomAudienceFixture.VALID_LAST_UPDATE_TIME_24_HRS_BEFORE);
+
+        DBCustomAudience dBCustomAudienceOutdated =
+                createDBCustomAudience(
+                        BUYER_3,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_3),
+                        bidsForBuyer3,
+                        CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                        CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE);
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceInactive, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceExpired, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceOutdated, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        assertFalse(resultsCallback.mIsSuccess);
+        assertEquals(
+                resultsCallback.mFledgeErrorResponse.getStatusCode(),
+                AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                String.format(
+                        AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
+                        AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
+                        AdSelectionRunner.ERROR_NO_CA_AVAILABLE));
     }
 
     @Test
@@ -861,10 +968,19 @@ public class AdSelectionE2ETest {
      * @param biddingUri path from where the bidding logic for this CA can be fetched from
      * @param bids these bids, are added to its metadata. Our JS logic then picks this value and
      *     creates ad with the provided value as bid
+     * @param activationTime is the activation time of the Custom Audience
+     * @param expirationTime is the expiration time of the Custom Audience
+     * @param lastUpdateTime is the last time of the Custom Audience ads and bidding data got
+     *     updated
      * @return a real Custom Audience object that can be persisted and used in bidding and scoring
      */
     private DBCustomAudience createDBCustomAudience(
-            final String buyer, final Uri biddingUri, List<Double> bids) {
+            final String buyer,
+            final Uri biddingUri,
+            List<Double> bids,
+            Instant activationTime,
+            Instant expirationTime,
+            Instant lastUpdateTime) {
 
         // Generate ads for with bids provided
         List<DBAdData> ads = new ArrayList<>();
@@ -882,10 +998,10 @@ public class AdSelectionE2ETest {
                 .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
-                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
-                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setActivationTime(activationTime)
+                .setExpirationTime(expirationTime)
                 .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(lastUpdateTime)
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
@@ -895,6 +1011,24 @@ public class AdSelectionE2ETest {
                 .setBiddingLogicUrl(biddingUri)
                 .setAds(ads)
                 .build();
+    }
+
+    /**
+     * @param buyer The name of the buyer for this Custom Audience
+     * @param biddingUri path from where the bidding logic for this CA can be fetched from
+     * @param bids these bids, are added to its metadata. Our JS logic then picks this value and
+     *     creates ad with the provided value as bid
+     * @return a real Custom Audience object that can be persisted and used in bidding and scoring
+     */
+    private DBCustomAudience createDBCustomAudience(
+            final String buyer, final Uri biddingUri, List<Double> bids) {
+        return createDBCustomAudience(
+                buyer,
+                biddingUri,
+                bids,
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
     }
 
     private void verifyErrorMessageIsCorrect(
