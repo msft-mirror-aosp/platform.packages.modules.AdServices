@@ -35,8 +35,12 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final String mDecisionLogicJs;
 
-    private AddAdSelectionOverrideRequest(
-            AdSelectionConfig adSelectionConfig, String decisionLogicJs) {
+    /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
+    public AddAdSelectionOverrideRequest(
+            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJs) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(decisionLogicJs);
+
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
     }
@@ -55,42 +59,5 @@ public class AddAdSelectionOverrideRequest {
     @NonNull
     public String getDecisionLogicJs() {
         return mDecisionLogicJs;
-    }
-
-    /** Builder for {@link AddAdSelectionOverrideRequest} objects. */
-    public static final class Builder {
-        private AdSelectionConfig mAdSelectionConfig;
-        private String mDecisionLogicJs;
-
-        public Builder() {}
-
-        /** Set the override decision logic javascript. */
-        @NonNull
-        public AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(
-                @NonNull String decisionLogicJs) {
-            Objects.requireNonNull(decisionLogicJs);
-
-            this.mDecisionLogicJs = decisionLogicJs;
-            return this;
-        }
-
-        /** Set the AdSelectionConfig. */
-        @NonNull
-        public AddAdSelectionOverrideRequest.Builder setAdSelectionConfig(
-                @NonNull AdSelectionConfig adSelectionConfig) {
-            Objects.requireNonNull(adSelectionConfig);
-
-            this.mAdSelectionConfig = adSelectionConfig;
-            return this;
-        }
-
-        /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
-        @NonNull
-        public AddAdSelectionOverrideRequest build() {
-            Objects.requireNonNull(mAdSelectionConfig);
-            Objects.requireNonNull(mDecisionLogicJs);
-
-            return new AddAdSelectionOverrideRequest(mAdSelectionConfig, mDecisionLogicJs);
-        }
     }
 }

@@ -17,7 +17,6 @@
 package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -108,8 +107,8 @@ public class AdSelectionDevOverridesHelper {
      * Adds an override of the {@code decisionLogicJS} along with {@link
      * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void addDecisionLogicOverride(
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJS) {
@@ -117,7 +116,7 @@ public class AdSelectionDevOverridesHelper {
         Objects.requireNonNull(decisionLogicJS);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
         mAdSelectionEntryDao.persistAdSelectionOverride(
                 DBAdSelectionOverride.builder()
@@ -130,14 +129,14 @@ public class AdSelectionDevOverridesHelper {
     /**
      * Removes an override for the given {@link AdSelectionConfig}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeDecisionLogicOverride(@NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         String adSelectionConfigId = calculateAdSelectionConfigId(adSelectionConfig);
@@ -150,12 +149,12 @@ public class AdSelectionDevOverridesHelper {
     /**
      * Removes all ad selection overrides that match {@link DevContext#getCallingAppPackageName()}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeAllDecisionLogicOverrides() {
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         mAdSelectionEntryDao.removeAllAdSelectionOverrides(mDevContext.getCallingAppPackageName());
