@@ -124,4 +124,20 @@ public class AdServicesConfig {
 
     /** Job ID for Consent Notification Job. */
     public static final int CONSENT_NOTIFICATION_JOB_ID = 10;
+
+    /** Job ID for Mdd Maintenance Task ({@link com.android.adservices.download.MddJobService}) */
+    public static final int MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID = 11;
+
+    /**
+     * Job ID for Mdd Charging Periodic Task ({@link com.android.adservices.download.MddJobService})
+     */
+    public static final int MDD_CHARGING_PERIODIC_TASK_JOB_ID = 12;
+
+    /**
+     * Job ID for Mdd Cellular Charging Task ({@link com.android.adservices.download.MddJobService})
+     */
+    public static final int MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID = 13;
+
+    /** Job ID for Mdd Wifi Charging Task ({@link com.android.adservices.download.MddJobService}) */
+    public static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
 }

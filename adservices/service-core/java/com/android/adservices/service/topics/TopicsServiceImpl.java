@@ -56,7 +56,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
-    private Clock mClock;
+    private final Clock mClock;
 
     public TopicsServiceImpl(
             Context context,

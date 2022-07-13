@@ -399,6 +399,16 @@ public interface Flags extends Dumpable {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
     }
 
+    /** MDD Topics API Classifier Manifest Url */
+    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
+    // when we actually upload the models.
+    String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1/manifest_config_1657744589741.binaryproto";
+
+    default String getMddTopicsClassifierManifestFileUrl() {
+        return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+    }
+
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
             /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
 

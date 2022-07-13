@@ -86,6 +86,9 @@
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
 
+    <!-- Allows JobScheduler to persist jobs across reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
             android:label="@string/app_label"
             android:forceQueryable="true"
@@ -144,6 +147,11 @@
         <!-- Epoch computation Job. -->
         <service android:name="com.android.adservices.service.topics.EpochJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Mdd background Job. -->
+        <service android:name="com.android.adservices.download.MddJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Activity for Adservices Settings UI -->
