@@ -30,7 +30,7 @@
         <item name="android:letterSpacing">0.072727273</item>
     </style>
 
-    <style name="AdServices.Settings" parent="android:Theme.DeviceDefault.Settings">
+    <style name="AdServices.MainTheme" parent="android:Theme.DeviceDefault.Settings">
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:navigationBarDividerColor">@null</item>
@@ -44,6 +44,7 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowNoTitle">true</item>
+        <item name="android:background">@color/background_color</item>
     </style>
 
     <style name="FilterTouches">
