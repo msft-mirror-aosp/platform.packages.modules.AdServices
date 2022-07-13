@@ -134,7 +134,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 customAudience.getAds().stream()
                         .map(
                                 adData -> {
-                                    return new AdData(adData.getRenderUrl(), adData.getMetadata());
+                                    return new AdData(adData.getRenderUri(), adData.getMetadata());
                                 })
                         .collect(Collectors.toList());
         // TODO(b/221862406): implementation ads filtering logic.

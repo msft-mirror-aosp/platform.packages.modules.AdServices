@@ -290,7 +290,7 @@ public class AdSelectionScriptEngineTest {
                 .setSeller("www.mydomain.com")
                 .setPerBuyerSignals(ImmutableMap.of())
                 .setContextualAds(ImmutableList.of())
-                .setDecisionLogicUrl(Uri.parse("http://www.mydomain.com/updateAds"))
+                .setDecisionLogicUri(Uri.parse("http://www.mydomain.com/updateAds"))
                 .setSellerSignals("{}")
                 .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
                 .setAdSelectionSignals("{}")

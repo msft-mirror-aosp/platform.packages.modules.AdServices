@@ -213,7 +213,7 @@ public class CustomAudienceUpdatableDataFixture {
                     addHarmlessJunkValues(adJson);
                 }
 
-                adJson.put(RENDER_URL_KEY, ad.getRenderUrl().toString());
+                adJson.put(RENDER_URL_KEY, ad.getRenderUri().toString());
                 adJson.put(METADATA_KEY, ad.getMetadata());
 
                 adsJson.put(adJson);

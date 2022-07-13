@@ -39,8 +39,7 @@ import java.util.Objects;
 public final class AdSelectionConfig implements Parcelable {
     @NonNull
     private final String mSeller;
-    @NonNull
-    private final Uri mDecisionLogicUrl;
+    @NonNull private final Uri mDecisionLogicUri;
     @NonNull
     private final List<String> mCustomAudienceBuyers;
     @NonNull
@@ -69,14 +68,14 @@ public final class AdSelectionConfig implements Parcelable {
 
     private AdSelectionConfig(
             @NonNull String seller,
-            @NonNull Uri decisionLogicUrl,
+            @NonNull Uri decisionLogicUri,
             @NonNull List<String> customAudienceBuyers,
             @NonNull String adSelectionSignals,
             @NonNull String sellerSignals,
             @NonNull Map<String, String> perBuyerSignals,
             @NonNull List<AdWithBid> contextualAds) {
         this.mSeller = seller;
-        this.mDecisionLogicUrl = decisionLogicUrl;
+        this.mDecisionLogicUri = decisionLogicUri;
         this.mCustomAudienceBuyers = customAudienceBuyers;
         this.mAdSelectionSignals = adSelectionSignals;
         this.mSellerSignals = sellerSignals;
@@ -88,7 +87,7 @@ public final class AdSelectionConfig implements Parcelable {
         Objects.requireNonNull(in);
 
         mSeller = in.readString();
-        mDecisionLogicUrl = Uri.CREATOR.createFromParcel(in);
+        mDecisionLogicUri = Uri.CREATOR.createFromParcel(in);
         mCustomAudienceBuyers = in.createStringArrayList();
         mAdSelectionSignals = in.readString();
         mSellerSignals = in.readString();
@@ -106,7 +105,7 @@ public final class AdSelectionConfig implements Parcelable {
         Objects.requireNonNull(dest);
 
         dest.writeString(mSeller);
-        mDecisionLogicUrl.writeToParcel(dest, flags);
+        mDecisionLogicUri.writeToParcel(dest, flags);
         dest.writeStringList(mCustomAudienceBuyers);
         dest.writeString(mAdSelectionSignals);
         dest.writeString(mSellerSignals);
@@ -142,7 +141,7 @@ public final class AdSelectionConfig implements Parcelable {
         if (!(o instanceof AdSelectionConfig)) return false;
         AdSelectionConfig that = (AdSelectionConfig) o;
         return Objects.equals(mSeller, that.mSeller)
-                && Objects.equals(mDecisionLogicUrl, that.mDecisionLogicUrl)
+                && Objects.equals(mDecisionLogicUri, that.mDecisionLogicUri)
                 && Objects.equals(mCustomAudienceBuyers, that.mCustomAudienceBuyers)
                 && Objects.equals(mAdSelectionSignals, that.mAdSelectionSignals)
                 && Objects.equals(mSellerSignals, that.mSellerSignals)
@@ -154,7 +153,7 @@ public final class AdSelectionConfig implements Parcelable {
     public int hashCode() {
         return Objects.hash(
                 mSeller,
-                mDecisionLogicUrl,
+                mDecisionLogicUri,
                 mCustomAudienceBuyers,
                 mAdSelectionSignals,
                 mSellerSignals,
@@ -172,11 +171,11 @@ public final class AdSelectionConfig implements Parcelable {
 
     /**
      * @return the URL used to retrieve the JS code containing the seller/SSP scoreAd function used
-     * during the ad selection and reporting processes
+     *     during the ad selection and reporting processes
      */
     @NonNull
-    public Uri getDecisionLogicUrl() {
-        return mDecisionLogicUrl;
+    public Uri getDecisionLogicUri() {
+        return mDecisionLogicUri;
     }
 
     /**
@@ -261,12 +260,12 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
-         * Sets the URL used to fetch decision logic for use in the ad selection process.
+         * Sets the URI used to fetch decision logic for use in the ad selection process.
          *
-         * See {@link #getDecisionLogicUrl()} for more details.
+         * <p>See {@link #getDecisionLogicUri()} for more details.
          */
         @NonNull
-        public AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull Uri decisionLogicUri) {
+        public AdSelectionConfig.Builder setDecisionLogicUri(@NonNull Uri decisionLogicUri) {
             Objects.requireNonNull(decisionLogicUri);
 
             this.mDecisionLogicUri = decisionLogicUri;
