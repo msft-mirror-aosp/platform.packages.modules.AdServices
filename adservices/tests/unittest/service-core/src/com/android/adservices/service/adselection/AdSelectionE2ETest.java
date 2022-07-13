@@ -16,13 +16,23 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
+import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -61,18 +71,19 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,6 +120,9 @@ public class AdSelectionE2ETest {
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}";
+    private static final String SELLER_VALID = "developer.android.com";
+    private static final Uri DECISION_LOGIC_URL_INCONSISTENT =
+            Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     private MockitoSession mStaticMockSession = null;
@@ -122,7 +136,7 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private AdServicesLogger mAdServicesLogger;
+    @Spy private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
     private Flags mFlags;
 
     @Before
@@ -150,7 +164,6 @@ public class AdSelectionE2ETest {
 
         mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
 
-        mAdServicesLogger = AdServicesLoggerImpl.getInstance();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -190,6 +203,8 @@ public class AdSelectionE2ETest {
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setSeller(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
                         .setDecisionLogicUrl(
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
                         .build();
@@ -231,10 +246,10 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
+        assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        Assert.assertEquals(
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
@@ -286,6 +301,8 @@ public class AdSelectionE2ETest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(participatingBuyers)
+                        .setSeller(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
                         .setDecisionLogicUrl(
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
                         .build();
@@ -293,10 +310,10 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, adSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
+        assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        Assert.assertEquals(
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
@@ -372,10 +389,10 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
+        assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        Assert.assertEquals(
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
@@ -387,7 +404,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertFalse(resultsCallback.mIsSuccess);
+        assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
     }
@@ -397,6 +414,10 @@ public class AdSelectionE2ETest {
         // Do not populate buyers in AdSelectionConfig
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setSeller(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
+                        .setDecisionLogicUrl(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .build();
 
@@ -404,7 +425,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertFalse(resultsCallback.mIsSuccess);
+        assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
     }
@@ -438,10 +459,10 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
+        assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        Assert.assertEquals(
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
                 AD_URL_PREFIX + "buyer1/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
@@ -493,7 +514,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertFalse(resultsCallback.mIsSuccess);
+        assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_NO_VALID_BIDS_FOR_SCORING);
@@ -546,7 +567,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertFalse(resultsCallback.mIsSuccess);
+        assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_SCORE_AD_LOGIC_MISSING);
@@ -600,10 +621,10 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
+        assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        Assert.assertEquals(
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
                 AD_URL_PREFIX + "buyer1/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
@@ -662,10 +683,10 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
+        assertTrue(resultsCallback.mIsSuccess);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        Assert.assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        Assert.assertEquals(
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
                 AD_URL_PREFIX + "buyer1/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
     }
@@ -724,7 +745,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertFalse(resultsCallback.mIsSuccess);
+        assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
     }
@@ -792,10 +813,47 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        Assert.assertTrue(resultsCallback.mIsSuccess);
-        Assert.assertEquals(
+        assertTrue(resultsCallback.mIsSuccess);
+        assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+    }
+
+    @Test
+    public void testAdSelectionConfigInvalidSellerAndSellerUrls() throws Exception {
+        AdSelectionConfig invalidAdSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setSeller(SELLER_VALID)
+                        .setDecisionLogicUrl(DECISION_LOGIC_URL_INCONSISTENT)
+                        .build();
+
+        Mockito.lenient()
+                .when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+        IllegalArgumentException thrown =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> invokeRunAdSelection(mAdSelectionService, invalidAdSelectionConfig));
+        String expected =
+                String.format(
+                        "Invalid object of type %s. The violations are: %s",
+                        AdSelectionConfig.class.getName(),
+                        Arrays.asList(
+                                String.format(
+                                        AdSelectionConfigValidator
+                                                .SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT,
+                                        Uri.parse("https://" + SELLER_VALID).getHost(),
+                                        DECISION_LOGIC_URL_INCONSISTENT.getHost())));
+        Truth.assertThat(thrown).hasMessageThat().isEqualTo(expected);
+        verify(mAdServicesLogger)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        STATUS_INVALID_ARGUMENT);
+        verify(mAdServicesLogger)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                STATUS_INVALID_ARGUMENT));
     }
 
     /**
@@ -841,12 +899,12 @@ public class AdSelectionE2ETest {
 
     private void verifyErrorMessageIsCorrect(
             final String actualErrorMassage, final String expectedErrorReason) {
-        Assert.assertTrue(
+        assertTrue(
                 String.format(
                         "Actual error [%s] does not begin with [%s]",
                         actualErrorMassage, ERROR_AD_SELECTION_FAILURE),
                 actualErrorMassage.startsWith(ERROR_AD_SELECTION_FAILURE));
-        Assert.assertTrue(
+        assertTrue(
                 String.format(
                         "Actual error [%s] does not contain expected message: [%s]",
                         actualErrorMassage, expectedErrorReason),

@@ -31,8 +31,8 @@ public class SdkProvider extends SandboxedSdkProvider {
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
-        executor.execute(() -> callback.onInitSdkFinished(null));
+            OnLoadSdkCallback callback) {
+        executor.execute(() -> callback.onLoadSdkFinished(null));
     }
 
     @Override

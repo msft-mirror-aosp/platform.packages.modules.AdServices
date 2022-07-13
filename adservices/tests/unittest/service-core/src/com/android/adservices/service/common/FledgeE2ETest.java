@@ -171,6 +171,17 @@ public class FledgeE2ETest {
                         CONTEXT,
                         mAdServicesLogger,
                         mFlags);
+
+        // Create an Ad Selection Config with the buyers and decision logic url
+        // the url points to a JS with score generation logic
+        mAdSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setSeller(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
+                        .setDecisionLogicUrl(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
+                        .build();
     }
 
     @After
@@ -182,12 +193,6 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithDevOverrides() throws Exception {
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                        .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
-                        .build();
-
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
                         + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -299,12 +304,6 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithDevOverrides() throws Exception {
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                        .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
-                        .build();
-
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
                         + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -415,12 +414,6 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowFailsWithBothCANegativeBidsWithDevOverrides() throws Exception {
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                        .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
-                        .build();
-
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
                         + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -527,13 +520,6 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithMockServer() throws Exception {
         Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                        .setDecisionLogicUrl(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
-                        .build();
 
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
@@ -644,13 +630,6 @@ public class FledgeE2ETest {
     public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithMockServer() throws Exception {
         Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                        .setDecisionLogicUrl(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
-                        .build();
 
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
@@ -763,13 +742,6 @@ public class FledgeE2ETest {
     public void testFledgeFlowFailsWithBothCANegativeBidsWithMockServer() throws Exception {
         Uri sellerReportingUrl = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUrl = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                        .setDecisionLogicUrl(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
-                        .build();
 
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"

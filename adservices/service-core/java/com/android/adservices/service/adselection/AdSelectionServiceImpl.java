@@ -113,7 +113,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
+
+            AdSelectionConfigValidator adSelectionConfigValidator =
+                    new AdSelectionConfigValidator();
+            adSelectionConfigValidator.validate(adSelectionConfig);
+        } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
@@ -144,7 +148,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
+            AdSelectionConfigValidator adSelectionConfigValidator =
+                    new AdSelectionConfigValidator();
+            adSelectionConfigValidator.validate(requestParams.getAdSelectionConfig());
+        } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);

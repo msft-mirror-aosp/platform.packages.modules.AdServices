@@ -84,6 +84,10 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                builder::setWebDestination);
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,

@@ -39,7 +39,6 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -153,6 +152,7 @@ public final class MeasurementImplTest {
                     .setSourceEventId(1L) //
                     .setSourcePriority(100L) //
                     .setDestination(Uri.parse("android-app://com.destination"))
+                    .setWebDestination(Uri.parse("https://com.web.destination"))
                     .setExpiry(8640000010L) //
                     .setInstallAttributionWindow(841839879274L) //
                     .setInstallCooldownWindow(8418398274L) //
@@ -164,6 +164,7 @@ public final class MeasurementImplTest {
                     .setSourceEventId(2) //
                     .setSourcePriority(200L) //
                     .setDestination(Uri.parse("android-app://com.destination2"))
+                    .setWebDestination(Uri.parse("https://com.web.destination2"))
                     .setExpiry(865000010L) //
                     .setInstallAttributionWindow(841839879275L) //
                     .setInstallCooldownWindow(7418398274L) //
@@ -270,8 +271,7 @@ public final class MeasurementImplTest {
         List<SourceRegistration> sourceRegistrationsOut =
                 Arrays.asList(VALID_SOURCE_REGISTRATION_1, VALID_SOURCE_REGISTRATION_2);
         RegistrationRequest registrationRequest = SOURCE_REGISTRATION_REQUEST;
-        when(mSourceFetcher.fetchSource(any()))
-                .thenAnswer((invocation) -> Optional.of(sourceRegistrationsOut));
+        doReturn(Optional.of(sourceRegistrationsOut)).when(mSourceFetcher).fetchSource(any());
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
@@ -301,13 +301,15 @@ public final class MeasurementImplTest {
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_1,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination());
+                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
         insertionLogicExecutor.get(1).accept(mMeasurementDao);
         verifyInsertSource(
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_2,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination());
+                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
     }
 
     @Test
@@ -354,9 +356,7 @@ public final class MeasurementImplTest {
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
         Trigger trigger =
                 createTrigger(
-                        VALID_TRIGGER_REGISTRATION,
                         triggerTime,
-                        DEFAULT_URI,
                         DEFAULT_CONTEXT.getAttributionSource());
         verify(mMeasurementDao).insertTrigger(trigger);
     }
@@ -522,7 +522,8 @@ public final class MeasurementImplTest {
         assertEquals(sampleSource.getEventId(), capturedSource.getEventId());
         assertEquals(sampleSource.getEventTime(), capturedSource.getEventTime());
         assertEquals(sampleSource.getAggregateSource(), capturedSource.getAggregateSource());
-        assertEquals(sampleSource.getAttributionDestination(),
+        assertEquals(
+                sampleSource.getAttributionDestination(),
                 capturedSource.getAttributionDestination());
         assertEquals(sampleSource.getAdTechDomain(), capturedSource.getAdTechDomain());
         assertEquals(sampleSource.getPublisher(), capturedSource.getPublisher());
@@ -572,8 +573,8 @@ public final class MeasurementImplTest {
                     reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
             Assert.assertEquals(0, report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
-            Assert.assertEquals(source.getAttributionDestination(),
-                    report.getAttributionDestination());
+            Assert.assertEquals(
+                    source.getAttributionDestination(), report.getAttributionDestination());
             Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
             Assert.assertTrue(report.getTriggerData()
                     < source.getTriggerDataCardinality());
@@ -608,7 +609,7 @@ public final class MeasurementImplTest {
     public void testGetMeasurementApiStatus_enabled() {
         MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
         final int result = measurement.getMeasurementApiStatus();
-        assertEquals(MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED, result);
+        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, result);
     }
 
     @Test
@@ -618,7 +619,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(DEFAULT_CONTEXT, mConsentManager, null, null, null, null);
         final int result = measurement.getMeasurementApiStatus();
-        assertEquals(MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED, result);
+        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, result);
     }
 
     @Test
@@ -680,13 +681,15 @@ public final class MeasurementImplTest {
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_1,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination());
+                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
         insertionLogicExecutor.get(1).accept(mMeasurementDao);
         verifyInsertSource(
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_2,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination());
+                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getWebDestination());
     }
 
     @Test
@@ -737,9 +740,7 @@ public final class MeasurementImplTest {
                 .insertTrigger(
                         eq(
                                 createTrigger(
-                                        VALID_TRIGGER_REGISTRATION,
                                         triggerTime,
-                                        DEFAULT_URI,
                                         DEFAULT_CONTEXT.getAttributionSource())));
     }
 
@@ -761,13 +762,15 @@ public final class MeasurementImplTest {
             RegistrationRequest registrationRequest,
             SourceRegistration sourceRegistration,
             long eventTime,
-            Uri firstSourceDestination)
+            Uri firstSourceDestination,
+            Uri firstSourceWebDestination)
             throws DatastoreException {
         Source source =
                 createSource(
                         sourceRegistration,
                         eventTime,
                         firstSourceDestination,
+                        firstSourceWebDestination,
                         registrationRequest.getTopOriginUri(),
                         registrationRequest.getAttributionSource());
         verify(mMeasurementDao).insertSource(source);
@@ -777,13 +780,15 @@ public final class MeasurementImplTest {
             WebSourceRegistrationRequestInternal registrationRequest,
             SourceRegistration sourceRegistration,
             long eventTime,
-            Uri firstSourceDestination)
+            Uri firstSourceDestination,
+            Uri firstSourceWebDestination)
             throws DatastoreException {
         Source source =
                 createSource(
                         sourceRegistration,
                         eventTime,
                         firstSourceDestination,
+                        firstSourceWebDestination,
                         registrationRequest.getSourceRegistrationRequest().getTopOriginUri(),
                         registrationRequest.getAttributionSource());
         verify(mMeasurementDao).insertSource(source);
@@ -793,12 +798,14 @@ public final class MeasurementImplTest {
             SourceRegistration sourceRegistration,
             long eventTime,
             Uri firstSourceDestination,
+            Uri firstSourceWebDestination,
             Uri topOrigin,
             AttributionSource attributionSource) {
         return SourceFixture.getValidSourceBuilder()
                 .setEventId(sourceRegistration.getSourceEventId())
                 .setPublisher(topOrigin)
                 .setAttributionDestination(firstSourceDestination)
+                .setWebDestination(firstSourceWebDestination)
                 .setAdTechDomain(sourceRegistration.getReportingOrigin())
                 .setRegistrant(Uri.parse("android-app://" + attributionSource.getPackageName()))
                 .setEventTime(eventTime)
@@ -816,20 +823,19 @@ public final class MeasurementImplTest {
                 .build();
     }
 
-    private Trigger createTrigger(
-            TriggerRegistration triggerRegistration,
-            long triggerTime,
-            Uri topOrigin,
-            AttributionSource attributionSource) {
+    private Trigger createTrigger(long triggerTime, AttributionSource attributionSource) {
         return TriggerFixture.getValidTriggerBuilder()
-                .setAttributionDestination(topOrigin)
-                .setAdTechDomain(triggerRegistration.getReportingOrigin())
+                .setAttributionDestination(MeasurementImplTest.DEFAULT_URI)
+                .setAdTechDomain(
+                        MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getReportingOrigin())
                 .setRegistrant(Uri.parse(ANDROID_APP_SCHEME + attributionSource.getPackageName()))
                 .setTriggerTime(triggerTime)
                 .setEventTriggers(EVENT_TRIGGERS)
-                .setAggregateTriggerData(triggerRegistration.getAggregateTriggerData())
-                .setAggregateValues(triggerRegistration.getAggregateValues())
-                .setFilters(triggerRegistration.getFilters())
+                .setAggregateTriggerData(
+                        MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getAggregateTriggerData())
+                .setAggregateValues(
+                        MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getAggregateValues())
+                .setFilters(MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getFilters())
                 .build();
     }
 }

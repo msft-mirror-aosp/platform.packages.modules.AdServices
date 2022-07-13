@@ -29,6 +29,7 @@ import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -55,8 +56,14 @@ public class AdSelectionManagerTest {
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
+    private static final String SELLER = "developer.android.com";
+    private static final Uri DECISION_LOGIC_URL =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
-            AdSelectionConfigFixture.anAdSelectionConfig();
+            AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                    .setSeller(SELLER)
+                    .setDecisionLogicUrl(DECISION_LOGIC_URL)
+                    .build();
 
     private AdSelectionClient mAdSelectionClient;
     private boolean mIsDebugMode;
@@ -170,6 +177,8 @@ public class AdSelectionManagerTest {
         LogUtil.i("Calling Ad Selection");
         AdSelectionConfig adSelectionConfigNoBuyers =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setSeller(SELLER)
+                        .setDecisionLogicUrl(DECISION_LOGIC_URL)
                         .setCustomAudienceBuyers(new ArrayList<String>())
                         .build();
         AdSelectionClient adSelectionClient =
