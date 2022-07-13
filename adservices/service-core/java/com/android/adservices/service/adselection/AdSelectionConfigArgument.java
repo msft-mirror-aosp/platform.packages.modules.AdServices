@@ -73,7 +73,7 @@ public class AdSelectionConfigArgument {
                 stringArg(SELLER_FIELD_NAME, adSelectionConfig.getSeller()),
                 stringArg(
                         DECISION_LOGIC_URL_FIELD_NAME,
-                        adSelectionConfig.getDecisionLogicUrl().toString()),
+                        adSelectionConfig.getDecisionLogicUri().toString()),
                 stringArrayArg(
                         CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                         adSelectionConfig.getCustomAudienceBuyers()),

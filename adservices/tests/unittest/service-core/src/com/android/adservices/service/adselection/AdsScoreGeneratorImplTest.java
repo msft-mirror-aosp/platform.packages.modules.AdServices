@@ -140,7 +140,7 @@ public class AdsScoreGeneratorImplTest {
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setDecisionLogicUrl(decisionLogicUri)
+                        .setDecisionLogicUri(decisionLogicUri)
                         .build();
 
         Mockito.when(mMockAdSelectionScriptEngine.scoreAds(mSellerDecisionLogicJs,
@@ -189,7 +189,7 @@ public class AdsScoreGeneratorImplTest {
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setDecisionLogicUrl(decisionLogicUri)
+                        .setDecisionLogicUri(decisionLogicUri)
                         .build();
 
         // Set dev override for this AdSelection
@@ -254,7 +254,7 @@ public class AdsScoreGeneratorImplTest {
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setDecisionLogicUrl(decisionLogicUri)
+                        .setDecisionLogicUri(decisionLogicUri)
                         .build();
 
         Mockito.when(mMockAdSelectionScriptEngine.scoreAds(mSellerDecisionLogicJs,
