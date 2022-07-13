@@ -105,12 +105,12 @@ public class AdSelectionServiceImplTest {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     private static final Uri RENDER_URL = Uri.parse("http://www.domain.com/advert/");
     private static final Instant ACTIVATION_TIME = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
-    private static final Uri BUYER_BIDDING_LOGIC_URL = Uri.parse("http://www.seller.com");
+    private static final Uri BUYER_BIDDING_LOGIC_URI = Uri.parse("http://www.seller.com");
     private static final long AD_SELECTION_ID = 1;
     private static final long INCORRECT_AD_SELECTION_ID = 2;
     private static final double BID = 5.0;
     private static final String SELLER_VALID = "developer.android.com";
-    private static final Uri DECISION_LOGIC_URL_INCONSISTENT =
+    private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
     private final String mSellerReportingPath = "/reporting/seller";
@@ -157,7 +157,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(mMockWebServerRule.uriForPath(mFetchJavaScriptPath).getHost())
-                        .setDecisionLogicUrl(mMockWebServerRule.uriForPath(mFetchJavaScriptPath));
+                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath));
     }
 
     @Test
@@ -191,7 +191,7 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
@@ -203,8 +203,8 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals)
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -286,7 +286,7 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
@@ -298,8 +298,8 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals)
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -377,7 +377,7 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
@@ -389,8 +389,8 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals)
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -465,7 +465,7 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(inValidBuyerDecisionLogicJsMissingCurlyBracket)
                         .build();
 
@@ -477,8 +477,8 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals)
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -546,7 +546,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setContextualSignals(mContextualSignals)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -624,7 +624,7 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
@@ -636,8 +636,8 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals)
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -985,12 +985,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
                         .setSeller("adidas.com")
-                        .setDecisionLogicUrl(Uri.parse("https://adidas.com/decisoin_logic_url"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
                         .setSeller("nike.com")
-                        .setDecisionLogicUrl(Uri.parse("https://nike.com/decisoin_logic_url"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
         String decisionLogicJs = "function test() { return \"hello world\"; }";
@@ -1085,12 +1085,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
                         .setSeller("adidas.com")
-                        .setDecisionLogicUrl(Uri.parse("https://adidas.com/decisoin_logic_url"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
                         .setSeller("nike.com")
-                        .setDecisionLogicUrl(Uri.parse("https://nike.com/decisoin_logic_url"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
         String decisionLogicJs = "function test() { return \"hello world\"; }";
@@ -1182,12 +1182,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
                         .setSeller("adidas.com")
-                        .setDecisionLogicUrl(Uri.parse("https://adidas.com/decisoin_logic_url"))
+                        .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
                         .setSeller("nike.com")
-                        .setDecisionLogicUrl(Uri.parse("https://nike.com/decisoin_logic_url"))
+                        .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
         String decisionLogicJs = "function test() { return \"hello world\"; }";
@@ -1347,7 +1347,7 @@ public class AdSelectionServiceImplTest {
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
                         .build();
 
@@ -1359,8 +1359,8 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
                         .setContextualSignals(mContextualSignals)
-                        .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)
-                        .setWinningAdRenderUrl(RENDER_URL)
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .build();
@@ -1370,7 +1370,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig invalidAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_INCONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -1404,7 +1404,7 @@ public class AdSelectionServiceImplTest {
                                         AdSelectionConfigValidator
                                                 .SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT,
                                         Uri.parse("https://" + SELLER_VALID).getHost(),
-                                        DECISION_LOGIC_URL_INCONSISTENT.getHost())));
+                                        DECISION_LOGIC_URI_INCONSISTENT.getHost())));
         Truth.assertThat(thrown).hasMessageThat().isEqualTo(expected);
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(

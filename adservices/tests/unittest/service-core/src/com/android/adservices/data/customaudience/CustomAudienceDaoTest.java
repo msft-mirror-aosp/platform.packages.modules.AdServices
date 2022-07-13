@@ -61,7 +61,7 @@ public class CustomAudienceDaoTest {
     private static final String AD_DATA_METADATA_1 = "meta1";
     private static final DBAdData ADS_1 =
             new DBAdData.Builder()
-                    .setRenderUrl(AD_DATA_RENDER_URL_1)
+                    .setRenderUri(AD_DATA_RENDER_URL_1)
                     .setMetadata(AD_DATA_METADATA_1)
                     .build();
     private static final Uri DAILY_UPDATE_URL_2 = Uri.parse("https://www.example.com/d2");
@@ -70,7 +70,7 @@ public class CustomAudienceDaoTest {
     private static final String AD_DATA_METADATA_2 = "meta2";
     private static final DBAdData ADS_2 =
             new DBAdData.Builder()
-                    .setRenderUrl(AD_DATA_RENDER_URL_2)
+                    .setRenderUri(AD_DATA_RENDER_URL_2)
                     .setMetadata(AD_DATA_METADATA_2)
                     .build();
     private static final Uri TRUSTED_BIDDING_DATA_URL_2 = Uri.parse("https://www.example.com/t1");

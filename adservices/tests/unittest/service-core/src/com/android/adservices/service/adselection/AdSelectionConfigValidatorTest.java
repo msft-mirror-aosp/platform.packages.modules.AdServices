@@ -35,12 +35,12 @@ public class AdSelectionConfigValidatorTest {
     private static final String SELLER_NOT_DOMAIN_NAME = "developer.android.com/test";
     private static final String SELLER_INVALID = "developer%$android.com";
     private static final String SELLER_NO_HOST = "test@";
-    private static final Uri DECISION_LOGIC_URL_CONSISTENT =
+    private static final Uri DECISION_LOGIC_URI_CONSISTENT =
             Uri.parse("https://developer.android.com/test/decisions_logic_urls");
-    private static final Uri DECISION_LOGIC_URL_CONSISTENT_WITH_PREFIX =
+    private static final Uri DECISION_LOGIC_URI_CONSISTENT_WITH_PREFIX =
             Uri.parse("https://www.developer.android.com/test/decisions_logic_urls");
-    private static final Uri DECISION_LOGIC_URL_NO_HOST = Uri.parse("test/decisions_logic_urls");
-    private static final Uri DECISION_LOGIC_URL_INCONSISTENT =
+    private static final Uri DECISION_LOGIC_URI_NO_HOST = Uri.parse("test/decisions_logic_urls");
+    private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
 
     private String generateInconsistentSellerAndDecisionLogicUrlMessage(
@@ -56,7 +56,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
@@ -67,7 +67,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID_WITH_PREFIX)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT_WITH_PREFIX)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT_WITH_PREFIX)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
@@ -78,7 +78,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(EMPTY_STRING)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -101,7 +101,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_NOT_DOMAIN_NAME)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -124,7 +124,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_INVALID)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -140,7 +140,7 @@ public class AdSelectionConfigValidatorTest {
                                 Arrays.asList(
                                         AdSelectionConfigValidator.SELLER_IS_AN_INVALID_DOMAIN_NAME,
                                         generateInconsistentSellerAndDecisionLogicUrlMessage(
-                                                SELLER_INVALID, DECISION_LOGIC_URL_CONSISTENT))));
+                                                SELLER_INVALID, DECISION_LOGIC_URI_CONSISTENT))));
     }
 
     @Test
@@ -148,7 +148,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_NO_HOST)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -171,7 +171,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_NO_HOST)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_NO_HOST)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -195,7 +195,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_INCONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -210,7 +210,7 @@ public class AdSelectionConfigValidatorTest {
                                 AdSelectionConfig.class.getName(),
                                 Arrays.asList(
                                         generateInconsistentSellerAndDecisionLogicUrlMessage(
-                                                SELLER_VALID, DECISION_LOGIC_URL_INCONSISTENT))));
+                                                SELLER_VALID, DECISION_LOGIC_URI_INCONSISTENT))));
     }
 
     @Test
@@ -219,7 +219,7 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID_WITH_PREFIX)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_CONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -235,6 +235,6 @@ public class AdSelectionConfigValidatorTest {
                                 Arrays.asList(
                                         generateInconsistentSellerAndDecisionLogicUrlMessage(
                                                 SELLER_VALID_WITH_PREFIX,
-                                                DECISION_LOGIC_URL_CONSISTENT))));
+                                                DECISION_LOGIC_URI_CONSISTENT))));
     }
 }

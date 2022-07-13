@@ -621,7 +621,7 @@ public class DBCustomAudience {
          */
         private static JSONObject toJson(DBAdData adData) throws JSONException {
             return new org.json.JSONObject()
-                    .put(RENDER_URL_FIELD_NAME, serializeUrl(adData.getRenderUrl()))
+                    .put(RENDER_URL_FIELD_NAME, serializeUrl(adData.getRenderUri()))
                     .put(METADATA_FIELD_NAME, adData.getMetadata());
         }
 

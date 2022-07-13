@@ -116,7 +116,7 @@ public class AdSelectionManager {
                                                 new AdSelectionOutcome.Builder()
                                                         .setAdSelectionId(
                                                                 resultParcel.getAdSelectionId())
-                                                        .setRenderUrl(resultParcel.getRenderUrl())
+                                                        .setRenderUri(resultParcel.getRenderUri())
                                                         .build());
                                     });
                         }

@@ -188,7 +188,7 @@ public final class AdSelectionRunner {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
                             .setAdSelectionId(result.getAdSelectionId())
-                            .setRenderUrl(result.getWinningAdRenderUrl())
+                            .setRenderUri(result.getWinningAdRenderUri())
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
@@ -414,9 +414,9 @@ public final class AdSelectionRunner {
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(
                         scoringWinner.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setWinningAdRenderUrl(
-                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUrl())
-                .setBiddingLogicUrl(
+                .setWinningAdRenderUri(
+                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
+                .setBiddingLogicUri(
                         scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUrl())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
@@ -443,7 +443,7 @@ public final class AdSelectionRunner {
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
-                                    .setBiddingLogicUrl(dbAdSelection.getBiddingLogicUrl())
+                                    .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
                     return dbAdSelection;
                 });
