@@ -39,7 +39,7 @@ import java.util.concurrent.Executor;
  *
  * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
  * passed to the {@link SandboxedSdkProvider#onLoadSdk(SandboxedSdkContext, Bundle, Executor,
- * SandboxedSdkProvider.InitSdkCallback)} after SDK is loaded.
+ * SandboxedSdkProvider.OnLoadSdkCallback)} after SDK is loaded.
  *
  * <p>Each sdk will get their own private storage directory and the file storage API on this object
  * will utilize those area.

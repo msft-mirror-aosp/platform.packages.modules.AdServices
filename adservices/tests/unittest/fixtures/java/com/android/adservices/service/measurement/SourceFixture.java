@@ -47,6 +47,7 @@ public final class SourceFixture {
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAttributionDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setWebDestination(ValidSourceParams.WEB_DESTINATION)
                 .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
                 .setRegistrant(ValidSourceParams.REGISTRANT)
                 .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
@@ -68,6 +69,7 @@ public final class SourceFixture {
         public static final Long SOURCE_EVENT_TIME = 8640000000L;
         public static final Uri ATTRIBUTION_DESTINATION =
                 Uri.parse("android-app://com.destination");
+        public static Uri WEB_DESTINATION = Uri.parse("https://destination.com");
         public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
         public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");

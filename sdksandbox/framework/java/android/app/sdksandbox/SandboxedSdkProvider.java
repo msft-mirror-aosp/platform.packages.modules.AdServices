@@ -54,7 +54,7 @@ public abstract class SandboxedSdkProvider {
             @NonNull SandboxedSdkContext sandboxedSdkContext,
             @NonNull Bundle params,
             @NonNull Executor executor,
-            @NonNull InitSdkCallback callback);
+            @NonNull OnLoadSdkCallback callback);
 
     /**
      * Requests a view to be remotely rendered to the client app process.
@@ -82,10 +82,11 @@ public abstract class SandboxedSdkProvider {
     /**
      * Callback for tracking the status of initializing the SDK.
      *
-     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the
-     * SDK sandbox about the status of initialization.
+     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the SDK sandbox
+     * about the status of {@link SandboxedSdkProvider#onLoadSdk( SandboxedSdkContext, Bundle,
+     * Executor, OnLoadSdkCallback)}
      */
-    public interface InitSdkCallback {
+    public interface OnLoadSdkCallback {
         /**
          * Called when sdk is successfully loaded.
          *
@@ -93,14 +94,14 @@ public abstract class SandboxedSdkProvider {
          *
          * @param params list of params to be passed to the client application
          */
-        void onInitSdkFinished(@NonNull Bundle params);
+        void onLoadSdkFinished(@NonNull Bundle params);
 
         /**
          * If SDK failed to initialize, it must call this method on the callback object.
          *
          * @param errorMessage a String description of the error
          */
-        void onInitSdkError(@NonNull String errorMessage);
+        void onLoadSdkError(@NonNull String errorMessage);
     }
 
     /**

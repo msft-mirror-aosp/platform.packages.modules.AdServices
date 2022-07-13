@@ -48,6 +48,7 @@ public final class MeasurementTables {
         String ID = "_id";
         String EVENT_ID = "event_id";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String WEB_DESTINATION = "web_destination";
         String DEDUP_KEYS = "dedup_keys";
         String EVENT_TIME = "event_time";
         String EXPIRY_TIME = "expiry_time";
@@ -65,12 +66,10 @@ public final class MeasurementTables {
         String AGGREGATE_SOURCE = "aggregate_source";
         String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
 
-        /** @deprecated replaced by PUBLISHER */
-        @Deprecated
-        String DEPRECATED_ATTRIBUTION_SOURCE = "attribution_source";
-        /** @deprecated replaced by AD_TECH_DOMAIN */
-        @Deprecated
-        String DEPRECATED_REPORT_TO = "report_to";
+        /** @deprecated replaced by {@link #PUBLISHER} */
+        @Deprecated String DEPRECATED_ATTRIBUTION_SOURCE = "attribution_source";
+        /** @deprecated replaced by {@link #AD_TECH_DOMAIN} */
+        @Deprecated String DEPRECATED_REPORT_TO = "report_to";
     }
 
     /** Contract for Trigger. */
@@ -124,9 +123,8 @@ public final class MeasurementTables {
         String AD_TECH_DOMAIN = "ad_tech_domain";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
 
-        /** @deprecated replaced by AD_TECH_DOMAIN */
-        @Deprecated
-        String DEPRECATED_REPORT_TO = "report_to";
+        /** @deprecated replaced by {@link #AD_TECH_DOMAIN} */
+        @Deprecated String DEPRECATED_REPORT_TO = "report_to";
     }
 
     /** Contract for Attribution rate limit. */
@@ -140,9 +138,7 @@ public final class MeasurementTables {
         String AD_TECH_DOMAIN = "ad_tech_domain";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
-        @Deprecated
-        String DEPRECATED_REPORT_TO = "report_to";
-
+        @Deprecated String DEPRECATED_REPORT_TO = "report_to";
     }
 
     /** Contract for Unencrypted aggregate payload. */

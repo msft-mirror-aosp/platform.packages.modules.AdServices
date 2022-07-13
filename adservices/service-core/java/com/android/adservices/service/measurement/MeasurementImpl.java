@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.attribution.BaseUriExtr
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import android.adservices.measurement.DeletionParam;
-import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
@@ -244,12 +243,12 @@ public final class MeasurementImpl {
     /**
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
-    @MeasurementApiUtil.MeasurementApiState int getMeasurementApiStatus() {
+    @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
         AdServicesApiConsent consent = mConsentManager.getConsent(mContext.getPackageManager());
         if (consent.isGiven()) {
-            return MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED;
+            return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
-            return MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED;
+            return MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 
@@ -322,36 +321,39 @@ public final class MeasurementImpl {
     }
 
     private void insertSources(
-            List<SourceRegistration> responseBasedRegistrations,
+            List<SourceRegistration> sourceRegistrations,
             long sourceEventTime,
             Uri topOriginUri,
             Uri registrant,
             Source.SourceType sourceType) {
-        for (SourceRegistration registration : responseBasedRegistrations) {
+        for (SourceRegistration registration : sourceRegistrations) {
             Source source =
                     createSource(
-                            responseBasedRegistrations,
                             sourceEventTime,
                             registration,
                             topOriginUri,
                             registrant,
-                            sourceType);
+                            sourceType,
+                            // Only first destination to avoid AdTechs change this
+                            sourceRegistrations.get(0).getDestination(),
+                            sourceRegistrations.get(0).getWebDestination());
             insertSource(source);
         }
     }
 
     private Source createSource(
-            List<SourceRegistration> responseBasedRegistrations,
             long sourceEventTime,
             SourceRegistration registration,
             Uri topOriginUri,
             Uri registrant,
-            Source.SourceType sourceType) {
+            Source.SourceType sourceType,
+            Uri destination,
+            Uri webDestination) {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
                 .setPublisher(topOriginUri)
-                // Only first destination to avoid AdTechs change this
-                .setAttributionDestination(responseBasedRegistrations.get(0).getDestination())
+                .setAttributionDestination(destination)
+                .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
                 .setSourceType(sourceType)

@@ -134,7 +134,7 @@
 
     <!-- EU Notification UI strings -->
     <!-- Text for the title of the header. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_header_title_eu">@string/notificationUI_header_title</string>
+    <string name="notificationUI_header_title_eu">Join the ads privacy beta</string>
 
     <!-- Text for the subtitle of the header. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_header_subtitle_eu">@string/notificationUI_header_subtitle</string>
@@ -169,6 +169,24 @@
     <!-- Text for the main title of the non-EU notification. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_non_eu_title">Android\'s ads privacy beta</string>
 
+    <!-- Text for button to open Privacy Sandbox Settings from confirmation activity. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_confirmation_left_control_button_text">@string/notificationUI_left_control_button_text</string>
+
+    <!-- Text for button to acknowledge and dismiss confirmation activity.  [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_confirmation_right_control_button_text">@string/notificationUI_right_control_button_text</string>
+
+    <!-- Text for the title of the confirmation screen for accepting to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_confirmation_accept_title">Thank you for participating</string>
+
+    <!-- Text for the subtitle of the confirmation screen for accepting to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_confirmation_accept_subtitle">You\'re now part of the Privacy Sandbox beta. \n\nYou can learn more or leave the beta any time, in your Privacy settings.</string>
+
+    <!-- Text for the title of the confirmation screen for declining to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_confirmation_decline_title">You\'ve chosen not to participate</string>
+
+    <!-- Text for the subtitle of the confirmation screen for declining to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_confirmation_decline_subtitle">Thanks for your response. You haven\'t been added to the Privacy Sandbox beta.\n\nIf you change your mind or want to learn more, go to your privacy settings.</string>
+
     <!-- ROW Notification UI strings -->
     <!-- Text for the title of the header. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_header_title">You\'re helping Android restrict cross-app tracking</string>
@@ -198,7 +216,7 @@
     <string name="notificationUI_container3_body_text">Today, data about your app usage can easily be associated with your device, then shared across apps for advertising purposes.</string>
 
     <!-- Text for button to open Privacy Sandbox Settings from detailed notification activity. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_left_control_button_text">Manage privacy settings</string>
+    <string name="notificationUI_left_control_button_text">Privacy settings</string>
 
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_text">Got it</string>
@@ -211,5 +229,5 @@
 
     <!-- TODO(b/230372892): Add in this text with styles and the correct component or animation to display and hide the text -->
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->
-<!--    <string name="notificationUI_how_it_works_expanded_text">How the Privacy Sandbox works\n\nData is collected in the Privacy Sandbox to show you ads you might like, but is shared without identifying you or your device.\n\nWhat kind of data will be stored in the Privacy Sandbox?\n\nGeneral interests\nAndroid generates this data based on the apps you use, and adds it to the Privacy Sandbox. For example, one of your general interests might be \u00E2\u0080\u009CSports.\u00E2\u0080\u009D\n\nYou can see the list of your interests in your Privacy settings, and block any you don\u00E2\u0080\u0099t like. \n\nSpecific interests \nYour apps generate this data based on how you use them, and add it to the Privacy Sandbox. For example, an app you use to shop for running shoes might add the label sport_running.\n\nIn your privacy settings, you can see the list of apps doing this, and block any app from contributing data to the sandbox.\n</string>-->
+    <string name="notificationUI_how_it_works_expanded_text">How the Privacy Sandbox works\n\nData is collected in the Privacy Sandbox to show you ads you might like, but is shared without identifying you or your device.\n\nWhat kind of data will be stored in the Privacy Sandbox?\n\nGeneral interests\nAndroid generates this data based on the apps you use, and adds it to the Privacy Sandbox. For example, one of your general interests might be \u00E2\u0080\u009CSports.\u00E2\u0080\u009D\n\nYou can see the list of your interests in your Privacy settings, and block any you don\u00E2\u0080\u0099t like. \n\nSpecific interests \nYour apps generate this data based on how you use them, and add it to the Privacy Sandbox. For example, an app you use to shop for running shoes might add the label sport_running.\n\nIn your privacy settings, you can see the list of apps doing this, and block any app from contributing data to the sandbox.\n</string>
 </resources>
