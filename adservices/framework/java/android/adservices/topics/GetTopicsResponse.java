@@ -20,10 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Represent the result from the getTopics API.
- */
-public class GetTopicsResponse {
+/** Represent the result from the getTopics API. */
+public final class GetTopicsResponse {
+    /** List of Topic objects returned by getTopics API. */
     private final List<Topic> mTopics;
 
     private GetTopicsResponse(@NonNull List<Topic> topics) {
@@ -53,8 +52,8 @@ public class GetTopicsResponse {
     }
 
     /**
-     * Builder for {@link GetTopicsResponse} objects.
-     * This class is unhidden so that developers can write tests.
+     * Builder for {@link GetTopicsResponse} objects. This class should be used in test
+     * implementation as expected response from Topics API
      */
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
