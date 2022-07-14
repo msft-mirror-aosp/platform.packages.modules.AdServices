@@ -33,16 +33,110 @@
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"தனியுரிமை சாண்ட்பாக்ஸ் பீட்டா"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"தனியுரிமை சாண்ட்பாக்ஸ் பீட்டா"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"தனியுரிமை சாண்ட்பாக்ஸ் பீட்டா பதிப்பை நிலைமாற்றலாம்"</string>
+    <!-- no translation found for settingsUI_main_view_title (5043539340176844807) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_subtitle (3380585883687237827) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text1 (8353580266621706164) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text2 (5144888171043725329) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text3 (9106658161862318732) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text4 (8784661072398581526) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text5 (6064832868440367397) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text6 (1372295962773839373) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text7 (210269084665708892) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_title (7437641813424176118) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_subtitle (5133398388693886168) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text1 (6729245512525985403) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text2 (8355913397424818046) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (912262290260184604) -->
+    <skip />
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"உங்களின் பொதுவான ஆர்வங்கள்"</string>
     <string name="settingsUI_topics_summary" msgid="3146101472984434355">"உங்களின் பொதுவான ஆர்வங்களை நிர்வகிக்கலாம்"</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"குறிப்பிட்ட ஆர்வங்களை உருவாக்கும் உங்கள் ஆப்ஸ்"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"குறிப்பிட்ட ஆர்வங்களை உருவாக்கும் உங்கள் ஆப்ஸை நிர்வகிக்கலாம்"</string>
+    <!-- no translation found for settingsUI_blocked_apps_title (616945769186215391) -->
+    <skip />
+    <!-- no translation found for settingsUI_block_app_title (4169472139940708737) -->
+    <skip />
+    <!-- no translation found for settingsUI_unblock_app_title (3298453461173699515) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_subtitle (8739946672076737081) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
+    <skip />
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"விளம்பரங்களுக்கான உங்கள் பொதுவான ஆர்வங்களை நிர்வகித்தல்"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"தடைசெய்"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"நீங்கள் தடைசெய்த தலைப்புகள்"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"அனைத்துத் தலைப்புகளையும் மீட்டமை"</string>
-    <!-- no translation found for settingsUI_unblock_topic_title (1710283575567727667) -->
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"தடையை நீக்கு"</string>
+    <string name="notificationUI_eu_title" msgid="1156528090731956503">"விளம்பரத் தனியுரிமை தொடர்பான பீட்டா அம்சத்தில் சேருங்கள்"</string>
+    <!-- no translation found for notificationUI_header_title_eu (6822288197367284058) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_subtitle_eu (340747660810152558) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_title_eu (4361051737453876336) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_text_eu (3002855638097043236) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title_eu (6354572742632086901) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_text_eu (166675713389999485) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_control_text_eu (2201590946141216882) -->
+    <skip />
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"நீங்கள் என்ன செய்யலாம்?"</string>
+    <!-- no translation found for notificationUI_container3_body_text_eu (1489739161978958930) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"வேண்டாம்"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="1179003744451135574">"அதைப் பயன்படுத்திப் பார்க்கிறேன்"</string>
+    <string name="notificationUI_non_eu_title" msgid="1400067162654584472">"Androidன் விளம்பரத் தனியுரிமை தொடர்பான பீட்டா அம்சம்"</string>
+    <!-- no translation found for notificationUI_confirmation_left_control_button_text (1004303831215770799) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_right_control_button_text (3207541606235495458) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_title (3178322390976087463) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_subtitle (9173047338339917593) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_title (6388776490679995340) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_subtitle (4615362687181140355) -->
+    <skip />
+    <string name="notificationUI_header_title" msgid="1049608950263285787">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பைக் கட்டுப்படுத்த Androidக்கு உதவுகிறீர்கள்"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"ஆப்ஸுக்கு இடையேயான தரவை விளம்பரதாரர்கள் கண்காணிப்பதைக் கட்டுப்படுத்துவதற்கான புதிய அம்சங்களை Android பரிசோதிக்கிறது"</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பு என்றால் என்ன?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"இன்று, உங்கள் ஆப்ஸ் உபயோகத் தரவைச் சாதனத்துடன் எளிதாக இணைக்கலாம், அந்தத் தரவை பல்வேறு ஆப்ஸுக்கு இடையே விளம்பர நோக்கங்களுக்காகப் பகிர அனுமதிக்கலாம்."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android என்ன செய்கிறது?"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"உங்களையோ உங்கள் சாதனத்தையோ அடையாளம் காண முடியாத வகையில் விளம்பரத் தரவைப் பாதுகாப்பாகச் சேமித்துப் பகிரும் புதிய தனியுரிமை சாண்ட்பாக்ஸ் தொழில்நுட்பத்தை Android பரிசோதிக்கிறது. \n\nஇந்தப் புதிய சிஸ்டம் ஓர் ஆப்ஸில் இருந்து மற்ற ஆப்ஸுக்கு நேரடியாகத் தரவு அனுப்பப்படுவதைத் தடுக்க உதவும். அதே நேரத்தில் நீங்கள் விரும்பக்கூடிய விளம்பரங்களைக் காட்டுவதற்கும் அந்த ஆப்ஸை அனுமதிக்கும்."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"இது எப்படிச் செயல்படுகிறது?"</string>
+    <string name="notificationUI_container3_title" msgid="4823075930852061894">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பு என்றால் என்ன?"</string>
+    <string name="notificationUI_container3_body_text" msgid="8999954025569853707">"இன்று, உங்கள் ஆப்ஸ் உபயோகத் தரவைச் சாதனத்துடன் எளிதாக இணைக்கலாம், அந்தத் தரவை பல்வேறு ஆப்ஸுக்கு இடையே விளம்பர நோக்கங்களுக்காகப் பகிர அனுமதிக்கலாம்."</string>
+    <!-- no translation found for notificationUI_left_control_button_text (6459461402253858770) -->
+    <skip />
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"சரி"</string>
+    <string name="notificationUI_eu_content" msgid="121153625335218261">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பைக் கட்டுப்படுத்தும் புதிய அம்சங்களைப் பரிசோதிக்கலாம்"</string>
+    <string name="notificationUI_non_eu_content" msgid="8932310379484651423">"ஆப்ஸுக்கு இடையேயான கண்காணிப்பைக் கட்டுப்படுத்தும் புதிய அம்சங்களைப் பரிசோதிக்கிறீர்கள்"</string>
+    <!-- no translation found for notificationUI_how_it_works_expanded_text (3758348489850620566) -->
     <skip />
 </resources>
