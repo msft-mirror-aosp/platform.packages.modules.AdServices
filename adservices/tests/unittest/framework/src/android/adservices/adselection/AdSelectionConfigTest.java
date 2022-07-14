@@ -36,6 +36,8 @@ public class AdSelectionConfigTest {
                         .setSellerSignals(AdSelectionConfigFixture.SELLER_SIGNALS)
                         .setPerBuyerSignals(AdSelectionConfigFixture.PER_BUYER_SIGNALS)
                         .setContextualAds(AdSelectionConfigFixture.CONTEXTUAL_ADS)
+                        .setTrustedScoringSignalsUri(
+                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
         assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
@@ -46,6 +48,9 @@ public class AdSelectionConfigTest {
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.SELLER_SIGNALS);
         assertEquals(config.getPerBuyerSignals(), AdSelectionConfigFixture.PER_BUYER_SIGNALS);
         assertEquals(config.getContextualAds(), AdSelectionConfigFixture.CONTEXTUAL_ADS);
+        assertEquals(
+                config.getTrustedScoringSignalsUri(),
+                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
 
     @Test
@@ -73,12 +78,17 @@ public class AdSelectionConfigTest {
                         .setSeller(AdSelectionConfigFixture.SELLER)
                         .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                         .setCustomAudienceBuyers(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
+                        .setTrustedScoringSignalsUri(
+                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
         assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
         assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
         assertEquals(
                 config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
+        assertEquals(
+                config.getTrustedScoringSignalsUri(),
+                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
 
         // Populated by default with empty signals, map, and list
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
