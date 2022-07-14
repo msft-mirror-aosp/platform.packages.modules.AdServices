@@ -19,6 +19,12 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    exclude_srcs: [
+        // The tests below are interacting with the JsSandbox singleton and should
+        // be run in a separate process
+        "src/com/android/adservices/service/js/JSScriptEngineTest.java",
+        "src/com/android/adservices/service/js/JsSandboxProviderTest.java",
+    ],
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     // Currently this test module is failing, which results in low test coverage
@@ -65,4 +71,39 @@ android_test {
         "-0 .lite",
         "-0 .tflite",
     ],
+}
+
+android_test {
+    name: "AdServicesJsEngineUnitTests",
+    srcs: [
+        "src/com/android/adservices/service/js/JSScriptEngineTest.java",
+        "src/com/android/adservices/service/js/JsSandboxProviderTest.java",
+    ],
+    defaults: ["modules-utils-testable-device-config-defaults"],
+    sdk_version: "module_current",
+    compile_multilib: "both",
+    min_sdk_version: "Tiramisu",
+    static_libs: [
+        "androidx.concurrent_concurrent-futures",
+        "androidx.test.rules",
+        "compatibility-device-util-axt",
+        "mockito-target-extended-minus-junit4",
+        "adservices-service-core",
+        "truth-prebuilt",
+        "ub-uiautomator",
+        "adservices-assets",
+        "adservices-test-fixtures",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.mock.stubs",
+        "framework-adservices.impl",
+        "framework-annotations-lib",
+    ],
+    test_suites: [
+        "general-tests",
+        "mts-adservices"
+    ],
+    test_config: "AndroidTest.JsScriptEngine.xml",
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
