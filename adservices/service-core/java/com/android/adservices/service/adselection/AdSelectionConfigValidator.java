@@ -41,8 +41,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
             "The AdSelectionConfig seller has missing domain name.";
 
     @VisibleForTesting
-    static final String SELLER_HAS_INVALID_DOMAIN_NAME =
-            "The AdSelectionConfig seller has invalid domain name.";
+    static final String SELLER_IS_AN_INVALID_DOMAIN_NAME =
+            "The AdSelectionConfig seller is an invalid domain name.";
 
     @VisibleForTesting
     static final String DECISION_LOGIC_URL_SHOULD_HAVE_PRESENT_HOST =
@@ -83,8 +83,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
             violations.add(SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY);
         } else if (Objects.isNull(sellerHost) || sellerHost.isEmpty()) {
             violations.add(SELLER_HAS_MISSING_DOMAIN_NAME);
-        } else if (!InternetDomainName.isValid(seller)) {
-            violations.add(SELLER_HAS_INVALID_DOMAIN_NAME);
+        } else if (!Objects.equals(sellerHost, seller) || !InternetDomainName.isValid(seller)) {
+            violations.add(SELLER_IS_AN_INVALID_DOMAIN_NAME);
         }
 
         if (Objects.isNull(decisionLogicUrl)) {

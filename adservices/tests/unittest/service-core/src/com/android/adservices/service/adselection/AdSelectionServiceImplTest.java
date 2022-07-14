@@ -1345,13 +1345,6 @@ public class AdSelectionServiceImplTest {
                         + "' } };\n"
                         + "}";
 
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse(),
-                                new MockResponse()));
-
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
                         .setBiddingLogicUrl(BUYER_BIDDING_LOGIC_URL)

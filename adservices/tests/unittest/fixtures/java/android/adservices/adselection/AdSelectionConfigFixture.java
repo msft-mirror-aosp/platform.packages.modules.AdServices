@@ -39,7 +39,7 @@ public class AdSelectionConfigFixture {
 
     public static final String BUYER_1 = "buyer1";
     public static final String BUYER_2 = "buyer2";
-
+    public static final String BUYER_3 = "buyer3";
     public static final List<String> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList("buyer1", "buyer2", "buyer3");
 
