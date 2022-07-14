@@ -73,8 +73,12 @@ public class AdSelectionConfigFixture {
     public static final List<AdWithBid> CONTEXTUAL_ADS =
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
 
+    public static final Uri TRUSTED_SCORING_SIGNALS_URI =
+            Uri.parse("https://www.kv-server.example");
+
     private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
         AdData asData = new AdData(renderUri, metaData);
+
         return new AdWithBid(asData, bid);
     }
 
@@ -95,7 +99,8 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS);
+                .setContextualAds(CONTEXTUAL_ADS)
+                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
 
     /**
@@ -111,6 +116,7 @@ public class AdSelectionConfigFixture {
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
                 .setContextualAds(CONTEXTUAL_ADS)
+                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }
 }

@@ -112,26 +112,6 @@ public class AdSelectionServiceImplTest {
     private static final String SELLER_VALID = "developer.android.com";
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
-    private final String mSellerReportingPath = "/reporting/seller";
-    private final String mBuyerReportingPath = "/reporting/buyer";
-    private final String mFetchJavaScriptPath = "/fetchJavascript/";
-    private final String mContextualSignals = "{\"contextual_signals\":1}";
-    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
-    private CustomAudienceDao mCustomAudienceDao;
-    private AdSelectionEntryDao mAdSelectionEntryDao;
-    private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
-
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
-
-    // This object access some system APIs
-    @Mock public DevContextFilter mDevContextFilter;
-
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
-
     // Auto-generated variable names are too long for lint check
     private static final int SHORT_API_NAME_OVERRIDE =
             AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -139,6 +119,21 @@ public class AdSelectionServiceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
     private static final int SHORT_API_NAME_RESET_ALL_OVERRIDES =
             AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
+    private final String mSellerReportingPath = "/reporting/seller";
+    private final String mBuyerReportingPath = "/reporting/buyer";
+    private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    private final String mContextualSignals = "{\"contextual_signals\":1}";
+    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    // This object access some system APIs
+    @Mock public DevContextFilter mDevContextFilter;
+    private CustomAudienceDao mCustomAudienceDao;
+    private AdSelectionEntryDao mAdSelectionEntryDao;
+    private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
     @Before
     public void setUp() {
@@ -277,12 +272,11 @@ public class AdSelectionServiceImplTest {
                         + "' } };\n"
                         + "}";
 
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse(),
-                                new MockResponse()));
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -1457,9 +1451,9 @@ public class AdSelectionServiceImplTest {
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
-        private final CountDownLatch mCountDownLatch;
 
         public ReportImpressionTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;
@@ -1479,9 +1473,9 @@ public class AdSelectionServiceImplTest {
     }
 
     public static class AdSelectionOverrideTestCallback extends AdSelectionOverrideCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
-        private final CountDownLatch mCountDownLatch;
 
         public AdSelectionOverrideTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;

@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URLS;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionConfig;
@@ -41,6 +45,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
@@ -54,7 +59,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -67,12 +71,11 @@ public class AdsScoreGeneratorImplTest {
     private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    private final String mTrustedScoringSignalsPath = "/getTrustedScoringSignals/";
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     AdSelectionConfig mAdSelectionConfig;
 
-    @Mock
-    // TODO(b/231349121): replace mocking script engine result with simple js scripts
-    private AdSelectionScriptEngine mMockAdSelectionScriptEngine;
+    @Mock private AdSelectionScriptEngine mMockAdSelectionScriptEngine;
 
     private ListeningExecutorService mListeningExecutorService;
     private ExecutorService mExecutorService;
@@ -88,6 +91,13 @@ public class AdsScoreGeneratorImplTest {
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
+    private String mTrustedScoringSignals;
+    private String mTrustedScoringParams;
+    private List<String> mTrustedScoringSignalsKeys;
+
+    private Dispatcher mDefaultDispatcher;
+    private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
+
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -102,7 +112,7 @@ public class AdsScoreGeneratorImplTest {
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_1, 1.0).build();
         mAdBiddingOutcomeBuyer2 =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_2, 2.0).build();
-        mAdBiddingOutcomeList = Arrays.asList(mAdBiddingOutcomeBuyer1, mAdBiddingOutcomeBuyer2);
+        mAdBiddingOutcomeList = ImmutableList.of(mAdBiddingOutcomeBuyer1, mAdBiddingOutcomeBuyer2);
 
         mSellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
@@ -120,6 +130,59 @@ public class AdsScoreGeneratorImplTest {
                         .build()
                         .adSelectionEntryDao();
 
+        mTrustedScoringSignalsKeys =
+                ImmutableList.of(
+                        mAdBiddingOutcomeBuyer1
+                                .getAdWithBid()
+                                .getAdData()
+                                .getRenderUri()
+                                .getEncodedPath(),
+                        mAdBiddingOutcomeBuyer2
+                                .getAdWithBid()
+                                .getAdData()
+                                .getRenderUri()
+                                .getEncodedPath());
+
+        mTrustedScoringParams =
+                String.format(
+                        "?%s=%s",
+                        QUERY_PARAM_RENDER_URLS,
+                        Uri.encode(String.join(",", mTrustedScoringSignalsKeys)));
+
+        mTrustedScoringSignals =
+                "{\n"
+                        + mAdBiddingOutcomeBuyer1
+                                .getAdWithBid()
+                                .getAdData()
+                                .getRenderUri()
+                                .getEncodedPath()
+                        + ": signalsForUrl1,\n"
+                        + mAdBiddingOutcomeBuyer2
+                                .getAdWithBid()
+                                .getAdData()
+                                .getRenderUri()
+                                .getEncodedPath()
+                        + ": signalsForUrl2,\n"
+                        + "}";
+
+        mDefaultDispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (mFetchJavaScriptPath.equals(request.getPath())) {
+                            return new MockResponse().setBody(mSellerDecisionLogicJs);
+                        } else if (mTrustedScoringSignalsPath
+                                .concat(mTrustedScoringParams)
+                                .equals(request.getPath())) {
+                            return new MockResponse().setBody(mTrustedScoringSignals);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+
+        mRequestMatcherExactMatch =
+                (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
+
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
@@ -131,27 +194,32 @@ public class AdsScoreGeneratorImplTest {
 
     @Test
     public void testRunAdScoringSuccess() throws Exception {
-        List<Double> scores = Arrays.asList(1.0, 2.0);
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(new MockResponse().setBody(mSellerDecisionLogicJs)));
+        List<Double> scores = ImmutableList.of(1.0, 2.0);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
                         .build();
 
-        Mockito.when(mMockAdSelectionScriptEngine.scoreAds(mSellerDecisionLogicJs,
-                        mAdBiddingOutcomeList.stream().map(a -> a.getAdWithBid())
-                                .collect(Collectors.toList()),
-                        mAdSelectionConfig,
-                        mAdSelectionConfig.getSellerSignals(),
-                        "{}",
-                        "{}",
-                        mAdBiddingOutcomeList.get(0)
-                                .getCustomAudienceBiddingInfo().getCustomAudienceSignals()))
+        Mockito.when(
+                        mMockAdSelectionScriptEngine.scoreAds(
+                                mSellerDecisionLogicJs,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(a -> a.getAdWithBid())
+                                        .collect(Collectors.toList()),
+                                mAdSelectionConfig,
+                                mAdSelectionConfig.getSellerSignals(),
+                                mTrustedScoringSignals,
+                                "{}",
+                                mAdBiddingOutcomeList
+                                        .get(0)
+                                        .getCustomAudienceBiddingInfo()
+                                        .getCustomAudienceSignals()))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -163,18 +231,62 @@ public class AdsScoreGeneratorImplTest {
                             return scoringResultFuture;
                         });
 
-        RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                2,
+                ImmutableList.of(
+                        mFetchJavaScriptPath, mTrustedScoringSignalsPath + mTrustedScoringParams),
+                mRequestMatcherExactMatch);
 
-        assertEquals(1L,
-                scoringOutcome.get(0).getAdWithScore().getScore().longValue());
-        assertEquals(2L,
-                scoringOutcome.get(1).getAdWithScore().getScore().longValue());
+        assertEquals(1L, scoringOutcome.get(0).getAdWithScore().getScore().longValue());
+        assertEquals(2L, scoringOutcome.get(1).getAdWithScore().getScore().longValue());
+    }
+
+    @Test
+    public void testMissingTrustedSignalsException() throws Exception {
+        // Missing server connection for trusted signals
+        Dispatcher missingSignalsDispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (mFetchJavaScriptPath.equals(request.getPath())) {
+                            return new MockResponse().setBody(mSellerDecisionLogicJs);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+        MockWebServer server = mMockWebServerRule.startMockWebServer(missingSignalsDispatcher);
+
+        Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
+
+        IllegalStateException missingSignalsException =
+                new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
+
+        mAdSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setDecisionLogicUri(decisionLogicUri)
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
+                        .build();
+
+        FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
+                mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
+
+        ExecutionException outException =
+                assertThrows(ExecutionException.class, scoringResultFuture::get);
+        assertEquals(outException.getCause().getMessage(), missingSignalsException.getMessage());
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                2,
+                ImmutableList.of(
+                        mFetchJavaScriptPath, mTrustedScoringSignalsPath + mTrustedScoringParams),
+                mRequestMatcherExactMatch);
     }
 
     @Test
     public void testRunAdScoringUseDevOverrideForJS() throws Exception {
-        List<Double> scores = Arrays.asList(1.0, 2.0);
+        List<Double> scores = ImmutableList.of(1.0, 2.0);
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
         // Different seller decision logic JS to simulate different different override from server
@@ -190,6 +302,8 @@ public class AdsScoreGeneratorImplTest {
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
                         .build();
 
         // Set dev override for this AdSelection
@@ -227,7 +341,7 @@ public class AdsScoreGeneratorImplTest {
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
                                 mAdSelectionConfig.getSellerSignals(),
-                                "{}",
+                                mTrustedScoringSignals,
                                 "{}",
                                 mAdBiddingOutcomeList
                                         .get(0)
@@ -240,32 +354,41 @@ public class AdsScoreGeneratorImplTest {
 
         List<AdScoringOutcome> scoringOutcome = waitForFuture(() -> scoringResultFuture);
 
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                1,
+                ImmutableList.of(mTrustedScoringSignalsPath + mTrustedScoringParams),
+                mRequestMatcherExactMatch);
         Assert.assertEquals(1L, scoringOutcome.get(0).getAdWithScore().getScore().longValue());
         Assert.assertEquals(2L, scoringOutcome.get(1).getAdWithScore().getScore().longValue());
     }
 
     @Test
     public void testRunAdScoringJsonException() throws Exception {
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        ImmutableList.of(new MockResponse().setBody(mSellerDecisionLogicJs)));
-
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setDecisionLogicUri(decisionLogicUri)
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
                         .build();
 
-        Mockito.when(mMockAdSelectionScriptEngine.scoreAds(mSellerDecisionLogicJs,
-                        mAdBiddingOutcomeList.stream().map(a -> a.getAdWithBid())
-                                .collect(Collectors.toList()),
-                        mAdSelectionConfig,
-                        mAdSelectionConfig.getSellerSignals(),
-                        "{}",
-                        "{}",
-                        mAdBiddingOutcomeList.get(0)
-                                .getCustomAudienceBiddingInfo().getCustomAudienceSignals()))
+        Mockito.when(
+                        mMockAdSelectionScriptEngine.scoreAds(
+                                mSellerDecisionLogicJs,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(a -> a.getAdWithBid())
+                                        .collect(Collectors.toList()),
+                                mAdSelectionConfig,
+                                mAdSelectionConfig.getSellerSignals(),
+                                mTrustedScoringSignals,
+                                "{}",
+                                mAdBiddingOutcomeList
+                                        .get(0)
+                                        .getCustomAudienceBiddingInfo()
+                                        .getCustomAudienceSignals()))
                 .thenThrow(new JSONException("Badly formatted JSON"));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -281,8 +404,12 @@ public class AdsScoreGeneratorImplTest {
                                     });
                         });
 
-        RecordedRequest fetchRequest = server.takeRequest();
-        assertEquals(mFetchJavaScriptPath, fetchRequest.getPath());
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                2,
+                ImmutableList.of(
+                        mFetchJavaScriptPath, mTrustedScoringSignalsPath + mTrustedScoringParams),
+                mRequestMatcherExactMatch);
     }
 
     private <T> T waitForFuture(
