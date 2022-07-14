@@ -72,6 +72,9 @@ public class PackageChangedReceiverTest {
         doNothing()
                 .when(mMockPackageChangedReceiver)
                 .onPackageAdded(any(Context.class), any(Uri.class));
+        doNothing()
+                .when(mMockPackageChangedReceiver)
+                .onPackageDataCleared(any(Context.class), any(Uri.class));
         doCallRealMethod()
                 .when(mMockPackageChangedReceiver)
                 .onReceive(any(Context.class), any(Intent.class));
@@ -114,6 +117,8 @@ public class PackageChangedReceiverTest {
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
         verify(mMockPackageChangedReceiver, never())
                 .onPackageAdded(any(Context.class), any(Uri.class));
+        verify(mMockPackageChangedReceiver, never())
+                .onPackageDataCleared(any(Context.class), any(Uri.class));
 
         // Verify method in AppUpdateManager is invoked
         // Note that only package name is passed into following methods.
@@ -133,5 +138,25 @@ public class PackageChangedReceiverTest {
                 .onPackageAdded(any(Context.class), any(Uri.class));
         verify(mMockPackageChangedReceiver, never())
                 .onPackageFullyRemoved(any(Context.class), any(Uri.class));
+        verify(mMockPackageChangedReceiver, never())
+                .onPackageDataCleared(any(Context.class), any(Uri.class));
+    }
+
+    @Test
+    public void testReceivePackageDataCleared() {
+        Intent intent = new Intent();
+        intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
+        intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
+        intent.putExtra(
+                PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+
+        mMockPackageChangedReceiver.onReceive(sContext, intent);
+
+        verify(mMockPackageChangedReceiver, times(1))
+                .onPackageDataCleared(any(Context.class), any(Uri.class));
+        verify(mMockPackageChangedReceiver, never())
+                .onPackageFullyRemoved(any(Context.class), any(Uri.class));
+        verify(mMockPackageChangedReceiver, never())
+                .onPackageAdded(any(Context.class), any(Uri.class));
     }
 }
