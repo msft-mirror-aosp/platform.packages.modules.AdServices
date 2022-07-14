@@ -161,10 +161,8 @@ public class FledgeCtsDebuggableTest {
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(decisionLogicJs)
-                        .build();
+                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, decisionLogicJs);
+
         mAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
                 .get(10, TimeUnit.SECONDS);

@@ -768,7 +768,7 @@ public class AdSelectionServiceImplTest {
         String decisionLogicJs = "function test() { return \"hello world\"; }";
 
         assertThrows(
-                IllegalStateException.class,
+                SecurityException.class,
                 () -> callAddOverride(adSelectionService, adSelectionConfig, decisionLogicJs));
 
         assertFalse(
@@ -883,7 +883,7 @@ public class AdSelectionServiceImplTest {
                         adSelectionConfigId, myAppPackageName));
 
         assertThrows(
-                IllegalStateException.class,
+                SecurityException.class,
                 () -> callRemoveOverride(adSelectionService, adSelectionConfig));
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
@@ -1234,7 +1234,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, myAppPackageName));
 
-        assertThrows(IllegalStateException.class, () -> callResetAllOverrides(adSelectionService));
+        assertThrows(SecurityException.class, () -> callResetAllOverrides(adSelectionService));
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(

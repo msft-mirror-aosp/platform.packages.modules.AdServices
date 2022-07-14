@@ -276,7 +276,7 @@ public class CustomAudienceServiceEndToEndTest {
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         assertThrows(
-                IllegalStateException.class,
+                SecurityException.class,
                 () ->
                         callAddOverride(
                                 MY_APP_PACKAGE_NAME,
@@ -382,7 +382,7 @@ public class CustomAudienceServiceEndToEndTest {
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
 
         assertThrows(
-                IllegalStateException.class,
+                SecurityException.class,
                 () -> callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService));
 
         assertTrue(
@@ -529,7 +529,7 @@ public class CustomAudienceServiceEndToEndTest {
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
 
-        assertThrows(IllegalStateException.class, () -> callResetAllOverrides(mService));
+        assertThrows(SecurityException.class, () -> callResetAllOverrides(mService));
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(

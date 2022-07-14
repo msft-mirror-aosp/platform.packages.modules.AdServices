@@ -112,10 +112,7 @@ public class AdSelectionManagerTest {
         Assume.assumeFalse(mIsDebugMode);
 
         AddAdSelectionOverrideRequest request =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
+                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, DECISION_LOGIC_JS);
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
@@ -126,7 +123,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -134,9 +131,7 @@ public class AdSelectionManagerTest {
         Assume.assumeFalse(mIsDebugMode);
 
         RemoveAdSelectionOverrideRequest request =
-                new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+                new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
@@ -147,7 +142,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -169,7 +164,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
