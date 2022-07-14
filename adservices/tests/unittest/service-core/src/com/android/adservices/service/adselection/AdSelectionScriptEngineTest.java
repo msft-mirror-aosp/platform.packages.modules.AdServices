@@ -294,6 +294,7 @@ public class AdSelectionScriptEngineTest {
                 .setSellerSignals("{}")
                 .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
                 .setAdSelectionSignals("{}")
+                .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                 .build();
     }
 
