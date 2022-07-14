@@ -24,6 +24,7 @@ package android.adservices.adselection {
     method @NonNull public java.util.Map<java.lang.String,java.lang.String> getPerBuyerSignals();
     method @NonNull public String getSeller();
     method @NonNull public String getSellerSignals();
+    method @NonNull public android.net.Uri getTrustedScoringSignalsUri();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.AdSelectionConfig> CREATOR;
   }
@@ -38,6 +39,7 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignals(@NonNull java.util.Map<java.lang.String,java.lang.String>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSeller(@NonNull String);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSellerSignals(@NonNull String);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setTrustedScoringSignalsUri(@NonNull android.net.Uri);
   }
 
   public class AdSelectionManager {
