@@ -139,16 +139,16 @@
                             style="@style/MainStyle.H5" />
                     <TextView
                             android:text="@string/notificationUI_how_it_works_expanded_text4"
-                            style="@style/MainStyle.BoldBullet" />
+                            style="@style/MainStyle.Body1BoldBullet" />
                     <TextView
                             android:text="@string/notificationUI_how_it_works_expanded_text5"
-                            style="@style/MainStyle.BulletSubtext" />
+                            style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
-                            style="@style/MainStyle.BoldBullet"
+                            style="@style/MainStyle.Body1BoldBullet"
                             android:text="@string/notificationUI_how_it_works_expanded_text6" />
                     <TextView
                             android:text="@string/notificationUI_how_it_works_expanded_text7"
-                            style="@style/MainStyle.BulletSubtext" />
+                            style="@style/MainStyle.Body1BulletSubtext" />
                 </LinearLayout>
             </LinearLayout>
 
