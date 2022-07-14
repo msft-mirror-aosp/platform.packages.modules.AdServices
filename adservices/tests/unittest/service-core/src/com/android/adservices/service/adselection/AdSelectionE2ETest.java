@@ -411,12 +411,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dbCustomAudienceActive =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceInactive =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2,
                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
@@ -424,7 +424,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceExpired =
                 createDBCustomAudience(
                         BUYER_3,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_3),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_3),
                         bidsForBuyer3,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
@@ -444,7 +444,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer1/ad1",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -459,7 +459,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceInactive =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1,
                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
@@ -467,7 +467,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceExpired =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
@@ -476,7 +476,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceOutdated =
                 createDBCustomAudience(
                         BUYER_3,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_3),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_3),
                         bidsForBuyer3,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
