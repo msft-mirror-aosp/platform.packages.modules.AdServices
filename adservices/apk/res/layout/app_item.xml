@@ -35,7 +35,7 @@
         android:textSize="20sp" />
     <Button
         android:id="@+id/option_button"
-        style="@style/ActionPrimaryButton"
+        style="@style/MainStyle.NotificationPrimaryButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
