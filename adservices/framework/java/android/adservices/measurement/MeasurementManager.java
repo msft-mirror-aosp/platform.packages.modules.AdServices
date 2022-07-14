@@ -26,6 +26,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.view.InputEvent;
 
 import com.android.adservices.AdServicesCommon;
@@ -160,6 +161,7 @@ public class MeasurementManager {
                         .setRegistrationUri(attributionSource)
                         .setInputEvent(inputEvent)
                         .setPackageName(getPackageName())
+                        .setRequestTime(SystemClock.uptimeMillis())
                         .build(),
                 executor,
                 callback);
@@ -187,7 +189,8 @@ public class MeasurementManager {
 
         try {
             service.registerWebSource(
-                    new WebSourceRegistrationRequestInternal.Builder(request, getPackageName())
+                    new WebSourceRegistrationRequestInternal.Builder(
+                                    request, getPackageName(), SystemClock.uptimeMillis())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override

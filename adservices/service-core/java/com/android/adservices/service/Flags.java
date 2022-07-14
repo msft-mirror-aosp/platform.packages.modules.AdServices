@@ -193,6 +193,23 @@ public interface Flags extends Dumpable {
     int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
     int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
+    /**
+     * Returns the window that an InputEvent has to be within for the system to register it as a
+     * click.
+     */
+    long MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS = 60 * 1000; // 1 minute.
+
+    default long getMeasurementRegistrationInputEventValidWindowMs() {
+        return MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS;
+    }
+
+    /** Returns whether a click event should be verified before a registration request. */
+    boolean MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED = true;
+
+    default boolean getMeasurementIsClickVerificationEnabled() {
+        return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
+    }
+
     /** Returns the app name. */
     default String getMeasurementAppName() {
         return MEASUREMENT_APP_NAME;
