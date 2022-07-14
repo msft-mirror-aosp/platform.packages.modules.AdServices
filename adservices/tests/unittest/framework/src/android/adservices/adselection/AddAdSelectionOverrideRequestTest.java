@@ -27,10 +27,8 @@ public class AddAdSelectionOverrideRequestTest {
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
-        AddAdSelectionOverrideRequest request = new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
+        AddAdSelectionOverrideRequest request =
+                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, DECISION_LOGIC_JS);
 
         assertThat(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
         assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);

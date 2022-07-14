@@ -126,7 +126,7 @@ public class CustomAudienceCtsTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class CustomAudienceCtsTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -163,6 +163,6 @@ public class CustomAudienceCtsTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 }
