@@ -339,7 +339,7 @@ public class FledgeE2ETest {
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer2/ad3",
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
         // Run Report Impression
@@ -474,7 +474,7 @@ public class FledgeE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         // Expect that ad from buyer 1 won since buyer 2 had negative bids
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad2",
+                AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
         // Run Report Impression
@@ -719,7 +719,7 @@ public class FledgeE2ETest {
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer2/ad3",
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
         // Run Report Impression
@@ -845,7 +845,7 @@ public class FledgeE2ETest {
 
         // Expect that ad from buyer 1 won since buyer 2 had negative bids
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad2",
+                AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
 
         // Run Report Impression
