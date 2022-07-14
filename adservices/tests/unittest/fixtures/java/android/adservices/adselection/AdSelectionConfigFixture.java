@@ -78,6 +78,7 @@ public class AdSelectionConfigFixture {
 
     private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
         AdData asData = new AdData(renderUri, metaData);
+
         return new AdWithBid(asData, bid);
     }
 

@@ -57,6 +57,12 @@ import java.util.stream.Collectors;
  * call
  */
 public class AdBidGeneratorImpl implements AdBidGenerator {
+
+    @VisibleForTesting static final String QUERY_PARAM_KEYS = "keys";
+
+    @VisibleForTesting
+    static final String MISSING_TRUSTED_BIDDING_SIGNALS = "Error fetching trusted bidding signals";
+
     @NonNull private final Context mContext;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
@@ -123,8 +129,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             return FluentFuture.from(Futures.immediateFuture(null));
         }
 
-        String trustedBiddingSignals =
-                getTrustedBiddingSignals(customAudience.getTrustedBiddingData());
         String userSignals = buildUserSignals(customAudience);
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(customAudience);
@@ -137,7 +141,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     return new AdData(adData.getRenderUri(), adData.getMetadata());
                                 })
                         .collect(Collectors.toList());
-        // TODO(b/221862406): implementation ads filtering logic.
+        // TODO(b/221862406): implement ads filtering logic.
 
         FluentFuture<String> buyerDecisionLogic =
                 getBuyerDecisionLogic(
@@ -153,7 +157,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                     decisionLogic,
                                     ImmutableList.copyOf(ads),
                                     buyerSignals,
-                                    trustedBiddingSignals,
+                                    customAudience.getTrustedBiddingData(),
                                     contextualSignals,
                                     customAudienceSignals,
                                     userSignals,
@@ -192,14 +196,33 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     private AdBiddingOutcome handleBiddingError(JSONException e) {
         // TODO(b/231326420): Define and implement the certain non-expected exceptions should be
         // re-throw from the AdBidGenerator.
-        LogUtil.e("Fail to generate bids for the ads in this custom audience.", e);
+        LogUtil.e("Failed to generate bids for the ads in this custom audience.", e);
         return null;
     }
 
-    private String getTrustedBiddingSignals(@NonNull DBTrustedBiddingData trustedBiddingData) {
+    private FluentFuture<String> getTrustedBiddingSignals(
+            @NonNull DBTrustedBiddingData trustedBiddingData) {
         Objects.requireNonNull(trustedBiddingData);
-        // TODO(b/221862503): implementing fetching trusted_bidding_signals.
-        return "{}";
+        final Uri trustedBiddingUri = trustedBiddingData.getUrl();
+        final List<String> trustedBiddingKeys = trustedBiddingData.getKeys();
+        final String keysQueryParams = String.join(",", trustedBiddingKeys);
+        final Uri trustedBiddingUriWithKeys =
+                Uri.parse(trustedBiddingUri.toString())
+                        .buildUpon()
+                        .appendQueryParameter(QUERY_PARAM_KEYS, keysQueryParams)
+                        .build();
+
+        FluentFuture trustedSignals =
+                FluentFuture.from(mAdServicesHttpsClient.fetchPayload(trustedBiddingUriWithKeys));
+
+        // TODO(237834494) : Add dev override support for trusted signals
+        return trustedSignals.catching(
+                Exception.class,
+                e -> {
+                    LogUtil.w("Exception encountered when fetching trusted signals", e);
+                    throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
+                },
+                mListeningExecutorService);
     }
 
     private FluentFuture<String> getBuyerDecisionLogic(
@@ -240,40 +263,41 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         return "{}";
     }
 
-    /**
-     * @return the {@link AdWithBid} with the best bid per CustomAudience.
-     */
+    /** @return the {@link AdWithBid} with the best bid per CustomAudience. */
     @NonNull
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(
             @NonNull String buyerDecisionLogicJs,
             @NonNull ImmutableList<AdData> ads,
             @NonNull String buyerSignals,
-            @NonNull String trustedBiddingSignals,
+            @NonNull DBTrustedBiddingData trustedBiddingData,
             @NonNull String contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
             @NonNull String userSignals,
             @NonNull String adSelectionSignals) {
-        try {
-            return FluentFuture.from(
-                            mAdSelectionScriptEngine.generateBids(
+
+        FluentFuture<String> trustedBiddingSignals = getTrustedBiddingSignals(trustedBiddingData);
+
+        return trustedBiddingSignals
+                .transformAsync(
+                        biddingSignals -> {
+                            return mAdSelectionScriptEngine.generateBids(
                                     buyerDecisionLogicJs,
                                     ads,
                                     adSelectionSignals,
                                     buyerSignals,
-                                    trustedBiddingSignals,
+                                    biddingSignals,
                                     contextualSignals,
                                     userSignals,
-                                    customAudienceSignals))
-                    .transform(
-                            adWithBids -> {
-                                return new Pair<>(
-                                        getBestAdWithBidPerCA(adWithBids), buyerDecisionLogicJs);
-                            },
-                            mListeningExecutorService);
-        } catch (JSONException e) {
-            return FluentFuture.from(Futures.immediateFailedFuture(e));
-        }
+                                    customAudienceSignals);
+                        },
+                        mListeningExecutorService)
+                .transform(
+                        adWithBids -> {
+                            return new Pair<>(
+                                    getBestAdWithBidPerCA(adWithBids), buyerDecisionLogicJs);
+                        },
+                        mListeningExecutorService);
     }
 
     @Nullable
