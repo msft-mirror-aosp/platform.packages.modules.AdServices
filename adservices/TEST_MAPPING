@@ -9,6 +9,10 @@
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
+      "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
@@ -36,6 +40,9 @@
     },
     {
       "name": "AdServicesServiceCoreUnitTests"
+    },
+    {
+      "name": "AdServicesJsEngineUnitTests"
     },
     {
       "name": "AdServicesEndToEndTests"
