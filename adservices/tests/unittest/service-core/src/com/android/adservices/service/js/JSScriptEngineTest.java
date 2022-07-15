@@ -23,13 +23,13 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,11 +55,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.chromium.android_webview.js_sandbox.client.JsIsolate;
 import org.chromium.android_webview.js_sandbox.client.JsSandbox;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -80,44 +79,37 @@ public class JSScriptEngineTest {
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
 
-    @Mock private Profiler mMockProfiler;
-    @Mock private StopWatch mSandboxInitWatch;
-    @Mock private StopWatch mSandboxFurtherInitWatch;
     @Mock private StopWatch mIsolateCreateWatch;
     @Mock private StopWatch mJavaExecutionWatch;
+    @Mock JSScriptEngine.JsSandboxProvider mMockSandboxProvider;
 
     @Mock private JsSandbox mMockedSandbox;
     @Mock private JsIsolate mMockedIsolate;
-    @Mock private JSScriptEngine.JsSandboxProvider mMockSandboxProvider;
 
-    private JSScriptEngine mJSScriptEngine;
+    private static final Profiler sMockProfiler = mock(Profiler.class);
+    private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
+    private static JSScriptEngine sJSScriptEngine;
+
+    @BeforeClass
+    public static void initJsSandbox() {
+        when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
+                .thenReturn(sSandboxInitWatch);
+        sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+    }
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        when(mMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
-                .thenReturn(mSandboxInitWatch)
-                .thenReturn(mSandboxFurtherInitWatch);
-        when(mMockProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME))
+        reset(sMockProfiler);
+        when(sMockProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME))
                 .thenReturn(mIsolateCreateWatch);
-        when(mMockProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME))
+        when(sMockProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME))
                 .thenReturn(mJavaExecutionWatch);
 
         FluentFuture<JsSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(mMockedSandbox));
         when(mMockSandboxProvider.getFutureInstance(sContext)).thenReturn(futureInstance);
-
-        mJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, mMockProfiler);
-    }
-
-    @After
-    public void shutDown() {
-        try {
-            mJSScriptEngine.shutdown().get(4, TimeUnit.SECONDS);
-        } catch (Throwable e) {
-            Log.e(TAG, "Error shutting down JSScriptEngine");
-        }
     }
 
     @Test
@@ -129,10 +121,9 @@ public class JSScriptEngineTest {
                                 "test"))
                 .isEqualTo("\"hello world\"");
 
-        verify(mMockProfiler).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
-        verify(mMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
-        verify(mMockProfiler).start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
-        verify(mSandboxInitWatch).stop();
+        verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(sMockProfiler).start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
+        verify(sSandboxInitWatch).stop();
         verify(mIsolateCreateWatch).stop();
         verify(mJavaExecutionWatch).stop();
     }
@@ -278,7 +269,10 @@ public class JSScriptEngineTest {
                                 "test"))
                 .isEqualTo("\"hello world\"");
 
-        mJSScriptEngine.shutdown().get(3, TimeUnit.SECONDS);
+        sJSScriptEngine.shutdown().get(3, TimeUnit.SECONDS);
+
+        when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
+                .thenReturn(sSandboxInitWatch);
 
         assertThat(
                         callJSEngine(
@@ -286,8 +280,11 @@ public class JSScriptEngineTest {
                                 ImmutableList.of(),
                                 "test"))
                 .isEqualTo("\"hello world\"");
-    }
 
+        // Engine is re-initialized
+        verify(sMockProfiler, atLeastOnce()).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
+        verify(sSandboxInitWatch, atLeastOnce()).stop();
+    }
 
     @Test
     public void testConnectionIsResetIfJSProcessIsTerminated() {
@@ -304,7 +301,7 @@ public class JSScriptEngineTest {
                                         JSScriptEngine.createNewInstanceForTesting(
                                                 ApplicationProvider.getApplicationContext(),
                                                 mMockSandboxProvider,
-                                                mMockProfiler),
+                                                sMockProfiler),
                                         "function test() { return \"hello world\"; }",
                                         ImmutableList.of(),
                                         "test"));
@@ -313,8 +310,7 @@ public class JSScriptEngineTest {
         assertThat(executionException.getCause())
                 .isInstanceOf(JSScriptEngineConnectionException.class);
 
-        verify(mMockProfiler).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
-        verify(mMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
+        verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
     // Troubles between google-java-format and checkstile
@@ -338,7 +334,7 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        mMockProfiler),
+                        sMockProfiler),
                 "function test() { return \"hello world\"; }",
                 ImmutableList.of(),
                 "test");
@@ -370,7 +366,7 @@ public class JSScriptEngineTest {
                                 JSScriptEngine.createNewInstanceForTesting(
                                         ApplicationProvider.getApplicationContext(),
                                         mMockSandboxProvider,
-                                        mMockProfiler),
+                                        sMockProfiler),
                                 "function test() { return \"hello world\"; }",
                                 ImmutableList.of(),
                                 "test"));
@@ -414,7 +410,7 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        mMockProfiler);
+                        sMockProfiler);
         ListenableFuture<String> jsExecutionFuture =
                 engine.evaluate(
                         "function test() { return \"hello world\"; }", ImmutableList.of(), "test");
@@ -465,7 +461,7 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        mMockProfiler);
+                        sMockProfiler);
         ExecutionException timeoutException =
                 assertThrows(
                         ExecutionException.class,
@@ -503,7 +499,7 @@ public class JSScriptEngineTest {
                 JSScriptEngine.createNewInstanceForTesting(
                         ApplicationProvider.getApplicationContext(),
                         mMockSandboxProvider,
-                        mMockProfiler);
+                        sMockProfiler);
 
         assertThrows(
                 ExecutionException.class,
@@ -516,93 +512,12 @@ public class JSScriptEngineTest {
         verify(mMockSandboxProvider).destroyCurrentInstance();
     }
 
-    @Test
-    public void testJsSandboxProviderCreatesOnlyOneInstance()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        // Shutting down existing WebView instance otherwise the next creation will fail
-        // with java.lang.IllegalStateException: Binding to already bound service
-        mJSScriptEngine.shutdown().get(3, TimeUnit.SECONDS);
-
-        Profiler profilerMock = mock(Profiler.class);
-        when(profilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
-                .thenReturn(mSandboxInitWatch);
-        JSScriptEngine.JsSandboxProvider jsSandboxProvider =
-                new JSScriptEngine.JsSandboxProvider(profilerMock);
-        Context applicationContext = ApplicationProvider.getApplicationContext();
-
-        JsSandbox firstInstance = null;
-        JsSandbox secondInstance = null;
-        try {
-            firstInstance =
-                    jsSandboxProvider
-                            .getFutureInstance(applicationContext)
-                            .get(5, TimeUnit.SECONDS);
-            secondInstance =
-                    jsSandboxProvider
-                            .getFutureInstance(applicationContext)
-                            .get(5, TimeUnit.SECONDS);
-
-            assertSame(firstInstance, secondInstance);
-            verify(profilerMock).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
-        } finally {
-            if (firstInstance != null) {
-                firstInstance.close();
-            }
-            if (secondInstance != null) {
-                secondInstance.close();
-            }
-        }
-    }
-
-    @Test
-    public void testJsSandboxProviderCreatesNewInstanceAfterFirstIsDestroyed()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        // Shutting down existing WebView instance otherwise the next creation will fail
-        // with java.lang.IllegalStateException: Binding to already bound service
-        mJSScriptEngine.shutdown().get(3, TimeUnit.SECONDS);
-
-        Profiler profilerMock = mock(Profiler.class);
-        when(profilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
-                .thenReturn(mSandboxInitWatch);
-        JSScriptEngine.JsSandboxProvider jsSandboxProvider =
-                new JSScriptEngine.JsSandboxProvider(profilerMock);
-        Context applicationContext = ApplicationProvider.getApplicationContext();
-
-        JsSandbox firstInstance = null;
-        JsSandbox secondInstance = null;
-        try {
-            firstInstance =
-                    jsSandboxProvider
-                            .getFutureInstance(applicationContext)
-                            .get(5, TimeUnit.SECONDS);
-
-            // Waiting for the first instance closure
-            jsSandboxProvider.destroyCurrentInstance().get(4, TimeUnit.SECONDS);
-
-            secondInstance =
-                    jsSandboxProvider
-                            .getFutureInstance(applicationContext)
-                            .get(5, TimeUnit.SECONDS);
-
-            assertNotSame(firstInstance, secondInstance);
-            verify(profilerMock, Mockito.times(2))
-                    .start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
-        } finally {
-            if (firstInstance != null) {
-                firstInstance.close();
-            }
-            if (secondInstance != null) {
-                secondInstance.close();
-            }
-        }
-    }
-
     private String callJSEngine(
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName)
             throws Exception {
-        return callJSEngine(mJSScriptEngine, jsScript, args, functionName);
+        return callJSEngine(sJSScriptEngine, jsScript, args, functionName);
     }
 
     private String callJSEngine(
@@ -623,7 +538,7 @@ public class JSScriptEngineTest {
             @NonNull List<JSScriptArgument> args,
             @NonNull String functionName,
             @NonNull CountDownLatch resultLatch) {
-        return callJSEngineAsync(mJSScriptEngine, jsScript, args, functionName, resultLatch);
+        return callJSEngineAsync(sJSScriptEngine, jsScript, args, functionName, resultLatch);
     }
 
     private ListenableFuture<String> callJSEngineAsync(
