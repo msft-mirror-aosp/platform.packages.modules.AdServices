@@ -40,6 +40,7 @@ public class AdServicesManagerServiceTest {
             "com.android.adservices.PACKAGE_CHANGED";
     private static final String PACKAGE_FULLY_REMOVED = "package_fully_removed";
     private static final String PACKAGE_ADDED = "package_added";
+    private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     @Before
     public void setup() {
@@ -95,6 +96,28 @@ public class AdServicesManagerServiceTest {
         Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
         Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
                 .isEqualTo(PACKAGE_ADDED);
+        Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
+    }
+
+    @Test
+    public void testSendBroadcastForPackageDataCleared() {
+        Intent i = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        i.setData(Uri.parse("package:" + PACKAGE_NAME));
+
+        ArgumentCaptor<Intent> argumentIntent = ArgumentCaptor.forClass(Intent.class);
+        ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
+
+        Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+        mService.onPackageChange(i, mSpyContext.getUser());
+
+        Mockito.verify(mSpyContext, Mockito.times(1))
+                .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
+
+        Truth.assertThat(argumentIntent.getValue().getAction())
+                .isEqualTo(PACKAGE_CHANGED_BROADCAST);
+        Truth.assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
+        Truth.assertThat(argumentIntent.getValue().getStringExtra("action"))
+                .isEqualTo(PACKAGE_DATA_CLEARED);
         Truth.assertThat(argumentUser.getValue()).isEqualTo(mSpyContext.getUser());
     }
 }
