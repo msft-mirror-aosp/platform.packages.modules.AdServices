@@ -34,7 +34,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
-import com.android.adservices.service.topics.classifier.OnDeviceClassifier;
+import com.android.adservices.service.topics.classifier.ClassifierManager;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -122,7 +122,7 @@ public class EpochManager implements Dumpable {
                                 TopicsDao.getInstance(context),
                                 DbHelper.getInstance(context),
                                 new Random(),
-                                OnDeviceClassifier.getInstance(context),
+                                ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 Clock.SYSTEM_CLOCK);
             }
