@@ -73,7 +73,7 @@ public class FledgeCtsDebuggableTest {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                    .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
+                    .setDecisionLogicUri(Uri.parse(SELLER_DECISION_LOGIC_URL))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -161,10 +161,8 @@ public class FledgeCtsDebuggableTest {
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(decisionLogicJs)
-                        .build();
+                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, decisionLogicJs);
+
         mAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
                 .get(10, TimeUnit.SECONDS);
@@ -189,7 +187,7 @@ public class FledgeCtsDebuggableTest {
                 mAdSelectionClient.runAdSelection(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
-        Assert.assertEquals(AD_URL_PREFIX + "buyer2/ad3", outcome.getRenderUrl().toString());
+        Assert.assertEquals(AD_URL_PREFIX + "buyer2/ad3", outcome.getRenderUri().toString());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest.Builder()
@@ -219,7 +217,7 @@ public class FledgeCtsDebuggableTest {
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
-                            .setRenderUrl(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
+                            .setRenderUri(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }

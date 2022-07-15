@@ -108,8 +108,8 @@ public class AdSelectionE2ETest {
     private static final String BUYER = "buyer";
     private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
 
-    private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
-    private static final String BUYER_BIDDING_LOGIC_URL_PREFIX = "/buyer/bidding/logic/";
+    private static final String SELLER_DECISION_LOGIC_URI = "/ssp/decision/logic/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PREFIX = "/buyer/bidding/logic/";
 
     private static final String USE_BID_AS_SCORE_JS =
             "function scoreAd(ad, bid, auction_config, seller_signals, "
@@ -191,10 +191,10 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         }
                         return new MockResponse().setResponseCode(404);
@@ -207,9 +207,9 @@ public class AdSelectionE2ETest {
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
-                        .setDecisionLogicUrl(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI).getHost())
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI))
                         .build();
     }
 
@@ -232,12 +232,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -254,7 +254,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -267,12 +267,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -293,7 +293,7 @@ public class AdSelectionE2ETest {
             DBCustomAudience dBCustomAudienceForBuyerX =
                     createDBCustomAudience(
                             BUYER + i,
-                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                            mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                             bidsForBuyer1);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     dBCustomAudienceForBuyerX, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
@@ -305,9 +305,9 @@ public class AdSelectionE2ETest {
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setCustomAudienceBuyers(participatingBuyers)
                         .setSeller(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
-                        .setDecisionLogicUrl(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI).getHost())
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI))
                         .build();
 
         AdSelectionTestCallback resultsCallback =
@@ -318,7 +318,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -331,12 +331,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         String myAppPackageName = "com.google.ppapi.test";
@@ -397,7 +397,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -411,12 +411,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dbCustomAudienceActive =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceInactive =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2,
                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
@@ -424,7 +424,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceExpired =
                 createDBCustomAudience(
                         BUYER_3,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_3),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_3),
                         bidsForBuyer3,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
@@ -444,7 +444,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer1/ad1",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -459,7 +459,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceInactive =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1,
                         CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
@@ -467,7 +467,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceExpired =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
@@ -476,7 +476,7 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceOutdated =
                 createDBCustomAudience(
                         BUYER_3,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_3),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_3),
                         bidsForBuyer3,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
@@ -522,9 +522,9 @@ public class AdSelectionE2ETest {
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL).getHost())
-                        .setDecisionLogicUrl(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URL))
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI).getHost())
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI))
                         .setCustomAudienceBuyers(Collections.emptyList())
                         .build();
 
@@ -549,12 +549,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -571,7 +571,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer1/ad2",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -589,10 +589,10 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody("");
                         }
                         return new MockResponse().setResponseCode(404);
@@ -604,12 +604,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -642,10 +642,10 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody("");
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         }
                         return new MockResponse().setResponseCode(404);
@@ -657,12 +657,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -695,11 +695,11 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
                                 return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody("");
                         }
                         return new MockResponse().setResponseCode(404);
@@ -711,12 +711,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -733,7 +733,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer1/ad2",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -758,10 +758,10 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody(makeOddBidsNegativeScoreJs);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         }
                         return new MockResponse().setResponseCode(404);
@@ -773,12 +773,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -795,7 +795,7 @@ public class AdSelectionE2ETest {
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
                 AD_URL_PREFIX + "buyer1/ad2",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -820,10 +820,10 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody(makeOddBidsNegativeScoreJs);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         }
                         return new MockResponse().setResponseCode(404);
@@ -835,12 +835,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -883,11 +883,11 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
 
                         switch (request.getPath()) {
-                            case SELLER_DECISION_LOGIC_URL:
+                            case SELLER_DECISION_LOGIC_URI:
                                 return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1:
                                 return new MockResponse().setBody(readBidFromAdMetadataWithDelayJs);
-                            case BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2:
+                            case BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2:
                                 return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         }
                         return new MockResponse().setResponseCode(404);
@@ -903,12 +903,12 @@ public class AdSelectionE2ETest {
         DBCustomAudience dBCustomAudienceForBuyer1 =
                 createDBCustomAudience(
                         BUYER_1,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
         DBCustomAudience dBCustomAudienceForBuyer2 =
                 createDBCustomAudience(
                         BUYER_2,
-                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Populating the Custom Audience DB
@@ -923,7 +923,7 @@ public class AdSelectionE2ETest {
         assertTrue(resultsCallback.mIsSuccess);
         assertEquals(
                 AD_URL_PREFIX + "buyer2/ad3",
-                resultsCallback.mAdSelectionResponse.getRenderUrl().toString());
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
     @Test
@@ -931,7 +931,7 @@ public class AdSelectionE2ETest {
         AdSelectionConfig invalidAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
-                        .setDecisionLogicUrl(DECISION_LOGIC_URL_INCONSISTENT)
+                        .setDecisionLogicUri(DECISION_LOGIC_URL_INCONSISTENT)
                         .build();
 
         Mockito.lenient()

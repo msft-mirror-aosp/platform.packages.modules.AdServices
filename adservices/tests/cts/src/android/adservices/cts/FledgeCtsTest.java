@@ -64,8 +64,8 @@ public class FledgeCtsTest {
 
     private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
 
-    private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
-    private static final String BUYER_BIDDING_LOGIC_URL_PREFIX = "/buyer/bidding/logic/";
+    private static final String SELLER_DECISION_LOGIC_URI = "/ssp/decision/logic/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PREFIX = "/buyer/bidding/logic/";
 
     private static final String SELLER = "developer.android.com";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
@@ -75,8 +75,8 @@ public class FledgeCtsTest {
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
                     .setSeller(SELLER)
-                    .setDecisionLogicUrl(
-                            Uri.parse("https://" + SELLER + "/" + SELLER_DECISION_LOGIC_URL))
+                    .setDecisionLogicUri(
+                            Uri.parse("https://" + SELLER + "/" + SELLER_DECISION_LOGIC_URI))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -137,13 +137,13 @@ public class FledgeCtsTest {
         CustomAudience customAudience1 =
                 createCustomAudience(
                         BUYER_1,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        Uri.parse(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_1),
                         bidsForBuyer1);
 
         CustomAudience customAudience2 =
                 createCustomAudience(
                         BUYER_2,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        Uri.parse(BUYER_BIDDING_LOGIC_URI_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
@@ -153,10 +153,7 @@ public class FledgeCtsTest {
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(decisionLogicJs)
-                        .build();
+                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, decisionLogicJs);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
@@ -168,8 +165,7 @@ public class FledgeCtsTest {
                         () -> {
                             adSelectionOverrideResult.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(adSelectionOverrideException.getCause())
-                .isInstanceOf(IllegalStateException.class);
+        assertThat(adSelectionOverrideException.getCause()).isInstanceOf(SecurityException.class);
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
@@ -192,7 +188,7 @@ public class FledgeCtsTest {
                             customAudienceOverrideResult.get(10, TimeUnit.SECONDS);
                         });
         assertThat(customAudienceOverrideException.getCause())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(SecurityException.class);
 
         // Running ad selection and asserting that a failure is returned since the fetch calls
         // should fail.
@@ -227,7 +223,7 @@ public class FledgeCtsTest {
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
-                            .setRenderUrl(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
+                            .setRenderUri(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }

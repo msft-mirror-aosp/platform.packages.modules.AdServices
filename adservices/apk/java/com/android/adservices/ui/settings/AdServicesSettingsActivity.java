@@ -22,6 +22,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
@@ -81,6 +82,7 @@ public class AdServicesSettingsActivity extends FragmentActivity {
                         this,
                         getSupportFragmentManager(),
                         getViewModelProvider().get(MainViewModel.class),
-                        getViewModelProvider().get(TopicsViewModel.class));
+                        getViewModelProvider().get(TopicsViewModel.class),
+                        getViewModelProvider().get(AppsViewModel.class));
     }
 }

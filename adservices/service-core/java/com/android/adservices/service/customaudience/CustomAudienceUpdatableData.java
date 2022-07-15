@@ -340,7 +340,7 @@ public abstract class CustomAudienceUpdatableData {
 
                     DBAdData adData =
                             new DBAdData.Builder()
-                                    .setRenderUrl(parsedUrl)
+                                    .setRenderUri(parsedUrl)
                                     .setMetadata(metadata)
                                     .build();
                     adsList.add(adData);

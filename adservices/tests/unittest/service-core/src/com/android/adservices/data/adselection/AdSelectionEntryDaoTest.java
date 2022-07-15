@@ -62,13 +62,13 @@ public class AdSelectionEntryDaoTest {
 
     private static final DBBuyerDecisionLogic DB_BUYER_DECISION_LOGIC_1 =
             new DBBuyerDecisionLogic.Builder()
-                    .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URL_1)
                     .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS_1)
                     .build();
 
     private static final DBBuyerDecisionLogic DB_BUYER_DECISION_LOGIC_2 =
             new DBBuyerDecisionLogic.Builder()
-                    .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URL_2)
                     .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS_2)
                     .build();
 
@@ -80,8 +80,8 @@ public class AdSelectionEntryDaoTest {
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
-                    .setWinningAdRenderUrl(RENDER_URL)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URL_1)
+                    .setWinningAdRenderUri(RENDER_URL)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .build();
@@ -91,8 +91,8 @@ public class AdSelectionEntryDaoTest {
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setWinningAdRenderUrl(RENDER_URL)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URL_2)
+                    .setWinningAdRenderUri(RENDER_URL)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .build();
@@ -101,7 +101,7 @@ public class AdSelectionEntryDaoTest {
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setWinningAdRenderUrl(RENDER_URL)
+                    .setWinningAdRenderUri(RENDER_URL)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .build();
@@ -484,10 +484,12 @@ public class AdSelectionEntryDaoTest {
     @Test
     public void testOverwriteDecisionLogic() {
         DBBuyerDecisionLogic firstEntry = DB_BUYER_DECISION_LOGIC_1;
-        DBBuyerDecisionLogic secondEntry = new DBBuyerDecisionLogic.Builder()
-                .setBiddingLogicUrl(DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUrl())
-                .setBuyerDecisionLogicJs(DB_BUYER_DECISION_LOGIC_2.getBuyerDecisionLogicJs())
-                .build();
+        DBBuyerDecisionLogic secondEntry =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(DB_BUYER_DECISION_LOGIC_1.getBiddingLogicUri())
+                        .setBuyerDecisionLogicJs(
+                                DB_BUYER_DECISION_LOGIC_2.getBuyerDecisionLogicJs())
+                        .build();
         mAdSelectionEntryDao.persistBuyerDecisionLogic(firstEntry);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(secondEntry);
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
@@ -510,7 +512,7 @@ public class AdSelectionEntryDaoTest {
                 .setAdSelectionId(adSelection.getAdSelectionId())
                 .setCustomAudienceSignals(adSelection.getCustomAudienceSignals())
                 .setContextualSignals(adSelection.getContextualSignals())
-                .setWinningAdRenderUrl(adSelection.getWinningAdRenderUrl())
+                .setWinningAdRenderUri(adSelection.getWinningAdRenderUri())
                 .setWinningAdBid(adSelection.getWinningAdBid())
                 .setCreationTimestamp(adSelection.getCreationTimestamp())
                 .setBuyerDecisionLogicJs(buyerDecisionLogic.getBuyerDecisionLogicJs())
@@ -526,7 +528,7 @@ public class AdSelectionEntryDaoTest {
                 .setAdSelectionId(adSelection.getAdSelectionId())
                 .setCustomAudienceSignals(adSelection.getCustomAudienceSignals())
                 .setContextualSignals(adSelection.getContextualSignals())
-                .setWinningAdRenderUrl(adSelection.getWinningAdRenderUrl())
+                .setWinningAdRenderUri(adSelection.getWinningAdRenderUri())
                 .setWinningAdBid(adSelection.getWinningAdBid())
                 .setCreationTimestamp(adSelection.getCreationTimestamp())
                 .build();

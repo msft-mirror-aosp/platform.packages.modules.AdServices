@@ -254,12 +254,12 @@ public class AdSelectionRunnerTest {
                                 mAdScoringOutcomeForBuyer2
                                         .getCustomAudienceBiddingInfo()
                                         .getCustomAudienceSignals())
-                        .setWinningAdRenderUrl(
+                        .setWinningAdRenderUri(
                                 mAdScoringOutcomeForBuyer2
                                         .getAdWithScore()
                                         .getAdWithBid()
                                         .getAdData()
-                                        .getRenderUrl())
+                                        .getRenderUri())
                         .setBuyerDecisionLogicJs(
                                 mAdBiddingOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
@@ -315,8 +315,8 @@ public class AdSelectionRunnerTest {
                 expectedAdSelectionResult.getAdSelectionId(),
                 resultsCallback.mAdSelectionResponse.getAdSelectionId());
         assertEquals(
-                expectedAdSelectionResult.getWinningAdRenderUrl(),
-                resultsCallback.mAdSelectionResponse.getRenderUrl());
+                expectedAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
         assertEquals(
                 expectedAdSelectionResult,
@@ -379,13 +379,13 @@ public class AdSelectionRunnerTest {
                                 mAdScoringOutcomeForBuyer2
                                         .getCustomAudienceBiddingInfo()
                                         .getCustomAudienceSignals())
-                        .setWinningAdRenderUrl(
+                        .setWinningAdRenderUri(
                                 mAdScoringOutcomeForBuyer2
                                         .getAdWithScore()
                                         .getAdWithBid()
                                         .getAdData()
-                                        .getRenderUrl())
-                        .setBiddingLogicUrl(
+                                        .getRenderUri())
+                        .setBiddingLogicUri(
                                 mAdScoringOutcomeForBuyer2
                                         .getCustomAudienceBiddingInfo()
                                         .getBiddingLogicUrl())
@@ -434,8 +434,8 @@ public class AdSelectionRunnerTest {
                 expectedDBAdSelectionResult.getAdSelectionId(),
                 resultsCallback.mAdSelectionResponse.getAdSelectionId());
         assertEquals(
-                expectedDBAdSelectionResult.getWinningAdRenderUrl(),
-                resultsCallback.mAdSelectionResponse.getRenderUrl());
+                expectedDBAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         verify(mAdServicesLoggerSpy)
@@ -570,13 +570,13 @@ public class AdSelectionRunnerTest {
                                 mAdScoringOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
                                         .getCustomAudienceSignals())
-                        .setWinningAdRenderUrl(
+                        .setWinningAdRenderUri(
                                 mAdScoringOutcomeForBuyer1
                                         .getAdWithScore()
                                         .getAdWithBid()
                                         .getAdData()
-                                        .getRenderUrl())
-                        .setBiddingLogicUrl(
+                                        .getRenderUri())
+                        .setBiddingLogicUri(
                                 mAdScoringOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
                                         .getBiddingLogicUrl())
@@ -609,8 +609,8 @@ public class AdSelectionRunnerTest {
                 expectedDBAdSelectionResult.getAdSelectionId(),
                 resultsCallback.mAdSelectionResponse.getAdSelectionId());
         assertEquals(
-                expectedDBAdSelectionResult.getWinningAdRenderUrl(),
-                resultsCallback.mAdSelectionResponse.getRenderUrl());
+                expectedDBAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         verify(mAdServicesLoggerSpy)
@@ -1003,13 +1003,13 @@ public class AdSelectionRunnerTest {
                                 mAdScoringOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
                                         .getCustomAudienceSignals())
-                        .setWinningAdRenderUrl(
+                        .setWinningAdRenderUri(
                                 mAdScoringOutcomeForBuyer1
                                         .getAdWithScore()
                                         .getAdWithBid()
                                         .getAdData()
-                                        .getRenderUrl())
-                        .setBiddingLogicUrl(
+                                        .getRenderUri())
+                        .setBiddingLogicUri(
                                 mAdScoringOutcomeForBuyer1
                                         .getCustomAudienceBiddingInfo()
                                         .getBiddingLogicUrl())
@@ -1021,8 +1021,8 @@ public class AdSelectionRunnerTest {
                 expectedDBAdSelectionResult.getAdSelectionId(),
                 resultsCallback.mAdSelectionResponse.getAdSelectionId());
         assertEquals(
-                expectedDBAdSelectionResult.getWinningAdRenderUrl(),
-                resultsCallback.mAdSelectionResponse.getRenderUrl());
+                expectedDBAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
 
         verify(mAdServicesLoggerSpy)

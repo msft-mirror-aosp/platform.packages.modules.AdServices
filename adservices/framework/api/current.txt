@@ -20,7 +20,7 @@ package android.adservices.adselection {
     method @NonNull public String getAdSelectionSignals();
     method @NonNull public java.util.List<android.adservices.adselection.AdWithBid> getContextualAds();
     method @NonNull public java.util.List<java.lang.String> getCustomAudienceBuyers();
-    method @NonNull public android.net.Uri getDecisionLogicUrl();
+    method @NonNull public android.net.Uri getDecisionLogicUri();
     method @NonNull public java.util.Map<java.lang.String,java.lang.String> getPerBuyerSignals();
     method @NonNull public String getSeller();
     method @NonNull public String getSellerSignals();
@@ -34,7 +34,7 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setAdSelectionSignals(@NonNull String);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setContextualAds(@NonNull java.util.List<android.adservices.adselection.AdWithBid>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setCustomAudienceBuyers(@NonNull java.util.List<java.lang.String>);
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setDecisionLogicUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setDecisionLogicUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignals(@NonNull java.util.Map<java.lang.String,java.lang.String>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSeller(@NonNull String);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSellerSignals(@NonNull String);
@@ -51,14 +51,14 @@ package android.adservices.adselection {
 
   public class AdSelectionOutcome {
     method @NonNull public long getAdSelectionId();
-    method @NonNull public android.net.Uri getRenderUrl();
+    method @NonNull public android.net.Uri getRenderUri();
   }
 
   public static final class AdSelectionOutcome.Builder {
     ctor public AdSelectionOutcome.Builder();
     method @NonNull public android.adservices.adselection.AdSelectionOutcome build();
     method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setAdSelectionId(long);
-    method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUri(@NonNull android.net.Uri);
   }
 
   public final class AdWithBid implements android.os.Parcelable {
@@ -71,25 +71,14 @@ package android.adservices.adselection {
   }
 
   public class AddAdSelectionOverrideRequest {
+    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method @NonNull public String getDecisionLogicJs();
   }
 
-  public static final class AddAdSelectionOverrideRequest.Builder {
-    ctor public AddAdSelectionOverrideRequest.Builder();
-    method @NonNull public android.adservices.adselection.AddAdSelectionOverrideRequest build();
-    method @NonNull public android.adservices.adselection.AddAdSelectionOverrideRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
-    method @NonNull public android.adservices.adselection.AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(@NonNull String);
-  }
-
   public class RemoveAdSelectionOverrideRequest {
+    ctor public RemoveAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
-  }
-
-  public static final class RemoveAdSelectionOverrideRequest.Builder {
-    ctor public RemoveAdSelectionOverrideRequest.Builder();
-    method @NonNull public android.adservices.adselection.RemoveAdSelectionOverrideRequest build();
-    method @NonNull public android.adservices.adselection.RemoveAdSelectionOverrideRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
   }
 
   public final class ReportImpressionInput implements android.os.Parcelable {
@@ -126,7 +115,7 @@ package android.adservices.common {
   public final class AdData implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public String getMetadata();
-    method @NonNull public android.net.Uri getRenderUrl();
+    method @NonNull public android.net.Uri getRenderUri();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdData> CREATOR;
   }
@@ -135,7 +124,7 @@ package android.adservices.common {
     ctor public AdData.Builder();
     method @NonNull public android.adservices.common.AdData build();
     method @NonNull public android.adservices.common.AdData.Builder setMetadata(@NonNull String);
-    method @NonNull public android.adservices.common.AdData.Builder setRenderUrl(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.common.AdData.Builder setRenderUri(@NonNull android.net.Uri);
   }
 
 }
@@ -262,12 +251,6 @@ package android.adservices.exceptions {
   public class AdServicesException extends java.lang.Exception {
     ctor public AdServicesException(@Nullable String, @Nullable Throwable);
     ctor public AdServicesException(@Nullable String);
-  }
-
-  public class ApiNotAuthorizedException extends java.lang.RuntimeException {
-    ctor public ApiNotAuthorizedException(@Nullable String, @Nullable Throwable);
-    ctor public ApiNotAuthorizedException(@Nullable String);
-    ctor public ApiNotAuthorizedException();
   }
 
   public class GetTopicsException extends android.adservices.exceptions.AdServicesException {

@@ -30,6 +30,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.data.topics.Topic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Tests for {@link CommonClassifierHelper}.
@@ -64,19 +66,42 @@ public class CommonClassifierHelperTest {
             "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_assets_metadata.json";
+
     private ImmutableList<Integer> testLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> testClassifierAssetsMetadata;
+    private long mTestTaxonomyVersion;
+    private long mTestModelVersion;
+
     private ImmutableList<Integer> productionLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> productionClassifierAssetsMetadata;
+    private long mProductionTaxonomyVersion;
+    private long mProductionModelVersion;
 
     @Before
     public void setUp() {
         testLabels = retrieveLabels(sContext.getAssets(), TEST_LABELS_FILE_PATH);
         testClassifierAssetsMetadata = getAssetsMetadata(
                 sContext.getAssets(), TEST_CLASSIFIER_ASSETS_METADATA_PATH);
+        mTestTaxonomyVersion =
+                Long.parseLong(
+                        testClassifierAssetsMetadata.get("labels_topics").get("asset_version"));
+        mTestModelVersion =
+                Long.parseLong(
+                        testClassifierAssetsMetadata.get("tflite_model").get("asset_version"));
+
         productionLabels = retrieveLabels(sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
         productionClassifierAssetsMetadata = getAssetsMetadata(
                 sContext.getAssets(), PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH);
+        mProductionTaxonomyVersion =
+                Long.parseLong(
+                        productionClassifierAssetsMetadata
+                                .get("labels_topics")
+                                .get("asset_version"));
+        mProductionModelVersion =
+                Long.parseLong(
+                        productionClassifierAssetsMetadata
+                                .get("tflite_model")
+                                .get("asset_version"));
     }
 
     @Test
@@ -112,15 +137,16 @@ public class CommonClassifierHelperTest {
         // construction the appTopics map so that when sorting by the number of occurrences,
         // the order of topics are:
         // topic1, topic2, topic3, topic4, topic5, ...,
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-        appTopics.put("app2", Arrays.asList(1, 2, 3, 4, 5));
-        appTopics.put("app3", Arrays.asList(1, 2, 3, 4, 15));
-        appTopics.put("app4", Arrays.asList(1, 2, 3, 13, 16));
-        appTopics.put("app5", Arrays.asList(1, 10, 12, 14, 20));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app2", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app3", getTestTopics(Arrays.asList(1, 2, 3, 4, 16)));
+        appTopics.put("app4", getTestTopics(Arrays.asList(1, 2, 3, 13, 17)));
+        appTopics.put("app5", getTestTopics(Arrays.asList(1, 2, 11, 14, 18)));
+        appTopics.put("app6", getTestTopics(Arrays.asList(1, 10, 12, 15, 19)));
 
         // This test case should return top 5 topics from appTopics and 1 random topic
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
                         testLabels,
@@ -128,11 +154,11 @@ public class CommonClassifierHelperTest {
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 1);
 
-        assertThat(testResponse.get(0)).isEqualTo(1);
-        assertThat(testResponse.get(1)).isEqualTo(2);
-        assertThat(testResponse.get(2)).isEqualTo(3);
-        assertThat(testResponse.get(3)).isEqualTo(4);
-        assertThat(testResponse.get(4)).isEqualTo(5);
+        assertThat(testResponse.get(0)).isEqualTo(getTestTopic(1));
+        assertThat(testResponse.get(1)).isEqualTo(getTestTopic(2));
+        assertThat(testResponse.get(2)).isEqualTo(getTestTopic(3));
+        assertThat(testResponse.get(3)).isEqualTo(getTestTopic(4));
+        assertThat(testResponse.get(4)).isEqualTo(getTestTopic(5));
         // Check the random topic is not empty
         // The random topic is at the end
         assertThat(testResponse.get(5)).isNotNull();
@@ -140,12 +166,12 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_largeTopTopicsInput() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // We only have 5 topics but requesting for 15 topics,
         // so we will pad them with 10 random topics.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
                         testLabels,
@@ -159,8 +185,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_zeroTopTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // This test case should throw an IllegalArgumentException if numberOfTopTopics is 0.
         assertThrows(
@@ -176,9 +202,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_zeroRandomTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
         // This test case should throw an IllegalArgumentException if numberOfRandomTopics is 0.
         assertThrows(
                 IllegalArgumentException.class,
@@ -193,8 +218,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_negativeTopTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // This test case should throw an IllegalArgumentException if numberOfTopTopics is negative.
         assertThrows(
@@ -210,8 +235,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_negativeRandomTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // This test case should throw an IllegalArgumentException
         // if numberOfRandomTopics is negative.
@@ -228,10 +253,10 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_emptyAppTopicsMap() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // The device does not have an app, an empty top topics list should be returned.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
                         testLabels,
@@ -245,7 +270,7 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_emptyTopicInEachApp() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // app1 and app2 do not have any classification topics.
         appTopics.put("app1", new ArrayList<>());
@@ -253,7 +278,7 @@ public class CommonClassifierHelperTest {
 
         // The device have some apps but the topic corresponding to the app cannot be obtained.
         // In this test case, an empty top topics list should be returned.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
                         testLabels,
@@ -277,14 +302,14 @@ public class CommonClassifierHelperTest {
         // the topicIds of app1 below.
         MockRandom mockRandom = new MockRandom(new long[] {20, 100, 300});
 
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        // We label app1 with the first 5 topicIds in topics list.
-        appTopics.put("app1", Arrays.asList(253, 146, 277, 59, 127));
+        Map<String, List<Topic>> testAppTopics = new HashMap<>();
+        // We label app1 with the first 5 topics in topics list.
+        testAppTopics.put("app1", getTestTopics(Arrays.asList(253, 146, 277, 59, 127)));
 
         // Test the random topic with labels file in test assets.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
-                        appTopics,
+                        testAppTopics,
                         testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
@@ -298,12 +323,16 @@ public class CommonClassifierHelperTest {
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
         // random = 20, topicId = 21
-        assertThat(testResponse.get(5)).isEqualTo(21);
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(21));
+
+        Map<String, List<Topic>> productionAppTopics = new HashMap<>();
+        // We label app1 with the same topic IDs as testAppTopics, but using production metadata.
+        productionAppTopics.put("app1", getProductionTopics(Arrays.asList(253, 146, 277, 59, 127)));
 
         // Test the random topic with labels file in production assets.
-        List<Integer> productionResponse =
+        List<Topic> productionResponse =
                 getTopTopics(
-                        appTopics,
+                        productionAppTopics,
                         productionLabels,
                         new MockRandom(new long[] {50, 100, 300}),
                         /* numberOfTopTopics = */ 5,
@@ -317,7 +346,7 @@ public class CommonClassifierHelperTest {
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
         // random = 20, topicId = 21
-        assertThat(productionResponse.get(5)).isEqualTo(51);
+        assertThat(productionResponse.get(5)).isEqualTo(getProductionTopic(51));
     }
 
     @Test
@@ -333,12 +362,12 @@ public class CommonClassifierHelperTest {
         // in topics list.
         MockRandom mockRandom = new MockRandom(new long[] {10, 20, 50, 75, 100, 300, 500});
 
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
         // The topicId we use is verticals4 and its index range is from 0 to 1918.
         // We label app1 with the first 5 topicIds in topics list.
-        appTopics.put("app1", Arrays.asList(34, 89, 69, 349, 241));
+        appTopics.put("app1", getTestTopics(Arrays.asList(34, 89, 69, 349, 241)));
 
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
                         testLabels,
@@ -354,26 +383,26 @@ public class CommonClassifierHelperTest {
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
         // random = 10, topicId = 11
-        assertThat(testResponse.get(5)).isEqualTo(11);
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(11));
 
         // random = 20, topicId = 21
-        assertThat(testResponse.get(6)).isEqualTo(21);
+        assertThat(testResponse.get(6)).isEqualTo(getTestTopic(21));
 
         // random = 50, topicId = 51
-        assertThat(testResponse.get(7)).isEqualTo(51);
+        assertThat(testResponse.get(7)).isEqualTo(getTestTopic(51));
 
         // random = 75, topicId = 76
-        assertThat(testResponse.get(8)).isEqualTo(76);
+        assertThat(testResponse.get(8)).isEqualTo(getTestTopic(76));
 
         // random = 100, topicId = 101
-        assertThat(testResponse.get(9)).isEqualTo(101);
+        assertThat(testResponse.get(9)).isEqualTo(getTestTopic(101));
 
         // random = 300, topicId = 301
-        assertThat(testResponse.get(10)).isEqualTo(301);
+        assertThat(testResponse.get(10)).isEqualTo(getTestTopic(301));
 
         // random = 500, size of labels list is 349,
         // index should be 500 % 349 = 151, topicId = 152
-        assertThat(testResponse.get(11)).isEqualTo(152);
+        assertThat(testResponse.get(11)).isEqualTo(getTestTopic(152));
     }
 
     @Test
@@ -387,16 +416,16 @@ public class CommonClassifierHelperTest {
         // in the topics list will overlap with the topicIds of app1 below.
         MockRandom mockRandom = new MockRandom(new long[] {1, 5, 10, 25, 100, 300});
 
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // If the random topic duplicates with the real topic, then pick another random
         // one until no duplicates. In this test, we will let app1 have five topicIds of
         // 2, 6, 11, 26, 101. These topicIds are the same as the topicIds in the
         // classifier/precomputed_test_app_list_chrome_topics.csv corresponding to
         // the first five indices in the MockRandomArray.
-        appTopics.put("app1", Arrays.asList(2, 6, 11, 26, 101));
+        appTopics.put("app1", getTestTopics(Arrays.asList(2, 6, 11, 26, 101)));
 
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
                         testLabels,
@@ -414,7 +443,7 @@ public class CommonClassifierHelperTest {
         // In this test, if we want to select a random topic that does not repeat,
         // we should select the one corresponding to the sixth index
         // in the MockRandom array topicId, i.e. random = 300, topicId = 301
-        assertThat(testResponse.get(5)).isEqualTo(301);
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(301));
     }
 
     @Test
@@ -431,9 +460,9 @@ public class CommonClassifierHelperTest {
                 "taxonomy_type", "taxonomy_version", "updated_date");
 
         // The property "version_info" should have attribution "taxonomy_version"
-        // and its value should be "1.0".
+        // and its value should be "12".
         assertThat(testClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
-                .isEqualTo("1.0");
+                .isEqualTo("12");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome".
@@ -448,9 +477,9 @@ public class CommonClassifierHelperTest {
                 "asset_version", "path", "checksum", "updated_date");
 
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
-        // "1.0"
+        // "1"
         assertThat(testClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
-                .isEqualTo("1.0");
+                .isEqualTo("34");
 
         // The asset "labels_topics" should have attribution "path" and its value should be
         // "assets/classifier/labels_test_topics.txt"
@@ -592,5 +621,21 @@ public class CommonClassifierHelperTest {
                 sContext.getAssets(), PRODUCTION_PRECOMPUTED_FILE_PATH);
         assertThat(precomputedAppsProductionChecksum).isEqualTo(
                 productionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
+    }
+
+    private Topic getTestTopic(int topicId) {
+        return Topic.create(topicId, mTestTaxonomyVersion, mTestModelVersion);
+    }
+
+    private List<Topic> getTestTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::getTestTopic).collect(Collectors.toList());
+    }
+
+    private Topic getProductionTopic(int topicId) {
+        return Topic.create(topicId, mProductionTaxonomyVersion, mProductionModelVersion);
+    }
+
+    private List<Topic> getProductionTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::getProductionTopic).collect(Collectors.toList());
     }
 }
