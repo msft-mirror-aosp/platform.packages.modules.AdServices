@@ -22,6 +22,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.content.Context;
+import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +56,6 @@ public class SdkSandboxManagerTest {
     public void loadSdkSuccessfully() {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
@@ -115,6 +116,34 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.requestSurfacePackage(
                 sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
+    }
+
+    @Test
+    public void getLoadedSdkLibrariesInfoSuccessfully() {
+        final String sdkName = "com.android.getLoadedSdkLibInfoSuccessfully";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        List<SharedLibraryInfo> sdkLibrariesInfo = mSdkSandboxManager.getLoadedSdkLibrariesInfo();
+
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        // TODO(b/239025435): assert size 1 after unload is implemented
+        assertThat(sdkLibrariesInfo.stream().filter(lib -> lib.getName().equals(sdkName)).count())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void getLoadedSdkLibrariesInfoMissesSdkWhenLoadFailed() {
+        final String sdkName = "com.android.loadSdkWithInternalErrorSdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+
+        List<SharedLibraryInfo> sdkLibrariesInfo = mSdkSandboxManager.getLoadedSdkLibrariesInfo();
+        // TODO(b/239025435): assert empty after unload is implemented
+        assertThat(sdkLibrariesInfo.stream().filter(lib -> lib.getName().equals(sdkName)).count())
+                .isEqualTo(0);
     }
 
     @Test
