@@ -110,41 +110,65 @@ public class AdSelectionEntryDaoTest {
     private static final String APP_PACKAGE_NAME_1 = "appPackageName1";
     private static final String DECISION_LOGIC_JS_1 =
             "function test() { return \"hello world_1\"; }";
+    private static final String TRUSTED_SCORING_SIGNALS_1 =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_1_2\"\n"
+                    + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_1 =
             DBAdSelectionOverride.builder()
                     .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_1)
                     .setAppPackageName(APP_PACKAGE_NAME_1)
                     .setDecisionLogicJS(DECISION_LOGIC_JS_1)
+                    .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS_1)
                     .build();
 
     private static final String AD_SELECTION_CONFIG_ID_2 = "2";
     private static final String APP_PACKAGE_NAME_2 = "appPackageName2";
     private static final String DECISION_LOGIC_JS_2 =
             "function test() { return \"hello world_2\"; }";
+    private static final String TRUSTED_SCORING_SIGNALS_2 =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_2_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2_2\"\n"
+                    + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_2 =
             DBAdSelectionOverride.builder()
                     .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_2)
                     .setAppPackageName(APP_PACKAGE_NAME_2)
                     .setDecisionLogicJS(DECISION_LOGIC_JS_2)
+                    .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS_2)
                     .build();
 
     private static final String DECISION_LOGIC_JS_3 =
             "function test() { return \"hello world_3\"; }";
+    private static final String TRUSTED_SCORING_SIGNALS_3 =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_3_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_3_2\"\n"
+                    + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_3 =
             DBAdSelectionOverride.builder()
                     .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_1)
                     .setAppPackageName(APP_PACKAGE_NAME_1)
                     .setDecisionLogicJS(DECISION_LOGIC_JS_3)
+                    .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS_3)
                     .build();
 
     private static final String AD_SELECTION_CONFIG_ID_4 = "4";
     private static final String DECISION_LOGIC_JS_4 =
             "function test() { return \"hello world_4\"; }";
+    private static final String TRUSTED_SCORING_SIGNALS_4 =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_4_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_4_2\"\n"
+                    + "}";
     public static final DBAdSelectionOverride DB_AD_SELECTION_OVERRIDE_4 =
             DBAdSelectionOverride.builder()
                     .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_4)
                     .setAppPackageName(APP_PACKAGE_NAME_1)
                     .setDecisionLogicJS(DECISION_LOGIC_JS_4)
+                    .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS_4)
                     .build();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -267,7 +291,12 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.getDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
+        String trustedScoringSignals =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
+
         assertEquals(DECISION_LOGIC_JS_1, decisionLogicJS);
+        assertEquals(TRUSTED_SCORING_SIGNALS_1, trustedScoringSignals);
     }
 
     @Test
@@ -290,8 +319,12 @@ public class AdSelectionEntryDaoTest {
         String decisionLogicJS_1 =
                 mAdSelectionEntryDao.getDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
+        String trustedScoringSignals_1 =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_1, decisionLogicJS_1);
+        assertEquals(TRUSTED_SCORING_SIGNALS_1, trustedScoringSignals_1);
 
         // Persisting with same AdSelectionConfigId but different decisionLogicJS
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_3);
@@ -299,8 +332,12 @@ public class AdSelectionEntryDaoTest {
         String decisionLogicJS_3 =
                 mAdSelectionEntryDao.getDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
+        String trustedScoringSignals_3 =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_3, decisionLogicJS_3);
+        assertEquals(TRUSTED_SCORING_SIGNALS_3, trustedScoringSignals_3);
     }
 
     @Test
@@ -319,14 +356,22 @@ public class AdSelectionEntryDaoTest {
         String decisionLogicJS_1 =
                 mAdSelectionEntryDao.getDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
+        String trustedScoringSignals_1 =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_1);
 
         assertEquals(DECISION_LOGIC_JS_1, decisionLogicJS_1);
+        assertEquals(TRUSTED_SCORING_SIGNALS_1, trustedScoringSignals_1);
 
         String decisionLogicJS_2 =
                 mAdSelectionEntryDao.getDecisionLogicOverride(
                         AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2);
+        String trustedScoringSignals_2 =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        AD_SELECTION_CONFIG_ID_2, APP_PACKAGE_NAME_2);
 
         assertEquals(DECISION_LOGIC_JS_2, decisionLogicJS_2);
+        assertEquals(TRUSTED_SCORING_SIGNALS_2, trustedScoringSignals_2);
     }
 
     @Test
@@ -334,6 +379,9 @@ public class AdSelectionEntryDaoTest {
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
         assertNull(
                 mAdSelectionEntryDao.getDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_2));
+        assertNull(
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
                         AD_SELECTION_CONFIG_ID_1, APP_PACKAGE_NAME_2));
     }
 

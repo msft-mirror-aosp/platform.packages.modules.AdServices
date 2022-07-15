@@ -140,7 +140,7 @@ public class AdSelectionE2ETest {
                     + "\t\"keys\": \"trusted bidding signal Values\"\n"
                     + "}";
 
-    private static final String TRUSTED_SELLER_SIGNALS =
+    private static final String TRUSTED_SCORING_SIGNALS =
             "{\n"
                     + "\t\"render_url_1\": \"signals_for_1\",\n"
                     + "\t\"render_url_2\": \"signals_for_2\"\n"
@@ -228,7 +228,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -392,6 +392,7 @@ public class AdSelectionE2ETest {
                                         mAdSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(USE_BID_AS_SCORE_JS)
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
@@ -651,7 +652,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -715,7 +716,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -780,7 +781,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -853,7 +854,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -926,7 +927,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1001,7 +1002,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1100,7 +1101,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1215,7 +1216,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                         }
                         return new MockResponse().setResponseCode(404);
                     }

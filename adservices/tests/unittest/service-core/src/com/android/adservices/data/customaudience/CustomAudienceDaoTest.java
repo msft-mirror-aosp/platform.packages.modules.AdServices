@@ -526,7 +526,8 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_1 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
@@ -539,7 +540,8 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_3 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_3, biddingLogicJs3);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_3, trustedBiddingData_3);
@@ -558,7 +560,8 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_1 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
@@ -568,7 +571,8 @@ public class CustomAudienceDaoTest {
                         OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
         String trustedBiddingData_2 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_2, BUYER_2, NAME_2);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
         assertEquals(BIDDING_LOGIC_JS_2, biddingLogicJs2);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_2, trustedBiddingData_2);

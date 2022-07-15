@@ -78,6 +78,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -109,7 +110,7 @@ public class FledgeE2ETest {
                     + "\t\"of\": \"of\",\n"
                     + "\t\"keys\": \"trusted bidding signal Values\"\n"
                     + "}";
-    private static final String TRUSTED_SELLER_SIGNALS =
+    private static final String TRUSTED_SCORING_SIGNALS =
             "{\n"
                     + "\t\"render_url_1\": \"signals_for_1\",\n"
                     + "\t\"render_url_2\": \"signals_for_2\"\n"
@@ -263,7 +264,7 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -300,7 +301,10 @@ public class FledgeE2ETest {
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
                 callAddAdSelectionOverride(
-                        mAdSelectionService, mAdSelectionConfig, decisionLogicJs);
+                        mAdSelectionService,
+                        mAdSelectionConfig,
+                        decisionLogicJs,
+                        TRUSTED_SCORING_SIGNALS);
 
         assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
 
@@ -311,7 +315,7 @@ public class FledgeE2ETest {
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
-                        "",
+                        TRUSTED_BIDDING_SIGNALS,
                         mCustomAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
@@ -322,7 +326,7 @@ public class FledgeE2ETest {
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
-                        "",
+                        TRUSTED_BIDDING_SIGNALS,
                         mCustomAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
@@ -350,12 +354,7 @@ public class FledgeE2ETest {
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
-                server,
-                3,
-                ImmutableList.of(
-                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS,
-                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
-                mRequestMatcherPrefixMatch);
+                server, 0, Collections.emptyList(), mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -402,19 +401,7 @@ public class FledgeE2ETest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         request -> {
-                            switch (request.getPath()) {
-                                case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
-                            }
-
-                            // The seller params vary based on runtime, so we are returning trusted
-                            // signals based on correct path prefix
-                            if (request.getPath()
-                                    .startsWith(
-                                            SELLER_TRUSTED_SIGNAL_URI_PATH
-                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
-                            }
+                            // With overrides the server should not be called
                             return new MockResponse().setResponseCode(404);
                         });
 
@@ -448,7 +435,10 @@ public class FledgeE2ETest {
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
                 callAddAdSelectionOverride(
-                        mAdSelectionService, mAdSelectionConfig, decisionLogicJs);
+                        mAdSelectionService,
+                        mAdSelectionConfig,
+                        decisionLogicJs,
+                        TRUSTED_SCORING_SIGNALS);
 
         assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
 
@@ -459,7 +449,7 @@ public class FledgeE2ETest {
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
-                        "",
+                        TRUSTED_BIDDING_SIGNALS,
                         mCustomAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
@@ -470,7 +460,7 @@ public class FledgeE2ETest {
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
-                        "",
+                        TRUSTED_BIDDING_SIGNALS,
                         mCustomAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
@@ -499,12 +489,7 @@ public class FledgeE2ETest {
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
-                server,
-                3,
-                ImmutableList.of(
-                        BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS,
-                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
-                mRequestMatcherPrefixMatch);
+                server, 0, Collections.emptyList(), mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -551,19 +536,7 @@ public class FledgeE2ETest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         request -> {
-                            switch (request.getPath()) {
-                                case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
-                            }
-
-                            // The seller params vary based on runtime, so we are returning trusted
-                            // signals based on correct path prefix
-                            if (request.getPath()
-                                    .startsWith(
-                                            SELLER_TRUSTED_SIGNAL_URI_PATH
-                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
-                            }
+                            // with overrides the server should not be invoked
                             return new MockResponse().setResponseCode(404);
                         });
 
@@ -595,7 +568,10 @@ public class FledgeE2ETest {
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
                 callAddAdSelectionOverride(
-                        mAdSelectionService, mAdSelectionConfig, decisionLogicJs);
+                        mAdSelectionService,
+                        mAdSelectionConfig,
+                        decisionLogicJs,
+                        TRUSTED_SCORING_SIGNALS);
 
         assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
 
@@ -642,10 +618,7 @@ public class FledgeE2ETest {
 
         assertFalse(reportImpressionTestCallback.mIsSuccess);
         mMockWebServerRule.verifyMockServerRequests(
-                server,
-                2,
-                ImmutableList.of(BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS),
-                mRequestMatcherPrefixMatch);
+                server, 0, Collections.emptyList(), mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -723,7 +696,7 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -847,7 +820,7 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -973,7 +946,7 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SELLER_SIGNALS);
+                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -1032,14 +1005,15 @@ public class FledgeE2ETest {
     private AdSelectionOverrideTestCallback callAddAdSelectionOverride(
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
-            String decisionLogicJS)
+            String decisionLogicJS,
+            String trustedScoringSignals)
             throws Exception {
         // Counted down in 1) callback
         CountDownLatch resultLatch = new CountDownLatch(1);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
-                adSelectionConfig, decisionLogicJS, callback);
+                adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
         resultLatch.await();
         return callback;
     }

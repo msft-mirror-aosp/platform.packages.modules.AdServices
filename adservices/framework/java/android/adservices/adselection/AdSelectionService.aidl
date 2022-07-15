@@ -99,6 +99,7 @@ interface AdSelectionService {
     void overrideAdSelectionConfigRemoteInfo(
         in AdSelectionConfig adSelectionConfig,
         in String decisionLogicJS,
+        in String trustedScoringSignals,
         in AdSelectionOverrideCallback callback);
 
    /**
