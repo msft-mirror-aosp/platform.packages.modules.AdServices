@@ -35,6 +35,7 @@ public final class EnrollmentDataTest {
         return new EnrollmentData.Builder()
                 .setEnrollmentId("1")
                 .setCompanyId("100")
+                .setSdkNames(Arrays.asList("Admob"))
                 .setAttributionSourceRegistrationUrl(
                         Arrays.asList("source1.example.com", "source2.example.com"))
                 .setAttributionTriggerRegistrationUrl(
@@ -53,6 +54,7 @@ public final class EnrollmentDataTest {
         EnrollmentData enrollmentData = createEnrollmentData();
         assertEquals("1", enrollmentData.getEnrollmentId());
         assertEquals("100", enrollmentData.getCompanyId());
+        assertThat(enrollmentData.getSdkNames()).containsExactly("Admob");
         assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
                 .containsExactly("source1.example.com", "source2.example.com");
         assertThat(enrollmentData.getAttributionTriggerRegistrationUrl())
@@ -70,6 +72,7 @@ public final class EnrollmentDataTest {
         EnrollmentData enrollmentData = new EnrollmentData.Builder().build();
         assertNull(enrollmentData.getEnrollmentId());
         assertNull(enrollmentData.getCompanyId());
+        assertEquals(enrollmentData.getSdkNames().size(), 0);
         assertEquals(enrollmentData.getAttributionSourceRegistrationUrl().size(), 0);
         assertEquals(enrollmentData.getAttributionTriggerRegistrationUrl().size(), 0);
         assertEquals(enrollmentData.getAttributionReportingUrl().size(), 0);
