@@ -16,9 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.measurement.MeasurementManager.RESULT_OK;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
+
+import static com.android.adservices.ResultCode.RESULT_OK;
 
 import android.content.AttributionSource;
 import android.content.Context;
