@@ -261,18 +261,13 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdBiddingPerCAWithJsOverrideSuccess() throws Exception {
-        // Resetting the server with a missing JS response body
+    public void testRunAdBiddingPerCAWithOverrideSuccess() throws Exception {
+        // Resetting the server with a missing response body, we do not expect any server calls
         mServer =
                 mMockWebServerRule.startMockWebServer(
                         new Dispatcher() {
                             @Override
                             public MockResponse dispatch(RecordedRequest request) {
-
-                                switch (request.getPath()) {
-                                    case mTrustedBiddingPath + mTrustedBiddingParams:
-                                        return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
-                                }
                                 return new MockResponse().setResponseCode(404);
                             }
                         });
@@ -352,10 +347,7 @@ public class AdBidGeneratorImplTest {
                         EMPTY_USER_SIGNALS,
                         mCustomAudienceSignals);
         mMockWebServerRule.verifyMockServerRequests(
-                mServer,
-                1,
-                ImmutableList.of(mTrustedBiddingPath + mTrustedBiddingParams),
-                mRequestMatcherExactMatch);
+                mServer, 0, Collections.emptyList(), mRequestMatcherExactMatch);
     }
 
     @Test
@@ -500,10 +492,9 @@ public class AdBidGeneratorImplTest {
         // When the call to runBidding, and the computation of future is complete.
         FluentFuture<Pair<AdWithBid, String>> result =
                 mAdBidGenerator.runBidding(
+                        mCustomAudienceWithAds,
                         mBuyerDecisionLogicJs,
-                        ImmutableList.copyOf(ADS),
                         EMPTY_BUYER_SIGNALS,
-                        mTrustedBiddingData,
                         EMPTY_CONTEXTUAL_SIGNALS,
                         mCustomAudienceSignals,
                         EMPTY_USER_SIGNALS,
