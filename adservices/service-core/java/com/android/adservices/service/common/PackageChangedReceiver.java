@@ -51,6 +51,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     /** Value if the package change was an installation. */
     public static final String PACKAGE_ADDED = "package_added";
 
+    /** Value if the package had its data cleared. */
+    public static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
+
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
@@ -67,6 +70,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     case PACKAGE_ADDED:
                         onPackageAdded(context, packageUri);
                         break;
+                    case PACKAGE_DATA_CLEARED:
+                        onPackageDataCleared(context, packageUri);
+                        break;
                 }
                 break;
         }
@@ -74,7 +80,13 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
     @VisibleForTesting
     void onPackageFullyRemoved(Context context, Uri packageUri) {
-        LogUtil.i("Package Fully Removed: " + packageUri);
+        LogUtil.i("Package Fully Removed:" + packageUri);
+        sBackgroundExecutor.execute(
+                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+    }
+
+    void onPackageDataCleared(Context context, Uri packageUri) {
+        LogUtil.i("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
