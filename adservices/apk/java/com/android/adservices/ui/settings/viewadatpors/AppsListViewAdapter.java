@@ -15,10 +15,12 @@
  */
 package com.android.adservices.ui.settings.viewadatpors;
 
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -27,6 +29,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.App;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 
 import com.google.common.collect.ImmutableList;
@@ -81,16 +85,19 @@ public class AppsListViewAdapter extends RecyclerView.Adapter {
 
         private final TextView mAppTextView;
         private final Button mOptionButtonView;
+        private final ImageView mImageView;
 
         public AppsViewHolder(View itemView) {
             super(itemView);
             mAppTextView = itemView.findViewById(R.id.app_text);
             mOptionButtonView = itemView.findViewById(R.id.option_button);
+            mImageView = itemView.findViewById(R.id.app_icon);
         }
 
         /** Set the human readable string for the app and listener for block app logic. */
         public void initAppItem(App app, AppsViewModel viewModel, boolean mIsBlockedAppsListItem) {
-            mAppTextView.setText(Integer.toString(app.getAppId()));
+            prepareAppName(app, viewModel);
+            prepareAppImageView(app, viewModel);
             if (mIsBlockedAppsListItem) {
                 mOptionButtonView.setText(R.string.settingsUI_unblock_app_title);
                 mOptionButtonView.setOnClickListener(
@@ -103,6 +110,18 @@ public class AppsListViewAdapter extends RecyclerView.Adapter {
                         view -> {
                             viewModel.revokeAppConsentButtonClickHandler(app);
                         });
+            }
+        }
+
+        private void prepareAppName(App app, AppsViewModel viewModel) {
+            mAppTextView.setText(
+                    app.getAppDisplayName(viewModel.getApplication().getPackageManager()));
+        }
+
+        private void prepareAppImageView(App app, AppsViewModel viewModel) {
+            Drawable appIcon = app.getAppIcon(viewModel.getApplication().getApplicationContext());
+            if (appIcon != null) {
+                mImageView.setImageDrawable(appIcon);
             }
         }
     }

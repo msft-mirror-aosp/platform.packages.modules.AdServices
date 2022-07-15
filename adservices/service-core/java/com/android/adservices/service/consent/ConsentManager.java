@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Manager to handle user's consent.
@@ -176,6 +177,58 @@ public class ConsentManager {
     /** Wipes out all the data gathered by Topics API but blocked topics. */
     public void resetTopics() {
         mTopicsWorker.clearAllTopicsData(List.of(TopicsTables.BlockedTopicsContract.TABLE));
+    }
+
+    /**
+     * @return an {@link ImmutableList} of all known apps in the database that have not had user
+     *     consent revoked
+     */
+    public ImmutableList<App> getKnownAppsWithConsent() {
+        try {
+            return ImmutableList.copyOf(
+                    mAppConsentDao.getKnownAppsWithConsent().stream()
+                            .map(App::create)
+                            .collect(Collectors.toList()));
+        } catch (IOException e) {
+            LogUtil.e(e, "getKnownAppsWithConsent failed due to IOException.");
+            return ImmutableList.of();
+        }
+    }
+
+    /**
+     * @return an {@link ImmutableList} of all known apps in the database that have had user consent
+     *     revoked
+     */
+    public ImmutableList<App> getAppsWithRevokedConsent() {
+        try {
+            return ImmutableList.copyOf(
+                    mAppConsentDao.getAppsWithRevokedConsent().stream()
+                            .map(App::create)
+                            .collect(Collectors.toList()));
+        } catch (IOException e) {
+            LogUtil.e(e, "getAppsWithRevokedConsent failed due to IOException.");
+            return ImmutableList.of();
+        }
+    }
+
+    /**
+     * Proxy call to {@link AppConsentDao} to revoke consent for provided {@link App}.
+     *
+     * @param app {@link App} to block.
+     */
+    @NonNull
+    public void revokeConsentForApp(@NonNull App app) throws IOException {
+        mAppConsentDao.setConsentForApp(app.getPackageName(), true);
+    }
+
+    /**
+     * Proxy call to {@link AppConsentDao} to restore consent for provided {@link App}.
+     *
+     * @param app {@link App} to restore consent for.
+     */
+    @NonNull
+    public void restoreConsentForApp(@NonNull App app) throws IOException {
+        mAppConsentDao.setConsentForApp(app.getPackageName(), false);
     }
 
     /**

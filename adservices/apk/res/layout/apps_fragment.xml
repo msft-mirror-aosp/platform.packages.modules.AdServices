@@ -15,116 +15,117 @@
 -->
 
 <androidx.appcompat.widget.LinearLayoutCompat
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/apps_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/apps_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
     <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
         <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:orientation="vertical">
             <TextView
-                    android:text="@string/settingsUI_apps_view_title"
-                    style="@style/MainStyle.H1" />
+                android:id="@+id/settingsUI_apps_title"
+                android:text="@string/settingsUI_apps_view_title"
+                style="@style/MainStyle.H1" />
             <TextView
-                    android:layout_marginTop="18dp"
-                    android:text="@string/settingsUI_apps_view_subtitle"
-                    style="@style/MainStyle.Body2" />
+                android:layout_marginTop="18dp"
+                android:text="@string/settingsUI_apps_view_subtitle"
+                style="@style/MainStyle.Body2" />
 
             <LinearLayout
-                    android:id="@+id/no_apps_message"
+                android:id="@+id/no_apps_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="48dp"
+                android:layout_marginBottom="36dp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_placeholder_icon"
+                    tools:ignore="ContentDescription" />
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="48dp"
-                    android:layout_marginBottom="36dp"
+                    android:layout_marginTop="24dp"
                     android:gravity="center"
-                    android:visibility="gone"
-                    android:orientation="vertical">
-                <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_placeholder_icon"
-                        tools:ignore="ContentDescription" />
-                <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:gravity="center"
-                        android:text="@string/settingsUI_apps_view_no_apps_text"
-                        android:textAppearance="@style/TextAppearance.Body2.Bold" />
+                    android:text="@string/settingsUI_apps_view_no_apps_text"
+                    android:textAppearance="@style/TextAppearance.Body2.Bold" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/apps_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipToPadding="false"
-                    android:scrollbars="none" />
+                android:id="@+id/apps_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:scrollbars="none" />
 
             <LinearLayout
-                    android:id="@+id/blocked_apps_button"
+                android:id="@+id/blocked_apps_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="?android:attr/selectableItemBackground" >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="24dp"
+                    android:key="blocked_apps"
+                    android:text="@string/settingsUI_blocked_apps_title"
+                    android:textAppearance="@style/TextAppearance.H5"
+                    android:drawableStart="@drawable/ic_chevron_right_24dp"
+                    android:drawablePadding="28dp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/empty_apps_hidden_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp" >
+                <LinearLayout
+                    android:id="@+id/reset_apps_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:background="?android:attr/selectableItemBackground" >
-                <TextView
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:paddingTop="24dp"
                         android:paddingBottom="24dp"
-                        android:key="blocked_apps"
-                        android:text="@string/settingsUI_blocked_apps_title"
+                        android:key="reset_apps"
+                        android:text="@string/settingsUI_reset_apps_title"
                         android:textAppearance="@style/TextAppearance.H5"
-                        android:drawableStart="@drawable/ic_chevron_right_24dp"
+                        android:drawableStart="@drawable/ic_restart_alt_24dp"
                         android:drawablePadding="28dp"/>
-            </LinearLayout>
-
-            <LinearLayout
-                    android:id="@+id/empty_apps_hidden_section"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingBottom="24dp" >
-                <LinearLayout
-                        android:id="@+id/reset_apps_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:background="?android:attr/selectableItemBackground" >
-                    <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="24dp"
-                            android:paddingBottom="24dp"
-                            android:key="reset_apps"
-                            android:text="@string/settingsUI_reset_apps_title"
-                            android:textAppearance="@style/TextAppearance.H5"
-                            android:drawableStart="@drawable/ic_restart_alt_24dp"
-                            android:drawablePadding="28dp"/>
                 </LinearLayout>
 
                 <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:layout_marginStart="2dp"
-                        android:src="@drawable/ic_info_icon"
-                        tools:ignore="ContentDescription" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginStart="2dp"
+                    android:src="@drawable/ic_info_icon"
+                    tools:ignore="ContentDescription" />
 
                 <TextView
-                        android:layout_marginStart="0dp"
-                        android:text="@string/settingsUI_apps_view_info_text1"
-                        style="@style/MainStyle.Body1BoldBullet" />
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_apps_view_info_text1"
+                    style="@style/MainStyle.Body1BoldBullet" />
                 <TextView
-                        android:text="@string/settingsUI_apps_view_info_text2"
-                        style="@style/MainStyle.Body1" />
+                    android:text="@string/settingsUI_apps_view_info_text2"
+                    style="@style/MainStyle.Body1" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
