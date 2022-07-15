@@ -36,7 +36,6 @@ import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -132,15 +131,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         String userSignals = buildUserSignals(customAudience);
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(customAudience);
-        // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData
-        //  classes and remove this conversion.
-        List<AdData> ads =
-                customAudience.getAds().stream()
-                        .map(
-                                adData -> {
-                                    return new AdData(adData.getRenderUri(), adData.getMetadata());
-                                })
-                        .collect(Collectors.toList());
+
         // TODO(b/221862406): implement ads filtering logic.
 
         FluentFuture<String> buyerDecisionLogic =
@@ -154,10 +145,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 buyerDecisionLogic.transformAsync(
                         decisionLogic -> {
                             return runBidding(
+                                    customAudience,
                                     decisionLogic,
-                                    ImmutableList.copyOf(ads),
                                     buyerSignals,
-                                    customAudience.getTrustedBiddingData(),
                                     contextualSignals,
                                     customAudienceSignals,
                                     userSignals,
@@ -201,7 +191,10 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     }
 
     private FluentFuture<String> getTrustedBiddingSignals(
-            @NonNull DBTrustedBiddingData trustedBiddingData) {
+            @NonNull DBTrustedBiddingData trustedBiddingData,
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name) {
         Objects.requireNonNull(trustedBiddingData);
         final Uri trustedBiddingUri = trustedBiddingData.getUrl();
         final List<String> trustedBiddingKeys = trustedBiddingData.getKeys();
@@ -212,17 +205,35 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         .appendQueryParameter(QUERY_PARAM_KEYS, keysQueryParams)
                         .build();
 
-        FluentFuture trustedSignals =
-                FluentFuture.from(mAdServicesHttpsClient.fetchPayload(trustedBiddingUriWithKeys));
-
-        // TODO(237834494) : Add dev override support for trusted signals
-        return trustedSignals.catching(
-                Exception.class,
-                e -> {
-                    LogUtil.w("Exception encountered when fetching trusted signals", e);
-                    throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
-                },
-                mListeningExecutorService);
+        FluentFuture<String> jsOverrideFuture =
+                FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () ->
+                                        mCustomAudienceDevOverridesHelper
+                                                .getTrustedBiddingSignalsOverride(
+                                                        owner, buyer, name)));
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            if (jsOverride == null) {
+                                return mAdServicesHttpsClient.fetchPayload(
+                                        trustedBiddingUriWithKeys);
+                            } else {
+                                LogUtil.d(
+                                        "Developer options enabled and override trusted signals"
+                                                + " are provided for the current Custom Audience."
+                                                + " Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mListeningExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            LogUtil.w("Exception encountered when fetching trusted signals", e);
+                            throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
+                        },
+                        mListeningExecutorService);
     }
 
     private FluentFuture<String> getBuyerDecisionLogic(
@@ -243,7 +254,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                     } else {
                         LogUtil.d(
                                 "Developer options enabled and an override JS is provided "
-                                        + "for the current ad selection config. "
+                                        + "for the current Custom Audience. "
                                         + "Skipping call to server.");
                         return Futures.immediateFuture(jsOverride);
                     }
@@ -267,16 +278,30 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(
+            @NonNull DBCustomAudience customAudience,
             @NonNull String buyerDecisionLogicJs,
-            @NonNull ImmutableList<AdData> ads,
             @NonNull String buyerSignals,
-            @NonNull DBTrustedBiddingData trustedBiddingData,
             @NonNull String contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
             @NonNull String userSignals,
             @NonNull String adSelectionSignals) {
 
-        FluentFuture<String> trustedBiddingSignals = getTrustedBiddingSignals(trustedBiddingData);
+        FluentFuture<String> trustedBiddingSignals =
+                getTrustedBiddingSignals(
+                        customAudience.getTrustedBiddingData(),
+                        customAudience.getOwner(),
+                        customAudience.getBuyer(),
+                        customAudience.getName());
+
+        // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData
+        //  classes and remove this conversion.
+        List<AdData> ads =
+                customAudience.getAds().stream()
+                        .map(
+                                adData -> {
+                                    return new AdData(adData.getRenderUri(), adData.getMetadata());
+                                })
+                        .collect(Collectors.toList());
 
         return trustedBiddingSignals
                 .transformAsync(

@@ -236,11 +236,14 @@ public abstract class CustomAudienceDao {
      */
     @Query(
             "SELECT trusted_bidding_data FROM custom_audience_overrides WHERE owner = :owner "
-                    + "AND buyer = :buyer AND name = :name")
+                    + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
     @VisibleForTesting
     public abstract String getTrustedBiddingDataOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name);
+            @NonNull String owner,
+            @NonNull String buyer,
+            @NonNull String name,
+            @NonNull String appPackageName);
 
     /** Delete the custom audience given owner, buyer, and name. */
     @Query("DELETE FROM custom_audience WHERE owner = :owner AND buyer = :buyer AND name = :name")

@@ -132,8 +132,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull final AdSelectionConfig adSelectionConfig) {
         final String sellerSignals = adSelectionConfig.getSellerSignals();
         final FluentFuture<String> trustedScoringSignals =
-                getTrustedScoringSignals(
-                        adSelectionConfig.getTrustedScoringSignalsUri(), adBiddingOutcomes);
+                getTrustedScoringSignals(adSelectionConfig, adBiddingOutcomes);
         final String contextualSignals = getContextualSignals();
         ListenableFuture<List<Double>> adScores =
                 trustedScoringSignals.transformAsync(
@@ -165,13 +164,14 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     }
 
     private FluentFuture<String> getTrustedScoringSignals(
-            @NonNull final Uri trustedScoringSignalUri,
+            @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
         final List<String> adRenderUrls =
                 adBiddingOutcomes.stream()
                         .map(a -> a.getAdWithBid().getAdData().getRenderUri().toString())
                         .collect(Collectors.toList());
         final String queryParams = String.join(",", adRenderUrls);
+        final Uri trustedScoringSignalUri = adSelectionConfig.getTrustedScoringSignalsUri();
 
         Uri trustedScoringSignalsUri =
                 Uri.parse(trustedScoringSignalUri.toString())
@@ -179,16 +179,35 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         .appendQueryParameter(QUERY_PARAM_RENDER_URLS, queryParams)
                         .build();
 
-        FluentFuture trustedSignals =
-                FluentFuture.from(mAdServicesHttpsClient.fetchPayload(trustedScoringSignalsUri));
-        // TODO(237834494) : Add dev override support for trusted signals
-        return trustedSignals.catching(
-                Exception.class,
-                e -> {
-                    LogUtil.w("Exception encountered when fetching trusted signals", e);
-                    throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
-                },
-                mListeningExecutorService);
+        FluentFuture<String> jsOverrideFuture =
+                FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () ->
+                                        mAdSelectionDevOverridesHelper
+                                                .getTrustedScoringSignalsOverride(
+                                                        adSelectionConfig)));
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            if (jsOverride == null) {
+                                return mAdServicesHttpsClient.fetchPayload(
+                                        trustedScoringSignalsUri);
+                            } else {
+                                LogUtil.d(
+                                        "Developer options enabled and an override trusted scoring"
+                                                + " signals are is provided for the current ad"
+                                                + " selection config. Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mListeningExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            LogUtil.w("Exception encountered when fetching trusted signals", e);
+                            throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
+                        },
+                        mListeningExecutorService);
     }
 
     /**

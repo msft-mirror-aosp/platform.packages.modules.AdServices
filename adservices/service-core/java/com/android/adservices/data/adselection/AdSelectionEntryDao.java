@@ -156,6 +156,20 @@ public interface AdSelectionEntryDao {
     String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
 
     /**
+     * Get ad selection trusted scoring signals override by its unique key and the package name of
+     * the app that created the override.
+     *
+     * @return ad selection override result if exists.
+     */
+    @Query(
+            "SELECT trusted_scoring_signals FROM ad_selection_overrides WHERE"
+                    + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
+                    + " :appPackageName")
+    @Nullable
+    @VisibleForTesting
+    String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
+
+    /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
      * creation_timestamp < expirationTime, the ad selection entry will be removed from the
      * ad_selection table.
