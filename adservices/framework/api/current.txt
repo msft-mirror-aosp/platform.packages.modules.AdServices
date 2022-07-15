@@ -73,9 +73,10 @@ package android.adservices.adselection {
   }
 
   public class AddAdSelectionOverrideRequest {
-    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String);
+    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull String);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method @NonNull public String getDecisionLogicJs();
+    method @NonNull public String getTrustedScoringSignals();
   }
 
   public class RemoveAdSelectionOverrideRequest {

@@ -67,6 +67,21 @@ public class FledgeCtsDebuggableTest {
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
+    private static final String TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
+
+    private static final String TRUSTED_BIDDING_SIGNALS =
+            "{\n"
+                    + "\t\"example\": \"example\",\n"
+                    + "\t\"valid\": \"Also valid\",\n"
+                    + "\t\"list\": \"list\",\n"
+                    + "\t\"of\": \"of\",\n"
+                    + "\t\"keys\": \"trusted bidding signal Values\"\n"
+                    + "}";
+
     private static final String APP_NOT_DEBUGGABLE = "App is not debuggable!";
     private static final String DEVELOPER_OPTIONS_OFF = "Developer options are off!";
 
@@ -161,7 +176,8 @@ public class FledgeCtsDebuggableTest {
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, decisionLogicJs);
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         mAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
@@ -173,7 +189,7 @@ public class FledgeCtsDebuggableTest {
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
-                        .setTrustedBiddingData("")
+                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an

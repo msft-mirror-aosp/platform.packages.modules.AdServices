@@ -59,6 +59,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -315,6 +316,7 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(differentSellerDecisionLogicJs)
+                        .setTrustedScoringSignals(mTrustedScoringSignals)
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
@@ -354,11 +356,9 @@ public class AdsScoreGeneratorImplTest {
 
         List<AdScoringOutcome> scoringOutcome = waitForFuture(() -> scoringResultFuture);
 
+        // The server will not be invoked as the web calls should be overridden
         mMockWebServerRule.verifyMockServerRequests(
-                server,
-                1,
-                ImmutableList.of(mTrustedScoringSignalsPath + mTrustedScoringParams),
-                mRequestMatcherExactMatch);
+                server, 0, Collections.emptyList(), mRequestMatcherExactMatch);
         Assert.assertEquals(1L, scoringOutcome.get(0).getAdWithScore().getScore().longValue());
         Assert.assertEquals(2L, scoringOutcome.get(1).getAdWithScore().getScore().longValue());
     }

@@ -104,14 +104,34 @@ public class AdSelectionDevOverridesHelper {
     }
 
     /**
+     * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
+     * {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in
+     * the constructor or if there is no override created by the app with package name specified in
+     * {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public String getTrustedScoringSignalsOverride(@NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
+        return mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                calculateAdSelectionConfigId(adSelectionConfig),
+                mDevContext.getCallingAppPackageName());
+    }
+
+    /**
      * Adds an override of the {@code decisionLogicJS} along with {@link
      * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
      *
      * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
      *     {@link DevContext}
      */
-    public void addDecisionLogicOverride(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJS) {
+    public void addAdSelectionSellerOverride(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJS,
+            @NonNull String trustedScoringSignals) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
@@ -123,6 +143,7 @@ public class AdSelectionDevOverridesHelper {
                         .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
                         .setAppPackageName(mDevContext.getCallingAppPackageName())
                         .setDecisionLogicJS(decisionLogicJS)
+                        .setTrustedScoringSignals(trustedScoringSignals)
                         .build());
     }
 
@@ -132,7 +153,7 @@ public class AdSelectionDevOverridesHelper {
      * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
      *     {@link DevContext}
      */
-    public void removeDecisionLogicOverride(@NonNull AdSelectionConfig adSelectionConfig) {
+    public void removeAdSelectionSellerOverride(@NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
         if (!mDevContext.getDevOptionsEnabled()) {

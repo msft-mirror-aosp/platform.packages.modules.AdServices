@@ -27,22 +27,29 @@ import java.util.concurrent.Executor;
  * AdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest, Executor,
  * OutcomeReceiver)} request
  *
- * <p>It contains two fields, a {@link AdSelectionConfig} which will serve as the identifier for the
- * specific override, and a {@code String} decisionLogicJs field representing the override value
+ * <p>It contains, a {@link AdSelectionConfig} which will serve as the identifier for the specific
+ * override, a {@code String} decisionLogicJs and {@code String} trustedScoringSignals field
+ * representing the override value
  */
 public class AddAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
     @NonNull private final String mDecisionLogicJs;
 
+    @NonNull private final String mTrustedScoringSignals;
+
     /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
     public AddAdSelectionOverrideRequest(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJs) {
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJs,
+            @NonNull String trustedScoringSignals) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJs);
+        Objects.requireNonNull(trustedScoringSignals);
 
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
+        mTrustedScoringSignals = trustedScoringSignals;
     }
 
     /**
@@ -59,5 +66,11 @@ public class AddAdSelectionOverrideRequest {
     @NonNull
     public String getDecisionLogicJs() {
         return mDecisionLogicJs;
+    }
+
+    /** @return The override trusted scoring signals */
+    @NonNull
+    public String getTrustedScoringSignals() {
+        return mTrustedScoringSignals;
     }
 }
