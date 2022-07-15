@@ -360,6 +360,24 @@ public class TriggerTest {
         assertEquals(Arrays.asList(eventTrigger1, eventTrigger2), actualEventTriggers);
     }
 
+    @Test
+    public void getDestinationType_success() {
+        // Setup
+        Trigger appTrigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(Uri.parse("android-app://com.example.abc"))
+                        .build();
+
+        Trigger webTrigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(Uri.parse("https://example.com"))
+                        .build();
+
+        // Assertion
+        assertEquals(DestinationType.APP, appTrigger.getDestinationType());
+        assertEquals(DestinationType.WEB, webTrigger.getDestinationType());
+    }
+
     private void assertInvalidTriggerArguments(
             Uri attributionDestination,
             Uri adTechDomain,
