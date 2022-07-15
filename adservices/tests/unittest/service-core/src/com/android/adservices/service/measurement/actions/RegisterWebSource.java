@@ -35,7 +35,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public final class RegisterWebSource implements Action {
     public final WebSourceRegistrationRequestInternal mRegistrationRequest;
@@ -114,7 +113,7 @@ public final class RegisterWebSource implements Action {
         return sourceParamsList;
     }
 
-    private Uri getNullableStringUri(JSONObject regParamsJson, String key) {
-        return Optional.ofNullable(regParamsJson.optString(key, null)).map(Uri::parse).orElse(null);
+    private Uri getNullableStringUri(JSONObject regParamsJson, String key) throws JSONException {
+        return regParamsJson.isNull(key) ? null : Uri.parse(regParamsJson.getString(key));
     }
 }
