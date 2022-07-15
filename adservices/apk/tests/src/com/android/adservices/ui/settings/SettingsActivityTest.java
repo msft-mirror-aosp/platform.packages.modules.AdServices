@@ -81,15 +81,15 @@ public class SettingsActivityTest {
      */
     public static ViewModelProvider generateMockedViewModelProvider() {
         List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(1, 1, 1));
-        tempList.add(Topic.create(2, 1, 1));
-        tempList.add(Topic.create(3, 1, 1));
+        tempList.add(Topic.create(10001, 1, 1));
+        tempList.add(Topic.create(10002, 1, 1));
+        tempList.add(Topic.create(10003, 1, 1));
         ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
         doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
 
         tempList = new ArrayList<>();
-        tempList.add(Topic.create(4, 1, 1));
-        tempList.add(Topic.create(5, 1, 1));
+        tempList.add(Topic.create(10004, 1, 1));
+        tempList.add(Topic.create(10005, 1, 1));
         ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
         doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
 
@@ -278,14 +278,12 @@ public class SettingsActivityTest {
     }
 
     private void assertTopicsFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
         onView(withId(R.id.blocked_topics_button))
                 .perform(scrollTo())
                 .check(matches(isDisplayed()));
     }
 
     private void assertAppsFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_blocked_apps_title)).check(matches(isDisplayed()));
         onView(withId(R.id.blocked_apps_button)).perform(scrollTo()).check(matches(isDisplayed()));
     }
 
