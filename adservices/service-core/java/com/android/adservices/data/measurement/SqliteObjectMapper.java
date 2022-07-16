@@ -27,6 +27,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.enrollment.EnrollmentData;
 
 import java.util.Arrays;
 import java.util.function.Function;
@@ -84,6 +85,10 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
                 builder::setAttributionDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                builder::setWebDestination);
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
@@ -153,6 +158,41 @@ public class SqliteObjectMapper {
                 builder::setPostbackUrl);
         setTextColumn(cursor, MeasurementTables.AdTechUrlsContract.AD_TECH_ID,
                 builder::setAdtechId);
+        return builder.build();
+    }
+
+    /** Create {@link EnrollmentData} object from SQLite datastore. */
+    static EnrollmentData constructEnrollmentDataFromCursor(Cursor cursor) {
+        EnrollmentData.Builder builder = new EnrollmentData.Builder();
+        setTextColumn(
+                cursor,
+                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID,
+                builder::setEnrollmentId);
+        setTextColumn(
+                cursor, MeasurementTables.EnrollmentDataContract.COMPANY_ID, builder::setCompanyId);
+        setTextColumn(
+                cursor, MeasurementTables.EnrollmentDataContract.SDK_NAMES, builder::setSdkNames);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                builder::setAttributionSourceRegistrationUrl);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                builder::setAttributionTriggerRegistrationUrl);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
+                builder::setAttributionReportingUrl);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EnrollmentDataContract
+                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                builder::setRemarketingResponseBasedRegistrationUrl);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
+                builder::setEncryptionKeyUrl);
         return builder.build();
     }
 

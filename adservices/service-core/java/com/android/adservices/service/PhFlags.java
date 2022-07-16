@@ -57,6 +57,17 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
 
     // FLEDGE keys.
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
+            "fledge_custom_audience_per_app_max_count";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT =
+            "fledge_custom_audience_max_owner_count";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS =
+            "fledge_custom_audience_default_expire_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
+            "fledge_custom_audience_max_activate_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS =
+            "fledge_custom_audience_max_expire_in_days";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS =
             "fledge_background_fetch_job_period_ms";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS =
@@ -223,6 +234,60 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeCustomAudienceMaxCount() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudiencePerAppMaxCount() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceMaxOwnerCount() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceDefaultExpireInMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceMaxActivationDelayInMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceMaxExpireInMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS);
+    }
+
+    @Override
     public long getFledgeBackgroundFetchJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -353,6 +418,36 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_MEASUREMENT_APP_NAME + " = " + getMeasurementAppName());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudienceMaxCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT
+                        + " = "
+                        + getFledgeCustomAudienceMaxOwnerCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudiencePerAppMaxCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS
+                        + " = "
+                        + getFledgeCustomAudienceDefaultExpireInMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS
+                        + " = "
+                        + getFledgeCustomAudienceMaxActivationDelayInMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS
+                        + " = "
+                        + getFledgeCustomAudienceMaxExpireInMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS

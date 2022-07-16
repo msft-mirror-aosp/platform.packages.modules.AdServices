@@ -14,23 +14,31 @@
  * limitations under the License.
  */
 
-package android.adservices.exceptions;
+package com.android.adservices.service.consent;
 
-import android.annotation.Nullable;
+import android.annotation.NonNull;
 
 /**
- * Exception thrown by AdServices in the case the caller is not authorized to call a specific API.
+ * POJO Represents a App.
+ *
+ * @hide
  */
-public class ApiNotAuthorizedException extends RuntimeException {
-    public ApiNotAuthorizedException(@Nullable String message, @Nullable Throwable e) {
-        super(message, e);
+public class App {
+
+    private int mAppId;
+
+    /** Returns an Integer represents the app identifier. */
+    public int getAppId() {
+        return mAppId;
     }
 
-    public ApiNotAuthorizedException(@Nullable String message) {
-        super(message);
+    App(int appId) {
+        this.mAppId = appId;
     }
 
-    public ApiNotAuthorizedException() {
-        super();
+    /** Creates an instance of an App. */
+    @NonNull
+    public static App create(int appId) {
+        return new App(appId);
     }
 }

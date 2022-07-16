@@ -18,6 +18,8 @@ package com.android.adservices.ui.settings;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
@@ -40,6 +42,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
@@ -78,24 +81,27 @@ public class SettingsActivityTest {
      */
     public static ViewModelProvider generateMockedViewModelProvider() {
         List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(1, 1, 1));
-        tempList.add(Topic.create(2, 1, 1));
-        tempList.add(Topic.create(3, 1, 1));
+        tempList.add(Topic.create(10001, 1, 1));
+        tempList.add(Topic.create(10002, 1, 1));
+        tempList.add(Topic.create(10003, 1, 1));
         ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
         doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
 
         tempList = new ArrayList<>();
-        tempList.add(Topic.create(4, 1, 1));
-        tempList.add(Topic.create(5, 1, 1));
+        tempList.add(Topic.create(10004, 1, 1));
+        tempList.add(Topic.create(10005, 1, 1));
         ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
         doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
 
         TopicsViewModel topicsViewModel =
                 new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+        AppsViewModel appsViewModel =
+                new AppsViewModel(ApplicationProvider.getApplicationContext());
         MainViewModel mainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext());
         doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
         doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
+        doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
         return sViewModelProvider;
     }
 
@@ -152,6 +158,20 @@ public class SettingsActivityTest {
                                         Matchers.allOf(
                                                 withClassName(Matchers.is(Switch.class.getName())),
                                                 Matchers.not(isChecked())))));
+
+        // Give consent back
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withClassName(Matchers.is(Switch.class.getName()))),
+                                click()));
+        onPreferenceScreen()
+                .check(
+                        matches(
+                                hasDescendant(
+                                        Matchers.allOf(
+                                                withClassName(Matchers.is(Switch.class.getName())),
+                                                isChecked()))));
     }
 
     /**
@@ -191,7 +211,7 @@ public class SettingsActivityTest {
 
         assertTopicsFragmentDisplayed();
 
-        onView(withId(R.id.blocked_topics_button)).perform(click());
+        onView(withId(R.id.blocked_topics_button)).perform(scrollTo(), click());
 
         assertBlockedTopicsFragmentDisplayed();
 
@@ -204,20 +224,77 @@ public class SettingsActivityTest {
         assertMainFragmentDisplayed();
     }
 
+    /**
+     * Test if the Topics button in the main fragment opens the topics fragment, and the back button
+     * returns to the main fragment.
+     */
+    @Test
+    public void test_AppsView() {
+        assertMainFragmentDisplayed();
+
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withText(R.string.settingsUI_apps_title)), click()));
+
+        assertAppsFragmentDisplayed();
+
+        pressBack();
+
+        assertMainFragmentDisplayed();
+    }
+
+    /**
+     * Test if the Topics button in the main fragment opens the topics fragment, and the back button
+     * returns to the main fragment.
+     */
+    @Test
+    public void test_BlockedAppsView() {
+        assertMainFragmentDisplayed();
+
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withText(R.string.settingsUI_apps_title)), click()));
+
+        assertAppsFragmentDisplayed();
+
+        onView(withId(R.id.blocked_apps_button)).perform(scrollTo(), click());
+
+        assertBlockedAppsFragmentDisplayed();
+
+        pressBack();
+
+        assertAppsFragmentDisplayed();
+
+        pressBack();
+
+        assertMainFragmentDisplayed();
+    }
+
     private void assertMainFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_topics_title)).check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_summary))
+                .check(matches(isDisplayed()));
     }
 
     private void assertTopicsFragmentDisplayed() {
-        onView(
-                        Matchers.allOf(
-                                Matchers.not(hasDescendant(withId(R.id.blocked_topics_button))),
-                                hasDescendant(withText(R.string.settingsUI_blocked_topics_title))))
+        onView(withId(R.id.blocked_topics_button))
+                .perform(scrollTo())
                 .check(matches(isDisplayed()));
+    }
+
+    private void assertAppsFragmentDisplayed() {
+        onView(withId(R.id.blocked_apps_button)).perform(scrollTo()).check(matches(isDisplayed()));
     }
 
     private void assertBlockedTopicsFragmentDisplayed() {
         onView(withText(R.string.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.blocked_topics_button)).check(doesNotExist());
+    }
+
+    private void assertBlockedAppsFragmentDisplayed() {
+        onView(withText(R.string.settingsUI_blocked_apps_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.blocked_apps_button)).check(doesNotExist());
     }
 
     private ViewInteraction onPreferenceScreen() {

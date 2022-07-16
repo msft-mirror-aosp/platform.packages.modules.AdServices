@@ -28,6 +28,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.enrollment.EnrollmentData;
 
 import java.time.Instant;
 import java.util.List;
@@ -210,6 +211,39 @@ public interface IMeasurementDao {
      * Deletes the {@link AdtechUrl} from datastore using the given postback url.
      */
     void deleteAdtechUrl(String postbackUrl) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link EnrollmentData}.
+     *
+     * @param enrollmentId ID provided to the adtech at the end of the enrollment process.
+     * @return the EnrollmentData; Null in case of SQL failure
+     */
+    @Nullable
+    EnrollmentData getEnrollmentData(String enrollmentId) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link EnrollmentData}.
+     *
+     * @param url could be source registration url or trigger registration url.
+     * @return the EnrollmentData; Null in case of SQL failure.
+     */
+    @Nullable
+    EnrollmentData getEnrollmentDataGivenUrl(String url) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link EnrollmentData}.
+     *
+     * @param sdkName List of SDKs belonging to the same enrollment.
+     * @return the EnrollmentData; Null in case of SQL failure
+     */
+    @Nullable
+    EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) throws DatastoreException;
+
+    /** Saves the {@link EnrollmentData} to datastore. */
+    void insertEnrollmentData(EnrollmentData enrollmentData) throws DatastoreException;
+
+    /** Deletes the {@link EnrollmentData} from datastore using the given enrollment id. */
+    void deleteEnrollmentData(String enrollmentId) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.

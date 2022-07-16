@@ -38,12 +38,14 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
+import com.android.adservices.service.measurement.enrollment.EnrollmentData;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -55,7 +57,7 @@ import java.util.stream.Stream;
  */
 class MeasurementDao implements IMeasurementDao {
 
-    private static final String TAG = "MeasurementDao";
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private SQLTransaction mSQLTransaction;
 
     @Override
@@ -112,7 +114,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Trigger getTrigger(String triggerId) throws DatastoreException {
+    public Trigger getTrigger(@NonNull String triggerId) throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.TriggerContract.TABLE,
                 /*columns=*/null,
@@ -128,7 +130,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public EventReport getEventReport(String eventReportId) throws DatastoreException {
+    public EventReport getEventReport(@NonNull String eventReportId) throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.EventReportContract.TABLE,
                 null,
@@ -148,7 +150,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public AggregateReport getAggregateReport(String aggregateReportId)
+    public AggregateReport getAggregateReport(@NonNull String aggregateReportId)
             throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.AggregateReport.TABLE,
@@ -174,8 +176,12 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                source.getAttributionDestination().toString());
+        values.put(
+                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
+                getNullableUriString(source.getAttributionDestination()));
+        values.put(
+                MeasurementTables.SourceContract.WEB_DESTINATION,
+                getNullableUriString(source.getWebDestination()));
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
@@ -203,26 +209,40 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException {
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.SourceContract.TABLE,
-                /*columns=*/null,
-                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? AND "
-                        + MeasurementTables.SourceContract.AD_TECH_DOMAIN + " = ? AND "
-                        // EventTime should be strictly less than TriggerTime as it is highly
-                        // unlikely for matching Source and Trigger to happen at same instant
-                        // in milliseconds.
-                        + MeasurementTables.SourceContract.EVENT_TIME + " < ? AND "
-                        + MeasurementTables.SourceContract.EXPIRY_TIME + " >= ? AND "
-                        + MeasurementTables.SourceContract.STATUS + " != ?",
-                new String[]{
-                        trigger.getAttributionDestination().toString(),
-                        trigger.getAdTechDomain().toString(),
-                        String.valueOf(trigger.getTriggerTime()),
-                        String.valueOf(trigger.getTriggerTime()),
-                        String.valueOf(Source.Status.IGNORED)
-                },
-                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+    public List<Source> getMatchingActiveSources(@NonNull Trigger trigger)
+            throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.SourceContract.TABLE,
+                                /*columns=*/ null,
+                                getSourceDestinationColumnForTrigger(trigger)
+                                        + " = ? AND "
+                                        + MeasurementTables.SourceContract.AD_TECH_DOMAIN
+                                        + " = ? AND "
+                                        // EventTime should be strictly less than TriggerTime as it
+                                        // is highly
+                                        // unlikely for matching Source and Trigger to happen at
+                                        // same instant
+                                        // in milliseconds.
+                                        + MeasurementTables.SourceContract.EVENT_TIME
+                                        + " < ? AND "
+                                        + MeasurementTables.SourceContract.EXPIRY_TIME
+                                        + " >= ? AND "
+                                        + MeasurementTables.SourceContract.STATUS
+                                        + " != ?",
+                                new String[] {
+                                    trigger.getAttributionDestination().toString(),
+                                    trigger.getAdTechDomain().toString(),
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(Source.Status.IGNORED)
+                                },
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
             List<Source> sources = new ArrayList<>();
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
@@ -606,6 +626,160 @@ class MeasurementDao implements IMeasurementDao {
                         new String[]{postbackUrl});
         if (rows != 1) {
             throw new DatastoreException("AdTechURL deletion failed.");
+        }
+    }
+
+    /**
+     * Queries and returns the {@link EnrollmentData}.
+     *
+     * @param enrollmentId ID provided to the adtech at the end of the enrollment process.
+     * @return the EnrollmentData; Null in case of SQL failure
+     */
+    // TODO(b/230617871): Move EnrollmentData related methods to a Dao class that is common across
+    //  for PPAPIs since Enrollment data will likely be used by others as well.
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentData(String enrollmentId) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID + " = ? ",
+                                new String[] {enrollmentId},
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    /**
+     * Queries and returns the {@link EnrollmentData} given measurement registration URLs.
+     *
+     * @param url could be source registration url or trigger registration url.
+     * @return the EnrollmentData; Null in case of SQL failure.
+     */
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentDataGivenUrl(String url) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EnrollmentDataContract
+                                                .ATTRIBUTION_SOURCE_REGISTRATION_URL
+                                        + " LIKE '%"
+                                        + url
+                                        + "%' OR "
+                                        + MeasurementTables.EnrollmentDataContract
+                                                .ATTRIBUTION_TRIGGER_REGISTRATION_URL
+                                        + " LIKE '%"
+                                        + url
+                                        + "%'",
+                                null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    /**
+     * Queries and returns the {@link EnrollmentData} given AdTech SDK Name.
+     *
+     * @param sdkName List of SDKs belonging to the same enrollment.
+     * @return the EnrollmentData; Null in case of SQL failure
+     */
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) throws DatastoreException {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*columns=*/ null,
+                                MeasurementTables.EnrollmentDataContract.SDK_NAMES
+                                        + " LIKE '%"
+                                        + sdkName
+                                        + "%'",
+                                null,
+                                /*groupBy=*/ null,
+                                /*having=*/ null,
+                                /*orderBy=*/ null,
+                                /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    @Override
+    public void insertEnrollmentData(EnrollmentData enrollmentData) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID,
+                enrollmentData.getEnrollmentId());
+        values.put(
+                MeasurementTables.EnrollmentDataContract.COMPANY_ID, enrollmentData.getCompanyId());
+        values.put(
+                MeasurementTables.EnrollmentDataContract.SDK_NAMES,
+                String.join(" ", enrollmentData.getSdkNames()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                String.join(" ", enrollmentData.getAttributionSourceRegistrationUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                String.join(" ", enrollmentData.getAttributionTriggerRegistrationUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
+                String.join(" ", enrollmentData.getAttributionReportingUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract
+                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                String.join(" ", enrollmentData.getRemarketingResponseBasedRegistrationUrl()));
+        values.put(
+                MeasurementTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
+                String.join(" ", enrollmentData.getEncryptionKeyUrl()));
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                /*nullColumnHack=*/ null,
+                                values);
+        if (rowId == -1) {
+            throw new DatastoreException("EnrollmentData insertion failed.");
+        }
+    }
+
+    @Override
+    public void deleteEnrollmentData(String enrollmentId) throws DatastoreException {
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .delete(
+                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID + " = ?",
+                                new String[] {enrollmentId});
+        if (rows != 1) {
+            throw new DatastoreException("EnrollmentData deletion failed.");
         }
     }
 
@@ -1091,5 +1265,17 @@ class MeasurementDao implements IMeasurementDao {
             }
             return aggregateReports;
         }
+    }
+
+    private String getSourceDestinationColumnForTrigger(Trigger trigger) {
+        boolean isAppDestination =
+                trigger.getAttributionDestination().getScheme().startsWith(ANDROID_APP_SCHEME);
+        return isAppDestination
+                ? MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION
+                : MeasurementTables.SourceContract.WEB_DESTINATION;
+    }
+
+    private String getNullableUriString(@Nullable Uri uri) {
+        return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 }

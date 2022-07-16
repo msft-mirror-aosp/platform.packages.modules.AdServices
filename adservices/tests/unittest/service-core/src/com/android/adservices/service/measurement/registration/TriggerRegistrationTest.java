@@ -30,6 +30,8 @@ import org.junit.Test;
  */
 @SmallTest
 public final class TriggerRegistrationTest {
+    private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
+    private static final Uri REPORTING_ORIGIN = Uri.parse("https://bar.com");
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
             "{\n"
                     + "  \"key_1\": [\"value_1\", \"value_2\"],\n"
@@ -50,8 +52,8 @@ public final class TriggerRegistrationTest {
 
     private TriggerRegistration createExampleResponse() {
         return new TriggerRegistration.Builder()
-                .setTopOrigin(Uri.parse("https://foo.com"))
-                .setReportingOrigin(Uri.parse("https://bar.com"))
+                .setTopOrigin(TOP_ORIGIN)
+                .setReportingOrigin(REPORTING_ORIGIN)
                 .setEventTriggers(EVENT_TRIGGERS)
                 .setAggregateTriggerData(
                         "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
@@ -82,9 +84,13 @@ public final class TriggerRegistrationTest {
 
     @Test
     public void testDefaults() throws Exception {
-        TriggerRegistration response = new TriggerRegistration.Builder().build();
-        assertEquals("", response.getTopOrigin().toString());
-        assertEquals("", response.getReportingOrigin().toString());
+        TriggerRegistration response =
+                new TriggerRegistration.Builder()
+                        .setTopOrigin(TOP_ORIGIN)
+                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .build();
+        assertEquals(TOP_ORIGIN, response.getTopOrigin());
+        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
         assertNull(response.getEventTriggers());
         assertNull(response.getAggregateTriggerData());
         assertNull(response.getAggregateValues());
