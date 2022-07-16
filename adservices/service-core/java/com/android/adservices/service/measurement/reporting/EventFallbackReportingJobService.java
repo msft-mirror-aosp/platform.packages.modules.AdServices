@@ -38,7 +38,7 @@ import java.util.concurrent.Executor;
  */
 public final class EventFallbackReportingJobService extends JobService {
 
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
     public void onCreate() {
@@ -47,7 +47,7 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        sBackgroundExecutor.execute(() -> {
+        sBlockingExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))

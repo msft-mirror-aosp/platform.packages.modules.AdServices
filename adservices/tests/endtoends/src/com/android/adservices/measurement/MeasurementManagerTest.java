@@ -18,7 +18,6 @@ package com.android.adservices.measurement;
 import static org.junit.Assert.assertNull;
 
 import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.content.Context;
 import android.net.Uri;
@@ -118,7 +117,7 @@ public class MeasurementManagerTest {
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
         Assert.assertEquals(Integer.valueOf(
-                MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
+                MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "getMeasurementApiStatus() took " + duration + " ms: " + label);

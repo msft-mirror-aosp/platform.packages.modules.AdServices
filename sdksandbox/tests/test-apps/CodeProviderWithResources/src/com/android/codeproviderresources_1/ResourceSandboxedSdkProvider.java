@@ -37,8 +37,11 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String ASSET_FILE = "test-asset.txt";
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            OnLoadSdkCallback callback) {
         Resources resources = context.getResources();
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
@@ -57,9 +60,9 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
                 sendError(callback, STRING_ASSET, readAsset);
             }
         } catch (IOException e) {
-            callback.onInitSdkError("File not found: " + ASSET_FILE);
+            callback.onLoadSdkError("File not found: " + ASSET_FILE);
         }
-        callback.onInitSdkFinished(new Bundle());
+        callback.onLoadSdkFinished(new Bundle());
     }
 
     @Override
@@ -71,7 +74,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 
     /* Sends an error if the expected resource/asset does not match the read value. */
-    private void sendError(InitSdkCallback callback, String expected, String actual) {
-        callback.onInitSdkError("Expected " + expected + ", actual " + actual);
+    private void sendError(OnLoadSdkCallback callback, String expected, String actual) {
+        callback.onLoadSdkError("Expected " + expected + ", actual " + actual);
     }
 }

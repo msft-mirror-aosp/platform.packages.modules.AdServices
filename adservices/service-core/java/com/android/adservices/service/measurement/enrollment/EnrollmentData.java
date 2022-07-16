@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.enrollment;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,6 +26,7 @@ public class EnrollmentData {
 
     private String mEnrollmentId;
     private String mCompanyId;
+    private List<String> mSdkNames;
     private List<String> mAttributionSourceRegistrationUrl;
     private List<String> mAttributionTriggerRegistrationUrl;
     private List<String> mAttributionReportingUrl;
@@ -34,6 +36,7 @@ public class EnrollmentData {
     private EnrollmentData() {
         mEnrollmentId = null;
         mCompanyId = null;
+        mSdkNames = new ArrayList<>();
         mAttributionSourceRegistrationUrl = new ArrayList<>();
         mAttributionTriggerRegistrationUrl = new ArrayList<>();
         mAttributionReportingUrl = new ArrayList<>();
@@ -49,6 +52,7 @@ public class EnrollmentData {
         EnrollmentData enrollmentData = (EnrollmentData) obj;
         return Objects.equals(mEnrollmentId, enrollmentData.mEnrollmentId)
                 && Objects.equals(mCompanyId, enrollmentData.mCompanyId)
+                && Objects.equals(mSdkNames, enrollmentData.mSdkNames)
                 && Objects.equals(
                         mAttributionSourceRegistrationUrl,
                         enrollmentData.mAttributionSourceRegistrationUrl)
@@ -67,6 +71,7 @@ public class EnrollmentData {
         return Objects.hash(
                 mEnrollmentId,
                 mCompanyId,
+                mSdkNames,
                 mAttributionSourceRegistrationUrl,
                 mAttributionTriggerRegistrationUrl,
                 mAttributionReportingUrl,
@@ -82,6 +87,11 @@ public class EnrollmentData {
     /** Returns ID assigned to the Parent Company. */
     public String getCompanyId() {
         return mCompanyId;
+    }
+
+    /** List of SDKs belonging to the same enrollment. */
+    public List<String> getSdkNames() {
+        return mSdkNames;
     }
 
     /** Returns URLs used to register attribution sources for measurement. */
@@ -129,10 +139,30 @@ public class EnrollmentData {
             return this;
         }
 
+        /** See {@link EnrollmentData#getSdkNames()} */
+        public Builder setSdkNames(List<String> sdkNames) {
+            mBuilding.mSdkNames = sdkNames;
+            return this;
+        }
+
+        /** See {@link EnrollmentData#getSdkNames()} */
+        public Builder setSdkNames(String sdkNames) {
+            mBuilding.mSdkNames = Arrays.asList(sdkNames.split(" "));
+            return this;
+        }
+
         /** See {@link EnrollmentData#getAttributionSourceRegistrationUrl()}. */
         public Builder setAttributionSourceRegistrationUrl(
                 List<String> attributionSourceRegistrationUrl) {
             mBuilding.mAttributionSourceRegistrationUrl = attributionSourceRegistrationUrl;
+            return this;
+        }
+
+        /** See {@link EnrollmentData#getAttributionSourceRegistrationUrl()}. */
+        public Builder setAttributionSourceRegistrationUrl(
+                String attributionSourceRegistrationUrl) {
+            mBuilding.mAttributionSourceRegistrationUrl =
+                    Arrays.asList(attributionSourceRegistrationUrl.split(" "));
             return this;
         }
 
@@ -143,9 +173,23 @@ public class EnrollmentData {
             return this;
         }
 
+        /** See {@link EnrollmentData#getAttributionTriggerRegistrationUrl()}. */
+        public Builder setAttributionTriggerRegistrationUrl(
+                String attributionTriggerRegistrationUrl) {
+            mBuilding.mAttributionTriggerRegistrationUrl =
+                    Arrays.asList(attributionTriggerRegistrationUrl.split(" "));
+            return this;
+        }
+
         /** See {@link EnrollmentData#getAttributionReportingUrl()}. */
         public Builder setAttributionReportingUrl(List<String> attributionReportingUrl) {
             mBuilding.mAttributionReportingUrl = attributionReportingUrl;
+            return this;
+        }
+
+        /** See {@link EnrollmentData#getAttributionReportingUrl()}. */
+        public Builder setAttributionReportingUrl(String attributionReportingUrl) {
+            mBuilding.mAttributionReportingUrl = Arrays.asList(attributionReportingUrl.split(" "));
             return this;
         }
 
@@ -157,9 +201,23 @@ public class EnrollmentData {
             return this;
         }
 
+        /** See {@link EnrollmentData#getRemarketingResponseBasedRegistrationUrl()}. */
+        public Builder setRemarketingResponseBasedRegistrationUrl(
+                String remarketingResponseBasedRegistrationUrl) {
+            mBuilding.mRemarketingResponseBasedRegistrationUrl =
+                    Arrays.asList(remarketingResponseBasedRegistrationUrl.split(" "));
+            return this;
+        }
+
         /** See {@link EnrollmentData#getEncryptionKeyUrl()}. */
         public Builder setEncryptionKeyUrl(List<String> encryptionKeyUrl) {
             mBuilding.mEncryptionKeyUrl = encryptionKeyUrl;
+            return this;
+        }
+
+        /** See {@link EnrollmentData#getEncryptionKeyUrl()}. */
+        public Builder setEncryptionKeyUrl(String encryptionKeyUrl) {
+            mBuilding.mEncryptionKeyUrl = Arrays.asList(encryptionKeyUrl.split(" "));
             return this;
         }
 

@@ -14,6 +14,6 @@
      limitations under the License.
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-  <solid android:color="#F9F9F9"/>
+  <solid android:color="@color/card_background_color"/>
   <corners android:radius="28dp"/>
 </shape>

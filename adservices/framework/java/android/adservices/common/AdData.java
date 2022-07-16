@@ -27,8 +27,7 @@ import java.util.Objects;
  * Represents data specific to an ad that is necessary for ad selection and rendering.
  */
 public final class AdData implements Parcelable {
-    @NonNull
-    private final Uri mRenderUrl;
+    @NonNull private final Uri mRenderUri;
     @NonNull
     private final String mMetadata;
 
@@ -51,36 +50,36 @@ public final class AdData implements Parcelable {
     /**
      * Represents data specific to a single ad that is necessary for ad selection and rendering.
      *
-     * @param renderUrl a URL pointing to the ad's rendering assets
-     * @param metadata  buyer ad metadata represented as a JSON string
+     * @param renderUri a URL pointing to the ad's rendering assets
+     * @param metadata buyer ad metadata represented as a JSON string
      * @hide
      * @deprecated use Builder to build the obj instead of this constructor.
      */
     // TODO(b/230782527): Remove this constructor.
     @Deprecated
-    public AdData(@NonNull Uri renderUrl, @NonNull String metadata) {
-        Objects.requireNonNull(renderUrl);
+    public AdData(@NonNull Uri renderUri, @NonNull String metadata) {
+        Objects.requireNonNull(renderUri);
         Objects.requireNonNull(metadata);
-        mRenderUrl = renderUrl;
+        mRenderUri = renderUri;
         mMetadata = metadata;
     }
 
     private AdData(@NonNull AdData.Builder builder) {
-        mRenderUrl = builder.mRenderUrl;
+        mRenderUri = builder.mRenderUri;
         mMetadata = builder.mMetadata;
     }
 
     private AdData(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mRenderUrl = Uri.CREATOR.createFromParcel(in);
+        mRenderUri = Uri.CREATOR.createFromParcel(in);
         mMetadata = in.readString();
     }
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
-        mRenderUrl.writeToParcel(dest, flags);
+        mRenderUri.writeToParcel(dest, flags);
         dest.writeString(mMetadata);
     }
 
@@ -92,8 +91,8 @@ public final class AdData implements Parcelable {
 
     /** Gets the URL that points to the ad's rendering assets. The URL must use HTTPS. */
     @NonNull
-    public Uri getRenderUrl() {
-        return mRenderUrl;
+    public Uri getRenderUri() {
+        return mRenderUri;
     }
 
     /**
@@ -118,25 +117,24 @@ public final class AdData implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof AdData)) return false;
         AdData adData = (AdData) o;
-        return Objects.equals(mRenderUrl, adData.mRenderUrl)
+        return Objects.equals(mRenderUri, adData.mRenderUri)
                 && Objects.equals(mMetadata, adData.mMetadata);
     }
 
     /** Returns the hash of the {@link AdData} object's data. */
     @Override
     public int hashCode() {
-        return Objects.hash(mRenderUrl, mMetadata);
+        return Objects.hash(mRenderUri, mMetadata);
     }
 
     @Override
     public String toString() {
-        return "AdData{" + "mRenderUrl=" + mRenderUrl + ", mMetadata='" + mMetadata + '\'' + '}';
+        return "AdData{" + "mRenderUri=" + mRenderUri + ", mMetadata='" + mMetadata + '\'' + '}';
     }
 
     /** Builder for {@link AdData} objects. */
     public static final class Builder {
-        @NonNull
-        private Uri mRenderUrl;
+        @NonNull private Uri mRenderUri;
         @NonNull
         private String mMetadata;
 
@@ -146,13 +144,13 @@ public final class AdData implements Parcelable {
 
         /**
          * Sets the URL that points to the ad's rendering assets. The URL must use HTTPS.
-         * <p>
-         * See {@link #getRenderUrl()} for detail.
+         *
+         * <p>See {@link #getRenderUri()} for detail.
          */
         @NonNull
-        public AdData.Builder setRenderUrl(@NonNull Uri renderUrl) {
-            Objects.requireNonNull(renderUrl);
-            mRenderUrl = renderUrl;
+        public AdData.Builder setRenderUri(@NonNull Uri renderUri) {
+            Objects.requireNonNull(renderUri);
+            mRenderUri = renderUri;
             return this;
         }
 
@@ -183,7 +181,7 @@ public final class AdData implements Parcelable {
          */
         @NonNull
         public AdData build() {
-            Objects.requireNonNull(mRenderUrl);
+            Objects.requireNonNull(mRenderUri);
             // TODO(b/231997523): Add JSON field validation.
             Objects.requireNonNull(mMetadata);
 

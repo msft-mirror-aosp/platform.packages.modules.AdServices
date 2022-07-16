@@ -27,12 +27,12 @@ import java.util.concurrent.Executor;
 public class SdkProvider extends SandboxedSdkProvider {
 
     @Override
-    public void initSdk(
+    public void onLoadSdk(
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
-        executor.execute(() -> callback.onInitSdkFinished(null));
+            OnLoadSdkCallback callback) {
+        executor.execute(() -> callback.onLoadSdkFinished(null));
     }
 
     @Override
