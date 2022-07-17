@@ -98,10 +98,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final Object mLock = new Object();
 
-    // TODO(b/239155932): Move to ArrayMaps
     // For communication between app<-ManagerService->RemoteCode for each codeToken
     @GuardedBy("mLock")
-    private final Map<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
+    private final ArrayMap<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
 
     @GuardedBy("mLock")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
@@ -154,7 +153,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         enforceCallingPackageBelongsToUid(callingInfo);
         List<SharedLibraryInfo> sharedLibraryInfos = new ArrayList<>();
         synchronized (mLock) {
-            for (AppAndRemoteSdkLink link : mAppAndRemoteSdkLinks.values()) {
+            for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
+                AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
                 if (link.mCallingInfo.equals(callingInfo) && link.mSdkProviderInfo != null) {
                     sharedLibraryInfos.add(link.mSdkProviderInfo.mSdkInfo);
                 }
