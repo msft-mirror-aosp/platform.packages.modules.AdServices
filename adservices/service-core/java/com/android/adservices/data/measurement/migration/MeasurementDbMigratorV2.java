@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 /** Migrates Measurement DB from user version 1 (base) to 2. */
 public class MeasurementDbMigratorV2 extends AbstractMeasurementDbMigrator {
 
+    private static final int MIGRATION_TARGET_VERSION = 2;
     private static final String[] DROP_INDEXES_VER_2 = {
         "DROP INDEX " + INDEX_PREFIX + MeasurementTables.SourceContract.TABLE + "_ad_rt_et",
         "DROP INDEX " + INDEX_PREFIX + MeasurementTables.TriggerContract.TABLE + "_ad_rt_tt",
@@ -136,7 +137,7 @@ public class MeasurementDbMigratorV2 extends AbstractMeasurementDbMigrator {
     };
 
     public MeasurementDbMigratorV2() {
-        super(2);
+        super(MIGRATION_TARGET_VERSION);
     }
 
     @Override

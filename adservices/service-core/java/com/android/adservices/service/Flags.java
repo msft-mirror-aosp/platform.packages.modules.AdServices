@@ -144,6 +144,53 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_APP_NAME;
     }
 
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
+    long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
+    long FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
+            60L * 24L * 60L * 60L * 1000L; // 60 days
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+
+    /** Returns the maximum number of custom audience can stay in the storage. */
+    default long getFledgeCustomAudienceMaxCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
+    }
+
+    /** Returns the maximum number of custom audience an app can create. */
+    default long getFledgeCustomAudiencePerAppMaxCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+    }
+
+    /** Returns the maximum number of apps can have access to custom audience. */
+    default long getFledgeCustomAudienceMaxOwnerCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
+    }
+
+    /**
+     * Returns the default amount of time in milliseconds a custom audience object will live before
+     * being expiring and being removed
+     */
+    default long getFledgeCustomAudienceDefaultExpireInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS;
+    }
+
+    /**
+     * Returns the maximum permitted difference in milliseconds between the custom audience object's
+     * creation time and its activation time
+     */
+    default long getFledgeCustomAudienceMaxActivationDelayInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS;
+    }
+
+    /**
+     * Returns the maximum permitted difference in milliseconds between the custom audience object's
+     * activation time and its expiration time
+     */
+    default long getFledgeCustomAudienceMaxExpireInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS;
+    }
+
     long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
     long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
     long FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes

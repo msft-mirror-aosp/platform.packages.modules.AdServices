@@ -68,6 +68,7 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
+    @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
 
     @VisibleForTesting
     static final String ERROR_AD_SELECTION_FAILURE = "Encountered failure during Ad Selection";
@@ -83,7 +84,6 @@ public final class AdSelectionRunner {
     static final String ERROR_NO_BUYERS_AVAILABLE =
             "The list of the custom audience buyers should not be empty.";
 
-    private static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -188,7 +188,7 @@ public final class AdSelectionRunner {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
                             .setAdSelectionId(result.getAdSelectionId())
-                            .setRenderUrl(result.getWinningAdRenderUrl())
+                            .setRenderUri(result.getWinningAdRenderUri())
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
@@ -414,9 +414,9 @@ public final class AdSelectionRunner {
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(
                         scoringWinner.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setWinningAdRenderUrl(
-                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUrl())
-                .setBiddingLogicUrl(
+                .setWinningAdRenderUri(
+                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
+                .setBiddingLogicUri(
                         scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUrl())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
@@ -443,7 +443,7 @@ public final class AdSelectionRunner {
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
-                                    .setBiddingLogicUrl(dbAdSelection.getBiddingLogicUrl())
+                                    .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
                     return dbAdSelection;
                 });

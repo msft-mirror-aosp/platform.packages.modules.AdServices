@@ -17,6 +17,8 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -57,15 +59,16 @@ public class Source {
     private long mEventId;
     private Uri mPublisher;
     private Uri mAttributionDestination;
+    private Uri mWebDestination;
     private Uri mAdTechDomain;
     private Uri mRegistrant;
     private SourceType mSourceType;
     private long mPriority;
-    private @Status int mStatus;
+    @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
     private List<Long> mDedupKeys;
-    private @AttributionMode int mAttributionMode;
+    @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
     private boolean mIsInstallAttributed;
@@ -254,6 +257,7 @@ public class Source {
         return Objects.equals(mId, source.mId)
                 && Objects.equals(mPublisher, source.mPublisher)
                 && Objects.equals(mAttributionDestination, source.mAttributionDestination)
+                && Objects.equals(mWebDestination, source.mWebDestination)
                 && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
@@ -267,15 +271,28 @@ public class Source {
                 && Objects.equals(mAggregateFilterData, source.mAggregateFilterData)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
-                && Objects.equals(mAggregatableAttributionSource,
-                source.mAggregatableAttributionSource);
+                && Objects.equals(
+                        mAggregatableAttributionSource, source.mAggregatableAttributionSource);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mPublisher, mAttributionDestination, mAdTechDomain, mPriority,
-                mStatus, mExpiryTime, mEventTime, mEventId, mSourceType, mDedupKeys,
-                mAggregateFilterData, mAggregateSource, mAggregateContributions,
+        return Objects.hash(
+                mId,
+                mPublisher,
+                mAttributionDestination,
+                mWebDestination,
+                mAdTechDomain,
+                mPriority,
+                mStatus,
+                mExpiryTime,
+                mEventTime,
+                mEventId,
+                mSourceType,
+                mDedupKeys,
+                mAggregateFilterData,
+                mAggregateSource,
+                mAggregateContributions,
                 mAggregatableAttributionSource);
     }
 
@@ -360,11 +377,16 @@ public class Source {
         return mPublisher;
     }
 
-    /**
-     * Uri for the {@link Trigger}'s.
-     */
+    /** Uri for the {@link Trigger}'s app destination. */
+    @Nullable
     public Uri getAttributionDestination() {
         return mAttributionDestination;
+    }
+
+    /** Uri for the {@link Trigger}'s web destination. */
+    @Nullable
+    public Uri getWebDestination() {
+        return mWebDestination;
     }
 
     /**
@@ -395,10 +417,9 @@ public class Source {
         return mDedupKeys;
     }
 
-    /**
-     * Current status of the {@link Source}.
-     */
-    public @Status int getStatus() {
+    /** Current status of the {@link Source}. */
+    @Status
+    public int getStatus() {
         return mStatus;
     }
 
@@ -409,10 +430,9 @@ public class Source {
         return mRegistrant;
     }
 
-    /**
-     * Selected mode for attribution. Values: Truthfully, Never, Falsely.
-     */
-    public @AttributionMode int getAttributionMode() {
+    /** Selected mode for attribution. Values: Truthfully, Never, Falsely. */
+    @AttributionMode
+    public int getAttributionMode() {
         return mAttributionMode;
     }
 
@@ -549,53 +569,55 @@ public class Source {
             mBuilding = new Source();
         }
 
-        /**
-         * See {@link Source#getId()}.
-         */
-        public Builder setId(String id) {
+        /** See {@link Source#getId()}. */
+        @NonNull
+        public Builder setId(@NonNull String id) {
+            Validation.validateNonNull(id);
             mBuilding.mId = id;
             return this;
         }
 
-        /**
-         * See {@link Source#getEventId()}.
-         */
+        /** See {@link Source#getEventId()}. */
+        @NonNull
         public Builder setEventId(long eventId) {
             mBuilding.mEventId = eventId;
             return this;
         }
 
-        /**
-         * See {@link Source#getPublisher()}.
-         */
-        public Builder setPublisher(Uri publisher) {
+        /** See {@link Source#getPublisher()}. */
+        @NonNull
+        public Builder setPublisher(@NonNull Uri publisher) {
             Validation.validateUri(publisher);
             mBuilding.mPublisher = publisher;
             return this;
         }
 
-        /**
-         * See {@link Source#getAttributionDestination()}.
-         */
-
-        public Builder setAttributionDestination(Uri attributionDestination) {
-            Validation.validateUri(attributionDestination);
+        /** See {@link Source#getAttributionDestination()}. */
+        @NonNull
+        public Builder setAttributionDestination(@Nullable Uri attributionDestination) {
+            Optional.ofNullable(attributionDestination).ifPresent(Validation::validateUri);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
 
-        /**
-         * See {@link Source#getAdTechDomain()} ()}.
-         */
-        public Builder setAdTechDomain(Uri adTechDomain) {
+        /** See {@link Source#getWebDestination()}. */
+        @NonNull
+        public Builder setWebDestination(@Nullable Uri webDestination) {
+            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
+            mBuilding.mWebDestination = webDestination;
+            return this;
+        }
+
+        /** See {@link Source#getAdTechDomain()} ()}. */
+        @NonNull
+        public Builder setAdTechDomain(@NonNull Uri adTechDomain) {
             Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
-        /**
-         * See {@link Source#getEventId()}.
-         */
+        /** See {@link Source#getEventId()}. */
+        @NonNull
         public Builder setEventTime(long eventTime) {
             mBuilding.mEventTime = eventTime;
             return this;
@@ -609,108 +631,94 @@ public class Source {
             return this;
         }
 
-        /**
-         * See {@link Source#getPriority()}.
-         */
+        /** See {@link Source#getPriority()}. */
+        @NonNull
         public Builder setPriority(long priority) {
             mBuilding.mPriority = priority;
             return this;
         }
 
-        /**
-         * See {@link Source#getSourceType()}.
-         */
-        public Builder setSourceType(SourceType sourceType) {
+        /** See {@link Source#getSourceType()}. */
+        @NonNull
+        public Builder setSourceType(@NonNull SourceType sourceType) {
+            Validation.validateNonNull(sourceType);
             mBuilding.mSourceType = sourceType;
             return this;
         }
 
-        /**
-         * See {@link Source#getDedupKeys()}.
-         */
-        public Builder setDedupKeys(List<Long> dedupKeys) {
+        /** See {@link Source#getDedupKeys()}. */
+        @NonNull
+        public Builder setDedupKeys(@Nullable List<Long> dedupKeys) {
             mBuilding.mDedupKeys = dedupKeys;
             return this;
         }
 
-        /**
-         * See {@link Source#getStatus()}.
-         */
+        /** See {@link Source#getStatus()}. */
+        @NonNull
         public Builder setStatus(@Status int status) {
             mBuilding.mStatus = status;
             return this;
         }
 
-        /**
-         * See {@link Source#getRegistrant()}
-         */
-        public Builder setRegistrant(Uri registrant) {
+        /** See {@link Source#getRegistrant()} */
+        @NonNull
+        public Builder setRegistrant(@NonNull Uri registrant) {
             Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
 
-        /**
-         * See {@link Source#getAttributionMode()}
-         */
+        /** See {@link Source#getAttributionMode()} */
+        @NonNull
         public Builder setAttributionMode(@AttributionMode int attributionMode) {
             mBuilding.mAttributionMode = attributionMode;
             return this;
         }
 
-        /**
-         * See {@link Source#getInstallAttributionWindow()}
-         */
+        /** See {@link Source#getInstallAttributionWindow()} */
+        @NonNull
         public Builder setInstallAttributionWindow(long installAttributionWindow) {
             mBuilding.mInstallAttributionWindow = installAttributionWindow;
             return this;
         }
 
-        /**
-         * See {@link Source#getInstallCooldownWindow()}
-         */
+        /** See {@link Source#getInstallCooldownWindow()} */
+        @NonNull
         public Builder setInstallCooldownWindow(long installCooldownWindow) {
             mBuilding.mInstallCooldownWindow = installCooldownWindow;
             return this;
         }
 
-        /**
-         * See {@link Source#isInstallAttributed()}
-         */
+        /** See {@link Source#isInstallAttributed()} */
+        @NonNull
         public Builder setInstallAttributed(boolean installAttributed) {
             mBuilding.mIsInstallAttributed = installAttributed;
             return this;
         }
 
-        /**
-         * See {@link Source#getAggregateFilterData()}.
-         */
-        public Builder setAggregateFilterData(String aggregateFilterData) {
+        /** See {@link Source#getAggregateFilterData()}. */
+        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
             mBuilding.mAggregateFilterData = aggregateFilterData;
             return this;
         }
 
-        /**
-         * See {@link Source#getAggregateSource()}
-         */
-        public Builder setAggregateSource(String aggregateSource) {
+        /** See {@link Source#getAggregateSource()} */
+        public Builder setAggregateSource(@Nullable String aggregateSource) {
             mBuilding.mAggregateSource = aggregateSource;
             return this;
         }
 
-        /**
-         * See {@link Source#getAggregateContributions()}
-         */
+        /** See {@link Source#getAggregateContributions()} */
+        @NonNull
         public Builder setAggregateContributions(int aggregateContributions) {
             mBuilding.mAggregateContributions = aggregateContributions;
             return this;
         }
 
-        /**
-         * See {@link Source#getAggregatableAttributionSource()}
-         */
+        /** See {@link Source#getAggregatableAttributionSource()} */
+        @NonNull
         public Builder setAggregatableAttributionSource(
-                AggregatableAttributionSource aggregatableAttributionSource) {
+                @Nullable AggregatableAttributionSource aggregatableAttributionSource) {
             mBuilding.mAggregatableAttributionSource = aggregatableAttributionSource;
             return this;
         }
@@ -721,10 +729,13 @@ public class Source {
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
-                    mBuilding.mAttributionDestination,
                     mBuilding.mAdTechDomain,
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
+
+            if (mBuilding.mAttributionDestination == null && mBuilding.mWebDestination == null) {
+                throw new IllegalArgumentException("At least one destination is required");
+            }
 
             return mBuilding;
         }

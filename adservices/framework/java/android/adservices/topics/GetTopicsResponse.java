@@ -75,8 +75,7 @@ public class GetTopicsResponse {
          */
         public @NonNull GetTopicsResponse build() {
             if (mTopics == null) {
-                throw new IllegalArgumentException(
-                        "Topics or TaxonomyVersion or ModelVersion is null");
+                throw new IllegalArgumentException("Topics is null");
             }
             return new GetTopicsResponse(mTopics);
         }

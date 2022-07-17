@@ -33,10 +33,13 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private SandboxedSdkContext mSdkContext;
 
     @Override
-    public void initSdk(SandboxedSdkContext sandboxedSdkContext, Bundle params, Executor executor,
-            InitSdkCallback callback) {
+    public void onLoadSdk(
+            SandboxedSdkContext sandboxedSdkContext,
+            Bundle params,
+            Executor executor,
+            OnLoadSdkCallback callback) {
         mSdkContext = sandboxedSdkContext;
-        callback.onInitSdkFinished(new Bundle());
+        callback.onLoadSdkFinished(new Bundle());
     }
 
     @Override

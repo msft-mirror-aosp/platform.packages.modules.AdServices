@@ -22,6 +22,8 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
 
@@ -30,28 +32,38 @@ import java.util.Objects;
 /** This class runs the validation of the {@link AdSelectionConfig} subfields. */
 public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> {
 
-    public static final String SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY =
+    @VisibleForTesting
+    static final String SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY =
             "The AdSelectionConfig's seller should not be null nor empty.";
-    public static final String SELLER_HAS_MISSING_DOMAIN_NAME =
+
+    @VisibleForTesting
+    static final String SELLER_HAS_MISSING_DOMAIN_NAME =
             "The AdSelectionConfig seller has missing domain name.";
-    public static final String SELLER_HAS_INVALID_DOMAIN_NAME =
-            "The AdSelectionConfig seller has invalid domain name.";
-    public static final String DECISION_LOGIC_URL_SHOULD_HAVE_PRESENT_HOST =
+
+    @VisibleForTesting
+    static final String SELLER_IS_AN_INVALID_DOMAIN_NAME =
+            "The AdSelectionConfig seller is an invalid domain name.";
+
+    @VisibleForTesting
+    static final String DECISION_LOGIC_URL_SHOULD_HAVE_PRESENT_HOST =
             "The AdSelectionConfig decisionLogicUrl should have present host.";
-    public static final String SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT =
+
+    @VisibleForTesting
+    static final String SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT =
             "The seller host name %s and the seller-provided "
                     + "decision logic urls host name %s are not"
                     + " consistent.";
 
     @Override
-    public ImmutableList getValidationViolations(@NonNull AdSelectionConfig adSelectionConfig) {
+    public ImmutableList<String> getValidationViolations(
+            @NonNull AdSelectionConfig adSelectionConfig) {
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
         if (Objects.isNull(adSelectionConfig)) {
             violations.add("The adSelectionConfig should not be null.");
         }
         violations.addAll(
                 validateSellerAndSellerDecisionUrls(
-                        adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUrl()));
+                        adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUri()));
 
         return violations.build();
     }
@@ -71,8 +83,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
             violations.add(SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY);
         } else if (Objects.isNull(sellerHost) || sellerHost.isEmpty()) {
             violations.add(SELLER_HAS_MISSING_DOMAIN_NAME);
-        } else if (!InternetDomainName.isValid(seller)) {
-            violations.add(SELLER_HAS_INVALID_DOMAIN_NAME);
+        } else if (!Objects.equals(sellerHost, seller) || !InternetDomainName.isValid(seller)) {
+            violations.add(SELLER_IS_AN_INVALID_DOMAIN_NAME);
         }
 
         if (Objects.isNull(decisionLogicUrl)) {

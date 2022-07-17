@@ -26,9 +26,12 @@ import java.util.concurrent.Executor;
 
 public class FailingSdkProvider extends SandboxedSdkProvider {
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
-        callback.onInitSdkError("Failed to initialize.");
+    public void onLoadSdk(
+            SandboxedSdkContext context,
+            Bundle params,
+            Executor executor,
+            OnLoadSdkCallback callback) {
+        callback.onLoadSdkError("Failed to initialize.");
     }
 
     @Override

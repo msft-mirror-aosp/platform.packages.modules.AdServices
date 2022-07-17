@@ -45,14 +45,14 @@ public class Sdk1 extends SandboxedSdkProvider {
 
     private Context mContext;
     private Executor mExecutor;
-    private InitSdkCallback mCallback;
+    private OnLoadSdkCallback mCallback;
 
     @Override
-    public void initSdk(
+    public void onLoadSdk(
             SandboxedSdkContext context,
             Bundle params,
             Executor executor,
-            InitSdkCallback callback) {
+            OnLoadSdkCallback callback) {
         mContext = context;
         mExecutor = executor;
         mCallback = callback;
@@ -69,13 +69,13 @@ public class Sdk1 extends SandboxedSdkProvider {
 
             // Trigger the success callback to tell the Test App that the first Topics API call
             // finished successfully.
-            mExecutor.execute(() -> mCallback.onInitSdkFinished(null));
+            mExecutor.execute(() -> mCallback.onLoadSdkFinished(null));
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
 
             // Trigger the error callback to tell the Test App that the first Topics API call
             // finished with an error.
-            mExecutor.execute(() -> mCallback.onInitSdkError(e.getMessage()));
+            mExecutor.execute(() -> mCallback.onLoadSdkError(e.getMessage()));
             success = false;
         }
 
@@ -94,7 +94,7 @@ public class Sdk1 extends SandboxedSdkProvider {
                     // Trigger the error callback to tell the Test App that the we did not receive
                     // any topic. This will tell the Test App to fail the test.
                     Log.e(TAG, "Failed. No topics!");
-                    mExecutor.execute(() -> mCallback.onInitSdkError("Failed. No topics!"));
+                    mExecutor.execute(() -> mCallback.onLoadSdkError("Failed. No topics!"));
                 } else {
                     // Verify the returned Topic.
                     Topic topic = response.getTopics().get(0);
@@ -107,19 +107,19 @@ public class Sdk1 extends SandboxedSdkProvider {
                         // API call got back some topic which is expected. This will tell the Test
                         // App to pass the test.
                         Log.i(TAG, "Get correct returned topic: " + topic.getTopicId());
-                        mExecutor.execute(() -> mCallback.onInitSdkFinished(null));
+                        mExecutor.execute(() -> mCallback.onLoadSdkFinished(null));
                     } else {
                         // Trigger the error callback to tell the Test App that the we received
                         // a wrong topic. This will tell the Test App to fail the test.
                         Log.e(TAG, "Get wrong returned topic: " + topic.getTopicId());
-                        mExecutor.execute(() -> mCallback.onInitSdkError("Failed. Wrong topics!"));
+                        mExecutor.execute(() -> mCallback.onLoadSdkError("Failed. Wrong topics!"));
                     }
                 }
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
                 // Trigger the error callback to tell the Test App that some errors occurred so
                 // that it will fail the test.
-                mExecutor.execute(() -> mCallback.onInitSdkError(e.getMessage()));
+                mExecutor.execute(() -> mCallback.onLoadSdkError(e.getMessage()));
             }
         }
     }
