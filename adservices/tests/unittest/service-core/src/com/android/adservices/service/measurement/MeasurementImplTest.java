@@ -16,12 +16,12 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.measurement.MeasurementManager.RESULT_INTERNAL_ERROR;
-import static android.adservices.measurement.MeasurementManager.RESULT_INVALID_ARGUMENT;
-import static android.adservices.measurement.MeasurementManager.RESULT_IO_ERROR;
-import static android.adservices.measurement.MeasurementManager.RESULT_OK;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
+import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.data.measurement.DatastoreManager.ThrowingCheckedConsumer;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
@@ -664,7 +664,7 @@ public final class MeasurementImplTest {
         final int result = measurement.registerWebSource(registrationRequest, eventTime);
 
         // Assert
-        assertEquals(MeasurementManager.RESULT_OK, result);
+        assertEquals(RESULT_OK, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
         verify(mDatastoreManager, times(2))
@@ -709,7 +709,7 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.registerWebSource(
                         createWebSourceRegistrationRequest(), System.currentTimeMillis());
-        assertEquals(MeasurementManager.RESULT_IO_ERROR, result);
+        assertEquals(RESULT_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
     }
@@ -732,7 +732,7 @@ public final class MeasurementImplTest {
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
 
         // Assertions
-        assertEquals(MeasurementManager.RESULT_OK, result);
+        assertEquals(RESULT_OK, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchWebTriggers(any());
@@ -752,7 +752,7 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.registerWebTrigger(
                         createWebTriggerRegistrationRequest(), System.currentTimeMillis());
-        assertEquals(MeasurementManager.RESULT_IO_ERROR, result);
+        assertEquals(RESULT_IO_ERROR, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, never()).fetchWebSources(any());
         verify(mTriggerFetcher, times(1)).fetchWebTriggers(any());

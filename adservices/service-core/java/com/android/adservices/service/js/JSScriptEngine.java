@@ -84,13 +84,6 @@ public class JSScriptEngine {
             mProfiler = profiler;
         }
 
-        /** @return true if there is an ongoing call to initialize the JsSandbox */
-        public boolean isInitialized() {
-            synchronized (mSandboxLock) {
-                return mFutureSandbox != null;
-            }
-        }
-
         public FluentFuture<JsSandbox> getFutureInstance(Context context) {
             synchronized (mSandboxLock) {
                 if (mFutureSandbox == null) {
@@ -199,18 +192,18 @@ public class JSScriptEngine {
             @NonNull Context context, @NonNull Profiler profiler) {
         synchronized (JSScriptEngine.class) {
             // If there is no instance already created or the instance was shutdown
-            if ((sSingleton == null) || !sSingleton.mJsSandboxProvider.isInitialized()) {
-                sSingleton =
-                        new JSScriptEngine(
-                                context,
-                                new JsSandboxProvider(profiler),
-                                profiler,
-                                AdServicesExecutors.getLightWeightExecutor());
-            } else {
+            if (sSingleton != null) {
                 throw new IllegalStateException(
-                        "Unable to initialize test JSScriptEngine instance with the given profile,"
-                                + " an existing instance has already been created.");
+                        "Unable to initialize test JSScriptEngine multiple times using"
+                                + "the real JsSandboxProvider.");
             }
+
+            sSingleton =
+                    new JSScriptEngine(
+                            context,
+                            new JsSandboxProvider(profiler),
+                            profiler,
+                            AdServicesExecutors.getLightWeightExecutor());
         }
 
         return sSingleton;

@@ -112,26 +112,13 @@ public class AdSelectionServiceImplTest {
     private static final String SELLER_VALID = "developer.android.com";
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
-    private final String mSellerReportingPath = "/reporting/seller";
-    private final String mBuyerReportingPath = "/reporting/buyer";
-    private final String mFetchJavaScriptPath = "/fetchJavascript/";
-    private final String mContextualSignals = "{\"contextual_signals\":1}";
-    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
-    private CustomAudienceDao mCustomAudienceDao;
-    private AdSelectionEntryDao mAdSelectionEntryDao;
-    private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
-
-    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
-
-    // This object access some system APIs
-    @Mock public DevContextFilter mDevContextFilter;
-
-    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
-
+    private static final String DUMMY_DECISION_LOGIC_JS =
+            "function test() { return \"hello world\"; }";
+    private static final String DUMMY_TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
     // Auto-generated variable names are too long for lint check
     private static final int SHORT_API_NAME_OVERRIDE =
             AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -139,6 +126,21 @@ public class AdSelectionServiceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
     private static final int SHORT_API_NAME_RESET_ALL_OVERRIDES =
             AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(20);
+    private final String mSellerReportingPath = "/reporting/seller";
+    private final String mBuyerReportingPath = "/reporting/buyer";
+    private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    private final String mContextualSignals = "{\"contextual_signals\":1}";
+    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
+    @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
+    // This object access some system APIs
+    @Mock public DevContextFilter mDevContextFilter;
+    private CustomAudienceDao mCustomAudienceDao;
+    private AdSelectionEntryDao mAdSelectionEntryDao;
+    private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
     @Before
     public void setUp() {
@@ -277,12 +279,11 @@ public class AdSelectionServiceImplTest {
                         + "' } };\n"
                         + "}";
 
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(
-                                new MockResponse().setBody(sellerDecisionLogicJs),
-                                new MockResponse(),
-                                new MockResponse()));
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
@@ -619,7 +620,7 @@ public class AdSelectionServiceImplTest {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         List.of(
-                                // There is no to fetch JS
+                                // There is no need to fetch JS
                                 new MockResponse(), new MockResponse()));
 
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
@@ -659,6 +660,7 @@ public class AdSelectionServiceImplTest {
                                         adSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(sellerDecisionLogicJs)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
@@ -726,10 +728,12 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         AdSelectionOverrideTestCallback callback =
-                callAddOverride(adSelectionService, adSelectionConfig, decisionLogicJs);
+                callAddOverride(
+                        adSelectionService,
+                        adSelectionConfig,
+                        DUMMY_DECISION_LOGIC_JS,
+                        DUMMY_TRUSTED_SCORING_SIGNALS);
 
         assertTrue(callback.mIsSuccess);
         assertTrue(
@@ -765,11 +769,14 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         assertThrows(
                 SecurityException.class,
-                () -> callAddOverride(adSelectionService, adSelectionConfig, decisionLogicJs));
+                () ->
+                        callAddOverride(
+                                adSelectionService,
+                                adSelectionConfig,
+                                DUMMY_DECISION_LOGIC_JS,
+                                DUMMY_TRUSTED_SCORING_SIGNALS));
 
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
@@ -809,8 +816,6 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         String adSelectionConfigId =
                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig);
 
@@ -818,7 +823,8 @@ public class AdSelectionServiceImplTest {
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride);
@@ -864,8 +870,6 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         String adSelectionConfigId =
                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig);
 
@@ -873,7 +877,8 @@ public class AdSelectionServiceImplTest {
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride);
@@ -923,8 +928,6 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         String adSelectionConfigId =
                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig);
 
@@ -932,7 +935,8 @@ public class AdSelectionServiceImplTest {
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride);
@@ -993,8 +997,6 @@ public class AdSelectionServiceImplTest {
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         String adSelectionConfigId1 =
                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
         String adSelectionConfigId2 =
@@ -1006,21 +1008,24 @@ public class AdSelectionServiceImplTest {
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
@@ -1093,8 +1098,6 @@ public class AdSelectionServiceImplTest {
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         String adSelectionConfigId1 =
                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
         String adSelectionConfigId2 =
@@ -1106,21 +1109,24 @@ public class AdSelectionServiceImplTest {
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
@@ -1190,8 +1196,6 @@ public class AdSelectionServiceImplTest {
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
-        String decisionLogicJs = "function test() { return \"hello world\"; }";
-
         String adSelectionConfigId1 =
                 AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(adSelectionConfig1);
         String adSelectionConfigId2 =
@@ -1203,21 +1207,24 @@ public class AdSelectionServiceImplTest {
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId1)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride2 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId2)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride3 =
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(adSelectionConfigId3)
                         .setAppPackageName(myAppPackageName)
-                        .setDecisionLogicJS(decisionLogicJs)
+                        .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
@@ -1283,7 +1290,8 @@ public class AdSelectionServiceImplTest {
     private AdSelectionOverrideTestCallback callAddOverride(
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
-            String decisionLogicJS)
+            String decisionLogicJS,
+            String trustedScoringSignals)
             throws Exception {
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch resultLatch = new CountDownLatch(2);
@@ -1298,7 +1306,7 @@ public class AdSelectionServiceImplTest {
         doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
-                adSelectionConfig, decisionLogicJS, callback);
+                adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
         resultLatch.await();
         return callback;
     }
@@ -1457,9 +1465,9 @@ public class AdSelectionServiceImplTest {
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
-        private final CountDownLatch mCountDownLatch;
 
         public ReportImpressionTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;
@@ -1479,9 +1487,9 @@ public class AdSelectionServiceImplTest {
     }
 
     public static class AdSelectionOverrideTestCallback extends AdSelectionOverrideCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
-        private final CountDownLatch mCountDownLatch;
 
         public AdSelectionOverrideTestCallback(CountDownLatch countDownLatch) {
             mCountDownLatch = countDownLatch;

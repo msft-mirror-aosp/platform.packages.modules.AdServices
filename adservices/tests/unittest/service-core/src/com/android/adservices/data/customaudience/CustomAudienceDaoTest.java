@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -525,7 +526,8 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_1 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
@@ -538,7 +540,8 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_3 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_3, biddingLogicJs3);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_3, trustedBiddingData_3);
@@ -557,7 +560,8 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         String trustedBiddingData_1 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_1, BUYER_1, NAME_1);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
         assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
@@ -567,7 +571,8 @@ public class CustomAudienceDaoTest {
                         OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
         String trustedBiddingData_2 =
-                mCustomAudienceDao.getTrustedBiddingDataOverride(OWNER_2, BUYER_2, NAME_2);
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
         assertEquals(BIDDING_LOGIC_JS_2, biddingLogicJs2);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_2, trustedBiddingData_2);
@@ -683,6 +688,35 @@ public class CustomAudienceDaoTest {
                 CUSTOM_AUDIENCE_BGF_DATA_2,
                 mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
                         OWNER_2, BUYER_2, NAME_2));
+    }
+
+    @Test
+    public void testGetCustomAudienceStats_nullOwner() {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mCustomAudienceDao.getCustomAudienceStats(null);
+                });
+    }
+
+    @Test
+    public void testCustomAudienceStats_nonnullOwner() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        verifyCustomAudienceStats(
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 0, 0, 0);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URL_1);
+        verifyCustomAudienceStats(
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 1, 1, 1);
+        verifyCustomAudienceStats(
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 1, 0, 1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_2, DAILY_UPDATE_URL_1);
+        verifyCustomAudienceStats(
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 2, 1, 2);
+        verifyCustomAudienceStats(
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 2, 1, 2);
+        verifyCustomAudienceStats(
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_3), OWNER_3, 2, 0, 2);
     }
 
     @Test(expected = NullPointerException.class)
@@ -850,5 +884,17 @@ public class CustomAudienceDaoTest {
         List<DBCustomAudience> result =
                 mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
         assertTrue(result.isEmpty());
+    }
+
+    private void verifyCustomAudienceStats(
+            CustomAudienceDao.CustomAudienceStats customAudienceStats,
+            String owner,
+            int totalCount,
+            int perOwnerCount,
+            int ownerCount) {
+        assertEquals(owner, customAudienceStats.getOwner());
+        assertEquals(totalCount, customAudienceStats.getTotalCount());
+        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCount());
+        assertEquals(ownerCount, customAudienceStats.getOwnerCount());
     }
 }

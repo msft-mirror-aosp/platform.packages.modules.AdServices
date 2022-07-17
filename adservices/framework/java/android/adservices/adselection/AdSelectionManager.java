@@ -211,6 +211,7 @@ public class AdSelectionManager {
             service.overrideAdSelectionConfigRemoteInfo(
                     request.getAdSelectionConfig(),
                     request.getDecisionLogicJs(),
+                    request.getTrustedScoringSignals(),
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {

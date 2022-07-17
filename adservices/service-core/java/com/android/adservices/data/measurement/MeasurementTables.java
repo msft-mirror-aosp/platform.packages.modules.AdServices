@@ -37,6 +37,7 @@ public final class MeasurementTables {
         MeasurementTables.SourceContract.TABLE,
         MeasurementTables.TriggerContract.TABLE,
         MeasurementTables.EventReportContract.TABLE,
+        MeasurementTables.EnrollmentDataContract.TABLE,
         MeasurementTables.AggregateReport.TABLE,
         MeasurementTables.AggregateEncryptionKey.TABLE,
         MeasurementTables.AttributionRateLimitContract.TABLE
@@ -100,11 +101,27 @@ public final class MeasurementTables {
         @Deprecated String DEPRECATED_PRIORITY = "priority";
     }
 
+    // TODO: delete all AdtechUrl related methods.
     /** Contract for AdTechUrls. */
     public interface AdTechUrlsContract {
         String TABLE = MSMT_TABLE_PREFIX + "adtech_urls";
         String POSTBACK_URL = "postback_url";
         String AD_TECH_ID = "ad_tech_id";
+    }
+
+    /** Contract for Adtech enrollment data. */
+    public interface EnrollmentDataContract {
+        String TABLE = MSMT_TABLE_PREFIX + "enrollment_data";
+        String ENROLLMENT_ID = "enrollment_id";
+        String COMPANY_ID = "company_id";
+        // Following six string columns each consist of a space separated list.
+        String SDK_NAMES = "sdk_names";
+        String ATTRIBUTION_SOURCE_REGISTRATION_URL = "attribution_source_registration_url";
+        String ATTRIBUTION_TRIGGER_REGISTRATION_URL = "attribution_trigger_registration_url";
+        String ATTRIBUTION_REPORTING_URL = "attribution_reporting_url";
+        String REMARKETING_RESPONSE_BASED_REGISTRATION_URL =
+                "remarketing_response_based_registration_url";
+        String ENCRYPTION_KEY_URL = "encryption_key_url";
     }
 
     /** Contract for EventReport. */
@@ -273,6 +290,28 @@ public final class MeasurementTables {
                     + AggregateEncryptionKey.EXPIRY + " INTEGER "
                     + ")";
 
+    public static final String CREATE_TABLE_ENROLLMENT_DATA =
+            "CREATE TABLE "
+                    + EnrollmentDataContract.TABLE
+                    + " ("
+                    + EnrollmentDataContract.ENROLLMENT_ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EnrollmentDataContract.COMPANY_ID
+                    + " TEXT, "
+                    + EnrollmentDataContract.SDK_NAMES
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_REPORTING_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENCRYPTION_KEY_URL
+                    + " TEXT "
+                    + ")";
+
     public static final String[] CREATE_INDEXES = {
             "CREATE INDEX "
                     + INDEX_PREFIX + SourceContract.TABLE + "_ad_rt_et " + "ON "
@@ -311,7 +350,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_TRIGGER,
                             CREATE_TABLE_ADTECH_URLS,
                             CREATE_TABLE_EVENT_REPORT,
-                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT));
+                            CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
+                            CREATE_TABLE_ENROLLMENT_DATA));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

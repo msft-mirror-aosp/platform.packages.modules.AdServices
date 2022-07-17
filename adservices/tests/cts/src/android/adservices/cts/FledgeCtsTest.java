@@ -66,6 +66,11 @@ public class FledgeCtsTest {
 
     private static final String SELLER_DECISION_LOGIC_URI = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PREFIX = "/buyer/bidding/logic/";
+    private static final String TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
 
     private static final String SELLER = "developer.android.com";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
@@ -153,7 +158,8 @@ public class FledgeCtsTest {
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest(AD_SELECTION_CONFIG, decisionLogicJs);
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(

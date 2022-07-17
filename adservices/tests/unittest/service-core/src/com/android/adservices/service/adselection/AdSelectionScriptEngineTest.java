@@ -62,9 +62,9 @@ public class AdSelectionScriptEngineTest {
             new AdSelectionScriptEngine(sContext);
     private static final Instant NOW = Instant.now();
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
-            new CustomAudienceSignals("owner", "buyer", "name",
-                    NOW, NOW.plus(Duration.ofDays(1)),
-                    "{}");
+            new CustomAudienceSignals(
+                    "owner", "buyer", "name", NOW, NOW.plus(Duration.ofDays(1)), "{}");
+
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {
         assertFalse(
@@ -294,6 +294,7 @@ public class AdSelectionScriptEngineTest {
                 .setSellerSignals("{}")
                 .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
                 .setAdSelectionSignals("{}")
+                .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                 .build();
     }
 
