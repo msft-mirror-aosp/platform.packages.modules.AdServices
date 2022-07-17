@@ -97,12 +97,13 @@ public class BackgroundFetchRunner {
         Objects.requireNonNull(dailyFetchUrl);
 
         UpdateResultType fetchResult = UpdateResultType.SUCCESS;
-        // TODO(b/235858839): Implement dev override for background fetch response
+
         // TODO(b/234884352): Perform k-anon check on daily fetch URL
         // TODO(b/235842292): Implement network fetch from server; for now, return empty response
         // TODO(b/233739309): Response data validation (less than 10 KB)
         String updateResponse = "{}";
+
         return CustomAudienceUpdatableData.createFromResponseString(
-                jobStartTime, fetchResult, updateResponse);
+                jobStartTime, fetchResult, updateResponse, mFlags);
     }
 }
