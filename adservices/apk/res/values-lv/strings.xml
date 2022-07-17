@@ -33,16 +33,110 @@
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Konfidencialitātes smilškastes beta versija"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Konfidencialitātes smilškastes beta versija"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Pārslēgt konfidencialitātes smilškastes beta versiju"</string>
+    <!-- no translation found for settingsUI_main_view_title (5043539340176844807) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_subtitle (3380585883687237827) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text1 (8353580266621706164) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text2 (5144888171043725329) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text3 (9106658161862318732) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text4 (8784661072398581526) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text5 (6064832868440367397) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text6 (1372295962773839373) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text7 (210269084665708892) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_title (7437641813424176118) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_subtitle (5133398388693886168) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text1 (6729245512525985403) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text2 (8355913397424818046) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (912262290260184604) -->
+    <skip />
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"Jūsu vispārīgās intereses"</string>
     <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Pārvaldiet savas vispārīgās intereses"</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Jūsu lietotnes, kas rada noteiktas intereses"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Pārvaldiet lietotnes, kas rada noteiktas intereses"</string>
+    <!-- no translation found for settingsUI_blocked_apps_title (616945769186215391) -->
+    <skip />
+    <!-- no translation found for settingsUI_block_app_title (4169472139940708737) -->
+    <skip />
+    <!-- no translation found for settingsUI_unblock_app_title (3298453461173699515) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_subtitle (8739946672076737081) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
+    <skip />
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Pārvaldiet savas vispārīgās intereses saistībā ar reklāmām"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Bloķēt"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Intereses, ko esat bloķējis"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Atiestatīt visas intereses"</string>
-    <!-- no translation found for settingsUI_unblock_topic_title (1710283575567727667) -->
+    <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Atbloķēt"</string>
+    <string name="notificationUI_eu_title" msgid="1156528090731956503">"Pievienojieties reklāmu konfidencialitātes beta programmai"</string>
+    <!-- no translation found for notificationUI_header_title_eu (6822288197367284058) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_subtitle_eu (340747660810152558) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_title_eu (4361051737453876336) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_text_eu (3002855638097043236) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title_eu (6354572742632086901) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_text_eu (166675713389999485) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_control_text_eu (2201590946141216882) -->
+    <skip />
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Ko jūs varat darīt"</string>
+    <!-- no translation found for notificationUI_container3_body_text_eu (1489739161978958930) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nē, paldies"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="1179003744451135574">"Jā, izmēģināšu"</string>
+    <string name="notificationUI_non_eu_title" msgid="1400067162654584472">"Android reklāmu konfidencialitātes beta programma"</string>
+    <!-- no translation found for notificationUI_confirmation_left_control_button_text (1004303831215770799) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_right_control_button_text (3207541606235495458) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_title (3178322390976087463) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_subtitle (9173047338339917593) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_title (6388776490679995340) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_subtitle (4615362687181140355) -->
+    <skip />
+    <string name="notificationUI_header_title" msgid="1049608950263285787">"Jūs palīdzat Android komandai ierobežot starplietotņu izsekošanu"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android komanda testē jaunas funkcijas, kas ierobežos reklāmdevēju veikto starplietotņu izsekošanu"</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Kas ir starplietotņu izsekošana?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Mūsdienās datus par to, kā jūs izmantojat lietotnes, ir viegli saistīt ar jūsu ierīci un reklamēšanas nolūkos kopīgot dažādās lietotnēs."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Ko dara Android komanda"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android komanda testē jaunu konfidencialitātes smilškasti, kurā tiek droši glabāti un kopīgoti reklamēšanas dati, neidentificējot jūs vai jūsu ierīci. \n\nŠīs jaunās sistēmas dēļ lietotnes nevar tieši nodot datus citām lietotnēm, bet joprojām var rādīt jums reklāmas, kas jums varētu patikt."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Darbības principi"</string>
+    <string name="notificationUI_container3_title" msgid="4823075930852061894">"Kas ir starplietotņu izsekošana?"</string>
+    <string name="notificationUI_container3_body_text" msgid="8999954025569853707">"Mūsdienās datus par to, kā jūs izmantojat lietotnes, ir viegli saistīt ar jūsu ierīci un reklamēšanas nolūkos kopīgot dažādās lietotnēs."</string>
+    <!-- no translation found for notificationUI_left_control_button_text (6459461402253858770) -->
+    <skip />
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Labi"</string>
+    <string name="notificationUI_eu_content" msgid="121153625335218261">"Testējiet jaunas funkcijas, kas ierobežos starplietotņu izsekošanu"</string>
+    <string name="notificationUI_non_eu_content" msgid="8932310379484651423">"Jūs testējat jaunas funkcijas, kas ierobežos starplietotņu izsekošanu"</string>
+    <!-- no translation found for notificationUI_how_it_works_expanded_text (3758348489850620566) -->
     <skip />
 </resources>
