@@ -19,11 +19,14 @@ package com.android.tests.sdksandbox.endtoend;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.SendDataException;
+import android.app.sdksandbox.SendDataResponse;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.content.Context;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
+import android.os.OutcomeReceiver;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -219,7 +222,8 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
 
-    private static class FakeSendDataCallback implements SdkSandboxManager.SendDataCallback {
+    private static class FakeSendDataCallback
+            implements OutcomeReceiver<SendDataResponse, SendDataException> {
         private final CountDownLatch mSendDataLatch = new CountDownLatch(1);
         private boolean mSendDataSuccess;
 
@@ -228,16 +232,16 @@ public class SdkSandboxManagerTest {
         private String mErrorMsg;
 
         @Override
-        public void onSendDataSuccess(Bundle params) {
+        public void onResult(SendDataResponse response) {
             mSendDataSuccess = true;
-            mBundle = params;
+            mBundle = response.getExtraInformation();
             mSendDataLatch.countDown();
         }
 
-        public void onSendDataError(int errorCode, String errorMsg) {
+        public void onError(SendDataException exception) {
             mSendDataSuccess = false;
-            mErrorCode = errorCode;
-            mErrorMsg = errorMsg;
+            mErrorCode = exception.getSendDataErrorCode();
+            mErrorMsg = exception.getMessage();
             mSendDataLatch.countDown();
         }
 
