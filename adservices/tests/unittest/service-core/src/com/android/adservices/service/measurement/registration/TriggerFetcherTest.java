@@ -525,7 +525,7 @@ public final class TriggerFetcherTest {
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse(triggerUri))
                 .setTopOriginUri(Uri.parse(topOriginUri))
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 

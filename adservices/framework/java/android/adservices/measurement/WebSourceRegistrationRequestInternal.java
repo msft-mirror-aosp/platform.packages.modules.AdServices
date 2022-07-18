@@ -17,7 +17,6 @@
 package android.adservices.measurement;
 
 import android.annotation.NonNull;
-import android.content.AttributionSource;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -47,19 +46,18 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Holds input to measurement source registration calls from web context. */
     @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
     /** Holds package info of where the request is coming from. */
-    @NonNull private final AttributionSource mAttributionSource;
+    @NonNull private final String mPackageName;
 
     private WebSourceRegistrationRequestInternal(
-            WebSourceRegistrationRequest sourceRegistrationRequest,
-            AttributionSource attributionSource) {
+            WebSourceRegistrationRequest sourceRegistrationRequest, String packageName) {
         mSourceRegistrationRequest = sourceRegistrationRequest;
-        mAttributionSource = attributionSource;
+        mPackageName = packageName;
     }
 
     private WebSourceRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mSourceRegistrationRequest = WebSourceRegistrationRequest.CREATOR.createFromParcel(in);
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
+        mPackageName = in.readString();
     }
 
     /** Getter for {@link #mSourceRegistrationRequest}. */
@@ -67,9 +65,9 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         return mSourceRegistrationRequest;
     }
 
-    /** Getter for {@link #mAttributionSource}. */
-    public AttributionSource getAttributionSource() {
-        return mAttributionSource;
+    /** Getter for {@link #mPackageName}. */
+    public String getPackageName() {
+        return mPackageName;
     }
 
     @Override
@@ -78,12 +76,12 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         if (!(o instanceof WebSourceRegistrationRequestInternal)) return false;
         WebSourceRegistrationRequestInternal that = (WebSourceRegistrationRequestInternal) o;
         return Objects.equals(mSourceRegistrationRequest, that.mSourceRegistrationRequest)
-                && Objects.equals(mAttributionSource, that.mAttributionSource);
+                && Objects.equals(mPackageName, that.mPackageName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mSourceRegistrationRequest, mAttributionSource);
+        return Objects.hash(mSourceRegistrationRequest, mPackageName);
     }
 
     @Override
@@ -95,15 +93,15 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mSourceRegistrationRequest.writeToParcel(out, flags);
-        mAttributionSource.writeToParcel(out, flags);
+        out.writeString(mPackageName);
     }
 
     /** Builder for {@link WebSourceRegistrationRequestInternal}. */
     public static final class Builder {
         /** External source registration request from client app SDK. */
         @NonNull private WebSourceRegistrationRequest mSourceRegistrationRequest;
-        /** AttributionSource of the registration. Used to determine the registrant. */
-        @NonNull private AttributionSource mAttributionSource;
+        /** Client's package name used for the registration. Used to determine the registrant. */
+        @NonNull private String mPackageName;
 
         /**
          * Setter for {@link #mSourceRegistrationRequest}.
@@ -119,14 +117,14 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         }
 
         /**
-         * Setter for {@link #mAttributionSource}.
+         * Setter for {@link #mPackageName}.
          *
-         * @param attributionSource app that is calling PP API
+         * @param packageName that is calling PP API
          * @return builder
          */
         @NonNull
-        public Builder setAttributionSource(@NonNull AttributionSource attributionSource) {
-            mAttributionSource = attributionSource;
+        public Builder setPackageName(@NonNull String packageName) {
+            mPackageName = packageName;
             return this;
         }
 
@@ -134,10 +132,10 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
         @NonNull
         public WebSourceRegistrationRequestInternal build() {
             Objects.requireNonNull(mSourceRegistrationRequest);
-            Objects.requireNonNull(mAttributionSource);
+            Objects.requireNonNull(mPackageName);
 
             return new WebSourceRegistrationRequestInternal(
-                    mSourceRegistrationRequest, mAttributionSource);
+                    mSourceRegistrationRequest, mPackageName);
         }
     }
 }
