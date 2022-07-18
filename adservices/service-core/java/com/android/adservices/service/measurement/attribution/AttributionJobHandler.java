@@ -17,13 +17,11 @@
 package com.android.adservices.service.measurement.attribution;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.DestinationType;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventTrigger;
@@ -43,7 +41,6 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -62,37 +59,6 @@ class AttributionJobHandler {
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
-    }
-
-    /**
-     * Finds the {@link AdtechUrl} when given a postback url.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    synchronized AdtechUrl findAdtechUrl(String postbackUrl) {
-        if (postbackUrl == null) {
-            return null;
-        }
-        return mDatastoreManager
-                .runInTransactionWithResult((dao) -> dao.getAdtechEnrollmentData(postbackUrl))
-                .orElse(null);
-    }
-
-    /**
-     * Queries and returns all the postback urls with the same adtech id as the given postback url.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    public List<String> getAllAdtechUrls(String postbackUrl) {
-        if (postbackUrl == null) {
-            return new ArrayList<>();
-        }
-        return mDatastoreManager
-                .runInTransactionWithResult((dao) -> dao.getAllAdtechUrls(postbackUrl))
-                .orElse(null);
     }
 
     /**

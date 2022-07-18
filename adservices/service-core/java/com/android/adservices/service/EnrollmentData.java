@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.enrollment;
+package com.android.adservices.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
