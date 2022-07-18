@@ -563,14 +563,19 @@ public final class MeasurementImplTest {
 
         // Generate valid report times
         Set<Long> reportingTimes = new HashSet<>();
-        reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(1)));
-        reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(3)));
-        reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(8)));
+        reportingTimes.add(
+                source.getReportingTime(
+                        eventTime + TimeUnit.DAYS.toMillis(1), DestinationType.APP));
+        reportingTimes.add(
+                source.getReportingTime(
+                        eventTime + TimeUnit.DAYS.toMillis(3), DestinationType.APP));
+        reportingTimes.add(
+                source.getReportingTime(
+                        eventTime + TimeUnit.DAYS.toMillis(8), DestinationType.APP));
 
         for (EventReport report : fakeEventReports) {
             Assert.assertEquals(source.getEventId(), report.getSourceId());
-            Assert.assertTrue(
-                    reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
+            Assert.assertTrue(reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
             Assert.assertEquals(0, report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
             Assert.assertEquals(
