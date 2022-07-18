@@ -21,20 +21,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
-import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Test;
 
-import java.util.List;
 
 public class CustomAudienceUpdatableDataTest {
     @Test
@@ -78,7 +77,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        jsonResponse);
+                        jsonResponse,
+                        FlagsFactory.getFlagsForTest());
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -117,7 +117,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        jsonResponse);
+                        jsonResponse,
+                        FlagsFactory.getFlagsForTest());
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -130,7 +131,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        "");
+                        "",
+                        FlagsFactory.getFlagsForTest());
 
         assertEquals(
                 "Updatable data created with empty string does not match built from response"
@@ -173,7 +175,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        jsonResponse);
+                        jsonResponse,
+                        FlagsFactory.getFlagsForTest());
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -195,7 +198,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        jsonResponseWithoutHarmlessJunk);
+                        jsonResponseWithoutHarmlessJunk,
+                        FlagsFactory.getFlagsForTest());
 
         // Harmless junk was added to the same response
         final String jsonResponseWithHarmlessJunk =
@@ -207,7 +211,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        jsonResponseWithHarmlessJunk);
+                        jsonResponseWithHarmlessJunk,
+                        FlagsFactory.getFlagsForTest());
 
         assertNotEquals(
                 "Harmless junk was not added to the response JSON",
@@ -251,7 +256,8 @@ public class CustomAudienceUpdatableDataTest {
                     CustomAudienceUpdatableData.createFromResponseString(
                             CommonFixture.FIXED_NOW,
                             initialUpdateResult,
-                            CustomAudienceUpdatableDataFixture.getEmptyJsonResponseString());
+                            CustomAudienceUpdatableDataFixture.getEmptyJsonResponseString(),
+                            FlagsFactory.getFlagsForTest());
             assertEquals(
                     "Incorrect update success when initial result is "
                             + initialUpdateResult.toString(),
@@ -266,7 +272,8 @@ public class CustomAudienceUpdatableDataTest {
                 CustomAudienceUpdatableData.createFromResponseString(
                         CommonFixture.FIXED_NOW,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
-                        "this (input ,string .is -not real json'");
+                        "this (input ,string .is -not real json'",
+                        FlagsFactory.getFlagsForTest());
 
         assertNull(updatableData.getUserBiddingSignals());
         assertNull(updatableData.getTrustedBiddingData());
@@ -279,191 +286,77 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {
+    public void testCreateFromFullJsonResponseStringWithSmallLimitStillSuccess()
+            throws JSONException {
+        class FlagsWithSmallLimits implements Flags {
+            @Override
+            public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
+                return 1;
+            }
+        }
+
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString,
+                        DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
+                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithSmallLimits());
 
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, validUserBiddingSignalsAsJsonObjectString, false);
-
+        // Because *something* was updated, even a failed unit of data still creates a successful
+        // update, but the failed unit is not updated
+        assertTrue(updatableDataFromResponseString.getContainsSuccessfulUpdate());
+        assertNull(updatableDataFromResponseString.getUserBiddingSignals());
         assertEquals(
-                validUserBiddingSignalsAsJsonObjectString,
-                CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(responseObject));
+                DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
+                updatableDataFromResponseString.getTrustedBiddingData());
+        assertEquals(
+                DBAdDataFixture.VALID_DB_AD_DATA_LIST, updatableDataFromResponseString.getAds());
     }
 
     @Test
-    public void testGetUserBiddingSignalsFromFullJsonObjectWithHarmlessJunkSuccess()
+    public void testCreateFromResponseStringWithLargeFieldsCausesUnsuccessfulUpdate()
             throws JSONException {
+        class FlagsWithSmallLimits implements Flags {
+            @Override
+            public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
+                return 1;
+            }
+
+            @Override
+            public int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
+                return 1;
+            }
+
+            @Override
+            public int getFledgeCustomAudienceMaxAdsSizeB() {
+                return 1;
+            }
+        }
+
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseString(
+                        validUserBiddingSignalsAsJsonObjectString,
+                        DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA,
+                        DBAdDataFixture.VALID_DB_AD_DATA_LIST);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        new FlagsWithSmallLimits());
 
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, validUserBiddingSignalsAsJsonObjectString, true);
-
-        assertEquals(
-                validUserBiddingSignalsAsJsonObjectString,
-                CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(responseObject));
-    }
-
-    @Test
-    public void testGetUserBiddingSignalsFromEmptyJsonObject() throws JSONException {
-        String missingUserBiddingSignalsAsJsonObjectString = null;
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, missingUserBiddingSignalsAsJsonObjectString, false);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(
-                                responseObject));
-    }
-
-    @Test
-    public void testGetUserBiddingSignalsFromJsonObjectMismatchedSchema() {
-        assertThrows(
-                JSONException.class,
-                () ->
-                        CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(
-                                CustomAudienceUpdatableDataFixture.getMalformedJsonObject()));
-    }
-
-    @Test
-    public void testGetUserBiddingSignalsFromJsonObjectMismatchedNullSchema() {
-        assertThrows(
-                JSONException.class,
-                () ->
-                        CustomAudienceUpdatableData.getUserBiddingSignalsFromJsonObject(
-                                CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject()));
-    }
-
-    @Test
-    public void testGetTrustedBiddingDataFromFullJsonObjectSuccess() throws JSONException {
-        DBTrustedBiddingData expectedTrustedBiddingData =
-                DBTrustedBiddingDataFixture.getValidBuilder().build();
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, expectedTrustedBiddingData, false);
-
-        assertEquals(
-                expectedTrustedBiddingData,
-                CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
-                        responseObject, "[1]"));
-    }
-
-    @Test
-    public void testGetTrustedBiddingDataFromFullJsonObjectWithHarmlessJunkSuccess()
-            throws JSONException {
-        DBTrustedBiddingData expectedTrustedBiddingData =
-                DBTrustedBiddingDataFixture.getValidBuilder().build();
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, expectedTrustedBiddingData, true);
-
-        assertEquals(
-                "responseObject = " + responseObject.toString(4),
-                expectedTrustedBiddingData,
-                CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
-                        responseObject, "[1]"));
-    }
-
-    @Test
-    public void testGetTrustedBiddingDataFromEmptyJsonObject() throws JSONException {
-        String missingTrustedBiddingDataAsJsonObjectString = null;
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, missingTrustedBiddingDataAsJsonObjectString, false);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
-                                responseObject, "[1]"));
-    }
-
-    @Test
-    public void testGetTrustedBiddingDataFromJsonObjectMismatchedSchema() {
-        assertThrows(
-                JSONException.class,
-                () ->
-                        CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
-                                CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
-                                "[1]"));
-    }
-
-    @Test
-    public void testGetTrustedBiddingDataFromJsonObjectMismatchedNullSchema() {
-        assertThrows(
-                JSONException.class,
-                () ->
-                        CustomAudienceUpdatableData.getTrustedBiddingDataFromJsonObject(
-                                CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
-                                "[1]"));
-    }
-
-    @Test
-    public void testGetAdsFromFullJsonObjectSuccess() throws JSONException {
-        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, false);
-
-        assertEquals(
-                expectedAds,
-                CustomAudienceUpdatableData.getAdsFromJsonObject(responseObject, "[1]"));
-    }
-
-    @Test
-    public void testGetAdsFromFullJsonObjectWithHarmlessJunkSuccess() throws JSONException {
-        List<DBAdData> expectedAds = DBAdDataFixture.VALID_DB_AD_DATA_LIST;
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(null, expectedAds, true);
-
-        assertEquals(
-                "responseObject = " + responseObject.toString(4),
-                expectedAds,
-                CustomAudienceUpdatableData.getAdsFromJsonObject(responseObject, "[1]"));
-    }
-
-    @Test
-    public void testGetAdsFromEmptyJsonObject() throws JSONException {
-        String missingAdsAsJsonObjectString = null;
-
-        JSONObject responseObject =
-                CustomAudienceUpdatableDataFixture.addToJsonObject(
-                        null, missingAdsAsJsonObjectString, false);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> CustomAudienceUpdatableData.getAdsFromJsonObject(responseObject, "[1]"));
-    }
-
-    @Test
-    public void testGetAdsFromJsonObjectMismatchedSchema() {
-        assertThrows(
-                JSONException.class,
-                () ->
-                        CustomAudienceUpdatableData.getAdsFromJsonObject(
-                                CustomAudienceUpdatableDataFixture.getMalformedJsonObject(),
-                                "[1]"));
-    }
-
-    @Test
-    public void testGetAdsFromJsonObjectMismatchedNullSchema() {
-        assertThrows(
-                JSONException.class,
-                () ->
-                        CustomAudienceUpdatableData.getAdsFromJsonObject(
-                                CustomAudienceUpdatableDataFixture.getMalformedNullJsonObject(),
-                                "[1]"));
+        // All found fields in the response were too large, failing validation
+        assertFalse(updatableDataFromResponseString.getContainsSuccessfulUpdate());
     }
 }

@@ -35,6 +35,7 @@ import com.android.adservices.service.customaudience.CustomAudienceUpdatableData
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.json.JSONException;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -157,7 +158,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     }
 
     @Test
-    public void testCopyWithFullSuccessfulUpdatableDataResetsFailureCounts() {
+    public void testCopyWithFullSuccessfulUpdatableDataResetsFailureCounts() throws JSONException {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
@@ -246,7 +247,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     }
 
     @Test
-    public void testCopyWithInitialConnectionTimeoutFailureUpdatesTimeoutFailureCount() {
+    public void testCopyWithNetworkConnectTimeoutFailureUpdatesTimeoutFailureCount() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
@@ -262,7 +263,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                         .setAttemptedUpdateTime(attemptedUpdateTime)
                         .setInitialUpdateResult(
                                 BackgroundFetchRunner.UpdateResultType
-                                        .INITIAL_CONNECTION_TIMEOUT_FAILURE)
+                                        .NETWORK_CONNECT_TIMEOUT_FAILURE)
                         .build();
 
         DBCustomAudienceBackgroundFetchData updatedFetchData =
@@ -276,7 +277,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
     }
 
     @Test
-    public void testCopyWithNetworkConnectionTimeoutFailureUpdatesTimeoutFailureCount() {
+    public void testCopyWithNetworkReadTimeoutFailureUpdatesTimeoutFailureCount() {
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
@@ -291,8 +292,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
                         .setAttemptedUpdateTime(attemptedUpdateTime)
                         .setInitialUpdateResult(
-                                BackgroundFetchRunner.UpdateResultType
-                                        .NETWORK_CONNECTION_TIMEOUT_FAILURE)
+                                BackgroundFetchRunner.UpdateResultType.NETWORK_READ_TIMEOUT_FAILURE)
                         .build();
 
         DBCustomAudienceBackgroundFetchData updatedFetchData =
