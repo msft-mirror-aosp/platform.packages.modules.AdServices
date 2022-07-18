@@ -19,6 +19,9 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.validation.Validation;
+
+import java.util.Objects;
 
 /**
  * A registration for a trigger of attribution.
@@ -36,8 +39,8 @@ public final class TriggerRegistration {
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
             @NonNull String eventTriggers,
-            String aggregateTriggerData,
-            String aggregateValues,
+            @Nullable String aggregateTriggerData,
+            @Nullable String aggregateValues,
             @Nullable String filters) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
@@ -45,6 +48,30 @@ public final class TriggerRegistration {
         mAggregateValues = aggregateValues;
         mFilters = filters;
         mEventTriggers = eventTriggers;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TriggerRegistration)) return false;
+        TriggerRegistration that = (TriggerRegistration) o;
+        return Objects.equals(mTopOrigin, that.mTopOrigin)
+                && Objects.equals(mReportingOrigin, that.mReportingOrigin)
+                && Objects.equals(mAggregateTriggerData, that.mAggregateTriggerData)
+                && Objects.equals(mAggregateValues, that.mAggregateValues)
+                && Objects.equals(mFilters, that.mFilters)
+                && Objects.equals(mEventTriggers, that.mEventTriggers);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mTopOrigin,
+                mReportingOrigin,
+                mAggregateTriggerData,
+                mAggregateValues,
+                mFilters,
+                mEventTriggers);
     }
 
     /** Top level origin. */
@@ -95,63 +122,56 @@ public final class TriggerRegistration {
         private String mAggregateValues;
         private String mFilters;
 
-        public Builder() {
-            mTopOrigin = Uri.EMPTY;
-            mReportingOrigin = Uri.EMPTY;
-        }
-
-        /**
-         * See {@link TriggerRegistration#getTopOrigin}.
-         */
-        public @NonNull Builder setTopOrigin(@NonNull Uri origin) {
+        /** See {@link TriggerRegistration#getTopOrigin}. */
+        @NonNull
+        public Builder setTopOrigin(@NonNull Uri origin) {
+            Validation.validateUri(origin);
             mTopOrigin = origin;
             return this;
         }
 
-        /**
-         * See {@link TriggerRegistration#getReportingOrigin}.
-         */
-        public @NonNull Builder setReportingOrigin(@NonNull Uri origin) {
+        /** See {@link TriggerRegistration#getReportingOrigin}. */
+        @NonNull
+        public Builder setReportingOrigin(@NonNull Uri origin) {
+            Validation.validateUri(origin);
             mReportingOrigin = origin;
             return this;
         }
 
         /** See {@link TriggerRegistration#getEventTriggers()}. */
-        public @NonNull Builder setEventTriggers(@NonNull String eventTriggers) {
+        @NonNull
+        public Builder setEventTriggers(@NonNull String eventTriggers) {
+            Validation.validateNonNull(eventTriggers);
             mEventTriggers = eventTriggers;
             return this;
         }
 
-        /**
-         * See {@link TriggerRegistration#getAggregateTriggerData()}.
-         */
-        public Builder setAggregateTriggerData(String aggregateTriggerData) {
+        /** See {@link TriggerRegistration#getAggregateTriggerData()}. */
+        @NonNull
+        public Builder setAggregateTriggerData(@Nullable String aggregateTriggerData) {
             mAggregateTriggerData = aggregateTriggerData;
             return this;
         }
 
-        /**
-         * See {@link TriggerRegistration#getAggregateValues()}.
-         */
-        public Builder setAggregateValues(String aggregateValues) {
+        /** See {@link TriggerRegistration#getAggregateValues()}. */
+        @NonNull
+        public Builder setAggregateValues(@Nullable String aggregateValues) {
             mAggregateValues = aggregateValues;
             return this;
         }
 
         /** See {@link TriggerRegistration#getFilters()}. */
-        public Builder setFilters(String filters) {
+        @NonNull
+        public Builder setFilters(@Nullable String filters) {
             mFilters = filters;
             return this;
         }
 
-        /**
-         * Build the TriggerRegistration.
-         */
-        public @NonNull TriggerRegistration build() {
-            if (mTopOrigin == null
-                    || mReportingOrigin == null) {
-                throw new IllegalArgumentException("uninitialized field");
-            }
+        /** Build the TriggerRegistration. */
+        @NonNull
+        public TriggerRegistration build() {
+            Validation.validateNonNull(mTopOrigin, mReportingOrigin);
+
             return new TriggerRegistration(
                     mTopOrigin,
                     mReportingOrigin,

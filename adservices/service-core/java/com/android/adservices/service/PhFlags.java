@@ -32,8 +32,11 @@ public final class PhFlags implements Flags {
     /*
      * Keys for ALL the flags stored in DeviceConfig.
      */
+    // Common Keys
     static final String KEY_MAINTENANCE_JOB_PERIOD_MS = "maintenance_job_period_ms";
     static final String KEY_MAINTENANCE_JOB_FLEX_MS = "maintenance_job_flex_ms";
+
+    // Topics keys
     static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
     static final String KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC =
@@ -41,6 +44,8 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
+
+    // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
             "measurement_event_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
@@ -50,6 +55,29 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
+
+    // FLEDGE Custom Audience keys
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
+            "fledge_custom_audience_per_app_max_count";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT =
+            "fledge_custom_audience_max_owner_count";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS =
+            "fledge_custom_audience_default_expire_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
+            "fledge_custom_audience_max_activate_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS =
+            "fledge_custom_audience_max_expire_in_days";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B =
+            "fledge_custom_audience_max_user_bidding_signals_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B =
+            "fledge_custom_audience_max_trusted_bidding_data_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B =
+            "fledge_custom_audience_max_ads_size_b";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS =
+            "fledge_custom_audience_max_num_ads";
+
+    // FLEDGE Background Fetch keys
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS =
             "fledge_background_fetch_job_period_ms";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS =
@@ -62,6 +90,23 @@ public final class PhFlags implements Flags {
             "fledge_background_fetch_thread_pool_size";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S =
             "fledge_background_fetch_eligible_update_base_interval_s";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS =
+            "fledge_background_fetch_network_connect_timeout_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS =
+            "fledge_background_fetch_network_read_timeout_ms";
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B =
+            "fledge_background_fetch_max_response_size_b";
+
+    // FLEDGE Ad Selection keys
+    static final String KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT =
+            "fledge_ad_selection_concurrent_bidding_count";
+    static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
+            "fledge_ad_selection_bidding_timeout_per_ca_ms";
+
+    // MDD keys.
+    static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
+    static final String KEY_DOWNLOADER_READ_TIMEOUT_MS = "downloader_read_timeout_ms";
+    static final String KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS = "downloader_max_download_threads";
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
@@ -207,6 +252,96 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeCustomAudienceMaxCount() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudiencePerAppMaxCount() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceMaxOwnerCount() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceDefaultExpireInMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceMaxActivationDelayInMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceMaxExpireInMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxAdsSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B);
+    }
+
+    @Override
+    public int getFledgeCustomAudienceMaxNumAds() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS);
+    }
+
+    @Override
     public long getFledgeBackgroundFetchJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -260,6 +395,76 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S);
     }
 
+    @Override
+    public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getFledgeBackgroundFetchMaxResponseSizeB() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B);
+    }
+
+    @Override
+    public int getAdSelectionConcurrentBiddingCount() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT,
+                /* defaultValue */ FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT);
+    }
+
+    @Override
+    public long getAdSelectionBiddingTimeoutPerCaMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS);
+    }
+
+    @Override
+    public int getDownloaderConnectionTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS,
+                /* defaultValue */ DOWNLOADER_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getDownloaderReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_DOWNLOADER_READ_TIMEOUT_MS,
+                /* defaultValue */ DOWNLOADER_READ_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getDownloaderMaxDownloadThreads() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS,
+                /* defaultValue */ DOWNLOADER_MAX_DOWNLOAD_THREADS);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -293,7 +498,57 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println("\t" + KEY_MEASUREMENT_APP_NAME + " = " + getMeasurementAppName());
 
-        writer.println("==== AdServices PH Flags Dump FLEDGE ====");
+        writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudienceMaxCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT
+                        + " = "
+                        + getFledgeCustomAudienceMaxOwnerCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudiencePerAppMaxCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS
+                        + " = "
+                        + getFledgeCustomAudienceDefaultExpireInMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS
+                        + " = "
+                        + getFledgeCustomAudienceMaxActivationDelayInMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS
+                        + " = "
+                        + getFledgeCustomAudienceMaxExpireInMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxUserBiddingSignalsSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxTrustedBiddingDataSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B
+                        + " = "
+                        + getFledgeCustomAudienceMaxAdsSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
+                        + " = "
+                        + getFledgeCustomAudienceMaxNumAds());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS
@@ -319,5 +574,30 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S
                         + " = "
                         + getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getFledgeBackgroundFetchNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getFledgeBackgroundFetchNetworkReadTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B
+                        + " = "
+                        + getFledgeBackgroundFetchMaxResponseSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT
+                        + " = "
+                        + getAdSelectionConcurrentBiddingCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS
+                        + " = "
+                        + getAdSelectionBiddingTimeoutPerCaMs());
     }
 }

@@ -16,13 +16,13 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.ADS_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.METADATA_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.RENDER_URL_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.TRUSTED_BIDDING_DATA_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.TRUSTED_BIDDING_KEYS_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.TRUSTED_BIDDING_URL_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.USER_BIDDING_SIGNALS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_KEYS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_URI_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -65,6 +65,14 @@ public class CustomAudienceUpdatableDataFixture {
      * of ads, malforms the expected schema, and returns it as a serialized string.
      */
     public static String getMalformedJsonResponseString() throws JSONException {
+        return getMalformedJsonObject().toString();
+    }
+
+    /**
+     * Gets a valid JSON object with keys for user bidding signals, trusted bidding data, and a list
+     * of ads, malforms the expected schema, and returns it.
+     */
+    public static JSONObject getMalformedJsonObject() throws JSONException {
         JSONObject jsonResponse = new JSONObject();
 
         jsonResponse.put(
@@ -73,7 +81,21 @@ public class CustomAudienceUpdatableDataFixture {
         jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, 0);
         jsonResponse.put(ADS_KEY, "mismatched schema");
 
-        return jsonResponse.toString();
+        return jsonResponse;
+    }
+
+    /**
+     * Gets a valid JSON object with keys for user bidding signals, trusted bidding data, and a list
+     * of ads, malforms the expected schema to null, and returns it.
+     */
+    public static JSONObject getMalformedNullJsonObject() throws JSONException {
+        JSONObject jsonResponse = new JSONObject();
+
+        jsonResponse.put(USER_BIDDING_SIGNALS_KEY, JSONObject.NULL);
+        jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, JSONObject.NULL);
+        jsonResponse.put(ADS_KEY, JSONObject.NULL);
+
+        return jsonResponse;
     }
 
     /**
@@ -100,6 +122,26 @@ public class CustomAudienceUpdatableDataFixture {
             throws JSONException {
         JSONObject jsonResponse = new JSONObject();
 
+        jsonResponse = addToJsonObject(jsonResponse, userBiddingSignals, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, trustedBiddingData, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, ads, shouldAddHarmlessJunk);
+
+        return jsonResponse.toString();
+    }
+
+    /**
+     * Converts a string representation of a JSON object into a JSONObject with a keyed field for
+     * user bidding signals.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addToJsonObject(
+            JSONObject jsonResponse, String userBiddingSignals, boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
+        }
+
         if (shouldAddHarmlessJunk) {
             addHarmlessJunkValues(jsonResponse);
         }
@@ -109,6 +151,24 @@ public class CustomAudienceUpdatableDataFixture {
             jsonResponse.put(USER_BIDDING_SIGNALS_KEY, userBiddingSignalsJson);
         }
 
+        return jsonResponse;
+    }
+
+    /**
+     * Converts {@link DBTrustedBiddingData} into a JSONObject with a keyed field for trusted
+     * bidding data.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addToJsonObject(
+            JSONObject jsonResponse,
+            DBTrustedBiddingData trustedBiddingData,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
+        }
+
         if (trustedBiddingData != null) {
             JSONObject trustedBiddingDataJson = new JSONObject();
             if (shouldAddHarmlessJunk) {
@@ -116,7 +176,7 @@ public class CustomAudienceUpdatableDataFixture {
             }
 
             trustedBiddingDataJson.put(
-                    TRUSTED_BIDDING_URL_KEY, trustedBiddingData.getUrl().toString());
+                    TRUSTED_BIDDING_URI_KEY, trustedBiddingData.getUrl().toString());
             JSONArray trustedBiddingKeysJson = new JSONArray(trustedBiddingData.getKeys());
             if (shouldAddHarmlessJunk) {
                 addHarmlessJunkValues(trustedBiddingKeysJson);
@@ -124,6 +184,21 @@ public class CustomAudienceUpdatableDataFixture {
             trustedBiddingDataJson.put(TRUSTED_BIDDING_KEYS_KEY, trustedBiddingKeysJson);
 
             jsonResponse.put(TRUSTED_BIDDING_DATA_KEY, trustedBiddingDataJson);
+        }
+
+        return jsonResponse;
+    }
+
+    /**
+     * Converts a list of {@link DBAdData} into a JSONObject with a keyed field for ads.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addToJsonObject(
+            JSONObject jsonResponse, List<DBAdData> ads, boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
         }
 
         if (ads != null) {
@@ -138,7 +213,7 @@ public class CustomAudienceUpdatableDataFixture {
                     addHarmlessJunkValues(adJson);
                 }
 
-                adJson.put(RENDER_URL_KEY, ad.getRenderUrl().toString());
+                adJson.put(RENDER_URI_KEY, ad.getRenderUri().toString());
                 adJson.put(METADATA_KEY, ad.getMetadata());
 
                 adsJson.put(adJson);
@@ -147,7 +222,7 @@ public class CustomAudienceUpdatableDataFixture {
             jsonResponse.put(ADS_KEY, adsJson);
         }
 
-        return jsonResponse.toString();
+        return jsonResponse;
     }
 
     /** Modifies the target JSONObject in-place to add harmless junk values. */
@@ -155,7 +230,7 @@ public class CustomAudienceUpdatableDataFixture {
         target.put("junk_int", 1);
         target.put("junk_boolean", true);
         target.put("junk_string", "harmless junk");
-        target.put("junk_null", null);
+        target.put("junk_null", JSONObject.NULL);
         target.put("junk_object", new JSONObject("{'harmless':true,'object':1}"));
     }
 
@@ -163,8 +238,7 @@ public class CustomAudienceUpdatableDataFixture {
     private static void addHarmlessJunkValues(JSONArray target) throws JSONException {
         target.put(1);
         target.put(true);
-        target.put("harmless junk");
-        target.put(null);
+        target.put(JSONObject.NULL);
         target.put(new JSONObject("{'harmless':true,'object':1}"));
     }
 
@@ -179,9 +253,12 @@ public class CustomAudienceUpdatableDataFixture {
         return new JSONObject(inputJsonString).toString();
     }
 
-    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse() {
+    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse()
+            throws JSONException {
         return CustomAudienceUpdatableData.builder()
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setUserBiddingSignals(
+                        formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS))
                 .setTrustedBiddingData(DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA)
                 .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
                 .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)

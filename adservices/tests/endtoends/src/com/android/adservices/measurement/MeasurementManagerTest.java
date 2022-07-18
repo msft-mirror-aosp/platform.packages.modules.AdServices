@@ -18,7 +18,6 @@ package com.android.adservices.measurement;
 import static org.junit.Assert.assertNull;
 
 import android.adservices.measurement.DeletionRequest;
-import android.adservices.measurement.MeasurementApiUtil;
 import android.adservices.measurement.MeasurementManager;
 import android.content.Context;
 import android.net.Uri;
@@ -33,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -79,7 +79,9 @@ public class MeasurementManagerTest {
         Log.i(TAG, "Calling deleteRegistrations()");
         DeletionRequest request =
                 new DeletionRequest.Builder()
-                        .setOriginUri(Uri.parse("https://example.com"))
+                        .setOriginUris(
+                                Collections.singletonList(Uri.parse("https://a.example1.com")))
+                        .setDomainUris(Collections.singletonList(Uri.parse("https://example2.com")))
                         .setStart(Instant.ofEpochMilli(123456789L))
                         .setEnd(Instant.now())
                         .build();
@@ -115,7 +117,7 @@ public class MeasurementManagerTest {
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
         Assert.assertEquals(Integer.valueOf(
-                MeasurementApiUtil.MEASUREMENT_API_STATE_ENABLED), future.get());
+                MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "getMeasurementApiStatus() took " + duration + " ms: " + label);

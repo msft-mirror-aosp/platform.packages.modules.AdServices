@@ -15,8 +15,9 @@
  */
 package com.android.adservices.ui.settings;
 
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment.PRIVACY_SANDBOX_BETA_SWITCH_KEY;
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment.TOPICS_PREFERENCE_BUTTON_KEY;
+import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.APPS_PREFERENCE_BUTTON_KEY;
+import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.PRIVACY_SANDBOX_BETA_SWITCH_KEY;
+import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.TOPICS_PREFERENCE_BUTTON_KEY;
 
 import android.view.View;
 
@@ -27,9 +28,13 @@ import androidx.preference.SwitchPreference;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.consent.App;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
+import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel.TopicsViewModelUiEvent;
@@ -45,19 +50,23 @@ public class ActionDelegate {
     private final FragmentManager mFragmentManager;
     private final MainViewModel mMainViewModel;
     private final TopicsViewModel mTopicsViewModel;
+    private final AppsViewModel mAppsViewModel;
 
     public ActionDelegate(
             LifecycleOwner lifecycleOwner,
             FragmentManager fragmentManager,
             MainViewModel mainViewModel,
-            TopicsViewModel topicsViewModel) {
-        this.mLifecycleOwner = lifecycleOwner;
-        this.mFragmentManager = fragmentManager;
-        this.mMainViewModel = mainViewModel;
-        this.mTopicsViewModel = topicsViewModel;
+            TopicsViewModel topicsViewModel,
+            AppsViewModel appsViewModel) {
+        mLifecycleOwner = lifecycleOwner;
+        mFragmentManager = fragmentManager;
+        mMainViewModel = mainViewModel;
+        mTopicsViewModel = topicsViewModel;
+        mAppsViewModel = appsViewModel;
 
         listenToMainViewModelUiEvents();
         listenToTopicsViewModelUiEvents();
+        listenToAppsViewModelUiEvents();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -73,25 +82,41 @@ public class ActionDelegate {
                             if (event == null) {
                                 return;
                             }
-                            switch (event) {
-                                case SWITCH_ON_PRIVACY_SANDBOX_BETA:
-                                    mMainViewModel.setConsent(true);
-                                    break;
-                                case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                    // TODO(b/235138016): confirmation for privacy sandbox consent
-                                    mMainViewModel.setConsent(false);
-                                    break;
-                                case DISPLAY_TOPICS_FRAGMENT:
-                                    mFragmentManager
-                                            .beginTransaction()
-                                            .replace(
-                                                    R.id.fragment_container_view,
-                                                    AdServicesSettingsTopicsFragment.class,
-                                                    null)
-                                            .setReorderingAllowed(true)
-                                            .addToBackStack(null)
-                                            .commit();
-                                    break;
+                            try {
+                                switch (event) {
+                                    case SWITCH_ON_PRIVACY_SANDBOX_BETA:
+                                        mMainViewModel.setConsent(true);
+                                        break;
+                                    case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
+                                        // TODO(b/235138016): confirmation for privacy sandbox
+                                        // consent
+                                        mMainViewModel.setConsent(false);
+                                        break;
+                                    case DISPLAY_APPS_FRAGMENT:
+                                        mFragmentManager
+                                                .beginTransaction()
+                                                .replace(
+                                                        R.id.fragment_container_view,
+                                                        AdServicesSettingsAppsFragment.class,
+                                                        null)
+                                                .setReorderingAllowed(true)
+                                                .addToBackStack(null)
+                                                .commit();
+                                        break;
+                                    case DISPLAY_TOPICS_FRAGMENT:
+                                        mFragmentManager
+                                                .beginTransaction()
+                                                .replace(
+                                                        R.id.fragment_container_view,
+                                                        AdServicesSettingsTopicsFragment.class,
+                                                        null)
+                                                .setReorderingAllowed(true)
+                                                .addToBackStack(null)
+                                                .commit();
+                                        break;
+                                }
+                            } finally {
+                                mMainViewModel.uiEventHandled();
                             }
                         });
     }
@@ -102,30 +127,76 @@ public class ActionDelegate {
                 .observe(
                         mLifecycleOwner,
                         eventTopicPair -> {
+                            if (eventTopicPair == null) {
+                                return;
+                            }
                             TopicsViewModelUiEvent event = eventTopicPair.first;
                             Topic topic = eventTopicPair.second;
                             if (event == null) {
                                 return;
                             }
+                            try {
+                                switch (event) {
+                                    case BLOCK_TOPIC:
+                                        // TODO(b/229721429): show confirmation for blocking a
+                                        // topic.
+                                        mTopicsViewModel.revokeTopicConsent(topic);
+                                        break;
+                                    case RESTORE_TOPIC:
+                                        // TODO(b/229721429): show confirmation for restoring a
+                                        // topic.
+                                        mTopicsViewModel.restoreTopicConsent(topic);
+                                        break;
+                                    case RESET_TOPICS:
+                                        // TODO(b/229721429): show confirmation for resetting
+                                        // topics.
+                                        mTopicsViewModel.resetTopics();
+                                        break;
+                                    case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
+                                        mTopicsViewModel.refresh();
+                                        mFragmentManager
+                                                .beginTransaction()
+                                                .replace(
+                                                        R.id.fragment_container_view,
+                                                        AdServicesSettingsBlockedTopicsFragment
+                                                                .class,
+                                                        null)
+                                                .setReorderingAllowed(true)
+                                                .addToBackStack(null)
+                                                .commit();
+                                        break;
+                                }
+                            } finally {
+                                mTopicsViewModel.uiEventHandled();
+                            }
+                        });
+    }
+
+    private void listenToAppsViewModelUiEvents() {
+        mAppsViewModel
+                .getUiEvents()
+                .observe(
+                        mLifecycleOwner,
+                        eventAppPair -> {
+                            AppsViewModel.AppsViewModelUiEvent event = eventAppPair.first;
+                            App app = eventAppPair.second;
+                            if (event == null) {
+                                return;
+                            }
                             switch (event) {
-                                case BLOCK_TOPIC:
-                                    // TODO(b/229721429): show confirmation for blocking a topic.
-                                    mTopicsViewModel.revokeTopicConsent(topic);
+                                case BLOCK_APP:
+                                    mAppsViewModel.revokeAppConsent(app);
                                     break;
-                                case RESTORE_TOPIC:
-                                    // TODO(b/229721429): show confirmation for restoring a topic.
-                                    mTopicsViewModel.restoreTopicConsent(topic);
+                                case RESTORE_APP:
+                                    mAppsViewModel.restoreAppConsent(app);
                                     break;
-                                case RESET_TOPICS:
-                                    // TODO(b/229721429): show confirmation for resetting topics.
-                                    mTopicsViewModel.resetTopics();
-                                    break;
-                                case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
+                                case DISPLAY_BLOCKED_APPS_FRAGMENT:
+                                    mAppsViewModel.refresh();
                                     mFragmentManager
                                             .beginTransaction()
                                             .replace(
                                                     R.id.fragment_container_view,
-                                                    AdServicesSettingsBlockedTopicsFragment.class,
+                                                    AdServicesSettingsBlockedAppsFragment.class,
                                                     null)
                                             .setReorderingAllowed(true)
                                             .addToBackStack(null)
@@ -140,14 +211,18 @@ public class ActionDelegate {
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Configure all UI elements in {@link AdServicesSettingsMainFragment} to handle user actions.
+     * Configure all UI elements in {@link AdServicesSettingsMainPreferenceFragment} to handle user
+     * actions.
+     *
+     * @param fragment the fragment to be initialized.
      */
-    public void initMainFragment(AdServicesSettingsMainFragment fragment) {
+    public void initMainFragment(AdServicesSettingsMainPreferenceFragment fragment) {
         configureConsentSwitch(fragment);
         configureTopicsButton(fragment);
+        configureAppsButton(fragment);
     }
 
-    private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
+    private void configureConsentSwitch(AdServicesSettingsMainPreferenceFragment fragment) {
         SwitchPreference switchPreference =
                 Objects.requireNonNull(fragment.findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
 
@@ -161,13 +236,24 @@ public class ActionDelegate {
                 });
     }
 
-    private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {
+    private void configureTopicsButton(AdServicesSettingsMainPreferenceFragment fragment) {
         Preference topicsButton =
                 Objects.requireNonNull(fragment.findPreference(TOPICS_PREFERENCE_BUTTON_KEY));
 
         topicsButton.setOnPreferenceClickListener(
                 preference -> {
                     mMainViewModel.topicsButtonClickHandler();
+                    return true;
+                });
+    }
+
+    private void configureAppsButton(AdServicesSettingsMainPreferenceFragment fragment) {
+        Preference appsButton =
+                Objects.requireNonNull(fragment.findPreference(APPS_PREFERENCE_BUTTON_KEY));
+
+        appsButton.setOnPreferenceClickListener(
+                preference -> {
+                    mMainViewModel.appsButtonClickHandler();
                     return true;
                 });
     }
@@ -200,6 +286,27 @@ public class ActionDelegate {
         resetTopicsButton.setOnClickListener(
                 view -> {
                     mTopicsViewModel.resetTopicsButtonClickHandler();
+                });
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Apps Fragment
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Configure all UI elements (except apps list) in {@link AdServicesSettingsAppsFragment} to
+     * handle user actions.
+     */
+    public void initAppsFragment(AdServicesSettingsAppsFragment fragment) {
+        configureBlockedAppsFragmentButton(fragment);
+    }
+
+    private void configureBlockedAppsFragmentButton(AdServicesSettingsAppsFragment fragment) {
+        View blockedAppsButton = fragment.requireView().findViewById(R.id.blocked_apps_button);
+
+        blockedAppsButton.setOnClickListener(
+                view -> {
+                    mAppsViewModel.blockedAppsFragmentButtonClickHandler();
                 });
     }
 }

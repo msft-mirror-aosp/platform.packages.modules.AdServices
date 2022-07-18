@@ -16,6 +16,7 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
@@ -31,11 +32,14 @@ import android.content.Context;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 /**
  * Implementation of {@link IMeasurementService}.
@@ -45,65 +49,71 @@ import java.util.concurrent.Executor;
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final MeasurementImpl mMeasurementImpl;
+    private final ConsentManager mConsentManager;
+    private final Context mContext;
+    private static final String UNAUTHORIZED_ERROR_MESSAGE =
+            "Caller is not authorized to call this API.";
 
-    public MeasurementServiceImpl(Context context) {
+    public MeasurementServiceImpl(Context context, ConsentManager consentManager) {
+        mContext = context;
         mMeasurementImpl = MeasurementImpl.getInstance(context);
+        mConsentManager = consentManager;
     }
 
     @VisibleForTesting
-    MeasurementServiceImpl(MeasurementImpl measurementImpl) {
+    MeasurementServiceImpl(
+            MeasurementImpl measurementImpl, Context context, ConsentManager consentManager) {
+        mContext = context;
         mMeasurementImpl = measurementImpl;
+        mConsentManager = consentManager;
     }
 
     @Override
-    public void register(@NonNull RegistrationRequest request,
-                         @NonNull IMeasurementCallback callback) {
+    public void register(
+            @NonNull RegistrationRequest request, @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        LogUtil.d("MeasurementServiceImpl: register: ");
-                        mMeasurementImpl.register(request, System.currentTimeMillis());
-                        callback.onResult();
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
+                    performWorkIfAllowed(
+                            (mMeasurementImpl) ->
+                                    mMeasurementImpl.register(request, System.currentTimeMillis()),
+                            callback);
                 });
     }
 
     @Override
     public void registerWebSource(
-            @NonNull WebSourceRegistrationRequestInternal registrationRequest,
-            @NonNull IMeasurementCallback iMeasurementCallback) {
-        Objects.requireNonNull(registrationRequest);
-        Objects.requireNonNull(iMeasurementCallback);
+            @NonNull WebSourceRegistrationRequestInternal request,
+            @NonNull IMeasurementCallback callback) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(callback);
+
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        LogUtil.d("MeasurementServiceImpl: registerWebSource: ");
-                        // TODO: call measurement Impl and remove the callback invocation below
-                        iMeasurementCallback.onResult();
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
+                    performWorkIfAllowed(
+                            (mMeasurementImpl) ->
+                                    mMeasurementImpl.registerWebSource(
+                                            request, System.currentTimeMillis()),
+                            callback);
                 });
     }
 
     @Override
     public void registerWebTrigger(
-            @NonNull WebTriggerRegistrationRequestInternal registrationRequest,
-            @NonNull IMeasurementCallback iMeasurementCallback) {
+            @NonNull WebTriggerRegistrationRequestInternal request,
+            @NonNull IMeasurementCallback callback) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(callback);
+
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        LogUtil.d("MeasurementServiceImpl: registerWebTrigger: ");
-                        // TODO: call measurement Impl and remove the callback invocation below
-                        iMeasurementCallback.onResult();
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
+                    performWorkIfAllowed(
+                            (measurementImpl) ->
+                                    measurementImpl.registerWebTrigger(
+                                            request, System.currentTimeMillis()),
+                            callback);
                 });
     }
 
@@ -116,7 +126,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-
                         @ResultCode int resultCode = mMeasurementImpl.deleteRegistrations(request);
                         if (resultCode == RESULT_OK) {
                             callback.onResult();
@@ -141,6 +150,27 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
         try {
             callback.onResult(Integer.valueOf(mMeasurementImpl.getMeasurementApiStatus()));
+        } catch (RemoteException e) {
+            LogUtil.e("Unable to send result to the callback", e);
+        }
+    }
+
+    private void performWorkIfAllowed(
+            Consumer<MeasurementImpl> execute, IMeasurementCallback callback) {
+        try {
+            AdServicesApiConsent userConsent =
+                    mConsentManager.getConsent(mContext.getPackageManager());
+
+            if (!userConsent.isGiven()) {
+                callback.onFailure(
+                        new MeasurementErrorResponse.Builder()
+                                .setResultCode(RESULT_UNAUTHORIZED_CALL)
+                                .setErrorMessage(UNAUTHORIZED_ERROR_MESSAGE)
+                                .build());
+            } else {
+                execute.accept(mMeasurementImpl);
+                callback.onResult();
+            }
         } catch (RemoteException e) {
             LogUtil.e("Unable to send result to the callback", e);
         }

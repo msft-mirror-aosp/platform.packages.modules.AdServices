@@ -44,7 +44,7 @@ public class AdServicesManagerService {
     private static final String PACKAGE_CHANGED_BROADCAST =
             "com.android.adservices.PACKAGE_CHANGED";
 
-    /** Key for designating if the action was an installation or an uninstallation. */
+    /** Key for designating the specific action. */
     private static final String ACTION_KEY = "action";
 
     /** Value if the package change was an uninstallation. */
@@ -52,6 +52,9 @@ public class AdServicesManagerService {
 
     /** Value if the package change was an installation. */
     private static final String PACKAGE_ADDED = "package_added";
+
+    /** Value if the package has its data cleared. */
+    private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     private final Context mContext;
     private final Handler mHandler;
@@ -94,6 +97,7 @@ public class AdServicesManagerService {
         final IntentFilter packageChangedIntentFilter = new IntentFilter();
 
         packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_DATA_CLEARED);
         packageChangedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
         packageChangedIntentFilter.addDataScheme("package");
 
@@ -129,6 +133,10 @@ public class AdServicesManagerService {
                 explicitBroadcast.setClassName(
                         info.activityInfo.packageName, info.activityInfo.name);
                 switch (intent.getAction()) {
+                    case Intent.ACTION_PACKAGE_DATA_CLEARED:
+                        explicitBroadcast.putExtra(ACTION_KEY, PACKAGE_DATA_CLEARED);
+                        mContext.sendBroadcastAsUser(explicitBroadcast, user);
+                        break;
                     case Intent.ACTION_PACKAGE_FULLY_REMOVED:
                         // TODO (b/233373604): Propagate broadcast to users not currently running
                         explicitBroadcast.putExtra(ACTION_KEY, PACKAGE_FULLY_REMOVED);

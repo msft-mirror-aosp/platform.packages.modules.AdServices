@@ -33,8 +33,8 @@ import android.annotation.Nullable;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -225,7 +225,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
@@ -267,7 +267,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE,
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();
@@ -302,7 +302,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         CustomAudienceDao customAudienceDao = mCustomAudienceImpl.getCustomAudienceDao();

@@ -144,12 +144,92 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_APP_NAME;
     }
 
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
+    long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
+    long FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
+            60L * 24L * 60L * 60L * 1000L; // 60 days
+    long FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS = 100;
+
+    /** Returns the maximum number of custom audience can stay in the storage. */
+    default long getFledgeCustomAudienceMaxCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
+    }
+
+    /** Returns the maximum number of custom audience an app can create. */
+    default long getFledgeCustomAudiencePerAppMaxCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+    }
+
+    /** Returns the maximum number of apps can have access to custom audience. */
+    default long getFledgeCustomAudienceMaxOwnerCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
+    }
+
+    /**
+     * Returns the default amount of time in milliseconds a custom audience object will live before
+     * being expiring and being removed
+     */
+    default long getFledgeCustomAudienceDefaultExpireInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS;
+    }
+
+    /**
+     * Returns the maximum permitted difference in milliseconds between the custom audience object's
+     * creation time and its activation time
+     */
+    default long getFledgeCustomAudienceMaxActivationDelayInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS;
+    }
+
+    /**
+     * Returns the maximum permitted difference in milliseconds between the custom audience object's
+     * activation time and its expiration time
+     */
+    default long getFledgeCustomAudienceMaxExpireInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for user bidding signals in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for trusted bidding data in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
+    }
+
+    /** Returns the maximum size in bytes allowed for ads in each FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxAdsSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B;
+    }
+
+    /** Returns the maximum allowed number of ads per FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxNumAds() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
+    }
+
     long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
     long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
     long FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
     long FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED = 1000;
     int FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE = 8;
     long FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S = 24L * 60L * 60L; // 24 hours
+    int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
+    int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
+    int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
 
     /**
      * Returns the best effort max time (in milliseconds) between each FLEDGE Background Fetch job
@@ -199,6 +279,44 @@ public interface Flags extends Dumpable {
         return FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
     }
 
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to open its initial
+     * connection during the FLEDGE background fetch.
+     */
+    default int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+        return FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to read a response from a
+     * target server during the FLEDGE background fetch.
+     */
+    default int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+        return FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum size in bytes of a single custom audience update response during the
+     * FLEDGE background fetch.
+     */
+    default int getFledgeBackgroundFetchMaxResponseSizeB() {
+        return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
+    }
+
+    int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;
+
+    /** Returns the number of CA that can be bid in parallel for one Ad Selection */
+    default int getAdSelectionConcurrentBiddingCount() {
+        return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+    }
+
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 1000;
+
+    /** Returns the time out constant in milliseconds that limits the bidding per CA */
+    default long getAdSelectionBiddingTimeoutPerCaMs() {
+        return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
@@ -214,5 +332,52 @@ public interface Flags extends Dumpable {
      */
     default int getNumberOfEpochsToKeepInHistory() {
         return NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+    }
+
+    /** Downloader Connection Timeout in Milliseconds. */
+    int DOWNLOADER_CONNECTION_TIMEOUT_MS = 10 * 1000; // 10 seconds.
+
+    /*
+     * Return the Downloader Connection Timeout in Milliseconds.
+     */
+    default int getDownloaderConnectionTimeoutMs() {
+        return DOWNLOADER_CONNECTION_TIMEOUT_MS;
+    }
+
+    /** Downloader Read Timeout in Milliseconds. */
+    int DOWNLOADER_READ_TIMEOUT_MS = 10 * 1000; // 10 seconds.
+
+    /** Returns the Downloader Read Timeout in Milliseconds. */
+    default int getDownloaderReadTimeoutMs() {
+        return DOWNLOADER_READ_TIMEOUT_MS;
+    }
+
+    /** Downloader max download threads. */
+    int DOWNLOADER_MAX_DOWNLOAD_THREADS = 2;
+
+    /** Returns the Downloader Read Timeout in Milliseconds. */
+    default int getDownloaderMaxDownloadThreads() {
+        return DOWNLOADER_MAX_DOWNLOAD_THREADS;
+    }
+
+    long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
+            /* hours */ 9 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 9 AM
+
+    default long getConsentNotificationIntervalBeginMs() {
+        return CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS;
+    }
+
+    long CONSENT_NOTIFICATION_INTERVAL_END_MS =
+            /* hours */ 17 * /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 5 PM
+
+    default long getConsentNotificationIntervalEndMs() {
+        return CONSENT_NOTIFICATION_INTERVAL_END_MS;
+    }
+
+    long CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
+            /* minutes */ 60 * /* seconds */ 60 * /* milliseconds */ 1000; // 1 hour
+
+    default long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
+        return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 }

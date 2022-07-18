@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,6 +39,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 
 import org.junit.Before;
@@ -66,6 +68,8 @@ import java.util.stream.Collectors;
 public final class EpochManagerTest {
     @SuppressWarnings({"unused"})
     private static final String TAG = "EpochManagerTest";
+
+    private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000;
     // TODO: (b/232807776) Replace below hardcoded taxonomy version and model version
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
@@ -80,6 +84,7 @@ public final class EpochManagerTest {
     private EpochManager mEpochManager;
 
     @Mock Classifier mMockClassifier;
+    @Mock Clock mMockClock;
 
     @Before
     public void setup() {
@@ -88,7 +93,8 @@ public final class EpochManagerTest {
         mDbHelper = DbTestUtil.getDbHelperForTest();
         mTopicsDao = new TopicsDao(mDbHelper);
         mEpochManager =
-                new EpochManager(mTopicsDao, mDbHelper, new Random(), mMockClassifier, mFlags);
+                new EpochManager(
+                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, mFlags, mMockClock);
 
         // Erase all existing data.
         DbTestUtil.deleteTable(TopicsTables.TaxonomyContract.TABLE);
@@ -98,6 +104,7 @@ public final class EpochManagerTest {
         DbTestUtil.deleteTable(TopicsTables.ReturnedTopicContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.UsageHistoryContract.TABLE);
         DbTestUtil.deleteTable(TopicsTables.AppUsageHistoryContract.TABLE);
+        DbTestUtil.deleteTable(TopicsTables.EpochOriginContract.TABLE);
     }
 
     @Test
@@ -188,7 +195,8 @@ public final class EpochManagerTest {
                         mDbHelper,
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
-                        mFlags);
+                        mFlags,
+                        mMockClock);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -227,7 +235,8 @@ public final class EpochManagerTest {
                         mDbHelper,
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
-                        mFlags);
+                        mFlags,
+                        mMockClock);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -251,7 +260,8 @@ public final class EpochManagerTest {
                         mDbHelper,
                         new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                         mMockClassifier,
-                        mFlags);
+                        mFlags,
+                        mMockClock);
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -372,7 +382,13 @@ public final class EpochManagerTest {
         when(mockedFlags.getNumberOfEpochsToKeepInHistory()).thenReturn(3);
 
         EpochManager epochManager =
-                new EpochManager(mTopicsDao, mDbHelper, new Random(), mMockClassifier, mockedFlags);
+                new EpochManager(
+                        mTopicsDao,
+                        mDbHelper,
+                        new Random(),
+                        mMockClassifier,
+                        mockedFlags,
+                        mMockClock);
 
         final long currentEpoch = 6L;
         final int epochLookBackNumberForGarbageCollection = 3;
@@ -438,10 +454,11 @@ public final class EpochManagerTest {
                                 mDbHelper,
                                 new MockRandom(new long[] {1, 5, 6, 7, 8, 9}),
                                 mMockClassifier,
-                                mFlags));
+                                mFlags,
+                                mMockClock));
         // Mock EpochManager for getCurrentEpochId()
         final long epochId = 1L;
-        when(epochManager.getCurrentEpochId()).thenReturn(epochId);
+        doReturn(epochId).when(epochManager).getCurrentEpochId();
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -470,15 +487,15 @@ public final class EpochManagerTest {
         // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
         when(topicsDao.retrieveAppSdksUsageMap(epochId)).thenReturn(appSdksUsageMap);
 
-        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
-        appClassificationTopicsMap.put("app2", Arrays.asList(2, 3));
-        appClassificationTopicsMap.put("app3", Arrays.asList(4, 5));
-        appClassificationTopicsMap.put("app4", Arrays.asList(5, 6));
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", createTopics(Arrays.asList(1, 2)));
+        appClassificationTopicsMap.put("app2", createTopics(Arrays.asList(2, 3)));
+        appClassificationTopicsMap.put("app3", createTopics(Arrays.asList(4, 5)));
+        appClassificationTopicsMap.put("app4", createTopics(Arrays.asList(5, 6)));
         when(mMockClassifier.classify(eq(appSdksUsageMap.keySet())))
                 .thenReturn(appClassificationTopicsMap);
 
-        List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
+        List<Topic> topTopics = createTopics(Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6));
         when(mMockClassifier.getTopTopics(
                         eq(appClassificationTopicsMap),
                         eq(mFlags.getTopicsNumberOfTopTopics()),
@@ -540,11 +557,7 @@ public final class EpochManagerTest {
 
         // Verify TopTopicsContract
         List<Topic> topTopicsFromDB = topicsDao.retrieveTopTopics(epochId);
-        List<Topic> expectedTopTopics =
-                topTopics.stream()
-                        .map(e -> Topic.create(e, TAXONOMY_VERSION, MODEL_VERSION))
-                        .collect(Collectors.toList());
-        assertThat(topTopicsFromDB).isEqualTo(expectedTopTopics);
+        assertThat(topTopicsFromDB).isEqualTo(topTopics);
 
         // Verify ReturnedTopicContract
         // Random sequence numbers used in this test: {1, 5, 6, 7, 8, 9}.
@@ -612,12 +625,17 @@ public final class EpochManagerTest {
         EpochManager epochManager =
                 Mockito.spy(
                         new EpochManager(
-                                topicsDao, mDbHelper, new Random(), mMockClassifier, mFlags));
+                                topicsDao,
+                                mDbHelper,
+                                new Random(),
+                                mMockClassifier,
+                                mFlags,
+                                mMockClock));
 
         // To mimic the scenario that there was no usage in last epoch.
         // i.e. current epoch id is 2, with some usages, while epoch id = 1 has no usage.
         final long epochId = 2L;
-        when(epochManager.getCurrentEpochId()).thenReturn(epochId);
+        doReturn(epochId).when(epochManager).getCurrentEpochId();
 
         // Note: we iterate over the appSdksUsageMap. For the test to be deterministic, we use
         // LinkedHashMap so that the order of iteration is defined.
@@ -629,8 +647,8 @@ public final class EpochManagerTest {
         // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
         when(topicsDao.retrieveAppSdksUsageMap(epochId)).thenReturn(appSdksUsageMap);
 
-        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", createTopics(Arrays.asList(1, 2)));
         when(mMockClassifier.classify(eq(appSdksUsageMap.keySet())))
                 .thenReturn(appClassificationTopicsMap);
 
@@ -739,7 +757,8 @@ public final class EpochManagerTest {
         Flags flags = mock(Flags.class);
         when(flags.getTopicsNumberOfTopTopics()).thenReturn(3);
         EpochManager epochManager =
-                new EpochManager(mTopicsDao, mDbHelper, new Random(), mMockClassifier, flags);
+                new EpochManager(
+                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, flags, mMockClock);
 
         final String app = "app";
 
@@ -785,5 +804,47 @@ public final class EpochManagerTest {
                 .isFalse();
 
         verify(flags, times(6)).getTopicsNumberOfTopTopics();
+    }
+
+    @Test
+    public void testGetCurrentEpochId() {
+        Flags flags = mock(Flags.class);
+        when(flags.getTopicsEpochJobPeriodMs()).thenReturn(TOPICS_EPOCH_JOB_PERIOD_MS);
+        // Initialize a local instance of epochManager to use mocked Flags.
+        EpochManager epochManager =
+                new EpochManager(
+                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, flags, mMockClock);
+
+        // Mock clock so that:
+        // 1st call: There is no origin and will set 0 as origin.
+        // 2nd call: The beginning of next epoch
+        // 3rd call: In the middle of the epoch after to test if current time is at somewhere
+        // between two epochs.
+        when(mMockClock.currentTimeMillis())
+                .thenReturn(
+                        0L, TOPICS_EPOCH_JOB_PERIOD_MS, (long) (2.5 * TOPICS_EPOCH_JOB_PERIOD_MS));
+
+        // Origin doesn't exist
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(-1);
+        assertThat(epochManager.getCurrentEpochId()).isEqualTo(0L);
+        // Origin has been persisted
+        assertThat(mTopicsDao.retrieveEpochOrigin()).isEqualTo(0L);
+
+        // 2nd call is on the start of next epoch (epochId = 1)
+        assertThat(epochManager.getCurrentEpochId()).isEqualTo(1L);
+
+        // 3rd call is in the middle of the epoch after (epochId = 2)
+        assertThat(epochManager.getCurrentEpochId()).isEqualTo(2L);
+
+        verify(flags, times(3)).getTopicsEpochJobPeriodMs();
+        verify(mMockClock, times(3)).currentTimeMillis();
+    }
+
+    private Topic createTopic(int topicId) {
+        return Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
+    }
+
+    private List<Topic> createTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
     }
 }

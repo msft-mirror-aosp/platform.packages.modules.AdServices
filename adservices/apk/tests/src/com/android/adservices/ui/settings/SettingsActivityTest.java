@@ -18,6 +18,8 @@ package com.android.adservices.ui.settings;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
@@ -26,50 +28,99 @@ import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.mockito.Mockito.doReturn;
+
 import android.widget.Switch;
 
+import androidx.lifecycle.ViewModelProvider;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.ViewInteraction;
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
+import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
+import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
+
+import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Tests for {@link AdServicesSettingsActivity}. */
 public class SettingsActivityTest {
+    static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
+    static ConsentManager sConsentManager = Mockito.mock(ConsentManager.class);
 
     /**
-     * {@link ActivityScenarioRule} is a JUnit {@link Rule @Rule}
-     * to launch your activity under test.
+     * {@link ActivityScenarioRule} is a JUnit {@link Rule @Rule} to launch your activity under
+     * test.
      *
-     * Rules are interceptors which are executed for each test method and are important building
+     * <p>Rules are interceptors which are executed for each test method and are important building
      * blocks of Junit tests.
      */
     @Rule
-    public ActivityScenarioRule mRule = new ActivityScenarioRule<>(
-            AdServicesSettingsActivity.class);
+    public ActivityScenarioRule mRule =
+            new ActivityScenarioRule<>(AdServicesSettingsActivityWrapper.class);
+
+    /**
+     * This is used by {@link AdServicesSettingsActivityWrapper}. Provides a mocked {@link
+     * ViewModelProvider} that serves mocked view models, which use a mocked {@link ConsentManager},
+     * which gives mocked data.
+     *
+     * @return the mocked {@link ViewModelProvider}
+     */
+    public static ViewModelProvider generateMockedViewModelProvider() {
+        List<Topic> tempList = new ArrayList<>();
+        tempList.add(Topic.create(10001, 1, 1));
+        tempList.add(Topic.create(10002, 1, 1));
+        tempList.add(Topic.create(10003, 1, 1));
+        ImmutableList<Topic> topicsList = ImmutableList.copyOf(tempList);
+        doReturn(topicsList).when(sConsentManager).getKnownTopicsWithConsent();
+
+        tempList = new ArrayList<>();
+        tempList.add(Topic.create(10004, 1, 1));
+        tempList.add(Topic.create(10005, 1, 1));
+        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
+        doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
+
+        TopicsViewModel topicsViewModel =
+                new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
+        AppsViewModel appsViewModel =
+                new AppsViewModel(ApplicationProvider.getApplicationContext());
+        MainViewModel mainViewModel =
+                new MainViewModel(ApplicationProvider.getApplicationContext());
+        doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
+        doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
+        doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
+        return sViewModelProvider;
+    }
 
     /**
      * Test if {@link AdServicesSettingsMainFragment} is displayed in {@link
      * AdServicesSettingsActivity}.
      */
     @Test
-    public void testFragmentContainer_isDisplayed() {
+    public void test_FragmentContainer_isDisplayed() {
         onView(withId(R.id.fragment_container_view)).check(matches(isDisplayed()));
     }
 
     /**
-     *  Test if the strings (settingsUI_topics_title, settingsUI_apps_title,
-     *  settingsUI_privacy_sandbox_beta_title) are displayed in
-     *  {@link AdServicesSettingsMainFragment}.
+     * Test if the strings (settingsUI_topics_title, settingsUI_apps_title,
+     * settingsUI_privacy_sandbox_beta_title) are displayed in {@link
+     * AdServicesSettingsMainFragment}.
      */
     @Test
-    public void testMainFragmentViews_isDisplayed() {
+    public void test_MainFragmentView_isDisplayed() {
         onPreferenceScreen()
                 .check(matches(hasDescendant(withText(R.string.settingsUI_topics_title))));
         onPreferenceScreen()
@@ -107,6 +158,20 @@ public class SettingsActivityTest {
                                         Matchers.allOf(
                                                 withClassName(Matchers.is(Switch.class.getName())),
                                                 Matchers.not(isChecked())))));
+
+        // Give consent back
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withClassName(Matchers.is(Switch.class.getName()))),
+                                click()));
+        onPreferenceScreen()
+                .check(
+                        matches(
+                                hasDescendant(
+                                        Matchers.allOf(
+                                                withClassName(Matchers.is(Switch.class.getName())),
+                                                isChecked()))));
     }
 
     /**
@@ -114,7 +179,7 @@ public class SettingsActivityTest {
      * returns to the main fragment.
      */
     @Test
-    public void test_TopicsPreference() {
+    public void test_TopicsView() {
         assertMainFragmentDisplayed();
 
         onPreferenceScreen()
@@ -130,12 +195,106 @@ public class SettingsActivityTest {
         assertMainFragmentDisplayed();
     }
 
+    /**
+     * Test if the Topics button in the main fragment opens the topics fragment, and the back button
+     * returns to the main fragment.
+     */
+    @Test
+    public void test_BlockedTopicsView() {
+        assertMainFragmentDisplayed();
+
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withText(R.string.settingsUI_topics_title)),
+                                click()));
+
+        assertTopicsFragmentDisplayed();
+
+        onView(withId(R.id.blocked_topics_button)).perform(scrollTo(), click());
+
+        assertBlockedTopicsFragmentDisplayed();
+
+        pressBack();
+
+        assertTopicsFragmentDisplayed();
+
+        pressBack();
+
+        assertMainFragmentDisplayed();
+    }
+
+    /**
+     * Test if the Topics button in the main fragment opens the topics fragment, and the back button
+     * returns to the main fragment.
+     */
+    @Test
+    public void test_AppsView() {
+        assertMainFragmentDisplayed();
+
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withText(R.string.settingsUI_apps_title)), click()));
+
+        assertAppsFragmentDisplayed();
+
+        pressBack();
+
+        assertMainFragmentDisplayed();
+    }
+
+    /**
+     * Test if the Topics button in the main fragment opens the topics fragment, and the back button
+     * returns to the main fragment.
+     */
+    @Test
+    public void test_BlockedAppsView() {
+        assertMainFragmentDisplayed();
+
+        onPreferenceScreen()
+                .perform(
+                        RecyclerViewActions.actionOnItem(
+                                hasDescendant(withText(R.string.settingsUI_apps_title)), click()));
+
+        assertAppsFragmentDisplayed();
+
+        onView(withId(R.id.blocked_apps_button)).perform(scrollTo(), click());
+
+        assertBlockedAppsFragmentDisplayed();
+
+        pressBack();
+
+        assertAppsFragmentDisplayed();
+
+        pressBack();
+
+        assertMainFragmentDisplayed();
+    }
+
     private void assertMainFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_topics_title)).check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_summary))
+                .check(matches(isDisplayed()));
     }
 
     private void assertTopicsFragmentDisplayed() {
+        onView(withId(R.id.blocked_topics_button))
+                .perform(scrollTo())
+                .check(matches(isDisplayed()));
+    }
+
+    private void assertAppsFragmentDisplayed() {
+        onView(withId(R.id.blocked_apps_button)).perform(scrollTo()).check(matches(isDisplayed()));
+    }
+
+    private void assertBlockedTopicsFragmentDisplayed() {
         onView(withText(R.string.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.blocked_topics_button)).check(doesNotExist());
+    }
+
+    private void assertBlockedAppsFragmentDisplayed() {
+        onView(withText(R.string.settingsUI_blocked_apps_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.blocked_apps_button)).check(doesNotExist());
     }
 
     private ViewInteraction onPreferenceScreen() {

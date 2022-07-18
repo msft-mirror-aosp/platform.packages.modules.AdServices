@@ -26,7 +26,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -43,6 +43,8 @@ public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("BackgroundFetchJobService.onStartJob");
+
+        // TODO(b/237128962): Feature enable flag
 
         // TODO(b/234642471): Stop and cancel the job if the FLEDGE APIs no longer have user consent
 
@@ -76,7 +78,7 @@ public class BackgroundFetchJobService extends JobService {
                             jobFinished(params, false);
                         });
 
-        return true;
+        return false;
     }
 
     @Override
@@ -114,6 +116,8 @@ public class BackgroundFetchJobService extends JobService {
      */
     @VisibleForTesting
     protected static void schedule(Context context) {
+        // TODO(b/237128962): Feature enable flag
+
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         final JobInfo job =
                 new JobInfo.Builder(

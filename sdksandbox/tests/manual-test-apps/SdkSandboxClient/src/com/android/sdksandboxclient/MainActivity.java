@@ -17,17 +17,21 @@
 package com.android.sdksandboxclient;
 
 import android.app.Activity;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.RequestSurfacePackageException;
+import android.app.sdksandbox.RequestSurfacePackageResponse;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback;
-import android.app.sdksandbox.SdkSandboxManager.RequestSurfacePackageCallback;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.SurfaceControlViewHost;
+import android.os.OutcomeReceiver;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 public class MainActivity extends Activity {
     private static final String SDK_NAME = "com.android.sdksandboxcode";
@@ -60,12 +64,44 @@ public class MainActivity extends Activity {
         mLoadButton.setOnClickListener(
                 v -> {
                     Bundle params = new Bundle();
-                    final LoadSdkCallbackImpl callback = new LoadSdkCallbackImpl();
-                    mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
+                    OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver =
+                            new OutcomeReceiver<LoadSdkResponse, LoadSdkException>() {
+                                @Override
+                                public void onResult(LoadSdkResponse response) {
+                                    mSdkLoaded = true;
+                                    makeToast("Loaded successfully!");
+                                }
+
+                                @Override
+                                public void onError(LoadSdkException error) {
+                                    makeToast("Failed: " + error);
+                                }
+                            };
+                    mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
                 });
     }
 
     private void registerLoadSurfacePackageButton() {
+        OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException> receiver =
+                new OutcomeReceiver<
+                        RequestSurfacePackageResponse, RequestSurfacePackageException>() {
+                    @Override
+                    public void onResult(@NonNull RequestSurfacePackageResponse result) {
+                        new Handler(Looper.getMainLooper())
+                                .post(
+                                        () -> {
+                                            mRenderedView.setChildSurfacePackage(
+                                                    result.getSurfacePackage());
+                                            mRenderedView.setVisibility(View.VISIBLE);
+                                        });
+                        makeToast("Rendered surface view");
+                    }
+
+                    @Override
+                    public void onError(@NonNull RequestSurfacePackageException error) {
+                        makeToast("Failed: " + error);
+                    }
+                };
         mRenderButton.setOnClickListener(
                 v -> {
                     if (mSdkLoaded) {
@@ -79,7 +115,7 @@ public class MainActivity extends Activity {
                                                         mRenderedView.getHeight(),
                                                         new Bundle(),
                                                         Runnable::run,
-                                                        new RequestSurfacePackageCallbackImpl()));
+                                                        receiver));
                     } else {
                         makeToast("Sdk is not loaded");
                     }
@@ -88,35 +124,5 @@ public class MainActivity extends Activity {
 
     private void makeToast(String message) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
-    }
-
-    private class LoadSdkCallbackImpl implements LoadSdkCallback {
-        @Override
-        public void onLoadSdkSuccess(Bundle bundle) {
-            mSdkLoaded = true;
-            makeToast("Loaded successfully!");
-        }
-
-        @Override
-        public void onLoadSdkFailure(int errorCode, String errorMessage) {
-            makeToast("Failed: " + errorMessage);
-        }
-    }
-
-    private class RequestSurfacePackageCallbackImpl implements RequestSurfacePackageCallback {
-        @Override
-        public void onSurfacePackageReady(SurfaceControlViewHost.SurfacePackage surfacePackage,
-                int i, Bundle bundle) {
-            new Handler(Looper.getMainLooper()).post(() -> {
-                mRenderedView.setChildSurfacePackage(surfacePackage);
-                mRenderedView.setVisibility(View.VISIBLE);
-            });
-            makeToast("Rendered surface view");
-        }
-
-        @Override
-        public void onSurfacePackageError(int errorCode, String errorMessage) {
-            makeToast("Failed: " + errorMessage);
-        }
     }
 }

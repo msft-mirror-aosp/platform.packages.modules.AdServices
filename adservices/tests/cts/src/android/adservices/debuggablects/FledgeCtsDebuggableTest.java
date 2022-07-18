@@ -34,6 +34,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -61,22 +62,48 @@ public class FledgeCtsDebuggableTest {
 
     private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
 
-    private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
-    private static final String BUYER_BIDDING_LOGIC_URL_PREFIX = "/buyer/bidding/logic/";
+    private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
 
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
+    private static final String TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
+
+    private static final String TRUSTED_BIDDING_SIGNALS =
+            "{\n"
+                    + "\t\"example\": \"example\",\n"
+                    + "\t\"valid\": \"Also valid\",\n"
+                    + "\t\"list\": \"list\",\n"
+                    + "\t\"of\": \"of\",\n"
+                    + "\t\"keys\": \"trusted bidding signal Values\"\n"
+                    + "}";
+
+    private static final String APP_NOT_DEBUGGABLE = "App is not debuggable!";
+    private static final String DEVELOPER_OPTIONS_OFF = "Developer options are off!";
+
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                    .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
+                    .setDecisionLogicUri(
+                            Uri.parse(
+                                    String.format(
+                                            "https://%s%s",
+                                            AdSelectionConfigFixture.SELLER,
+                                            SELLER_DECISION_LOGIC_URI_PATH)))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private DevContext mDevContext;
-    private boolean mIsDebugMode;
+
+    private boolean mHasAccessToDevOverrides;
+
+    private String mAccessStatus;
 
     @Before
     public void setup() {
@@ -90,13 +117,20 @@ public class FledgeCtsDebuggableTest {
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
+        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = mDevContext.getDevOptionsEnabled();
+        boolean isDebuggable =
+                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
+        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        mHasAccessToDevOverrides = mDevContext.getDevOptionsEnabled();
+        mAccessStatus =
+                String.format("Debuggable: %b\n", isDebuggable)
+                        + String.format("Developer options on: %b", isDeveloperMode);
     }
 
     @Test
     public void testFledgeFlowSucceeds() throws Exception {
-        Assume.assumeTrue(mIsDebugMode);
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
@@ -131,13 +165,17 @@ public class FledgeCtsDebuggableTest {
         CustomAudience customAudience1 =
                 createCustomAudience(
                         BUYER_1,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        Uri.parse(
+                                String.format(
+                                        "https://%s%s", BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH)),
                         bidsForBuyer1);
 
         CustomAudience customAudience2 =
                 createCustomAudience(
                         BUYER_2,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        Uri.parse(
+                                String.format(
+                                        "https://%s%s", BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH)),
                         bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
@@ -148,10 +186,9 @@ public class FledgeCtsDebuggableTest {
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(decisionLogicJs)
-                        .build();
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
+
         mAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
                 .get(10, TimeUnit.SECONDS);
@@ -162,7 +199,7 @@ public class FledgeCtsDebuggableTest {
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
-                        .setTrustedBiddingData("")
+                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
@@ -171,12 +208,18 @@ public class FledgeCtsDebuggableTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(10, TimeUnit.SECONDS);
 
+        LogUtil.i(
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        LogUtil.i(
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
                 mAdSelectionClient.runAdSelection(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
-        Assert.assertEquals(AD_URL_PREFIX + "buyer2/ad3", outcome.getRenderUrl().toString());
+        Assert.assertEquals(AD_URL_PREFIX + BUYER_2 + "/ad3", outcome.getRenderUri().toString());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest.Builder()
@@ -206,7 +249,7 @@ public class FledgeCtsDebuggableTest {
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
-                            .setRenderUrl(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
+                            .setRenderUri(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }

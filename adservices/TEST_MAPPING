@@ -9,6 +9,10 @@
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
+      "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
@@ -19,6 +23,15 @@
     {
       // Install com.google.android.adservices.apex and run CtsAdServicesEndToEndTests.
       "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdServicesPermissionsNoPermEndToEndTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -27,6 +40,9 @@
     },
     {
       "name": "AdServicesServiceCoreUnitTests"
+    },
+    {
+      "name": "AdServicesJsEngineUnitTests"
     },
     {
       "name": "AdServicesEndToEndTests"
@@ -38,13 +54,16 @@
       "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "AdServicesSettingsUITests"
+      "name": "AdServicesApkUITests"
     },
     {
       "name": "CtsAdServicesEndToEndTests"
     },
     {
       "name": "AdServicesManagerServiceTests"
+    },
+    {
+      "name": "AdServicesApkUnitTests"
     }
   ]
 }
