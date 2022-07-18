@@ -78,7 +78,7 @@ public class BackgroundFetchJobService extends JobService {
                             jobFinished(params, false);
                         });
 
-        return false;
+        return true;
     }
 
     @Override
