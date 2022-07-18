@@ -99,7 +99,7 @@ public class MeasurementDbMigratorV2 extends AbstractMeasurementDbMigrator {
                 + "ON "
                 + MeasurementTables.SourceContract.TABLE
                 + "( "
-                + MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION
+                + MeasurementTables.SourceContract.DEPRECATED_ATTRIBUTION_DESTINATION
                 + ", "
                 + MeasurementTables.SourceContract.AD_TECH_DOMAIN
                 + ", "

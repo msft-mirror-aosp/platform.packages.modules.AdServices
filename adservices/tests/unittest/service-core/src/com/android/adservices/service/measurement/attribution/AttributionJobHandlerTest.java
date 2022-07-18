@@ -72,7 +72,7 @@ import java.util.concurrent.TimeUnit;
 public class AttributionJobHandlerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final Uri OS_DESTINATION = Uri.parse("android-app://com.example.app");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -434,19 +434,19 @@ public class AttributionJobHandlerTest {
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerPriority(100L)
                         .setReportTime(5L)
-                        .setAttributionDestination(OS_DESTINATION)
+                        .setAttributionDestination(APP_DESTINATION)
                         .build();
         EventReport eventReport2 =
                 new EventReport.Builder()
                         .setStatus(EventReport.Status.DELIVERED)
                         .setReportTime(5L)
-                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAttributionDestination(source.getAppDestination())
                         .build();
         EventReport eventReport3 =
                 new EventReport.Builder()
                         .setStatus(EventReport.Status.DELIVERED)
                         .setReportTime(5L)
-                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAttributionDestination(source.getAppDestination())
                         .build();
         List<EventReport> matchingReports = new ArrayList<>();
         matchingReports.add(eventReport1);
@@ -458,7 +458,7 @@ public class AttributionJobHandlerTest {
         when(source.getReportingTime(anyLong(), any())).thenReturn(5L);
         when(source.getDedupKeys()).thenReturn(new ArrayList<>());
         when(source.getAttributionMode()).thenReturn(Source.AttributionMode.TRUTHFULLY);
-        when(source.getAttributionDestination()).thenReturn(OS_DESTINATION);
+        when(source.getAppDestination()).thenReturn(APP_DESTINATION);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).deleteEventReport(eventReport1);
@@ -1094,7 +1094,7 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAttributionDestination(source.getAppDestination())
                         .setReportTime(
                                 source.getReportingTime(
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
@@ -1172,7 +1172,7 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAttributionDestination(source.getAppDestination())
                         .setReportTime(
                                 source.getReportingTime(
                                         trigger.getTriggerTime(), trigger.getDestinationType()))
@@ -1253,7 +1253,7 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAttributionDestination())
+                        .setAttributionDestination(source.getAppDestination())
                         .setReportTime(
                                 source.getReportingTime(
                                         trigger.getTriggerTime(), trigger.getDestinationType()))

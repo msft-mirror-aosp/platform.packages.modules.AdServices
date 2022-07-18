@@ -77,7 +77,7 @@ public class SourceTest {
         assertEquals(
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
-                        .setAttributionDestination(Uri.parse("android-app://example.com/aD1"))
+                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("1")
@@ -95,7 +95,7 @@ public class SourceTest {
                         .build(),
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
-                        .setAttributionDestination(Uri.parse("android-app://example.com/aD1"))
+                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("1")
@@ -123,10 +123,10 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setEventId(2).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAttributionDestination(Uri.parse("android-app://1.com"))
+                        .setAppDestination(Uri.parse("android-app://1.com"))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAttributionDestination(Uri.parse("android-app://2.com"))
+                        .setAppDestination(Uri.parse("android-app://2.com"))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -1064,7 +1064,7 @@ public class SourceTest {
     private void assertInvalidSourceArguments(
             Long sourceEventId,
             Uri publisher,
-            Uri attributionDestination,
+            Uri appDestination,
             Uri webDestination,
             Uri adTechDomain,
             Uri registrant,
@@ -1083,7 +1083,7 @@ public class SourceTest {
                         new Source.Builder()
                                 .setEventId(sourceEventId)
                                 .setPublisher(publisher)
-                                .setAttributionDestination(attributionDestination)
+                                .setAppDestination(appDestination)
                                 .setWebDestination(webDestination)
                                 .setAdTechDomain(adTechDomain)
                                 .setRegistrant(registrant)

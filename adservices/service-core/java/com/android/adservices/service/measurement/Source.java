@@ -58,7 +58,7 @@ public class Source {
     private String mId;
     private long mEventId;
     private Uri mPublisher;
-    private Uri mAttributionDestination;
+    private Uri mAppDestination;
     private Uri mWebDestination;
     private Uri mAdTechDomain;
     private Uri mRegistrant;
@@ -244,7 +244,7 @@ public class Source {
     }
 
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAttributionDestination != null;
+        return mInstallCooldownWindow > 0 && mAppDestination != null;
     }
 
     @Override
@@ -255,7 +255,7 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mId, source.mId)
                 && Objects.equals(mPublisher, source.mPublisher)
-                && Objects.equals(mAttributionDestination, source.mAttributionDestination)
+                && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
                 && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && mPriority == source.mPriority
@@ -279,7 +279,7 @@ public class Source {
         return Objects.hash(
                 mId,
                 mPublisher,
-                mAttributionDestination,
+                mAppDestination,
                 mWebDestination,
                 mAdTechDomain,
                 mPriority,
@@ -381,8 +381,8 @@ public class Source {
 
     /** Uri for the {@link Trigger}'s app destination. */
     @Nullable
-    public Uri getAttributionDestination() {
-        return mAttributionDestination;
+    public Uri getAppDestination() {
+        return mAppDestination;
     }
 
     /** Uri for the {@link Trigger}'s web destination. */
@@ -594,11 +594,10 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAttributionDestination()}. */
-        @NonNull
-        public Builder setAttributionDestination(@Nullable Uri attributionDestination) {
-            Optional.ofNullable(attributionDestination).ifPresent(Validation::validateUri);
-            mBuilding.mAttributionDestination = attributionDestination;
+        /** See {@link Source#getAppDestination()}. */
+        public Builder setAppDestination(Uri appDestination) {
+            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
+            mBuilding.mAppDestination = appDestination;
             return this;
         }
 
@@ -735,7 +734,7 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 
-            if (mBuilding.mAttributionDestination == null && mBuilding.mWebDestination == null) {
+            if (mBuilding.mAppDestination == null && mBuilding.mWebDestination == null) {
                 throw new IllegalArgumentException("At least one destination is required");
             }
 

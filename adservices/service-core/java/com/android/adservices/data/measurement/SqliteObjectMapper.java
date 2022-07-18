@@ -83,8 +83,10 @@ public class SqliteObjectMapper {
                 builder::setAdTechDomain);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
                 builder::setPublisher);
-        setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                builder::setAttributionDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                builder::setAppDestination);
         setUriColumn(
                 cursor,
                 MeasurementTables.SourceContract.WEB_DESTINATION,

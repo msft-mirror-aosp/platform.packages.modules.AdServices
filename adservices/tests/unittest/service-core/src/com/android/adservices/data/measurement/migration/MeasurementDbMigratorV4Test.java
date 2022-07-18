@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 import org.junit.Test;
@@ -46,6 +47,9 @@ public class MeasurementDbMigratorV4Test extends AbstractMeasurementDbMigratorTe
         db = dbHelper.getReadableDatabase();
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 20));
+        assertTrue(
+                DbTestUtil.getTableColumns(db, MeasurementTables.SourceContract.TABLE)
+                        .contains(MeasurementTables.SourceContract.APP_DESTINATION));
     }
 
     @Override

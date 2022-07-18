@@ -28,7 +28,12 @@ public class MeasurementDbMigratorV4 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.WEB_DESTINATION)
+                MeasurementTables.SourceContract.WEB_DESTINATION),
+        String.format(
+                "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.DEPRECATED_ATTRIBUTION_DESTINATION,
+                MeasurementTables.SourceContract.APP_DESTINATION)
     };
 
     public MeasurementDbMigratorV4() {

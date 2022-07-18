@@ -118,7 +118,7 @@ public class SourceFetcher {
 
         if (!json.isNull(EventSourceContract.DESTINATION)) {
             Uri destination = Uri.parse(json.getString(EventSourceContract.DESTINATION));
-            result.setDestination(destination);
+            result.setAppDestination(destination);
         }
 
         if (shouldValidateDestination
