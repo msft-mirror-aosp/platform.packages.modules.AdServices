@@ -253,9 +253,12 @@ public class CustomAudienceUpdatableDataFixture {
         return new JSONObject(inputJsonString).toString();
     }
 
-    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse() {
+    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse()
+            throws JSONException {
         return CustomAudienceUpdatableData.builder()
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setUserBiddingSignals(
+                        formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS))
                 .setTrustedBiddingData(DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA)
                 .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
                 .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
