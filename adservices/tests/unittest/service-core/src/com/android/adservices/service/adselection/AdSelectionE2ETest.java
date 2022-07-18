@@ -286,11 +286,11 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer2/ad3",
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -354,11 +354,11 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, adSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer2/ad3",
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -436,11 +436,11 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer2/ad3",
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -483,11 +483,11 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad1",
+                AD_URI_PREFIX + BUYER_1 + "/ad1",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -536,7 +536,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         assertEquals(
                 resultsCallback.mFledgeErrorResponse.getStatusCode(),
                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
@@ -555,7 +555,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
     }
@@ -580,7 +580,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
     }
@@ -614,12 +614,28 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad2",
+                AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+    }
+
+    private void assertCallbackIsSuccessful(AdSelectionTestCallback resultsCallback) {
+        assertTrue(
+                resultsCallback.mFledgeErrorResponse != null
+                        ? String.format(
+                                "Expected callback to succeed but it failed with status %d and"
+                                        + " message '%s'",
+                                resultsCallback.mFledgeErrorResponse.getStatusCode(),
+                                resultsCallback.mFledgeErrorResponse.getErrorMessage())
+                        : "Expected callback to succeed but it failed with no details",
+                resultsCallback.mIsSuccess);
+    }
+
+    private void assertCallbackFailed(AdSelectionTestCallback resultsCallback) {
+        assertFalse("Expected callback to fail but succeeded", resultsCallback.mIsSuccess);
     }
 
     @Test
@@ -680,7 +696,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_NO_VALID_BIDS_FOR_SCORING);
@@ -744,7 +760,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_SCORE_AD_LOGIC_MISSING);
@@ -809,11 +825,11 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad2",
+                AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -882,11 +898,11 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad2",
+                AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -955,7 +971,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_WINNING_AD_FOUND);
     }
@@ -1034,9 +1050,9 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         assertEquals(
-                AD_URI_PREFIX + "buyer2/ad3",
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
@@ -1131,7 +1147,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 ERROR_NO_VALID_BIDS_FOR_SCORING);
@@ -1184,7 +1200,7 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertFalse(resultsCallback.mIsSuccess);
+        assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
                 MISSING_TRUSTED_SCORING_SIGNALS);
@@ -1247,12 +1263,12 @@ public class AdSelectionE2ETest {
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
-        assertTrue(resultsCallback.mIsSuccess);
+        assertCallbackIsSuccessful(resultsCallback);
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         // Given buyer 2 will be excluded from bidding for missing signals, Buyer 1 : Ad 2 will win
         assertEquals(
-                AD_URI_PREFIX + "buyer1/ad2",
+                AD_URI_PREFIX + BUYER_1 + "/ad2",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
     }
 
