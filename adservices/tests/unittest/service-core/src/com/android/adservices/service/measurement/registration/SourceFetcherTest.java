@@ -68,6 +68,7 @@ public final class SourceFetcherTest {
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
     private static final String DEFAULT_TOP_ORIGIN = "https://baz.com";
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
+    private static final String DEFAULT_DESTINATION_WITHOUT_SCHEME = "com.myapps";
     private static final long DEFAULT_PRIORITY = 123;
     private static final long DEFAULT_EXPIRY = 456789;
     private static final long DEFAULT_EVENT_ID = 987654321;
@@ -1154,6 +1155,89 @@ public final class SourceFetcherTest {
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withDestinationUriNotHavingScheme_attachesAppScheme()
+            throws IOException {
+        // Setup
+        SourceRegistration expectedResult =
+                new SourceRegistration.Builder()
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
+                        .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
+                        .setReportingOrigin(REGISTRATION_URI_1)
+                        .setSourceEventId(EVENT_ID_1)
+                        .setSourcePriority(0)
+                        .build();
+
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Collections.singletonList(SOURCE_REGISTRATION_1),
+                        DEFAULT_TOP_ORIGIN,
+                        Uri.parse(DEFAULT_DESTINATION_WITHOUT_SCHEME),
+                        null);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION_WITHOUT_SCHEME
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\"\n"
+                                                + "}\n")));
+
+        // Execution
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(
+                new HashSet<>(Collections.singletonList(expectedResult)), new HashSet<>(result));
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withDestinationUriHavingHttpsScheme_dropsSource()
+            throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Collections.singletonList(SOURCE_REGISTRATION_1),
+                        DEFAULT_TOP_ORIGIN,
+                        Uri.parse(DEFAULT_DESTINATION_WITHOUT_SCHEME),
+                        null);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                // Invalid (https) URI for app destination
+                                                + WEB_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\"\n"
+                                                + "}\n")));
+
+        // Execution
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection1).setRequestMethod("POST");
     }
 
     private RegistrationRequest buildRequest(String registrationUri, String topOrigin) {
