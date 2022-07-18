@@ -51,6 +51,11 @@ public class DBAdData {
         return new DBAdData(parcelable.getRenderUri(), parcelable.getMetadata());
     }
 
+    /** Returns the estimated size, in bytes, of the strings contained in this object. */
+    public int size() {
+        return mRenderUri.toString().getBytes().length + mMetadata.getBytes().length;
+    }
+
     /** Gets the URI that points to the ad's rendering assets. */
     @NonNull
     public Uri getRenderUri() {

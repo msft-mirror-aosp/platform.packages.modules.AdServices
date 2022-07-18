@@ -151,6 +151,10 @@ public interface Flags extends Dumpable {
     long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
             60L * 24L * 60L * 60L * 1000L; // 60 days
     long FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS = 100;
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -189,6 +193,32 @@ public interface Flags extends Dumpable {
      */
     default long getFledgeCustomAudienceMaxExpireInMs() {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for user bidding signals in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for trusted bidding data in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
+    }
+
+    /** Returns the maximum size in bytes allowed for ads in each FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxAdsSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B;
+    }
+
+    /** Returns the maximum allowed number of ads per FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxNumAds() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
     }
 
     long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
