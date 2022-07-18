@@ -48,7 +48,7 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "source";
         String ID = "_id";
         String EVENT_ID = "event_id";
-        String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
         String DEDUP_KEYS = "dedup_keys";
         String EVENT_TIME = "event_time";
@@ -71,6 +71,8 @@ public final class MeasurementTables {
         @Deprecated String DEPRECATED_ATTRIBUTION_SOURCE = "attribution_source";
         /** @deprecated replaced by {@link #AD_TECH_DOMAIN} */
         @Deprecated String DEPRECATED_REPORT_TO = "report_to";
+        /** @deprecated replaced by {@link #APP_DESTINATION} */
+        @Deprecated String DEPRECATED_ATTRIBUTION_DESTINATION = "attribution_destination";
     }
 
     /** Contract for Trigger. */
@@ -186,22 +188,38 @@ public final class MeasurementTables {
             "CREATE TABLE "
                     + SourceContract.TABLE
                     + " ("
-                    + SourceContract.ID + " TEXT PRIMARY KEY NOT NULL, "
-                    + SourceContract.EVENT_ID + " INTEGER, "
-                    + SourceContract.DEPRECATED_ATTRIBUTION_SOURCE + " TEXT, "
-                    + SourceContract.ATTRIBUTION_DESTINATION + " TEXT, "
-                    + SourceContract.DEPRECATED_REPORT_TO + " TEXT, "
-                    + SourceContract.EVENT_TIME + " INTEGER, "
-                    + SourceContract.EXPIRY_TIME + " INTEGER, "
-                    + SourceContract.PRIORITY + " INTEGER, "
-                    + SourceContract.STATUS + " INTEGER, "
-                    + SourceContract.DEDUP_KEYS + " TEXT, "
-                    + SourceContract.SOURCE_TYPE + " TEXT, "
-                    + SourceContract.REGISTRANT + " TEXT, "
-                    + SourceContract.ATTRIBUTION_MODE + " INTEGER, "
-                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW + " INTEGER, "
-                    + SourceContract.INSTALL_COOLDOWN_WINDOW + " INTEGER, "
-                    + SourceContract.IS_INSTALL_ATTRIBUTED + " INTEGER "
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.DEPRECATED_ATTRIBUTION_SOURCE
+                    + " TEXT, "
+                    + SourceContract.DEPRECATED_ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + SourceContract.DEPRECATED_REPORT_TO
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_TRIGGER =
@@ -313,33 +331,66 @@ public final class MeasurementTables {
                     + ")";
 
     public static final String[] CREATE_INDEXES = {
-            "CREATE INDEX "
-                    + INDEX_PREFIX + SourceContract.TABLE + "_ad_rt_et " + "ON "
-                    + SourceContract.TABLE + "( "
-                    + SourceContract.ATTRIBUTION_DESTINATION + ", "
-                    + SourceContract.DEPRECATED_REPORT_TO + ", "
-                    + SourceContract.EXPIRY_TIME + " DESC " + ")",
-            "CREATE INDEX "
-                    + INDEX_PREFIX + TriggerContract.TABLE + "_ad_rt_tt " + "ON "
-                    + TriggerContract.TABLE + "( "
-                    + TriggerContract.ATTRIBUTION_DESTINATION + ", "
-                    + TriggerContract.DEPRECATED_REPORT_TO + ", "
-                    + TriggerContract.TRIGGER_TIME + " ASC)",
-            "CREATE INDEX "
-                    + INDEX_PREFIX + SourceContract.TABLE + "_et " + "ON "
-                    + SourceContract.TABLE + "("
-                    + SourceContract.EXPIRY_TIME + ")",
-            "CREATE INDEX "
-                    + INDEX_PREFIX + TriggerContract.TABLE + "_tt " + "ON "
-                    + TriggerContract.TABLE + "("
-                    + TriggerContract.TRIGGER_TIME + ")",
-            "CREATE INDEX "
-                    + INDEX_PREFIX + AttributionRateLimitContract.TABLE + "_ss_ds_tt" + " ON "
-                    + AttributionRateLimitContract.TABLE + "("
-                    + AttributionRateLimitContract.SOURCE_SITE + ", "
-                    + AttributionRateLimitContract.DESTINATION_SITE + ", "
-                    + AttributionRateLimitContract.DEPRECATED_REPORT_TO + ", "
-                    + AttributionRateLimitContract.TRIGGER_TIME + ")"
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + SourceContract.TABLE
+                + "_ad_rt_et "
+                + "ON "
+                + SourceContract.TABLE
+                + "( "
+                + SourceContract.DEPRECATED_ATTRIBUTION_DESTINATION
+                + ", "
+                + SourceContract.DEPRECATED_REPORT_TO
+                + ", "
+                + SourceContract.EXPIRY_TIME
+                + " DESC "
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + TriggerContract.TABLE
+                + "_ad_rt_tt "
+                + "ON "
+                + TriggerContract.TABLE
+                + "( "
+                + TriggerContract.ATTRIBUTION_DESTINATION
+                + ", "
+                + TriggerContract.DEPRECATED_REPORT_TO
+                + ", "
+                + TriggerContract.TRIGGER_TIME
+                + " ASC)",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + SourceContract.TABLE
+                + "_et "
+                + "ON "
+                + SourceContract.TABLE
+                + "("
+                + SourceContract.EXPIRY_TIME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + TriggerContract.TABLE
+                + "_tt "
+                + "ON "
+                + TriggerContract.TABLE
+                + "("
+                + TriggerContract.TRIGGER_TIME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + AttributionRateLimitContract.TABLE
+                + "_ss_ds_tt"
+                + " ON "
+                + AttributionRateLimitContract.TABLE
+                + "("
+                + AttributionRateLimitContract.SOURCE_SITE
+                + ", "
+                + AttributionRateLimitContract.DESTINATION_SITE
+                + ", "
+                + AttributionRateLimitContract.DEPRECATED_REPORT_TO
+                + ", "
+                + AttributionRateLimitContract.TRIGGER_TIME
+                + ")"
     };
 
     // Consolidated list of create statements for all tables.

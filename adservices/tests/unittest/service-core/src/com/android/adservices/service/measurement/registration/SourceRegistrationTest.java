@@ -41,7 +41,7 @@ public final class SourceRegistrationTest {
         return new SourceRegistration.Builder()
                 .setTopOrigin(TOP_ORIGIN)
                 .setReportingOrigin(REPORTING_ORIGIN)
-                .setDestination(Uri.parse("android-app://baz.com"))
+                .setAppDestination(Uri.parse("android-app://baz.com"))
                 .setSourceEventId(1234567)
                 .setExpiry(2345678)
                 .setSourcePriority(345678)
@@ -55,7 +55,7 @@ public final class SourceRegistrationTest {
     void verifyExampleResponse(SourceRegistration response) {
         assertEquals("https://foo.com", response.getTopOrigin().toString());
         assertEquals("https://bar.com", response.getReportingOrigin().toString());
-        assertEquals("android-app://baz.com", response.getDestination().toString());
+        assertEquals("android-app://baz.com", response.getAppDestination().toString());
         assertEquals(1234567, response.getSourceEventId());
         assertEquals(2345678, response.getExpiry());
         assertEquals(345678, response.getSourcePriority());
@@ -79,11 +79,11 @@ public final class SourceRegistrationTest {
                 new SourceRegistration.Builder()
                         .setTopOrigin(TOP_ORIGIN)
                         .setReportingOrigin(REPORTING_ORIGIN)
-                        .setDestination(destination)
+                        .setAppDestination(destination)
                         .build();
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
         assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
-        assertEquals(destination, response.getDestination());
+        assertEquals(destination, response.getAppDestination());
         assertNull(response.getWebDestination());
         assertEquals(0, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
@@ -104,7 +104,7 @@ public final class SourceRegistrationTest {
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
         assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
         assertEquals(destination, response.getWebDestination());
-        assertNull(response.getDestination());
+        assertNull(response.getAppDestination());
         assertEquals(0, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
@@ -120,13 +120,13 @@ public final class SourceRegistrationTest {
                 new SourceRegistration.Builder()
                         .setTopOrigin(TOP_ORIGIN)
                         .setReportingOrigin(REPORTING_ORIGIN)
-                        .setDestination(destination)
+                        .setAppDestination(destination)
                         .setWebDestination(webDestination)
                         .build();
         assertEquals(TOP_ORIGIN, response.getTopOrigin());
         assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
         assertEquals(webDestination, response.getWebDestination());
-        assertEquals(destination, response.getDestination());
+        assertEquals(destination, response.getAppDestination());
         assertEquals(0, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
@@ -140,7 +140,7 @@ public final class SourceRegistrationTest {
                 IllegalArgumentException.class,
                 () ->
                         new SourceRegistration.Builder()
-                                .setDestination(null)
+                                .setAppDestination(null)
                                 .setWebDestination(null)
                                 .build());
     }

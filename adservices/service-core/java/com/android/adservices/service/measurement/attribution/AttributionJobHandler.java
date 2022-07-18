@@ -197,7 +197,7 @@ class AttributionJobHandler {
                     AggregateReport aggregateReport =
                             new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(source.getAttributionDestination())
+                                    .setAttributionDestination(source.getAppDestination())
                                     .setSourceRegistrationTime(source.getEventTime())
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
@@ -206,7 +206,8 @@ class AttributionJobHandler {
                                                     contributions.get()))
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
-                                                    .setContributions(contributions.get()).build())
+                                                    .setContributions(contributions.get())
+                                                    .build())
                                     .setStatus(AggregateReport.Status.PENDING)
                                     .setApiVersion(API_VERSION)
                                     .build();
@@ -288,8 +289,9 @@ class AttributionJobHandler {
         return true;
     }
 
-    private boolean provisionEventReportQuota(Source source,
-            EventReport newEventReport, IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean provisionEventReportQuota(
+            Source source, EventReport newEventReport, IMeasurementDao measurementDao)
+            throws DatastoreException {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
         if (isWithinReportLimit(
