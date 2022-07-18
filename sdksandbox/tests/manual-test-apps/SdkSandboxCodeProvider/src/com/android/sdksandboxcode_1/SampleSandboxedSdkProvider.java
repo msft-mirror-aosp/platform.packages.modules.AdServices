@@ -24,6 +24,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -32,9 +33,16 @@ import java.util.concurrent.Executor;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
+    private static final String TAG = "SampleSandboxedSdkProvider";
+
     @Override
     public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
         callback.onLoadSdkFinished(null);
+    }
+
+    @Override
+    public void beforeUnloadSdk() {
+        Log.i(TAG, "SDK unloaded");
     }
 
     @Override
