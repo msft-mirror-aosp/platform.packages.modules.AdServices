@@ -29,9 +29,9 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockM
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -109,7 +109,7 @@ public class BackgroundFetchJobServiceTest {
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
-        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
@@ -133,7 +133,7 @@ public class BackgroundFetchJobServiceTest {
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
-        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
@@ -157,7 +157,7 @@ public class BackgroundFetchJobServiceTest {
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
-        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
@@ -181,7 +181,7 @@ public class BackgroundFetchJobServiceTest {
                 .when(mBgFJobServiceSpy)
                 .jobFinished(mJobParametersMock, false);
 
-        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
