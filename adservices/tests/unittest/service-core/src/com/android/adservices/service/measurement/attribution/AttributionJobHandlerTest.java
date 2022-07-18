@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -71,6 +72,7 @@ import java.util.concurrent.TimeUnit;
 public class AttributionJobHandlerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final String EVENT_TRIGGERS =
             "[\n"
                     + "{\n"
@@ -432,15 +434,20 @@ public class AttributionJobHandlerTest {
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerPriority(100L)
                         .setReportTime(5L)
+                        .setAttributionDestination(APP_DESTINATION)
                         .build();
-        EventReport eventReport2 = new EventReport.Builder()
-                .setStatus(EventReport.Status.DELIVERED)
-                .setReportTime(5L)
-                .build();
-        EventReport eventReport3 = new EventReport.Builder()
-                .setStatus(EventReport.Status.DELIVERED)
-                .setReportTime(5L)
-                .build();
+        EventReport eventReport2 =
+                new EventReport.Builder()
+                        .setStatus(EventReport.Status.DELIVERED)
+                        .setReportTime(5L)
+                        .setAttributionDestination(source.getAppDestination())
+                        .build();
+        EventReport eventReport3 =
+                new EventReport.Builder()
+                        .setStatus(EventReport.Status.DELIVERED)
+                        .setReportTime(5L)
+                        .setAttributionDestination(source.getAppDestination())
+                        .build();
         List<EventReport> matchingReports = new ArrayList<>();
         matchingReports.add(eventReport1);
         matchingReports.add(eventReport2);
@@ -448,9 +455,10 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getSourceEventReports(source)).thenReturn(matchingReports);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        when(source.getReportingTime(anyLong())).thenReturn(5L);
+        when(source.getReportingTime(anyLong(), any())).thenReturn(5L);
         when(source.getDedupKeys()).thenReturn(new ArrayList<>());
         when(source.getAttributionMode()).thenReturn(Source.AttributionMode.TRUTHFULLY);
+        when(source.getAppDestination()).thenReturn(APP_DESTINATION);
         AttributionJobHandler attributionService = new AttributionJobHandler(mDatastoreManager);
         attributionService.performPendingAttributions();
         verify(mMeasurementDao).deleteEventReport(eventReport1);
@@ -1086,8 +1094,10 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAttributionDestination())
-                        .setReportTime(source.getReportingTime(trigger.getTriggerTime()))
+                        .setAttributionDestination(source.getAppDestination())
+                        .setReportTime(
+                                source.getReportingTime(
+                                        trigger.getTriggerTime(), trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build();
@@ -1162,8 +1172,10 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAttributionDestination())
-                        .setReportTime(source.getReportingTime(trigger.getTriggerTime()))
+                        .setAttributionDestination(source.getAppDestination())
+                        .setReportTime(
+                                source.getReportingTime(
+                                        trigger.getTriggerTime(), trigger.getDestinationType()))
                         .setSourceType(source.getSourceType())
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build();
@@ -1241,8 +1253,10 @@ public class AttributionJobHandlerTest {
                         .setSourceId(source.getEventId())
                         .setAdTechDomain(source.getAdTechDomain())
                         .setStatus(EventReport.Status.PENDING)
-                        .setAttributionDestination(source.getAttributionDestination())
-                        .setReportTime(source.getReportingTime(trigger.getTriggerTime()))
+                        .setAttributionDestination(source.getAppDestination())
+                        .setReportTime(
+                                source.getReportingTime(
+                                        trigger.getTriggerTime(), trigger.getDestinationType()))
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .build();

@@ -177,8 +177,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(
-                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                getNullableUriString(source.getAttributionDestination()));
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                getNullableUriString(source.getAppDestination()));
         values.put(
                 MeasurementTables.SourceContract.WEB_DESTINATION,
                 getNullableUriString(source.getWebDestination()));
@@ -520,8 +520,10 @@ class MeasurementDao implements IMeasurementDao {
         // For all Source records matching the given Uri
         // as REGISTRANT, obtains EventReport records who's SOURCE_ID
         // matches a Source records' EVENT_ID.
-        db.delete(MeasurementTables.EventReportContract.TABLE,
-                String.format("%1$s IN ("
+        db.delete(
+                MeasurementTables.EventReportContract.TABLE,
+                String.format(
+                        "%1$s IN ("
                                 + "SELECT e.%1$s FROM %2$s e"
                                 + " INNER JOIN %3$s s"
                                 + " ON (e.%4$s = s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s)"
@@ -533,21 +535,27 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.SOURCE_ID,
                         MeasurementTables.SourceContract.EVENT_ID,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                        MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
+                        MeasurementTables.SourceContract.APP_DESTINATION,
                         MeasurementTables.EventReportContract.AD_TECH_DOMAIN,
                         MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                         MeasurementTables.SourceContract.REGISTRANT),
-                new String[]{uriStr});
+                new String[] {uriStr});
         // EventReport table
         db.delete(MeasurementTables.EventReportContract.TABLE,
                 MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
                 new String[]{uriStr});
         // Source table
-        db.delete(MeasurementTables.SourceContract.TABLE,
-                "( " + MeasurementTables.SourceContract.REGISTRANT + " = ? ) OR "
-                        + "(" + MeasurementTables.SourceContract.STATUS + " = ? AND "
-                        + MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ? )",
-                new String[]{uriStr, String.valueOf(Source.Status.IGNORED), uriStr});
+        db.delete(
+                MeasurementTables.SourceContract.TABLE,
+                "( "
+                        + MeasurementTables.SourceContract.REGISTRANT
+                        + " = ? ) OR "
+                        + "("
+                        + MeasurementTables.SourceContract.STATUS
+                        + " = ? AND "
+                        + MeasurementTables.SourceContract.APP_DESTINATION
+                        + " = ? )",
+                new String[] {uriStr, String.valueOf(Source.Status.IGNORED), uriStr});
         // Trigger table
         db.delete(MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.REGISTRANT + " = ?",
@@ -1120,19 +1128,30 @@ class MeasurementDao implements IMeasurementDao {
         // Sub query for selecting relevant source ids.
         // Selecting the highest priority, most recent source with eventTimestamp falling in the
         // source's install attribution window.
-        String subQuery = sqb.buildQuery(new String[]{MeasurementTables.SourceContract.ID},
-                String.format(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION
-                                + " = \"%s\" AND "
-                                + MeasurementTables.SourceContract.EVENT_TIME + " <= %2$d AND "
-                                + MeasurementTables.SourceContract.EXPIRY_TIME + " > %2$d AND "
-                                + MeasurementTables.SourceContract.EVENT_TIME + " + "
-                                + MeasurementTables.SourceContract.INSTALL_ATTRIBUTION_WINDOW
-                                + " >= %2$d",
-                        uri.toString(), eventTimestamp),
-                /* groupBy= */null, /* having= */null,
-                /* sortOrder= */MeasurementTables.SourceContract.PRIORITY + " DESC, "
-                        + MeasurementTables.SourceContract.EVENT_TIME + " DESC",
-                /* limit = */ "1");
+        String subQuery =
+                sqb.buildQuery(
+                        new String[] {MeasurementTables.SourceContract.ID},
+                        String.format(
+                                MeasurementTables.SourceContract.APP_DESTINATION
+                                        + " = \"%s\" AND "
+                                        + MeasurementTables.SourceContract.EVENT_TIME
+                                        + " <= %2$d AND "
+                                        + MeasurementTables.SourceContract.EXPIRY_TIME
+                                        + " > %2$d AND "
+                                        + MeasurementTables.SourceContract.EVENT_TIME
+                                        + " + "
+                                        + MeasurementTables.SourceContract
+                                                .INSTALL_ATTRIBUTION_WINDOW
+                                        + " >= %2$d",
+                                uri.toString(),
+                                eventTimestamp),
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* sortOrder= */ MeasurementTables.SourceContract.PRIORITY
+                                + " DESC, "
+                                + MeasurementTables.SourceContract.EVENT_TIME
+                                + " DESC",
+                        /* limit = */ "1");
 
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, true);
@@ -1147,10 +1166,11 @@ class MeasurementDao implements IMeasurementDao {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED, false);
-        db.update(MeasurementTables.SourceContract.TABLE,
+        db.update(
+                MeasurementTables.SourceContract.TABLE,
                 values,
-                MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION + " = ?",
-                new String[]{uri.toString()});
+                MeasurementTables.SourceContract.APP_DESTINATION + " = ?",
+                new String[] {uri.toString()});
     }
 
     @Override
@@ -1252,13 +1272,24 @@ class MeasurementDao implements IMeasurementDao {
     public List<String> getPendingAggregateReportIdsForGivenApp(Uri appName)
             throws DatastoreException {
         List<String> aggregateReports = new ArrayList<>();
-        try (Cursor cursor = mSQLTransaction.getDatabase().query(
-                MeasurementTables.AggregateReport.TABLE, null,
-                MeasurementTables.AggregateReport.PUBLISHER + " = ? AND "
-                + MeasurementTables.AggregateReport.STATUS + " = ? ",
-                new String[]{appName.toString(),
-                        String.valueOf(AggregateReport.Status.PENDING)},
-                null, null, "RANDOM()", null)) {
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                MeasurementTables.AggregateReport.PUBLISHER
+                                        + " = ? AND "
+                                        + MeasurementTables.AggregateReport.STATUS
+                                        + " = ? ",
+                                new String[] {
+                                    appName.toString(),
+                                    String.valueOf(AggregateReport.Status.PENDING)
+                                },
+                                null,
+                                null,
+                                "RANDOM()",
+                                null)) {
             while (cursor.moveToNext()) {
                 aggregateReports.add(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AggregateReport.ID)));
@@ -1271,7 +1302,7 @@ class MeasurementDao implements IMeasurementDao {
         boolean isAppDestination =
                 trigger.getAttributionDestination().getScheme().startsWith(ANDROID_APP_SCHEME);
         return isAppDestination
-                ? MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION
+                ? MeasurementTables.SourceContract.APP_DESTINATION
                 : MeasurementTables.SourceContract.WEB_DESTINATION;
     }
 

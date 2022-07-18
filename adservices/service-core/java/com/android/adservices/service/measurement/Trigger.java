@@ -333,6 +333,10 @@ public class Trigger {
         return eventTriggers;
     }
 
+    public DestinationType getDestinationType() {
+        return DestinationType.getDestinationType(mAttributionDestination);
+    }
+
     /**
      * Builder for {@link Trigger}.
      */

@@ -68,6 +68,7 @@ public final class SourceFetcherTest {
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
     private static final String DEFAULT_TOP_ORIGIN = "https://baz.com";
     private static final String DEFAULT_DESTINATION = "android-app://com.myapps";
+    private static final String DEFAULT_DESTINATION_WITHOUT_SCHEME = "com.myapps";
     private static final long DEFAULT_PRIORITY = 123;
     private static final long DEFAULT_EXPIRY = 456789;
     private static final long DEFAULT_EVENT_ID = 987654321;
@@ -127,7 +128,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
@@ -160,7 +161,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(987654321, result.get(0).getSourceEventId());
@@ -199,7 +200,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(987654321, result.get(0).getSourceEventId());
@@ -238,7 +239,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(987654321, result.get(0).getSourceEventId());
@@ -323,7 +324,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(
@@ -355,7 +356,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS,
@@ -381,7 +382,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(
@@ -407,7 +408,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(
@@ -453,7 +454,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(0, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
@@ -517,13 +518,13 @@ public final class SourceFetcherTest {
         assertEquals(2, result.size());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(1).getTopOrigin().toString());
         assertEquals(ALT_REGISTRATION, result.get(1).getReportingOrigin().toString());
-        assertEquals(ALT_DESTINATION, result.get(1).getDestination().toString());
+        assertEquals(ALT_DESTINATION, result.get(1).getAppDestination().toString());
         assertEquals(ALT_EVENT_ID, result.get(1).getSourceEventId());
         assertEquals(ALT_PRIORITY, result.get(1).getSourcePriority());
         assertEquals(ALT_EXPIRY, result.get(1).getExpiry());
@@ -572,19 +573,19 @@ public final class SourceFetcherTest {
         result.sort((o1, o2) -> (int) (o2.getSourcePriority() - o1.getSourcePriority()));
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(0).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
         assertEquals(999, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(1).getTopOrigin().toString());
         assertEquals(ALT_REGISTRATION, result.get(1).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(1).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(1).getAppDestination().toString());
         assertEquals(ALT_EVENT_ID, result.get(1).getSourceEventId());
         assertEquals(888, result.get(1).getSourcePriority());
         assertEquals(ALT_EXPIRY, result.get(1).getExpiry());
         assertEquals(DEFAULT_TOP_ORIGIN, result.get(2).getTopOrigin().toString());
         assertEquals(ALT_REGISTRATION, result.get(2).getReportingOrigin().toString());
-        assertEquals(DEFAULT_DESTINATION, result.get(2).getDestination().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(2).getAppDestination().toString());
         assertEquals(777, result.get(2).getSourceEventId());
         assertEquals(777, result.get(2).getSourcePriority());
         assertEquals(456791, result.get(2).getExpiry());
@@ -676,7 +677,7 @@ public final class SourceFetcherTest {
         assertEquals(1, result.size());
         assertEquals("https://baz.com", result.get(0).getTopOrigin().toString());
         assertEquals("https://foo.com", result.get(0).getReportingOrigin().toString());
-        assertEquals("android-app://com.myapps", result.get(0).getDestination().toString());
+        assertEquals("android-app://com.myapps", result.get(0).getAppDestination().toString());
         assertEquals(123, result.get(0).getSourcePriority());
         assertEquals(456789, result.get(0).getExpiry());
         assertEquals(987654321, result.get(0).getSourceEventId());
@@ -742,7 +743,7 @@ public final class SourceFetcherTest {
         // Setup
         SourceRegistration expectedResult1 =
                 new SourceRegistration.Builder()
-                        .setDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
                         .setReportingOrigin(REGISTRATION_URI_1)
@@ -751,7 +752,7 @@ public final class SourceFetcherTest {
                         .build();
         SourceRegistration expectedResult2 =
                 new SourceRegistration.Builder()
-                        .setDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
                         .setReportingOrigin(REGISTRATION_URI_2)
@@ -816,7 +817,7 @@ public final class SourceFetcherTest {
         // Setup
         SourceRegistration expectedResult2 =
                 new SourceRegistration.Builder()
-                        .setDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
                         .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
                         .setReportingOrigin(REGISTRATION_URI_2)
@@ -909,7 +910,7 @@ public final class SourceFetcherTest {
                                 List.of(aggregateSource)));
         SourceRegistration expectedSourceRegistration =
                 new SourceRegistration.Builder()
-                        .setDestination(OS_DESTINATION)
+                        .setAppDestination(OS_DESTINATION)
                         .setSourcePriority(123)
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
@@ -967,7 +968,7 @@ public final class SourceFetcherTest {
                                 List.of(ALT_REGISTRATION)));
         SourceRegistration expectedSourceRegistration =
                 new SourceRegistration.Builder()
-                        .setDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
                         .setSourcePriority(123)
                         .setExpiry(456789)
                         .setSourceEventId(987654321)
@@ -1105,7 +1106,7 @@ public final class SourceFetcherTest {
                                                 + "}")));
         SourceRegistration expectedSourceRegistration =
                 new SourceRegistration.Builder()
-                        .setDestination(OS_DESTINATION)
+                        .setAppDestination(OS_DESTINATION)
                         .setWebDestination(WEB_DESTINATION)
                         .setSourcePriority(123)
                         .setExpiry(456789)
@@ -1154,6 +1155,89 @@ public final class SourceFetcherTest {
         // Assertion
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withDestinationUriNotHavingScheme_attachesAppScheme()
+            throws IOException {
+        // Setup
+        SourceRegistration expectedResult =
+                new SourceRegistration.Builder()
+                        .setAppDestination(Uri.parse(DEFAULT_DESTINATION))
+                        .setExpiry(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS)
+                        .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
+                        .setReportingOrigin(REGISTRATION_URI_1)
+                        .setSourceEventId(EVENT_ID_1)
+                        .setSourcePriority(0)
+                        .build();
+
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Collections.singletonList(SOURCE_REGISTRATION_1),
+                        DEFAULT_TOP_ORIGIN,
+                        Uri.parse(DEFAULT_DESTINATION_WITHOUT_SCHEME),
+                        null);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION_WITHOUT_SCHEME
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\"\n"
+                                                + "}\n")));
+
+        // Execution
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(
+                new HashSet<>(Collections.singletonList(expectedResult)), new HashSet<>(result));
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withDestinationUriHavingHttpsScheme_dropsSource()
+            throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Collections.singletonList(SOURCE_REGISTRATION_1),
+                        DEFAULT_TOP_ORIGIN,
+                        Uri.parse(DEFAULT_DESTINATION_WITHOUT_SCHEME),
+                        null);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                // Invalid (https) URI for app destination
+                                                + WEB_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\"\n"
+                                                + "}\n")));
+
+        // Execution
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+
+        // Assertion
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection1).setRequestMethod("POST");
     }
 
     private RegistrationRequest buildRequest(String registrationUri, String topOrigin) {

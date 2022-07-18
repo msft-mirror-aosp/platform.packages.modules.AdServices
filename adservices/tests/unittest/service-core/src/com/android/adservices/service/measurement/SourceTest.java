@@ -72,12 +72,12 @@ public class SourceTest {
 
         JSONObject aggregateFilterData = new JSONObject();
         aggregateFilterData.put(
-                "conversion_subdomain", Arrays.asList("electronics.megastore"));
+                "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         aggregateFilterData.put("product", Arrays.asList("1234", "2345"));
         assertEquals(
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
-                        .setAttributionDestination(Uri.parse("android-app://example.com/aD1"))
+                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("1")
@@ -95,7 +95,7 @@ public class SourceTest {
                         .build(),
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
-                        .setAttributionDestination(Uri.parse("android-app://example.com/aD1"))
+                        .setAppDestination(Uri.parse("android-app://example.com/aD1"))
                         .setWebDestination(Uri.parse("https://example.com/aD2"))
                         .setPublisher(Uri.parse("https://example.com/aS"))
                         .setId("1")
@@ -123,10 +123,10 @@ public class SourceTest {
                 SourceFixture.getValidSourceBuilder().setEventId(2).build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAttributionDestination(Uri.parse("android-app://1.com"))
+                        .setAppDestination(Uri.parse("android-app://1.com"))
                         .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAttributionDestination(Uri.parse("android-app://2.com"))
+                        .setAppDestination(Uri.parse("android-app://2.com"))
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
@@ -137,9 +137,11 @@ public class SourceTest {
                         .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
-                        .setAdTechDomain(Uri.parse("https://1.com")).build(),
+                        .setAdTechDomain(Uri.parse("https://1.com"))
+                        .build(),
                 SourceFixture.getValidSourceBuilder()
-                        .setAdTechDomain(Uri.parse("https://2.com")).build());
+                        .setAdTechDomain(Uri.parse("https://2.com"))
+                        .build());
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder()
                         .setPublisher(Uri.parse("https://1.com")).build(),
@@ -390,120 +392,174 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildAggregateFilterData());
     }
 
-    private void assertInvalidSourceArguments(
-            Long sourceEventId,
-            Uri publisher,
-            Uri attributionDestination,
-            Uri webDestination,
-            Uri adTechDomain,
-            Uri registrant,
-            Long sourceEventTime,
-            Long expiryTime,
-            Long priority,
-            Source.SourceType sourceType,
-            Long installAttributionWindow,
-            Long installCooldownWindow,
-            @Source.AttributionMode int attributionMode,
-            @Nullable String aggregateSource,
-            @Nullable String aggregateFilterData) {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new Source.Builder()
-                                .setEventId(sourceEventId)
-                                .setPublisher(publisher)
-                                .setAttributionDestination(attributionDestination)
-                                .setWebDestination(webDestination)
-                                .setAdTechDomain(adTechDomain)
-                                .setRegistrant(registrant)
-                                .setEventTime(sourceEventTime)
-                                .setExpiryTime(expiryTime)
-                                .setPriority(priority)
-                                .setSourceType(sourceType)
-                                .setInstallAttributionWindow(installAttributionWindow)
-                                .setInstallCooldownWindow(installCooldownWindow)
-                                .setAttributionMode(attributionMode)
-                                .setAggregateSource(aggregateSource)
-                                .setAggregateFilterData(aggregateFilterData)
-                                .build());
-    }
-
     @Test
-    public void testGetReportingTimeEvent() {
+    public void getReportingTime_eventSourceAppDestination() {
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setExpiryTime(expiryTime)
-                .setEventTime(sourceEventTime)
-                .build();
-        assertEquals(expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime));
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
+        assertEquals(
+                expiryTime + TimeUnit.HOURS.toMillis(1),
+                source.getReportingTime(triggerTime, DestinationType.APP));
     }
 
     @Test
-    public void testGetReportingTimeNavigationFirst() {
+    public void getReportingTime_eventSrcInstallAttributedAppDestinationTrigger1stWindow() {
+        long triggerTime = System.currentTimeMillis();
+        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
+        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .setInstallAttributed(true)
+                        .build();
+        assertEquals(
+                sourceEventTime
+                        + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
+                        + TimeUnit.HOURS.toMillis(1),
+                source.getReportingTime(triggerTime, DestinationType.APP));
+    }
+
+    @Test
+    public void getReportingTime_eventSrcInstallAttributedAppDestinationTrigger2ndWindow() {
+        long triggerTime = System.currentTimeMillis();
+        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
+        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .setInstallAttributed(true)
+                        .build();
+        assertEquals(
+                expiryTime + TimeUnit.HOURS.toMillis(1),
+                source.getReportingTime(triggerTime, DestinationType.APP));
+    }
+
+    @Test
+    public void getReportingTime_eventSrcInstallAttributedWebDestinationTrigger1stWindow() {
+        long triggerTime = System.currentTimeMillis();
+        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
+        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .setInstallAttributed(true)
+                        .build();
+        assertEquals(
+                expiryTime + TimeUnit.HOURS.toMillis(1),
+                source.getReportingTime(triggerTime, DestinationType.WEB));
+    }
+
+    @Test
+    public void getReportingTime_eventSrcInstallAttributedWebDestinationTrigger2ndWindow() {
+        long triggerTime = System.currentTimeMillis();
+        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
+        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .setInstallAttributed(true)
+                        .build();
+        assertEquals(
+                expiryTime + TimeUnit.HOURS.toMillis(1),
+                source.getReportingTime(triggerTime, DestinationType.WEB));
+    }
+
+    @Test
+    public void getReportingTime_eventSourceWebDestination() {
+        long triggerTime = System.currentTimeMillis();
+        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
+        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setExpiryTime(expiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
+        assertEquals(
+                expiryTime + TimeUnit.HOURS.toMillis(1),
+                source.getReportingTime(triggerTime, DestinationType.WEB));
+    }
+
+    @Test
+    public void getReportingTime_navigationSourceTriggerInFirstWindow() {
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setExpiryTime(sourceExpiryTime)
-                .setEventTime(sourceEventTime)
-                .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
                         + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime));
+                source.getReportingTime(triggerTime, DestinationType.APP));
     }
 
     @Test
-    public void testGetReportingTimeNavigationSecond() {
+    public void getReportingTime_navigationSourceTriggerInSecondWindow() {
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setExpiryTime(sourceExpiryTime)
-                .setEventTime(sourceEventTime)
-                .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
         assertEquals(
                 sourceEventTime
                         + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
                         + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime));
+                source.getReportingTime(triggerTime, DestinationType.APP));
     }
 
     @Test
-    public void testGetReportingTimeNavigationSecondExpiry() {
+    public void getReportingTime_navigationSecondExpiry() {
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setExpiryTime(sourceExpiryTime)
-                .setEventTime(sourceEventTime)
-                .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
         assertEquals(
                 sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime));
+                source.getReportingTime(triggerTime, DestinationType.APP));
     }
 
     @Test
-    public void testGetReportingTimeNavigationLast() {
+    public void getReportingTime_navigationLast() {
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
         long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(20);
-        Source source = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setExpiryTime(sourceExpiryTime)
-                .setEventTime(sourceEventTime)
-                .build();
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setExpiryTime(sourceExpiryTime)
+                        .setEventTime(sourceEventTime)
+                        .build();
         assertEquals(
                 sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime));
+                source.getReportingTime(triggerTime, DestinationType.APP));
     }
 
     @Test
@@ -522,16 +578,54 @@ public class SourceTest {
 
     @Test
     public void testMaxReportCount() {
-        Source eventSource = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .build();
-        assertEquals(PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSource.getMaxReportCount());
-        Source navigationSource = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .build();
-        assertEquals(PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSource.getMaxReportCount());
+        Source eventSourceInstallNotAttributed =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(false)
+                        .build();
+        assertEquals(
+                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
+                eventSourceInstallNotAttributed.getMaxReportCount(DestinationType.APP));
+        assertEquals(
+                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
+                eventSourceInstallNotAttributed.getMaxReportCount(DestinationType.WEB));
+
+        Source navigationSourceInstallNotAttributed =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setInstallAttributed(false)
+                        .build();
+        assertEquals(
+                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
+                navigationSourceInstallNotAttributed.getMaxReportCount(DestinationType.APP));
+        assertEquals(
+                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
+                navigationSourceInstallNotAttributed.getMaxReportCount(DestinationType.WEB));
+
+        Source eventSourceInstallAttributed =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallAttributed(true)
+                        .build();
+        assertEquals(
+                PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS,
+                eventSourceInstallAttributed.getMaxReportCount(DestinationType.APP));
+        // Install attribution state does not matter for web destination
+        assertEquals(
+                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
+                eventSourceInstallAttributed.getMaxReportCount(DestinationType.WEB));
+
+        Source navigationSourceInstallAttributed =
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setInstallAttributed(true)
+                        .build();
+        assertEquals(
+                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
+                navigationSourceInstallAttributed.getMaxReportCount(DestinationType.APP));
+        assertEquals(
+                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
+                navigationSourceInstallAttributed.getMaxReportCount(DestinationType.WEB));
     }
 
     @Test
@@ -961,9 +1055,47 @@ public class SourceTest {
         assertTrue(aggregatableAttributionSource.isPresent());
         AggregatableAttributionSource aggregateSource = aggregatableAttributionSource.get();
         assertEquals(aggregateSource.getAggregatableSource().size(), 2);
-        assertEquals(aggregateSource.getAggregatableSource()
-                .get("campaignCounts").longValue(), 345L);
+        assertEquals(
+                aggregateSource.getAggregatableSource().get("campaignCounts").longValue(), 345L);
         assertEquals(aggregateSource.getAggregatableSource().get("geoValue").longValue(), 5L);
         assertEquals(aggregateSource.getAggregateFilterData().getAttributionFilterMap().size(), 2);
+    }
+
+    private void assertInvalidSourceArguments(
+            Long sourceEventId,
+            Uri publisher,
+            Uri appDestination,
+            Uri webDestination,
+            Uri adTechDomain,
+            Uri registrant,
+            Long sourceEventTime,
+            Long expiryTime,
+            Long priority,
+            Source.SourceType sourceType,
+            Long installAttributionWindow,
+            Long installCooldownWindow,
+            @Source.AttributionMode int attributionMode,
+            @Nullable String aggregateSource,
+            @Nullable String aggregateFilterData) {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new Source.Builder()
+                                .setEventId(sourceEventId)
+                                .setPublisher(publisher)
+                                .setAppDestination(appDestination)
+                                .setWebDestination(webDestination)
+                                .setAdTechDomain(adTechDomain)
+                                .setRegistrant(registrant)
+                                .setEventTime(sourceEventTime)
+                                .setExpiryTime(expiryTime)
+                                .setPriority(priority)
+                                .setSourceType(sourceType)
+                                .setInstallAttributionWindow(installAttributionWindow)
+                                .setInstallCooldownWindow(installCooldownWindow)
+                                .setAttributionMode(attributionMode)
+                                .setAggregateSource(aggregateSource)
+                                .setAggregateFilterData(aggregateFilterData)
+                                .build());
     }
 }
