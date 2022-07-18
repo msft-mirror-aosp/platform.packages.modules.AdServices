@@ -19,14 +19,12 @@ package com.android.tests.sdksandbox.endtoend;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.SendDataException;
-import android.app.sdksandbox.SendDataResponse;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.content.Context;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
-import android.os.OutcomeReceiver;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -36,8 +34,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /*
  * TODO(b/215372846): These providers
@@ -220,65 +216,6 @@ public class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
-    }
-
-    private static class FakeSendDataCallback
-            implements OutcomeReceiver<SendDataResponse, SendDataException> {
-        private final CountDownLatch mSendDataLatch = new CountDownLatch(1);
-        private boolean mSendDataSuccess;
-
-        private Bundle mBundle;
-        private int mErrorCode;
-        private String mErrorMsg;
-
-        @Override
-        public void onResult(SendDataResponse response) {
-            mSendDataSuccess = true;
-            mBundle = response.getExtraInformation();
-            mSendDataLatch.countDown();
-        }
-
-        public void onError(SendDataException exception) {
-            mSendDataSuccess = false;
-            mErrorCode = exception.getSendDataErrorCode();
-            mErrorMsg = exception.getMessage();
-            mSendDataLatch.countDown();
-        }
-
-        public boolean isSendDataSuccessful() {
-            waitForLatch(mSendDataLatch);
-            return mSendDataSuccess;
-        }
-
-        public Bundle getSendDataSuccessBundle() {
-            return mBundle;
-        }
-
-        public int getSendDataErrorCode() {
-            waitForLatch(mSendDataLatch);
-            assertThat(mSendDataSuccess).isFalse();
-            return mErrorCode;
-        }
-
-        public String getSendDataErrorMsg() {
-            waitForLatch(mSendDataLatch);
-            assertThat(mSendDataSuccess).isFalse();
-            return mErrorMsg;
-        }
-
-        private void waitForLatch(CountDownLatch latch) {
-            try {
-                // Wait for callback to be called
-                final int waitTime = 5;
-                if (!latch.await(waitTime, TimeUnit.SECONDS)) {
-                    throw new IllegalStateException(
-                            "Callback not called within " + waitTime + " seconds");
-                }
-            } catch (InterruptedException e) {
-                throw new IllegalStateException(
-                        "Interrupted while waiting on callback: " + e.getMessage());
-            }
-        }
     }
 }
 
