@@ -34,6 +34,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -61,8 +62,8 @@ public class FledgeCtsDebuggableTest {
 
     private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
 
-    private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
-    private static final String BUYER_BIDDING_LOGIC_URL_PREFIX = "/buyer/bidding/logic/";
+    private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
 
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
@@ -88,7 +89,12 @@ public class FledgeCtsDebuggableTest {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                    .setDecisionLogicUri(Uri.parse(SELLER_DECISION_LOGIC_URL))
+                    .setDecisionLogicUri(
+                            Uri.parse(
+                                    String.format(
+                                            "https://%s%s",
+                                            AdSelectionConfigFixture.SELLER,
+                                            SELLER_DECISION_LOGIC_URI_PATH)))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -159,13 +165,17 @@ public class FledgeCtsDebuggableTest {
         CustomAudience customAudience1 =
                 createCustomAudience(
                         BUYER_1,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
+                        Uri.parse(
+                                String.format(
+                                        "https://%s%s", BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH)),
                         bidsForBuyer1);
 
         CustomAudience customAudience2 =
                 createCustomAudience(
                         BUYER_2,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
+                        Uri.parse(
+                                String.format(
+                                        "https://%s%s", BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH)),
                         bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
@@ -198,12 +208,18 @@ public class FledgeCtsDebuggableTest {
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(10, TimeUnit.SECONDS);
 
+        LogUtil.i(
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        LogUtil.i(
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
                 mAdSelectionClient.runAdSelection(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
-        Assert.assertEquals(AD_URL_PREFIX + "buyer2/ad3", outcome.getRenderUri().toString());
+        Assert.assertEquals(AD_URL_PREFIX + BUYER_2 + "/ad3", outcome.getRenderUri().toString());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest.Builder()
