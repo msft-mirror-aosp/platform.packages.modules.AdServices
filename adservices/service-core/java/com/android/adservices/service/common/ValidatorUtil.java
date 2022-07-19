@@ -16,10 +16,21 @@
 
 package com.android.adservices.service.common;
 
+import androidx.annotation.Nullable;
+
+import java.util.Objects;
+
 /** Constants and utility method for data validation. */
 public class ValidatorUtil {
+    public static final String AD_TECH_ROLE_BUYER = "buyer";
+    public static final String AD_TECH_ROLE_SELLER = "seller";
 
     public static final String HTTPS_SCHEME = "https";
+
+    /** Returns true if the given string is null or empty or vise versa. */
+    public static boolean isStringNullOrEmpty(@Nullable String str) {
+        return Objects.isNull(str) || str.isEmpty();
+    }
 
     private ValidatorUtil() {}
 }
