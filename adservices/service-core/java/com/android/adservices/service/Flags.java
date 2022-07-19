@@ -151,6 +151,10 @@ public interface Flags extends Dumpable {
     long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
             60L * 24L * 60L * 60L * 1000L; // 60 days
     long FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B = 10 * 1024; // 10 KiB
+    int FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS = 100;
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -191,12 +195,41 @@ public interface Flags extends Dumpable {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS;
     }
 
+    /**
+     * Returns the maximum size in bytes allowed for user bidding signals in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
+    }
+
+    /**
+     * Returns the maximum size in bytes allowed for trusted bidding data in each FLEDGE custom
+     * audience.
+     */
+    default int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
+    }
+
+    /** Returns the maximum size in bytes allowed for ads in each FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxAdsSizeB() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B;
+    }
+
+    /** Returns the maximum allowed number of ads per FLEDGE custom audience. */
+    default int getFledgeCustomAudienceMaxNumAds() {
+        return FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
+    }
+
     long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
     long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
     long FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
     long FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED = 1000;
     int FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE = 8;
     long FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S = 24L * 60L * 60L; // 24 hours
+    int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
+    int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
+    int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
 
     /**
      * Returns the best effort max time (in milliseconds) between each FLEDGE Background Fetch job
@@ -244,6 +277,30 @@ public interface Flags extends Dumpable {
      */
     default long getFledgeBackgroundFetchEligibleUpdateBaseIntervalS() {
         return FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
+    }
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to open its initial
+     * connection during the FLEDGE background fetch.
+     */
+    default int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+        return FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to read a response from a
+     * target server during the FLEDGE background fetch.
+     */
+    default int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+        return FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum size in bytes of a single custom audience update response during the
+     * FLEDGE background fetch.
+     */
+    default int getFledgeBackgroundFetchMaxResponseSizeB() {
+        return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
     int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;

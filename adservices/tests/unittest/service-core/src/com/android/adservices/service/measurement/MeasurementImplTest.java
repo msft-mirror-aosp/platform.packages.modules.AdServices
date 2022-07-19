@@ -151,7 +151,7 @@ public final class MeasurementImplTest {
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
                     .setSourceEventId(1L) //
                     .setSourcePriority(100L) //
-                    .setDestination(Uri.parse("android-app://com.destination"))
+                    .setAppDestination(Uri.parse("android-app://com.destination"))
                     .setWebDestination(Uri.parse("https://com.web.destination"))
                     .setExpiry(8640000010L) //
                     .setInstallAttributionWindow(841839879274L) //
@@ -163,7 +163,7 @@ public final class MeasurementImplTest {
             new com.android.adservices.service.measurement.registration.SourceRegistration.Builder()
                     .setSourceEventId(2) //
                     .setSourcePriority(200L) //
-                    .setDestination(Uri.parse("android-app://com.destination2"))
+                    .setAppDestination(Uri.parse("android-app://com.destination2"))
                     .setWebDestination(Uri.parse("https://com.web.destination2"))
                     .setExpiry(865000010L) //
                     .setInstallAttributionWindow(841839879275L) //
@@ -301,14 +301,14 @@ public final class MeasurementImplTest {
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_1,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
                 VALID_SOURCE_REGISTRATION_1.getWebDestination());
         insertionLogicExecutor.get(1).accept(mMeasurementDao);
         verifyInsertSource(
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_2,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
                 VALID_SOURCE_REGISTRATION_1.getWebDestination());
     }
 
@@ -480,7 +480,7 @@ public final class MeasurementImplTest {
                         .setExpiryTime(eventTime + TimeUnit.SECONDS.toMillis(expiry))
                         .setEventTime(eventTime)
                         .setPublisher(DEFAULT_URI)
-                        .setAttributionDestination(Uri.parse("android-app://com.example.abc"))
+                        .setAppDestination(Uri.parse("android-app://com.example.abc"))
                         .setEventId(123L)
                         .build();
         // Mocking fetchSource call to populate source registrations.
@@ -488,7 +488,7 @@ public final class MeasurementImplTest {
                 Collections.singletonList(
                         new SourceRegistration.Builder()
                                 .setSourceEventId(sampleSource.getEventId())
-                                .setDestination(sampleSource.getAttributionDestination())
+                                .setAppDestination(sampleSource.getAppDestination())
                                 .setTopOrigin(sampleSource.getPublisher())
                                 .setExpiry(expiry)
                                 .setReportingOrigin(sampleSource.getAdTechDomain())
@@ -522,9 +522,7 @@ public final class MeasurementImplTest {
         assertEquals(sampleSource.getEventId(), capturedSource.getEventId());
         assertEquals(sampleSource.getEventTime(), capturedSource.getEventTime());
         assertEquals(sampleSource.getAggregateSource(), capturedSource.getAggregateSource());
-        assertEquals(
-                sampleSource.getAttributionDestination(),
-                capturedSource.getAttributionDestination());
+        assertEquals(sampleSource.getAppDestination(), capturedSource.getAppDestination());
         assertEquals(sampleSource.getAdTechDomain(), capturedSource.getAdTechDomain());
         assertEquals(sampleSource.getPublisher(), capturedSource.getPublisher());
         assertEquals(sampleSource.getPriority(), capturedSource.getPriority());
@@ -544,7 +542,7 @@ public final class MeasurementImplTest {
                                 .setExpiryTime(eventTime + TimeUnit.DAYS.toMillis(20))
                                 .setSourceType(Source.SourceType.NAVIGATION)
                                 .setAdTechDomain(BaseUriExtractor.getBaseUri(REGISTRATION_URI_1))
-                                .setAttributionDestination(DEFAULT_URI)
+                                .setAppDestination(DEFAULT_URI)
                                 .setPublisher(DEFAULT_URI)
                                 .build());
         when(source.getRandomAttributionProbability()).thenReturn(1.1D);
@@ -563,18 +561,22 @@ public final class MeasurementImplTest {
 
         // Generate valid report times
         Set<Long> reportingTimes = new HashSet<>();
-        reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(1)));
-        reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(3)));
-        reportingTimes.add(source.getReportingTime(eventTime + TimeUnit.DAYS.toMillis(8)));
+        reportingTimes.add(
+                source.getReportingTime(
+                        eventTime + TimeUnit.DAYS.toMillis(1), DestinationType.APP));
+        reportingTimes.add(
+                source.getReportingTime(
+                        eventTime + TimeUnit.DAYS.toMillis(3), DestinationType.APP));
+        reportingTimes.add(
+                source.getReportingTime(
+                        eventTime + TimeUnit.DAYS.toMillis(8), DestinationType.APP));
 
         for (EventReport report : fakeEventReports) {
             Assert.assertEquals(source.getEventId(), report.getSourceId());
-            Assert.assertTrue(
-                    reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
+            Assert.assertTrue(reportingTimes.stream().anyMatch(x -> x == report.getReportTime()));
             Assert.assertEquals(0, report.getTriggerTime());
             Assert.assertEquals(0, report.getTriggerPriority());
-            Assert.assertEquals(
-                    source.getAttributionDestination(), report.getAttributionDestination());
+            Assert.assertEquals(source.getAppDestination(), report.getAttributionDestination());
             Assert.assertEquals(source.getAdTechDomain(), report.getAdTechDomain());
             Assert.assertTrue(report.getTriggerData()
                     < source.getTriggerDataCardinality());
@@ -681,14 +683,14 @@ public final class MeasurementImplTest {
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_1,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
                 VALID_SOURCE_REGISTRATION_1.getWebDestination());
         insertionLogicExecutor.get(1).accept(mMeasurementDao);
         verifyInsertSource(
                 registrationRequest,
                 VALID_SOURCE_REGISTRATION_2,
                 eventTime,
-                VALID_SOURCE_REGISTRATION_1.getDestination(),
+                VALID_SOURCE_REGISTRATION_1.getAppDestination(),
                 VALID_SOURCE_REGISTRATION_1.getWebDestination());
     }
 
@@ -804,7 +806,7 @@ public final class MeasurementImplTest {
         return SourceFixture.getValidSourceBuilder()
                 .setEventId(sourceRegistration.getSourceEventId())
                 .setPublisher(topOrigin)
-                .setAttributionDestination(firstSourceDestination)
+                .setAppDestination(firstSourceDestination)
                 .setWebDestination(firstSourceWebDestination)
                 .setAdTechDomain(sourceRegistration.getReportingOrigin())
                 .setRegistrant(Uri.parse("android-app://" + attributionSource.getPackageName()))

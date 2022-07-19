@@ -56,7 +56,9 @@ import java.util.function.Function;
  * @hide
  */
 public class SourceFetcher {
-    private static final ExecutorService sIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private static final ExecutorService IO_EXECUTOR = AdServicesExecutors.getBlockingExecutor();
+    private static final String DEFAULT_ANDROID_APP_SCHEME = "android-app";
+    private static final String DEFAULT_ANDROID_APP_URI_PREFIX = DEFAULT_ANDROID_APP_SCHEME + "://";
 
     private static boolean parseEventSource(
             @NonNull String text,
@@ -117,8 +119,20 @@ public class SourceFetcher {
         }
 
         if (!json.isNull(EventSourceContract.DESTINATION)) {
-            Uri destination = Uri.parse(json.getString(EventSourceContract.DESTINATION));
-            result.setDestination(destination);
+            Uri appUri = Uri.parse(json.getString(EventSourceContract.DESTINATION));
+            if (appUri.getScheme() == null) {
+                LogUtil.d("App destination is missing app scheme, adding.");
+                appUri = Uri.parse(DEFAULT_ANDROID_APP_URI_PREFIX + appUri);
+            }
+
+            if (!DEFAULT_ANDROID_APP_SCHEME.equals(appUri.getScheme())) {
+                LogUtil.e(
+                        "Invalid scheme for app destination: %s; dropping the source.",
+                        appUri.getScheme());
+                return false;
+            }
+
+            result.setAppDestination(appUri);
         }
 
         if (shouldValidateDestination
@@ -317,7 +331,7 @@ public class SourceFetcher {
                                                     sourceInfo,
                                                     /*shouldProcessRedirects*/ false,
                                                     registrationsOut),
-                                    sIoExecutor);
+                                    IO_EXECUTOR);
             CompletableFuture.allOf(
                             redirects.stream()
                                     .map(fetchSourceFromRedirectFuture)
@@ -413,7 +427,7 @@ public class SourceFetcher {
                                 sourceType,
                                 /* shouldProcessRedirects*/ false,
                                 registrationsOut),
-                sIoExecutor);
+                IO_EXECUTOR);
     }
 
     private interface EventSourceContract {

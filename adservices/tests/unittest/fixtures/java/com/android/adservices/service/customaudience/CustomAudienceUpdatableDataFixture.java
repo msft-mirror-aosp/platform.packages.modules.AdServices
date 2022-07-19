@@ -16,13 +16,13 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.ADS_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.METADATA_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.RENDER_URL_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.TRUSTED_BIDDING_DATA_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.TRUSTED_BIDDING_KEYS_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.TRUSTED_BIDDING_URL_KEY;
-import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.USER_BIDDING_SIGNALS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_KEYS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_URI_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -176,7 +176,7 @@ public class CustomAudienceUpdatableDataFixture {
             }
 
             trustedBiddingDataJson.put(
-                    TRUSTED_BIDDING_URL_KEY, trustedBiddingData.getUrl().toString());
+                    TRUSTED_BIDDING_URI_KEY, trustedBiddingData.getUrl().toString());
             JSONArray trustedBiddingKeysJson = new JSONArray(trustedBiddingData.getKeys());
             if (shouldAddHarmlessJunk) {
                 addHarmlessJunkValues(trustedBiddingKeysJson);
@@ -213,7 +213,7 @@ public class CustomAudienceUpdatableDataFixture {
                     addHarmlessJunkValues(adJson);
                 }
 
-                adJson.put(RENDER_URL_KEY, ad.getRenderUri().toString());
+                adJson.put(RENDER_URI_KEY, ad.getRenderUri().toString());
                 adJson.put(METADATA_KEY, ad.getMetadata());
 
                 adsJson.put(adJson);
@@ -253,9 +253,12 @@ public class CustomAudienceUpdatableDataFixture {
         return new JSONObject(inputJsonString).toString();
     }
 
-    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse() {
+    public static CustomAudienceUpdatableData.Builder getValidBuilderFullSuccessfulResponse()
+            throws JSONException {
         return CustomAudienceUpdatableData.builder()
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setUserBiddingSignals(
+                        formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS))
                 .setTrustedBiddingData(DBTrustedBiddingDataFixture.VALID_DB_TRUSTED_BIDDING_DATA)
                 .setAds(DBAdDataFixture.VALID_DB_AD_DATA_LIST)
                 .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)

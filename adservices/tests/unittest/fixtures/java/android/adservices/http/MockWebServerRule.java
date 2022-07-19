@@ -49,8 +49,6 @@ import javax.net.ssl.SSLSocketFactory;
 
 /** Instances of this class are not thread safe. */
 public class MockWebServerRule implements TestRule {
-    // TODO: add support for HTTPS
-
     private static final int UNINITIALIZED = -1;
     private final InputStream mCertificateInputStream;
     private final char[] mKeyStorePassword;
