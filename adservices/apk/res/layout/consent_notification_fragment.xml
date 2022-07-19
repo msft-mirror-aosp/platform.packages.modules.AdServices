@@ -116,7 +116,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableEnd="@drawable/ic_expand"
-                        android:drawablePadding="24dp"
                         android:gravity="center_vertical"
                         android:text="@string/notificationUI_container2_control_text"
                         android:textAppearance="@style/TextAppearance.Body1" />
