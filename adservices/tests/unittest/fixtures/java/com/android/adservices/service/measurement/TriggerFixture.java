@@ -90,5 +90,7 @@ public final class TriggerFixture {
                     + "\"campaignCounts\":32768,"
                     + "\"geoValue\":1664"
                 + "}";
+
+        public static final Long DEBUG_KEY = 27836L;
     }
 }

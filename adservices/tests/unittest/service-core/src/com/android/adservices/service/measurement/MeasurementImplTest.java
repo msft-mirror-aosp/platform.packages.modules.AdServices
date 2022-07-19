@@ -822,6 +822,7 @@ public final class MeasurementImplTest {
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource(sourceRegistration.getAggregateSource())
                 .setAggregateFilterData(sourceRegistration.getAggregateFilterData())
+                .setDebugKey(sourceRegistration.getDebugKey())
                 .build();
     }
 
@@ -838,6 +839,7 @@ public final class MeasurementImplTest {
                 .setAggregateValues(
                         MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getAggregateValues())
                 .setFilters(MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getFilters())
+                .setDebugKey(MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getDebugKey())
                 .build();
     }
 }
