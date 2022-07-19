@@ -46,6 +46,7 @@ import org.json.JSONException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -176,10 +177,20 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 .withTimeout(
                         mFlags.getAdSelectionBiddingTimeoutPerCaMs(),
                         TimeUnit.MILLISECONDS,
-                        // TODO(b/237103033): Compile with thread usage policy for AdServices;
+                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         new ScheduledThreadPoolExecutor(1))
-                .catching(JSONException.class, this::handleBiddingError, mListeningExecutorService);
+                .catching(JSONException.class, this::handleBiddingError, mListeningExecutorService)
+                .catching(
+                        ExecutionException.class,
+                        this::handleTimeoutError,
+                        mListeningExecutorService);
+    }
+
+    @Nullable
+    private AdBiddingOutcome handleTimeoutError(ExecutionException e) {
+        LogUtil.w("Bid Generation exceeded time limit", e);
+        throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
     }
 
     @Nullable
