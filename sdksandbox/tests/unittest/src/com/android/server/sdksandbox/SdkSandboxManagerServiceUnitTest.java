@@ -26,6 +26,8 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.ISendDataCallback;
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
@@ -1338,12 +1340,19 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         void sendLoadCodeSuccessful() throws RemoteException {
-            mLoadSdkInSandboxCallback.onLoadSdkSuccess(new Bundle(), mManagerToSdkCallback);
+            mLoadSdkInSandboxCallback.onLoadSdkSuccess(
+                    new LoadSdkResponse(new Bundle()), mManagerToSdkCallback);
         }
 
-        void sendLoadCodeError() throws RemoteException {
-            mLoadSdkInSandboxCallback.onLoadSdkError(
-                    SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR, "Internal error");
+        void sendLoadCodeError() throws Exception {
+            Class<?> clz = Class.forName("android.app.sdksandbox.LoadSdkException");
+            LoadSdkException exception =
+                    (LoadSdkException)
+                            clz.getConstructor(Integer.TYPE, String.class)
+                                    .newInstance(
+                                            SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR,
+                                            "Internal error");
+            mLoadSdkInSandboxCallback.onLoadSdkError(exception);
         }
 
         void sendSurfacePackageReady(FakeRequestSurfacePackageCallbackBinder callback)

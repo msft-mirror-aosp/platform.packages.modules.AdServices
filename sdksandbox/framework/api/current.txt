@@ -1,17 +1,21 @@
 // Signature format: 2.0
 package android.app.sdksandbox {
 
-  public final class LoadSdkException extends java.lang.Exception {
-    ctor public LoadSdkException(int, @Nullable String);
-    ctor public LoadSdkException(int, @Nullable String, @Nullable Throwable);
-    ctor public LoadSdkException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
-    method @NonNull public android.os.Bundle getExtraErrorInformation();
+  public final class LoadSdkException extends java.lang.Exception implements android.os.Parcelable {
+    ctor public LoadSdkException(@NonNull Throwable, @NonNull android.os.Bundle);
+    method public int describeContents();
+    method @NonNull public android.os.Bundle getExtraInformation();
     method public int getLoadSdkErrorCode();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.LoadSdkException> CREATOR;
   }
 
-  public final class LoadSdkResponse {
+  public final class LoadSdkResponse implements android.os.Parcelable {
     ctor public LoadSdkResponse(@NonNull android.os.Bundle);
+    method public int describeContents();
     method @NonNull public android.os.Bundle getExtraInformation();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.LoadSdkResponse> CREATOR;
   }
 
   public final class RequestSurfacePackageException extends java.lang.Exception {
@@ -29,7 +33,7 @@ package android.app.sdksandbox {
     method @Nullable public android.content.Context getContext();
     method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);
-    method public abstract void onLoadSdk(@NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.OnLoadSdkCallback);
+    method @NonNull public abstract android.app.sdksandbox.LoadSdkResponse onLoadSdk(@NonNull android.os.Bundle) throws android.app.sdksandbox.LoadSdkException;
   }
 
   public static interface SandboxedSdkProvider.DataReceivedCallback {
@@ -59,6 +63,7 @@ package android.app.sdksandbox {
     field public static final int LOAD_SDK_ALREADY_LOADED = 101; // 0x65
     field public static final int LOAD_SDK_INTERNAL_ERROR = 500; // 0x1f4
     field public static final int LOAD_SDK_NOT_FOUND = 100; // 0x64
+    field public static final int LOAD_SDK_SDK_DEFINED_ERROR = 102; // 0x66
     field public static final int REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR = 700; // 0x2bc
     field public static final String SDK_SANDBOX_SERVICE = "sdk_sandbox";
     field public static final int SDK_SANDBOX_STATE_DISABLED = 0; // 0x0
