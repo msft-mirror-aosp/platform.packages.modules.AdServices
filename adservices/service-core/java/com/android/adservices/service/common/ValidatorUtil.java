@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package com.android.adservices.service.common;
 
-import android.net.Uri;
+/** Constants and utility method for data validation. */
+public class ValidatorUtil {
 
-public class CustomAudienceBiddingInfoFixture {
+    public static final String HTTPS_SCHEME = "https";
 
-    public static final Uri VALID_BIDDING_LOGIC_URL =
-            new Uri.Builder().path("valid-buyer.example.com/bidding/logic/here/").build();
-
-    public static final String BUYER_DECISION_LOGIC_JS =
-            "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
-                    + ") {;\n"
-                    + "}";
+    private ValidatorUtil() {}
 }
