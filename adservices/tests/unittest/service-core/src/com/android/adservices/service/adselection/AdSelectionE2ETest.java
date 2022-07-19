@@ -1032,6 +1032,26 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionBiddingTimesOut() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionBiddingTimeoutPerCaMs() {
+                        return 100;
+                    }
+                };
+
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        mContext,
+                        mAdServicesLogger,
+                        flagsWithSmallerLimits);
+
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
         String readBidFromAdMetadataWithDelayJs =
@@ -1111,6 +1131,26 @@ public class AdSelectionE2ETest {
     @Test
     public void testRunAdSelectionScoringTimesOut() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionScoringTimeoutMs() {
+                        return 100;
+                    }
+                };
+
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        mContext,
+                        mAdServicesLogger,
+                        flagsWithSmallerLimits);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
