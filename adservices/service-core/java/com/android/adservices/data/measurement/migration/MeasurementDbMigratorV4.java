@@ -33,7 +33,14 @@ public class MeasurementDbMigratorV4 extends AbstractMeasurementDbMigrator {
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.DEPRECATED_ATTRIBUTION_DESTINATION,
-                MeasurementTables.SourceContract.APP_DESTINATION)
+                MeasurementTables.SourceContract.APP_DESTINATION),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.SourceContract.TABLE, MeasurementTables.SourceContract.DEBUG_KEY),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.DEBUG_KEY),
     };
 
     public MeasurementDbMigratorV4() {

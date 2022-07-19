@@ -35,6 +35,7 @@ import org.junit.Test;
 public final class SourceRegistrationTest {
     private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
     private static final Uri REPORTING_ORIGIN = Uri.parse("https://bar.com");
+    private static final Long DEBUG_KEY = 2376843L;
 
     private SourceRegistration createExampleResponse() {
 
@@ -49,6 +50,7 @@ public final class SourceRegistrationTest {
                         "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                                 + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
                 .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}")
+                .setDebugKey(DEBUG_KEY)
                 .build();
     }
 
@@ -59,6 +61,7 @@ public final class SourceRegistrationTest {
         assertEquals(1234567, response.getSourceEventId());
         assertEquals(2345678, response.getExpiry());
         assertEquals(345678, response.getSourcePriority());
+        assertEquals(DEBUG_KEY, response.getDebugKey());
         assertEquals(
                 "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
                         + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]",
