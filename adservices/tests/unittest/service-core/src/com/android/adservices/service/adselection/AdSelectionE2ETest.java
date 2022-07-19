@@ -280,9 +280,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -315,9 +317,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -327,15 +331,17 @@ public class AdSelectionE2ETest {
         participatingBuyers.add(BUYER_2);
 
         for (int i = 3; i <= 50; i++) {
+            String buyerX = BUYER + i + ".com";
             DBCustomAudience dBCustomAudienceForBuyerX =
                     createDBCustomAudience(
-                            BUYER + i,
+                            buyerX,
                             mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
                             bidsForBuyer1);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    dBCustomAudienceForBuyerX, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                    dBCustomAudienceForBuyerX,
+                    CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyerX));
 
-            participatingBuyers.add(BUYER + i);
+            participatingBuyers.add(buyerX);
         }
 
         AdSelectionConfig adSelectionConfig =
@@ -429,9 +435,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -475,11 +483,14 @@ public class AdSelectionE2ETest {
                         CustomAudienceFixture.VALID_LAST_UPDATE_TIME_24_HRS_BEFORE);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudienceActive, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dbCustomAudienceActive,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceInactive, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceInactive,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceExpired, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceExpired,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
 
@@ -527,11 +538,14 @@ public class AdSelectionE2ETest {
                         CustomAudienceFixture.INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceInactive, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceInactive,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceExpired, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceExpired,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceOutdated, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceOutdated,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_3));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -607,9 +621,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -689,9 +705,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -753,9 +771,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -818,9 +838,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -891,9 +913,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -964,9 +988,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -1038,9 +1064,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -1109,9 +1137,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -1206,9 +1236,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -1259,9 +1291,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
@@ -1322,9 +1356,11 @@ public class AdSelectionE2ETest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);

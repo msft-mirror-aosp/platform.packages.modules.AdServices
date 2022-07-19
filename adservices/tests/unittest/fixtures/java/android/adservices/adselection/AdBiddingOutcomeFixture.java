@@ -33,15 +33,17 @@ public class AdBiddingOutcomeFixture {
 
         return AdBiddingOutcome.builder()
                 .setAdWithBid(new AdWithBid(adData, testBid))
-                .setCustomAudienceBiddingInfo(CustomAudienceBiddingInfo.builder()
-                        .setBiddingLogicUrl(CustomAudienceBiddingInfoFixture
-                                .VALID_BIDDING_LOGIC_URL)
-                        .setBuyerDecisionLogicJs(
-                                CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
-                        .setCustomAudienceSignals(
-                                CustomAudienceBiddingInfoFixture.CUSTOM_AUDIENCE_SIGNAL_BUILDER
-                                        .setBuyer(buyerName).build())
-                        .build());
+                .setCustomAudienceBiddingInfo(
+                        CustomAudienceBiddingInfo.builder()
+                                .setBiddingLogicUrl(
+                                        CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URL)
+                                .setBuyerDecisionLogicJs(
+                                        CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
+                                .setCustomAudienceSignals(
+                                        CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                                                .setBuyer(buyerName)
+                                                .build())
+                                .build());
     }
 
 }

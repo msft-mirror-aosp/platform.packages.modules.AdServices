@@ -38,12 +38,10 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceFixture;
-import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.os.RemoteException;
@@ -51,15 +49,14 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
-import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -91,7 +88,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 /**
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
@@ -184,25 +180,11 @@ public class AdSelectionRunnerTest {
     }
 
     private DBCustomAudience createDBCustomAudience(final String buyer) {
-        return new DBCustomAudience.Builder()
+        return DBCustomAudienceFixture.getValidBuilderByBuyer(buyer)
                 .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
-                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
-                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(
-                        new DBTrustedBiddingData.Builder()
-                                .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
-                                .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
-                                .build())
-                .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                .setAds(
-                        AdDataFixture.VALID_ADS.stream()
-                                .map(DBAdData::fromServiceObject)
-                                .collect(Collectors.toList()))
                 .build();
     }
 
@@ -215,9 +197,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -346,9 +330,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -504,9 +490,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         // In this case assuming bidding fails for one of ads and return partial result
@@ -633,9 +621,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         // In this case assuming bidding fails and returns null
@@ -723,9 +713,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -815,9 +807,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -914,9 +908,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -1046,9 +1042,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
@@ -1136,9 +1134,11 @@ public class AdSelectionRunnerTest {
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
 
         // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))

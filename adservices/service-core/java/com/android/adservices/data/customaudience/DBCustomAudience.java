@@ -56,8 +56,8 @@ public class DBCustomAudience {
     public static final String TABLE_NAME = "custom_audience";
     // Default to 60-day expiry
     private static final Duration DEFAULT_EXPIRE_IN = Duration.ofDays(60);
-    private static final Duration MAX_ACTIVATE_IN = Duration.ofDays(365);
-    private static final Duration MAX_EXPIRE_IN = Duration.ofDays(365);
+    private static final Duration MAX_ACTIVATE_IN = Duration.ofDays(60);
+    private static final Duration MAX_EXPIRE_IN = Duration.ofDays(60);
 
     @ColumnInfo(name = "owner", index = true)
     @NonNull
@@ -162,12 +162,12 @@ public class DBCustomAudience {
         if (activationTime.isBefore(currentTime)) {
             activationTime = currentTime;
         }
-        Preconditions.checkArgument(activationTime.isBefore(currentTime.plus(getMaxActivateIn())));
+        Preconditions.checkArgument(!activationTime.isAfter(currentTime.plus(getMaxActivateIn())));
 
         Instant expirationTime = Optional.ofNullable(parcelable.getExpirationTime())
                 .orElse(activationTime.plus(getDefaultExpireIn()));
         Preconditions.checkArgument(expirationTime.isAfter(activationTime));
-        Preconditions.checkArgument(expirationTime.isBefore(activationTime.plus(getMaxExpireIn())));
+        Preconditions.checkArgument(!expirationTime.isAfter(activationTime.plus(getMaxExpireIn())));
 
         Instant lastAdsAndBiddingDataUpdatedTime = parcelable.getAds().isEmpty()
                 || parcelable.getTrustedBiddingData() == null

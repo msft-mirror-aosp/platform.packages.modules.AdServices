@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -28,9 +29,9 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -39,28 +40,34 @@ import java.time.Clock;
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceImplTest {
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilder().build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
-            DBCustomAudienceFixture.getValidBuilder().build();
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER).build();
 
     @Mock
     private CustomAudienceDao mCustomAudienceDao;
-    @Mock
-    private Clock mClock;
+    @Mock private Clock mClock;
 
-    @InjectMocks
     public CustomAudienceImpl mImpl;
+
+    @Before
+    public void setup() {
+        mImpl = new CustomAudienceImpl(mCustomAudienceDao, mClock);
+    }
 
     @Test
     public void testJoinCustomAudience_runNormally() {
+
         when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         mImpl.joinCustomAudience(VALID_CUSTOM_AUDIENCE);
 
         verify(mCustomAudienceDao)
                 .insertOrOverwriteCustomAudience(
-                        VALID_DB_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+                        VALID_DB_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER));
         verify(mClock).instant();
         verifyNoMoreInteractions(mClock, mCustomAudienceDao);
     }
@@ -69,14 +76,15 @@ public class CustomAudienceImplTest {
     public void testLeaveCustomAudience_runNormally() {
         mImpl.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME);
 
         verify(mCustomAudienceDao)
                 .deleteAllCustomAudienceDataByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
+
         verifyNoMoreInteractions(mClock, mCustomAudienceDao);
     }
 }
