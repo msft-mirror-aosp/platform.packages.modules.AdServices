@@ -1026,16 +1026,32 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {
-            // TODO(b/209599396): Have a meaningful allowlist.
-            if (intent.getAction() != null && !Intent.ACTION_VIEW.equals(intent.getAction())) {
-                throw new SecurityException("Intent " + intent.getAction()
-                        + " may not be broadcast from an SDK sandbox uid");
+            if (intent.getAction() != null) {
+                throw new SecurityException(
+                        "Intent "
+                                + intent.getAction()
+                                + " may not be broadcast from an SDK sandbox uid");
             }
         }
 
         @Override
         public void enforceAllowedToStartActivity(@NonNull Intent intent) {
-            enforceAllowedToSendBroadcast(intent);
+            if (intent.getAction() != null) {
+                if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
+                    throw new SecurityException(
+                            "Intent "
+                                    + intent.getAction()
+                                    + " may not be broadcast from an SDK sandbox uid.");
+                }
+
+                if (intent.getPackage() != null || intent.getComponent() != null) {
+                    throw new SecurityException(
+                            "Intent "
+                                    + intent.getAction()
+                                    + " broadcast from an SDK sandbox uid may not specify a"
+                                    + " package name or component.");
+                }
+            }
         }
 
         @Override
