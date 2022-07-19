@@ -26,9 +26,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
-import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV2;
-import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3;
-import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV4;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -42,17 +39,10 @@ import java.util.List;
  */
 public final class DbHelper extends SQLiteOpenHelper {
 
-    static final int LATEST_DATABASE_VERSION = 4;
+    static final int LATEST_DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "adservices.db";
 
     private static DbHelper sSingleton = null;
-
-    /**
-     * Ideally we'd want to keep only the {@link #LATEST_DATABASE_VERSION} parameter. This field
-     * helps initialize and upgrade the DB to a certain version, which is useful for DB migration
-     * tests.
-     */
-    private final int mDbVersion;
 
     /**
      * It's only public to unit test.
@@ -64,7 +54,6 @@ public final class DbHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     public DbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
-        this.mDbVersion = dbVersion;
     }
 
     /** Returns an instance of the DbHelper given a context. */
@@ -90,7 +79,6 @@ public final class DbHelper extends SQLiteOpenHelper {
         for (String sql : MeasurementTables.CREATE_INDEXES) {
             db.execSQL(sql);
         }
-        onUpgrade(db, 0, mDbVersion);
     }
 
     /**
@@ -128,8 +116,7 @@ public final class DbHelper extends SQLiteOpenHelper {
 
     private static List<IMeasurementDbMigrator> getOrderedDbMigrators() {
         return ImmutableList.of(
-                new MeasurementDbMigratorV2(),
-                new MeasurementDbMigratorV3(),
-                new MeasurementDbMigratorV4());
+                // Include migration implementations in ascending order
+                );
     }
 }
