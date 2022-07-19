@@ -406,7 +406,7 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdBiddingPerCABiddingWaits5SecondsMore() throws Exception {
+    public void testRunAdBiddingPerCABiddingTimesOut() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
         mServer = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
@@ -724,7 +724,7 @@ public class AdBidGeneratorImplTest {
     private ListenableFuture<List<AdWithBid>> generateBidsWithDelay() {
         return mListeningExecutorService.submit(
                 () -> {
-                    Thread.sleep(mFlags.getAdSelectionBiddingTimeoutPerCaMs() + 5000);
+                    Thread.sleep(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
                     return AD_WITH_BIDS;
                 });
     }

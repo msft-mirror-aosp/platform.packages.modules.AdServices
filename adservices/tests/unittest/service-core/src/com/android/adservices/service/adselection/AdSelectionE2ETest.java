@@ -79,6 +79,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -318,8 +319,7 @@ public class AdSelectionE2ETest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
 
-        Mockito.lenient()
-                .when(mDevContextFilter.createDevContext())
+        when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
         List<String> participatingBuyers = new ArrayList<>();
@@ -977,21 +977,16 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testRunAdSelectionJSTimesOut() throws Exception {
+    public void testRunAdSelectionBiddingTimesOut() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
+        String jsWaitMoreThanAllowedForBiddingPerCa =
+                insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
         String readBidFromAdMetadataWithDelayJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
                         + " trusted_bidding_signals, contextual_signals, user_signals,"
                         + " custom_audience_signals) { \n"
-                        + "    const wait = (ms) => {\n"
-                        + "       var start = new Date().getTime();\n"
-                        + "       var end = start;\n"
-                        + "       while(end < start + ms) {\n"
-                        + "         end = new Date().getTime();\n"
-                        + "      }\n"
-                        + "    }\n"
-                        + "    wait(15000);\n"
+                        + jsWaitMoreThanAllowedForBiddingPerCa
                         + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                         + "}";
 
@@ -1054,6 +1049,77 @@ public class AdSelectionE2ETest {
         assertEquals(
                 AD_URI_PREFIX + BUYER_2 + "/ad3",
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+    }
+
+    @Test
+    public void testRunAdSelectionScoringTimesOut() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        String jsWaitMoreThanAllowedForScoring =
+                insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
+        String useBidAsScoringWithDelayJs =
+                "function scoreAd(ad, bid, auction_config, seller_signals, "
+                        + "trusted_scoring_signals, contextual_signal, user_signal, "
+                        + "custom_audience_signal) { \n"
+                        + jsWaitMoreThanAllowedForScoring
+                        + "  return {'status': 0, 'score': bid };\n"
+                        + "}";
+
+        // In this case the one buyer's logic takes more than the bidding time limit
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        switch (request.getPath()) {
+                            case SELLER_DECISION_LOGIC_URI_PATH:
+                                return new MockResponse().setBody(useBidAsScoringWithDelayJs);
+                            case BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1:
+                            case BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2:
+                                return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
+                            case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
+                                return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
+                        }
+
+                        // The seller params vary based on runtime, so we are returning trusted
+                        // signals based on correct path prefix
+                        if (request.getPath()
+                                .startsWith(
+                                        SELLER_TRUSTED_SIGNAL_URI_PATH
+                                                + SELLER_TRUSTED_SIGNAL_PARAMS)) {
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+
+        mMockWebServerRule.startMockWebServer(dispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2, 15.0);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        Assert.assertFalse(resultsCallback.mIsSuccess);
+
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), "Timed out");
     }
 
     @Test
@@ -1367,6 +1433,17 @@ public class AdSelectionE2ETest {
         adSelectionService.runAdSelection(adSelectionConfig, adSelectionTestCallback);
         adSelectionTestCallback.mCountDownLatch.await();
         return adSelectionTestCallback;
+    }
+
+    private String insertJsWait(long waitTime) {
+        return "    const wait = (ms) => {\n"
+                + "       var start = new Date().getTime();\n"
+                + "       var end = start;\n"
+                + "       while(end < start + ms) {\n"
+                + "         end = new Date().getTime();\n"
+                + "      }\n"
+                + "    }\n"
+                + String.format("    wait(\"%d\");\n", waitTime);
     }
 
     static class AdSelectionTestCallback extends AdSelectionCallback.Stub {

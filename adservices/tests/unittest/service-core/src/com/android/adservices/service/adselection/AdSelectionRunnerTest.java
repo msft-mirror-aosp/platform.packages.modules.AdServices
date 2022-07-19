@@ -77,6 +77,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
+import org.mockito.internal.stubbing.answers.AnswersWithDelay;
+import org.mockito.internal.stubbing.answers.Returns;
 import org.mockito.stubbing.Answer;
 
 import java.time.Clock;
@@ -108,7 +110,7 @@ public class AdSelectionRunnerTest {
     @Mock private AdBidGenerator mMockAdBidGenerator;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private Clock mClock;
-    @Mock private Flags mFlags;
+    private Flags mFlags;
 
     private Context mContext;
     private ExecutorService mExecutorService;
@@ -176,8 +178,9 @@ public class AdSelectionRunnerTest {
                 AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_2, 3.0).build();
         mAdScoringOutcomeList =
                 Arrays.asList(mAdScoringOutcomeForBuyer1, mAdScoringOutcomeForBuyer2);
+        mFlags = FlagsFactory.getFlagsForTest();
+
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
-        when(mFlags.getAdSelectionConcurrentBiddingCount()).thenReturn(4);
     }
 
     private DBCustomAudience createDBCustomAudience(final String buyer) {
@@ -461,9 +464,6 @@ public class AdSelectionRunnerTest {
         verifyZeroInteractions(mMockAdBidGenerator);
         // If there was no bidding then we should not even attempt to run scoring
         verifyZeroInteractions(mMockAdsScoreGenerator);
-
-        // We won't get to the part where we need to get the concurrent bidding count
-        Mockito.lenient().when(mFlags.getAdSelectionConcurrentBiddingCount()).thenReturn(4);
 
         mAdSelectionRunner =
                 new AdSelectionRunner(
@@ -1125,6 +1125,95 @@ public class AdSelectionRunnerTest {
                         aCallStatForFledgeApiWithStatus(
                                 AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
+    }
+
+    @Test
+    public void testRunAdSelectionOrchestrationTimesOut() throws AdServicesException {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        // Creating ad selection config for happy case with all the buyers in place
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2, CustomAudienceFixture.VALID_DAILY_UPDATE_URL);
+
+        // Getting BiddingOutcome-forBuyerX corresponding to each CA-forBuyerX
+        doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer1)))
+                .when(mMockAdBidGenerator)
+                .runAdBiddingPerCA(
+                        mDBCustomAudienceForBuyer1,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(mDBCustomAudienceForBuyer1.getBuyer()),
+                        "{}",
+                        adSelectionConfig);
+        doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
+                .when(mMockAdBidGenerator)
+                .runAdBiddingPerCA(
+                        mDBCustomAudienceForBuyer2,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(mDBCustomAudienceForBuyer2.getBuyer()),
+                        "{}",
+                        adSelectionConfig);
+
+        // Getting ScoringOutcome-ForBuyerX corresponding to each BiddingOutcome-forBuyerX
+        when(mMockAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, adSelectionConfig))
+                .thenReturn((FluentFuture.from(Futures.immediateFuture(mAdScoringOutcomeList))));
+
+        Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
+        when(mClock.instant()).thenReturn(adSelectionCreationTs);
+
+        when(mMockAdSelectionIdGenerator.generateId())
+                .thenAnswer(new AnswersWithDelay(5000, new Returns(AD_SELECTION_ID)));
+
+        mAdSelectionRunner =
+                new AdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mExecutorService,
+                        mMockAdsScoreGenerator,
+                        mMockAdBidGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
+
+        Mockito.verify(mMockAdBidGenerator)
+                .runAdBiddingPerCA(
+                        mDBCustomAudienceForBuyer1,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(mDBCustomAudienceForBuyer1.getBuyer()),
+                        "{}",
+                        adSelectionConfig);
+        Mockito.verify(mMockAdBidGenerator)
+                .runAdBiddingPerCA(
+                        mDBCustomAudienceForBuyer2,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(mDBCustomAudienceForBuyer2.getBuyer()),
+                        "{}",
+                        adSelectionConfig);
+        Mockito.verify(mMockAdsScoreGenerator)
+                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+
+        assertFalse(resultsCallback.mIsSuccess);
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), "Timed out");
     }
 
     private void verifyErrorMessageIsCorrect(
