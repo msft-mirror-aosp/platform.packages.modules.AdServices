@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.ActionDelegate;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.viewadatpors.AppsListViewAdapter;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
@@ -39,8 +40,16 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.blocked_apps_fragment, container, false);
 
         setupViewModel(rootView);
+        initActionListeners();
 
         return rootView;
+    }
+
+    // initialize all action listeners except for actions in blocked topics list
+    private void initActionListeners() {
+        ActionDelegate actionDelegate =
+                ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
+        actionDelegate.initBlockedAppsFragment();
     }
 
     /**
@@ -56,6 +65,7 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         AppsListViewAdapter adapter = new AppsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
+        recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         viewModel
                 .getBlockedApps()

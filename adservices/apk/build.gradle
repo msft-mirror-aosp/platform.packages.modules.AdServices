@@ -49,6 +49,10 @@ android {
                     '../../../../../frameworks/base/packages/SettingsLib/' +
                             'ActionBarShadow/src',
                     '../../../../../frameworks/base/core/java',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'CollapsingToolbarBaseActivity/src',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'MainSwitchPreference/src',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
@@ -57,6 +61,7 @@ android {
                     'com/android/settingslib/widget/**/*.java',
                     'com/google/common/collect/*.java',
                     'android/os/*.java',
+                    'com/android/settingslib/collapsingtoolbar/**/*.java',
             ]))
             res.srcDirs = [
                     'res',
