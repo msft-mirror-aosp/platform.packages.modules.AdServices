@@ -369,6 +369,7 @@ public final class MeasurementImpl {
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource(registration.getAggregateSource())
                 .setAggregateFilterData(registration.getAggregateFilterData())
+                .setDebugKey(registration.getDebugKey())
                 .build();
     }
 
@@ -444,6 +445,7 @@ public final class MeasurementImpl {
                 .setAggregateTriggerData(registration.getAggregateTriggerData())
                 .setAggregateValues(registration.getAggregateValues())
                 .setFilters(registration.getFilters())
+                .setDebugKey(registration.getDebugKey())
                 .build();
     }
 
