@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
@@ -101,6 +102,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     }
 
     private void topicsOnPackageFullyRemoved(Context context, @NonNull Uri packageUri) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            return;
+        }
+
         LogUtil.d("Deleting topics data for package: " + packageUri.toString());
         sBackgroundExecutor.execute(
                 () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
