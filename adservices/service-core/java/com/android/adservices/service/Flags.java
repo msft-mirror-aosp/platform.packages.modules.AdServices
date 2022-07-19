@@ -144,6 +144,15 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_APP_NAME;
     }
 
+    /** Measurement manifest file url, used for MDD download. */
+    String MEASUREMENT_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1657831410387.binaryproto";
+
+    /** Measurement manifest file url. */
+    default String getMeasurementManifestFileUrl() {
+        return MEASUREMENT_MANIFEST_FILE_URL;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
