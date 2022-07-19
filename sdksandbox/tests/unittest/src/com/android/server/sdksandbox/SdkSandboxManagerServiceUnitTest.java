@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThrows;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.sdksandbox.ILoadSdkCallback;
-import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -33,6 +32,7 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSendDataCallbackBinder;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -337,8 +337,40 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testRequestSurfacePackageSdkNotLoaded() {
+    public void testLoadSdk_SandboxDiesInBetween() throws Exception {
+        disableNetworkPermissionChecks();
         disableForegroundCheck();
+
+        // Load an sdk
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+
+        // Kill the sandbox before the SDK can call the callback
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        assertThat(callback.getLoadSdkErrorCode())
+                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+    }
+
+    @Test
+    public void testRequestSurfacePackageSdkNotLoaded() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        // Assume SupplementalProcess loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
         // Trying to request package with not exist SDK packageName
         String sdkName = "invalid";
         IllegalArgumentException thrown =
@@ -356,6 +388,29 @@ public class SdkSandboxManagerServiceUnitTest {
                                         new Bundle(),
                                         new FakeRequestSurfacePackageCallbackBinder()));
         assertThat(thrown).hasMessageThat().contains("Sdk " + sdkName + " is not loaded");
+    }
+
+    @Test
+    public void testRequestSurfacePackageSdkNotLoaded_SandboxDoesNotExist() throws Exception {
+        disableForegroundCheck();
+
+        // Trying to request package when sandbox is not there
+        String sdkName = "invalid";
+        FakeRequestSurfacePackageCallbackBinder callback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                sdkName,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                callback);
+        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(callback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
     }
 
     @Test
@@ -403,23 +458,21 @@ public class SdkSandboxManagerServiceUnitTest {
         // App Died
         deathRecipient.getValue().binderDied();
 
-        // After App Died
-        IllegalArgumentException thrown =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () ->
-                                mService.requestSurfacePackage(
-                                        TEST_PACKAGE,
-                                        SDK_NAME,
-                                        new Binder(),
-                                        0,
-                                        500,
-                                        500,
-                                        TIME_APP_CALLED_SYSTEM_SERVER,
-                                        new Bundle(),
-                                        new FakeRequestSurfacePackageCallbackBinder()));
-        assertThat(thrown).hasMessageThat()
-                .contains("Sdk " + SDK_NAME + " is not loaded");
+        FakeRequestSurfacePackageCallbackBinder requestSurfacePackageCallback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                SDK_NAME,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                requestSurfacePackageCallback);
+        assertThat(requestSurfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(requestSurfacePackageCallback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
     }
 
     @Test
@@ -439,26 +492,127 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testRequestSurfacePackage_SandboxDiesInBetween() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        // Load an sdk
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Request surface package from the SDK
+        FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                SDK_NAME,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                surfacePackageCallback);
+
+        // Kill the sandbox before the SDK can call the callback
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
+        assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
+                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+    }
+
+    @Test
+    public void testSendData() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        // Load an sdk
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Send data to the sdk
+        FakeSendDataCallbackBinder sendDataCallback = new FakeSendDataCallbackBinder();
+        mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), sendDataCallback);
+        mSdkSandboxService.sendSendDataSuccessful(sendDataCallback);
+        assertThat(sendDataCallback.isSendDataSuccessful()).isTrue();
+    }
+
+    @Test
     public void testSendData_SdkNotLoaded() throws Exception {
         disableForegroundCheck();
+        disableNetworkPermissionChecks();
+
+        // Create sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        // Assume SupplementalProcess loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Try to send data to an SDK which is not loaded
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
                         () ->
                                 mService.sendData(
                                         TEST_PACKAGE,
-                                        SDK_NAME,
+                                        "invalid",
                                         new Bundle(),
-                                        new ISendDataCallback.Stub() {
-                                            @Override
-                                            public void onSendDataSuccess(Bundle params)
-                                                    throws RemoteException {}
+                                        new FakeSendDataCallbackBinder()));
+        assertThat(thrown).hasMessageThat().contains("Sdk invalid is not loaded");
+    }
 
-                                            @Override
-                                            public void onSendDataError(int i, String s)
-                                                    throws RemoteException {}
-                                        }));
-        assertThat(thrown).hasMessageThat().contains("Sdk " + SDK_NAME + " is not loaded");
+    @Test
+    public void testSendData_SandboxDoesNotExist() throws Exception {
+        disableForegroundCheck();
+
+        FakeSendDataCallbackBinder callback = new FakeSendDataCallbackBinder();
+        mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        assertThat(callback.isSendDataSuccessful()).isFalse();
+        assertThat(callback.getSendDataErrorCode())
+                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
+    }
+
+    @Test
+    public void testSendData_SandboxDiesInBetween() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+
+        // Load an sdk
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Send data to the sdk
+        FakeSendDataCallbackBinder sendDataCallback = new FakeSendDataCallbackBinder();
+        mService.sendData(TEST_PACKAGE, SDK_NAME, new Bundle(), sendDataCallback);
+
+        // Kill the sandbox before the SDK can call the callback
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        assertThat(sendDataCallback.isSendDataSuccessful()).isFalse();
+        assertThat(sendDataCallback.getSendDataErrorCode())
+                .isEqualTo(SdkSandboxManager.SANDBOX_NOT_AVAILABLE);
     }
 
     @Test
@@ -1457,6 +1611,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
         private boolean mSurfacePackageRequested = false;
         private Bundle mLastSyncUpdate = null;
+        boolean mDataReceived = false;
 
         FakeSdkSandboxService() {
             mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -1524,6 +1679,17 @@ public class SdkSandboxManagerServiceUnitTest {
             callback.onSurfacePackageError(errorCode, errorMsg);
         }
 
+        void sendSendDataSuccessful(FakeSendDataCallbackBinder callback) throws RemoteException {
+            if (mDataReceived) {
+                callback.onSendDataSuccess(null);
+            }
+        }
+
+        void sendSendDataError(int errorCode, String errorMsg, FakeSendDataCallbackBinder callback)
+                throws RemoteException {
+            callback.onSendDataError(errorCode, errorMsg);
+        }
+
         private class FakeManagerToSdkCallback extends ISdkSandboxManagerToSdkSandboxCallback.Stub {
             @Override
             public void onSurfacePackageRequested(
@@ -1539,7 +1705,9 @@ public class SdkSandboxManagerServiceUnitTest {
             }
 
             @Override
-            public void onDataReceived(Bundle data, IDataReceivedCallback callback) {}
+            public void onDataReceived(Bundle data, IDataReceivedCallback callback) {
+                mDataReceived = true;
+            }
         }
     }
 

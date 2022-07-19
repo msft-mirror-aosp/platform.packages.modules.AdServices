@@ -290,19 +290,23 @@ class SandboxedSdkHolder {
 
         @Override
         public void onDataReceived(Bundle data, IDataReceivedCallback callback) {
-            mSdk.onDataReceived(
-                    data,
-                    new SandboxedSdkProvider.DataReceivedCallback() {
-                        @Override
-                        public void onDataReceivedSuccess(Bundle params) {
-                            sendDataReceivedSuccess(params, callback);
-                        }
+            try {
+                mSdk.onDataReceived(
+                        data,
+                        new SandboxedSdkProvider.DataReceivedCallback() {
+                            @Override
+                            public void onDataReceivedSuccess(Bundle params) {
+                                sendDataReceivedSuccess(params, callback);
+                            }
 
-                        @Override
-                        public void onDataReceivedError(String errorMessage) {
-                            sendDataReceivedError(errorMessage, callback);
-                        }
-                    });
+                            @Override
+                            public void onDataReceivedError(String errorMessage) {
+                                sendDataReceivedError(errorMessage, callback);
+                            }
+                        });
+            } catch (Throwable e) {
+                sendDataReceivedError("Error thrown while sending data: " + e, callback);
+            }
         }
     }
 }
