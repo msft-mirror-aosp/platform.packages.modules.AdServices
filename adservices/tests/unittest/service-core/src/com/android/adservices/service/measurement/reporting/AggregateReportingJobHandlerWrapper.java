@@ -19,10 +19,14 @@ package com.android.adservices.service.measurement.reporting;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +34,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A wrapper class to expose a constructor for AggregateReportingJobHandler in testing.
@@ -38,9 +44,24 @@ public class AggregateReportingJobHandlerWrapper {
     public static Object[] spyPerformScheduledPendingReportsInWindow(
             DatastoreManager datastoreManager, long windowStartTime, long windowEndTime)
             throws IOException, JSONException {
+        // Setup encryption manager to return valid public keys
+        ArgumentCaptor<Integer> captorNumberOfKeys = ArgumentCaptor.forClass(Integer.class);
+        AggregateEncryptionKeyManager mockEncryptionManager =
+                Mockito.mock(AggregateEncryptionKeyManager.class);
+        when(mockEncryptionManager.getAggregateEncryptionKeys(captorNumberOfKeys.capture()))
+                .thenAnswer(
+                        invocation -> {
+                            List<AggregateEncryptionKey> keys = new ArrayList<>();
+                            for (int i = 0; i < captorNumberOfKeys.getValue(); i++) {
+                                keys.add(AggregateCryptoFixture.getKey());
+                            }
+                            return keys;
+                        });
+
         // Set up aggregate reporting job handler spy
         AggregateReportingJobHandler aggregateReportingJobHandler =
-                Mockito.spy(new AggregateReportingJobHandler(datastoreManager));
+                Mockito.spy(
+                        new AggregateReportingJobHandler(datastoreManager, mockEncryptionManager));
         Mockito.doReturn(200).when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any());
 
