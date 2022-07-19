@@ -65,6 +65,7 @@ public class FledgeCtsTest {
 
     private static final String SELLER_DECISION_LOGIC_URI = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PREFIX = "/buyer/bidding/logic/";
+    private static final Uri TRUSTED_SCORING_SIGNALS_URI = Uri.parse("ssp/trusted/signals");
     private static final String TRUSTED_SCORING_SIGNALS =
             "{\n"
                     + "\t\"render_url_1\": \"signals_for_1\",\n"
@@ -81,6 +82,8 @@ public class FledgeCtsTest {
                     .setSeller(SELLER)
                     .setDecisionLogicUri(
                             Uri.parse("https://" + SELLER + "/" + SELLER_DECISION_LOGIC_URI))
+                    .setTrustedScoringSignalsUri(
+                            Uri.parse("https://" + SELLER + "/" + TRUSTED_SCORING_SIGNALS_URI))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -176,7 +179,7 @@ public class FledgeCtsTest {
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
-                        .setTrustedBiddingData("")
+                        .setTrustedBiddingData("{}")
                         .build();
 
         // Adding Custom audience override, asserting a failure since app is not debuggable.

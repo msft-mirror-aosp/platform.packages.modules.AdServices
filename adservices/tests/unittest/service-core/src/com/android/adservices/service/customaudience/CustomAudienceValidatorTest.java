@@ -71,7 +71,7 @@ public class CustomAudienceValidatorTest {
         String buyerWithPath = CommonFixture.VALID_BUYER + "/path";
         List<AdData> adDataList = AdDataFixture.getValidAdsByBuyer(buyerWithPath);
 
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(buyerWithPath).build()),
                 String.format(
@@ -143,7 +143,7 @@ public class CustomAudienceValidatorTest {
 
     @Test
     public void testInvalidDailyUpdateUriAndBiddingLogicUri() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setDailyUpdateUrl(
@@ -171,7 +171,7 @@ public class CustomAudienceValidatorTest {
 
     @Test
     public void testInvalidTrustedBiddingData() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setTrustedBiddingData(
@@ -189,7 +189,7 @@ public class CustomAudienceValidatorTest {
 
     @Test
     public void testInvalidUserBiddingSignals() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setUserBiddingSignals("Not[A]VALID[JSON]")
@@ -203,7 +203,7 @@ public class CustomAudienceValidatorTest {
     @Test
     public void testActivationTimeBeyondMaxAndExpireBeforeActivation() {
 
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setActivationTime(
@@ -222,7 +222,7 @@ public class CustomAudienceValidatorTest {
 
     @Test
     public void testExpirationTimeBeforeNow() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setExpirationTime(
@@ -235,7 +235,7 @@ public class CustomAudienceValidatorTest {
 
     @Test
     public void testExpirationTimeBeforeActivation() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setExpirationTime(
@@ -271,7 +271,7 @@ public class CustomAudienceValidatorTest {
                                         CommonFixture.VALID_BUYER, 3))
                         .setMetadata("{\"a\":1}")
                         .build();
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setAds(

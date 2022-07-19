@@ -44,7 +44,7 @@ public class AdTechUriValidatorTest {
 
     @Test
     public void testNullUri() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(null),
                 String.format(
                         AdTechUriValidator.URI_SHOULD_BE_SPECIFIED, CLASS_NAME, URI_FIELD_NAME));
@@ -52,7 +52,7 @@ public class AdTechUriValidatorTest {
 
     @Test
     public void testNoHostUri() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(Uri.parse("/a/b/c")),
                 String.format(
                         AdTechUriValidator.URI_SHOULD_HAVE_PRESENT_HOST,
@@ -63,7 +63,7 @@ public class AdTechUriValidatorTest {
     @Test
     public void testNotMatchHost() {
         String uriHost = "buy.com";
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(Uri.parse("https://" + uriHost + "/not/match")),
                 String.format(
                         AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
@@ -76,7 +76,7 @@ public class AdTechUriValidatorTest {
 
     @Test
     public void testNotHttpsHost() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         Uri.parse("http://" + CommonFixture.VALID_BUYER + "/not/https/")),
                 String.format(AdTechUriValidator.URI_SHOULD_USE_HTTPS, CLASS_NAME, URI_FIELD_NAME));
