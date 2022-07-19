@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.util;
 
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 
@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 /** Filtering utilities for measurement. */
-public class FilterUtil {
+public final class Filter {
+    private Filter() { }
 
     /**
      * Checks whether source filter and trigger filter are matched. When a key is only present in
