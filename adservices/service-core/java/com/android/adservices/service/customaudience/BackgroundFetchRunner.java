@@ -71,13 +71,11 @@ public class BackgroundFetchRunner {
      */
     public void deleteExpiredCustomAudiences(@NonNull Instant jobStartTime) {
         Objects.requireNonNull(jobStartTime);
+
         LogUtil.d("Starting custom audience garbage collection");
-        // TODO(b/221862020): Garbage collection of expired custom audiences
-        //  Two options for synchronized deletion across two tables:
-        //  A) Transactions (with @Transaction) in DAO to delete entries in both the main table and
-        //     the BgF table based on the expiration time in the main CA table.
-        //  B) Create a unique foreign key to use @ForeignKey relationship to automatically cascade
-        //     deletion in the main table to the BgF table.
+        int numCustomAudiencesDeleted =
+                mCustomAudienceDao.deleteAllExpiredCustomAudienceData(jobStartTime);
+        LogUtil.d("Deleted %d expired custom audiences", numCustomAudiencesDeleted);
     }
 
     /** Updates a single given custom audience and persists the results. */
