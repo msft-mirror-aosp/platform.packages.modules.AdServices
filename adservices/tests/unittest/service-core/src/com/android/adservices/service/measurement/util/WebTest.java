@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import java.util.Optional;
 
-public class WebUtilTest {
+public class WebTest {
 
     private static final String VALID_PUBLIC_DOMAIN = "com";
     private static final String VALID_PRIVATE_DOMAIN = "blogspot.com";
@@ -42,7 +42,7 @@ public class WebUtilTest {
         String inputUrl = String.format("%s://%s.%s",
                 HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN);
         Uri expectedUri = Uri.parse(inputUrl);
-        Optional output = WebUtil.topPrivateDomainAndScheme(inputUrl);
+        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -52,7 +52,7 @@ public class WebUtilTest {
         String inputUrl = String.format("%s://%s.%s",
                 HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PRIVATE_DOMAIN);
         Uri expectedUri = Uri.parse(inputUrl);
-        Optional output = WebUtil.topPrivateDomainAndScheme(inputUrl);
+        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -63,7 +63,7 @@ public class WebUtilTest {
                 HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN);
         Uri expectedUri = Uri.parse(String.format("%s://%s.%s",
                   HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN));
-        Optional output = WebUtil.topPrivateDomainAndScheme(inputUrl);
+        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -74,7 +74,7 @@ public class WebUtilTest {
                 HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, VALID_PRIVATE_DOMAIN);
         Uri expectedUri = Uri.parse(String.format("%s://%s.%s",
                   HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PRIVATE_DOMAIN));
-        Optional output = WebUtil.topPrivateDomainAndScheme(inputUrl);
+        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -84,7 +84,7 @@ public class WebUtilTest {
         String inputUrl = String.format("%s://%s.%s",
                 HTTP_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN);
         Uri expectedUri = Uri.parse(inputUrl);
-        Optional output = WebUtil.topPrivateDomainAndScheme(inputUrl);
+        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
         assertTrue(output.isPresent());
         assertEquals(expectedUri, output.get());
     }
@@ -92,13 +92,13 @@ public class WebUtilTest {
     @Test
     public void testTopPrivateDomainAndScheme_InvalidTldAndHttpsScheme() {
         String inputUrl = String.format("%s://%s.%s", HTTP_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
-        Optional output = WebUtil.topPrivateDomainAndScheme(inputUrl);
+        Optional output = Web.topPrivateDomainAndScheme(inputUrl);
         assertFalse(output.isPresent());
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_InvalidUrl() {
-        Optional output = WebUtil.topPrivateDomainAndScheme(INVALID_URL);
+        Optional output = Web.topPrivateDomainAndScheme(INVALID_URL);
         assertFalse(output.isPresent());
     }
 }

@@ -35,10 +35,10 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Web;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -1130,7 +1130,7 @@ class MeasurementDao implements IMeasurementDao {
                     trigger.getAttributionDestination().toString()));
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
-                    WebUtil.topPrivateDomainAndScheme(trigger.getAttributionDestination());
+                    Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
             if (topPrivateDomainAndScheme.isPresent()) {
                 return Optional.of(Pair.create(
                         MeasurementTables.SourceContract.WEB_DESTINATION,
@@ -1147,12 +1147,12 @@ class MeasurementDao implements IMeasurementDao {
         Optional<Uri> triggerDestinationTopPrivateDomain =
                 hasAndroidAppScheme(attributionDestination)
                         ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
-                        : WebUtil.topPrivateDomainAndScheme(attributionDestination);
+                        : Web.topPrivateDomainAndScheme(attributionDestination);
         Uri publisher = source.getPublisher();
         Optional<Uri> publisherTopPrivateDomain =
                 hasAndroidAppScheme(publisher)
                 ? Optional.of(publisher)
-                : WebUtil.topPrivateDomainAndScheme(publisher);
+                : Web.topPrivateDomainAndScheme(publisher);
         if (!triggerDestinationTopPrivateDomain.isPresent()
                 || !publisherTopPrivateDomain.isPresent()) {
             return Optional.empty();

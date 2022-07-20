@@ -31,7 +31,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -161,7 +161,7 @@ public class SourceFetcher {
         if (!json.isNull(EventSourceContract.WEB_DESTINATION)) {
             Uri webDestination = Uri.parse(json.getString(EventSourceContract.WEB_DESTINATION));
             Optional<Uri> topPrivateDomainAndScheme =
-                    WebUtil.topPrivateDomainAndScheme(webDestination);
+                    Web.topPrivateDomainAndScheme(webDestination);
             if (!topPrivateDomainAndScheme.isPresent()) {
                 LogUtil.d("Unable to extract top private domain and scheme from web destination.");
                 return false;
