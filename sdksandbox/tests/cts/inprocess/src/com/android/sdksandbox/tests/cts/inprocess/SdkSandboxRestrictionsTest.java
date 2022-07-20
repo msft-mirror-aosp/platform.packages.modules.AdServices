@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -155,15 +154,6 @@ public class SdkSandboxRestrictionsTest {
         componentIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         componentIntent.setComponent(new ComponentName("test.package", "TestClass"));
         assertThrows(SecurityException.class, () -> context.startActivity(componentIntent));
-    }
-
-    /**
-     * Tests that sandbox cannot access hidden API methods via reflection.
-     */
-    @Test
-    public void testNoHiddenApiAccess() {
-        assertThrows(NoSuchMethodException.class,
-                () -> SandboxedSdkContext.class.getDeclaredMethod("getSdkName"));
     }
 
     /** Tests that sandbox cannot execute code in read-write locations. */
