@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.notifications;
 
-import android.os.Bundle;
+package com.android.adservices.service.measurement.registration;
 
-import androidx.core.view.WindowCompat;
-import androidx.fragment.app.FragmentActivity;
+/** A wrapper class to get Ad ID consent permission info */
+public class AdIdPermissionFetcher {
 
-import com.android.adservices.api.R;
-/**
- * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
- */
-public class ConsentNotificationActivity extends FragmentActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    // TODO : replace with stub ag/19194826
+    private static final long PLATFORM_AD_ID = 0L;
 
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        setContentView(R.layout.consent_notification_activity);
+    public boolean isAdIdPermissionEnabled() {
+        return PLATFORM_AD_ID > 0;
     }
 }

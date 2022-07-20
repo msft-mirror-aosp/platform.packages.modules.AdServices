@@ -71,6 +71,7 @@ public class Source {
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
+    private @Nullable Long mDebugKey;
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;
@@ -263,6 +264,7 @@ public class Source {
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
                 && mEventId == source.mEventId
+                && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
@@ -292,7 +294,8 @@ public class Source {
                 mAggregateFilterData,
                 mAggregateSource,
                 mAggregateContributions,
-                mAggregatableAttributionSource);
+                mAggregatableAttributionSource,
+                mDebugKey);
     }
 
     /**
@@ -398,11 +401,14 @@ public class Source {
         return mSourceType;
     }
 
-    /**
-     * Time when {@link Source} will expiry.
-     */
+    /** Time when {@link Source} will expiry. */
     public long getExpiryTime() {
         return mExpiryTime;
+    }
+
+    /** Debug key of {@link Source}. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
     }
 
     /**
@@ -512,9 +518,7 @@ public class Source {
         return mAggregatableAttributionSource;
     }
 
-    /**
-     * Set app install attribution to the {@link Source}.
-     */
+    /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
     }
@@ -636,6 +640,12 @@ public class Source {
         @NonNull
         public Builder setPriority(long priority) {
             mBuilding.mPriority = priority;
+            return this;
+        }
+
+        /** See {@link Source#getDebugKey()} ()}. */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mBuilding.mDebugKey = debugKey;
             return this;
         }
 

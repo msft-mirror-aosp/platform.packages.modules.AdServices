@@ -17,7 +17,9 @@ package com.android.adservices.ui.settings;
 
 import android.app.ActionBar;
 import android.os.Bundle;
+import android.view.MenuItem;
 
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -64,9 +66,21 @@ public class AdServicesSettingsActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.adservices_settings_main_activity);
         initActionDelegate();
         initActionBar();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     // TODO(b/230372790): update to another action bar.

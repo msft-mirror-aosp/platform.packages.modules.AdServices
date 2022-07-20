@@ -43,8 +43,8 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 7));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 20));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 10));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 21));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 11));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_adtech_urls", 2));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 12));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution_rate_limit", 6));

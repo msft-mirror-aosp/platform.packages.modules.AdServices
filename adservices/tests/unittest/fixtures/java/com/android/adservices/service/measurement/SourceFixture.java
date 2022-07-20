@@ -76,6 +76,7 @@ public final class SourceFixture {
         public static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
         public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
+        public static final Long DEBUG_KEY = 7834690L;
         public static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
         public static final int AGGREGATE_CONTRIBUTIONS = 0;

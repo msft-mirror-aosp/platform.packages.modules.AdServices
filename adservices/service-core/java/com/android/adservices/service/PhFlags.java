@@ -102,6 +102,10 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_concurrent_bidding_count";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS =
             "fledge_ad_selection_bidding_timeout_per_ca_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS =
+            "fledge_ad_selection_scoring_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
+            "fledge_ad_selection_overall_timeout_ms";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -439,6 +443,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getAdSelectionScoringTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS);
+    }
+
+    @Override
+    public long getAdSelectionOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+    }
+
+    @Override
     public int getDownloaderConnectionTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
@@ -599,5 +619,15 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS
                         + " = "
                         + getAdSelectionBiddingTimeoutPerCaMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionScoringTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getAdSelectionScoringTimeoutMs());
     }
 }

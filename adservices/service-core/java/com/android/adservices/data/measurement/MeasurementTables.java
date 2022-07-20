@@ -66,6 +66,7 @@ public final class MeasurementTables {
         String FILTER_DATA = "filter_data";
         String AGGREGATE_SOURCE = "aggregate_source";
         String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
+        String DEBUG_KEY = "debug_key";
 
         /** @deprecated replaced by {@link #PUBLISHER} */
         @Deprecated String DEPRECATED_ATTRIBUTION_SOURCE = "attribution_source";
@@ -88,6 +89,7 @@ public final class MeasurementTables {
         String AGGREGATE_TRIGGER_DATA = "aggregate_trigger_data";
         String AGGREGATE_VALUES = "aggregate_values";
         String FILTERS = "filters";
+        String DEBUG_KEY = "debug_key";
 
         /** @deprecated replaced by AD_TECH_DOMAIN */
         @Deprecated

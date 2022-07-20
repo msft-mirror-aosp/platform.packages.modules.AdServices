@@ -20,11 +20,13 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPOR
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,9 +43,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.net.URL;
@@ -59,10 +62,8 @@ import java.util.stream.Collectors;
 
 import javax.net.ssl.HttpsURLConnection;
 
-
-/**
- * Unit tests for {@link SourceFetcher}
- */
+/** Unit tests for {@link SourceFetcher} */
+@RunWith(MockitoJUnitRunner.class)
 @SmallTest
 public final class SourceFetcherTest {
     private static final String DEFAULT_REGISTRATION = "https://foo.com";
@@ -74,6 +75,7 @@ public final class SourceFetcherTest {
     private static final long DEFAULT_EVENT_ID = 987654321;
     private static final long EVENT_ID_1 = 987654321;
     private static final long EVENT_ID_2 = 987654322;
+    private static final Long DEBUG_KEY = 823523783L;
     private static final String ALT_REGISTRATION = "https://bar.com";
     private static final String ALT_DESTINATION = "android-app://com.yourapps";
     private static final long ALT_PRIORITY = 321;
@@ -97,30 +99,47 @@ public final class SourceFetcherTest {
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
-    @Spy SourceFetcher mFetcher;
+    SourceFetcher mFetcher;
     @Mock HttpsURLConnection mUrlConnection;
 
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
+    @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
 
     @Before
-    public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+    public void setup() {
+        mFetcher = spy(new SourceFetcher(mAdIdPermissionFetcher));
+        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
     }
 
     @Test
     public void testBasicSourceRequest() throws Exception {
+        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields()).thenReturn(Map.of(
-                "Attribution-Reporting-Register-Source",
-                List.of("{\n"
-                        + "  \"destination\": \"" + DEFAULT_DESTINATION + "\",\n"
-                        + "  \"priority\": \"" + DEFAULT_PRIORITY + "\",\n"
-                        + "  \"expiry\": \"" + DEFAULT_EXPIRY + "\",\n"
-                        + "  \"source_event_id\": \"" + DEFAULT_EVENT_ID + "\"\n"
-                        + "}\n")));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\"\n"
+                                                + "}\n")));
 
         Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
         assertTrue(fetch.isPresent());
@@ -132,6 +151,52 @@ public final class SourceFetcherTest {
         assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
         assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
         assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
+        assertEquals(DEBUG_KEY, result.get(0).getDebugKey());
+
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicSourceRequestWithoutAdIdPermission() throws Exception {
+        Mockito.when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, DEFAULT_TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchSource(request);
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(DEFAULT_TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(DEFAULT_REGISTRATION, result.get(0).getReportingOrigin().toString());
+        assertEquals(DEFAULT_DESTINATION, result.get(0).getAppDestination().toString());
+        assertEquals(DEFAULT_PRIORITY, result.get(0).getSourcePriority());
+        assertEquals(DEFAULT_EXPIRY, result.get(0).getExpiry());
+        assertEquals(DEFAULT_EVENT_ID, result.get(0).getSourceEventId());
+        assertNull(result.get(0).getDebugKey());
+
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -749,6 +814,7 @@ public final class SourceFetcherTest {
                         .setReportingOrigin(REGISTRATION_URI_1)
                         .setSourceEventId(EVENT_ID_1)
                         .setSourcePriority(0)
+                        .setDebugKey(DEBUG_KEY)
                         .build();
         SourceRegistration expectedResult2 =
                 new SourceRegistration.Builder()
@@ -781,6 +847,9 @@ public final class SourceFetcherTest {
                                                 + "\",\n"
                                                 + "\"source_event_id\": \""
                                                 + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
         when(mUrlConnection2.getHeaderFields())
@@ -848,8 +917,12 @@ public final class SourceFetcherTest {
                                                 + "\",\n"
                                                 + "\"source_event_id\": \""
                                                 + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
                                                 + "\"\n"
                                                 + "}\n")));
+
         when(mUrlConnection2.getHeaderFields())
                 .thenReturn(
                         Map.of(
