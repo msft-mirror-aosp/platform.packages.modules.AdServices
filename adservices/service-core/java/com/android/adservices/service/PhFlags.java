@@ -112,6 +112,10 @@ public final class PhFlags implements Flags {
     static final String KEY_DOWNLOADER_READ_TIMEOUT_MS = "downloader_read_timeout_ms";
     static final String KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS = "downloader_max_download_threads";
 
+    // Killswitch keys
+    static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
+    static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -485,6 +489,35 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DOWNLOADER_MAX_DOWNLOAD_THREADS);
     }
 
+    // Group of All Killswitches
+
+    @Override
+    public boolean getGlobalKillSwitch() {
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_GLOBAL_KILL_SWITCH,
+                        /* defaultValue */ GLOBAL_KILL_SWITCH));
+    }
+
+    // TOPICS Killswitches
+    @Override
+    public boolean getTopicsKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_TOPICS_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_TOPICS_KILL_SWITCH,
+                                /* defaultValue */ TOPICS_KILL_SWITCH));
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -492,9 +525,14 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
-        writer.println("==== AdServices PH Flags Dump ====");
+        writer.println("==== AdServices PH Flags Dump killswitches ====");
+        writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
+        writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
+
+        writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
+
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
         writer.println(
                 "\t"

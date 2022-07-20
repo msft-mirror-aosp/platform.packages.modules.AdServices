@@ -395,4 +395,30 @@ public interface Flags extends Dumpable {
     default long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
+
+    // Group of All Killswitches
+
+    /**
+     * Global PP API Kill Switch. This overrides all other killswitches. The default value is false
+     * which means the PP API is enabled. This flag is used for emergency turning off the whole PP
+     * API.
+     */
+    boolean GLOBAL_KILL_SWITCH = false; // By default, the PP API is enabled.
+
+    default boolean getGlobalKillSwitch() {
+        return GLOBAL_KILL_SWITCH;
+    }
+
+    // TOPICS Killswitches
+
+    /**
+     * Topics API Kill Switch. The default value is false which means the Topics API is enabled.
+     * This flag is used for emergency turning off the Topics API.
+     */
+    boolean TOPICS_KILL_SWITCH = false; // By default, the Topics API is enabled.
+
+    default boolean getTopicsKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
 }

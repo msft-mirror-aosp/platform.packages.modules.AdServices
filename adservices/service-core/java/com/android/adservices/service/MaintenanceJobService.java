@@ -40,8 +40,13 @@ public final class MaintenanceJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        LogUtil.d("MaintenanceJobService.onStartJob");
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Returning false means that this job has completed its work.
+            return false;
+        }
 
+        LogUtil.d("MaintenanceJobService.onStartJob");
         ListenableFuture<Void> appReconciliationFuture =
                 Futures.submit(
                         () -> TopicsWorker.getInstance(this).reconcileUninstalledApps(this),
