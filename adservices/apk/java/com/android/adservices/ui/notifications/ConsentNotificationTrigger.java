@@ -53,7 +53,7 @@ public class ConsentNotificationTrigger {
                 PendingIntent.getActivity(
                         context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setSmallIcon(R.drawable.ic_android_icon_small)
                 .setContentTitle(isEuDevice
                         ? context.getString(R.string.notificationUI_notification_title_eu)
                         : context.getString(R.string.notificationUI_notification_title))
