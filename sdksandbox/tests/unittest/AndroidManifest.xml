@@ -18,6 +18,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.android.server.sdksandbox.tests" >
 
+    <queries>
+        <package android:name="com.android.codeproviderresources" />
+        <package android:name="com.android.serviceprovider" />
+        <package android:name="com.android.codeprovider" />
+    </queries>
+
     <application android:debuggable="true">
         <uses-library android:name="android.test.runner" />
         <uses-sdk-library android:name="com.android.codeprovider" android:versionMajor="1"
