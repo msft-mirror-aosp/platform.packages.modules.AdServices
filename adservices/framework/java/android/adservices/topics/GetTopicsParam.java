@@ -19,6 +19,7 @@ package android.adservices.topics;
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -29,15 +30,21 @@ import android.os.Parcelable;
  */
 public final class GetTopicsParam implements Parcelable {
     private final String mSdkName;
+    private final String mSdkPackageName;
     private final String mAppPackageName;
 
-    private GetTopicsParam(@NonNull String sdkName, String appPackageName) {
+    private GetTopicsParam(
+            @NonNull String sdkName,
+            @Nullable String sdkPackageName,
+            @NonNull String appPackageName) {
         mSdkName = sdkName;
+        mSdkPackageName = sdkPackageName;
         mAppPackageName = appPackageName;
     }
 
     private GetTopicsParam(@NonNull Parcel in) {
         mSdkName = in.readString();
+        mSdkPackageName = in.readString();
         mAppPackageName = in.readString();
     }
 
@@ -62,13 +69,20 @@ public final class GetTopicsParam implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
         out.writeString(mSdkName);
+        out.writeString(mSdkPackageName);
         out.writeString(mAppPackageName);
     }
 
-    /** Get the Sdk Name. */
+    /** Get the Sdk Name. This is the name in the <sdk-library> tag of the Manfiest. */
     @NonNull
     public String getSdkName() {
         return mSdkName;
+    }
+
+    /** Get the Sdk Package Name. This is the package name in the Manifest. */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkPackageName;
     }
 
     /** Get the App PackageName. */
@@ -80,6 +94,7 @@ public final class GetTopicsParam implements Parcelable {
     /** Builder for {@link GetTopicsParam} objects. */
     public static final class Builder {
         private String mSdkName;
+        private String mSdkPackageName;
         private String mAppPackageName;
 
         public Builder() {}
@@ -90,6 +105,15 @@ public final class GetTopicsParam implements Parcelable {
          */
         public @NonNull Builder setSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;
+            return this;
+        }
+
+        /**
+         * Set the Sdk Package Name. When the app calls the Topics API directly without using an
+         * SDK, don't set this field.
+         */
+        public @NonNull Builder setSdkPackageName(@NonNull String sdkPackageName) {
+            mSdkPackageName = sdkPackageName;
             return this;
         }
 
@@ -107,11 +131,18 @@ public final class GetTopicsParam implements Parcelable {
                 mSdkName = EMPTY_SDK;
             }
 
+            if (mSdkPackageName == null) {
+                // When Sdk package name is not set, we assume the App calls the Topics API
+                // directly.
+                // We set the Sdk package name to empty to mark this.
+                mSdkPackageName = EMPTY_SDK;
+            }
+
             if (mAppPackageName == null || mAppPackageName.isEmpty()) {
                 throw new IllegalArgumentException("App PackageName must not be empty or null");
             }
 
-            return new GetTopicsParam(mSdkName, mAppPackageName);
+            return new GetTopicsParam(mSdkName, mSdkPackageName, mAppPackageName);
         }
     }
 }
