@@ -18,6 +18,8 @@ package com.android.adservices.service.consent;
 
 import static com.android.adservices.service.consent.ConsentManager.EEA_DEVICE;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +39,8 @@ import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.service.topics.TopicsWorker;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
@@ -243,5 +247,105 @@ public class ConsentManagerTest {
                 () ->
                         mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                                 mPackageManager, AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+    }
+
+    @Test
+    public void testGetKnownAppsWithConsent()
+            throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManager);
+        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+
+        // all apps have received a consent
+        assertThat(knownAppsWithConsent).hasSize(3);
+        assertThat(appsWithRevokedConsent).isEmpty();
+    }
+
+    @Test
+    public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked()
+            throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManager);
+        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
+
+        // revoke consent for first app
+        mConsentManager.revokeConsentForApp(app);
+        ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+
+        // all apps have received a consent
+        assertThat(knownAppsWithConsent).hasSize(2);
+        assertThat(appsWithRevokedConsent).hasSize(1);
+        App appWithRevokedConsent = appsWithRevokedConsent.get(0);
+        assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
+    }
+
+    @Test
+    public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored()
+            throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        mConsentManager.enable(mPackageManager);
+        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
+
+        // revoke consent for first app
+        mConsentManager.revokeConsentForApp(app);
+        ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+
+        // all apps have received a consent
+        assertThat(knownAppsWithConsent).hasSize(2);
+        assertThat(appsWithRevokedConsent).hasSize(1);
+        App appWithRevokedConsent = appsWithRevokedConsent.get(0);
+        assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
+
+        // restore consent for first app
+        mConsentManager.restoreConsentForApp(app);
+        knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+
+        // all apps have received a consent
+        assertThat(knownAppsWithConsent).hasSize(3);
+        assertThat(appsWithRevokedConsent).isEmpty();
     }
 }

@@ -17,6 +17,12 @@
 package com.android.adservices.service.consent;
 
 import android.annotation.NonNull;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.ApplicationInfoFlags;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
 
 /**
  * POJO Represents a App.
@@ -25,20 +31,43 @@ import android.annotation.NonNull;
  */
 public class App {
 
-    private int mAppId;
+    private final String mPackageName;
 
-    /** Returns an Integer represents the app identifier. */
-    public int getAppId() {
-        return mAppId;
-    }
-
-    App(int appId) {
-        this.mAppId = appId;
+    App(String packageName) {
+        this.mPackageName = packageName;
     }
 
     /** Creates an instance of an App. */
     @NonNull
-    public static App create(int appId) {
-        return new App(appId);
+    public static App create(String packageName) {
+        return new App(packageName);
+    }
+
+    /** Returns a String represents the app identifier (i.e. packageName). */
+    public String getPackageName() {
+        return mPackageName;
+    }
+
+    /** @return an application name using provided {@link PackageManager}. */
+    public String getAppDisplayName(@NonNull PackageManager packageManager) {
+        ApplicationInfo ai;
+        try {
+            ai = packageManager.getApplicationInfo(getPackageName(), ApplicationInfoFlags.of(0));
+        } catch (NameNotFoundException e) {
+            return "";
+        }
+        return packageManager.getApplicationLabel(ai).toString();
+    }
+
+    /**
+     * @return an application icon using provided {@link PackageManager} or null if operation
+     *     failed.
+     */
+    public Drawable getAppIcon(@NonNull Context context) {
+        try {
+            return context.getPackageManager().getApplicationIcon(getPackageName());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
