@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -66,7 +68,8 @@ public class AggregateReportSenderTest {
         Mockito.when(httpUrlConnection.getOutputStream()).thenReturn(outputStream);
         Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
 
-        JSONObject aggregateReportJson = createAggregateReportBodyExample1().toJson();
+        JSONObject aggregateReportJson =
+                createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
         AggregateReportSender aggregateReportSender = new AggregateReportSender();

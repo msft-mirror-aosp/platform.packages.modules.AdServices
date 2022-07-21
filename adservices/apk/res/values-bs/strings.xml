@@ -33,15 +33,90 @@
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Beta verzija Okruženja zaštićene privatnosti"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Beta verzija Okruženja zaštićene privatnosti"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Uključivanje/isključivanje beta verzije Okruženja zaštićene privatnosti"</string>
+    <string name="settingsUI_main_view_title" msgid="5043539340176844807">"Privatnost oglasa Androida, beta verzija"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Testirajte novi sistem Okruženja zaštićene privatnosti koji ograničava praćenje između aplikacija"</string>
+    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Kako funkcionira Okruženje zaštićene privatnosti"</string>
+    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Podaci se prikupljaju u Okruženju zaštićene privatnosti radi prikazivanja oglasa koji vam se mogu svidjeti, ali se dijele bez otkrivanja vašeg identiteta ili uređaja."</string>
+    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Kakvi podaci se pohranjuju u Okruženje zaštićene privatnosti?"</string>
+    <string name="settingsUI_main_view_info_text4" msgid="8784661072398581526">"• Opća interesovanja"</string>
+    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android generira ove podatke na osnovu aplikacija koje koristite i dodaje ih u Okruženje zaštićene privatnosti. Naprimjer, jedno od općih interesovanja može biti \"Sportovi\". \n\nListu interesovanja možete vidjeti u postavkama privatnosti i blokirati sve što vam se ne sviđa."</string>
+    <string name="settingsUI_main_view_info_text6" msgid="1372295962773839373">"• Konkretna interesovanja"</string>
+    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Vaše aplikacije generiraju ove podatke na osnovu načina na koji ih koristite i dodaju ih u Okruženje zaštićene privatnosti. Naprimjer, aplikacija koju koristite za kupovinu patika za trčanje može dodati oznaku sport_trčanje.\n\nU postavkama privatnosti možete vidjeti listu aplikacija koje to rade, te blokirati bilo koju aplikaciju da ne šalje podatke Okruženju zaštićene privatnosti."</string>
+    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Upravljajte interesovanjima"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="5133398388693886168">"Androidovo Okruženje zaštićene privatnosti ograničava praćenje između aplikacija, ali im i dalje dozvoljava da vam prikazuju oglase koji vam se mogu svidjeti. Android dijeli te podatke s oglašivačima bez otkrivanja vašeg identiteta ili uređaja.\n\nNa osnovu aplikacija koje koristite, Android generira i ažurira listu općih interesovanja za oglase. Ako blokirate neko interesovanje, ono se neće ponovo dodati na listu dok ga ne deblokirate. I dalje vam se mogu prikazivati srodni oglasi."</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Opća interesovanja za oglase"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android generira ova interesovanja na osnovu aplikacija koje koristite.\n\nNaprimjer, ako na uređaju imate nekoliko sportskih aplikacija, Android može dodati interesovanje \"Sportovi\" u Okruženje zaštićene privatnosti.\n\nKasnije se ti podaci dijele s oglašivačem bez otkrivanja vašeg identiteta ili uređaja."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Trenutno nema interesovanja za prikaz"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"Vaša općenita interesovanja"</string>
     <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Upravljajte općenitim interesovanjima"</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Vaše aplikacije koje generiraju određena interesovanja"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Upravljajte aplikacijama koje generiraju određena interesovanja"</string>
+    <!-- no translation found for settingsUI_blocked_apps_title (616945769186215391) -->
+    <skip />
+    <!-- no translation found for settingsUI_block_app_title (4169472139940708737) -->
+    <skip />
+    <!-- no translation found for settingsUI_unblock_app_title (3298453461173699515) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_subtitle (8739946672076737081) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
+    <skip />
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Upravljajte svojim općim interesovanjima za oglase"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokiraj"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Interesovanja koja ste blokirali"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Poništite sva interesovanja"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Deblokiraj"</string>
+    <string name="notificationUI_eu_title" msgid="1156528090731956503">"Pridružite se beta verziji privatnosti oglasa"</string>
+    <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Pridružite se Beta verziji privatnosti za oglase"</string>
+    <!-- no translation found for notificationUI_header_subtitle_eu (340747660810152558) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_title_eu (4361051737453876336) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_text_eu (3002855638097043236) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title_eu (6354572742632086901) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_text_eu (166675713389999485) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_control_text_eu (2201590946141216882) -->
+    <skip />
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Šta možete učiniti"</string>
+    <!-- no translation found for notificationUI_container3_body_text_eu (1489739161978958930) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Ne, hvala"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="1179003744451135574">"Da, isprobat ću."</string>
+    <string name="notificationUI_non_eu_title" msgid="1400067162654584472">"Privatnost oglasa Androida, beta verzija"</string>
+    <!-- no translation found for notificationUI_confirmation_left_control_button_text (1004303831215770799) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_right_control_button_text (3207541606235495458) -->
+    <skip />
+    <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Hvala na sudjelovanju."</string>
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="9173047338339917593">"Sada sudjelujete u Beta verziji Privacy Sandboxa. \n\nU postavkama privatnosti možete saznati više ili napustiti Beta verziju kad god želite."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6388776490679995340">"Odlučili ste da nećete sudjelovati"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="4615362687181140355">"Zahvaljujemo na odgovoru. Niste dodani u Beta verziju Privacy Sandboxa.\n\nAko se predomislite ili želite saznati više, posjetite postavke privatnosti."</string>
+    <string name="notificationUI_header_title" msgid="1049608950263285787">"Pomažete Androidu da ograniči praćenje između aplikacija"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android testira nove funkcije koje će oglašivačima ograničiti praćenje između aplikacija."</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Šta je praćenje između aplikacija?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Danas se podaci o vašem korištenju aplikacije mogu jednostavno povezati s vašim uređajem, a zatim dijeliti u aplikacijama u svrhu oglašavanja."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Šta radi Android"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android testira novo Okruženje zaštićene privatnosti u kojem se sigurno pohranjuju i dijele podaci o oglašavanju – bez otkrivanja vašeg identiteta ili uređaja. \n\nOvaj novi sistem pomaže u sprečavanju aplikacija da direktno prenose podatke drugim aplikacijama, ali im i dalje dozvoljava da vam prikazuju oglase koji vam se mogu svidjeti."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Kako radi"</string>
+    <string name="notificationUI_container3_title" msgid="4823075930852061894">"Šta je praćenje između aplikacija?"</string>
+    <string name="notificationUI_container3_body_text" msgid="8999954025569853707">"Danas se podaci o vašem korištenju aplikacije mogu jednostavno povezati s vašim uređajem, a zatim dijeliti u aplikacijama u svrhu oglašavanja."</string>
+    <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Postavke privatnosti"</string>
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Razumijem"</string>
+    <string name="notificationUI_eu_content" msgid="121153625335218261">"Testirajte nove funkcije koje će ograničiti praćenje između aplikacija"</string>
+    <string name="notificationUI_non_eu_content" msgid="8932310379484651423">"Testirate nove funkcije koje ograničavaju praćenje između aplikacija"</string>
+    <!-- no translation found for notificationUI_how_it_works_expanded_text (3758348489850620566) -->
+    <skip />
 </resources>
