@@ -24,8 +24,9 @@
     android:orientation="vertical">
 
     <TextView
-            android:text="@string/settingsUI_blocked_topics_title"
-            style="@style/MainStyle.H1" />
+        android:id="@+id/settingsUI_blocked_topics_title"
+        android:text="@string/settingsUI_blocked_topics_title"
+        style="@style/MainStyle.H1" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/blocked_topics_list"
         android:layout_width="match_parent"
