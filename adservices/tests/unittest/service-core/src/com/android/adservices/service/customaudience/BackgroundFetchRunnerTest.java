@@ -112,11 +112,13 @@ public class BackgroundFetchRunnerTest {
                         .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
                                 CommonFixture.FIXED_NOW, mFlags);
         DBCustomAudienceBackgroundFetchData originalFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(expectedEligibleUpdateTime)
                         .build();
 
@@ -138,11 +140,13 @@ public class BackgroundFetchRunnerTest {
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         DBCustomAudienceBackgroundFetchData originalFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .build();
         DBCustomAudienceBackgroundFetchData expectedFetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(originalEligibleUpdateTime)
                         .setNumValidationFailures(1)
                         .build();

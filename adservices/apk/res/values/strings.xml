@@ -51,6 +51,9 @@
     <string name="permdesc_adServicesAccessConsentService">Allows an application to access Consent Service API.</string>
 
     <!-- Settings App UI strings -->
+    <!-- Text for the label of the app. This will appear as the app name on notifications sent by this app. [CHAR LIMIT=NONE] -->
+    <string name="app_label">Android System</string>
+
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->

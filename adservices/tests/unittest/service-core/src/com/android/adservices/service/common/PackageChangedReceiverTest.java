@@ -19,6 +19,7 @@ package com.android.adservices.service.common;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -31,6 +32,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
@@ -39,7 +41,6 @@ import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -59,6 +60,7 @@ public class PackageChangedReceiverTest {
     @Mock CacheManager mMockCacheManager;
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
+    @Mock Flags mMockFlags;
 
     private TopicsWorker mTopicsWorker;
     private MockitoSession mTopicsWorkerMockedSession;
@@ -88,41 +90,83 @@ public class PackageChangedReceiverTest {
                         mBlockedTopicsManager,
                         mMockAppUpdateManager,
                         FlagsFactory.getFlagsForTest());
-        mTopicsWorkerMockedSession =
-                ExtendedMockito.mockitoSession().spyStatic(TopicsWorker.class).startMocking();
-    }
-
-    @After
-    public void teardown() {
-        mTopicsWorkerMockedSession.finishMocking();
     }
 
     @Test
-    public void testReceivePackageFullyRemoved() throws InterruptedException {
+    public void testReceivePackageFullyRemoved_topicsKillSwitchOff() throws InterruptedException {
         Intent intent = new Intent();
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(
                 PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
 
-        // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
-        ExtendedMockito.doReturn(mTopicsWorker).when(() -> TopicsWorker.getInstance(eq(sContext)));
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
+        try {
+            // Killswitch is off.
+            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
-        mMockPackageChangedReceiver.onReceive(sContext, intent);
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
 
-        // Grant some time to allow background thread to execute
-        Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+            ExtendedMockito.doReturn(mTopicsWorker)
+                    .when(() -> TopicsWorker.getInstance(eq(sContext)));
 
-        verify(mMockPackageChangedReceiver, times(1))
-                .onPackageFullyRemoved(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageAdded(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageDataCleared(any(Context.class), any(Uri.class));
+            mMockPackageChangedReceiver.onReceive(sContext, intent);
 
-        // Verify method in AppUpdateManager is invoked
-        // Note that only package name is passed into following methods.
-        verify(mMockAppUpdateManager).deleteAppDataByUri(eq(Uri.parse(SAMPLE_PACKAGE)));
+            // Grant some time to allow background thread to execute
+            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+            verify(mMockPackageChangedReceiver, times(1))
+                    .onPackageFullyRemoved(any(Context.class), any(Uri.class));
+            verify(mMockPackageChangedReceiver, never())
+                    .onPackageAdded(any(Context.class), any(Uri.class));
+            verify(mMockPackageChangedReceiver, never())
+                    .onPackageDataCleared(any(Context.class), any(Uri.class));
+
+            // Verify method in AppUpdateManager is invoked
+            // Note that only package name is passed into following methods.
+            verify(mMockAppUpdateManager).deleteAppDataByUri(eq(Uri.parse(SAMPLE_PACKAGE)));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_topicsKillSwitchOn() throws InterruptedException {
+        Intent intent = new Intent();
+        intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
+        intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
+        intent.putExtra(
+                PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
+        try {
+            // Killswitch is on.
+            doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
+            mMockPackageChangedReceiver.onReceive(sContext, intent);
+
+            // Grant some time to allow background thread to execute
+            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+            // When the kill switch is on, there is no Topics related work.
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test

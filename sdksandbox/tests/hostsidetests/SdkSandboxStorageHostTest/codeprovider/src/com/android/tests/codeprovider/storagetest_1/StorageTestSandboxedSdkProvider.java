@@ -46,31 +46,34 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
 
     @Override
     public View getView(Context windowContext, Bundle params) {
-        handlePhase(params);
         return null;
     }
 
     @Override
-    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {
+        try {
+            handlePhase(data);
+            callback.onDataReceivedSuccess(new Bundle());
+        } catch (Throwable e) {
+            Log.e(TAG, e.getMessage(), e);
+            callback.onDataReceivedError(e.getMessage());
+        }
+    }
 
-    private void handlePhase(Bundle params) {
+    private void handlePhase(Bundle params) throws Exception {
         String phaseName = params.getString(BUNDLE_KEY_PHASE_NAME, "");
         Log.i(TAG, "Handling phase: " + phaseName);
-        try {
-            switch (phaseName) {
-                case "testSdkDataPackageDirectory_SharedStorageIsUsable":
-                    testSdkDataPackageDirectory_SharedStorageIsUsable();
-                    break;
-                case "testSdkDataSubDirectory_PerSdkStorageIsUsable":
-                    testSdkDataSubDirectory_PerSdkStorageIsUsable();
-                    break;
-                case "testSdkDataIsAttributedToApp":
-                    testSdkDataIsAttributedToApp();
-                    break;
-                default:
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
+        switch (phaseName) {
+            case "testSdkDataPackageDirectory_SharedStorageIsUsable":
+                testSdkDataPackageDirectory_SharedStorageIsUsable();
+                break;
+            case "testSdkDataSubDirectory_PerSdkStorageIsUsable":
+                testSdkDataSubDirectory_PerSdkStorageIsUsable();
+                break;
+            case "testSdkDataIsAttributedToApp":
+                testSdkDataIsAttributedToApp();
+                break;
+            default:
         }
     }
 
