@@ -41,6 +41,9 @@ public class AdServicesCommon {
     /** Intent action to discover the Adid service in the APK. */
     public static final String ACTION_ADID_SERVICE = "android.adservices.ADID_SERVICE";
 
+    /** Intent action to discover the AppsetId service in the APK. */
+    public static final String ACTION_APPSETID_SERVICE = "android.adservices.APPSETID_SERVICE";
+
     /** Intent action to discover the AdServicesCommon service in the APK. */
     public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
             "android.adservices.AD_SERVICES_COMMON_SERVICE";
