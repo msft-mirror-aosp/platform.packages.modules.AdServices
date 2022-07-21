@@ -148,10 +148,13 @@ public final class TopicsManager {
         final ITopicsService service = getService();
         String sdkName = getTopicsRequest.getSdkName();
         String appPackageName = "";
+        String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
         Context getTopicsRequestContext = getTopicsRequest.getContext();
         if (getTopicsRequestContext instanceof SandboxedSdkContext) {
-            appPackageName = ((SandboxedSdkContext) getTopicsRequestContext).getClientPackageName();
+            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getTopicsRequestContext);
+            sdkPackageName = requestContext.getSdkPackageName();
+            appPackageName = requestContext.getClientPackageName();
         } else { // This is the case without the Sandbox.
             appPackageName = getTopicsRequestContext.getPackageName();
         }
@@ -160,6 +163,7 @@ public final class TopicsManager {
                     new GetTopicsParam.Builder()
                             .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
+                            .setSdkPackageName(sdkPackageName)
                             .build(),
                     callerMetadata,
                     new IGetTopicsCallback.Stub() {
