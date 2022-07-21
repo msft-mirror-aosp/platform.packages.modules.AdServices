@@ -16,7 +16,6 @@
 
 package android.adservices.common;
 
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.IntDef;
 
 import java.lang.annotation.Retention;
@@ -72,7 +71,7 @@ public class AdServicesStatusUtils {
     /**
      * The caller is not authorized to make this call.
      *
-     * <p>This error may be considered similar to {@link ApiNotAuthorizedException}.
+     * <p>This error may be considered similar to {@link SecurityException}.
      */
     public static final int STATUS_UNAUTHORIZED = 3;
 

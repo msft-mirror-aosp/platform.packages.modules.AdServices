@@ -171,6 +171,49 @@ public class BooleanFileDatastore {
     }
 
     /**
+     * Stores a value to the datastore file, but only if the key does not already exist.
+     *
+     * <p>If a change is made to the datastore, it is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value A boolean to be stored
+     * @return the value that exists in the datastore after the operation completes
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public boolean putIfNew(@NonNull String key, boolean value) throws IOException {
+        Objects.requireNonNull(key);
+        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+
+        // Try not to block readers first before trying to write
+        mReadLock.lock();
+        try {
+            Boolean valueInLocalMap = mLocalMap.get(key);
+            if (valueInLocalMap != null) {
+                return valueInLocalMap;
+            }
+        } finally {
+            mReadLock.unlock();
+        }
+
+        // Double check that the key wasn't written after the first check
+        mWriteLock.lock();
+        try {
+            Boolean valueInLocalMap = mLocalMap.get(key);
+            if (valueInLocalMap != null) {
+                return valueInLocalMap;
+            } else {
+                mLocalMap.put(key, value);
+                writeToFile();
+                return value;
+            }
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
+    /**
      * Retrieves a boolean value from the loaded datastore file.
      *
      * @param key A non-null, non-empty String key to fetch a value from

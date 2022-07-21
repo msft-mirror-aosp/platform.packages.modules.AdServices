@@ -24,6 +24,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 
@@ -42,6 +43,7 @@ public class MainViewModel extends AndroidViewModel {
         SWITCH_ON_PRIVACY_SANDBOX_BETA,
         SWITCH_OFF_PRIVACY_SANDBOX_BETA,
         DISPLAY_TOPICS_FRAGMENT,
+        DISPLAY_APPS_FRAGMENT,
     }
 
     public MainViewModel(@NonNull Application application) {
@@ -95,6 +97,11 @@ public class MainViewModel extends AndroidViewModel {
     /** Triggers {@link AdServicesSettingsTopicsFragment}. */
     public void topicsButtonClickHandler() {
         mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_TOPICS_FRAGMENT);
+    }
+
+    /** Triggers {@link AdServicesSettingsAppsFragment}. */
+    public void appsButtonClickHandler() {
+        mEventTrigger.postValue(MainViewModelUiEvent.DISPLAY_APPS_FRAGMENT);
     }
 
     /** Triggers {@link AdServicesSettingsTopicsFragment}. */

@@ -21,6 +21,7 @@ import android.content.res.AssetManager;
 import android.util.JsonReader;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.topics.Topic;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
@@ -233,17 +234,17 @@ class CommonClassifierHelper {
     /**
      * Create a list of top topicIds with numberOfTopTopics + numberOfRandomTopics topicIds.
      *
-     * @param appTopics appPackageName to topicIds map.
+     * @param appTopics appPackageName to topics map.
      * @param labelIds all topicIds from the labels file.
      * @param random to fetch random elements from the labelIds.
      * @param numberOfTopTopics number of top topics to be added at the start of the list.
      * @param numberOfRandomTopics number of random topics to be added at the end of the list.
-     * @return a list of topic ids with numberOfTopTopics top predicted topics and
-     *     numberOfRandomTopics random topics.
+     * @return a list of topics with numberOfTopTopics top predicted topics and numberOfRandomTopics
+     *     random topics.
      */
     @NonNull
-    static List<Integer> getTopTopics(
-            @NonNull Map<String, List<Integer>> appTopics,
+    static List<Topic> getTopTopics(
+            @NonNull Map<String, List<Topic>> appTopics,
             @NonNull List<Integer> labelIds,
             @NonNull Random random,
             @NonNull int numberOfTopTopics,
@@ -254,9 +255,9 @@ class CommonClassifierHelper {
                 numberOfRandomTopics > 0, "numberOfRandomTopics should larger than 0");
 
         // A map from Topics to the count of its occurrences.
-        Map<Integer, Integer> topicsToAppTopicCount = new HashMap<>();
-        for (List<Integer> appTopic : appTopics.values()) {
-            for (Integer topic : appTopic) {
+        Map<Topic, Integer> topicsToAppTopicCount = new HashMap<>();
+        for (List<Topic> appTopic : appTopics.values()) {
+            for (Topic topic : appTopic) {
                 topicsToAppTopicCount.put(topic, topicsToAppTopicCount.getOrDefault(topic, 0) + 1);
             }
         }
@@ -269,7 +270,7 @@ class CommonClassifierHelper {
         }
 
         // Sort the topics by their count.
-        List<Integer> allSortedTopics =
+        List<Topic> allSortedTopics =
                 topicsToAppTopicCount.entrySet().stream()
                         .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                         .map(Map.Entry::getKey)
@@ -277,7 +278,7 @@ class CommonClassifierHelper {
 
         // The number of topics to pad in top topics.
         int numberOfRandomPaddingTopics = Math.max(0, numberOfTopTopics - allSortedTopics.size());
-        List<Integer> topTopics =
+        List<Topic> topTopics =
                 allSortedTopics.subList(0, Math.min(numberOfTopTopics, allSortedTopics.size()));
 
         // If the size of topTopics smaller than numberOfTopTopics,
@@ -288,16 +289,26 @@ class CommonClassifierHelper {
 
     // This helper function will populate numOfRandomTopics random topics in the topTopics list.
     @NonNull
-    private static List<Integer> getRandomTopics(
+    private static List<Topic> getRandomTopics(
             @NonNull List<Integer> labelIds,
             @NonNull Random random,
-            @NonNull List<Integer> topTopics,
+            @NonNull List<Topic> topTopics,
             @NonNull int numberOfRandomTopics) {
         if (numberOfRandomTopics <= 0) {
             return topTopics;
         }
 
-        List<Integer> returnedTopics = new ArrayList<>();
+        // Get version information from the first top topic if present
+        // (all topics' versions are identical in a given classification).
+        long taxonomyVersion = 0L;
+        long modelVersion = 0L;
+        if (!topTopics.isEmpty()) {
+            Topic firstTopic = topTopics.get(0);
+            taxonomyVersion = firstTopic.getTaxonomyVersion();
+            modelVersion = firstTopic.getModelVersion();
+        }
+
+        List<Topic> returnedTopics = new ArrayList<>();
 
         // First add all the topTopics.
         returnedTopics.addAll(topTopics);
@@ -308,7 +319,8 @@ class CommonClassifierHelper {
         // Then add random topics.
         while (topicsCounter > 0 && returnedTopics.size() < labelIds.size()) {
             // Pick up a random topic from labels list and check if it is a duplicate.
-            int randTopic = labelIds.get(random.nextInt(labelIds.size()));
+            int randTopicId = labelIds.get(random.nextInt(labelIds.size()));
+            Topic randTopic = Topic.create(randTopicId, taxonomyVersion, modelVersion);
             if (returnedTopics.contains(randTopic)) {
                 continue;
             }

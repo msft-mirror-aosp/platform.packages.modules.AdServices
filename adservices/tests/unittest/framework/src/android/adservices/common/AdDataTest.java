@@ -38,7 +38,7 @@ public final class AdDataTest {
     public void testBuildValidAdDataSuccess() {
         AdData validAdData = new AdData(VALID_RENDER_URL, VALID_METADATA);
 
-        assertThat(validAdData.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
+        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URL);
         assertThat(validAdData.getMetadata()).isEqualTo(VALID_METADATA);
     }
 
@@ -51,7 +51,7 @@ public final class AdDataTest {
         p.setDataPosition(0);
         AdData fromParcel = AdData.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
+        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URL);
         assertThat(fromParcel.getMetadata()).isEqualTo(VALID_METADATA);
     }
 
