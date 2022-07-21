@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.settings.viewadatpors;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.topics.TopicsMapper;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
@@ -65,7 +67,8 @@ public class TopicsListViewAdapter extends RecyclerView.Adapter {
                 .initTopicItem(
                         Objects.requireNonNull(mTopicsList.getValue()).get(position),
                         mViewModel,
-                        mIsBlockedTopicsList);
+                        mIsBlockedTopicsList,
+                        mViewModel.getApplication().getApplicationContext());
     }
 
     @Override
@@ -92,9 +95,19 @@ public class TopicsListViewAdapter extends RecyclerView.Adapter {
 
         /** Set the human readable string for the topic and listener for block topic logic. */
         public void initTopicItem(
-                Topic topic, TopicsViewModel viewModel, boolean mIsBlockedTopicsListItem) {
+                Topic topic,
+                TopicsViewModel viewModel,
+                boolean mIsBlockedTopicsListItem,
+                Context context) {
             // TODO(b/234655984): show readable string of topic
-            mTopicTextView.setText(Integer.toString(topic.getTopic()));
+            int resourceId = TopicsMapper.getResourceIdByTopic(topic, context);
+            if (resourceId == 0) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Android resource id for topic %d doesn't exist.",
+                                topic.getTopic()));
+            }
+            mTopicTextView.setText(resourceId);
             if (mIsBlockedTopicsListItem) {
                 mOptionButtonView.setText(R.string.settingsUI_unblock_topic_title);
                 mOptionButtonView.setOnClickListener(

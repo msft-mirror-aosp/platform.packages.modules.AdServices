@@ -16,9 +16,13 @@
 
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.notifications.ConsentNotificationFragment.IS_EU_DEVICE_ARGUMENT_KEY;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -43,25 +47,24 @@ public class ConsentNotificationTrigger {
      */
     public static NotificationCompat.Builder getConsentNotificationBuilder(
             @NonNull Context context, boolean isEuDevice) {
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(
+                        context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
         return new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_background)
-                .setContentTitle(
-                        isEuDevice
-                                ? context.getString(R.string.notificationUI_eu_title)
-                                : context.getString(R.string.notificationUI_non_eu_title))
-                .setContentText(
-                        isEuDevice
-                                ? context.getString(R.string.notificationUI_eu_content)
-                                : context.getString(R.string.notificationUI_non_eu_content))
-                .setStyle(
-                        new NotificationCompat.BigTextStyle()
-                                .bigText(
-                                        isEuDevice
-                                                ? context.getString(
-                                                        R.string.notificationUI_eu_content)
-                                                : context.getString(
-                                                        R.string.notificationUI_non_eu_content)))
-                .setPriority(NOTIFICATION_PRIORITY);
+                .setSmallIcon(R.drawable.ic_android_icon_small)
+                .setContentTitle(isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_title_eu)
+                        : context.getString(R.string.notificationUI_notification_title))
+                .setContentText(isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_content_eu)
+                        : context.getString(R.string.notificationUI_notification_content))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(isEuDevice
+                        ? context.getString(R.string.notificationUI_notification_content_eu)
+                        : context.getString(R.string.notificationUI_notification_content)))
+                .setPriority(NOTIFICATION_PRIORITY)
+                .setContentIntent(pendingIntent);
     }
 
     /**

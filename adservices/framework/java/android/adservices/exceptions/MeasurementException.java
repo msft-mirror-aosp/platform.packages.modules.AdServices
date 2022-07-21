@@ -16,59 +16,35 @@
 
 package android.adservices.exceptions;
 
-import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.annotation.NonNull;
 
 /** Exception thrown by Measurement API. */
 public class MeasurementException extends AdServicesException {
-
-    @ResultCode private final int mResultCode;
-
-    /**
-     * Initializes an {@link MeasurementException} with no message.
-     *
-     * @param resultCode The resultCode.
-     */
-    public MeasurementException(@ResultCode int resultCode) {
+    /** Initializes an {@link MeasurementException} with no message. */
+    public MeasurementException() {
         super(null, null);
-        mResultCode = resultCode;
     }
 
     /**
      * Initializes an {@link MeasurementException} with a result code and message.
      *
-     * @param resultCode The resultCode.
      * @param message The detail message (which is saved for later retrieval by the {@link
      *     #getMessage()} method).
      */
-    public MeasurementException(@ResultCode int resultCode, @NonNull String message) {
+    public MeasurementException(@NonNull String message) {
         super(message, null);
-        mResultCode = resultCode;
     }
 
     /**
      * Initializes an {@link MeasurementException} with a result code, message and cause.
      *
-     * @param resultCode The resultCode.
      * @param message The detail message (which is saved for later retrieval by the {@link
      *     #getMessage()} method).
      * @param cause The cause (which is saved for later retrieval by the {@link #getCause()}
      *     method). (A null value is permitted, and indicates that the cause is nonexistent or
      *     unknown.)
      */
-    public MeasurementException(
-            @ResultCode int resultCode, @NonNull String message, @NonNull Throwable cause) {
+    public MeasurementException(@NonNull String message, @NonNull Throwable cause) {
         super(message, cause);
-        mResultCode = resultCode;
-    }
-
-    /**
-     * Returns the result code this exception was constructed with.
-     *
-     * @return The resultCode.
-     */
-    @ResultCode
-    public int getResultCode() {
-        return mResultCode;
     }
 }

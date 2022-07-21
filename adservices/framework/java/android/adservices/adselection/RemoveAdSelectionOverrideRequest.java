@@ -19,7 +19,6 @@ package android.adservices.adselection;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
-import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
@@ -33,7 +32,8 @@ import java.util.concurrent.Executor;
 public class RemoveAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
-    private RemoveAdSelectionOverrideRequest(AdSelectionConfig adSelectionConfig) {
+    /** Builds a {@link RemoveAdSelectionOverrideRequest} instance. */
+    public RemoveAdSelectionOverrideRequest(@NonNull AdSelectionConfig adSelectionConfig) {
         mAdSelectionConfig = adSelectionConfig;
     }
 
@@ -43,30 +43,5 @@ public class RemoveAdSelectionOverrideRequest {
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {
         return mAdSelectionConfig;
-    }
-
-    /** Builder for {@link RemoveAdSelectionOverrideRequest} objects. */
-    public static final class Builder {
-        private AdSelectionConfig mAdSelectionConfig;
-
-        public Builder() {}
-
-        /** Set the AdSelectionConfig. */
-        @NonNull
-        public RemoveAdSelectionOverrideRequest.Builder setAdSelectionConfig(
-                @NonNull AdSelectionConfig adSelectionConfig) {
-            Objects.requireNonNull(adSelectionConfig);
-
-            this.mAdSelectionConfig = adSelectionConfig;
-            return this;
-        }
-
-        /** Builds a {@link RemoveAdSelectionOverrideRequest} instance. */
-        @NonNull
-        public RemoveAdSelectionOverrideRequest build() {
-            Objects.requireNonNull(mAdSelectionConfig);
-
-            return new RemoveAdSelectionOverrideRequest(mAdSelectionConfig);
-        }
     }
 }
