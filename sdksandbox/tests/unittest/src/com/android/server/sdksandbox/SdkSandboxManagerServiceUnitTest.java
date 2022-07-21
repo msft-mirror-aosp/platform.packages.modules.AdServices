@@ -683,6 +683,33 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
     }
 
+    @Test
+    public void testStopSdkSandbox() throws Exception {
+        disableKillUid();
+        disableNetworkPermissionChecks();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        // Assume sandbox loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        Mockito.doNothing()
+                .when(mSpyContext)
+                .enforceCallingPermission(
+                        Mockito.eq("com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX"),
+                        Mockito.anyString());
+        mService.stopSdkSandbox(TEST_PACKAGE);
+        int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
+        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+    }
+
+    @Test(expected = SecurityException.class)
+    public void testStopSdkSandbox_WithoutPermission() {
+        mService.stopSdkSandbox(TEST_PACKAGE);
+    }
+
     /**
      * Fake service provider that returns local instance of {@link SdkSandboxServiceProvider}
      */

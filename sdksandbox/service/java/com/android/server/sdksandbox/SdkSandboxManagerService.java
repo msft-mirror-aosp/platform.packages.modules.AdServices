@@ -86,6 +86,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String TAG = "SdkSandboxManager";
     private static final String PROPERTY_SDK_PROVIDER_CLASS_NAME =
             "android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME";
+    private static final String STOP_SDK_SANDBOX_PERMISSION =
+            "com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX";
 
     private final Context mContext;
     private final SdkTokenManager mSdkTokenManager = new SdkTokenManager();
@@ -420,24 +422,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    static class SandboxServiceConnection implements ServiceConnection {
+    interface SandboxBindingCallback {
+        void onBindingSuccessful(ISdkSandboxService service);
 
-        interface Callback {
-            void onBindingSuccessful(ISdkSandboxService service);
+        void onBindingFailed();
+    }
 
-            void onBindingFailed();
-        }
+    class SandboxServiceConnection implements ServiceConnection {
 
         private final SdkSandboxServiceProvider mServiceProvider;
         private final CallingInfo mCallingInfo;
         private boolean mServiceBound = false;
 
-        private final Callback mCallback;
+        private final SandboxBindingCallback mCallback;
 
         SandboxServiceConnection(
                 SdkSandboxServiceProvider serviceProvider,
                 CallingInfo callingInfo,
-                Callback callback) {
+                SandboxBindingCallback callback) {
             mServiceProvider = serviceProvider;
             mCallingInfo = callingInfo;
             mCallback = callback;
@@ -453,6 +455,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             "Sdk sandbox has been bound for app package %s with uid %d",
                             mCallingInfo.getPackageName(), mCallingInfo.getUid()));
             mServiceProvider.setBoundServiceForApp(mCallingInfo, mService);
+
+            try {
+                service.linkToDeath(() -> removeAllSdkTokensAndLinks(mCallingInfo), 0);
+            } catch (RemoteException re) {
+                // Sandbox had already died, cleanup sdk tokens and links.
+                removeAllSdkTokensAndLinks(mCallingInfo);
+            }
 
             if (!mServiceBound) {
                 mCallback.onBindingSuccessful(mService);
@@ -481,7 +490,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    void startSdkSandbox(CallingInfo callingInfo, SandboxServiceConnection.Callback callback) {
+    void startSdkSandbox(CallingInfo callingInfo, SandboxBindingCallback callback) {
         mServiceProvider.bindService(
                 callingInfo, new SandboxServiceConnection(mServiceProvider, callingInfo, callback));
     }
@@ -497,17 +506,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         startSdkSandbox(
                 callingInfo,
-                new SandboxServiceConnection.Callback() {
+                new SandboxBindingCallback() {
                     @Override
                     public void onBindingSuccessful(ISdkSandboxService service) {
-                        try {
-                            service.asBinder()
-                                    .linkToDeath(() -> removeAllSdkTokensAndLinks(callingInfo), 0);
-                        } catch (RemoteException re) {
-                            // Sandbox had already died, cleanup sdk tokens and links.
-                            removeAllSdkTokensAndLinks(callingInfo);
-                        }
-
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
@@ -521,7 +522,29 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 });
     }
 
+    @Override
+    public void stopSdkSandbox(String callingPackageName) {
+        final int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+
+        mContext.enforceCallingPermission(
+                STOP_SDK_SANDBOX_PERMISSION,
+                callingPackageName + " does not have permission to stop their sandbox");
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            stopSdkSandboxService(callingInfo, "App requesting sandbox kill");
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
     void stopSdkSandboxService(CallingInfo callingInfo, String reason) {
+        if (!isSdkSandboxServiceRunning(callingInfo)) {
+            return;
+        }
+
         mServiceProvider.unbindService(callingInfo);
         final int sdkSandboxUid = Process.toSdkSandboxUid(callingInfo.getUid());
         Log.i(TAG, "Killing sdk sandbox/s with uid " + sdkSandboxUid);
@@ -589,6 +612,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         synchronized (mLock) {
             ISdkSandboxService boundSandbox = mServiceProvider.getBoundServiceForApp(callingInfo);
             boolean shouldStopSandbox = true;
+            ArrayList<IBinder> linksToDelete = new ArrayList<>();
             for (int i = 0; i < mAppAndRemoteSdkLinks.size(); i++) {
                 AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
                 if (link.mCallingInfo.equals(callingInfo)) {
@@ -602,12 +626,17 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                 Log.w(TAG, "Failed to unload SDK: ", e);
                             }
                         }
-                        mSdkTokenManager.destroy(sdkToken);
-                        mAppAndRemoteSdkLinks.remove(sdkToken);
+                        linksToDelete.add(sdkToken);
                     } else {
                         shouldStopSandbox = false;
                     }
                 }
+            }
+
+            for (int i = 0; i < linksToDelete.size(); i++) {
+                IBinder sdkToken = linksToDelete.get(i);
+                mSdkTokenManager.destroy(sdkToken);
+                mAppAndRemoteSdkLinks.remove(sdkToken);
             }
 
             return shouldStopSandbox;
