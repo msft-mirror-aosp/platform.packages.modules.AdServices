@@ -455,8 +455,6 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testEnforceAllowedToSendBroadcast() {
         SdkSandboxManagerLocal mSdkSandboxManagerLocal = mService.getLocalManager();
-        Intent allowedIntent = new Intent(Intent.ACTION_VIEW);
-        mSdkSandboxManagerLocal.enforceAllowedToSendBroadcast(allowedIntent);
 
         Intent disallowedIntent = new Intent(Intent.ACTION_SCREEN_ON);
         assertThrows(SecurityException.class,
@@ -568,6 +566,35 @@ public class SdkSandboxManagerServiceUnitTest {
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback2.isLoadSdkSuccessful()).isTrue();
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+    }
+
+    @Test
+    public void testGetLoadedSdkLibrariesInfo_afterLoadSdkSuccess() throws Exception {
+        disableNetworkPermissionChecks();
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        // Now loading should work
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        assertThat(mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE)).hasSize(1);
+        assertThat(mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE).get(0).getName())
+                .isEqualTo(SDK_NAME);
+    }
+
+    @Test
+    public void testGetLoadedSdkLibrariesInfo_errorLoadingSdk() throws Exception {
+        disableNetworkPermissionChecks();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeError();
+
+        // Verify sdkInfo is missing when loading failed
+        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+        assertThat(callback.getLoadSdkErrorCode())
+                .isEqualTo(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR);
+        assertThat(mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE)).isEmpty();
     }
 
     @Test

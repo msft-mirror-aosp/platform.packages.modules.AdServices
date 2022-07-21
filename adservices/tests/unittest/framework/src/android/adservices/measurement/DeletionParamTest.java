@@ -48,7 +48,7 @@ public final class DeletionParamTest {
                 .setDeletionMode(DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA)
                 .setStart(Instant.ofEpochMilli(1642060000000L))
                 .setEnd(Instant.ofEpochMilli(1642060538000L))
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
@@ -58,7 +58,7 @@ public final class DeletionParamTest {
                 .setDomainUris(Collections.emptyList())
                 .setStart(null)
                 .setEnd(null)
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
@@ -71,7 +71,7 @@ public final class DeletionParamTest {
                 DeletionRequest.DELETION_MODE_EXCLUDE_INTERNAL_DATA, request.getDeletionMode());
         assertEquals(1642060000000L, request.getStart().toEpochMilli());
         assertEquals(1642060538000L, request.getEnd().toEpochMilli());
-        assertNotNull(request.getAttributionSource());
+        assertNotNull(request.getPackageName());
     }
 
     void verifyDefaultExample(DeletionParam request) {
@@ -81,7 +81,7 @@ public final class DeletionParamTest {
         assertEquals(DeletionRequest.DELETION_MODE_ALL, request.getDeletionMode());
         assertNull(request.getStart());
         assertNull(request.getEnd());
-        assertNotNull(request.getAttributionSource());
+        assertNotNull(request.getPackageName());
     }
 
     @Test
