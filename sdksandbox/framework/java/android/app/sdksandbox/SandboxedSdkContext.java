@@ -23,10 +23,8 @@ import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
-import android.os.Bundle;
 
 import java.io.File;
-import java.util.concurrent.Executor;
 
 /**
  * Refers to the context of the SDK loaded in the SDK sandbox process.
@@ -38,13 +36,14 @@ import java.util.concurrent.Executor;
  * sdk sandbox process, or other SDKs loaded into the same sdk sandbox process.
  *
  * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
- * passed to the {@link SandboxedSdkProvider#onLoadSdk(SandboxedSdkContext, Bundle, Executor,
- * SandboxedSdkProvider.OnLoadSdkCallback)} after SDK is loaded.
+ * attached to the {@link SandboxedSdkProvider} after the SDK is loaded.
  *
  * <p>Each sdk will get their own private storage directory and the file storage API on this object
  * will utilize those area.
  *
  * <p>Note: All APIs defined in this class are not stable and subject to change.
+ *
+ * @hide
  */
 public final class SandboxedSdkContext extends ContextWrapper {
 
@@ -56,7 +55,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
     @Nullable private final File mCeDataDir;
     @Nullable private final File mDeDataDir;
 
-    /** @hide */
     public SandboxedSdkContext(
             @NonNull Context baseContext,
             @NonNull String clientPackageName,
@@ -91,7 +89,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
      * backed by sdk specific credential-protected storage.
      *
      * @see Context#isCredentialProtectedStorage()
-     * @hide
      */
     @Override
     @NonNull
@@ -127,7 +124,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
     /**
      * Returns the SDK name defined in the SDK's manifest.
-     * @hide
      */
     @NonNull
     public String getSdkName() {
@@ -137,7 +133,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
     /**
      * Returns the package name of the client application corresponding to the sandbox.
      *
-     * @hide
      */
     @NonNull
     public String getClientPackageName() {
