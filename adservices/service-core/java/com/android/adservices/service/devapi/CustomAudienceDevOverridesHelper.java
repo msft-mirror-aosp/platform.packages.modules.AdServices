@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.devapi;
 
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -52,11 +51,11 @@ public class CustomAudienceDevOverridesHelper {
     }
 
     /**
-     * Looks for an bidding logic override for the given combination of {@code owner}, {@code
-     * buyer}, and {@code name}. Will return {@code null} if {@link
-     * DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in the
-     * constructor or if there is no override created by the app with package name specified in
-     * {@link DevContext#getCallingAppPackageName()}.
+     * Looks for a bidding logic override for the given combination of {@code owner}, {@code buyer},
+     * and {@code name}. Will return {@code null} if {@link DevContext#getDevOptionsEnabled()}
+     * returns false for the {@link DevContext} passed in the constructor or if there is no override
+     * created by the app with package name specified in {@link
+     * DevContext#getCallingAppPackageName()}.
      */
     @Nullable
     public String getBiddingLogicOverride(
@@ -71,27 +70,46 @@ public class CustomAudienceDevOverridesHelper {
     }
 
     /**
-     * Adds an override of the {@code biddingLogicJS} and {@code trustedBiddingData} along with
+     * Looks for a bidding trusted signals override for the given combination of {@code owner},
+     * {@code buyer}, and {@code name}. Will return {@code null} if {@link
+     * DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in the
+     * constructor or if there is no override created by the app with package name specified in
+     * {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public String getTrustedBiddingSignalsOverride(
+            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+        Objects.requireNonNull(owner);
+        Objects.requireNonNull(buyer);
+        Objects.requireNonNull(name);
+
+        String appPackageName = mDevContext.getCallingAppPackageName();
+
+        return mCustomAudienceDao.getTrustedBiddingDataOverride(owner, buyer, name, appPackageName);
+    }
+
+    /**
+     * Adds an override of the {@code biddingLogicJS} and {@code trustedBiddingSignals} along with
      * {@link DevContext#getCallingAppPackageName()} for the given combination of {@code owner},
      * {@code buyer}, and {@code name}.
      *
-     * @throws ApiNotAuthorizedException if {@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if {@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void addOverride(
             @NonNull String owner,
             @NonNull String buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingData) {
+            @NonNull String trustedBiddingSignals) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
         Objects.requireNonNull(biddingLogicJS);
-        Objects.requireNonNull(trustedBiddingData);
+        Objects.requireNonNull(trustedBiddingSignals);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         String appPackageName = mDevContext.getCallingAppPackageName();
@@ -103,7 +121,7 @@ public class CustomAudienceDevOverridesHelper {
                             .setBuyer(buyer)
                             .setName(name)
                             .setBiddingLogicJS(biddingLogicJS)
-                            .setTrustedBiddingData(trustedBiddingData)
+                            .setTrustedBiddingData(trustedBiddingSignals)
                             .setAppPackageName(appPackageName)
                             .build());
         }
@@ -113,8 +131,8 @@ public class CustomAudienceDevOverridesHelper {
      * Removes an override for the given combination of {@code owner}, {@code buyer}, and {@code
      * name}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeOverride(@NonNull String owner, @NonNull String buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
@@ -122,7 +140,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(name);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         String appPackageName = mDevContext.getCallingAppPackageName();
@@ -135,12 +153,12 @@ public class CustomAudienceDevOverridesHelper {
      * Removes all custom audience overrides that match {@link
      * DevContext#getCallingAppPackageName()}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeAllOverrides() {
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         mCustomAudienceDao.removeAllCustomAudienceOverrides(mDevContext.getCallingAppPackageName());

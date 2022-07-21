@@ -18,6 +18,7 @@ package android.app.sdksandbox;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
@@ -27,12 +28,28 @@ import java.util.concurrent.Executor;
 /**
  * Encapsulates API which SDK sandbox can use to interact with SDKs loaded into it.
  *
- * <p> SDK has to implement this abstract class to generate an entry point
- * for SDK sandbox to be able to call it through.
+ * <p>SDK has to implement this abstract class to generate an entry point for SDK sandbox to be able
+ * to call it through.
  *
  * <p>Note: All APIs defined in this class are not stable and subject to change.
  */
-public abstract class SandboxedSdkProvider {
+public abstract class SandboxedSdkProvider extends ContextWrapper {
+
+    public SandboxedSdkProvider() {
+        super(null);
+    }
+
+    /**
+     * Set the base context. All calls will then be delegated to the base context. Throws
+     * IllegalStateException if a base context has already been set. This must be called before
+     * {@link SandboxedSdkProvider#onLoadSdk}.
+     *
+     * @param newBase The new base context.
+     */
+    @Override
+    public final void attachBaseContext(@NonNull Context newBase) {
+        super.attachBaseContext(newBase);
+    }
 
     /**
      * Does the work needed for the SDK to start handling requests.
@@ -44,23 +61,20 @@ public abstract class SandboxedSdkProvider {
      * further initialization can be triggered by the client using {@link
      * SdkSandboxManager#sendData}.
      *
-     * @param sandboxedSdkContext a {@link SandboxedSdkContext} which is the context of the SDK
-     *     loaded in the SDK sandbox process
      * @param params list of params passed from App when it loads the SDK.
      * @param executor the {@link Executor} on which to invoke the {@code callback}
      * @param callback to notify App if the SDK successfully loaded
      */
     public abstract void onLoadSdk(
-            @NonNull SandboxedSdkContext sandboxedSdkContext,
             @NonNull Bundle params,
             @NonNull Executor executor,
-            @NonNull InitSdkCallback callback);
+            @NonNull OnLoadSdkCallback callback);
 
     /**
      * Requests a view to be remotely rendered to the client app process.
      *
-     * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting
-     * {@link SurfacePackage} will be sent back to the client application.
+     * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting {@link
+     * SurfacePackage} will be sent back to the client application.
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
@@ -76,16 +90,16 @@ public abstract class SandboxedSdkProvider {
      * @param callback to notify the app if the data has been successfully received.
      */
     public abstract void onDataReceived(
-            @NonNull Bundle data,
-            @NonNull DataReceivedCallback callback);
+            @NonNull Bundle data, @NonNull DataReceivedCallback callback);
 
     /**
      * Callback for tracking the status of initializing the SDK.
      *
-     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the
-     * SDK sandbox about the status of initialization.
+     * <p>This callback is created by the SDK sandbox, SDKs should use it to notify the SDK sandbox
+     * about the status of {@link SandboxedSdkProvider#onLoadSdk(Bundle, Executor,
+     * OnLoadSdkCallback)}
      */
-    public interface InitSdkCallback {
+    public interface OnLoadSdkCallback {
         /**
          * Called when sdk is successfully loaded.
          *
@@ -93,14 +107,14 @@ public abstract class SandboxedSdkProvider {
          *
          * @param params list of params to be passed to the client application
          */
-        void onInitSdkFinished(@NonNull Bundle params);
+        void onLoadSdkFinished(@NonNull Bundle params);
 
         /**
          * If SDK failed to initialize, it must call this method on the callback object.
          *
          * @param errorMessage a String description of the error
          */
-        void onInitSdkError(@NonNull String errorMessage);
+        void onLoadSdkError(@NonNull String errorMessage);
     }
 
     /**

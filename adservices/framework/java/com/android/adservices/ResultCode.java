@@ -27,4 +27,8 @@ public class ResultCode {
     public static final int RESULT_INTERNAL_ERROR = 1;
     /** Result code for unauthorized API call. */
     public static final int RESULT_UNAUTHORIZED_CALL = 2;
+    /** Result code for invalid argument. */
+    public static final int RESULT_INVALID_ARGUMENT = 3;
+    /** Result code for I/O error. */
+    public static final int RESULT_IO_ERROR = 4;
 }

@@ -19,7 +19,6 @@ package android.adservices.cts;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.measurement.MeasurementClient;
-import android.adservices.exceptions.MeasurementException;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -200,9 +199,7 @@ public class CtsMeasurementManagerTest {
                     @Override
                     public void onError(Exception error) {
                         future.complete(null);
-                        Assert.assertEquals(
-                                ((MeasurementException) error).getResultCode(),
-                                MeasurementManager.RESULT_INVALID_ARGUMENT);
+                        Assert.assertTrue(error.getCause() instanceof IllegalArgumentException);
                     }
                 };
         DeletionRequest request =

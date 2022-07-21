@@ -222,7 +222,7 @@ public class DbState {
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
-                .setAttributionDestination(Uri.parse(sJSON.getString("attributionDestination")))
+                .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))

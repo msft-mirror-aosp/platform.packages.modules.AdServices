@@ -97,7 +97,7 @@ public class SandboxedTopicsManagerTest {
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
         // This verifies that the Sdk1 in the Sandbox gets back the correct topic.
-        // If the Sdk1 did not get correct topic, it will trigger the callback.onInitSdkError
+        // If the Sdk1 did not get correct topic, it will trigger the callback.onLoadSdkError
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Reset back the original values.
