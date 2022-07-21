@@ -131,6 +131,16 @@ public final class SandboxedSdkContext extends ContextWrapper {
     }
 
     /**
+     * Returns the SDK package name defined in the SDK's manifest.
+     *
+     * @hide
+     */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkProviderInfo.packageName;
+    }
+
+    /**
      * Returns the package name of the client application corresponding to the sandbox.
      *
      */
