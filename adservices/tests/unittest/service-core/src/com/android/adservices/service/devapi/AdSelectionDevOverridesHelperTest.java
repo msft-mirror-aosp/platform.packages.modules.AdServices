@@ -40,6 +40,11 @@ public class AdSelectionDevOverridesHelperTest {
             AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(AD_SELECTION_CONFIG);
     private static final String APP_PACKAGE_NAME = "com.test.app";
     private static final String DECISION_LOGIC_JS = "function test() {return 'hello';}";
+    private static final String TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @Before
@@ -78,6 +83,7 @@ public class AdSelectionDevOverridesHelperTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                         .build());
 
         DevContext devContext =
@@ -91,6 +97,8 @@ public class AdSelectionDevOverridesHelperTest {
 
         assertThat(helper.getDecisionLogicOverride(AD_SELECTION_CONFIG))
                 .isEqualTo(DECISION_LOGIC_JS);
+        assertThat(helper.getTrustedScoringSignalsOverride(AD_SELECTION_CONFIG))
+                .isEqualTo(TRUSTED_SCORING_SIGNALS);
     }
 
     @Test
@@ -100,6 +108,7 @@ public class AdSelectionDevOverridesHelperTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                         .build());
 
         DevContext devContext = DevContext.createForDevOptionsDisabled();
@@ -108,6 +117,7 @@ public class AdSelectionDevOverridesHelperTest {
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
 
         assertThat(helper.getDecisionLogicOverride(AD_SELECTION_CONFIG)).isNull();
+        assertThat(helper.getTrustedScoringSignalsOverride(AD_SELECTION_CONFIG)).isNull();
     }
 
     @Test
@@ -117,6 +127,7 @@ public class AdSelectionDevOverridesHelperTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS)
                         .build());
 
         DevContext devContext =
@@ -129,5 +140,6 @@ public class AdSelectionDevOverridesHelperTest {
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
 
         assertThat(helper.getDecisionLogicOverride(AD_SELECTION_CONFIG)).isNull();
+        assertThat(helper.getTrustedScoringSignalsOverride(AD_SELECTION_CONFIG)).isNull();
     }
 }

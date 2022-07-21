@@ -23,7 +23,10 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.validation.Validation;
+
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * A registration for an attribution source.
@@ -31,13 +34,14 @@ import java.util.Objects;
 public final class SourceRegistration {
     private final Uri mTopOrigin;
     private final Uri mReportingOrigin;
-    private final Uri mDestination;
+    private final Uri mAppDestination;
     private final Uri mWebDestination;
     private final long mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
     private final long mInstallAttributionWindow;
     private final long mInstallCooldownWindow;
+    @Nullable private final Long mDebugKey;
     private final String mAggregateSource;
     private final String mAggregateFilterData;
 
@@ -45,18 +49,19 @@ public final class SourceRegistration {
     private SourceRegistration(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
-            @Nullable Uri destination,
+            @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             long sourceEventId,
             long expiry,
             long sourcePriority,
             long installAttributionWindow,
             long installCooldownWindow,
-            String aggregateSource,
-            String aggregateFilterData) {
+            @Nullable Long debugKey,
+            @Nullable String aggregateSource,
+            @Nullable String aggregateFilterData) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
-        mDestination = destination;
+        mAppDestination = appDestination;
         mWebDestination = webDestination;
         mSourceEventId = sourceEventId;
         mExpiry = expiry;
@@ -65,6 +70,7 @@ public final class SourceRegistration {
         mInstallCooldownWindow = installCooldownWindow;
         mAggregateSource = aggregateSource;
         mAggregateFilterData = aggregateFilterData;
+        mDebugKey = debugKey;
     }
 
     @Override
@@ -79,10 +85,11 @@ public final class SourceRegistration {
                 && mInstallCooldownWindow == that.mInstallCooldownWindow
                 && Objects.equals(mTopOrigin, that.mTopOrigin)
                 && Objects.equals(mReportingOrigin, that.mReportingOrigin)
-                && Objects.equals(mDestination, that.mDestination)
+                && Objects.equals(mAppDestination, that.mAppDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mAggregateSource, that.mAggregateSource)
-                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData);
+                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData)
+                && Objects.equals(mDebugKey, that.mDebugKey);
     }
 
     @Override
@@ -90,7 +97,7 @@ public final class SourceRegistration {
         return Objects.hash(
                 mTopOrigin,
                 mReportingOrigin,
-                mDestination,
+                mAppDestination,
                 mWebDestination,
                 mSourceEventId,
                 mExpiry,
@@ -98,51 +105,54 @@ public final class SourceRegistration {
                 mInstallAttributionWindow,
                 mInstallCooldownWindow,
                 mAggregateSource,
-                mAggregateFilterData);
+                mAggregateFilterData,
+                mDebugKey);
     }
 
-    /**
-     * Top level origin.
-     */
-    public @NonNull Uri getTopOrigin() {
+    /** Top level origin. */
+    @NonNull
+    public Uri getTopOrigin() {
         return mTopOrigin;
     }
 
-    /**
-     * Reporting origin.
-     */
-    public @NonNull Uri getReportingOrigin() {
+    /** Reporting origin. */
+    @NonNull
+    public Uri getReportingOrigin() {
         return mReportingOrigin;
     }
 
     /** OS (app) destination Uri. */
-    public @Nullable Uri getDestination() {
-        return mDestination;
+    @Nullable
+    public Uri getAppDestination() {
+        return mAppDestination;
     }
 
     /** Web destination Uri. */
-    public @Nullable Uri getWebDestination() {
+    @Nullable
+    public Uri getWebDestination() {
         return mWebDestination;
     }
 
-    /**
-     * Source event id.
-     */
-    public @NonNull long getSourceEventId() {
+    /** Source event id. */
+    @NonNull
+    public long getSourceEventId() {
         return mSourceEventId;
     }
 
-    /**
-     * Expiration.
-     */
-    public @NonNull long getExpiry() {
+    /** Source debug key. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
+    }
+
+    /** Expiration. */
+    @NonNull
+    public long getExpiry() {
         return mExpiry;
     }
 
-    /**
-     * Source priority.
-     */
-    public @NonNull long getSourcePriority() {
+    /** Source priority. */
+    @NonNull
+    public long getSourcePriority() {
         return mSourcePriority;
     }
 
@@ -180,48 +190,47 @@ public final class SourceRegistration {
     public static final class Builder {
         private Uri mTopOrigin;
         private Uri mReportingOrigin;
-        private Uri mDestination;
+        private Uri mAppDestination;
         private Uri mWebDestination;
         private long mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
         private long mInstallAttributionWindow;
         private long mInstallCooldownWindow;
+        private @Nullable Long mDebugKey;
         private String mAggregateSource;
         private String mAggregateFilterData;
 
         public Builder() {
-            mTopOrigin = Uri.EMPTY;
-            mReportingOrigin = Uri.EMPTY;
-            mDestination = Uri.EMPTY;
-            mWebDestination = Uri.EMPTY;
             mExpiry = MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
             mInstallAttributionWindow = MAX_INSTALL_ATTRIBUTION_WINDOW;
             mInstallCooldownWindow = MIN_POST_INSTALL_EXCLUSIVITY_WINDOW;
         }
 
-        /**
-         * See {@link SourceRegistration#getTopOrigin}.
-         */
-        public @NonNull Builder setTopOrigin(@NonNull Uri origin) {
+        /** See {@link SourceRegistration#getTopOrigin}. */
+        @NonNull
+        public Builder setTopOrigin(@NonNull Uri origin) {
+            Validation.validateUri(origin);
             mTopOrigin = origin;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getReportingOrigin}.
-         */
-        public @NonNull Builder setReportingOrigin(@NonNull Uri origin) {
+        /** See {@link SourceRegistration#getReportingOrigin}. */
+        @NonNull
+        public Builder setReportingOrigin(@NonNull Uri origin) {
+            Validation.validateUri(origin);
             mReportingOrigin = origin;
             return this;
         }
 
         /**
-         * See {@link SourceRegistration#getDestination}. At least one of destination or web
+         * See {@link SourceRegistration#getAppDestination}. At least one of destination or web
          * destination is required.
          */
-        public @NonNull Builder setDestination(@Nullable Uri destination) {
-            mDestination = destination;
+        @NonNull
+        public Builder setAppDestination(@Nullable Uri appDestination) {
+            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
+            mAppDestination = appDestination;
             return this;
         }
 
@@ -229,76 +238,74 @@ public final class SourceRegistration {
          * See {@link SourceRegistration#getWebDestination()}. At least one of destination or web
          * destination is required.
          */
-        public @NonNull Builder setWebDestination(@Nullable Uri webDestination) {
+        @NonNull
+        public Builder setWebDestination(@Nullable Uri webDestination) {
+            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
             mWebDestination = webDestination;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getSourceEventId}.
-         */
-        public @NonNull Builder setSourceEventId(long sourceEventId) {
+        /** See {@link SourceRegistration#getSourceEventId}. */
+        @NonNull
+        public Builder setSourceEventId(long sourceEventId) {
             mSourceEventId = sourceEventId;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getExpiry}.
-         */
-        public @NonNull Builder setExpiry(long expiry) {
+        /** See {@link SourceRegistration#getDebugKey()}. */
+        public @NonNull Builder setDebugKey(@Nullable Long debugKey) {
+            mDebugKey = debugKey;
+            return this;
+        }
+
+        /** See {@link SourceRegistration#getExpiry}. */
+        @NonNull
+        public Builder setExpiry(long expiry) {
             mExpiry = expiry;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getSourcePriority}.
-         */
-        public @NonNull Builder setSourcePriority(long priority) {
+        /** See {@link SourceRegistration#getSourcePriority}. */
+        @NonNull
+        public Builder setSourcePriority(long priority) {
             mSourcePriority = priority;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getInstallAttributionWindow()}.
-         */
-        public @NonNull Builder setInstallAttributionWindow(long installAttributionWindow) {
+        /** See {@link SourceRegistration#getInstallAttributionWindow()}. */
+        @NonNull
+        public Builder setInstallAttributionWindow(long installAttributionWindow) {
             mInstallAttributionWindow = installAttributionWindow;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getInstallCooldownWindow()}.
-         */
-        public @NonNull Builder setInstallCooldownWindow(long installCooldownWindow) {
+        /** See {@link SourceRegistration#getInstallCooldownWindow()}. */
+        @NonNull
+        public Builder setInstallCooldownWindow(long installCooldownWindow) {
             mInstallCooldownWindow = installCooldownWindow;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getAggregateSource()}.
-         */
-        public Builder setAggregateSource(String aggregateSource) {
+        /** See {@link SourceRegistration#getAggregateSource()}. */
+        @NonNull
+        public Builder setAggregateSource(@Nullable String aggregateSource) {
             mAggregateSource = aggregateSource;
             return this;
         }
 
-        /**
-         * See {@link SourceRegistration#getAggregateFilterData()}.
-         */
-        public Builder setAggregateFilterData(String aggregateFilterData) {
+        /** See {@link SourceRegistration#getAggregateFilterData()}. */
+        @NonNull
+        public Builder setAggregateFilterData(@Nullable String aggregateFilterData) {
             mAggregateFilterData = aggregateFilterData;
             return this;
         }
 
-        /**
-         * Build the SourceRegistration.
-         */
-        public @NonNull SourceRegistration build() {
-            if (mTopOrigin == null || mReportingOrigin == null) {
-                throw new IllegalArgumentException("uninitialized fields");
-            }
+        /** Build the SourceRegistration. */
+        @NonNull
+        public SourceRegistration build() {
+            Validation.validateNonNull(mTopOrigin, mReportingOrigin);
 
-            if (mDestination == null && mWebDestination == null) {
+            if (mAppDestination == null && mWebDestination == null) {
                 throw new IllegalArgumentException(
                         "At least one of destination or web destination is required.");
             }
@@ -306,13 +313,14 @@ public final class SourceRegistration {
             return new SourceRegistration(
                     mTopOrigin,
                     mReportingOrigin,
-                    mDestination,
+                    mAppDestination,
                     mWebDestination,
                     mSourceEventId,
                     mExpiry,
                     mSourcePriority,
                     mInstallAttributionWindow,
                     mInstallCooldownWindow,
+                    mDebugKey,
                     mAggregateSource,
                     mAggregateFilterData);
         }
