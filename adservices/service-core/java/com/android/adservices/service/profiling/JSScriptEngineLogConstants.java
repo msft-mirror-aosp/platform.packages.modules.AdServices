@@ -20,6 +20,10 @@ package com.android.adservices.service.profiling;
 public class JSScriptEngineLogConstants {
     public static final String SANDBOX_INIT_TIME = "SANDBOX_INIT_TIME";
     public static final String ISOLATE_CREATE_TIME = "ISOLATE_CREATE_TIME";
+    // JS Execution latency as measured by the calling Java process. Includes the overhead
+    // of communicating with WebView.
     public static final String JAVA_EXECUTION_TIME = "JAVA_EXECUTION_TIME";
+    // JS Execution latency as measured insided WebView by adding latency measures to the JS
+    // scripts.
     public static final String WEBVIEW_EXECUTION_TIME = "WEBVIEW_EXECUTION_TIME";
 }

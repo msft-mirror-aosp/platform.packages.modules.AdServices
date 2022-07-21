@@ -33,15 +33,110 @@
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"প্রাইভেসি স্যান্ডবক্স বিটা ভার্সন"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"প্রাইভেসি স্যান্ডবক্স বিটা ভার্সন"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"প্রাইভেসি স্যান্ডবক্স বিটা ভার্সন টগল করা হয়"</string>
+    <!-- no translation found for settingsUI_main_view_title (5043539340176844807) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_subtitle (3380585883687237827) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text1 (8353580266621706164) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text2 (5144888171043725329) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text3 (9106658161862318732) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text4 (8784661072398581526) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text5 (6064832868440367397) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text6 (1372295962773839373) -->
+    <skip />
+    <!-- no translation found for settingsUI_main_view_info_text7 (210269084665708892) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_title (7437641813424176118) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_subtitle (5133398388693886168) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text1 (6729245512525985403) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_info_text2 (8355913397424818046) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (912262290260184604) -->
+    <skip />
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"আপনার সাধারণ আগ্রহের বিভিন্ন বিষয়"</string>
     <string name="settingsUI_topics_summary" msgid="3146101472984434355">"আপনার সাধারণ আগ্রহের বিভিন্ন বিষয় ম্যানেজ করা হয়"</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"আপনার যেসব অ্যাপ নির্দিষ্ট আগ্রহ তৈরি করে"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"নির্দিষ্ট কোনও আগ্রহ তৈরি করে এমন সব অ্যাপ ম্যানেজ করা হয়"</string>
+    <!-- no translation found for settingsUI_blocked_apps_title (616945769186215391) -->
+    <skip />
+    <!-- no translation found for settingsUI_block_app_title (4169472139940708737) -->
+    <skip />
+    <!-- no translation found for settingsUI_unblock_app_title (3298453461173699515) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_subtitle (8739946672076737081) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
+    <skip />
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"বিজ্ঞাপনের জন্য আপনার সাধারণ আগ্রহ ম্যানেজ করুন"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"ব্লক করুন"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"আপনার ব্লক করা আগ্রহের বিষয়"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"সব আগ্রহের বিষয় রিসেট করুন"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"আনব্লক করুন"</string>
+    <string name="notificationUI_eu_title" msgid="1156528090731956503">"বিজ্ঞাপন গোপনীয়তা বিটা প্রোগ্রামে যোগ দিন"</string>
+    <!-- no translation found for notificationUI_header_title_eu (6822288197367284058) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_subtitle_eu (340747660810152558) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_title_eu (4361051737453876336) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_text_eu (3002855638097043236) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title_eu (6354572742632086901) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_text_eu (166675713389999485) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_control_text_eu (2201590946141216882) -->
+    <skip />
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"আপনি কী করতে পারেন"</string>
+    <!-- no translation found for notificationUI_container3_body_text_eu (1489739161978958930) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"না থাক"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="1179003744451135574">"হ্যাঁ, আমি এটি ব্যবহার করে দেখব"</string>
+    <string name="notificationUI_non_eu_title" msgid="1400067162654584472">"Android-এর বিজ্ঞাপন গোপনীয়তা বিটা"</string>
+    <!-- no translation found for notificationUI_confirmation_left_control_button_text (1004303831215770799) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_right_control_button_text (3207541606235495458) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_title (3178322390976087463) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_subtitle (9173047338339917593) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_title (6388776490679995340) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_subtitle (4615362687181140355) -->
+    <skip />
+    <string name="notificationUI_header_title" msgid="1049608950263285787">"ক্রস-অ্যাপ ট্র্যাকিং সীমিত করার জন্য আপনি Android-কে সাহায্য করছেন"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android নতুন একটি ফিচার পরীক্ষা করছে যা বিজ্ঞাপনদাতাদের ক্রস-অ্যাপ ট্র্যাকিং সীমিত করবে"</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"ক্রস-অ্যাপ ট্র্যাকিং কী?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"বর্তমান সময়ে, অ্যাপের ব্যবহার সংক্রান্ত ডেটা সহজেই আপনার ডিভাইসের সাথে অ্যাসোসিয়েট করা যায়, তারপরে বিজ্ঞাপন দেখানোর উদ্দেশ্যে তা বিভিন্ন অ্যাপ জুড়ে শেয়ার করা হয়।"</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android কী করছে"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Android একটি নতুন প্রাইভেসি স্যান্ডবক্স প্রযুক্তি পরীক্ষা করছে যা বিজ্ঞাপন সংক্রান্ত ডেটা সুরক্ষিতভাবে সেভ ও শেয়ার করে — আপনি বা আপনার ডিভাইস শনাক্ত না করে। \n\nনতুন এই সিস্টেম সরাসরি অন্যান্য অ্যাপে ডেটা পাঠানো থেকে অ্যাপকে আটকাতে সাহায্য করে, তবে এখনও আপনি পছন্দ করতে পারেন এমন বিজ্ঞাপন দেখানোর ক্ষেত্রে অনুমতি দেয়।"</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"এটি কীভাবে কাজ করে"</string>
+    <string name="notificationUI_container3_title" msgid="4823075930852061894">"ক্রস-অ্যাপ ট্র্যাকিং কী?"</string>
+    <string name="notificationUI_container3_body_text" msgid="8999954025569853707">"বর্তমান সময়ে, অ্যাপের ব্যবহার সংক্রান্ত ডেটা সহজেই আপনার ডিভাইসের সাথে অ্যাসোসিয়েট করা যায়, তারপরে বিজ্ঞাপন দেখানোর উদ্দেশ্যে তা বিভিন্ন অ্যাপ জুড়ে শেয়ার করা হয়।"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (6459461402253858770) -->
+    <skip />
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"বুঝেছি"</string>
+    <string name="notificationUI_eu_content" msgid="121153625335218261">"নতুন ফিচার পরীক্ষা করুন যা ক্রস-অ্যাপ ট্র্যাকিং সীমিত করবে"</string>
+    <string name="notificationUI_non_eu_content" msgid="8932310379484651423">"আপনি নতুন ফিচার পরীক্ষা করছেন যা ক্রস-অ্যাপ ট্র্যাকিং সীমিত করে"</string>
+    <!-- no translation found for notificationUI_how_it_works_expanded_text (3758348489850620566) -->
+    <skip />
 </resources>
