@@ -38,11 +38,11 @@ public class AdSelectionResponseTest {
         AdSelectionResponse adSelectionResponse =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUrl(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URL)
                         .build();
 
         assertThat(adSelectionResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(adSelectionResponse.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
+        assertThat(adSelectionResponse.getRenderUri()).isEqualTo(VALID_RENDER_URL);
     }
 
     @Test
@@ -50,7 +50,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse adSelectionResponse =
                 new AdSelectionResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUrl(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URL)
                         .build();
 
         Parcel p = Parcel.obtain();
@@ -59,7 +59,7 @@ public class AdSelectionResponseTest {
         AdSelectionResponse fromParcel = AdSelectionResponse.CREATOR.createFromParcel(p);
 
         assertThat(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(fromParcel.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
+        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URL);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class AdSelectionResponseTest {
                 () -> {
                     new AdSelectionResponse.Builder()
                             // Not setting AdSelectionId making it null.
-                            .setRenderUrl(VALID_RENDER_URL)
+                            .setRenderUri(VALID_RENDER_URL)
                             .build();
                 });
     }
