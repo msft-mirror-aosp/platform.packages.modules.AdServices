@@ -35,10 +35,10 @@ public class AdSelectionOutcomeTest {
         AdSelectionOutcome adSelectionOutcome =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUrl(VALID_RENDER_URL)
+                        .setRenderUri(VALID_RENDER_URL)
                         .build();
 
         assertThat(adSelectionOutcome.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        assertThat(adSelectionOutcome.getRenderUrl()).isEqualTo(VALID_RENDER_URL);
+        assertThat(adSelectionOutcome.getRenderUri()).isEqualTo(VALID_RENDER_URL);
     }
 }

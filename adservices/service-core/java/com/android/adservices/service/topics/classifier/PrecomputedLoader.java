@@ -47,14 +47,17 @@ public class PrecomputedLoader {
     private final AssetManager mAssetManager;
     private final String mLabelsFilePath;
     private final String mTopAppsFilePath;
+    private final String mClassifierAssetsMetadataPath;
 
     public PrecomputedLoader(
             @NonNull Context context,
             @NonNull String labelsFilePath,
-            @NonNull String topAppsFilePath) {
+            @NonNull String topAppsFilePath,
+            @NonNull String classifierAssetsMetadataPath) {
         mAssetManager = context.getAssets();
         mLabelsFilePath = labelsFilePath;
         mTopAppsFilePath = topAppsFilePath;
+        mClassifierAssetsMetadataPath = classifierAssetsMetadataPath;
     }
 
     /**
@@ -130,5 +133,15 @@ public class PrecomputedLoader {
         }
 
         return appTopicsMap;
+    }
+
+    /**
+     * Retrieve the classifier assets metadata from file name here.
+     *
+     * @return The map of classifier assets metadata.
+     */
+    ImmutableMap<String, ImmutableMap<String, String>> retrieveClassifierAssetsMetadata() {
+        return CommonClassifierHelper.getAssetsMetadata(
+                mAssetManager, mClassifierAssetsMetadataPath);
     }
 }

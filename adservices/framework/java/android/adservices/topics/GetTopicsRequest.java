@@ -21,11 +21,12 @@ import android.annotation.NonNull;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 
-/**
- * Get Topics Request.
- */
-public class GetTopicsRequest {
+/** Get Topics Request. */
+public final class GetTopicsRequest {
+    /** Context of the application/sandbox which send out the request to getTopics API. */
     private final Context mContext;
+
+    /** Name of Ads SDK that is involved in this request. */
     private final String mSdkName;
 
     private GetTopicsRequest(@NonNull Context context, @NonNull String sdkName) {
@@ -61,8 +62,6 @@ public class GetTopicsRequest {
         /**
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
          * set this field.
-         * <p> Currently we allow callers to specify the SdkName. In the future releases we will
-         * probably have a way to get the SdkName internally.
          */
         public @NonNull Builder setSdkName(@NonNull String sdkName) {
             mSdkName = sdkName;

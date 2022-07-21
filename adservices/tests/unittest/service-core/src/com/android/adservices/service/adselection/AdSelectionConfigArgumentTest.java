@@ -45,10 +45,11 @@ public class AdSelectionConfigArgumentTest {
             new AdSelectionConfig.Builder()
                     .setSeller("seller")
                     .setAdSelectionSignals("{\"ad_selection_signals\":1}")
-                    .setDecisionLogicUrl(Uri.parse("http://seller.com/decision_logic"))
+                    .setDecisionLogicUri(Uri.parse("http://seller.com/decision_logic"))
                     .setContextualAds(ImmutableList.of(AD_WITH_BID))
                     .setCustomAudienceBuyers(ImmutableList.of("buyer1", "buyer2"))
                     .setSellerSignals("{\"seller_signals\":1}")
+                    .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                     .setPerBuyerSignals(
                             ImmutableMap.of(
                                     "buyer1", "{\"buyer_signals\":1}",
@@ -65,8 +66,8 @@ public class AdSelectionConfigArgumentTest {
                                         AdSelectionConfigArgument.SELLER_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getSeller()),
                                 stringArg(
-                                        AdSelectionConfigArgument.DECISION_LOGIC_URL_FIELD_NAME,
-                                        AD_SELECTION_CONFIG.getDecisionLogicUrl().toString()),
+                                        AdSelectionConfigArgument.DECISION_LOGIC_URI_FIELD_NAME,
+                                        AD_SELECTION_CONFIG.getDecisionLogicUri().toString()),
                                 stringArrayArg(
                                         AdSelectionConfigArgument.CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getCustomAudienceBuyers()),
@@ -83,7 +84,12 @@ public class AdSelectionConfigArgumentTest {
                                                 jsonArg("buyer2", "{\"buyer_signals\":2}"))),
                                 arrayArg(
                                         AdSelectionConfigArgument.CONTEXTUAL_ADS_FIELD_NAME,
-                                        AdWithBidArgument.asScriptArgument(
-                                                "ignored", AD_WITH_BID))));
+                                        AdWithBidArgument.asScriptArgument("ignored", AD_WITH_BID)),
+                                stringArg(
+                                        AdSelectionConfigArgument
+                                                .TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME,
+                                        AD_SELECTION_CONFIG
+                                                .getTrustedScoringSignalsUri()
+                                                .toString())));
     }
 }
