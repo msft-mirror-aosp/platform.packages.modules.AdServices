@@ -36,8 +36,12 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.concurrent.Executor;
+
 /** MDD JobService. This will download MDD files in background tasks. */
 public class MddJobService extends JobService {
+    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
+
     @Override
     public boolean onStartJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStartJob");
@@ -53,6 +57,7 @@ public class MddJobService extends JobService {
                             }
                             String mddTag = extras.getString(KEY_MDD_TASK_TAG);
                             LogUtil.d("MddJobService.onStartJob for " + mddTag);
+
                             return MobileDataDownloadFactory.getMdd(this, FlagsFactory.getFlags())
                                     .handleTask(mddTag);
                         },
@@ -64,9 +69,16 @@ public class MddJobService extends JobService {
                     @Override
                     public void onSuccess(Void result) {
                         LogUtil.v("MddJobService.MddHandleTask succeeded!");
-                        // Tell the JobScheduler that the job has completed and does not needs to be
-                        // rescheduled.
-                        jobFinished(params, /* wantsReschedule = */ false);
+
+                        sBlockingExecutor.execute(
+                                () -> {
+                                    EnrollmentDataDownloadManager.getInstance(MddJobService.this)
+                                            .readAndInsertEnrolmentDataFromMdd();
+                                    // Tell the JobScheduler that the job has completed and does not
+                                    // need to be
+                                    // rescheduled.
+                                    jobFinished(params, /* wantsReschedule = */ false);
+                                });
                     }
 
                     @Override
@@ -104,7 +116,7 @@ public class MddJobService extends JobService {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        LogUtil.e(t, "Successfully schedule MDD tasks.");
+                        LogUtil.e(t, "Failed to schedule MDD tasks.");
                     }
                 },
                 MoreExecutors.directExecutor());
