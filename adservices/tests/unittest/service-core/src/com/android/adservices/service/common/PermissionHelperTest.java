@@ -18,21 +18,33 @@ package com.android.adservices.service.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.when;
+
 import android.content.pm.PackageManager;
 import android.test.mock.MockContext;
 
 import androidx.test.filters.SmallTest;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 /** Unit tests for {@link com.android.adservices.service.common.PermissionHelper} */
 @SmallTest
 public class PermissionHelperTest {
+    private static final String SDK_PACKAGE_NAME = "test_package_name";
+    @Mock private PackageManager mMockPackageManager;
     MockContext mMockContextGrant =
             new MockContext() {
                 @Override
                 public int checkCallingOrSelfPermission(String permission) {
                     return PackageManager.PERMISSION_GRANTED;
+                }
+
+                @Override
+                public PackageManager getPackageManager() {
+                    return mMockPackageManager;
                 }
             };
 
@@ -42,19 +54,105 @@ public class PermissionHelperTest {
                 public int checkCallingOrSelfPermission(String permission) {
                     return PackageManager.PERMISSION_DENIED;
                 }
+
+                @Override
+                public PackageManager getPackageManager() {
+                    return mMockPackageManager;
+                }
             };
 
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+    }
+
     @Test
-    public void testHasPermission() {
-        assertThat(PermissionHelper.hasTopicsPermission(mMockContextGrant)).isTrue();
-        assertThat(PermissionHelper.hasAttributionPermission(mMockContextGrant)).isTrue();
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextGrant)).isTrue();
+    public void testHasPermission_notUseSandboxCheck() {
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isTrue();
+        assertThat(
+                        PermissionHelper.hasAttributionPermission(
+                                mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isTrue();
+        assertThat(
+                        PermissionHelper.hasCustomAudiencesPermission(
+                                mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isTrue();
     }
 
     @Test
     public void testNotHasPermission() {
-        assertThat(PermissionHelper.hasTopicsPermission(mMockContextDeny)).isFalse();
-        assertThat(PermissionHelper.hasAttributionPermission(mMockContextDeny)).isFalse();
-        assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextDeny)).isFalse();
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isFalse();
+        assertThat(
+                        PermissionHelper.hasAttributionPermission(
+                                mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isFalse();
+        assertThat(
+                        PermissionHelper.hasCustomAudiencesPermission(
+                                mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isFalse();
+    }
+
+    @Test
+    public void testSdkHasPermission() {
+        when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+        when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
+                        SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+        when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION,
+                        SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mMockContextGrant, /*useSandboxCheck =*/ true, SDK_PACKAGE_NAME))
+                .isTrue();
+        // TODO(b/236267953): Check Sdk permission for Attribution.
+        // assertThat(PermissionHelper.hasAttributionPermission(mMockContextGrant, /*useSandboxCheck
+        // =*/ true,
+        // SDK_PACKAGE_NAME)).isTrue();
+
+        // TODO(b/236268316): Check Sdk permission for Custom Audiences.
+        // assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextGrant,
+        // /*useSandboxCheck =*/ true,
+        // SDK_PACKAGE_NAME)).isTrue();
+    }
+
+    @Test
+    public void testSdkNotHasPermission() {
+        when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_DENIED);
+        when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
+                        SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_DENIED);
+        when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION,
+                        SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_DENIED);
+
+        assertThat(
+                        PermissionHelper.hasTopicsPermission(
+                                mMockContextDeny, /*useSandboxCheck =*/ true, SDK_PACKAGE_NAME))
+                .isFalse();
+        // TODO(b/236267953): Check Sdk permission for Attribution.
+        // assertThat(PermissionHelper.hasAttributionPermission(mMockContextDeny, /*useSandboxCheck
+        // =*/ true,
+        // SDK_PACKAGE_NAME)).isFalse();
+
+        // TODO(b/236268316): Check Sdk permission for Custom Audiences.
+        // assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextDeny,
+        // /*useSandboxCheck =*/ true,
+        // SDK_PACKAGE_NAME)).isFalse();
     }
 }

@@ -22,7 +22,9 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
+import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.adservices.exceptions.AdServicesException;
@@ -71,15 +73,22 @@ public class CustomAudienceCtsTest {
     @Test
     public void testJoinCustomAudience_validCustomAudience_success()
             throws ExecutionException, InterruptedException {
-        mClient.joinCustomAudience(CustomAudienceFixture.getValidBuilder().build()).get();
+        mClient.joinCustomAudience(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .build())
+                .get();
     }
 
     @Test
     public void testJoinCustomAudience_illegalExpirationTime_fail() {
-        Exception exception = assertThrows(ExecutionException.class,
-                () -> mClient.joinCustomAudience(CustomAudienceFixture.getValidBuilder()
+        CustomAudience customAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                         .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
-                        .build()).get());
+                        .build();
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mClient.joinCustomAudience(customAudience).get());
         assertTrue(exception.getCause() instanceof AdServicesException);
         assertTrue(exception.getCause().getCause() instanceof IllegalArgumentException);
     }
@@ -87,10 +96,13 @@ public class CustomAudienceCtsTest {
     @Test
     public void testLeaveCustomAudience_joinedCustomAudience_success()
             throws ExecutionException, InterruptedException {
-        mClient.joinCustomAudience(CustomAudienceFixture.getValidBuilder().build()).get();
+        mClient.joinCustomAudience(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .build())
+                .get();
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
     }
@@ -100,7 +112,7 @@ public class CustomAudienceCtsTest {
             throws ExecutionException, InterruptedException {
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         "not_exist_name")
                 .get();
     }
@@ -126,7 +138,7 @@ public class CustomAudienceCtsTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -148,7 +160,7 @@ public class CustomAudienceCtsTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -163,6 +175,6 @@ public class CustomAudienceCtsTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 }
