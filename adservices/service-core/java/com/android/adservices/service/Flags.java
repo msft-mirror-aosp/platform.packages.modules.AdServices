@@ -111,6 +111,15 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default URL for fetching public encryption keys for aggregatable reports. */
+    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
+
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
+    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
+    }
+
     /* The default min time period (in millis) between each aggregate main reporting job run. */
     long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -125,15 +134,6 @@ public interface Flags extends Dumpable {
     /** Returns min time period (in millis) between each aggregate fallback job run. */
     default long getMeasurementAggregateFallbackReportingJobPeriodMs() {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
-    }
-
-    /* The default URL for fetching public encryption keys for aggregatable reports. */
-    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
-
-    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
-    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
     }
 
     /* The default measurement app name. */

@@ -83,13 +83,17 @@ public class AdServicesConfig {
     }
 
     /**
+     * Returns the URL for fetching public encryption keys for aggregatable reports.
+     */
+    public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
+    }
+
+    /**
      * Job ID for Measurement Aggregate Main Reporting Job ({@link
      * com.android.adservices.service.measurement.AggregateReportingJobService})
      */
     public static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID = 7;
-
-    public static long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
-            TimeUnit.HOURS.toMillis(4);
 
     /** Returns the min time period (in millis) between each aggregate main reporting job run. */
     public static long getMeasurementAggregateMainReportingJobPeriodMs() {
@@ -110,13 +114,6 @@ public class AdServicesConfig {
      */
     public static long getMeasurementAggregateFallbackReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementAggregateFallbackReportingJobPeriodMs();
-    }
-
-    /**
-     * Returns the URL for fetching public encryption keys for aggregatable reports.
-     */
-    public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
     }
 
     /**
