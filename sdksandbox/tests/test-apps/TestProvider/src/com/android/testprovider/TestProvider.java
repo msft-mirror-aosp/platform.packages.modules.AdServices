@@ -16,7 +16,6 @@
 
 package com.android.testprovider;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
@@ -27,11 +26,7 @@ import java.util.concurrent.Executor;
 public class TestProvider extends SandboxedSdkProvider {
 
     @Override
-    public void onLoadSdk(
-            SandboxedSdkContext context,
-            Bundle params,
-            Executor executor,
-            OnLoadSdkCallback callback) {
+    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
         callback.onLoadSdkFinished(params);
     }
 

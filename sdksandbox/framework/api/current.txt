@@ -28,14 +28,12 @@ package android.app.sdksandbox {
     method @NonNull public android.view.SurfaceControlViewHost.SurfacePackage getSurfacePackage();
   }
 
-  public final class SandboxedSdkContext extends android.content.ContextWrapper {
-  }
-
-  public abstract class SandboxedSdkProvider {
+  public abstract class SandboxedSdkProvider extends android.content.ContextWrapper {
     ctor public SandboxedSdkProvider();
+    method public void attachBaseContext(@NonNull android.content.Context);
     method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);
-    method public abstract void onLoadSdk(@NonNull android.app.sdksandbox.SandboxedSdkContext, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.OnLoadSdkCallback);
+    method public abstract void onLoadSdk(@NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.OnLoadSdkCallback);
   }
 
   public static interface SandboxedSdkProvider.DataReceivedCallback {
