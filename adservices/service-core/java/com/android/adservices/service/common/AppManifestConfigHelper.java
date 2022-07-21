@@ -33,7 +33,7 @@ import java.io.IOException;
 // TODO(b/213488783): Add persistence, so that lookup/parse is not on every request.
 // Also consider if this should execute in the background.
 public class AppManifestConfigHelper {
-    private static final String AD_SERVICES_CONFIG_PROPERTY =
+    public static final String AD_SERVICES_CONFIG_PROPERTY =
             "android.adservices.AD_SERVICES_CONFIG";
 
     private static XmlResourceParser getXmlParser(
@@ -67,7 +67,7 @@ public class AppManifestConfigHelper {
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             return appManifestConfig.isAllowedAttributionAccess(sdk);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, "App manifest parse failed.");
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
@@ -93,7 +93,7 @@ public class AppManifestConfigHelper {
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             return appManifestConfig.isAllowedCustomAudiencesAccess(sdk);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, "App manifest parse failed.");
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
         }
@@ -119,7 +119,7 @@ public class AppManifestConfigHelper {
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
             return appManifestConfig.isAllowedTopicsAccess(sdk);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, "App manifest parse failed.");
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
             LogUtil.e(e, "App manifest parse failed.");
         }

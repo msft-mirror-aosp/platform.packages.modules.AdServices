@@ -22,7 +22,6 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -183,33 +182,6 @@ public interface IMeasurementDao {
      * {@link Trigger}
      */
     void insertAttributionRateLimit(Source source, Trigger trigger) throws DatastoreException;
-
-    /**
-     * Given one postback urls, queries and returns all the postback urls with the same adtech id.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    List<String> getAllAdtechUrls(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link AdtechUrl}.
-     *
-     * @param postbackUrl the postback Url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    AdtechUrl getAdtechEnrollmentData(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Saves the {@link AdtechUrl} to datastore.
-     */
-    void insertAdtechUrl(AdtechUrl adtechUrl) throws DatastoreException;
-
-    /**
-     * Deletes the {@link AdtechUrl} from datastore using the given postback url.
-     */
-    void deleteAdtechUrl(String postbackUrl) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.

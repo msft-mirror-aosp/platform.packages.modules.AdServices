@@ -41,7 +41,7 @@ import java.util.concurrent.Executor;
  */
 public final class AggregateReportingJobService extends JobService {
 
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
     public void onCreate() {
@@ -50,7 +50,7 @@ public final class AggregateReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        sBackgroundExecutor.execute(() -> {
+        sBlockingExecutor.execute(() -> {
             boolean success = new AggregateReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))
@@ -71,7 +71,7 @@ public final class AggregateReportingJobService extends JobService {
                         (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
                 LogUtil.d("AggregateReportingJobService: onStartJob: isTestOnly=" + isTestOnly);
                 if (isTestOnly) {
-                    sBackgroundExecutor.execute(() -> {
+                    sBlockingExecutor.execute(() -> {
                         boolean success = new AggregateReportingJobHandler(
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()))

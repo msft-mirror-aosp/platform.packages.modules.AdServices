@@ -17,6 +17,7 @@
 package com.android.adservices.service;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 import android.app.job.JobParameters;
@@ -48,6 +49,7 @@ public class MaintenanceJobServiceTest {
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock JobParameters mMockJobParameters;
+    @Mock Flags mMockFlags;
 
     @Before
     public void setup() {
@@ -57,7 +59,7 @@ public class MaintenanceJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob() throws InterruptedException {
+    public void testOnStartJob_killSwitchOff() throws InterruptedException {
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -68,9 +70,18 @@ public class MaintenanceJobServiceTest {
 
         // Start a mockitoSession to mock static method
         MockitoSession session =
-                ExtendedMockito.mockitoSession().spyStatic(TopicsWorker.class).startMocking();
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
 
         try {
+            // Killswitch is off.
+            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
             // Mock static method AppUpdateWorker.getInstance, let it return the local
             // appUpdateWorker in order to get a test instance.
             ExtendedMockito.doReturn(topicsWorker)
@@ -83,6 +94,55 @@ public class MaintenanceJobServiceTest {
 
             ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
             verify(mMockAppUpdateManager).reconcileUninstalledApps(any(Context.class));
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testOnStartJob_killSwitchOn() throws InterruptedException {
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+
+        try {
+            // Killswitch on.
+            doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
+            mMaintenanceJobService.onStartJob(mMockJobParameters);
+
+            // Grant some time to allow background thread to execute
+            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testOnStartJob_globalKillswitchOverridesAll() throws InterruptedException {
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+
+        try {
+            // Global Killswitch is on.
+            doReturn(true).when(mMockFlags).getGlobalKillSwitch();
+
+            // Killswitch off.
+            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
+            mMaintenanceJobService.onStartJob(mMockJobParameters);
+
+            // Grant some time to allow background thread to execute
+            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+            // When the kill switch is on, the MaintenanceJobService exits early and do nothing.
         } finally {
             session.finishMocking();
         }
