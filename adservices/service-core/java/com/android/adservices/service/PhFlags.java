@@ -78,6 +78,7 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_max_num_ads";
 
     // FLEDGE Background Fetch keys
+    static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED = "fledge_background_fetch_enabled";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS =
             "fledge_background_fetch_job_period_ms";
     static final String KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS =
@@ -353,6 +354,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeBackgroundFetchEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_ENABLED,
+                /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ENABLED);
+    }
+
+    @Override
     public long getFledgeBackgroundFetchJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
@@ -619,6 +629,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED
+                        + " = "
+                        + getFledgeBackgroundFetchEnabled());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS
