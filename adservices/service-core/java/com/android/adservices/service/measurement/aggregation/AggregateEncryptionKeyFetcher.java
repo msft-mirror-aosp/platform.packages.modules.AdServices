@@ -53,13 +53,30 @@ final class AggregateEncryptionKeyFetcher {
 
     private static long getMaxAgeInSeconds(@NonNull Map<String, List<String>> headers) {
         String cacheControl = null;
+        int cachedAge = 0;
+        int remainingHeaders = 2;
         for (String key : headers.keySet()) {
-            if (key != null && key.equalsIgnoreCase("cache-control")) {
-                List<String> field = headers.get(key);
-                if (field != null && field.size() > 0) {
-                    cacheControl = field.get(0).toLowerCase(Locale.ENGLISH);
-                    break;
+            if (key != null) {
+                if (key.equalsIgnoreCase("cache-control")) {
+                    List<String> field = headers.get(key);
+                    if (field != null && field.size() > 0) {
+                        cacheControl = field.get(0).toLowerCase(Locale.ENGLISH);
+                        remainingHeaders -= 1;
+                    }
+                } else if (key.equalsIgnoreCase("age")) {
+                    List<String> field = headers.get(key);
+                    if (field != null && field.size() > 0) {
+                        try {
+                            cachedAge = Integer.parseInt(field.get(0));
+                        } catch (NumberFormatException e) {
+                            LogUtil.e("Error parsing age header: %s", e);
+                        }
+                        remainingHeaders -= 1;
+                    }
                 }
+            }
+            if (remainingHeaders == 0) {
+                break;
             }
         }
         if (cacheControl == null) {
@@ -83,7 +100,7 @@ final class AggregateEncryptionKeyFetcher {
             LogUtil.d("max-age directive is missing");
             return 0;
         }
-        return maxAge;
+        return maxAge - cachedAge;
     }
 
     private static Optional<List<AggregateEncryptionKey>> parseResponse(
@@ -91,7 +108,7 @@ final class AggregateEncryptionKeyFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull long eventTime) {
         long maxAge = getMaxAgeInSeconds(headers);
-        if (maxAge == 0) {
+        if (maxAge <= 0) {
             return Optional.empty();
         }
         try {

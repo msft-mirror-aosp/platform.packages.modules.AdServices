@@ -47,7 +47,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /** A class to manage Epoch computation. */
 public class EpochManager implements Dumpable {
@@ -156,7 +155,7 @@ public class EpochManager implements Dumpable {
             // Only produce for apps that called the Topics API in the current Epoch.
             // appClassificationTopicsMap = Map<App, List<Topics>>
             Map<String, List<Topic>> appClassificationTopicsMap =
-                    computeAppClassificationTopics(appSdksUsageMap);
+                    mClassifier.classify(appSdksUsageMap.keySet());
             LogUtil.v("appClassificationTopicsMap size is %d", appClassificationTopicsMap.size());
 
             // Then save app-topics Map into DB
@@ -183,7 +182,11 @@ public class EpochManager implements Dumpable {
             // Step 5: Retrieve the Top Topics. This will return a list of 5 top topics and
             // the 6th topic which is selected randomly. We can refer this 6th topic as the
             // random-topic.
-            List<Topic> topTopics = computeTopTopics(appClassificationTopicsMap);
+            List<Topic> topTopics =
+                    mClassifier.getTopTopics(
+                            appClassificationTopicsMap,
+                            mFlags.getTopicsNumberOfTopTopics(),
+                            mFlags.getTopicsNumberOfRandomTopics());
             // Abort the computation if empty list of top topics is returned from classifier.
             // This could happen if there is no usage of the Topics API in the last epoch.
             if (topTopics.isEmpty()) {
@@ -216,63 +219,6 @@ public class EpochManager implements Dumpable {
         } finally {
             db.endTransaction();
         }
-    }
-
-    // Query the Classifier to get the top Topics for this epoch.
-    // appClassificationTopicsMap = Map<App, List<Topics>>
-    // TODO: (b/232807776) Remove Topic Casting when topic can be populated from classifier
-    @NonNull
-    private List<Topic> computeTopTopics(Map<String, List<Topic>> appClassificationTopicsMap) {
-        Map<String, List<Integer>> appClassificationTopicsMapIntegerTopic = new HashMap<>();
-        for (Map.Entry<String, List<Topic>> appTopics : appClassificationTopicsMap.entrySet()) {
-            appClassificationTopicsMapIntegerTopic.put(
-                    appTopics.getKey(),
-                    appTopics.getValue().stream()
-                            .map(Topic::getTopic)
-                            .collect(Collectors.toList()));
-        }
-        List<Integer> topTopics =
-                mClassifier.getTopTopics(
-                        appClassificationTopicsMapIntegerTopic,
-                        mFlags.getTopicsNumberOfTopTopics(),
-                        mFlags.getTopicsNumberOfRandomTopics());
-        return topTopics.stream()
-                .map(
-                        topicsId ->
-                                Topic.create(
-                                        topicsId,
-                                        /* taxonomyVersion = */ 1L,
-                                        /* modelVersion = */ 1L))
-                .collect(Collectors.toList());
-    }
-
-    // Compute the Map from App to its classification topics.
-    // Only produce for apps that called the Topics API in the current Epoch.
-    // input:
-    // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
-    // Return appClassificationTopicsMap = Map<App, List<Topic>>
-    // TODO: (b/232807776) Remove Topic Casting when topic can be populated from classifier
-    @VisibleForTesting
-    @NonNull
-    Map<String, List<Topic>> computeAppClassificationTopics(
-            Map<String, List<String>> appSdksUsageMap) {
-        Map<String, List<Integer>> appClassificationTopicsMapIntegerTopic =
-                mClassifier.classify(appSdksUsageMap.keySet());
-        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
-        for (Map.Entry<String, List<Integer>> appTopics :
-                appClassificationTopicsMapIntegerTopic.entrySet()) {
-            appClassificationTopicsMap.put(
-                    appTopics.getKey(),
-                    appTopics.getValue().stream()
-                            .map(
-                                    topicsId ->
-                                            Topic.create(
-                                                    topicsId,
-                                                    /* taxonomyVersion = */ 1L,
-                                                    /* modelVersion = */ 1L))
-                            .collect(Collectors.toList()));
-        }
-        return appClassificationTopicsMap;
     }
 
     /**

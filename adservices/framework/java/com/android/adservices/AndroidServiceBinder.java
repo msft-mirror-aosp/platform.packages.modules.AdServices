@@ -186,7 +186,8 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         final Intent intent = new Intent(mServiceIntentAction);
 
         final ResolveInfo resolveInfo =
-                mContext.getPackageManager().resolveService(intent, PackageManager.GET_SERVICES);
+                mContext.getPackageManager()
+                        .resolveService(intent, PackageManager.MATCH_SYSTEM_ONLY);
         if (resolveInfo == null) {
             LogUtil.e("Failed to find resolveInfo for adServices service");
             return null;

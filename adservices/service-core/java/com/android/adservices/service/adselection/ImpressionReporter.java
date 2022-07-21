@@ -248,7 +248,7 @@ public class ImpressionReporter {
                         jsOverride -> {
                             if (jsOverride == null) {
                                 return mAdServicesHttpsClient.fetchPayload(
-                                        ctx.mAdSelectionConfig.getDecisionLogicUrl());
+                                        ctx.mAdSelectionConfig.getDecisionLogicUri());
                             } else {
                                 LogUtil.i(
                                         "Developer options enabled and an override JS is provided "
@@ -269,7 +269,7 @@ public class ImpressionReporter {
                             mJsEngine.reportResult(
                                     decisionLogicJs,
                                     ctx.mAdSelectionConfig,
-                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUrl(),
+                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
                                     ctx.mDBAdSelectionEntry.getWinningAdBid(),
                                     ctx.mDBAdSelectionEntry.getContextualSignals()))
                     .transform(
