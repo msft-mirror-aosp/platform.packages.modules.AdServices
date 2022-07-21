@@ -18,7 +18,7 @@ package android.adservices.topics;
 import java.util.Objects;
 
 /** Represent the topic result from the getTopics API. */
-public class Topic {
+public final class Topic {
     private final long mTaxonomyVersion;
     private final long mModelVersion;
     private final int mTopicId;

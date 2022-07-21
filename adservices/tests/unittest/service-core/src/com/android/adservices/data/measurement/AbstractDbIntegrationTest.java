@@ -235,8 +235,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER,
                 source.getPublisher().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                source.getAttributionDestination().toString());
+        values.put(
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                source.getAppDestination().toString());
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
