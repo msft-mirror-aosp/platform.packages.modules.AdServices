@@ -18,8 +18,6 @@ package android.adservices.adselection;
 
 import android.net.Uri;
 
-import com.android.adservices.data.adselection.CustomAudienceSignals;
-
 public class CustomAudienceBiddingInfoFixture {
 
     public static final Uri VALID_BIDDING_LOGIC_URL =
@@ -29,7 +27,4 @@ public class CustomAudienceBiddingInfoFixture {
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                     + ") {;\n"
                     + "}";
-
-    public static final CustomAudienceSignals.Builder CUSTOM_AUDIENCE_SIGNAL_BUILDER =
-            CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder();
 }

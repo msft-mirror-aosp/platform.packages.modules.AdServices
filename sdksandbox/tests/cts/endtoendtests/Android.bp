@@ -33,6 +33,7 @@ android_test {
     ],
     data: [
       ":LoadSdkSuccessfullySdkProvider",
+      ":GetLoadedSdkLibInfoSuccessfully",
       ":RetryLoadSameSdkShouldFailSdkProvider",
       ":LoadSdkWithInternalErrorSdkProvider",
       ":RequestSurfacePackageSuccessfullySdkProvider",

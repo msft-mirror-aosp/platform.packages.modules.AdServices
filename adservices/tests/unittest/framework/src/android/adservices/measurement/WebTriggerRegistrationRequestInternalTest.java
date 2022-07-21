@@ -80,7 +80,7 @@ public class WebTriggerRegistrationRequestInternalTest {
                 () ->
                         new WebTriggerRegistrationRequestInternal.Builder()
                                 .setTriggerRegistrationRequest(null)
-                                .setAttributionSource(CONTEXT.getAttributionSource())
+                                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
                                 .build());
 
         assertThrows(
@@ -88,20 +88,20 @@ public class WebTriggerRegistrationRequestInternalTest {
                 () ->
                         new WebTriggerRegistrationRequestInternal.Builder()
                                 .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                                .setAttributionSource(null)
+                                .setPackageName(null)
                                 .build());
     }
 
     private WebTriggerRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebTriggerRegistrationRequestInternal.Builder()
                 .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
-                .setAttributionSource(CONTEXT.getAttributionSource())
+                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
                 .build();
     }
 
     private void verifyExampleRegistrationInternal(WebTriggerRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getTriggerRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource(), request.getAttributionSource());
+        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getPackageName());
     }
 
     private void verifyExampleRegistration(WebTriggerRegistrationRequest request) {

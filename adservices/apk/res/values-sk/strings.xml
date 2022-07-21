@@ -33,15 +33,96 @@
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Prepnúť na technológie Privacy Sandbox beta"</string>
+    <string name="settingsUI_main_view_title" msgid="5043539340176844807">"Beta verzia ochrany súkromia v reklamách Androidu"</string>
+    <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"Otestujte nový systém Privacy Sandbox, ktorý obmedzuje sledovanie naprieč aplikáciami"</string>
+    <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Ako funguje systém Privacy Sandbox"</string>
+    <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Údaje sa zhromažďujú v systéme Privacy Sandbox, aby bolo možné zobrazovať reklamy, ktoré by sa vám mohli páčiť, ale zdieľajú sa bez identifikácie vašej osoby či zariadenia."</string>
+    <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Aký druh údajov sa ukladá do systému Privacy Sandbox?"</string>
+    <string name="settingsUI_main_view_info_text4" msgid="8784661072398581526">"• Všeobecné záujmy"</string>
+    <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Android generuje tieto údaje na základe aplikácií, ktoré používate, a pridáva ich do systému Privacy Sandbox. Napríklad jeden z vašich všeobecných záujmov môže byť Šport. \n\nZoznam záujmov si môžete pozrieť vo svojich nastaveniach ochrany súkromia, kde môžete aj zablokovať všetky, ktoré sa vám nepáčia."</string>
+    <string name="settingsUI_main_view_info_text6" msgid="1372295962773839373">"• Konkrétne záujmy"</string>
+    <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Vaše aplikácie generujú tieto údaje na základe toho, ako ich používate, a pridávajú ich do systému Privacy Sandbox. Napríklad aplikácia, pomocou ktorej nakupujete bežeckú obuv, môže pridať štítok sport_running.\n\nV nastaveniach ochrany súkromia si môžete pozrieť zoznam aplikácií, ktoré to robia, a zablokovať ľubovoľnú z nich, aby neposkytovala údaje systému Privacy Sandbox."</string>
+    <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Správa záujmov"</string>
+    <string name="settingsUI_topics_view_subtitle" msgid="5133398388693886168">"Privacy Sandbox Androidu obmedzuje sledovanie naprieč aplikáciami a súčasne umožňuje aplikáciám zobrazovať vám reklamy, ktoré by sa vám mohli páčiť. Android zdieľa tieto údaje s inzerentmi bez identifikácie vašej osoby či zariadenia.\n\nAndroid generuje a aktualizuje tento zoznam vašich všeobecných reklamných záujmov na základe aplikácií, ktoré používate. Ak nejaký záujem zablokujete, do tohto zoznamu bude pridaný až vtedy, keď ho odblokujete. Naďalej sa vám môžu zobrazovať súvisiace reklamy."</string>
+    <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Všeobecné reklamné záujmy"</string>
+    <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Android generuje tieto záujmy na základe aplikácií, ktoré používate.\n\nAk napríklad máte v zariadení viacero športových aplikácií, Android môže pridať do systému Privacy Sandbox záujem Šport.\n\nTieto údaje sa neskôr zdieľajú s inzerentmi bez identifikácie vašej osoby či zariadenia."</string>
+    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentálne nie sú k dispozícii žiadne záujmy, ktoré by sme mohli zobraziť"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"Vaše všeobecné záujmy"</string>
     <string name="settingsUI_topics_summary" msgid="3146101472984434355">"Spravujte svoje všeobecné záujmy"</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Vaše aplikácie generujúce konkrétne záujmy"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Spravujte svoje aplikácie generujúce konkrétne záujmy"</string>
+    <!-- no translation found for settingsUI_blocked_apps_title (616945769186215391) -->
+    <skip />
+    <!-- no translation found for settingsUI_block_app_title (4169472139940708737) -->
+    <skip />
+    <!-- no translation found for settingsUI_unblock_app_title (3298453461173699515) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_subtitle (8739946672076737081) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
+    <skip />
+    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
+    <skip />
+    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
+    <skip />
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Správa všeobecných záujmov pre reklamy"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blokovať"</string>
     <string name="settingsUI_blocked_topics_title" msgid="8563397445730522086">"Záujmy, ktoré ste zablokovali"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Resetovať všetky záujmy"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Odblokovať"</string>
+    <string name="notificationUI_eu_title" msgid="1156528090731956503">"Prihláste sa do beta verzie ochrany súkromia v reklamách"</string>
+    <!-- no translation found for notificationUI_header_title_eu (6822288197367284058) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_subtitle_eu (340747660810152558) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_title_eu (4361051737453876336) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_text_eu (3002855638097043236) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_title_eu (6354572742632086901) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_text_eu (166675713389999485) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_control_text_eu (2201590946141216882) -->
+    <skip />
+    <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Čo môžete robiť"</string>
+    <!-- no translation found for notificationUI_container3_body_text_eu (1489739161978958930) -->
+    <skip />
+    <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Nie, vďaka"</string>
+    <string name="notificationUI_right_control_button_text_eu" msgid="1179003744451135574">"Áno, vyskúšam to"</string>
+    <string name="notificationUI_non_eu_title" msgid="1400067162654584472">"Beta verzia ochrany súkromia v reklamách Androidu"</string>
+    <!-- no translation found for notificationUI_confirmation_left_control_button_text (1004303831215770799) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_right_control_button_text (3207541606235495458) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_title (3178322390976087463) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_accept_subtitle (9173047338339917593) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_title (6388776490679995340) -->
+    <skip />
+    <!-- no translation found for notificationUI_confirmation_decline_subtitle (4615362687181140355) -->
+    <skip />
+    <string name="notificationUI_header_title" msgid="1049608950263285787">"Pomáhate Androidu obmedziť sledovanie naprieč aplikáciami"</string>
+    <string name="notificationUI_header_subtitle" msgid="522289584167376388">"V rámci Androidu testujeme nové funkcie, ktoré obmedzia sledovanie naprieč aplikáciami inzerentmi."</string>
+    <string name="notificationUI_container1_title" msgid="3837529978480615552">"Čo je sledovanie naprieč aplikáciami?"</string>
+    <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Momentálne je možné údaje o používaní vašej aplikácie jednoducho spojiť s vaším zariadením a potom zdieľať s aplikáciami na reklamné účely."</string>
+    <string name="notificationUI_container2_title" msgid="4796199061758878885">"Čo robí Android"</string>
+    <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"V rámci Androidu testujeme nové technológie Privacy Sandbox, ktoré bezpečne ukladajú a zdieľajú reklamné údaje bez toho, aby bolo identifikované vaše zariadenie alebo vy. \n\nTento nový systém zabraňuje aplikáciám priamo odovzdávať údaje iným aplikáciám, pričom vám však môžu zobrazovať reklamy, ktoré by sa vám mohli páčiť."</string>
+    <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Ako to funguje"</string>
+    <string name="notificationUI_container3_title" msgid="4823075930852061894">"Čo je sledovanie naprieč aplikáciami?"</string>
+    <string name="notificationUI_container3_body_text" msgid="8999954025569853707">"Momentálne je možné údaje o používaní vašej aplikácie jednoducho spojiť s vaším zariadením a potom zdieľať s aplikáciami na reklamné účely."</string>
+    <!-- no translation found for notificationUI_left_control_button_text (6459461402253858770) -->
+    <skip />
+    <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Dobre"</string>
+    <string name="notificationUI_eu_content" msgid="121153625335218261">"Otestujete nové funkcie, ktoré budú obmedzovať sledovanie naprieč aplikáciami inzerentmi"</string>
+    <string name="notificationUI_non_eu_content" msgid="8932310379484651423">"Testujete nové funkcie, ktoré obmedzujú sledovanie naprieč aplikáciami"</string>
+    <!-- no translation found for notificationUI_how_it_works_expanded_text (3758348489850620566) -->
+    <skip />
 </resources>

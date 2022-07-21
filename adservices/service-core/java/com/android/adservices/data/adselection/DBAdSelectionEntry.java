@@ -49,9 +49,9 @@ public final class DBAdSelectionEntry {
     @NonNull
     private final String mContextualSignals;
 
-    @ColumnInfo(name = "winning_ad_render_url")
+    @ColumnInfo(name = "winning_ad_render_uri")
     @NonNull
-    private final Uri mWinningAdRenderUrl;
+    private final Uri mWinningAdRenderUri;
 
     @ColumnInfo(name = "winning_ad_bid")
     private final double mWinningAdBid;
@@ -68,14 +68,14 @@ public final class DBAdSelectionEntry {
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
             @NonNull String contextualSignals,
-            @NonNull Uri winningAdRenderUrl,
+            @NonNull Uri winningAdRenderUri,
             double winningAdBid,
             @NonNull Instant creationTimestamp,
             @Nullable String buyerDecisionLogicJs) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
         this.mContextualSignals = contextualSignals;
-        this.mWinningAdRenderUrl = winningAdRenderUrl;
+        this.mWinningAdRenderUri = winningAdRenderUri;
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
         this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
@@ -90,7 +90,7 @@ public final class DBAdSelectionEntry {
                     && Objects.equals(
                             mCustomAudienceSignals, adSelectionEntry.mCustomAudienceSignals)
                     && mContextualSignals.equals(adSelectionEntry.mContextualSignals)
-                    && Objects.equals(mWinningAdRenderUrl, adSelectionEntry.mWinningAdRenderUrl)
+                    && Objects.equals(mWinningAdRenderUri, adSelectionEntry.mWinningAdRenderUri)
                     && mWinningAdBid == adSelectionEntry.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelectionEntry.mCreationTimestamp)
                     && Objects.equals(
@@ -105,7 +105,7 @@ public final class DBAdSelectionEntry {
                 mAdSelectionId,
                 mCustomAudienceSignals,
                 mContextualSignals,
-                mWinningAdRenderUrl,
+                mWinningAdRenderUri,
                 mWinningAdBid,
                 mCreationTimestamp,
                 mBuyerDecisionLogicJs);
@@ -136,12 +136,10 @@ public final class DBAdSelectionEntry {
         return mContextualSignals;
     }
 
-    /**
-     * @return the rendering URL of the winning ad in this ad_selection_entry.
-     */
+    /** @return the rendering URI of the winning ad in this ad_selection_entry. */
     @NonNull
-    public Uri getWinningAdRenderUrl() {
-        return mWinningAdRenderUrl;
+    public Uri getWinningAdRenderUri() {
+        return mWinningAdRenderUri;
     }
 
     /**
@@ -172,7 +170,7 @@ public final class DBAdSelectionEntry {
         private long mAdSelectionId = UNSET;
         private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
-        private Uri mWinningAdRenderUrl;
+        private Uri mWinningAdRenderUri;
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mBuyerDecisionLogicJs;
@@ -204,11 +202,11 @@ public final class DBAdSelectionEntry {
             return this;
         }
 
-        /** Sets the winning ad's rendering URL for this ad_selection_entry. */
+        /** Sets the winning ad's rendering URI for this ad_selection_entry. */
         @NonNull
-        public DBAdSelectionEntry.Builder setWinningAdRenderUrl(@NonNull Uri mWinningAdRenderUrl) {
-            Objects.requireNonNull(mWinningAdRenderUrl);
-            this.mWinningAdRenderUrl = mWinningAdRenderUrl;
+        public DBAdSelectionEntry.Builder setWinningAdRenderUri(@NonNull Uri mWinningAdRenderUri) {
+            Objects.requireNonNull(mWinningAdRenderUri);
+            this.mWinningAdRenderUri = mWinningAdRenderUri;
             return this;
         }
 
@@ -255,14 +253,14 @@ public final class DBAdSelectionEntry {
             Preconditions.checkArgument(
                     !oneNull, "Buyer fields must both be null in case of contextual ad.");
             Objects.requireNonNull(mContextualSignals);
-            Objects.requireNonNull(mWinningAdRenderUrl);
+            Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
 
             return new DBAdSelectionEntry(
                     mAdSelectionId,
                     mCustomAudienceSignals,
                     mContextualSignals,
-                    mWinningAdRenderUrl,
+                    mWinningAdRenderUri,
                     mWinningAdBid,
                     mCreationTimestamp,
                     mBuyerDecisionLogicJs);
