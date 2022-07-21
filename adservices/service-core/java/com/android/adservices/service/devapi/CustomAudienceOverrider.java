@@ -23,7 +23,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
@@ -240,7 +239,7 @@ public class CustomAudienceOverrider {
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                     t.getMessage(),
                     apiName);
-        } else if (t instanceof ApiNotAuthorizedException) {
+        } else if (t instanceof SecurityException) {
             invokeFailure(
                     callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
         } else {

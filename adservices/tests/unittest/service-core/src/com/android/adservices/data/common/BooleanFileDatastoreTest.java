@@ -17,6 +17,7 @@
 package com.android.adservices.data.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -69,6 +70,18 @@ public class BooleanFileDatastoreTest {
                 IllegalArgumentException.class,
                 () -> {
                     mDatastore.put("", true);
+                });
+
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mDatastore.putIfNew(null, true);
+                });
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    mDatastore.putIfNew("", true);
                 });
 
         assertThrows(
@@ -128,6 +141,30 @@ public class BooleanFileDatastoreTest {
 
         // Should not throw when removing a nonexistent key
         mDatastore.remove(TEST_KEY);
+    }
+
+    @Test
+    public void testPutIfNewBooleanFileDatastore() throws IOException {
+        // Should not exist yet
+        assertNull(mDatastore.get(TEST_KEY));
+
+        // Create because it's new
+        assertFalse(mDatastore.putIfNew(TEST_KEY, false));
+        Boolean readValue = mDatastore.get(TEST_KEY);
+        assertNotNull(readValue);
+        assertFalse(readValue);
+
+        // Force overwrite
+        mDatastore.put(TEST_KEY, true);
+        readValue = mDatastore.get(TEST_KEY);
+        assertNotNull(readValue);
+        assertTrue(readValue);
+
+        // Put should read the existing value
+        assertTrue(mDatastore.putIfNew(TEST_KEY, false));
+        readValue = mDatastore.get(TEST_KEY);
+        assertNotNull(readValue);
+        assertTrue(readValue);
     }
 
     @Test

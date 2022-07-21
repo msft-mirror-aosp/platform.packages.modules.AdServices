@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
@@ -53,20 +53,18 @@ public class SdkSandboxStorageTestApp {
 
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
-    private static Context sContext;
-
     private static final String JAVA_FILE_PERMISSION_DENIED_MSG =
             "open failed: EACCES (Permission denied)";
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
+    private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
-        sContext = ApplicationProvider.getApplicationContext();
-        mSdkSandboxManager = sContext.getSystemService(
-                SdkSandboxManager.class);
+        mContext = ApplicationProvider.getApplicationContext();
+        mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
     }
 
@@ -75,11 +73,11 @@ public class SdkSandboxStorageTestApp {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
 
-        FakeRequestSurfacePackageCallback callback = new FakeRequestSurfacePackageCallback();
-        mSdkSandboxManager.requestSurfacePackage(
-                SDK_NAME, 0, 500, 500, bundle, Runnable::run, callback);
-        // Wait for SDK to finish handling the request
-        assertThat(callback.isRequestSurfacePackageSuccessful()).isFalse();
+        final FakeSendDataCallback callback = new FakeSendDataCallback();
+        mSdkSandboxManager.sendData(SDK_NAME, bundle, Runnable::run, callback);
+        if (!callback.isSendDataSuccessful()) {
+            throw new AssertionError(callback.getSendDataErrorMsg());
+        }
     }
 
     @Test

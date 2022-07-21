@@ -59,7 +59,9 @@ public class TopicsManagerTest {
 
     @Before
     public void setup() throws InterruptedException {
-        killPpApiProcess();
+        // TODO(b/238236775): Uncomment below line after root access is granted in tests
+        // killPpApiProcess();
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
