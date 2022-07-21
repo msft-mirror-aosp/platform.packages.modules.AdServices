@@ -71,6 +71,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -112,7 +113,8 @@ public class TopicsServiceImplTest {
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
-        AppUpdateManager appUpdateManager = new AppUpdateManager(mTopicsDao);
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -281,10 +283,10 @@ public class TopicsServiceImplTest {
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
-        // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        // Invocations Summary
+        // loadCache() : 1, getTopics(): 1 * 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -331,10 +333,11 @@ public class TopicsServiceImplTest {
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        // Invocation Summary:
+        // loadCache(): 1, getTopics(): 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -382,10 +385,10 @@ public class TopicsServiceImplTest {
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
-        // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        // Invocations Summary
+        // loadCache() : 1, getTopics(): 1 * 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -494,10 +497,10 @@ public class TopicsServiceImplTest {
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
         assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
-        // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        // Invocations Summary
+        // loadCache() : 1, getTopics(): 1 * 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -627,9 +630,9 @@ public class TopicsServiceImplTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @NonNull

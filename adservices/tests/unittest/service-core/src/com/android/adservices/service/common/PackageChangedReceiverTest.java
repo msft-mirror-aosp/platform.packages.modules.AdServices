@@ -24,6 +24,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.Intent;
@@ -63,7 +64,6 @@ public class PackageChangedReceiverTest {
     @Mock Flags mMockFlags;
 
     private TopicsWorker mTopicsWorker;
-    private MockitoSession mTopicsWorkerMockedSession;
 
     @Before
     public void before() {
@@ -111,7 +111,7 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             ExtendedMockito.doReturn(mTopicsWorker)
@@ -156,7 +156,7 @@ public class PackageChangedReceiverTest {
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             mMockPackageChangedReceiver.onReceive(sContext, intent);
 
@@ -170,20 +170,48 @@ public class PackageChangedReceiverTest {
     }
 
     @Test
-    public void testReceivePackageAdded() {
+    public void testReceivePackageAdded() throws InterruptedException {
+        final long epochId = 1;
+
         Intent intent = new Intent();
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
         intent.putExtra(PackageChangedReceiver.ACTION_KEY, PackageChangedReceiver.PACKAGE_ADDED);
 
-        mMockPackageChangedReceiver.onReceive(sContext, intent);
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
 
-        verify(mMockPackageChangedReceiver, times(1))
-                .onPackageAdded(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageFullyRemoved(any(Context.class), any(Uri.class));
-        verify(mMockPackageChangedReceiver, never())
-                .onPackageDataCleared(any(Context.class), any(Uri.class));
+        try {
+            // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
+            ExtendedMockito.doReturn(mTopicsWorker)
+                    .when(() -> TopicsWorker.getInstance(eq(sContext)));
+            when(mMockEpochManager.getCurrentEpochId()).thenReturn(epochId);
+
+            mMockPackageChangedReceiver.onReceive(sContext, intent);
+
+            // Grant some time to allow background thread to execute
+            Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
+
+            verify(mMockPackageChangedReceiver, times(1))
+                    .onPackageAdded(any(Context.class), any(Uri.class));
+            verify(mMockPackageChangedReceiver, never())
+                    .onPackageFullyRemoved(any(Context.class), any(Uri.class));
+
+            // Verify method in AppUpdateManager is invoked
+            // Note that only package name is passed into following methods.
+            verify(mMockEpochManager).getCurrentEpochId();
+            verify(mMockAppUpdateManager)
+                    .assignTopicsToNewlyInstalledApps(eq(Uri.parse(SAMPLE_PACKAGE)), eq(epochId));
+
+            verify(mMockPackageChangedReceiver, never())
+                    .onPackageDataCleared(any(Context.class), any(Uri.class));
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
