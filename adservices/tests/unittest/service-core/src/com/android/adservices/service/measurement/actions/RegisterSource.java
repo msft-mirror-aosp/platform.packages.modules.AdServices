@@ -44,33 +44,31 @@ public final class RegisterSource implements Action {
         AttributionSource attributionSource = getAttributionSource(
                 regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
 
-        RegistrationRequest registrationRequest = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setTopOriginUri(Uri.parse(regParamsJson.getString(
-                        TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
-                .setRegistrationUri(Uri.parse(regParamsJson.getString(
-                        TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                .setInputEvent(regParamsJson.getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
-                        .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE) ? null : getInputEvent())
-                .setAttributionSource(attributionSource)
-                .build();
-
-        Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap =
-                getUriToResponseHeadersMap(obj);
-
-        long timestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-
-        mRegistrationRequest = registrationRequest;
-        mUriToResponseHeadersMap = uriToResponseHeadersMap;
-        mTimestamp = timestamp;
+        mRegistrationRequest =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setTopOriginUri(
+                                Uri.parse(
+                                        regParamsJson.getString(
+                                                TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
+                        .setRegistrationUri(
+                                Uri.parse(
+                                        regParamsJson.getString(
+                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)))
+                        .setInputEvent(
+                                regParamsJson
+                                                .getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
+                                                .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
+                                        ? null
+                                        : getInputEvent())
+                        .setPackageName(attributionSource.getPackageName())
+                        .build();
+        mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
+        mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
     }
 
+    @Override
     public long getComparable() {
         return mTimestamp;
-    }
-
-    public Map<String, List<String>> getNextResponse(String uri) {
-        List<Map<String, List<String>>> responseList = mUriToResponseHeadersMap.get(uri);
-        return responseList.remove(0);
     }
 }

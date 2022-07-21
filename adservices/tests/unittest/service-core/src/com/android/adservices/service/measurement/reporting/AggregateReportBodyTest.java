@@ -17,11 +17,30 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.HpkeJni;
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.util.Base64;
+import java.util.List;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.Map;
+import co.nstant.in.cbor.model.UnicodeString;
 
 public class AggregateReportBodyTest {
 
@@ -61,15 +80,67 @@ public class AggregateReportBodyTest {
     }
 
     @Test
-    public void testAggregationServicePayloadsJsonSerialization() throws JSONException {
+    public void testAggregationServicePayloadsJsonSerialization() throws Exception {
         AggregateReportBody aggregateReport = createAggregateReportBodyExample1();
+
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
         JSONArray aggregationServicePayloadsJson =
-                aggregateReport.aggregationServicePayloadsToJson();
+                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
 
-        JSONObject debugCleartextPayloadJson =
-                aggregationServicePayloadsJson.getJSONObject(0);
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
-        assertEquals(DEBUG_CLEARTEXT_PAYLOAD,
-                debugCleartextPayloadJson.get("debug_cleartext_payload"));
+        assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {
+        final String encodedPayloadBase64 =
+                (String) aggregateServicePayloads.get("debug_cleartext_payload");
+        assertNotNull(encodedPayloadBase64);
+
+        final byte[] cborEncodedPayload = Base64.getDecoder().decode(encodedPayloadBase64);
+        assertCborEncoded(cborEncodedPayload);
+    }
+
+    private void assertEncryptedPayload(JSONObject aggregateServicePayloads) throws Exception {
+        final String encryptedPayloadBase64 = (String) aggregateServicePayloads.get("payload");
+        assertNotNull(encryptedPayloadBase64);
+
+        final byte[] decryptedCborEncoded =
+                HpkeJni.decrypt(
+                        AggregateCryptoFixture.getPrivateKey(),
+                        Base64.getDecoder().decode(encryptedPayloadBase64),
+                        AggregateCryptoFixture.getSharedInfoPrefix().getBytes());
+        assertNotNull(decryptedCborEncoded);
+        assertCborEncoded(decryptedCborEncoded);
+    }
+
+    private void assertCborEncoded(byte[] value) throws CborException {
+        final List<DataItem> dataItems = new CborDecoder(new ByteArrayInputStream(value)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+        assertEquals(2, payloadArray.getDataItems().size());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", 1369)
+                                                && isFound((Map) i, "value", 32768)));
+
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", 3461)
+                                                && isFound((Map) i, "value", 1664)));
+    }
+
+    private boolean isFound(Map map, String name, int value) {
+        return BigInteger.valueOf(value)
+                .equals(new BigInteger(((ByteString) map.get(new UnicodeString(name))).getBytes()));
     }
 }

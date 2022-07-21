@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import java.util.ArrayList;
@@ -23,15 +24,19 @@ import java.util.Arrays;
 
 /** Utility class supporting custom audience API unit tests */
 public class TrustedBiddingDataFixture {
+    public static final String VALID_TRUSTED_BIDDING_URL_PATH = "/trusted/bidding/";
 
-    public static final Uri VALID_TRUSTED_BIDDING_URL =
-            new Uri.Builder().path("valid.example.com/testing/hello").build();
     public static final ArrayList<String> VALID_TRUSTED_BIDDING_KEYS = new ArrayList<String>(
             Arrays.asList("example", "valid", "list", "of", "keys"));
 
-    public static final TrustedBiddingData VALID_TRUSTED_BIDDING_DATA =
-            new TrustedBiddingData.Builder()
-                    .setTrustedBiddingUrl(VALID_TRUSTED_BIDDING_URL)
-                    .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
-                    .build();
+    public static Uri getValidTrustedBiddingUrlByBuyer(String buyer) {
+        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URL_PATH);
+    }
+
+    public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(String buyer) {
+        return new TrustedBiddingData.Builder()
+                .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
+                .setTrustedBiddingUrl(getValidTrustedBiddingUrlByBuyer(buyer))
+                .build();
+    }
 }

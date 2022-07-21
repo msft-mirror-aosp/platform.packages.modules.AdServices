@@ -17,11 +17,13 @@ package com.android.adservices.service.measurement.registration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,10 +37,10 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
@@ -62,6 +64,7 @@ public final class TriggerFetcherTest {
     private static final long TRIGGER_DATA = 7;
     private static final long PRIORITY = 1;
     private static final long DEDUP_KEY = 100;
+    private static final Long DEBUG_KEY = 34787843L;
 
     private static final String DEFAULT_REDIRECT = "https://bar.com";
 
@@ -114,10 +117,17 @@ public final class TriggerFetcherTest {
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
-    @Spy TriggerFetcher mFetcher;
+    TriggerFetcher mFetcher;
     @Mock HttpsURLConnection mUrlConnection;
     @Mock HttpsURLConnection mUrlConnection1;
     @Mock HttpsURLConnection mUrlConnection2;
+    @Mock AdIdPermissionFetcher mAdIdPermissionFetcher;
+
+    @Before
+    public void setup() {
+        mFetcher = spy(new TriggerFetcher(mAdIdPermissionFetcher));
+        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+    }
 
     @Test
     public void testBasicTriggerRequest() throws Exception {
@@ -136,6 +146,60 @@ public final class TriggerFetcherTest {
         assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
         assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
         assertEquals(EVENT_TRIGGERS_1, result.get(0).getEventTriggers());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequestWithDebugKey() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Event-Trigger", List.of(EVENT_TRIGGERS_1));
+        headersRequest.put(
+                "Attribution-Reporting-Trigger-Debug-Key", List.of(String.valueOf(DEBUG_KEY)));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(true);
+
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(EVENT_TRIGGERS_1, result.get(0).getEventTriggers());
+        assertEquals(DEBUG_KEY, result.get(0).getDebugKey()); // todo
+
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequestWithoutAdIdPermission() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI, TOP_ORIGIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Event-Trigger", List.of(EVENT_TRIGGERS_1));
+        headersRequest.put(
+                "Attribution-Reporting-Trigger-Debug-Key", List.of(String.valueOf(DEBUG_KEY)));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+        when(mAdIdPermissionFetcher.isAdIdPermissionEnabled()).thenReturn(false);
+
+        Optional<List<TriggerRegistration>> fetch = mFetcher.fetchTrigger(request);
+        assertTrue(fetch.isPresent());
+        List<TriggerRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(TOP_ORIGIN, result.get(0).getTopOrigin().toString());
+        assertEquals(TRIGGER_URI, result.get(0).getReportingOrigin().toString());
+        assertEquals(EVENT_TRIGGERS_1, result.get(0).getEventTriggers());
+        assertNull(result.get(0).getDebugKey());
+
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -324,6 +388,7 @@ public final class TriggerFetcherTest {
                         .setTopOrigin(Uri.parse(TOP_ORIGIN))
                         .setEventTriggers(EVENT_TRIGGERS_1)
                         .setReportingOrigin(REGISTRATION_URI_1)
+                        .setDebugKey(DEBUG_KEY)
                         .build();
         TriggerRegistration expectedResult2 =
                 new TriggerRegistration.Builder()
@@ -339,16 +404,21 @@ public final class TriggerFetcherTest {
         doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL(REGISTRATION_URI_2.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
         when(mUrlConnection2.getResponseCode()).thenReturn(200);
-        when(mUrlConnection1.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Event-Trigger",
-                                List.of(EVENT_TRIGGERS_1)));
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Event-Trigger", List.of(EVENT_TRIGGERS_1));
+        headersRequest.put(
+                "Attribution-Reporting-Trigger-Debug-Key", List.of(String.valueOf(DEBUG_KEY)));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
         when(mUrlConnection2.getHeaderFields())
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Event-Trigger",
                                 List.of(EVENT_TRIGGERS_2)));
+
+
+
 
         // Execution
         Optional<List<TriggerRegistration>> fetch = mFetcher.fetchWebTriggers(request);
@@ -455,7 +525,7 @@ public final class TriggerFetcherTest {
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse(triggerUri))
                 .setTopOriginUri(Uri.parse(topOriginUri))
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 

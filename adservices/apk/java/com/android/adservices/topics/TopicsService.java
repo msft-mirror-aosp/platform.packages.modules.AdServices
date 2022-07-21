@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.consent.ConsentManager;
@@ -44,6 +45,12 @@ public class TopicsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            return;
+        }
+
         if (mTopicsService == null) {
             mTopicsService =
                     new TopicsServiceImpl(
@@ -65,6 +72,11 @@ public class TopicsService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
         return Objects.requireNonNull(mTopicsService);
     }
 

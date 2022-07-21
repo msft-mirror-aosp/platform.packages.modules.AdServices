@@ -90,7 +90,7 @@ public class WebSourceRegistrationRequestInternalTest {
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder()
                                 .setSourceRegistrationRequest(null)
-                                .setAttributionSource(CONTEXT.getAttributionSource())
+                                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
                                 .build());
 
         assertThrows(
@@ -98,20 +98,20 @@ public class WebSourceRegistrationRequestInternalTest {
                 () ->
                         new WebSourceRegistrationRequestInternal.Builder()
                                 .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
-                                .setAttributionSource(null)
+                                .setPackageName(null)
                                 .build());
     }
 
     private WebSourceRegistrationRequestInternal createExampleRegistrationRequest() {
         return new WebSourceRegistrationRequestInternal.Builder()
                 .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
-                .setAttributionSource(CONTEXT.getAttributionSource())
+                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
                 .build();
     }
 
     private void verifyExampleRegistrationInternal(WebSourceRegistrationRequestInternal request) {
         verifyExampleRegistration(request.getSourceRegistrationRequest());
-        assertEquals(CONTEXT.getAttributionSource(), request.getAttributionSource());
+        assertEquals(CONTEXT.getAttributionSource().getPackageName(), request.getPackageName());
     }
 
     private void verifyExampleRegistration(WebSourceRegistrationRequest request) {

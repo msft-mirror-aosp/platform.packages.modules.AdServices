@@ -163,7 +163,8 @@ public class BackgroundFetchWorkerTest {
 
         // Mock a custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .build();
         doReturn(Arrays.asList(fetchData))
@@ -195,7 +196,8 @@ public class BackgroundFetchWorkerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         // Mock a single custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .build();
         doReturn(Arrays.asList(fetchData))
@@ -215,7 +217,8 @@ public class BackgroundFetchWorkerTest {
 
         // Mock a list of custom audiences eligible for update
         DBCustomAudienceBackgroundFetchData.Builder fetchDataBuilder =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW);
         List<DBCustomAudienceBackgroundFetchData> fetchDataList = new ArrayList<>();
         for (int i = 0; i < numEligibleCustomAudiences; i++) {
