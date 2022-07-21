@@ -1,1 +1,10 @@
 // Signature format: 2.0
+package android.adservices.common {
+
+  public class AdServicesCommonManager {
+    method public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,android.adservices.exceptions.AdServicesException>);
+    method public void setAdServicesEntryPointEnabled(@NonNull boolean);
+  }
+
+}
+

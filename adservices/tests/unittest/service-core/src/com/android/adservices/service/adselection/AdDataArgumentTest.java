@@ -85,7 +85,7 @@ public class AdDataArgumentTest {
                                 "name",
                                 stringArg(
                                         AdDataArgument.RENDER_URL_FIELD_NAME,
-                                        AD_DATA.getRenderUrl().toString()),
+                                        AD_DATA.getRenderUri().toString()),
                                 jsonArg(
                                         AdDataArgument.METADATA_FIELD_NAME,
                                         AD_DATA.getMetadata())));
