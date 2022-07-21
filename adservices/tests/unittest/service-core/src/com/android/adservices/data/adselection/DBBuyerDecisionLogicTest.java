@@ -32,11 +32,11 @@ public class DBBuyerDecisionLogicTest {
     public void testBuildDBBuyerDecisionLogic() {
         DBBuyerDecisionLogic dbBuyerDecisionLogic =
                 new DBBuyerDecisionLogic.Builder()
-                        .setBiddingLogicUrl(BIDDING_LOGIC_URL)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URL)
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .build();
 
-        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUrl(), BIDDING_LOGIC_URL);
+        assertEquals(dbBuyerDecisionLogic.getBiddingLogicUri(), BIDDING_LOGIC_URL);
         assertEquals(dbBuyerDecisionLogic.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
     }
 }

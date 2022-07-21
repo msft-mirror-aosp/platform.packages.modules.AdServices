@@ -84,11 +84,7 @@ public class AdServicesHttpsClientTest {
         URL url = server.getUrl(mReportingPath);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            reportUrl(Uri.parse(url.toString()));
-                        });
+                assertThrows(ExecutionException.class, () -> reportUrl(Uri.parse(url.toString())));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -99,9 +95,7 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            reportUrl(Uri.parse("https://www.domain.com/adverts/123"));
-                        });
+                        () -> reportUrl(Uri.parse("https://www.domain.com/adverts/123")));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -149,10 +143,7 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            fetchPayload(Uri.parse(url.toString()));
-                        });
+                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -163,9 +154,7 @@ public class AdServicesHttpsClientTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> {
-                            fetchPayload(Uri.parse("https://www.domain.com/adverts/123"));
-                        });
+                        () -> fetchPayload(Uri.parse("https://www.domain.com/adverts/123")));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
@@ -186,10 +175,7 @@ public class AdServicesHttpsClientTest {
 
         Exception exception =
                 assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            fetchPayload(Uri.parse(url.toString()));
-                        });
+                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
         assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
