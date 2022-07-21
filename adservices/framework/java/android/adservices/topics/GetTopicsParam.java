@@ -73,7 +73,7 @@ public final class GetTopicsParam implements Parcelable {
         out.writeString(mAppPackageName);
     }
 
-    /** Get the Sdk Name. This is the name in the <sdk-library> tag of the Manfiest. */
+    /** Get the Sdk Name. This is the name in the <sdk-library> tag of the Manifest. */
     @NonNull
     public String getSdkName() {
         return mSdkName;
