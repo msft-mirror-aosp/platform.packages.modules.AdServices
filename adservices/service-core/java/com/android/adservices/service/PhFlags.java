@@ -107,6 +107,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_scoring_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
+            "topics_number_of_epochs_to_keep_in_history";
 
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
@@ -503,7 +505,6 @@ public final class PhFlags implements Flags {
     }
 
     // Group of All Killswitches
-
     @Override
     public boolean getGlobalKillSwitch() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
@@ -538,6 +539,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ADSERVICES_ENABLE_STATUS,
                 /* defaultValue */ ADSERVICES_ENABLE_STATUS);
+    }
+
+    @Override
+    public int getNumberOfEpochsToKeepInHistory() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
+                /* defaultValue */ NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
     }
 
     @VisibleForTesting
