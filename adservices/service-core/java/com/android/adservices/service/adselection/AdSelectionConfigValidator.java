@@ -22,8 +22,10 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.common.Validator;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
 
@@ -55,17 +57,15 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
                     + " consistent.";
 
     @Override
-    public ImmutableList<String> getValidationViolations(
-            @NonNull AdSelectionConfig adSelectionConfig) {
-        ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
+    public void addValidation(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull ImmutableCollection.Builder<String> violations) {
         if (Objects.isNull(adSelectionConfig)) {
             violations.add("The adSelectionConfig should not be null.");
         }
         violations.addAll(
                 validateSellerAndSellerDecisionUrls(
                         adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUri()));
-
-        return violations.build();
     }
 
     /**

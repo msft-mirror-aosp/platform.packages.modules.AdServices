@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.common;
+
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
 
@@ -24,6 +27,8 @@ import java.util.Collection;
  * @param <T> is the type name of the object instance to be validated.
  */
 public interface Validator<T> {
+    String EXCEPTION_MESSAGE_FORMAT = "Invalid object of type %s. The violations are: %s";
+
     /**
      * Validate the object instance of type T.
      *
@@ -36,8 +41,7 @@ public interface Validator<T> {
         if (!violations.isEmpty()) {
             throw new IllegalArgumentException(
                     String.format(
-                            "Invalid object of type %s. The violations are: %s",
-                            object.getClass().getName(), violations));
+                            EXCEPTION_MESSAGE_FORMAT, object.getClass().getName(), violations));
         }
     }
 
@@ -48,5 +52,12 @@ public interface Validator<T> {
      * @return an empty collection if the object is valid or a collection of strings describing all
      *     the encountered violations.
      */
-    Collection<String> getValidationViolations(T object);
+    default Collection<String> getValidationViolations(T object) {
+        ImmutableCollection.Builder<String> violations = new ImmutableList.Builder<>();
+        addValidation(object, violations);
+        return violations.build();
+    }
+
+    /** Validates the object and populate the violations. */
+    void addValidation(T object, ImmutableCollection.Builder<String> violations);
 }
