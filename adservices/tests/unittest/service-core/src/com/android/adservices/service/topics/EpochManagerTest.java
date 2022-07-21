@@ -487,15 +487,15 @@ public final class EpochManagerTest {
         // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
         when(topicsDao.retrieveAppSdksUsageMap(epochId)).thenReturn(appSdksUsageMap);
 
-        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
-        appClassificationTopicsMap.put("app2", Arrays.asList(2, 3));
-        appClassificationTopicsMap.put("app3", Arrays.asList(4, 5));
-        appClassificationTopicsMap.put("app4", Arrays.asList(5, 6));
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", createTopics(Arrays.asList(1, 2)));
+        appClassificationTopicsMap.put("app2", createTopics(Arrays.asList(2, 3)));
+        appClassificationTopicsMap.put("app3", createTopics(Arrays.asList(4, 5)));
+        appClassificationTopicsMap.put("app4", createTopics(Arrays.asList(5, 6)));
         when(mMockClassifier.classify(eq(appSdksUsageMap.keySet())))
                 .thenReturn(appClassificationTopicsMap);
 
-        List<Integer> topTopics = Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6);
+        List<Topic> topTopics = createTopics(Arrays.asList(1, 2, 3, 4, 5, /* random_topic */ 6));
         when(mMockClassifier.getTopTopics(
                         eq(appClassificationTopicsMap),
                         eq(mFlags.getTopicsNumberOfTopTopics()),
@@ -557,11 +557,7 @@ public final class EpochManagerTest {
 
         // Verify TopTopicsContract
         List<Topic> topTopicsFromDB = topicsDao.retrieveTopTopics(epochId);
-        List<Topic> expectedTopTopics =
-                topTopics.stream()
-                        .map(e -> Topic.create(e, TAXONOMY_VERSION, MODEL_VERSION))
-                        .collect(Collectors.toList());
-        assertThat(topTopicsFromDB).isEqualTo(expectedTopTopics);
+        assertThat(topTopicsFromDB).isEqualTo(topTopics);
 
         // Verify ReturnedTopicContract
         // Random sequence numbers used in this test: {1, 5, 6, 7, 8, 9}.
@@ -651,8 +647,8 @@ public final class EpochManagerTest {
         // Mock TopicsDao to return above LinkedHashMap for retrieveAppSdksUsageMap()
         when(topicsDao.retrieveAppSdksUsageMap(epochId)).thenReturn(appSdksUsageMap);
 
-        Map<String, List<Integer>> appClassificationTopicsMap = new HashMap<>();
-        appClassificationTopicsMap.put("app1", Arrays.asList(1, 2));
+        Map<String, List<Topic>> appClassificationTopicsMap = new HashMap<>();
+        appClassificationTopicsMap.put("app1", createTopics(Arrays.asList(1, 2)));
         when(mMockClassifier.classify(eq(appSdksUsageMap.keySet())))
                 .thenReturn(appClassificationTopicsMap);
 
@@ -842,5 +838,13 @@ public final class EpochManagerTest {
 
         verify(flags, times(3)).getTopicsEpochJobPeriodMs();
         verify(mMockClock, times(3)).currentTimeMillis();
+    }
+
+    private Topic createTopic(int topicId) {
+        return Topic.create(topicId, TAXONOMY_VERSION, MODEL_VERSION);
+    }
+
+    private List<Topic> createTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
     }
 }

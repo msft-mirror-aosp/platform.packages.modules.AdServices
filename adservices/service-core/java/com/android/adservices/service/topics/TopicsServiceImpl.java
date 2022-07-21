@@ -81,17 +81,22 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
         final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
-
-        // Check the permission in the same thread since we're looking for caller's permissions.
-        boolean permitted =
-                PermissionHelper.hasTopicsPermission(mContext)
-                        && AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mContext, packageName, sdkName);
+        final String sdkPackageName = topicsParam.getSdkPackageName();
 
         // We need to save the Calling Uid before offloading to the background executor. Otherwise
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
         // since it's used in the lambda.
         final int callingUid = Binder.getCallingUid();
+
+        // Check the permission in the same thread since we're looking for caller's permissions.
+        // Note: The permission check uses sdk package name since PackageManager checks if the
+        // permission is declared in the manifest of that package name.
+        boolean permitted =
+                PermissionHelper.hasTopicsPermission(
+                                mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName)
+                        && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                mContext, packageName, sdkName);
+
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = RESULT_OK;

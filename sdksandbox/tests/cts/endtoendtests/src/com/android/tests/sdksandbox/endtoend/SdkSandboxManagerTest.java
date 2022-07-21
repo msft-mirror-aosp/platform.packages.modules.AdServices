@@ -21,7 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.content.Context;
+import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -31,8 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 /*
  * TODO(b/215372846): These providers
@@ -54,7 +55,6 @@ public class SdkSandboxManagerTest {
     public void loadSdkSuccessfully() {
         final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
@@ -115,6 +115,34 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.requestSurfacePackage(
                 sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
+    }
+
+    @Test
+    public void getLoadedSdkLibrariesInfoSuccessfully() {
+        final String sdkName = "com.android.getLoadedSdkLibInfoSuccessfully";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        List<SharedLibraryInfo> sdkLibrariesInfo = mSdkSandboxManager.getLoadedSdkLibrariesInfo();
+
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        // TODO(b/239025435): assert size 1 after unload is implemented
+        assertThat(sdkLibrariesInfo.stream().filter(lib -> lib.getName().equals(sdkName)).count())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void getLoadedSdkLibrariesInfoMissesSdkWhenLoadFailed() {
+        final String sdkName = "com.android.loadSdkWithInternalErrorSdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isFalse();
+
+        List<SharedLibraryInfo> sdkLibrariesInfo = mSdkSandboxManager.getLoadedSdkLibrariesInfo();
+        // TODO(b/239025435): assert empty after unload is implemented
+        assertThat(sdkLibrariesInfo.stream().filter(lib -> lib.getName().equals(sdkName)).count())
+                .isEqualTo(0);
     }
 
     @Test
@@ -188,64 +216,6 @@ public class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
-    }
-
-    private static class FakeSendDataCallback implements SdkSandboxManager.SendDataCallback {
-        private final CountDownLatch mSendDataLatch = new CountDownLatch(1);
-        private boolean mSendDataSuccess;
-
-        private Bundle mBundle;
-        private int mErrorCode;
-        private String mErrorMsg;
-
-        @Override
-        public void onSendDataSuccess(Bundle params) {
-            mSendDataSuccess = true;
-            mBundle = params;
-            mSendDataLatch.countDown();
-        }
-
-        public void onSendDataError(int errorCode, String errorMsg) {
-            mSendDataSuccess = false;
-            mErrorCode = errorCode;
-            mErrorMsg = errorMsg;
-            mSendDataLatch.countDown();
-        }
-
-        public boolean isSendDataSuccessful() {
-            waitForLatch(mSendDataLatch);
-            return mSendDataSuccess;
-        }
-
-        public Bundle getSendDataSuccessBundle() {
-            return mBundle;
-        }
-
-        public int getSendDataErrorCode() {
-            waitForLatch(mSendDataLatch);
-            assertThat(mSendDataSuccess).isFalse();
-            return mErrorCode;
-        }
-
-        public String getSendDataErrorMsg() {
-            waitForLatch(mSendDataLatch);
-            assertThat(mSendDataSuccess).isFalse();
-            return mErrorMsg;
-        }
-
-        private void waitForLatch(CountDownLatch latch) {
-            try {
-                // Wait for callback to be called
-                final int waitTime = 5;
-                if (!latch.await(waitTime, TimeUnit.SECONDS)) {
-                    throw new IllegalStateException(
-                            "Callback not called within " + waitTime + " seconds");
-                }
-            } catch (InterruptedException e) {
-                throw new IllegalStateException(
-                        "Interrupted while waiting on callback: " + e.getMessage());
-            }
-        }
     }
 }
 
