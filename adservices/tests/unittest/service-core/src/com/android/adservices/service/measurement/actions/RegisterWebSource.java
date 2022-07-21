@@ -81,7 +81,7 @@ public final class RegisterWebSource implements Action {
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder()
                         .setSourceRegistrationRequest(registrationRequest)
-                        .setAttributionSource(attributionSource)
+                        .setPackageName(attributionSource.getPackageName())
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

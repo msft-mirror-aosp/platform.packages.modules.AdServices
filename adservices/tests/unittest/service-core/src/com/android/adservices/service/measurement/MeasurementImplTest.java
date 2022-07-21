@@ -218,7 +218,7 @@ public final class MeasurementImplTest {
         return new RegistrationRequest.Builder()
                 .setRegistrationUri(REGISTRATION_URI_1)
                 .setTopOriginUri(DEFAULT_URI)
-                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                 .setRegistrationType(type)
                 .build();
     }
@@ -233,7 +233,7 @@ public final class MeasurementImplTest {
                         .build();
         return new WebTriggerRegistrationRequestInternal.Builder()
                 .setTriggerRegistrationRequest(webTriggerRegistrationRequest)
-                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                 .build();
     }
 
@@ -252,7 +252,7 @@ public final class MeasurementImplTest {
 
         return new WebSourceRegistrationRequestInternal.Builder()
                 .setSourceRegistrationRequest(sourceRegistrationRequest)
-                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                 .build();
     }
 
@@ -380,7 +380,8 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .build());
@@ -393,7 +394,8 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
@@ -410,7 +412,8 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.singletonList(DEFAULT_URI))
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
@@ -424,7 +427,8 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
@@ -440,7 +444,8 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
@@ -459,7 +464,8 @@ public final class MeasurementImplTest {
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
@@ -509,7 +515,8 @@ public final class MeasurementImplTest {
                         new RegistrationRequest.Builder()
                                 .setRegistrationUri(REGISTRATION_URI_1)
                                 .setTopOriginUri(DEFAULT_URI)
-                                .setAttributionSource(DEFAULT_CONTEXT.getAttributionSource())
+                                .setPackageName(
+                                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
                                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                                 .setInputEvent(inputEvent)
                                 .build(),
@@ -774,7 +781,7 @@ public final class MeasurementImplTest {
                         firstSourceDestination,
                         firstSourceWebDestination,
                         registrationRequest.getTopOriginUri(),
-                        registrationRequest.getAttributionSource());
+                        registrationRequest.getPackageName());
         verify(mMeasurementDao).insertSource(source);
     }
 
@@ -792,7 +799,7 @@ public final class MeasurementImplTest {
                         firstSourceDestination,
                         firstSourceWebDestination,
                         registrationRequest.getSourceRegistrationRequest().getTopOriginUri(),
-                        registrationRequest.getAttributionSource());
+                        registrationRequest.getPackageName());
         verify(mMeasurementDao).insertSource(source);
     }
 
@@ -802,14 +809,14 @@ public final class MeasurementImplTest {
             Uri firstSourceDestination,
             Uri firstSourceWebDestination,
             Uri topOrigin,
-            AttributionSource attributionSource) {
+            String packageName) {
         return SourceFixture.getValidSourceBuilder()
                 .setEventId(sourceRegistration.getSourceEventId())
                 .setPublisher(topOrigin)
                 .setAppDestination(firstSourceDestination)
                 .setWebDestination(firstSourceWebDestination)
                 .setAdTechDomain(sourceRegistration.getReportingOrigin())
-                .setRegistrant(Uri.parse("android-app://" + attributionSource.getPackageName()))
+                .setRegistrant(Uri.parse("android-app://" + packageName))
                 .setEventTime(eventTime)
                 .setExpiryTime(
                         eventTime + TimeUnit.SECONDS.toMillis(sourceRegistration.getExpiry()))

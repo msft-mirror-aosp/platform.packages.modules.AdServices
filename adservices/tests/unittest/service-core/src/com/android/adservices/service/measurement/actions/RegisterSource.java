@@ -61,7 +61,7 @@ public final class RegisterSource implements Action {
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
-                        .setAttributionSource(attributionSource)
+                        .setPackageName(attributionSource.getPackageName())
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
