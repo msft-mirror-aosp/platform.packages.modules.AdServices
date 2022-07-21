@@ -13,6 +13,20 @@ package android.adservices {
 
 }
 
+package android.adservices.adid {
+
+  public class AdId {
+    ctor public AdId(@NonNull String, boolean);
+    method @NonNull public String getAdId();
+    method public boolean isLimitAdTrackingEnabled();
+  }
+
+  public class AdIdManager {
+    method @NonNull public void getAdId(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adid.AdId,java.lang.Exception>);
+  }
+
+}
+
 package android.adservices.adselection {
 
   public final class AdSelectionConfig implements android.os.Parcelable {
