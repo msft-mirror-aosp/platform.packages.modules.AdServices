@@ -114,7 +114,7 @@ public class JSScriptEngine {
                                 @Override
                                 public void onFailure(Throwable t) {
                                     mSandboxInitStopWatch.stop();
-                                    LogUtil.e("JsSandbox initialization failed", t);
+                                    LogUtil.e(t, "JsSandbox initialization failed");
                                 }
                             },
                             AdServicesExecutors.getLightWeightExecutor());

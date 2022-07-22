@@ -104,7 +104,7 @@ public class AdServicesHttpsClient {
         try {
             url = new URL(uri.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Uri is malformed! ", e);
+            LogUtil.d(e, "Uri is malformed! ");
             throw new IllegalArgumentException("Uri is malformed!");
         }
         return url;
@@ -150,7 +150,7 @@ public class AdServicesHttpsClient {
         try {
             urlConnection = setupConnection(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open URL", e);
+            LogUtil.d(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -210,7 +210,7 @@ public class AdServicesHttpsClient {
         try {
             urlConnection = setupConnection(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open URL", e);
+            LogUtil.d(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
         }
 

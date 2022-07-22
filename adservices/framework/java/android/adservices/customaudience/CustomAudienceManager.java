@@ -110,7 +110,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -164,7 +164,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -216,7 +216,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -266,7 +266,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -309,7 +309,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }

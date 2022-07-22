@@ -102,7 +102,7 @@ public class ImpressionReporter {
                             .build());
             resultCode = statusCode;
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send failed result to the callback", e);
+            LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -118,7 +118,7 @@ public class ImpressionReporter {
             callback.onSuccess();
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send successful result to the callback", e);
+            LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {

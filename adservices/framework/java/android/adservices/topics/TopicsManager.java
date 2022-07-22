@@ -199,7 +199,7 @@ public final class TopicsManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             callback.onError(e);
         }
     }

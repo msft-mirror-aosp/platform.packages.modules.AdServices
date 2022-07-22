@@ -361,7 +361,7 @@ class AttributionJobHandler {
             return FilterUtil.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e("Malformed JSON string.", e);
+            LogUtil.e(e, "Malformed JSON string.");
             return false;
         }
     }
@@ -392,7 +392,7 @@ class AttributionJobHandler {
                     .findFirst();
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e("Malformed JSON string.", e);
+            LogUtil.e(e, "Malformed JSON string.");
             return Optional.empty();
         }
     }
@@ -439,7 +439,7 @@ class AttributionJobHandler {
                     return OptionalInt.empty();
                 }
             } catch (ArithmeticException e) {
-                LogUtil.e("Error adding aggregate contribution values.", e);
+                LogUtil.e(e, "Error adding aggregate contribution values.");
                 return OptionalInt.empty();
             }
         }

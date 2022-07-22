@@ -124,7 +124,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         mTopicsWorker.recordUsage(
                                 topicsParam.getAppPackageName(), topicsParam.getSdkName());
                     } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
+                        LogUtil.e(e, "Unable to send result to the callback");
                         resultCode = RESULT_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();

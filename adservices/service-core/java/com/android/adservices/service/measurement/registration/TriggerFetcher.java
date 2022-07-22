@@ -121,7 +121,7 @@ public class TriggerFetcher {
             try {
                 result.setDebugKey(Long.parseLong(field.get(0)));
             } catch (NumberFormatException e) {
-                LogUtil.e("Parsing debug key failed", e);
+                LogUtil.e(e, "Parsing debug key failed");
             }
         }
 
@@ -256,7 +256,7 @@ public class TriggerFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 

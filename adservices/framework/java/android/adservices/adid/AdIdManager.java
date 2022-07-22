@@ -165,7 +165,7 @@ public class AdIdManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             callback.onError(e);
         }
     }

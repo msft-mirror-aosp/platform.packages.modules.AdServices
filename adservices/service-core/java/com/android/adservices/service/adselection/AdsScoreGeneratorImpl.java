@@ -124,7 +124,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @Nullable
     private List<AdScoringOutcome> handleTimeoutError(ExecutionException e) {
-        LogUtil.w("Scoring exceeded time limit", e);
+        LogUtil.w(e, "Scoring exceeded time limit");
         throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
     }
 
@@ -229,7 +229,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.w("Exception encountered when fetching trusted signals", e);
+                            LogUtil.w(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },
                         mListeningExecutorService);

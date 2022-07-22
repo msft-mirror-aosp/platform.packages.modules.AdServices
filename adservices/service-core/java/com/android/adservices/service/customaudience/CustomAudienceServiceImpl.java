@@ -135,7 +135,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                             .build());
                         }
                     } catch (Exception exception) {
-                        LogUtil.e("Unable to send result to the callback", exception);
+                        LogUtil.e(exception, "Unable to send result to the callback");
                         resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
                     } finally {
                         mAdServicesLogger.logFledgeApiCallStats(
@@ -173,7 +173,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     try {
                         mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
                     } catch (Exception exception) {
-                        LogUtil.e("Unexpected error leave custom audience.", exception);
+                        LogUtil.e(exception, "Unexpected error leave custom audience.");
                     }
                     try {
                         callback.onSuccess();
@@ -181,7 +181,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         //  logs/metrics
                         resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                     } catch (Exception exception) {
-                        LogUtil.e("Unable to send result to the callback", exception);
+                        LogUtil.e(exception, "Unable to send result to the callback");
                         resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
                     } finally {
                         mAdServicesLogger.logFledgeApiCallStats(

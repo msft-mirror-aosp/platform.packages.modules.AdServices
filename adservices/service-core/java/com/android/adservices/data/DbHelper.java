@@ -89,7 +89,7 @@ public final class DbHelper extends SQLiteOpenHelper {
         try {
             return super.getReadableDatabase();
         } catch (SQLiteException e) {
-            LogUtil.e("Failed to get a readable database", e);
+            LogUtil.e(e, "Failed to get a readable database");
             return null;
         }
     }
@@ -102,7 +102,7 @@ public final class DbHelper extends SQLiteOpenHelper {
         try {
             return super.getWritableDatabase();
         } catch (SQLiteException e) {
-            LogUtil.e("Failed to get a writeable database", e);
+            LogUtil.e(e, "Failed to get a writeable database");
             return null;
         }
     }
