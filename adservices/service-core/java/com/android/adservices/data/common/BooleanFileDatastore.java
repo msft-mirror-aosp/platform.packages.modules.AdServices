@@ -116,7 +116,7 @@ public class BooleanFileDatastore {
             if (out != null) {
                 mAtomicFile.failWrite(out);
             }
-            LogUtil.e("Write to file failed", e);
+            LogUtil.e(e, "Write to file failed");
             throw e;
         }
     }
@@ -141,7 +141,7 @@ public class BooleanFileDatastore {
             LogUtil.v("File not found; continuing with clear database");
             mLocalMap.clear();
         } catch (IOException e) {
-            LogUtil.e("Read from store file failed", e);
+            LogUtil.e(e, "Read from store file failed");
             throw e;
         }
     }

@@ -373,7 +373,7 @@ public class SourceFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
@@ -442,7 +442,7 @@ public class SourceFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
