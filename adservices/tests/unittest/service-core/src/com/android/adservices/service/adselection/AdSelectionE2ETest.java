@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
+import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
@@ -65,6 +66,7 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -73,7 +75,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Truth;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
@@ -1153,7 +1154,7 @@ public class AdSelectionE2ETest {
     }
 
     @Test
-    public void testAdSelectionConfigInvalidSellerAndSellerUrls() throws Exception {
+    public void testAdSelectionConfigInvalidInput() throws Exception {
         AdSelectionConfig invalidAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER_VALID)
@@ -1167,17 +1168,19 @@ public class AdSelectionE2ETest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> invokeRunAdSelection(mAdSelectionService, invalidAdSelectionConfig));
-        String expected =
+
+        ValidatorTestUtil.assertValidationFailuresMatch(
+                thrown,
                 String.format(
-                        "Invalid object of type %s. The violations are: %s",
-                        AdSelectionConfig.class.getName(),
-                        ImmutableList.of(
-                                String.format(
-                                        AdSelectionConfigValidator
-                                                .SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT,
-                                        Uri.parse("https://" + SELLER_VALID).getHost(),
-                                        DECISION_LOGIC_URI_INCONSISTENT.getHost())));
-        Truth.assertThat(thrown).hasMessageThat().isEqualTo(expected);
+                        "Invalid object of type %s. The violations are:",
+                        AdSelectionConfig.class.getName()),
+                ImmutableList.of(
+                        String.format(
+                                AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
+                                Uri.parse("https://" + SELLER_VALID).getHost(),
+                                DECISION_LOGIC_URI_INCONSISTENT.getHost(),
+                                DECISION_LOGIC_URI_TYPE)));
+
         verify(mAdServicesLogger)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
