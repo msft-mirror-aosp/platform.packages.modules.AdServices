@@ -66,6 +66,7 @@ import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
+import com.android.server.pm.PackageManagerLocal;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -113,7 +114,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mContext = context;
         mServiceProvider = provider;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
-        mSdkSandboxStorageManager = new SdkSandboxStorageManager(mContext);
+        mLocalManager = new LocalImpl();
+
+        PackageManagerLocal packageManagerLocal =
+                LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        mSdkSandboxStorageManager =
+                new SdkSandboxStorageManager(mContext, mLocalManager, packageManagerLocal);
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -121,7 +127,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mHandler = new Handler(handlerThread.getLooper());
         registerBroadcastReceivers();
 
-        mLocalManager = new LocalImpl();
         mAdServicesPackageName = resolveAdServicesPackage();
     }
 
@@ -948,6 +953,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    private boolean isInstrumentationRunning(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            return mRunningInstrumentations.contains(callingInfo);
+        }
+    }
+
     /** @hide */
     public static class Lifecycle extends SystemService {
         private final SdkSandboxManagerService mService;
@@ -1021,6 +1032,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         public void notifyInstrumentationFinished(
                 @NonNull String clientAppPackageName, int clientAppUid) {
             SdkSandboxManagerService.this.notifyInstrumentationFinished(
+                    new CallingInfo(clientAppUid, clientAppPackageName));
+        }
+
+        @Override
+        public boolean isInstrumentationRunning(
+                @NonNull String clientAppPackageName, int clientAppUid) {
+            return SdkSandboxManagerService.this.isInstrumentationRunning(
                     new CallingInfo(clientAppUid, clientAppPackageName));
         }
 
