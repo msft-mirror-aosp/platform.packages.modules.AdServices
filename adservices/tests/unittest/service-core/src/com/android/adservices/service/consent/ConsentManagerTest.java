@@ -224,7 +224,7 @@ public class ConsentManagerTest {
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsent()
-            throws PackageManager.NameNotFoundException, IOException {
+            throws PackageManager.NameNotFoundException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.disable(mContextSpy);
@@ -297,7 +297,7 @@ public class ConsentManagerTest {
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseWithoutPrivacySandboxConsent()
-            throws PackageManager.NameNotFoundException, IOException {
+            throws PackageManager.NameNotFoundException {
         doReturn(mPackageManagerMock).when(mContextSpy).getPackageManager();
         doReturn(true).when(mPackageManagerMock).hasSystemFeature(eq(EEA_DEVICE));
         mConsentManager.disable(mContextSpy);

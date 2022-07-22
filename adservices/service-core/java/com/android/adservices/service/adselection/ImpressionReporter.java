@@ -39,6 +39,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -61,7 +62,6 @@ import java.util.concurrent.TimeUnit;
 
 /** Encapsulates the Impression Reporting logic */
 public class ImpressionReporter {
-
     public static final String UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID =
             "Unable to find ad selection with given ID";
     @NonNull private final Context mContext;
@@ -69,6 +69,7 @@ public class ImpressionReporter {
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
+    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
@@ -80,6 +81,7 @@ public class ImpressionReporter {
             @NonNull ExecutorService executor,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull ConsentManager consentManager,
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
@@ -89,6 +91,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(consentManager);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
@@ -99,6 +102,7 @@ public class ImpressionReporter {
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mJsEngine = new ReportImpressionScriptEngine(mContext);
+        mConsentManager = consentManager;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
@@ -109,9 +113,7 @@ public class ImpressionReporter {
 
     /** Invokes the onFailure function from the callback and handles the exception. */
     private void invokeFailure(
-            @androidx.annotation.NonNull ReportImpressionCallback callback,
-            int statusCode,
-            String errorMessage) {
+            @NonNull ReportImpressionCallback callback, int statusCode, String errorMessage) {
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             callback.onFailure(
@@ -131,11 +133,9 @@ public class ImpressionReporter {
     }
 
     /** Invokes the onSuccess function from the callback and handles the exception. */
-    private void invokeSuccess(@androidx.annotation.NonNull ReportImpressionCallback callback) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+    private void invokeSuccess(@NonNull ReportImpressionCallback callback, int resultCode) {
         try {
             callback.onSuccess();
-            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
@@ -190,19 +190,11 @@ public class ImpressionReporter {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
 
-        FluentFuture.from(
-                        mListeningExecutorService.submit(
-                                () -> {
-                                    if (mFlags
-                                            .getEnforceForegroundStatusForFledgeRunAdSelection()) {
-                                        mAppImportanceFilter.assertCallerIsInForeground(
-                                                mCallerUid,
-                                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                                null);
-                                    }
+        ListenableFuture<Void> userConsentFuture =
+                Futures.submit(this::assertCallerHasUserConsent, mListeningExecutorService);
 
-                                    return null;
-                                }))
+        FluentFuture.from(userConsentFuture)
+                .transform(ignoredVoid -> maybeAssertForegroundCaller(), mListeningExecutorService)
                 .transformAsync(
                         ignoredVoid -> computeReportingUrls(adSelectionId, adSelectionConfig),
                         mListeningExecutorService)
@@ -226,7 +218,13 @@ public class ImpressionReporter {
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Report Impression failed!");
-                                notifyFailureToCaller(callback, t);
+                                if (t instanceof ConsentManager.RevokedConsentException) {
+                                    invokeSuccess(
+                                            callback,
+                                            AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                                } else {
+                                    notifyFailureToCaller(callback, t);
+                                }
                             }
                         },
                         mListeningExecutorService);
@@ -234,7 +232,7 @@ public class ImpressionReporter {
 
     private ReportingUrls notifySuccessToCaller(
             @NonNull ReportImpressionCallback callback, @NonNull ReportingUrls reportingUrls) {
-        invokeSuccess(callback);
+        invokeSuccess(callback, AdServicesStatusUtils.STATUS_SUCCESS);
         return reportingUrls;
     }
 
@@ -386,6 +384,34 @@ public class ImpressionReporter {
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid JSON args", e);
         }
+    }
+
+    /**
+     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
+     *
+     * @return an ignorable {@code null}
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     */
+    private Void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
+        if (!mConsentManager.getConsent(mContext.getPackageManager()).isGiven()) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+        return null;
+    }
+
+    /**
+     * Asserts that the caller has the appropriate foreground status, if enabled.
+     *
+     * @return an ignorable {@code null}
+     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
+     */
+    private Void maybeAssertForegroundCaller() throws WrongCallingApplicationStateException {
+        if (mFlags.getEnforceForegroundStatusForFledgeReportImpression()) {
+            mAppImportanceFilter.assertCallerIsInForeground(
+                    mCallerUid, AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, null);
+        }
+        return null;
     }
 
     private static class ReportingContext {

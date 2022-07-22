@@ -29,6 +29,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.Uri;
 import android.os.RemoteException;
 import android.util.Pair;
 
@@ -42,6 +43,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -105,6 +107,7 @@ public final class AdSelectionRunner {
     @NonNull private final AdBidGenerator mAdBidGenerator;
     @NonNull private final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull private final Clock mClock;
+    @NonNull private final ConsentManager mConsentManager;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
@@ -115,6 +118,7 @@ public final class AdSelectionRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService executorService,
+            @NonNull final ConsentManager consentManager,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
             @NonNull AppImportanceFilter appImportanceFilter,
@@ -130,6 +134,7 @@ public final class AdSelectionRunner {
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mExecutorService = executorService;
+        mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
@@ -155,6 +160,7 @@ public final class AdSelectionRunner {
             @NonNull final CustomAudienceDao customAudienceDao,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
             @NonNull final ExecutorService executorService,
+            @NonNull final ConsentManager consentManager,
             @NonNull final AdsScoreGenerator adsScoreGenerator,
             @NonNull final AdBidGenerator adBidGenerator,
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
@@ -179,6 +185,7 @@ public final class AdSelectionRunner {
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mExecutorService = executorService;
+        mConsentManager = consentManager;
         mAdsScoreGenerator = adsScoreGenerator;
         mAdBidGenerator = adBidGenerator;
         mAdSelectionIdGenerator = adSelectionIdGenerator;
@@ -200,23 +207,15 @@ public final class AdSelectionRunner {
             @NonNull AdSelectionConfig adSelectionConfig, @NonNull AdSelectionCallback callback) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
+
         try {
-            // Need to extract this function to avoid formatting issues
-            Runnable maybeEnforceForegroundcCaller =
-                    () -> {
-                        if (mFlags.getEnforceForegroundStatusForFledgeRunAdSelection()) {
-                            mAppImportanceFilter.assertCallerIsInForeground(
-                                    mCallerUid,
-                                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                                    null);
-                        }
-                    };
-            // Need to avoid checking pH flags in a Binder thread.
-            ListenableFuture<?> checkCallerIsInForeground =
-                    MoreExecutors.listeningDecorator(mExecutorService)
-                            .submit(maybeEnforceForegroundcCaller);
+            ListenableFuture<Void> userConsentFuture =
+                    Futures.submit(this::assertCallerHasUserConsent, mExecutorService);
+
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    FluentFuture.from(checkCallerIsInForeground)
+                    FluentFuture.from(userConsentFuture)
+                            .transform(
+                                    ignoredVoid -> maybeAssertForegroundCaller(), mExecutorService)
                             .transformAsync(
                                     ignoredVoid -> orchestrateAdSelection(adSelectionConfig),
                                     mExecutorService);
@@ -231,7 +230,13 @@ public final class AdSelectionRunner {
 
                         @Override
                         public void onFailure(Throwable t) {
-                            notifyFailureToCaller(callback, t);
+                            if (t instanceof ConsentManager.RevokedConsentException) {
+                                notifyEmptySuccessToCaller(
+                                        callback,
+                                        AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                            } else {
+                                notifyFailureToCaller(callback, t);
+                            }
                         }
                     },
                     mExecutorService);
@@ -257,6 +262,23 @@ public final class AdSelectionRunner {
             LogUtil.v(
                     "Ad Selection with Id:%d completed, attempted notifying success",
                     result.getAdSelectionId());
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
+        }
+    }
+
+    /** Sends a successful response to the caller that represents a silent failure. */
+    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback, int resultCode) {
+        try {
+            callback.onSuccess(
+                    new AdSelectionResponse.Builder()
+                            .setAdSelectionId(mAdSelectionIdGenerator.generateId())
+                            .setRenderUri(Uri.EMPTY)
+                            .build());
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
+            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+        } finally {
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
         }
@@ -540,5 +562,33 @@ public final class AdSelectionRunner {
                                     .build());
                     return dbAdSelection;
                 });
+    }
+
+    /**
+     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
+     *
+     * @return an ignorable {@code null}
+     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
+     *     user consent
+     */
+    private Void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
+        if (!mConsentManager.getConsent(mContext.getPackageManager()).isGiven()) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+        return null;
+    }
+
+    /**
+     * Asserts that the caller has the appropriate foreground status, if enabled.
+     *
+     * @return an ignorable {@code null}
+     * @throws WrongCallingApplicationStateException if the foreground check is enabled and fails
+     */
+    private Void maybeAssertForegroundCaller() throws WrongCallingApplicationStateException {
+        if (mFlags.getEnforceForegroundStatusForFledgeRunAdSelection()) {
+            mAppImportanceFilter.assertCallerIsInForeground(
+                    mCallerUid, AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, null);
+        }
+        return null;
     }
 }
