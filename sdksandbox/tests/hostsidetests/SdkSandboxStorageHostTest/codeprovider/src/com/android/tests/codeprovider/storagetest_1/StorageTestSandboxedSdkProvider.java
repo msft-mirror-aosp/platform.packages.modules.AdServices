@@ -16,7 +16,6 @@
 
 package com.android.tests.codeprovider.storagetest_1;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
@@ -32,16 +31,9 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String TAG = "StorageTestSandboxedSdkProvider";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
-    private SandboxedSdkContext mContext;
-
     @Override
-    public void onLoadSdk(
-            SandboxedSdkContext context,
-            Bundle params,
-            Executor executor,
-            OnLoadSdkCallback callback) {
+    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
         callback.onLoadSdkFinished(null);
-        mContext = context;
     }
 
     @Override
@@ -91,7 +83,7 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     private void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        String sdkDataPath = mContext.getDataDir().toString();
+        String sdkDataPath = getBaseContext().getDataDir().toString();
         // Read the file
         String input = Files.readAllLines(Paths.get(sdkDataPath, "readme.txt")).get(0);
 
@@ -120,10 +112,10 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     private String getSharedStoragePath() {
-        return mContext.getApplicationContext().getDataDir().toString();
+        return getBaseContext().getApplicationContext().getDataDir().toString();
     }
 
     private String getSharedStorageCachePath() {
-        return mContext.getApplicationContext().getCacheDir().toString();
+        return getBaseContext().getApplicationContext().getCacheDir().toString();
     }
 }
