@@ -124,6 +124,9 @@ public final class PhFlags implements Flags {
     static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
 
+    // App/SDK AllowList/DenyList keys
+    static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
+
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLE_STATUS = "adservice_enable_status";
 
@@ -563,6 +566,16 @@ public final class PhFlags implements Flags {
                                 DeviceConfig.NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_TOPICS_KILL_SWITCH,
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
+    }
+
+    // TOPICS AllowLists
+    @Override
+    public String getPpapiAppAllowList() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
+                /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
     @Override

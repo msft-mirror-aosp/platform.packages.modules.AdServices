@@ -455,4 +455,26 @@ public interface Flags extends Dumpable {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
     }
+
+    /*
+     * The Allow List for PP APIs. This list has the list of app package names that we allow
+     * to use PP APIs.
+     * App Package Name that does not belongs to this Allow List will not be able use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    String PPAPI_APP_ALLOW_LIST =
+            "com.android.tests.sandbox.topics,"
+                    + "com.android.adservices.tests.cts.endtoendtest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.noperm,"
+                    + "com.android.adservices.tests.permissions.valid";
+
+    /**
+     * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
+     * use PP APIs.
+     */
+    default String getPpapiAppAllowList() {
+        return PPAPI_APP_ALLOW_LIST;
+    }
 }
