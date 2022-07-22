@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -164,11 +165,11 @@ public class AdSelectionScriptEngineTest {
                                 + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
     }
@@ -188,11 +189,11 @@ public class AdSelectionScriptEngineTest {
                                 + "  return {'status': 1, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).isEmpty();
     }
@@ -215,11 +216,11 @@ public class AdSelectionScriptEngineTest {
                                 + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).isEmpty();
     }
@@ -241,9 +242,9 @@ public class AdSelectionScriptEngineTest {
                                 + "}",
                         adWithBids,
                         anAdSelectionConfig(),
-                        "{}",
-                        "{}",
-                        "{}",
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).containsExactly(100.0, 200.0);
     }
@@ -265,9 +266,9 @@ public class AdSelectionScriptEngineTest {
                                 + "}",
                         adWithBids,
                         anAdSelectionConfig(),
-                        "{}",
-                        "{}",
-                        "{}",
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
                         CUSTOM_AUDIENCE_SIGNALS);
         assertThat(result).isEmpty();
     }
@@ -311,11 +312,11 @@ public class AdSelectionScriptEngineTest {
     private List<AdWithBid> generateBids(
             String jsScript,
             List<AdData> ads,
-            String auctionSignals,
-            String perBuyerSignals,
-            String trustedBiddingSignals,
-            String contextualSignals,
-            String userSignals,
+            AdSelectionSignals auctionSignals,
+            AdSelectionSignals perBuyerSignals,
+            AdSelectionSignals trustedBiddingSignals,
+            AdSelectionSignals contextualSignals,
+            AdSelectionSignals userSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
@@ -337,9 +338,9 @@ public class AdSelectionScriptEngineTest {
             String jsScript,
             List<AdWithBid> adsWithBids,
             AdSelectionConfig adSelectionConfig,
-            String sellerSignals,
-            String trustedScoringSignals,
-            String contextualSignals,
+            AdSelectionSignals sellerSignals,
+            AdSelectionSignals trustedScoringSignals,
+            AdSelectionSignals contextualSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(

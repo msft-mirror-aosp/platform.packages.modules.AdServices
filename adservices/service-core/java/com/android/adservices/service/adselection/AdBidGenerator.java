@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
@@ -43,8 +44,8 @@ interface AdBidGenerator {
     @Nullable
     FluentFuture<AdBiddingOutcome> runAdBiddingPerCA(
             @NonNull DBCustomAudience customAudience,
-            @NonNull String adSelectionSignals,
-            @NonNull String buyerSignals,
-            @NonNull String contextualSignals,
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull AdSelectionSignals buyerSignals,
+            @NonNull AdSelectionSignals contextualSignals,
             @NonNull AdSelectionConfig adSelectionConfig);
 }

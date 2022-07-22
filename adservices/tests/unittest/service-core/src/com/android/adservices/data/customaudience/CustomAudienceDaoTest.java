@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.AdSelectionSignals;
 import android.content.Context;
 import android.net.Uri;
 
@@ -66,7 +67,8 @@ public class CustomAudienceDaoTest {
                     .setMetadata(AD_DATA_METADATA_1)
                     .build();
     private static final Uri DAILY_UPDATE_URL_2 = Uri.parse("https://www.example.com/d2");
-    private static final String USER_BIDDING_SIGNALS_2 = "ExampleBiddingSignal2";
+    private static final AdSelectionSignals USER_BIDDING_SIGNALS_2 =
+            AdSelectionSignals.fromString("ExampleBiddingSignal2");
     private static final Uri AD_DATA_RENDER_URL_2 = Uri.parse("https://www.example.com/a2");
     private static final String AD_DATA_METADATA_2 = "meta2";
     private static final DBAdData ADS_2 =
@@ -213,7 +215,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_1)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -228,7 +230,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_2)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -285,7 +287,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_MINUS_ONE_DAY)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();

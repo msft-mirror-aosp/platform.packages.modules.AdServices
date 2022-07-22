@@ -17,6 +17,8 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
@@ -64,26 +66,27 @@ public final class CustomAudienceFixture {
     public static final Instant INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE =
             CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 3);
 
-    public static final String VALID_USER_BIDDING_SIGNALS =
-            "{'valid': 'yep', 'opaque': 'definitely'}";
+    public static final AdSelectionSignals VALID_USER_BIDDING_SIGNALS =
+            AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
 
-    public static Uri getValidDailyUpdateUriByBuyer(String buyer) {
-        return CommonFixture.getUri(buyer, "/update");
+    public static Uri getValidDailyUpdateUriByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer.getStringForm(), "/update");
     }
 
-    public static Uri getValidBiddingLogicUrlByBuyer(String buyer) {
-        return CommonFixture.getUri(buyer, "/bidding/logic/here/");
+    public static Uri getValidBiddingLogicUrlByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer.getStringForm(), "/bidding/logic/here/");
     }
 
-    public static CustomAudience.Builder getValidBuilderForBuyer(String buyer) {
+    public static CustomAudience.Builder getValidBuilderForBuyer(AdTechIdentifier buyer) {
         return new CustomAudience.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer)
+                .setBuyer(buyer.getStringForm())
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setUserBiddingSignals(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))

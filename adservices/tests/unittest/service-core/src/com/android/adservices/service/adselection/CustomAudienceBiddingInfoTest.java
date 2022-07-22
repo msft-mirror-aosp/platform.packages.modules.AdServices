@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertEquals;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -33,7 +34,7 @@ import java.time.Instant;
 public class CustomAudienceBiddingInfoTest {
     private static final String BUYER_DECISION_LOGIC_JS = "buyer_decision_logic_javascript";
     private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final Instant NOW = Instant.now();
     private static final Instant ACTIVATION_TIME = NOW;
@@ -41,16 +42,17 @@ public class CustomAudienceBiddingInfoTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
             new CustomAudienceSignals.Builder()
                     .setOwner(OWNER)
-                    .setBuyer(BUYER)
+                    .setBuyer(BUYER.getStringForm())
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
-                    .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                    .setUserBiddingSignals(
+                            CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                     .build();
     private static final DBCustomAudience CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER)
                     .setOwner(OWNER)
-                    .setBuyer(BUYER)
+                    .setBuyer(BUYER.getStringForm())
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)

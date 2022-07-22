@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -53,11 +55,11 @@ public abstract class CustomAudienceUpdatableData {
             "%s Data validation failed while parsing %s found in JSON response";
 
     /**
-     * @return the user bidding signals as a JSON object serialized as a string that were sent in
-     *     the update response. If there were no valid user bidding signals, returns {@code null}.
+     * @return the user bidding signals that were sent in the update response. If there were no
+     *     valid user bidding signals, returns {@code null}.
      */
     @Nullable
-    public abstract String getUserBiddingSignals();
+    public abstract AdSelectionSignals getUserBiddingSignals();
 
     /**
      * @return trusted bidding data that was sent in the update response. If no valid trusted
@@ -210,7 +212,7 @@ public abstract class CustomAudienceUpdatableData {
             @NonNull String responseHash,
             @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
         try {
-            String userBiddingSignals = reader.getUserBiddingSignalsFromJsonObject();
+            AdSelectionSignals userBiddingSignals = reader.getUserBiddingSignalsFromJsonObject();
             dataBuilder.setUserBiddingSignals(userBiddingSignals);
 
             if (userBiddingSignals == null) {
@@ -325,7 +327,7 @@ public abstract class CustomAudienceUpdatableData {
     public abstract static class Builder {
         /** Sets the user bidding signals found in the response string. */
         @NonNull
-        public abstract Builder setUserBiddingSignals(@Nullable String value);
+        public abstract Builder setUserBiddingSignals(@Nullable AdSelectionSignals value);
 
         /** Sets the trusted bidding data found in the response string. */
         @NonNull
