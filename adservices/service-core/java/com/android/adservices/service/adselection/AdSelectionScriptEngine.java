@@ -244,9 +244,9 @@ public class AdSelectionScriptEngine {
                 return result.build();
             } catch (IllegalArgumentException e) {
                 LogUtil.w(
-                        "Invalid ad with bid returned by a generateBid script %s. Returning"
-                                + " empty list of ad with bids.",
-                        e);
+                        e,
+                        "Invalid ad with bid returned by a generateBid script. Returning empty"
+                                + " list of ad with bids.");
                 return ImmutableList.of();
             }
         }
