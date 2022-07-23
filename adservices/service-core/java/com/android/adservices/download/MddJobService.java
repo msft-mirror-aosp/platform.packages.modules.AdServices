@@ -91,8 +91,6 @@ public class MddJobService extends JobService {
     /** Schedule MDD background tasks. */
     public static void schedule(Context context) {
         LogUtil.d("MddJobService.schedule MDD tasks.");
-        MobileDataDownloadFactory.getMdd(context, FlagsFactory.getFlags())
-                .schedulePeriodicBackgroundTasks();
 
         // Schedule MDD to download scripts periodically.
         Futures.addCallback(
