@@ -15,10 +15,17 @@
   ~ limitations under the License.
   -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical">
-    <!-- TODO(b/228287479): add imageview for icon -->
+    <ImageView
+        android:id="@+id/app_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="2dp"
+        tools:ignore="ContentDescription" />
     <TextView
         android:id="@+id/app_text"
         android:layout_width="wrap_content"
@@ -31,11 +38,10 @@
         android:layout_toStartOf="@+id/option_button"
         android:paddingTop="24dp"
         android:paddingBottom="24dp"
-        android:textColor="@android:color/primary_text_light"
-        android:textSize="20sp" />
+        android:textAppearance="@style/TextAppearance.H5" />
     <Button
         android:id="@+id/option_button"
-        style="@style/MainStyle.NotificationPrimaryButton"
+        style="@style/MainStyle.SettingsControlButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"

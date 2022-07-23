@@ -250,7 +250,7 @@ public abstract class CustomAudienceDao {
     protected abstract void deleteCustomAudienceByPrimaryKey(
             @NonNull String owner, @NonNull String buyer, @NonNull String name);
 
-    /** Delete the custom audience given owner, buyer, and name. */
+    /** Delete background fetch data for the custom audience given owner, buyer, and name. */
     @Query(
             "DELETE FROM custom_audience_background_fetch_data WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name")
@@ -266,6 +266,46 @@ public abstract class CustomAudienceDao {
             @NonNull String owner, @NonNull String buyer, @NonNull String name) {
         deleteCustomAudienceByPrimaryKey(owner, buyer, name);
         deleteCustomAudienceBackgroundFetchDataByPrimaryKey(owner, buyer, name);
+    }
+
+    /**
+     * Deletes all custom audiences which are expired, where the custom audiences' expiration times
+     * match or precede the given {@code expiryTime}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllExpiredCustomAudienceData(Instant)} instead.
+     *
+     * @return the number of deleted custom audiences
+     */
+    @Query("DELETE FROM custom_audience WHERE expiration_time <= :expiryTime")
+    protected abstract int deleteAllExpiredCustomAudiences(@NonNull Instant expiryTime);
+
+    /**
+     * Deletes background fetch data for all custom audiences which are expired, where the custom
+     * audiences' expiration times match or precede the given {@code expiryTime}.
+     *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #deleteAllExpiredCustomAudienceData(Instant)} instead.
+     */
+    @Query(
+            "DELETE FROM custom_audience_background_fetch_data WHERE ROWID IN "
+                    + "(SELECT bgf.ROWID FROM custom_audience_background_fetch_data AS bgf "
+                    + "INNER JOIN custom_audience AS ca "
+                    + "ON bgf.buyer = ca.buyer AND bgf.owner = ca.owner AND bgf.name = ca.name "
+                    + "WHERE expiration_time <= :expiryTime)")
+    protected abstract void deleteAllExpiredCustomAudienceBackgroundFetchData(
+            @NonNull Instant expiryTime);
+
+    /**
+     * Deletes all expired custom audience data in a single transaction, where the custom audiences'
+     * expiration times match or precede the given {@code expiryTime}.
+     *
+     * @return the number of deleted custom audiences
+     */
+    @Transaction
+    public int deleteAllExpiredCustomAudienceData(@NonNull Instant expiryTime) {
+        deleteAllExpiredCustomAudienceBackgroundFetchData(expiryTime);
+        return deleteAllExpiredCustomAudiences(expiryTime);
     }
 
     /** Clean up selected custom audience override data by its primary key */

@@ -66,6 +66,7 @@ import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
+import com.android.server.pm.PackageManagerLocal;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -98,10 +99,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final Object mLock = new Object();
 
-    // TODO(b/239155932): Move to ArrayMaps
     // For communication between app<-ManagerService->RemoteCode for each codeToken
     @GuardedBy("mLock")
-    private final Map<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
+    private final ArrayMap<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
 
     @GuardedBy("mLock")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
@@ -114,7 +114,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mContext = context;
         mServiceProvider = provider;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
-        mSdkSandboxStorageManager = new SdkSandboxStorageManager(mContext);
+        mLocalManager = new LocalImpl();
+
+        PackageManagerLocal packageManagerLocal =
+                LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        mSdkSandboxStorageManager =
+                new SdkSandboxStorageManager(mContext, mLocalManager, packageManagerLocal);
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -122,7 +127,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mHandler = new Handler(handlerThread.getLooper());
         registerBroadcastReceivers();
 
-        mLocalManager = new LocalImpl();
         mAdServicesPackageName = resolveAdServicesPackage();
     }
 
@@ -154,7 +158,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         enforceCallingPackageBelongsToUid(callingInfo);
         List<SharedLibraryInfo> sharedLibraryInfos = new ArrayList<>();
         synchronized (mLock) {
-            for (AppAndRemoteSdkLink link : mAppAndRemoteSdkLinks.values()) {
+            for (int i = mAppAndRemoteSdkLinks.size() - 1; i >= 0; i--) {
+                AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
                 if (link.mCallingInfo.equals(callingInfo) && link.mSdkProviderInfo != null) {
                     sharedLibraryInfos.add(link.mSdkProviderInfo.mSdkInfo);
                 }
@@ -948,6 +953,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
+    private boolean isInstrumentationRunning(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            return mRunningInstrumentations.contains(callingInfo);
+        }
+    }
+
     /** @hide */
     public static class Lifecycle extends SystemService {
         private final SdkSandboxManagerService mService;
@@ -1025,17 +1036,40 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
 
         @Override
+        public boolean isInstrumentationRunning(
+                @NonNull String clientAppPackageName, int clientAppUid) {
+            return SdkSandboxManagerService.this.isInstrumentationRunning(
+                    new CallingInfo(clientAppUid, clientAppPackageName));
+        }
+
+        @Override
         public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {
-            // TODO(b/209599396): Have a meaningful allowlist.
-            if (intent.getAction() != null && !Intent.ACTION_VIEW.equals(intent.getAction())) {
-                throw new SecurityException("Intent " + intent.getAction()
-                        + " may not be broadcast from an SDK sandbox uid");
+            if (intent.getAction() != null) {
+                throw new SecurityException(
+                        "Intent "
+                                + intent.getAction()
+                                + " may not be broadcast from an SDK sandbox uid");
             }
         }
 
         @Override
         public void enforceAllowedToStartActivity(@NonNull Intent intent) {
-            enforceAllowedToSendBroadcast(intent);
+            if (intent.getAction() != null) {
+                if (!Intent.ACTION_VIEW.equals(intent.getAction())) {
+                    throw new SecurityException(
+                            "Intent "
+                                    + intent.getAction()
+                                    + " may not be broadcast from an SDK sandbox uid.");
+                }
+
+                if (intent.getPackage() != null || intent.getComponent() != null) {
+                    throw new SecurityException(
+                            "Intent "
+                                    + intent.getAction()
+                                    + " broadcast from an SDK sandbox uid may not specify a"
+                                    + " package name or component.");
+                }
+            }
         }
 
         @Override

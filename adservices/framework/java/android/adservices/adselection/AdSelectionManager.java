@@ -130,10 +130,10 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e("Unable to find the AdSelection service.", e);
+            LogUtil.e(e, "Unable to find the AdSelection service.");
             receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Failure of AdSelection service.", e);
+            LogUtil.e(e, "Failure of AdSelection service.");
             receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
         }
     }
@@ -177,10 +177,10 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e("Unable to find the AdSelection service.", e);
+            LogUtil.e(e, "Unable to find the AdSelection service.");
             receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
         }
     }
@@ -230,10 +230,10 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e("Unable to find the AdSelection service.", e);
+            LogUtil.e(e, "Unable to find the AdSelection service.");
             receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
         }
     }
@@ -281,10 +281,10 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e("Unable to find the AdSelection service.", e);
+            LogUtil.e(e, "Unable to find the AdSelection service.");
             receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
         }
     }
@@ -327,10 +327,10 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e("Unable to find the AdSelection service.", e);
+            LogUtil.e(e, "Unable to find the AdSelection service.");
             receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
         }
     }

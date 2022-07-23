@@ -33,7 +33,6 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
-import android.content.AttributionSource;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -173,7 +172,7 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         sourceRegistrationRequest.getTopOriginUri(),
-                        getRegistrant(request.getAttributionSource()),
+                        getRegistrant(request.getPackageName()),
                         getSourceType(sourceRegistrationRequest.getInputEvent()));
                 return RESULT_OK;
             } else {
@@ -202,7 +201,7 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
-                        getRegistrant(request.getAttributionSource()));
+                        getRegistrant(request.getPackageName()));
                 return RESULT_OK;
             } else {
                 return RESULT_IO_ERROR;
@@ -223,7 +222,7 @@ public final class MeasurementImpl {
                     mDatastoreManager.runInTransaction(
                             (dao) ->
                                     dao.deleteMeasurementData(
-                                            getRegistrant(request.getAttributionSource()),
+                                            getRegistrant(request.getPackageName()),
                                             request.getStart(),
                                             request.getEnd(),
                                             request.getOriginUris(),
@@ -296,7 +295,7 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getAttributionSource()));
+                    getRegistrant(request.getPackageName()));
             return RESULT_OK;
         } else {
             return RESULT_IO_ERROR;
@@ -311,7 +310,7 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getAttributionSource()),
+                    getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent()));
             return RESULT_OK;
         } else {
@@ -334,7 +333,7 @@ public final class MeasurementImpl {
                             registrant,
                             sourceType,
                             // Only first destination to avoid AdTechs change this
-                            sourceRegistrations.get(0).getDestination(),
+                            sourceRegistrations.get(0).getAppDestination(),
                             sourceRegistrations.get(0).getWebDestination());
             insertSource(source);
         }
@@ -351,7 +350,7 @@ public final class MeasurementImpl {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
                 .setPublisher(topOriginUri)
-                .setAttributionDestination(destination)
+                .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
@@ -369,6 +368,7 @@ public final class MeasurementImpl {
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource(registration.getAggregateSource())
                 .setAggregateFilterData(registration.getAggregateFilterData())
+                .setDebugKey(registration.getDebugKey())
                 .build();
     }
 
@@ -393,8 +393,7 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(
-                                                source.getAttributionDestination())
+                                        .setAttributionDestination(source.getAppDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
@@ -445,11 +444,12 @@ public final class MeasurementImpl {
                 .setAggregateTriggerData(registration.getAggregateTriggerData())
                 .setAggregateValues(registration.getAggregateValues())
                 .setFilters(registration.getFilters())
+                .setDebugKey(registration.getDebugKey())
                 .build();
     }
 
-    private Uri getRegistrant(AttributionSource attributionSource) {
-        return Uri.parse(ANDROID_APP_SCHEME + attributionSource.getPackageName());
+    private Uri getRegistrant(String packageName) {
+        return Uri.parse(ANDROID_APP_SCHEME + packageName);
     }
 
     private Uri getAppUri(Uri packageUri) {

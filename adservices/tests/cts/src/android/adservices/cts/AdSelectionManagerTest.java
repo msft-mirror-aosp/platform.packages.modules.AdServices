@@ -59,6 +59,8 @@ public class AdSelectionManagerTest {
     private static final String SELLER = "developer.android.com";
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+    private static final Uri TRUSTED_SCORING_SIGNALS_URI =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
     private static final String TRUSTED_SCORING_SIGNALS =
             "{\n"
                     + "\t\"render_url_1\": \"signals_for_1\",\n"
@@ -68,6 +70,7 @@ public class AdSelectionManagerTest {
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setSeller(SELLER)
                     .setDecisionLogicUri(DECISION_LOGIC_URI)
+                    .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -181,6 +184,7 @@ public class AdSelectionManagerTest {
                         .setSeller(SELLER)
                         .setDecisionLogicUri(DECISION_LOGIC_URI)
                         .setCustomAudienceBuyers(new ArrayList<String>())
+                        .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                         .build();
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()

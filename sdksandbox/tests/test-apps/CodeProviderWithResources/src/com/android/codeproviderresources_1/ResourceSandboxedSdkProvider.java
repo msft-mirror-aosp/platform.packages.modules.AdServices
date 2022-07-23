@@ -16,7 +16,6 @@
 
 package com.android.codeproviderresources_1;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -37,12 +36,8 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String ASSET_FILE = "test-asset.txt";
 
     @Override
-    public void onLoadSdk(
-            SandboxedSdkContext context,
-            Bundle params,
-            Executor executor,
-            OnLoadSdkCallback callback) {
-        Resources resources = context.getResources();
+    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
+        Resources resources = getBaseContext().getResources();
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
         if (!stringRes.equals(STRING_RESOURCE)) {
@@ -52,7 +47,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
             sendError(callback, String.valueOf(INTEGER_RESOURCE), String.valueOf(integerRes));
         }
 
-        AssetManager assets = context.getAssets();
+        AssetManager assets = getBaseContext().getAssets();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(assets.open(ASSET_FILE)))) {
             String readAsset = reader.readLine();

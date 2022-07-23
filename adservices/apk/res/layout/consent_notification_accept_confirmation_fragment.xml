@@ -48,7 +48,7 @@
                 <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
+                        android:layout_marginTop="16dp"
                         android:src="@drawable/ic_confirmation_accept_image" />
             </LinearLayout>
         </LinearLayout>

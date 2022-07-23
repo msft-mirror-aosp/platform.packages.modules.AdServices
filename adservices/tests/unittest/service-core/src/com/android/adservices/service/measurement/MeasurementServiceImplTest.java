@@ -415,7 +415,7 @@ public final class MeasurementServiceImplTest {
 
     private RegistrationRequest getDefaultRegistrationRequest() {
         return new RegistrationRequest.Builder()
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
                 .setTopOriginUri(Uri.parse("android-app//com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
@@ -432,7 +432,7 @@ public final class MeasurementServiceImplTest {
                         .build();
         return new WebSourceRegistrationRequestInternal.Builder()
                 .setSourceRegistrationRequest(sourceRegistrationRequest)
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
@@ -444,13 +444,13 @@ public final class MeasurementServiceImplTest {
                         .build();
         return new WebTriggerRegistrationRequestInternal.Builder()
                 .setTriggerRegistrationRequest(webTriggerRegistrationRequest)
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
     private DeletionParam getDefaultDeletionRequest() {
         return new DeletionParam.Builder()
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setDomainUris(Collections.emptyList())
                 .setOriginUris(Collections.emptyList())
                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)

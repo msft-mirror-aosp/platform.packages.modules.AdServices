@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
@@ -65,6 +66,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -74,7 +76,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Truth;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
@@ -94,7 +95,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -130,6 +130,7 @@ public class AdSelectionServiceImplTest {
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
+    private final String mFetchTrustedScoringSignalsPath = "/fetchTrustedSignals/";
     private final String mContextualSignals = "{\"contextual_signals\":1}";
     private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
@@ -159,7 +160,9 @@ public class AdSelectionServiceImplTest {
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(mMockWebServerRule.uriForPath(mFetchJavaScriptPath).getHost())
-                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath));
+                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
     }
 
     @Test
@@ -1403,17 +1406,18 @@ public class AdSelectionServiceImplTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> callReportImpression(adSelectionService, request));
-        String expected =
+
+        ValidatorTestUtil.assertValidationFailuresMatch(
+                thrown,
                 String.format(
-                        "Invalid object of type %s. The violations are: %s",
-                        AdSelectionConfig.class.getName(),
-                        Arrays.asList(
-                                String.format(
-                                        AdSelectionConfigValidator
-                                                .SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT,
-                                        Uri.parse("https://" + SELLER_VALID).getHost(),
-                                        DECISION_LOGIC_URI_INCONSISTENT.getHost())));
-        Truth.assertThat(thrown).hasMessageThat().isEqualTo(expected);
+                        "Invalid object of type %s. The violations are:",
+                        AdSelectionConfig.class.getName()),
+                ImmutableList.of(
+                        String.format(
+                                AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
+                                Uri.parse("https://" + SELLER_VALID).getHost(),
+                                DECISION_LOGIC_URI_INCONSISTENT.getHost(),
+                                DECISION_LOGIC_URI_TYPE)));
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,

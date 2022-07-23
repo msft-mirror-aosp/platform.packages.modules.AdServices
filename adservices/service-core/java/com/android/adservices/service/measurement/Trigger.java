@@ -59,6 +59,7 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
+    private @Nullable Long mDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -86,6 +87,7 @@ public class Trigger {
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
+                && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
@@ -108,7 +110,8 @@ public class Trigger {
                 mAggregateTriggerData,
                 mAggregateValues,
                 mAggregatableAttributionTrigger,
-                mFilters);
+                mFilters,
+                mDebugKey);
     }
 
     /**
@@ -225,6 +228,10 @@ public class Trigger {
         return mFilters;
     }
 
+    /** Debug key of {@link Trigger}. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
+    }
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -333,6 +340,10 @@ public class Trigger {
         return eventTriggers;
     }
 
+    public DestinationType getDestinationType() {
+        return DestinationType.getDestinationType(mAttributionDestination);
+    }
+
     /**
      * Builder for {@link Trigger}.
      */
@@ -419,6 +430,12 @@ public class Trigger {
         @NonNull
         public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugKey()} ()} */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mBuilding.mDebugKey = debugKey;
             return this;
         }
 
