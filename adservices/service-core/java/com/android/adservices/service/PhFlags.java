@@ -117,6 +117,8 @@ public final class PhFlags implements Flags {
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
     static final String KEY_DOWNLOADER_READ_TIMEOUT_MS = "downloader_read_timeout_ms";
     static final String KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS = "downloader_max_download_threads";
+    static final String KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
+            "mdd_topics_classifier_manifest_file_url";
 
     // Killswitch keys
     static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
@@ -498,6 +500,7 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
     }
 
+    // MDD related flags.
     @Override
     public int getDownloaderConnectionTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
@@ -523,6 +526,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS,
                 /* defaultValue */ DOWNLOADER_MAX_DOWNLOAD_THREADS);
+    }
+
+    @Override
+    public String getMddTopicsClassifierManifestFileUrl() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
+                /* defaultValue */ MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
     }
 
     // Group of All Killswitches

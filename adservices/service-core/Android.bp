@@ -78,6 +78,7 @@ android_library {
         "androidx.annotation_annotation",
         "cbor-java",
         "guava",
+        "mobile_data_downloader_lib",
         "modules-utils-preconditions",
         "tflite_support_classifiers_java",
         "mobile_data_downloader_lib",
