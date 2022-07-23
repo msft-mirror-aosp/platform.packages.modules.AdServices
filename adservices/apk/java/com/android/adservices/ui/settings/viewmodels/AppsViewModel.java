@@ -30,8 +30,7 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragme
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
 /**
  * View model for the apps view and blocked apps view of the AdServices Settings App. This view
@@ -96,7 +95,8 @@ public class AppsViewModel extends AndroidViewModel {
      *
      * @param app the app to be blocked.
      */
-    public void revokeAppConsent(App app) {
+    public void revokeAppConsent(App app) throws IOException {
+        mConsentManager.revokeConsentForApp(app);
         mApps.postValue(getAppsFromConsentManager());
         mBlockedApps.postValue(getBlockedAppsFromConsentManager());
     }
@@ -119,7 +119,8 @@ public class AppsViewModel extends AndroidViewModel {
      *
      * @param app the {@link App} to be restored.
      */
-    public void restoreAppConsent(App app) {
+    public void restoreAppConsent(App app) throws IOException {
+        mConsentManager.restoreConsentForApp(app);
         mApps.postValue(getAppsFromConsentManager());
         mBlockedApps.postValue(getBlockedAppsFromConsentManager());
     }
@@ -169,17 +170,10 @@ public class AppsViewModel extends AndroidViewModel {
     }
 
     private ImmutableList<App> getAppsFromConsentManager() {
-        List<App> tempList = new ArrayList<>();
-        tempList.add(App.create(11));
-        tempList.add(App.create(22));
-        tempList.add(App.create(33));
-        return ImmutableList.copyOf(tempList);
+        return mConsentManager.getKnownAppsWithConsent();
     }
 
     private ImmutableList<App> getBlockedAppsFromConsentManager() {
-        List<App> tempList = new ArrayList<>();
-        tempList.add(App.create(44));
-        tempList.add(App.create(55));
-        return ImmutableList.copyOf(tempList);
+        return mConsentManager.getAppsWithRevokedConsent();
     }
 }
