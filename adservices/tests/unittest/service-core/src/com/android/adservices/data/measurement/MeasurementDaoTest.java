@@ -866,7 +866,7 @@ public class MeasurementDaoTest {
             String tableName = cursor.getString(cursor.getColumnIndex("name"));
             tableNames.add(tableName);
         }
-        assertThat(tableNames.size()).isEqualTo(MeasurementTables.ALL_MSMT_TABLES.length - 1);
+        assertThat(tableNames.size()).isEqualTo(MeasurementTables.ALL_MSMT_TABLES.length);
         for (String tableName : tableNames) {
             assertThat(MeasurementTables.ALL_MSMT_TABLES).asList().contains(tableName);
         }
