@@ -51,6 +51,9 @@
     <string name="permdesc_adServicesAccessConsentService">Allows an application to access Consent Service API.</string>
 
     <!-- Settings App UI strings -->
+    <!-- Text for the label of the app. This will appear as the app name on notifications sent by this app. [CHAR LIMIT=NONE] -->
+    <string name="app_label">Android System</string>
+
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_privacy_sandbox_beta_title">Privacy Sandbox beta</string>
     <!-- Text for the Privacy Sandbox beta toggle. [CHAR LIMIT=NONE] -->
@@ -59,7 +62,7 @@
     <string name="settingsUI_privacy_sandbox_beta_switch_summary">Toggle Privacy Sandbox beta</string>
 
     <!-- Title text of the main view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_main_view_title">Android\'s ads privacy beta</string>
+    <string name="settingsUI_main_view_title">Android’s ads privacy beta</string>
 
     <!-- Sub title text of the main view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_main_view_subtitle">Test the new Privacy Sandbox system that restricts cross-app tracking</string>
@@ -89,7 +92,7 @@
     <string name="settingsUI_topics_view_title">Manage interests</string>
 
     <!-- Sub title text of the topics view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_subtitle">Android\'s Privacy Sandbox restricts cross-app tracking while still allowing apps to show you ads you might like. Android shares this data with advertisers without identifying you or your device.\n\nBased on the apps you use, Android generates and updates this list of your general ads interests. If you block an interest, it won’t be added to the list again unless you unblock it. You may still see some related ads.</string>
+    <string name="settingsUI_topics_view_subtitle">Android’s Privacy Sandbox restricts cross-app tracking while still allowing apps to show you ads you might like. Android shares this data with advertisers without identifying you or your device.\n\nBased on the apps you use, Android generates and updates this list of your general ads interests. If you block an interest, it won’t be added to the list again unless you unblock it. You may still see some related ads.</string>
 
     <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_info_text1">General ads interests</string>
@@ -97,16 +100,7 @@
     <!-- Info text at the bottom of the topics view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_view_info_text2">Android generates these interests based on the apps you use.\n\nFor example, if you have several sports apps on your device, Android might add the interest “Sports” to the Privacy Sandbox.\n\nLater, this data is shared with advertisers without identifying you or your device.</string>
 
-    <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_view_no_topics_text">No interests to show right now</string>
-
-    <!-- Key for the topics preference. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_key">topics_preference</string>
-    <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_title">Your general interests</string>
-    <!-- Summary of the topics preference. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_topics_summary">Manage your general interests</string>
-
+    <!-- APPS STRINGS -->
     <!-- Key for the apps preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_key">apps_preference</string>
     <!-- Text for the apps preference. [CHAR LIMIT=NONE] -->
@@ -114,15 +108,15 @@
     <!-- Summary of the apps preference. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_summary">Manage your apps that generate specific interests</string>
     <!-- Text for the button to open blocked topics fragment. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_apps_title">Apps you\'ve blocked</string>
+    <string name="settingsUI_blocked_apps_title">Apps you’ve blocked</string>
     <!-- Text for the button to block an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_block_app_title">Block</string>
+    <string name="settingsUI_block_app_title" translatable="false">@string/settingsUI_block_topic_title</string>
     <!-- Text for the button to unblock an app. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_unblock_app_title">Unblock</string>
+    <string name="settingsUI_unblock_app_title" translatable="false">@string/settingsUI_unblock_topic_title</string>
     <!-- Title text of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_title">Manage apps</string>
     <!-- Sub title text of the apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_apps_view_subtitle">Based on how you use them, some apps generate data about your specific ads interests for the Privacy Sandbox. Android updates this list of apps so you can view or edit it.\n\nIf you block an app, it won\'t add any more specific interests. It won\'t be added to this list again unless you unblock it. Interests already generated by the app will be deleted, but you may still see some related ads. </string>
+    <string name="settingsUI_apps_view_subtitle">Based on how you use them, some apps generate data about your specific ads interests for the Privacy Sandbox. Android updates this list of apps so you can view or edit it.\n\nIf you block an app, it won’t add any more specific interests. It won’t be added to this list again unless you unblock it. Interests already generated by the app will be deleted, but you may still see some related ads. </string>
     <!-- Text to show if there are no apps. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_no_apps_text">No apps estimate your interests yet</string>
     <!-- Text for the button to reset all apps. [CHAR LIMIT=NONE] -->
@@ -132,83 +126,94 @@
     <!-- Info text at the bottom of the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_view_info_text2">Some apps you use generate data about your specific interests for advertising, and add it to the Privacy Sandbox.\n\nFor example, an app you use to shop for running shoes might add the label sport_running.\n\nLater, data collected in the Privacy Sandbox is shared with advertisers without identifying you or your device. So you still see ads you might like, but with greater privacy protection.</string>
 
-
+    <!-- TOPICS STRINGS -->
+    <!-- Text to show if there are no topics. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_view_no_topics_text">No interests to show right now</string>
+    <!-- Key for the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_key">topics_preference</string>
+    <!-- Text for the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_title">Your general interests</string>
+    <!-- Summary of the topics preference. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_topics_summary">Manage your general interests</string>
     <!-- Text for the title for the Topics fragment. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_topics_fragment_title">Manage your general interests for ads</string>
-
     <!-- Text for the button to block a topic. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_block_topic_title">Block</string>
-
+    <!-- Text for the button to unblock a topic. [CHAR LIMIT=NONE] -->
+    <string name="settingsUI_unblock_topic_title">Unblock</string>
     <!-- Text for the button to open blocked topics fragment. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_blocked_topics_title">Interests you\'ve blocked</string>
-
+    <string name="settingsUI_blocked_topics_title">Interests you’ve blocked</string>
     <!-- Text for the button to reset all topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_reset_topics_title">Reset all interests</string>
 
-    <!-- Text for the button to unblock a topic. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_unblock_topic_title">Unblock</string>
-
-    <!-- Text for the main title of the notification. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_eu_title">Join the ads privacy beta</string>
 
     <!-- EU Notification UI strings -->
+    <!-- Text for the main title of the EU notification. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_title_eu" translatable="false">@string/notificationUI_header_title_eu</string>
+
+    <!-- Text for the content of the EU notification. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_content_eu">Test new features that will restrict cross-app tracking</string>
+
     <!-- Text for the title of the header. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_header_title_eu">Join the ads privacy beta</string>
 
     <!-- Text for the subtitle of the header. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_header_subtitle_eu">@string/notificationUI_header_subtitle</string>
+    <string name="notificationUI_header_subtitle_eu" translatable="false">@string/notificationUI_header_subtitle</string>
 
     <!-- Text for container1 title. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container1_title_eu">@string/notificationUI_container1_title</string>
+    <string name="notificationUI_container1_title_eu" translatable="false">@string/notificationUI_container1_title</string>
 
     <!-- Text for container1 body text. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container1_body_text_eu">@string/notificationUI_container1_body_text</string>
+    <string name="notificationUI_container1_body_text_eu" translatable="false">@string/notificationUI_container1_body_text</string>
 
     <!-- Text for container2 title. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container2_title_eu">@string/notificationUI_container2_title</string>
+    <string name="notificationUI_container2_title_eu" translatable="false">@string/notificationUI_container2_title</string>
 
     <!-- Text for container2 body text. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container2_body_text_eu">@string/notificationUI_container2_body_text</string>
+    <string name="notificationUI_container2_body_text_eu" translatable="false">@string/notificationUI_container2_body_text</string>
 
     <!-- Text for container2 control text. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container2_control_text_eu">@string/notificationUI_container2_control_text</string>
+    <string name="notificationUI_container2_control_text_eu" translatable="false">@string/notificationUI_container2_control_text</string>
 
     <!-- Text for container3 title. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container3_title_eu">What you can do</string>
 
     <!-- Text for container3 body text. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container3_body_text_eu">@string/notificationUI_container3_body_text</string>
+    <string name="notificationUI_container3_body_text_eu" translatable="false">@string/notificationUI_container3_body_text</string>
 
     <!-- Text for button to open Privacy Sandbox Settings from detailed notification activity. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_left_control_button_text_eu">No thanks</string>
 
     <!-- Text for button to acknowledge and dismiss detailed notification activity. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_right_control_button_text_eu">Yes, I\'ll try it</string>
-
-    <!-- Text for the main title of the non-EU notification. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_non_eu_title">Android\'s ads privacy beta</string>
+    <string name="notificationUI_right_control_button_text_eu">Yes, I’ll try it</string>
 
     <!-- Text for button to open Privacy Sandbox Settings from confirmation activity. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_left_control_button_text">@string/notificationUI_left_control_button_text</string>
+    <string name="notificationUI_confirmation_left_control_button_text" translatable="false">@string/notificationUI_left_control_button_text</string>
 
     <!-- Text for button to acknowledge and dismiss confirmation activity.  [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_right_control_button_text">@string/notificationUI_right_control_button_text</string>
+    <string name="notificationUI_confirmation_right_control_button_text" translatable="false">@string/notificationUI_right_control_button_text</string>
 
     <!-- Text for the title of the confirmation screen for accepting to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_confirmation_accept_title">Thank you for participating</string>
 
     <!-- Text for the subtitle of the confirmation screen for accepting to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_accept_subtitle">You\'re now part of the Privacy Sandbox beta. \n\nYou can learn more or leave the beta any time, in your Privacy settings.</string>
+    <string name="notificationUI_confirmation_accept_subtitle">You’re now part of the Privacy Sandbox beta. \n\nYou can learn more or leave the beta any time, in your Privacy settings.</string>
 
     <!-- Text for the title of the confirmation screen for declining to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_decline_title">You\'ve chosen not to participate</string>
+    <string name="notificationUI_confirmation_decline_title">You’ve chosen not to participate</string>
 
     <!-- Text for the subtitle of the confirmation screen for declining to be part of the Privacy Sandbox Beta. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_decline_subtitle">Thanks for your response. You haven\'t been added to the Privacy Sandbox beta.\n\nIf you change your mind or want to learn more, go to your privacy settings.</string>
+    <string name="notificationUI_confirmation_decline_subtitle">Thanks for your response. You haven’t been added to the Privacy Sandbox beta.\n\nIf you change your mind or want to learn more, go to your privacy settings.</string>
 
     <!-- ROW Notification UI strings -->
+    <!-- Text for the main title of the ROW notification. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_title" translatable="false">@string/settingsUI_main_view_title</string>
+
+    <!-- Text for the content of the ROW notification. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_content">You’re testing new features that restrict cross-app tracking</string>
+
     <!-- Text for the title of the header. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_header_title">You\'re helping Android restrict cross-app tracking</string>
+    <string name="notificationUI_header_title">You’re helping Android restrict cross-app tracking</string>
 
     <!-- Text for the subtitle of the header. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_header_subtitle">Android is testing new features that will restrict cross-app tracking by advertisers</string>
@@ -229,7 +234,7 @@
     <string name="notificationUI_container2_control_text">How it works</string>
 
     <!-- Text for container3 title. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_container3_title">How you\'re helping</string>
+    <string name="notificationUI_container3_title">How you’re helping</string>
 
     <!-- Text for container3 body text. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container3_body_text">While you may not notice changes in the ads you see, being part of the beta will help Android restrict cross-app tracking over time. You can leave the beta any time by going to your privacy settings.</string>
@@ -239,12 +244,6 @@
 
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_text">Got it</string>
-
-    <!-- Text for the content of the EU notification. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_eu_content">Test new features that will restrict cross-app tracking</string>
-
-    <!-- Text for the content of the non-EU notification. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_non_eu_content">You\'re testing new features that restrict cross-app tracking</string>
 
     <!-- Text that is part of an additional explainer of how the privacy sandbox works. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_expanded_text1">How the Privacy Sandbox works</string>
@@ -259,7 +258,7 @@
     <string name="notificationUI_how_it_works_expanded_text4">&#8226;&#160;&#160;General interests</string>
 
     <!-- Text that is part of an additional explainer of how the privacy sandbox works. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_expanded_text5">Android generates this data based on the apps you use, and adds it to the Privacy Sandbox. For example, one of your general interests might be "Sports."\n\nYou can see the list of your interests in your Privacy settings, and block any you don\'t like.</string>
+    <string name="notificationUI_how_it_works_expanded_text5">Android generates this data based on the apps you use, and adds it to the Privacy Sandbox. For example, one of your general interests might be "Sports."\n\nYou can see the list of your interests in your Privacy settings, and block any you don’t like.</string>
 
     <!-- Text that is part of an additional explainer of how the privacy sandbox works. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_expanded_text6">&#8226;&#160;&#160;Specific interests</string>

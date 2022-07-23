@@ -24,6 +24,7 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
@@ -71,24 +72,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @SmallTest
 public class JSScriptEngineTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = JSScriptEngineTest.class.getSimpleName();
-    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
-
-    @Mock private StopWatch mIsolateCreateWatch;
-    @Mock private StopWatch mJavaExecutionWatch;
-    @Mock JSScriptEngine.JsSandboxProvider mMockSandboxProvider;
-
-    @Mock private JsSandbox mMockedSandbox;
-    @Mock private JsIsolate mMockedIsolate;
-
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
     private static JSScriptEngine sJSScriptEngine;
+    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
+    @Mock JSScriptEngine.JsSandboxProvider mMockSandboxProvider;
+    @Mock private StopWatch mIsolateCreateWatch;
+    @Mock private StopWatch mJavaExecutionWatch;
+    @Mock private JsSandbox mMockedSandbox;
+    @Mock private JsIsolate mMockedIsolate;
 
     @BeforeClass
     public static void initJsSandbox() {
@@ -321,9 +320,11 @@ public class JSScriptEngineTest {
         when(mMockedIsolate.evaluateJavascriptAsync(anyString()))
                 .thenReturn(Futures.immediateFuture("hello world"));
 
+        AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
         CountDownLatch isolateIsClosedLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
+                            isolateHasBeenClosed.set(true);
                             isolateIsClosedLatch.countDown();
                             return null;
                         })
@@ -340,7 +341,9 @@ public class JSScriptEngineTest {
                 "test");
 
         isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
-        verify(mMockedIsolate).close();
+        // Using Mockito.verify made the test unstable (mockito call registration was in a
+        // race condition with the verify call)
+        assertTrue(isolateHasBeenClosed.get());
     }
 
     @Test
@@ -350,9 +353,11 @@ public class JSScriptEngineTest {
                 .thenReturn(
                         Futures.immediateFailedFuture(new RuntimeException("JS execution failed")));
 
+        AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
         CountDownLatch isolateIsClosedLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
+                            isolateHasBeenClosed.set(true);
                             isolateIsClosedLatch.countDown();
                             return null;
                         })
@@ -372,7 +377,9 @@ public class JSScriptEngineTest {
                                 "test"));
 
         isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
-        verify(mMockedIsolate).close();
+        // Using Mockito.verify made the test unstable (mockito call registration was in a
+        // race condition with the verify call)
+        assertTrue(isolateHasBeenClosed.get());
     }
 
     @Test
@@ -397,9 +404,11 @@ public class JSScriptEngineTest {
                                     LogUtil.i("Reporting JS completion");
                                     return "hello world";
                                 }));
+        AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
         CountDownLatch isolateIsClosedLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
+                            isolateHasBeenClosed.set(true);
                             isolateIsClosedLatch.countDown();
                             return null;
                         })
@@ -422,7 +431,9 @@ public class JSScriptEngineTest {
         LogUtil.i("Waiting for isolate to close");
         isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
         LogUtil.i("Checking");
-        verify(mMockedIsolate).close();
+        // Using Mockito.verify made the test unstable (mockito call registration was in a
+        // race condition with the verify call)
+        assertTrue(isolateHasBeenClosed.get());
     }
 
     @Test
@@ -447,9 +458,11 @@ public class JSScriptEngineTest {
                                     return "hello world";
                                 }));
 
+        AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
         CountDownLatch isolateIsClosedLatch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
+                            isolateHasBeenClosed.set(true);
                             LogUtil.i("Mock isolate has been closed");
                             isolateIsClosedLatch.countDown();
                             return null;
@@ -481,10 +494,9 @@ public class JSScriptEngineTest {
         // cancelling only after the processing started and the sandbox has been created
         jsEvaluationStartedLatch.await(4, TimeUnit.SECONDS);
         isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
-        verify(mMockedIsolate).close();
-
-        completeJsEvaluationLatch.countDown();
-
+        // Using Mockito.verify made the test unstable (mockito call registration was in a
+        // race condition with the verify call)
+        assertTrue(isolateHasBeenClosed.get());
         assertThat(timeoutException.getCause()).isInstanceOf(TimeoutException.class);
     }
     // CHECKSTYLE:ON IndentationCheck
@@ -521,6 +533,15 @@ public class JSScriptEngineTest {
     }
 
     private String callJSEngine(
+            @NonNull String jsScript,
+            @NonNull byte[] wasmBytes,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String functionName)
+            throws Exception {
+        return callJSEngine(sJSScriptEngine, jsScript, wasmBytes, args, functionName);
+    }
+
+    private String callJSEngine(
             @NonNull JSScriptEngine jsScriptEngine,
             @NonNull String jsScript,
             @NonNull List<JSScriptArgument> args,
@@ -529,6 +550,21 @@ public class JSScriptEngineTest {
         CountDownLatch resultLatch = new CountDownLatch(1);
         ListenableFuture<String> futureResult =
                 callJSEngineAsync(jsScriptEngine, jsScript, args, functionName, resultLatch);
+        resultLatch.await();
+        return futureResult.get();
+    }
+
+    private String callJSEngine(
+            @NonNull JSScriptEngine jsScriptEngine,
+            @NonNull String jsScript,
+            @NonNull byte[] wasmBytes,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String functionName)
+            throws Exception {
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ListenableFuture<String> futureResult =
+                callJSEngineAsync(
+                        jsScriptEngine, jsScript, wasmBytes, args, functionName, resultLatch);
         resultLatch.await();
         return futureResult.get();
     }
@@ -551,6 +587,21 @@ public class JSScriptEngineTest {
         Objects.requireNonNull(resultLatch);
         Log.i(TAG, "Calling WebVew");
         ListenableFuture<String> result = engine.evaluate(jsScript, args, functionName);
+        result.addListener(resultLatch::countDown, mExecutorService);
+        return result;
+    }
+
+    private ListenableFuture<String> callJSEngineAsync(
+            @NonNull JSScriptEngine engine,
+            @NonNull String jsScript,
+            @NonNull byte[] wasmBytes,
+            @NonNull List<JSScriptArgument> args,
+            @NonNull String functionName,
+            @NonNull CountDownLatch resultLatch) {
+        Objects.requireNonNull(engine);
+        Objects.requireNonNull(resultLatch);
+        Log.i(TAG, "Calling WebVew");
+        ListenableFuture<String> result = engine.evaluate(jsScript, wasmBytes, args, functionName);
         result.addListener(resultLatch::countDown, mExecutorService);
         return result;
     }

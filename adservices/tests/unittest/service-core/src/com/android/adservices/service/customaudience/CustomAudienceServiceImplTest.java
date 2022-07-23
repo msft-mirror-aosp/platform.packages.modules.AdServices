@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -61,7 +62,7 @@ public class CustomAudienceServiceImplTest {
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilder().build();
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
 
     @Mock private Context mContext;
     @Mock private CustomAudienceImpl mCustomAudienceImpl;
@@ -200,14 +201,14 @@ public class CustomAudienceServiceImplTest {
     public void testLeaveCustomAudience_runNormally() throws RemoteException {
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
 
@@ -228,13 +229,13 @@ public class CustomAudienceServiceImplTest {
     public void testLeaveCustomAudience_nullOwner() throws RemoteException {
         mService.leaveCustomAudience(
                 null,
-                CustomAudienceFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
-                        null, CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
+                        null, CommonFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
 
         verify(mAdServicesLoggerSpy)
@@ -282,7 +283,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CustomAudienceFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER,
                                 null,
                                 mICustomAudienceCallback));
 
@@ -307,7 +308,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CustomAudienceFixture.VALID_BUYER,
+                                CommonFixture.VALID_BUYER,
                                 CustomAudienceFixture.VALID_NAME,
                                 null));
 
@@ -331,19 +332,19 @@ public class CustomAudienceServiceImplTest {
                 .when(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
 
@@ -366,14 +367,14 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
         verify(mCustomAudienceImpl)
                 .leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CustomAudienceFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
         verify(mICustomAudienceCallback).onSuccess();
 

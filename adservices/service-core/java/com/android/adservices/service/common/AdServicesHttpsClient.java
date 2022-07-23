@@ -104,7 +104,7 @@ public class AdServicesHttpsClient {
         try {
             url = new URL(uri.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Uri is malformed! ", e);
+            LogUtil.d(e, "Uri is malformed! ");
             throw new IllegalArgumentException("Uri is malformed!");
         }
         return url;
@@ -149,14 +149,14 @@ public class AdServicesHttpsClient {
 
         try {
             urlConnection = setupConnection(url);
-        } catch (SocketTimeoutException e) {
-            throw new IOException("Connection timed out!");
         } catch (IOException e) {
-            LogUtil.d("Failed to open URL", e);
+            LogUtil.d(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
         try {
+            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
+            //  necessary need to be separated
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
@@ -209,14 +209,14 @@ public class AdServicesHttpsClient {
 
         try {
             urlConnection = setupConnection(url);
-        } catch (SocketTimeoutException e) {
-            throw new IOException("Connection timed out!");
         } catch (IOException e) {
-            LogUtil.d("Failed to open URL", e);
+            LogUtil.d(e, "Failed to open URL");
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
         try {
+            // TODO(b/237342352): Both connect and read timeouts are kludged in this method and if
+            //  necessary need to be separated
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
                 LogUtil.d("Successfully reported for URl: " + url);

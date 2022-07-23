@@ -21,10 +21,11 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
+import com.android.adservices.service.measurement.actions.RegisterWebSource;
+import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.ReportingJob;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
@@ -36,7 +37,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.ByteArrayInputStream;
@@ -69,8 +69,7 @@ public abstract class E2EMockTest extends E2ETest {
     SourceFetcher mSourceFetcher;
     TriggerFetcher mTriggerFetcher;
 
-    E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            String name) throws DatastoreException {
+    E2EMockTest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
         super(actions, expectedOutput, name);
         mSourceFetcher = Mockito.spy(new SourceFetcher());
         mTriggerFetcher = Mockito.spy(new TriggerFetcher());
@@ -81,11 +80,9 @@ public abstract class E2EMockTest extends E2ETest {
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
-            Mockito.doAnswer(new Answer<Map<String, List<String>>>() {
-                public Map<String, List<String>> answer(InvocationOnMock invocation) {
-                    return sourceRegistration.getNextResponse(uri);
-                }
-            }).when(urlConnection).getHeaderFields();
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             when(mSourceFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
         }
     }
@@ -96,11 +93,35 @@ public abstract class E2EMockTest extends E2ETest {
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
-            Mockito.doAnswer(new Answer<Map<String, List<String>>>() {
-                public Map<String, List<String>> answer(InvocationOnMock invocation) {
-                    return triggerRegistration.getNextResponse(uri);
-                }
-            }).when(urlConnection).getHeaderFields();
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation ->
+                            getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            when(mTriggerFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+        }
+    }
+
+    @Override
+    void prepareRegistrationServer(RegisterWebSource sourceRegistration) throws IOException {
+        for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
+            when(mSourceFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+        }
+    }
+
+    @Override
+    void prepareRegistrationServer(RegisterWebTrigger triggerRegistration) throws IOException {
+        for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
+            HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
+            when(urlConnection.getResponseCode()).thenReturn(200);
+            Answer<Map<String, List<String>>> headerFieldsMockAnswer =
+                    invocation ->
+                            getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
+            Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
             when(mTriggerFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
         }
     }
@@ -225,5 +246,11 @@ public abstract class E2EMockTest extends E2ETest {
         }
 
         return new JSONArray(result);
+    }
+
+    private static Map<String, List<String>> getNextResponse(
+            Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap, String uri) {
+        List<Map<String, List<String>>> responseList = uriToResponseHeadersMap.get(uri);
+        return responseList.remove(0);
     }
 }

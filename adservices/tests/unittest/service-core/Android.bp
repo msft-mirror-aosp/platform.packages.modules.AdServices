@@ -50,9 +50,10 @@ android_test {
     ],
     libs: [
         "android.test.base",
-	    "android.test.mock.stubs",
+        "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
+        "framework-sdksandbox.impl",
     ],
     test_suites: [
         "general-tests",

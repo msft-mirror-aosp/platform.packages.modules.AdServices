@@ -20,6 +20,7 @@ import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMai
 import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.TOPICS_PREFERENCE_BUTTON_KEY;
 
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
@@ -39,6 +40,7 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel.TopicsViewModelUiEvent;
 
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -102,6 +104,7 @@ public class ActionDelegate {
                                                 .setReorderingAllowed(true)
                                                 .addToBackStack(null)
                                                 .commit();
+                                        mAppsViewModel.refresh();
                                         break;
                                     case DISPLAY_TOPICS_FRAGMENT:
                                         mFragmentManager
@@ -113,6 +116,7 @@ public class ActionDelegate {
                                                 .setReorderingAllowed(true)
                                                 .addToBackStack(null)
                                                 .commit();
+                                        mTopicsViewModel.refresh();
                                         break;
                                 }
                             } finally {
@@ -153,7 +157,6 @@ public class ActionDelegate {
                                         mTopicsViewModel.resetTopics();
                                         break;
                                     case DISPLAY_BLOCKED_TOPICS_FRAGMENT:
-                                        mTopicsViewModel.refresh();
                                         mFragmentManager
                                                 .beginTransaction()
                                                 .replace(
@@ -164,6 +167,7 @@ public class ActionDelegate {
                                                 .setReorderingAllowed(true)
                                                 .addToBackStack(null)
                                                 .commit();
+                                        mTopicsViewModel.refresh();
                                         break;
                                 }
                             } finally {
@@ -185,13 +189,26 @@ public class ActionDelegate {
                             }
                             switch (event) {
                                 case BLOCK_APP:
-                                    mAppsViewModel.revokeAppConsent(app);
+                                    try {
+                                        mAppsViewModel.revokeAppConsent(app);
+                                    } catch (IOException e) {
+                                        Toast.makeText(
+                                                mMainViewModel.getApplication(),
+                                                "Block app failed",
+                                                Toast.LENGTH_SHORT);
+                                    }
                                     break;
                                 case RESTORE_APP:
-                                    mAppsViewModel.restoreAppConsent(app);
+                                    try {
+                                        mAppsViewModel.restoreAppConsent(app);
+                                    } catch (IOException e) {
+                                        Toast.makeText(
+                                                mMainViewModel.getApplication(),
+                                                "Unblock app failed",
+                                                Toast.LENGTH_SHORT);
+                                    }
                                     break;
                                 case DISPLAY_BLOCKED_APPS_FRAGMENT:
-                                    mAppsViewModel.refresh();
                                     mFragmentManager
                                             .beginTransaction()
                                             .replace(
@@ -201,6 +218,7 @@ public class ActionDelegate {
                                             .setReorderingAllowed(true)
                                             .addToBackStack(null)
                                             .commit();
+                                    mAppsViewModel.refresh();
                                     break;
                             }
                         });

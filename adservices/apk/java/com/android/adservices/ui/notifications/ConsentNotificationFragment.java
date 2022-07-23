@@ -23,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -63,14 +64,18 @@ public class ConsentNotificationFragment extends Fragment {
         boolean isEUDevice =
                 requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
 
-        View howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
+        TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
         howItWorksExpander.setOnClickListener(
                 view -> {
                     View text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
                     if (text.getVisibility() == View.VISIBLE) {
                         text.setVisibility(View.GONE);
+                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                0, 0, R.drawable.ic_expand, 0);
                     } else {
                         text.setVisibility(View.VISIBLE);
+                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                0, 0, R.drawable.ic_minimize, 0);
                     }
                 });
 

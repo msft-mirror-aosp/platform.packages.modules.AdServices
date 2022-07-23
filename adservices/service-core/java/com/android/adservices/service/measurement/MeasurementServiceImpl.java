@@ -139,7 +139,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             .build());
                         }
                     } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
+                        LogUtil.e(e, "Unable to send result to the callback");
                     }
                 });
     }
@@ -151,7 +151,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         try {
             callback.onResult(Integer.valueOf(mMeasurementImpl.getMeasurementApiStatus()));
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
+            LogUtil.e(e, "Unable to send result to the callback");
         }
     }
 
@@ -172,7 +172,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 callback.onResult();
             }
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
+            LogUtil.e(e, "Unable to send result to the callback");
         }
     }
 }
