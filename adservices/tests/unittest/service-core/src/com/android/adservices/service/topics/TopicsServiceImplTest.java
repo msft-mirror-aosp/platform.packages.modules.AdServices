@@ -82,6 +82,7 @@ public class TopicsServiceImplTest {
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
+    private static final String TOPICS_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdServicesLogger mAdServicesLogger =
@@ -136,6 +137,14 @@ public class TopicsServiceImplTest {
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mMockSdkContext.getSdkName()).thenReturn(SOME_SDK_NAME);
+        when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);
+    }
+
+    @Test
+    public void checkAllowList_emptyList() {
+        // Empty allow list, don't allow any app.
+        when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
+        invokeGetTopicsAndVerifyUnauthorized(mContext);
     }
 
     @Test
@@ -152,7 +161,7 @@ public class TopicsServiceImplTest {
                         return mPackageManager;
                     }
                 };
-        invokeGetTopics(context);
+        invokeGetTopicsAndVerifyUnauthorized(context);
     }
 
     @Test
@@ -160,7 +169,7 @@ public class TopicsServiceImplTest {
         when(mPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        invokeGetTopics(mMockSdkContext);
+        invokeGetTopicsAndVerifyUnauthorized(mMockSdkContext);
     }
 
     @Test
@@ -182,7 +191,12 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
-                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        context,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,
@@ -208,7 +222,12 @@ public class TopicsServiceImplTest {
     public void getTopics() throws Exception {
         runGetTopics(
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock));
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags));
     }
 
     @Test
@@ -233,7 +252,12 @@ public class TopicsServiceImplTest {
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         runGetTopics(
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock));
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags));
     }
 
     @Test
@@ -259,7 +283,12 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -316,7 +345,12 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -361,7 +395,12 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -412,7 +451,12 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -527,7 +571,12 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
-                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        context,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
 
         // A request with an invalid package name.
         mRequest =
@@ -568,10 +617,15 @@ public class TopicsServiceImplTest {
     }
 
     @NonNull
-    private void invokeGetTopics(Context context) {
+    private void invokeGetTopicsAndVerifyUnauthorized(Context context) {
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
-                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        context,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,

@@ -59,7 +59,8 @@ public class TopicsService extends Service {
                             TopicsWorker.getInstance(this),
                             ConsentManager.getInstance(this),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK);
+                            Clock.SYSTEM_CLOCK,
+                            FlagsFactory.getFlags());
             mTopicsService.init();
         }
 
