@@ -23,9 +23,6 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-
-import com.android.internal.util.Preconditions;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -472,22 +469,10 @@ public final class CustomAudience implements Parcelable {
             Objects.requireNonNull(mDailyUpdateUrl);
             Objects.requireNonNull(mBiddingLogicUrl);
 
-            if (mExpirationTime != null) {
-                Preconditions.checkArgument(mExpirationTime.isAfter(Instant.now()),
-                        "Expiration time must be in the future.");
-            }
-
-            if (mActivationTime != null && mExpirationTime != null) {
-                Preconditions.checkArgument(mExpirationTime.isAfter(mActivationTime),
-                        "Expiration time must be before activation time.");
-            }
-
             // To pass the API lint, we should not allow null Collection.
             if (mAds == null) {
                 mAds = List.of();
             }
-
-            // TODO(b/231997523): Add JSON field validation for user bidding signals.
 
             return new CustomAudience(this);
         }

@@ -17,6 +17,7 @@ package com.android.adservices.ui.notifications;
 
 import android.os.Bundle;
 
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.api.R;
@@ -28,6 +29,7 @@ public class ConsentNotificationActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.consent_notification_activity);
     }
 }

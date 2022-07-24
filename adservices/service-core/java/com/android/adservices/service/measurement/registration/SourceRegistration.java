@@ -34,13 +34,14 @@ import java.util.Optional;
 public final class SourceRegistration {
     private final Uri mTopOrigin;
     private final Uri mReportingOrigin;
-    private final Uri mDestination;
+    private final Uri mAppDestination;
     private final Uri mWebDestination;
     private final long mSourceEventId;
     private final long mExpiry;
     private final long mSourcePriority;
     private final long mInstallAttributionWindow;
     private final long mInstallCooldownWindow;
+    @Nullable private final Long mDebugKey;
     private final String mAggregateSource;
     private final String mAggregateFilterData;
 
@@ -48,18 +49,19 @@ public final class SourceRegistration {
     private SourceRegistration(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
-            @Nullable Uri destination,
+            @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             long sourceEventId,
             long expiry,
             long sourcePriority,
             long installAttributionWindow,
             long installCooldownWindow,
+            @Nullable Long debugKey,
             @Nullable String aggregateSource,
             @Nullable String aggregateFilterData) {
         mTopOrigin = topOrigin;
         mReportingOrigin = reportingOrigin;
-        mDestination = destination;
+        mAppDestination = appDestination;
         mWebDestination = webDestination;
         mSourceEventId = sourceEventId;
         mExpiry = expiry;
@@ -68,6 +70,7 @@ public final class SourceRegistration {
         mInstallCooldownWindow = installCooldownWindow;
         mAggregateSource = aggregateSource;
         mAggregateFilterData = aggregateFilterData;
+        mDebugKey = debugKey;
     }
 
     @Override
@@ -82,10 +85,11 @@ public final class SourceRegistration {
                 && mInstallCooldownWindow == that.mInstallCooldownWindow
                 && Objects.equals(mTopOrigin, that.mTopOrigin)
                 && Objects.equals(mReportingOrigin, that.mReportingOrigin)
-                && Objects.equals(mDestination, that.mDestination)
+                && Objects.equals(mAppDestination, that.mAppDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mAggregateSource, that.mAggregateSource)
-                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData);
+                && Objects.equals(mAggregateFilterData, that.mAggregateFilterData)
+                && Objects.equals(mDebugKey, that.mDebugKey);
     }
 
     @Override
@@ -93,7 +97,7 @@ public final class SourceRegistration {
         return Objects.hash(
                 mTopOrigin,
                 mReportingOrigin,
-                mDestination,
+                mAppDestination,
                 mWebDestination,
                 mSourceEventId,
                 mExpiry,
@@ -101,7 +105,8 @@ public final class SourceRegistration {
                 mInstallAttributionWindow,
                 mInstallCooldownWindow,
                 mAggregateSource,
-                mAggregateFilterData);
+                mAggregateFilterData,
+                mDebugKey);
     }
 
     /** Top level origin. */
@@ -118,8 +123,8 @@ public final class SourceRegistration {
 
     /** OS (app) destination Uri. */
     @Nullable
-    public Uri getDestination() {
-        return mDestination;
+    public Uri getAppDestination() {
+        return mAppDestination;
     }
 
     /** Web destination Uri. */
@@ -132,6 +137,11 @@ public final class SourceRegistration {
     @NonNull
     public long getSourceEventId() {
         return mSourceEventId;
+    }
+
+    /** Source debug key. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
     }
 
     /** Expiration. */
@@ -180,13 +190,14 @@ public final class SourceRegistration {
     public static final class Builder {
         private Uri mTopOrigin;
         private Uri mReportingOrigin;
-        private Uri mDestination;
+        private Uri mAppDestination;
         private Uri mWebDestination;
         private long mSourceEventId;
         private long mExpiry;
         private long mSourcePriority;
         private long mInstallAttributionWindow;
         private long mInstallCooldownWindow;
+        private @Nullable Long mDebugKey;
         private String mAggregateSource;
         private String mAggregateFilterData;
 
@@ -213,13 +224,13 @@ public final class SourceRegistration {
         }
 
         /**
-         * See {@link SourceRegistration#getDestination}. At least one of destination or web
+         * See {@link SourceRegistration#getAppDestination}. At least one of destination or web
          * destination is required.
          */
         @NonNull
-        public Builder setDestination(@Nullable Uri destination) {
-            Optional.ofNullable(destination).ifPresent(Validation::validateUri);
-            mDestination = destination;
+        public Builder setAppDestination(@Nullable Uri appDestination) {
+            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
+            mAppDestination = appDestination;
             return this;
         }
 
@@ -238,6 +249,12 @@ public final class SourceRegistration {
         @NonNull
         public Builder setSourceEventId(long sourceEventId) {
             mSourceEventId = sourceEventId;
+            return this;
+        }
+
+        /** See {@link SourceRegistration#getDebugKey()}. */
+        public @NonNull Builder setDebugKey(@Nullable Long debugKey) {
+            mDebugKey = debugKey;
             return this;
         }
 
@@ -288,7 +305,7 @@ public final class SourceRegistration {
         public SourceRegistration build() {
             Validation.validateNonNull(mTopOrigin, mReportingOrigin);
 
-            if (mDestination == null && mWebDestination == null) {
+            if (mAppDestination == null && mWebDestination == null) {
                 throw new IllegalArgumentException(
                         "At least one of destination or web destination is required.");
             }
@@ -296,13 +313,14 @@ public final class SourceRegistration {
             return new SourceRegistration(
                     mTopOrigin,
                     mReportingOrigin,
-                    mDestination,
+                    mAppDestination,
                     mWebDestination,
                     mSourceEventId,
                     mExpiry,
                     mSourcePriority,
                     mInstallAttributionWindow,
                     mInstallCooldownWindow,
+                    mDebugKey,
                     mAggregateSource,
                     mAggregateFilterData);
         }

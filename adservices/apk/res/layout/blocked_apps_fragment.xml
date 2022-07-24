@@ -25,11 +25,9 @@
     android:orientation="vertical">
 
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:id="@+id/settingsUI_blocked_apps_title"
         android:text="@string/settingsUI_blocked_apps_title"
-        android:textSize="36sp" />
+        style="@style/MainStyle.H1"  />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/blocked_apps_list"
         android:layout_width="match_parent"

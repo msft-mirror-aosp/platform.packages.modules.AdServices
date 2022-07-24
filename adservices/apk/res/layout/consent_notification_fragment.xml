@@ -116,7 +116,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:drawableEnd="@drawable/ic_expand"
-                        android:drawablePadding="24dp"
                         android:gravity="center_vertical"
                         android:text="@string/notificationUI_container2_control_text"
                         android:textAppearance="@style/TextAppearance.Body1" />
@@ -139,16 +138,16 @@
                             style="@style/MainStyle.H5" />
                     <TextView
                             android:text="@string/notificationUI_how_it_works_expanded_text4"
-                            style="@style/MainStyle.BoldBullet" />
+                            style="@style/MainStyle.Body1BoldBullet" />
                     <TextView
                             android:text="@string/notificationUI_how_it_works_expanded_text5"
-                            style="@style/MainStyle.BulletSubtext" />
+                            style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
-                            style="@style/MainStyle.BoldBullet"
+                            style="@style/MainStyle.Body1BoldBullet"
                             android:text="@string/notificationUI_how_it_works_expanded_text6" />
                     <TextView
                             android:text="@string/notificationUI_how_it_works_expanded_text7"
-                            style="@style/MainStyle.BulletSubtext" />
+                            style="@style/MainStyle.Body1BulletSubtext" />
                 </LinearLayout>
             </LinearLayout>
 

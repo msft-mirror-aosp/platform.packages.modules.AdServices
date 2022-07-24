@@ -19,7 +19,6 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
-import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
@@ -40,6 +39,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
@@ -93,10 +93,21 @@ public class SettingsActivityTest {
         ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
         doReturn(blockedTopicsList).when(sConsentManager).getTopicsWithRevokedConsent();
 
+        List<App> appTempList = new ArrayList<>();
+        appTempList.add(App.create("app1"));
+        appTempList.add(App.create("app2"));
+        ImmutableList<App> appsList = ImmutableList.copyOf(appTempList);
+        doReturn(appsList).when(sConsentManager).getKnownAppsWithConsent();
+
+        appTempList = new ArrayList<>();
+        appTempList.add(App.create("app3"));
+        ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
+        doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
+
         TopicsViewModel topicsViewModel =
                 new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         AppsViewModel appsViewModel =
-                new AppsViewModel(ApplicationProvider.getApplicationContext());
+                new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         MainViewModel mainViewModel =
                 new MainViewModel(ApplicationProvider.getApplicationContext());
         doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
@@ -278,23 +289,19 @@ public class SettingsActivityTest {
     }
 
     private void assertTopicsFragmentDisplayed() {
-        onView(withId(R.id.blocked_topics_button))
-                .perform(scrollTo())
-                .check(matches(isDisplayed()));
+        onView(withId(R.id.settingsUI_topics_title)).check(matches(isDisplayed()));
     }
 
     private void assertAppsFragmentDisplayed() {
-        onView(withId(R.id.blocked_apps_button)).perform(scrollTo()).check(matches(isDisplayed()));
+        onView(withId(R.id.settingsUI_apps_title)).check(matches(isDisplayed()));
     }
 
     private void assertBlockedTopicsFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
-        onView(withId(R.id.blocked_topics_button)).check(doesNotExist());
+        onView(withId(R.id.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
     }
 
     private void assertBlockedAppsFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_blocked_apps_title)).check(matches(isDisplayed()));
-        onView(withId(R.id.blocked_apps_button)).check(doesNotExist());
+        onView(withId(R.id.settingsUI_blocked_apps_title)).check(matches(isDisplayed()));
     }
 
     private ViewInteraction onPreferenceScreen() {

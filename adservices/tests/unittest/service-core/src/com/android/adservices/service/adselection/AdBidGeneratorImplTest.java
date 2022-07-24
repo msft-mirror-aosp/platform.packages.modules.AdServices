@@ -28,6 +28,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
@@ -82,20 +83,22 @@ import java.util.concurrent.Executors;
 public class AdBidGeneratorImplTest {
     public static final List<Double> BIDS =
             new ArrayList<Double>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4));
+    public static final List<AdData> ADS =
+            AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER);
     public static final List<AdWithBid> AD_WITH_NON_POSITIVE_BIDS =
             new ArrayList<AdWithBid>(
                     ImmutableList.of(
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(0), BIDS.get(1)),
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(1), BIDS.get(0)),
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(2), BIDS.get(1)),
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(3), BIDS.get(0))));
+                            new AdWithBid(ADS.get(0), BIDS.get(1)),
+                            new AdWithBid(ADS.get(1), BIDS.get(0)),
+                            new AdWithBid(ADS.get(2), BIDS.get(1)),
+                            new AdWithBid(ADS.get(3), BIDS.get(0))));
     public static final List<AdWithBid> AD_WITH_BIDS =
             new ArrayList<AdWithBid>(
                     ImmutableList.of(
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(0), BIDS.get(1)),
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(1), BIDS.get(0)),
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(2), BIDS.get(3)),
-                            new AdWithBid(AdDataFixture.VALID_ADS.get(3), BIDS.get(2))));
+                            new AdWithBid(ADS.get(0), BIDS.get(1)),
+                            new AdWithBid(ADS.get(1), BIDS.get(0)),
+                            new AdWithBid(ADS.get(2), BIDS.get(3)),
+                            new AdWithBid(ADS.get(3), BIDS.get(2))));
     private static final String EMPTY_BUYER_DECISION_LOGIC_JS = "{}";
     private static final String EMPTY_AD_SELECTION_SIGNALS = "{}";
     private static final String EMPTY_BUYER_SIGNALS = "{}";
@@ -103,9 +106,10 @@ public class AdBidGeneratorImplTest {
     private static final String EMPTY_USER_SIGNALS = "{}";
     private static final String TRUSTED_BIDDING_SIGNALS =
             "{\n" + "\t\"max_bid_limit\": 20,\n" + "\t\"ad_type\": \"retail\"\n" + "}";
-    private static final ArrayList<AdData> ADS = AdDataFixture.VALID_ADS;
     private static final DBCustomAudience CUSTOM_AUDIENCE_WITH_EMPTY_ADS =
-            DBCustomAudienceFixture.getValidBuilder().setAds(Collections.emptyList()).build();
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                    .setAds(Collections.emptyList())
+                    .build();
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
     private final String mTrustedBiddingPath = "/fetchBiddingSignals/";
@@ -168,7 +172,7 @@ public class AdBidGeneratorImplTest {
                         .build();
 
         mCustomAudienceWithAds =
-                DBCustomAudienceFixture.getValidBuilder()
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setBiddingLogicUrl(mDecisionLogicUri)
                         .setTrustedBiddingData(mTrustedBiddingData)
                         .build();
@@ -406,7 +410,7 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdBiddingPerCABiddingWaits5SecondsMore() throws Exception {
+    public void testRunAdBiddingPerCABiddingTimesOut() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
         mServer = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
@@ -537,7 +541,7 @@ public class AdBidGeneratorImplTest {
                         .build();
 
         DBCustomAudience customAudienceWithAds =
-                DBCustomAudienceFixture.getValidBuilder()
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setBiddingLogicUrl(mDecisionLogicUri)
                         .setTrustedBiddingData(trustedBiddingData)
                         .build();
@@ -724,7 +728,7 @@ public class AdBidGeneratorImplTest {
     private ListenableFuture<List<AdWithBid>> generateBidsWithDelay() {
         return mListeningExecutorService.submit(
                 () -> {
-                    Thread.sleep(mFlags.getAdSelectionBiddingTimeoutPerCaMs() + 5000);
+                    Thread.sleep(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
                     return AD_WITH_BIDS;
                 });
     }

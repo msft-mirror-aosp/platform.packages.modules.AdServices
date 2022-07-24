@@ -20,10 +20,12 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -39,7 +41,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -57,18 +62,21 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
+    @NonNull private final Flags mFlags;
 
     public AdsScoreGeneratorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull ExecutorService executor,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
-            @NonNull AdSelectionEntryDao adSelectionEntryDao) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull Flags flags) {
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
+        mFlags = flags;
     }
 
     /**
@@ -100,7 +108,24 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                     return mapAdsToScore(adBiddingOutcomes, scores);
                 };
 
-        return FluentFuture.from(adScores).transform(adsToScore, mListeningExecutorService);
+        return FluentFuture.from(adScores)
+                .transform(adsToScore, mListeningExecutorService)
+                .withTimeout(
+                        mFlags.getAdSelectionScoringTimeoutMs(),
+                        TimeUnit.MILLISECONDS,
+                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
+                        //  use a global scheduled executor
+                        new ScheduledThreadPoolExecutor(1))
+                .catching(
+                        ExecutionException.class,
+                        this::handleTimeoutError,
+                        mListeningExecutorService);
+    }
+
+    @Nullable
+    private List<AdScoringOutcome> handleTimeoutError(ExecutionException e) {
+        LogUtil.w(e, "Scoring exceeded time limit");
+        throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
     }
 
     private ListenableFuture<String> getAdSelectionLogic(
@@ -204,7 +229,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.w("Exception encountered when fetching trusted signals", e);
+                            LogUtil.w(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },
                         mListeningExecutorService);

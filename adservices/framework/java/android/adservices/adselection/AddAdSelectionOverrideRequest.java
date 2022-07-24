@@ -53,7 +53,9 @@ public class AddAdSelectionOverrideRequest {
     }
 
     /**
-     * @return AdSelectionConfig, the configuration of the ad selection process.
+     * @return an instance of {@link AdSelectionConfig}, the configuration of the ad selection
+     *     process. This configuration provides the data necessary to run Ad Selection flow that
+     *     generates bids and scores to find a wining ad for rendering.
      */
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {
@@ -61,14 +63,18 @@ public class AddAdSelectionOverrideRequest {
     }
 
     /**
-     * @return The override javascript result
+     * @return The override javascript result, should be a string that contains valid JS code. The
+     *     code should contain the scoring logic that will be executed during Ad selection.
      */
     @NonNull
     public String getDecisionLogicJs() {
         return mDecisionLogicJs;
     }
 
-    /** @return The override trusted scoring signals */
+    /**
+     * @return The override trusted scoring signals, should be a valid json string. The trusted
+     *     signals would be fed into the scoring logic during Ad Selection.
+     */
     @NonNull
     public String getTrustedScoringSignals() {
         return mTrustedScoringSignals;
