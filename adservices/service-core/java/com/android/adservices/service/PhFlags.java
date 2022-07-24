@@ -127,6 +127,9 @@ public final class PhFlags implements Flags {
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
 
+    // Rate Limit keys
+    static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
+
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLE_STATUS = "adservice_enable_status";
 
@@ -576,6 +579,16 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+    }
+
+    // Rate Limit Flags.
+    @Override
+    public float getSdkRequestPermitsPerSecond() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getFloat(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                /* defaultValue */ SDK_REQUEST_PERMITS_PER_SECOND);
     }
 
     @Override

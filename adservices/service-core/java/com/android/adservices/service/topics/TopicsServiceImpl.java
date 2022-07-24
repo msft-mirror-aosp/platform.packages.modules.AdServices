@@ -17,6 +17,7 @@ package com.android.adservices.service.topics;
 
 import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
 import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -38,12 +39,14 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
+
 
 import java.util.concurrent.Executor;
 
@@ -60,6 +63,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final ConsentManager mConsentManager;
     private final Clock mClock;
     private final Flags mFlags;
+    private final Throttler mThrottler;
 
     public TopicsServiceImpl(
             Context context,
@@ -67,13 +71,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             ConsentManager consentManager,
             AdServicesLogger adServicesLogger,
             Clock clock,
-            Flags flags) {
+            Flags flags,
+            Throttler throttler) {
         mContext = context;
         mTopicsWorker = topicsWorker;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
         mFlags = flags;
+        mThrottler = throttler;
     }
 
     @Override
@@ -81,6 +87,16 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull GetTopicsParam topicsParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetTopicsCallback callback) {
+
+        if (!mThrottler.tryAcquire(Throttler.ApiKey.TOPICS_API, topicsParam.getSdkName())) {
+            LogUtil.e("Rate Limit Reached for TOPICS_API and SDK = %s", topicsParam.getSdkName());
+            try {
+                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return;
+        }
 
         final long startServiceTime = mClock.elapsedRealtime();
         // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
