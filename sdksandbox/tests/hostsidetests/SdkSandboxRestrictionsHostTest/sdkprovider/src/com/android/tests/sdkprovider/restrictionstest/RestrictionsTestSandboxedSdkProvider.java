@@ -58,7 +58,7 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     // Tries to register a broadcast receiver. An exception will be thrown if broadcast restrictions
     // are being enforced.
     void testSdkSandboxBroadcastRestrictions() {
-        getBaseContext()
+        getContext()
                 .registerReceiver(
                         new BroadcastReceiver() {
                             @Override
