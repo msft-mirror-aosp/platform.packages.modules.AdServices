@@ -37,7 +37,6 @@ public final class MeasurementTables {
         MeasurementTables.SourceContract.TABLE,
         MeasurementTables.TriggerContract.TABLE,
         MeasurementTables.EventReportContract.TABLE,
-        MeasurementTables.EnrollmentDataContract.TABLE,
         MeasurementTables.AggregateReport.TABLE,
         MeasurementTables.AggregateEncryptionKey.TABLE,
         MeasurementTables.AttributionRateLimitContract.TABLE
@@ -83,21 +82,6 @@ public final class MeasurementTables {
         String AGGREGATE_VALUES = "aggregate_values";
         String FILTERS = "filters";
         String DEBUG_KEY = "debug_key";
-    }
-
-    /** Contract for Adtech enrollment data. */
-    public interface EnrollmentDataContract {
-        String TABLE = "enrollment_data";
-        String ENROLLMENT_ID = "enrollment_id";
-        String COMPANY_ID = "company_id";
-        // Following six string columns each consist of a space separated list.
-        String SDK_NAMES = "sdk_names";
-        String ATTRIBUTION_SOURCE_REGISTRATION_URL = "attribution_source_registration_url";
-        String ATTRIBUTION_TRIGGER_REGISTRATION_URL = "attribution_trigger_registration_url";
-        String ATTRIBUTION_REPORTING_URL = "attribution_reporting_url";
-        String REMARKETING_RESPONSE_BASED_REGISTRATION_URL =
-                "remarketing_response_based_registration_url";
-        String ENCRYPTION_KEY_URL = "encryption_key_url";
     }
 
     /** Contract for EventReport. */
@@ -309,28 +293,6 @@ public final class MeasurementTables {
                     + AggregateEncryptionKey.EXPIRY + " INTEGER "
                     + ")";
 
-    public static final String CREATE_TABLE_ENROLLMENT_DATA =
-            "CREATE TABLE "
-                    + EnrollmentDataContract.TABLE
-                    + " ("
-                    + EnrollmentDataContract.ENROLLMENT_ID
-                    + " TEXT PRIMARY KEY NOT NULL, "
-                    + EnrollmentDataContract.COMPANY_ID
-                    + " TEXT, "
-                    + EnrollmentDataContract.SDK_NAMES
-                    + " TEXT, "
-                    + EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
-                    + " TEXT, "
-                    + EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL
-                    + " TEXT, "
-                    + EnrollmentDataContract.ATTRIBUTION_REPORTING_URL
-                    + " TEXT, "
-                    + EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL
-                    + " TEXT, "
-                    + EnrollmentDataContract.ENCRYPTION_KEY_URL
-                    + " TEXT "
-                    + ")";
-
     public static final String[] CREATE_INDEXES = {
         "CREATE INDEX "
                 + INDEX_PREFIX
@@ -403,8 +365,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_EVENT_REPORT,
                             CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
                             CREATE_TABLE_AGGREGATE_REPORT,
-                            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY,
-                            CREATE_TABLE_ENROLLMENT_DATA));
+                            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {
