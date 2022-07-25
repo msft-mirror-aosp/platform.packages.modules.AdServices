@@ -342,11 +342,11 @@ public final class AdSelectionRunner {
                     .get();
         } catch (InterruptedException e) {
             final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new InterruptedException(exceptionReason);
         } catch (ExecutionException e) {
             final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new ExecutionException(e.getCause());
         } finally {
             customThreadPool.shutdownNow();

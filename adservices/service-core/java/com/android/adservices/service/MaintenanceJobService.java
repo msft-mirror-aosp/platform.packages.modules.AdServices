@@ -64,7 +64,7 @@ public final class MaintenanceJobService extends JobService {
                     @Override
                     public void onFailure(Throwable t) {
                         LogUtil.e(
-                                "Failed to handle MaintenanceJobService: " + params.getJobId(), t);
+                                t, "Failed to handle MaintenanceJobService: " + params.getJobId());
                         jobFinished(params, /* wantsReschedule = */ false);
                     }
                 },
