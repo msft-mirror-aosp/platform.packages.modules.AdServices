@@ -22,6 +22,7 @@ import android.adservices.topics.GetTopicsResult;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
+import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -60,17 +61,20 @@ public class TopicsWorker {
     private final EpochManager mEpochManager;
     private final CacheManager mCacheManager;
     private final BlockedTopicsManager mBlockedTopicsManager;
+    private final AppUpdateManager mAppUpdateManager;
     private final Flags mFlags;
 
-    @VisibleForTesting
-    TopicsWorker(
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
+    public TopicsWorker(
             @NonNull EpochManager epochManager,
             @NonNull CacheManager cacheManager,
             @NonNull BlockedTopicsManager blockedTopicsManager,
+            @NonNull AppUpdateManager appUpdateManager,
             Flags flags) {
         mEpochManager = epochManager;
         mCacheManager = cacheManager;
         mBlockedTopicsManager = blockedTopicsManager;
+        mAppUpdateManager = appUpdateManager;
         mFlags = flags;
     }
 
@@ -90,6 +94,7 @@ public class TopicsWorker {
                                     EpochManager.getInstance(context),
                                     CacheManager.getInstance(context),
                                     BlockedTopicsManager.getInstance(context),
+                                    AppUpdateManager.getInstance(context),
                                     FlagsFactory.getFlags());
                 }
             }
@@ -177,6 +182,11 @@ public class TopicsWorker {
     @NonNull
     public GetTopicsResult getTopics(@NonNull String app, @NonNull String sdk) {
         LogUtil.v("TopicsWorker.getTopics for %s, %s", app, sdk);
+
+        // We will generally handle the App and SDK topics assignment through
+        // PackageChangedReceiver. However, this is to catch the case we miss the broadcast.
+        handleSdkTopicsAssignment(app, sdk);
+
         mReadWriteLock.readLock().lock();
         try {
             List<Topic> topics =
@@ -273,6 +283,83 @@ public class TopicsWorker {
             LogUtil.v(
                     "All derived data are cleaned for Topics API except: %s",
                     tablesToExclude.toString());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Reconcile unhandled app update in real-time service.
+     *
+     * <p>Uninstallation: Wipe out data in all tables for an uninstalled application with data still
+     * persisted in database.
+     *
+     * <p>Installation: Assign a random top topic from last 3 epochs to app only.
+     *
+     * @param context the context
+     */
+    public void reconcileApplicationUpdate(Context context) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.reconcileUninstalledApps(context);
+            mAppUpdateManager.reconcileInstalledApps(context, mEpochManager.getCurrentEpochId());
+
+            loadCache();
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Delete derived data for a specific app
+     *
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     */
+    public void deletePackageData(@NonNull Uri packageUri) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.deleteAppDataByUri(packageUri);
+
+            loadCache();
+            LogUtil.v("Derived data is cleared for %s", packageUri.toString());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Handle application installation for Topics API
+     *
+     * @param packageUri The {@link Uri} got from Broadcast Intent
+     */
+    public void handleAppInstallation(@NonNull Uri packageUri) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mAppUpdateManager.assignTopicsToNewlyInstalledApps(
+                    packageUri, mEpochManager.getCurrentEpochId());
+
+            loadCache();
+            LogUtil.v(
+                    "Topics have been assigned to newly installed %s and cache" + "is reloaded",
+                    packageUri);
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    // Handle topic assignment to SDK for newly installed applications. Cached topics need to be
+    // reloaded if any topic assignment happens.
+    private void handleSdkTopicsAssignment(String app, String sdk) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            if (mAppUpdateManager.assignTopicsToSdkForAppInstallation(
+                    app, sdk, mEpochManager.getCurrentEpochId())) {
+                loadCache();
+                LogUtil.v(
+                        "Topics have been assigned to sdk %s as app %s is newly installed in"
+                                + " current epoch",
+                        sdk, app);
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

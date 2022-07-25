@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -32,12 +34,10 @@ import java.net.HttpURLConnection;
 
 public class AggregateReportSenderTest {
 
-    private static final String SOURCE_SITE = "https://source.example";
     private static final String ATTRIBUTION_DESTINATION = "https://attribution.destination";
     private static final String SOURCE_REGISTRATION_TIME = "1246174152155";
     private static final String SCHEDULED_REPORT_TIME = "1246174158155";
-    private static final String PRIVACY_BUDGET_KEY = "example-key";
-    private static final String VERSION = "1";
+    private static final String VERSION = "1234";
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
@@ -46,12 +46,10 @@ public class AggregateReportSenderTest {
 
     private AggregateReportBody createAggregateReportBodyExample1() {
         return new AggregateReportBody.Builder()
-                .setSourceSite(SOURCE_SITE)
                 .setAttributionDestination(ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
                 .setScheduledReportTime(SCHEDULED_REPORT_TIME)
-                .setPrivacyBudgetKey(PRIVACY_BUDGET_KEY)
-                .setVersion(VERSION)
+                .setApiVersion(VERSION)
                 .setReportId(REPORT_ID)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
@@ -70,7 +68,8 @@ public class AggregateReportSenderTest {
         Mockito.when(httpUrlConnection.getOutputStream()).thenReturn(outputStream);
         Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
 
-        JSONObject aggregateReportJson = createAggregateReportBodyExample1().toJson();
+        JSONObject aggregateReportJson =
+                createAggregateReportBodyExample1().toJson(AggregateCryptoFixture.getKey());
         Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
 
         AggregateReportSender aggregateReportSender = new AggregateReportSender();

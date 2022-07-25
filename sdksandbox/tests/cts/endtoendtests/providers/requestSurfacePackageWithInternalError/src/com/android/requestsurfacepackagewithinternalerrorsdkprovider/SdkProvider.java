@@ -16,7 +16,6 @@
 
 package com.android.requestsurfacepackagewithinternalerrorsdkprovider;
 
-import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.os.Bundle;
@@ -27,9 +26,8 @@ import java.util.concurrent.Executor;
 public class SdkProvider extends SandboxedSdkProvider {
 
     @Override
-    public void initSdk(SandboxedSdkContext context, Bundle params,
-            Executor executor, InitSdkCallback callback) {
-        executor.execute(() -> callback.onInitSdkFinished(null));
+    public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
+        executor.execute(() -> callback.onLoadSdkFinished(null));
     }
 
     @Override
@@ -38,6 +36,5 @@ public class SdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public void onExtraDataReceived(Bundle extraData) {
-    }
+    public void onDataReceived(Bundle data, DataReceivedCallback callback) {}
 }

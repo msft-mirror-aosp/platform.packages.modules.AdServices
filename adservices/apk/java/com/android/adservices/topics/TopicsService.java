@@ -20,8 +20,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.CacheManager;
@@ -43,9 +47,23 @@ public class TopicsService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            return;
+        }
+
         if (mTopicsService == null) {
-            mTopicsService = new TopicsServiceImpl(this, TopicsWorker.getInstance(this),
-                    AdServicesLoggerImpl.getInstance(), Clock.SYSTEM_CLOCK);
+            mTopicsService =
+                    new TopicsServiceImpl(
+                            this,
+                            TopicsWorker.getInstance(this),
+                            ConsentManager.getInstance(this),
+                            AdServicesLoggerImpl.getInstance(),
+                            Clock.SYSTEM_CLOCK,
+                            FlagsFactory.getFlags(),
+                            Throttler.getInstance(
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()));
             mTopicsService.init();
         }
 
@@ -55,10 +73,18 @@ public class TopicsService extends Service {
     private void schedulePeriodicJobs() {
         MaintenanceJobService.schedule(this);
         EpochJobService.schedule(this);
+
+        // TODO(b/238674236): Schedule this after the boot complete.
+        MddJobService.schedule(this);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
         return Objects.requireNonNull(mTopicsService);
     }
 

@@ -17,11 +17,14 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.validation.Validation;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -56,6 +59,7 @@ public class Trigger {
     private String mAggregateValues;
     private AggregatableAttributionTrigger mAggregatableAttributionTrigger;
     private String mFilters;
+    private @Nullable Long mDebugKey;
 
     @IntDef(value = {
             Status.PENDING,
@@ -83,6 +87,7 @@ public class Trigger {
                 && Objects.equals(mAttributionDestination, trigger.mAttributionDestination)
                 && Objects.equals(mAdTechDomain, trigger.mAdTechDomain)
                 && mTriggerTime == trigger.mTriggerTime
+                && Objects.equals(mDebugKey, trigger.mDebugKey)
                 && Objects.equals(mEventTriggers, trigger.mEventTriggers)
                 && mStatus == trigger.mStatus
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
@@ -105,7 +110,8 @@ public class Trigger {
                 mAggregateTriggerData,
                 mAggregateValues,
                 mAggregatableAttributionTrigger,
-                mFilters);
+                mFilters,
+                mDebugKey);
     }
 
     /**
@@ -143,10 +149,9 @@ public class Trigger {
         return mEventTriggers;
     }
 
-    /**
-     * Current state of the {@link Trigger}.
-     */
-    public @Status int getStatus() {
+    /** Current state of the {@link Trigger}. */
+    @Status
+    public int getStatus() {
         return mStatus;
     }
 
@@ -223,6 +228,10 @@ public class Trigger {
         return mFilters;
     }
 
+    /** Debug key of {@link Trigger}. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
+    }
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -331,6 +340,10 @@ public class Trigger {
         return eventTriggers;
     }
 
+    public DestinationType getDestinationType() {
+        return DestinationType.getDestinationType(mAttributionDestination);
+    }
+
     /**
      * Builder for {@link Trigger}.
      */
@@ -346,95 +359,102 @@ public class Trigger {
             mBuilding = trigger;
         }
 
-        /**
-         * See {@link Trigger#getId()}.
-         */
+        /** See {@link Trigger#getId()}. */
+        @NonNull
         public Builder setId(String id) {
             mBuilding.mId = id;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAttributionDestination()}.
-         */
+        /** See {@link Trigger#getAttributionDestination()}. */
+        @NonNull
         public Builder setAttributionDestination(Uri attributionDestination) {
+            Validation.validateUri(attributionDestination);
             mBuilding.mAttributionDestination = attributionDestination;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAdTechDomain()} ()}.
-         */
+        /** See {@link Trigger#getAdTechDomain()} ()}. */
+        @NonNull
         public Builder setAdTechDomain(Uri adTechDomain) {
+            Validation.validateUri(adTechDomain);
             mBuilding.mAdTechDomain = adTechDomain;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getStatus()}.
-         */
+        /** See {@link Trigger#getStatus()}. */
+        @NonNull
         public Builder setStatus(@Status int status) {
             mBuilding.mStatus = status;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getTriggerTime()}.
-         */
+        /** See {@link Trigger#getTriggerTime()}. */
+        @NonNull
         public Builder setTriggerTime(long triggerTime) {
             mBuilding.mTriggerTime = triggerTime;
             return this;
         }
 
         /** See {@link Trigger#getEventTriggers()}. */
-        public Builder setEventTriggers(String eventTriggers) {
+        @NonNull
+        public Builder setEventTriggers(@NonNull String eventTriggers) {
+            Validation.validateNonNull(eventTriggers);
             mBuilding.mEventTriggers = eventTriggers;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getRegistrant()}
-         */
-        public Builder setRegistrant(Uri registrant) {
+        /** See {@link Trigger#getRegistrant()} */
+        @NonNull
+        public Builder setRegistrant(@NonNull Uri registrant) {
+            Validation.validateUri(registrant);
             mBuilding.mRegistrant = registrant;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAggregateTriggerData()}.
-         */
-        public Builder setAggregateTriggerData(String aggregateTriggerData) {
+        /** See {@link Trigger#getAggregateTriggerData()}. */
+        @NonNull
+        public Builder setAggregateTriggerData(@Nullable String aggregateTriggerData) {
             mBuilding.mAggregateTriggerData = aggregateTriggerData;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAggregateValues()}
-         */
-        public Builder setAggregateValues(String aggregateValues) {
+        /** See {@link Trigger#getAggregateValues()} */
+        @NonNull
+        public Builder setAggregateValues(@Nullable String aggregateValues) {
             mBuilding.mAggregateValues = aggregateValues;
             return this;
         }
 
         /** See {@link Trigger#getFilters()} */
-        public Builder setFilters(String filters) {
+        @NonNull
+        public Builder setFilters(@Nullable String filters) {
             mBuilding.mFilters = filters;
             return this;
         }
 
-        /**
-         * See {@link Trigger#getAggregatableAttributionTrigger()}
-         */
+        /** See {@link Trigger#getDebugKey()} ()} */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mBuilding.mDebugKey = debugKey;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregatableAttributionTrigger()} */
+        @NonNull
         public Builder setAggregatableAttributionTrigger(
-                AggregatableAttributionTrigger aggregatableAttributionTrigger) {
+                @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
             mBuilding.mAggregatableAttributionTrigger = aggregatableAttributionTrigger;
             return this;
         }
 
-        /**
-         * Build the {@link Trigger}.
-         */
+        /** Build the {@link Trigger}. */
+        @NonNull
         public Trigger build() {
+            Validation.validateNonNull(
+                    mBuilding.mAttributionDestination,
+                    mBuilding.mAdTechDomain,
+                    mBuilding.mRegistrant);
+
             return mBuilding;
         }
     }

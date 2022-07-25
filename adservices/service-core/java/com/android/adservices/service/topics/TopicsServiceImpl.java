@@ -17,6 +17,7 @@ package com.android.adservices.service.topics;
 
 import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
 import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -27,15 +28,25 @@ import android.adservices.topics.IGetTopicsCallback;
 import android.adservices.topics.ITopicsService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Binder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
+
 
 import java.util.concurrent.Executor;
 
@@ -49,14 +60,26 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final TopicsWorker mTopicsWorker;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final AdServicesLogger mAdServicesLogger;
-    private Clock mClock;
+    private final ConsentManager mConsentManager;
+    private final Clock mClock;
+    private final Flags mFlags;
+    private final Throttler mThrottler;
 
-    public TopicsServiceImpl(Context context, TopicsWorker topicsWorker,
-            AdServicesLogger adServicesLogger, Clock clock) {
+    public TopicsServiceImpl(
+            Context context,
+            TopicsWorker topicsWorker,
+            ConsentManager consentManager,
+            AdServicesLogger adServicesLogger,
+            Clock clock,
+            Flags flags,
+            Throttler throttler) {
         mContext = context;
         mTopicsWorker = topicsWorker;
+        mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
+        mFlags = flags;
+        mThrottler = throttler;
     }
 
     @Override
@@ -65,31 +88,71 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetTopicsCallback callback) {
 
+        if (!mThrottler.tryAcquire(Throttler.ApiKey.TOPICS_API, topicsParam.getSdkName())) {
+            LogUtil.e("Rate Limit Reached for TOPICS_API and SDK = %s", topicsParam.getSdkName());
+            try {
+                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return;
+        }
+
         final long startServiceTime = mClock.elapsedRealtime();
-        final String packageName = topicsParam.getAttributionSource().getPackageName();
+        // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
+        final String packageName = topicsParam.getAppPackageName();
         final String sdkName = topicsParam.getSdkName();
+        final String sdkPackageName = topicsParam.getSdkPackageName();
+
+        // We need to save the Calling Uid before offloading to the background executor. Otherwise
+        // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
+        // since it's used in the lambda.
+        final int callingUid = Binder.getCallingUid();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
-        boolean permitted = PermissionHelper.hasTopicsPermission(mContext);
+        // Note: The permission check uses sdk package name since PackageManager checks if the
+        // permission is declared in the manifest of that package name.
+        boolean permitted =
+                PermissionHelper.hasTopicsPermission(
+                                mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName)
+                        && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                mContext, packageName, sdkName);
+
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = RESULT_OK;
 
                     try {
-                        // Check if caller has permission to invoke this API.
-                        if (!permitted) {
+
+                        AdServicesApiConsent userConsent =
+                                mConsentManager.getConsent(mContext.getPackageManager());
+
+                        // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
+                        // is not granted for binder thread. So we have to check it here with one
+                        // of non-binder thread of the PPAPI.
+                        boolean appCanUsePpapi = AllowLists.appCanUsePpapi(mFlags, packageName);
+
+                        // Check if caller has permission to invoke this API and user has given
+                        // a consent
+                        if (!appCanUsePpapi || !permitted || !userConsent.isGiven()) {
                             resultCode = RESULT_UNAUTHORIZED_CALL;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);
-                        } else {
-                            callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
-
-                            mTopicsWorker.recordUsage(
-                                    topicsParam.getAttributionSource().getPackageName(),
-                                    topicsParam.getSdkName());
+                            return;
                         }
+
+                        resultCode = enforceCallingPackageBelongsToUid(packageName, callingUid);
+                        if (resultCode != RESULT_OK) {
+                            callback.onFailure(resultCode);
+                            return;
+                        }
+
+                        callback.onResult(mTopicsWorker.getTopics(packageName, sdkName));
+
+                        mTopicsWorker.recordUsage(
+                                topicsParam.getAppPackageName(), topicsParam.getSdkName());
                     } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
+                        LogUtil.e(e, "Unable to send result to the callback");
                         resultCode = RESULT_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
@@ -110,6 +173,30 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    // Enforce that the callingPackage has the callingUid.
+    private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
+        int appCallingUid;
+        // Check the Calling Package Name
+        if (Process.isSdkSandboxUid(callingUid)) {
+            // The callingUid is the Sandbox UId, convert it to the app UId.
+            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
+        } else {
+            appCallingUid = callingUid;
+        }
+        int packageUid;
+        try {
+            packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, callingPackage + " not found");
+            return RESULT_UNAUTHORIZED_CALL;
+        }
+        if (packageUid != appCallingUid) {
+            LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
+            return RESULT_UNAUTHORIZED_CALL;
+        }
+        return RESULT_OK;
     }
 
     /**

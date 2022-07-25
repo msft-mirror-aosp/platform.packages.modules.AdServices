@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
+import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getAssetsMetadata;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getTopTopics;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.retrieveLabels;
 
@@ -28,8 +30,10 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
+import com.android.adservices.data.topics.Topic;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Tests for {@link CommonClassifierHelper}.
@@ -52,22 +57,71 @@ import java.util.Random;
 public class CommonClassifierHelperTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
-    private ImmutableList<Integer> mLabels;
+    private static final String TEST_PRECOMPUTED_FILE_PATH =
+            "classifier/precomputed_test_app_list.csv";
+    private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_test_assets_metadata.json";
+    private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
+    private static final String PRODUCTION_PRECOMPUTED_FILE_PATH =
+            "classifier/precomputed_app_list.csv";
+    private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_assets_metadata.json";
+
+    private ImmutableList<Integer> testLabels;
+    private ImmutableMap<String, ImmutableMap<String, String>> testClassifierAssetsMetadata;
+    private long mTestTaxonomyVersion;
+    private long mTestModelVersion;
+
+    private ImmutableList<Integer> productionLabels;
+    private ImmutableMap<String, ImmutableMap<String, String>> productionClassifierAssetsMetadata;
+    private long mProductionTaxonomyVersion;
+    private long mProductionModelVersion;
 
     @Before
     public void setUp() {
-        mLabels = retrieveLabels(sContext.getAssets(), TEST_LABELS_FILE_PATH);
+        testLabels = retrieveLabels(sContext.getAssets(), TEST_LABELS_FILE_PATH);
+        testClassifierAssetsMetadata = getAssetsMetadata(
+                sContext.getAssets(), TEST_CLASSIFIER_ASSETS_METADATA_PATH);
+        mTestTaxonomyVersion =
+                Long.parseLong(
+                        testClassifierAssetsMetadata.get("labels_topics").get("asset_version"));
+        mTestModelVersion =
+                Long.parseLong(
+                        testClassifierAssetsMetadata.get("tflite_model").get("asset_version"));
+
+        productionLabels = retrieveLabels(sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
+        productionClassifierAssetsMetadata = getAssetsMetadata(
+                sContext.getAssets(), PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH);
+        mProductionTaxonomyVersion =
+                Long.parseLong(
+                        productionClassifierAssetsMetadata
+                                .get("labels_topics")
+                                .get("asset_version"));
+        mProductionModelVersion =
+                Long.parseLong(
+                        productionClassifierAssetsMetadata
+                                .get("tflite_model")
+                                .get("asset_version"));
     }
 
     @Test
     public void testRetrieveLabels_successfulRead() {
-        ImmutableList<Integer> labels = retrieveLabels(sContext.getAssets(), TEST_LABELS_FILE_PATH);
+        // Test the labels list in test assets
         // Check size of list.
-        // The labels.txt contains 350 topics.
-        assertThat(labels.size()).isEqualTo(349);
+        // The labels_test_topics.txt contains 349 topics.
+        assertThat(testLabels.size()).isEqualTo(349);
 
         // Check some labels.
-        assertThat(labels).containsAtLeast(1693, 1030, 565, 1770);
+        assertThat(testLabels).containsAtLeast(5, 100, 250, 349);
+
+
+        // Test the labels list in production assets
+        // Check size of list.
+        // The labels_topics.txt contains 349 topics.
+        assertThat(productionLabels.size()).isEqualTo(349);
+
+        // Check some labels.
+        assertThat(productionLabels).containsAtLeast(10, 200, 270, 320);
     }
 
     @Test
@@ -83,27 +137,28 @@ public class CommonClassifierHelperTest {
         // construction the appTopics map so that when sorting by the number of occurrences,
         // the order of topics are:
         // topic1, topic2, topic3, topic4, topic5, ...,
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-        appTopics.put("app2", Arrays.asList(1, 2, 3, 4, 5));
-        appTopics.put("app3", Arrays.asList(1, 2, 3, 4, 15));
-        appTopics.put("app4", Arrays.asList(1, 2, 3, 13, 16));
-        appTopics.put("app5", Arrays.asList(1, 10, 12, 14, 20));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app2", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app3", getTestTopics(Arrays.asList(1, 2, 3, 4, 16)));
+        appTopics.put("app4", getTestTopics(Arrays.asList(1, 2, 3, 13, 17)));
+        appTopics.put("app5", getTestTopics(Arrays.asList(1, 2, 11, 14, 18)));
+        appTopics.put("app6", getTestTopics(Arrays.asList(1, 10, 12, 15, 19)));
 
         // This test case should return top 5 topics from appTopics and 1 random topic
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
-                        mLabels,
+                        testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 1);
 
-        assertThat(testResponse.get(0)).isEqualTo(1);
-        assertThat(testResponse.get(1)).isEqualTo(2);
-        assertThat(testResponse.get(2)).isEqualTo(3);
-        assertThat(testResponse.get(3)).isEqualTo(4);
-        assertThat(testResponse.get(4)).isEqualTo(5);
+        assertThat(testResponse.get(0)).isEqualTo(getTestTopic(1));
+        assertThat(testResponse.get(1)).isEqualTo(getTestTopic(2));
+        assertThat(testResponse.get(2)).isEqualTo(getTestTopic(3));
+        assertThat(testResponse.get(3)).isEqualTo(getTestTopic(4));
+        assertThat(testResponse.get(4)).isEqualTo(getTestTopic(5));
         // Check the random topic is not empty
         // The random topic is at the end
         assertThat(testResponse.get(5)).isNotNull();
@@ -111,15 +166,15 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_largeTopTopicsInput() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // We only have 5 topics but requesting for 15 topics,
         // so we will pad them with 10 random topics.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
-                        mLabels,
+                        testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 15,
                         /* numberOfRandomTopics = */ 1);
@@ -130,8 +185,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_zeroTopTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // This test case should throw an IllegalArgumentException if numberOfTopTopics is 0.
         assertThrows(
@@ -139,7 +194,7 @@ public class CommonClassifierHelperTest {
                 () ->
                         getTopTopics(
                                 appTopics,
-                                mLabels,
+                                testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ 0,
                                 /* numberOfRandomTopics = */ 1));
@@ -147,16 +202,15 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_zeroRandomTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
         // This test case should throw an IllegalArgumentException if numberOfRandomTopics is 0.
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         getTopTopics(
                                 appTopics,
-                                mLabels,
+                                testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ 3,
                                 /* numberOfRandomTopics = */ 0));
@@ -164,8 +218,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_negativeTopTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // This test case should throw an IllegalArgumentException if numberOfTopTopics is negative.
         assertThrows(
@@ -173,7 +227,7 @@ public class CommonClassifierHelperTest {
                 () ->
                         getTopTopics(
                                 appTopics,
-                                mLabels,
+                                testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ -5,
                                 /* numberOfRandomTopics = */ 1));
@@ -181,8 +235,8 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_negativeRandomTopics() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", getTestTopics(Arrays.asList(1, 2, 3, 4, 5)));
 
         // This test case should throw an IllegalArgumentException
         // if numberOfRandomTopics is negative.
@@ -191,7 +245,7 @@ public class CommonClassifierHelperTest {
                 () ->
                         getTopTopics(
                                 appTopics,
-                                mLabels,
+                                testLabels,
                                 new Random(),
                                 /* numberOfTopTopics = */ 3,
                                 /* numberOfRandomTopics = */ -1));
@@ -199,13 +253,13 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_emptyAppTopicsMap() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // The device does not have an app, an empty top topics list should be returned.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
-                        mLabels,
+                        testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 1);
@@ -216,7 +270,7 @@ public class CommonClassifierHelperTest {
 
     @Test
     public void testGetTopTopics_emptyTopicInEachApp() {
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // app1 and app2 do not have any classification topics.
         appTopics.put("app1", new ArrayList<>());
@@ -224,10 +278,10 @@ public class CommonClassifierHelperTest {
 
         // The device have some apps but the topic corresponding to the app cannot be obtained.
         // In this test case, an empty top topics list should be returned.
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
-                        mLabels,
+                        testLabels,
                         new Random(),
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 1);
@@ -246,16 +300,17 @@ public class CommonClassifierHelperTest {
         // array,
         // their corresponding topicIds in the topics list will not overlap with
         // the topicIds of app1 below.
-        MockRandom mockRandom = new MockRandom(new long[] {20, 100, 30});
+        MockRandom mockRandom = new MockRandom(new long[] {20, 100, 300});
 
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        // We label app1 with the first 5 topicIds in topics list.
-        appTopics.put("app1", Arrays.asList(1013, 89, 69, 512, 1376));
+        Map<String, List<Topic>> testAppTopics = new HashMap<>();
+        // We label app1 with the first 5 topics in topics list.
+        testAppTopics.put("app1", getTestTopics(Arrays.asList(253, 146, 277, 59, 127)));
 
-        List<Integer> testResponse =
+        // Test the random topic with labels file in test assets.
+        List<Topic> testResponse =
                 getTopTopics(
-                        appTopics,
-                        mLabels,
+                        testAppTopics,
+                        testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 1);
@@ -267,8 +322,31 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_test_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 20, topicId = 541
-        assertThat(testResponse.get(5)).isEqualTo(541);
+        // random = 20, topicId = 21
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(21));
+
+        Map<String, List<Topic>> productionAppTopics = new HashMap<>();
+        // We label app1 with the same topic IDs as testAppTopics, but using production metadata.
+        productionAppTopics.put("app1", getProductionTopics(Arrays.asList(253, 146, 277, 59, 127)));
+
+        // Test the random topic with labels file in production assets.
+        List<Topic> productionResponse =
+                getTopTopics(
+                        productionAppTopics,
+                        productionLabels,
+                        new MockRandom(new long[] {50, 100, 300}),
+                        /* numberOfTopTopics = */ 5,
+                        /* numberOfRandomTopics = */ 1);
+
+        // The response body should contain 5 topics + 1 random topic.
+        assertThat(productionResponse.size()).isEqualTo(6);
+
+        // In the following test, we need to verify that the mock random integer index
+        // can match the correct topic in classifier/precomputed_app_list_chrome_topics.csv.
+        // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
+        // topicId in the topics list.
+        // random = 20, topicId = 21
+        assertThat(productionResponse.get(5)).isEqualTo(getProductionTopic(51));
     }
 
     @Test
@@ -284,15 +362,15 @@ public class CommonClassifierHelperTest {
         // in topics list.
         MockRandom mockRandom = new MockRandom(new long[] {10, 20, 50, 75, 100, 300, 500});
 
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
         // The topicId we use is verticals4 and its index range is from 0 to 1918.
         // We label app1 with the first 5 topicIds in topics list.
-        appTopics.put("app1", Arrays.asList(1013, 89, 69, 512, 1376));
+        appTopics.put("app1", getTestTopics(Arrays.asList(34, 89, 69, 349, 241)));
 
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
-                        mLabels,
+                        testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 7);
@@ -304,27 +382,27 @@ public class CommonClassifierHelperTest {
         // can match the correct topic in classifier/precomputed_test_app_list_chrome_topics.csv.
         // "random = n, topicId = m" means this topicId m is from the nth (0-indexed)
         // topicId in the topics list.
-        // random = 10, topicId = 1852
-        assertThat(testResponse.get(5)).isEqualTo(1852);
+        // random = 10, topicId = 11
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(11));
 
-        // random = 20, topicId = 541
-        assertThat(testResponse.get(6)).isEqualTo(541);
+        // random = 20, topicId = 21
+        assertThat(testResponse.get(6)).isEqualTo(getTestTopic(21));
 
-        // random = 50, topicId = 1007
-        assertThat(testResponse.get(7)).isEqualTo(1007);
+        // random = 50, topicId = 51
+        assertThat(testResponse.get(7)).isEqualTo(getTestTopic(51));
 
-        // random = 75, topicId = 1596
-        assertThat(testResponse.get(8)).isEqualTo(1596);
+        // random = 75, topicId = 76
+        assertThat(testResponse.get(8)).isEqualTo(getTestTopic(76));
 
-        // random = 100, topicId = 1289
-        assertThat(testResponse.get(9)).isEqualTo(1289);
+        // random = 100, topicId = 101
+        assertThat(testResponse.get(9)).isEqualTo(getTestTopic(101));
 
-        // random = 300, topicId = 273
-        assertThat(testResponse.get(10)).isEqualTo(273);
+        // random = 300, topicId = 301
+        assertThat(testResponse.get(10)).isEqualTo(getTestTopic(301));
 
         // random = 500, size of labels list is 349,
-        // index should be 500 % 349 = 151, topicId = 1023
-        assertThat(testResponse.get(11)).isEqualTo(1023);
+        // index should be 500 % 349 = 151, topicId = 152
+        assertThat(testResponse.get(11)).isEqualTo(getTestTopic(152));
     }
 
     @Test
@@ -338,19 +416,19 @@ public class CommonClassifierHelperTest {
         // in the topics list will overlap with the topicIds of app1 below.
         MockRandom mockRandom = new MockRandom(new long[] {1, 5, 10, 25, 100, 300});
 
-        Map<String, List<Integer>> appTopics = new HashMap<>();
+        Map<String, List<Topic>> appTopics = new HashMap<>();
 
         // If the random topic duplicates with the real topic, then pick another random
         // one until no duplicates. In this test, we will let app1 have five topicIds of
-        // 89, 612, 1852, 959, 1289. These topicIds are the same as the topicIds in the
+        // 2, 6, 11, 26, 101. These topicIds are the same as the topicIds in the
         // classifier/precomputed_test_app_list_chrome_topics.csv corresponding to
         // the first five indices in the MockRandomArray.
-        appTopics.put("app1", Arrays.asList(89, 612, 1852, 959, 1289));
+        appTopics.put("app1", getTestTopics(Arrays.asList(2, 6, 11, 26, 101)));
 
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 getTopTopics(
                         appTopics,
-                        mLabels,
+                        testLabels,
                         mockRandom,
                         /* numberOfTopTopics = */ 5,
                         /* numberOfRandomTopics = */ 1);
@@ -364,7 +442,200 @@ public class CommonClassifierHelperTest {
         // topicId in the topics list.
         // In this test, if we want to select a random topic that does not repeat,
         // we should select the one corresponding to the sixth index
-        // in the MockRandom array topicId, i.e. random = 300, topicId = 273
-        assertThat(testResponse.get(5)).isEqualTo(273);
+        // in the MockRandom array topicId, i.e. random = 300, topicId = 301
+        assertThat(testResponse.get(5)).isEqualTo(getTestTopic(301));
+    }
+
+    @Test
+    public void testGetTestClassifierAssetsMetadata_correctFormat() {
+        // There should contain 6 assets and 1 property in classifier_test_assets_metadata.json.
+        // The asset without "asset_name" or "property" will not be stored in the map.
+        assertThat(testClassifierAssetsMetadata).hasSize(7);
+
+        // The property of metadata with correct format should contain 3 attributions:
+        // "taxonomy_type", "taxonomy_version", "updated_date".
+        // The key name of property is "version_info"
+        assertThat(testClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(testClassifierAssetsMetadata.get("version_info").keySet()).containsExactly(
+                "taxonomy_type", "taxonomy_version", "updated_date");
+
+        // The property "version_info" should have attribution "taxonomy_version"
+        // and its value should be "12".
+        assertThat(testClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("12");
+
+        // The property "version_info" should have attribution "taxonomy_type"
+        // and its value should be "chrome".
+        assertThat(testClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
+                .isEqualTo("chrome");
+
+        // The metadata of 1 asset with correct format should contain 4 attributions:
+        // "asset_version", "path", "checksum", "updated_date".
+        // Check if "labels_topics" asset has the correct format.
+        assertThat(testClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
+        assertThat(testClassifierAssetsMetadata.get("labels_topics").keySet()).containsExactly(
+                "asset_version", "path", "checksum", "updated_date");
+
+        // The asset "labels_topics" should have attribution "asset_version" and its value should be
+        // "1"
+        assertThat(testClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
+                .isEqualTo("34");
+
+        // The asset "labels_topics" should have attribution "path" and its value should be
+        // "assets/classifier/labels_test_topics.txt"
+        assertThat(testClassifierAssetsMetadata.get("labels_topics").get("path"))
+                .isEqualTo("assets/classifier/labels_test_topics.txt");
+
+        // The asset "labels_topics" should have attribution "updated_date" and its value should be
+        // "2022-06-15"
+        assertThat(testClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
+                .isEqualTo("2022-06-15");
+
+        // There should contain 4 metadata attributions in asset "topic_id_to_name"
+        assertThat(testClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
+
+        // The asset "topic_id_to_name" should have attribution "path" and its value should be
+        // "assets/classifier/topic_id_to_name.csv"
+        assertThat(testClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
+                .isEqualTo("assets/classifier/topic_id_to_name.csv");
+
+        // The asset "precomputed_app_list" should have attribution "checksum" and
+        // its value should be "50a5ea88e8789d689544a988668aacc7814feff2f6393e5497dad4e08416b0da"
+        assertThat(testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
+                .isEqualTo("50a5ea88e8789d689544a988668aacc7814feff2f6393e5497dad4e08416b0da");
+    }
+
+    @Test
+    public void testGetProductionClassifierAssetsMetadata_correctFormat() {
+        // There should contain 4 assets and 1 property in classifier_assets_metadata.json.
+        assertThat(productionClassifierAssetsMetadata).hasSize(5);
+
+        // The property of metadata in production metadata should contain 4 attributions:
+        // "taxonomy_type", "taxonomy_version", "updated_date".
+        // The key name of property is "version_info"
+        assertThat(productionClassifierAssetsMetadata.get("version_info")).hasSize(3);
+        assertThat(productionClassifierAssetsMetadata.get("version_info").keySet())
+                .containsExactly(
+                        "taxonomy_type", "taxonomy_version", "updated_date");
+
+        // The property "version_info" should have attribution "taxonomy_version"
+        // and its value should be "1".
+        assertThat(productionClassifierAssetsMetadata.get("version_info").get("taxonomy_version"))
+                .isEqualTo("1");
+
+        // The property "version_info" should have attribution "taxonomy_type"
+        // and its value should be "chrome".
+        assertThat(productionClassifierAssetsMetadata.get("version_info").get("taxonomy_type"))
+                .isEqualTo("chrome");
+
+        // The metadata of 1 asset in production metadata should contain 4 attributions:
+        // "asset_version", "path", "checksum", "updated_date".
+        // Check if "labels_topics" asset has the correct format.
+        assertThat(productionClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
+        assertThat(productionClassifierAssetsMetadata.get("labels_topics").keySet())
+                .containsExactly("asset_version", "path", "checksum", "updated_date");
+
+        // The asset "labels_topics" should have attribution "asset_version" and its value should be
+        // "1"
+        assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("asset_version"))
+                .isEqualTo("1");
+
+        // The asset "labels_topics" should have attribution "path" and its value should be
+        // "assets/classifier/labels_topics.txt"
+        assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("path"))
+                .isEqualTo("assets/classifier/labels_topics.txt");
+
+        // The asset "labels_topics" should have attribution "updated_date" and its value should be
+        // "2022-06-15"
+        assertThat(productionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
+                .isEqualTo("2022-06-15");
+
+        // There should contain 5 metadata attributions in asset "topic_id_to_name"
+        assertThat(productionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
+
+        // The asset "topic_id_to_name" should have attribution "path" and its value should be
+        // "assets/classifier/topic_id_to_name.csv"
+        assertThat(productionClassifierAssetsMetadata.get("topic_id_to_name").get("path"))
+                .isEqualTo("assets/classifier/topic_id_to_name.csv");
+
+        // The asset "precomputed_app_list" should have attribution "checksum" and
+        // its value should be "ee6518e087897eec372d31a76296fb5285a2202b66d784e98047085673a37ea3"
+        assertThat(productionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
+                .isEqualTo("ee6518e087897eec372d31a76296fb5285a2202b66d784e98047085673a37ea3");
+    }
+
+    @Test
+    public void testGetTestClassifierAssetsMetadata_wrongFormat() {
+        // There should contain 1 metadata attributions in asset "test_asset1",
+        // because it doesn't have "checksum" and "updated_date"
+        assertThat(testClassifierAssetsMetadata.get("test_asset1")).hasSize(1);
+
+        // The asset "test_asset1" should have attribution "path" and its value should be
+        // "assets/classifier/test1"
+        assertThat(testClassifierAssetsMetadata.get("test_asset1").get("path"))
+                .isEqualTo("assets/classifier/test1");
+
+        // There should contain 4 metadata attributions in asset "test_asset2",
+        // because "redundant_field1" and "redundant_field2" are not correct attributions.
+        assertThat(testClassifierAssetsMetadata.get("test_asset2")).hasSize(4);
+
+        // The asset "test_asset2" should have attribution "path" and its value should be
+        // "assets/classifier/test2"
+        assertThat(testClassifierAssetsMetadata.get("test_asset2").get("path"))
+                .isEqualTo("assets/classifier/test2");
+
+        // The asset "test_asset2" shouldn't have redundant attribution "redundant_field1"
+        assertThat(testClassifierAssetsMetadata.get("test_asset2"))
+                .doesNotContainKey("redundant_field1");
+    }
+
+    @Test
+    public void testComputeTestAssetChecksum() {
+        // Compute SHA256 checksum of labels topics file in test assets and check the result
+        // can match the checksum saved in the test classifier assets metadata file.
+        String labelsTestTopicsChecksum = computeClassifierAssetChecksum(
+                sContext.getAssets(), TEST_LABELS_FILE_PATH);
+        assertThat(labelsTestTopicsChecksum).isEqualTo(
+                testClassifierAssetsMetadata.get("labels_topics").get("checksum"));
+
+        // Compute SHA256 checksum of precomputed apps topics file in test assets
+        // and check the result can match the checksum saved in the classifier assets metadata file.
+        String precomputedAppsTestChecksum = computeClassifierAssetChecksum(
+                sContext.getAssets(), TEST_PRECOMPUTED_FILE_PATH);
+        assertThat(precomputedAppsTestChecksum).isEqualTo(
+                testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
+    }
+
+    @Test
+    public void testComputeProductionAssetChecksum() {
+        // Compute SHA256 checksum of labels topics file in production assets and check the result
+        // can match the checksum saved in the production classifier assets metadata file.
+        String labelsProductionTopicsChecksum = computeClassifierAssetChecksum(
+                sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
+        assertThat(labelsProductionTopicsChecksum).isEqualTo(
+                productionClassifierAssetsMetadata.get("labels_topics").get("checksum"));
+
+        // Compute SHA256 checksum of precomputed apps topics file in production assets
+        // and check the result can match the checksum saved in the classifier assets metadata file.
+        String precomputedAppsProductionChecksum = computeClassifierAssetChecksum(
+                sContext.getAssets(), PRODUCTION_PRECOMPUTED_FILE_PATH);
+        assertThat(precomputedAppsProductionChecksum).isEqualTo(
+                productionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
+    }
+
+    private Topic getTestTopic(int topicId) {
+        return Topic.create(topicId, mTestTaxonomyVersion, mTestModelVersion);
+    }
+
+    private List<Topic> getTestTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::getTestTopic).collect(Collectors.toList());
+    }
+
+    private Topic getProductionTopic(int topicId) {
+        return Topic.create(topicId, mProductionTaxonomyVersion, mProductionModelVersion);
+    }
+
+    private List<Topic> getProductionTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::getProductionTopic).collect(Collectors.toList());
     }
 }

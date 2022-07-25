@@ -27,9 +27,9 @@ import android.content.pm.PackageInfo;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
-import com.android.adservices.service.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.SystemHealthParams;
 
@@ -41,7 +41,7 @@ import java.util.concurrent.Executor;
  */
 public final class EventReportingJobService extends JobService {
 
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
     public void onCreate() {
@@ -51,7 +51,7 @@ public final class EventReportingJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("EventReportingJobService: onStartJob: ");
-        sBackgroundExecutor.execute(() -> {
+        sBlockingExecutor.execute(() -> {
             boolean success = new EventReportingJobHandler(
                     DatastoreManagerFactory.getDatastoreManager(
                             getApplicationContext()))
@@ -74,7 +74,7 @@ public final class EventReportingJobService extends JobService {
                         (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_TEST_ONLY) != 0;
                 LogUtil.d("EventReportingJobService: onStartJob: isTestOnly=" + isTestOnly);
                 if (isTestOnly) {
-                    sBackgroundExecutor.execute(() -> {
+                    sBlockingExecutor.execute(() -> {
                         boolean success = new EventReportingJobHandler(
                                 DatastoreManagerFactory.getDatastoreManager(
                                         getApplicationContext()))

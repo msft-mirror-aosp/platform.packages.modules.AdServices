@@ -20,7 +20,9 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -39,10 +41,19 @@ import java.util.concurrent.TimeUnit;
 public class AggregateReportingJobHandler {
 
     private final DatastoreManager mDatastoreManager;
-    private static final String API_VERSION_PLACEHOLDER = "1";
+    private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
 
     AggregateReportingJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
+        mAggregateEncryptionKeyManager = new AggregateEncryptionKeyManager(datastoreManager);
+    }
+
+    @VisibleForTesting
+    AggregateReportingJobHandler(
+            DatastoreManager datastoreManager,
+            AggregateEncryptionKeyManager aggregateEncryptionKeyManager) {
+        mDatastoreManager = datastoreManager;
+        mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
     }
 
     public enum PerformReportResult {
@@ -54,7 +65,7 @@ public class AggregateReportingJobHandler {
 
     /**
      * Finds all aggregate reports within the given window that have a status
-     * {@link CleartextAggregatePayload.Status.PENDING} and attempts to upload them individually.
+     * {@link AggregateReport.Status.PENDING} and attempts to upload them individually.
      *
      * @param windowStartTime Start time of the search window
      * @param windowEndTime   End time of the search window
@@ -71,8 +82,17 @@ public class AggregateReportingJobHandler {
         }
 
         List<String> pendingAggregateReportIdsInWindow = pendingAggregateReportsInWindowOpt.get();
-        for (String aggregateReportId : pendingAggregateReportIdsInWindow) {
-            performReport(aggregateReportId);
+        List<AggregateEncryptionKey> keys =
+                mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        pendingAggregateReportIdsInWindow.size());
+
+        if (keys.size() == pendingAggregateReportIdsInWindow.size()) {
+            for (int i = 0; i < pendingAggregateReportIdsInWindow.size(); i++) {
+                final String aggregateReportId = pendingAggregateReportIdsInWindow.get(i);
+                performReport(aggregateReportId, keys.get(i));
+            }
+        } else {
+            LogUtil.w("The number of keys do not align with the number of reports");
         }
         return true;
     }
@@ -96,37 +116,49 @@ public class AggregateReportingJobHandler {
         }
 
         List<String> pendingAggregateReportForGivenApp = pendingAggregateReportsForGivenApp.get();
-        for (String aggregateReportId : pendingAggregateReportForGivenApp) {
-            PerformReportResult result = performReport(aggregateReportId);
-            if (result != PerformReportResult.SUCCESS) {
-                LogUtil.i("Perform report status is %s for app : %s",
-                        result, String.valueOf(appName));
+        List<AggregateEncryptionKey> keys =
+                mAggregateEncryptionKeyManager.getAggregateEncryptionKeys(
+                        pendingAggregateReportForGivenApp.size());
+
+        if (keys.size() == pendingAggregateReportForGivenApp.size()) {
+            for (int i = 0; i < pendingAggregateReportForGivenApp.size(); i++) {
+                final String aggregateReportId = pendingAggregateReportForGivenApp.get(i);
+                PerformReportResult result = performReport(aggregateReportId, keys.get(i));
+                if (result != PerformReportResult.SUCCESS) {
+                    LogUtil.i(
+                            "Perform report status is %s for app : %s",
+                            result, String.valueOf(appName));
+                }
             }
+        } else {
+            LogUtil.w("The number of keys do not align with the number of reports");
         }
+
         return true;
     }
 
     /**
-     * Perform aggregate reporting by finding the relevant {@link CleartextAggregatePayload} and
-     * making an HTTP POST request to the specified report to URL with the report data as a JSON in
-     * the body.
+     * Perform aggregate reporting by finding the relevant {@link AggregateReport} and making an
+     * HTTP POST request to the specified report to URL with the report data as a JSON in the body.
      *
-     * @param aggregateReportId for the datastore id of the {@link CleartextAggregatePayload}
+     * @param aggregateReportId for the datastore id of the {@link AggregateReport}
+     * @param key used for encrypting report payload
      * @return success
      */
-    synchronized PerformReportResult performReport(String aggregateReportId) {
-        Optional<CleartextAggregatePayload> aggregateReportOpt =
+    synchronized PerformReportResult performReport(
+            String aggregateReportId, AggregateEncryptionKey key) {
+        Optional<AggregateReport> aggregateReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
         if (!aggregateReportOpt.isPresent()) {
             return PerformReportResult.DATASTORE_ERROR;
         }
-        CleartextAggregatePayload aggregateReport = aggregateReportOpt.get();
-        if (aggregateReport.getStatus() != CleartextAggregatePayload.Status.PENDING) {
+        AggregateReport aggregateReport = aggregateReportOpt.get();
+        if (aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
             return PerformReportResult.ALREADY_DELIVERED;
         }
         try {
-            JSONObject aggregateReportJsonBody = createReportJsonPayload(aggregateReport);
+            JSONObject aggregateReportJsonBody = createReportJsonPayload(aggregateReport, key);
             int returnCode = makeHttpPostRequest(aggregateReport.getReportingOrigin(),
                     aggregateReportJsonBody);
 
@@ -146,28 +178,26 @@ public class AggregateReportingJobHandler {
         }
     }
 
-    /**
-     * Creates the JSON payload for the POST request from the AggregateReport.
-     */
+    /** Creates the JSON payload for the POST request from the AggregateReport. */
     @VisibleForTesting
-    JSONObject createReportJsonPayload(CleartextAggregatePayload aggregateReport)
+    JSONObject createReportJsonPayload(AggregateReport aggregateReport, AggregateEncryptionKey key)
             throws JSONException {
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
-                .setSourceSite(aggregateReport.getPublisher().toString())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
                 .setSourceRegistrationTime(
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(
-                                aggregateReport.getSourceRegistrationTime())))
+                        String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        aggregateReport.getSourceRegistrationTime())))
                 .setScheduledReportTime(
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(
-                                aggregateReport.getScheduledReportTime())))
-                .setPrivacyBudgetKey("") // For now this is blank since the payload is not encrypted
-                .setVersion(API_VERSION_PLACEHOLDER) // For now this is just 1 as a placeholder
+                        String.valueOf(
+                                TimeUnit.MILLISECONDS.toSeconds(
+                                        aggregateReport.getScheduledReportTime())))
+                .setApiVersion(aggregateReport.getApiVersion())
                 .setReportingOrigin(aggregateReport.getReportingOrigin().toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .build()
-                .toJson();
+                .toJson(key);
     }
 
     /**

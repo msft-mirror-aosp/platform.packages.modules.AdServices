@@ -18,11 +18,16 @@ package android.app.sdksandbox;
 
 import android.os.Bundle;
 import android.os.IBinder;
-import android.app.sdksandbox.IRemoteSdkCallback;
+
+import android.app.sdksandbox.ILoadSdkCallback;
+import android.app.sdksandbox.IRequestSurfacePackageCallback;
+import android.app.sdksandbox.ISendDataCallback;
+import android.content.pm.SharedLibraryInfo;
 
 /** @hide */
 interface ISdkSandboxManager {
-    void loadSdk(in String callingPackageName, in String sdkName, in Bundle params, in IRemoteSdkCallback callback);
-    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params);
-    void sendData(in String sdkName, in Bundle params);
+    void loadSdk(in String callingPackageName, in String sdkName, in Bundle params, in ILoadSdkCallback callback);
+    void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params, IRequestSurfacePackageCallback callback);
+    void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
+    List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName);
 }

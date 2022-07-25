@@ -28,7 +28,7 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.AdServicesExecutors;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -43,6 +43,12 @@ public final class EpochJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
+            LogUtil.e("Topics API is disabled");
+            // Returning false means that this job has completed its work.
+            return false;
+        }
+
         LogUtil.d("EpochJobService.onStartJob");
 
         // This service executes each incoming job on a Handler running on the application's

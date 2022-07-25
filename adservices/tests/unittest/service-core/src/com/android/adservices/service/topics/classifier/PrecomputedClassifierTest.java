@@ -22,6 +22,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.topics.Topic;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Precomputed Topics Classifier Test {@link PrecomputedClassifier}.
@@ -39,28 +42,35 @@ import java.util.Map;
 public class PrecomputedClassifierTest {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_APPS_FILE_PATH =
-            "classifier/precomputed_test_app_list_chrome_topics.csv";
+            "classifier/precomputed_test_app_list.csv";
+    private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
+            "classifier/classifier_test_assets_metadata.json";
+
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final PrecomputedLoader sPrecomputedLoader =
-            new PrecomputedLoader(sContext, TEST_LABELS_FILE_PATH, TEST_APPS_FILE_PATH);
-
+            new PrecomputedLoader(
+                    sContext,
+                    TEST_LABELS_FILE_PATH,
+                    TEST_APPS_FILE_PATH,
+                    TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
     private PrecomputedClassifier sPrecomputedClassifier;
 
     @Before
     public void setUp() throws IOException {
         sPrecomputedClassifier = new PrecomputedClassifier(sPrecomputedLoader);
+
     }
 
     @Test
     public void testClassify_existingApp() {
         // Using What's App. This app has 1 classification topic.
-        List<Integer> expectedWhatsAppTopics = Arrays.asList(1379);
+        List<Topic> expectedWhatsAppTopics = createTopics(Arrays.asList(222));
 
-        Map<String, List<Integer>> expectedAppTopicsResponse = new HashMap<>();
+        Map<String, List<Topic>> expectedAppTopicsResponse = new HashMap<>();
         expectedAppTopicsResponse.put("com.whatsapp", expectedWhatsAppTopics);
 
         // TODO(b/226470370): Convert the app to lower case in Epoch Processing
-        Map<String, List<Integer>> testResponse =
+        Map<String, List<Topic>> testResponse =
                 sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("com.whatsapp")));
 
         // The correct response body should be exactly the same as expectedAppTopicsResponse
@@ -70,7 +80,7 @@ public class PrecomputedClassifierTest {
     @Test
     public void testClassify_nonExistingApp() {
         // Check the non-existing app "random_app"
-        Map<String, List<Integer>> testResponse =
+        Map<String, List<Topic>> testResponse =
                 sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("random_app")));
 
         // The topics list of "random_app" should be empty
@@ -80,7 +90,7 @@ public class PrecomputedClassifierTest {
     @Test
     public void testClassify_emptyStringApp() {
         // Check if input contains empty string or null
-        Map<String, List<Integer>> testResponse =
+        Map<String, List<Topic>> testResponse =
                 sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("", null)));
 
         // The response body should be empty
@@ -90,7 +100,7 @@ public class PrecomputedClassifierTest {
     @Test
     public void testClassify_emptyAppList() {
         // Check if input is empty
-        Map<String, List<Integer>> testResponse =
+        Map<String, List<Topic>> testResponse =
                 sPrecomputedClassifier.classify(new HashSet<>(new ArrayList<>()));
 
         // The response body should be empty
@@ -101,26 +111,38 @@ public class PrecomputedClassifierTest {
     public void testGetTopTopics_legalInput() {
         // construction the appTopics map so that when sorting by the number of occurrences,
         // the order of topics are:
-        //topic1, topic2, topic3, topic4, topic5, ...,
-        Map<String, List<Integer>> appTopics = new HashMap<>();
-        appTopics.put("app1", Arrays.asList(1, 2, 3, 4, 5));
-        appTopics.put("app2", Arrays.asList(1, 2, 3, 4, 5));
-        appTopics.put("app3", Arrays.asList(1, 2, 3, 4, 15));
-        appTopics.put("app4", Arrays.asList(1, 2, 3, 13, 16));
-        appTopics.put("app5", Arrays.asList(1, 10, 12, 14, 20));
+        // topic1, topic2, topic3, topic4, topic5, ...,
+        Map<String, List<Topic>> appTopics = new HashMap<>();
+        appTopics.put("app1", createTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app2", createTopics(Arrays.asList(1, 2, 3, 4, 5)));
+        appTopics.put("app3", createTopics(Arrays.asList(1, 2, 3, 4, 16)));
+        appTopics.put("app4", createTopics(Arrays.asList(1, 2, 3, 13, 17)));
+        appTopics.put("app5", createTopics(Arrays.asList(1, 2, 11, 14, 18)));
+        appTopics.put("app6", createTopics(Arrays.asList(1, 10, 12, 15, 19)));
 
         // This test case should return top 5 topics from appTopics and 1 random topic
-        List<Integer> testResponse =
+        List<Topic> testResponse =
                 sPrecomputedClassifier.getTopTopics(
                         appTopics, /* numberOfTopTopics = */ 5, /* numberOfRandomTopics = */ 1);
 
-        assertThat(testResponse.get(0)).isEqualTo(1);
-        assertThat(testResponse.get(1)).isEqualTo(2);
-        assertThat(testResponse.get(2)).isEqualTo(3);
-        assertThat(testResponse.get(3)).isEqualTo(4);
-        assertThat(testResponse.get(4)).isEqualTo(5);
+        assertThat(testResponse.get(0)).isEqualTo(createTopic(1));
+        assertThat(testResponse.get(1)).isEqualTo(createTopic(2));
+        assertThat(testResponse.get(2)).isEqualTo(createTopic(3));
+        assertThat(testResponse.get(3)).isEqualTo(createTopic(4));
+        assertThat(testResponse.get(4)).isEqualTo(createTopic(5));
         // Check the random topic is not empty
         // The random topic is at the end
         assertThat(testResponse.get(5)).isNotNull();
+    }
+
+    private Topic createTopic(int topicId) {
+        return Topic.create(
+                topicId,
+                sPrecomputedClassifier.getLabelsVersion(),
+                sPrecomputedClassifier.getModelVersion());
+    }
+
+    private List<Topic> createTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
     }
 }

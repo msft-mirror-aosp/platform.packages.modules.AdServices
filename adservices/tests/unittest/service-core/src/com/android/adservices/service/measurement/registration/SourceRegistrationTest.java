@@ -19,11 +19,10 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.InstrumentationRegistry;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -34,33 +33,38 @@ import org.junit.Test;
  */
 @SmallTest
 public final class SourceRegistrationTest {
-    private static final String TAG = "SourceRegistrationTest";
-
-    private static final Context sContext = InstrumentationRegistry.getTargetContext();
+    private static final Uri TOP_ORIGIN = Uri.parse("https://foo.com");
+    private static final Uri REPORTING_ORIGIN = Uri.parse("https://bar.com");
+    private static final Long DEBUG_KEY = 2376843L;
 
     private SourceRegistration createExampleResponse() {
+
         return new SourceRegistration.Builder()
-                .setTopOrigin(Uri.parse("https://foo.com"))
-                .setReportingOrigin(Uri.parse("https://bar.com"))
-                .setDestination(Uri.parse("android-app://baz.com"))
+                .setTopOrigin(TOP_ORIGIN)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setAppDestination(Uri.parse("android-app://baz.com"))
                 .setSourceEventId(1234567)
                 .setExpiry(2345678)
                 .setSourcePriority(345678)
-                .setAggregateSource("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
+                .setAggregateSource(
+                        "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                                + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]")
                 .setAggregateFilterData("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}")
+                .setDebugKey(DEBUG_KEY)
                 .build();
     }
 
     void verifyExampleResponse(SourceRegistration response) {
         assertEquals("https://foo.com", response.getTopOrigin().toString());
         assertEquals("https://bar.com", response.getReportingOrigin().toString());
-        assertEquals("android-app://baz.com", response.getDestination().toString());
+        assertEquals("android-app://baz.com", response.getAppDestination().toString());
         assertEquals(1234567, response.getSourceEventId());
         assertEquals(2345678, response.getExpiry());
         assertEquals(345678, response.getSourcePriority());
-        assertEquals("[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
-                + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]",
+        assertEquals(DEBUG_KEY, response.getDebugKey());
+        assertEquals(
+                "[{\"id\" : \"campaignCounts\", \"key_piece\" : \"0x159\"},"
+                        + "{\"id\" : \"geoValue\", \"key_piece\" : \"0x5\"}]",
                 response.getAggregateSource());
         assertEquals("{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
                 response.getAggregateFilterData());
@@ -72,15 +76,80 @@ public final class SourceRegistrationTest {
     }
 
     @Test
-    public void testDefaults() throws Exception {
-        SourceRegistration response = new SourceRegistration.Builder().build();
-        assertEquals("", response.getTopOrigin().toString());
-        assertEquals("", response.getReportingOrigin().toString());
-        assertEquals("", response.getDestination().toString());
+    public void sourceRegistration_onlyOsDestination_success() {
+        Uri destination = Uri.parse("android-app://baz.com");
+        SourceRegistration response =
+                new SourceRegistration.Builder()
+                        .setTopOrigin(TOP_ORIGIN)
+                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setAppDestination(destination)
+                        .build();
+        assertEquals(TOP_ORIGIN, response.getTopOrigin());
+        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(destination, response.getAppDestination());
+        assertNull(response.getWebDestination());
         assertEquals(0, response.getSourceEventId());
         assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
         assertEquals(0, response.getSourcePriority());
         assertNull(response.getAggregateSource());
         assertNull(response.getAggregateFilterData());
+    }
+
+    @Test
+    public void sourceRegistration_onlyWebDestination_success() {
+        Uri destination = Uri.parse("https://baz.com");
+        SourceRegistration response =
+                new SourceRegistration.Builder()
+                        .setTopOrigin(TOP_ORIGIN)
+                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setWebDestination(destination)
+                        .build();
+        assertEquals(TOP_ORIGIN, response.getTopOrigin());
+        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(destination, response.getWebDestination());
+        assertNull(response.getAppDestination());
+        assertEquals(0, response.getSourceEventId());
+        assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
+        assertEquals(0, response.getSourcePriority());
+        assertNull(response.getAggregateSource());
+        assertNull(response.getAggregateFilterData());
+    }
+
+    @Test
+    public void sourceRegistration_bothOsAndWebDestination_success() {
+        Uri webDestination = Uri.parse("https://baz.com");
+        Uri destination = Uri.parse("android-app://baz.com");
+        SourceRegistration response =
+                new SourceRegistration.Builder()
+                        .setTopOrigin(TOP_ORIGIN)
+                        .setReportingOrigin(REPORTING_ORIGIN)
+                        .setAppDestination(destination)
+                        .setWebDestination(webDestination)
+                        .build();
+        assertEquals(TOP_ORIGIN, response.getTopOrigin());
+        assertEquals(REPORTING_ORIGIN, response.getReportingOrigin());
+        assertEquals(webDestination, response.getWebDestination());
+        assertEquals(destination, response.getAppDestination());
+        assertEquals(0, response.getSourceEventId());
+        assertEquals(MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS, response.getExpiry());
+        assertEquals(0, response.getSourcePriority());
+        assertNull(response.getAggregateSource());
+        assertNull(response.getAggregateFilterData());
+    }
+
+    @Test
+    public void sourceRegistration_bothDestinationsNull_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new SourceRegistration.Builder()
+                                .setAppDestination(null)
+                                .setWebDestination(null)
+                                .build());
+    }
+
+    @Test
+    public void equals_success() {
+        assertEquals(createExampleResponse(), createExampleResponse());
     }
 }

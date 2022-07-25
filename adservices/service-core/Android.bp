@@ -35,13 +35,27 @@ filegroup {
     ],
 }
 
-java_library {
+filegroup {
+    name: "adservices-service-core-jni-sources",
+    srcs: [
+        "jni/java/**/*.java"
+    ],
+    path: "jni",
+    visibility: [
+        "//packages/modules/AdServices/adservices:__subpackages__",
+    ],
+}
+
+android_library {
     name: "adservices-service-core",
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     srcs: [
-        ":adservices-service-core-sources", ":statslog-adservices-java-gen",
+        ":adservices-service-core-sources",
+        ":adservices-service-core-jni-sources",
+        ":statslog-adservices-java-gen",
     ],
+    manifest: "AndroidManifest.xml",
     plugins: [
         "androidx.room_room-compiler-plugin",
         "auto_value_plugin",
@@ -62,9 +76,30 @@ java_library {
         "js-sandbox-client",
         "androidx.concurrent_concurrent-futures",
         "androidx.annotation_annotation",
+        "cbor-java",
         "guava",
+        "mobile_data_downloader_lib",
         "modules-utils-preconditions",
         "tflite_support_classifiers_java",
+        "mobile_data_downloader_lib",
     ],
     apex_available: ["com.android.adservices"],
+}
+
+cc_library_shared {
+    name: "libhpke_jni",
+    min_sdk_version: "33",
+    sdk_version: "current",
+    stl: "libc++_static",
+    cflags: [
+        "-Werror",
+        "-Wno-unused-parameter",
+        "-Wno-unused-but-set-variable",
+    ],
+    srcs: ["jni/cpp/hpke_jni.cpp"],
+    include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
+    header_libs: [ "jni_headers"  ],
+    shared_libs: ["libcrypto"],
+    apex_available: ["com.android.adservices"],
+    visibility: ["//packages/modules/AdServices:__subpackages__"],
 }

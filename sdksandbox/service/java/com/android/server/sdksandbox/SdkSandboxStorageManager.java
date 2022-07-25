@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -31,7 +32,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
-import com.android.server.LocalManagerRegistry;
+import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.pm.PackageManagerLocal;
 
 import java.io.File;
@@ -43,7 +44,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Helper class to handle all logics related to sdk data
@@ -52,12 +55,31 @@ class SdkSandboxStorageManager {
     private static final String TAG = "SdkSandboxManager";
 
     private final Context mContext;
-    private final PackageManagerLocal mPackageManagerLocal;
     private final Object mLock = new Object();
 
-    SdkSandboxStorageManager(Context context) {
+    // Prefix to prepend with all sdk storage paths.
+    private final String mRootDir;
+
+    private final SdkSandboxManagerLocal mSdkSandboxManagerLocal;
+    private final PackageManagerLocal mPackageManagerLocal;
+
+    SdkSandboxStorageManager(
+            Context context,
+            SdkSandboxManagerLocal sdkSandboxManagerLocal,
+            PackageManagerLocal packageManagerLocal) {
+        this(context, sdkSandboxManagerLocal, packageManagerLocal, /*rootDir=*/ "");
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    SdkSandboxStorageManager(
+            Context context,
+            SdkSandboxManagerLocal sdkSandboxManagerLocal,
+            PackageManagerLocal packageManagerLocal,
+            String rootDir) {
         mContext = context;
-        mPackageManagerLocal = LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        mSdkSandboxManagerLocal = sdkSandboxManagerLocal;
+        mPackageManagerLocal = packageManagerLocal;
+        mRootDir = rootDir;
     }
 
     public void notifyInstrumentationStarted(CallingInfo callingInfo) {
@@ -138,8 +160,15 @@ class SdkSandboxStorageManager {
                 return;
             }
         }
-        final String deSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                userId, packageName, /*isCeData=*/false);
+        String volumeUuid = null;
+        try {
+            volumeUuid = getVolumeUuidForPackage(userId, packageName);
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to find package " + packageName + " error: " + e.getMessage());
+            return;
+        }
+        final String deSdkDataPackagePath =
+                getSdkDataPackageDirectory(volumeUuid, userId, packageName, /*isCeData=*/ false);
         final ArrayMap<String, String> existingDeSubdirMap = getSubDirs(deSdkDataPackagePath);
         final List<String> subDirNames = new ArrayList<>();
         subDirNames.add("shared");
@@ -160,8 +189,8 @@ class SdkSandboxStorageManager {
         expectedSubDirNames.add("shared");
         final UserHandle userHandle = UserHandle.getUserHandleForUid(uid);
         if (um.isUserUnlockingOrUnlocked(userHandle)) {
-            final String ceSdkDataPackagePath = getSdkDataPackageDirectory(/*volumeUuid=*/null,
-                    userId, packageName, /*isCeData=*/true);
+            final String ceSdkDataPackagePath =
+                    getSdkDataPackageDirectory(volumeUuid, userId, packageName, /*isCeData=*/ true);
             final Set<String> ceSdkDirsBeforeReconcilePrefix =
                     getSubDirs(ceSdkDataPackagePath).keySet();
             final Set<String> deSdkDirsBeforeReconcilePrefix = existingDeSubdirMap.keySet();
@@ -175,9 +204,16 @@ class SdkSandboxStorageManager {
         }
         if (doesCeNeedReconcile || doesDeNeedReconcile) {
             try {
-                //TODO(b/224719352): Pass actual seinfo from here
-                mPackageManagerLocal.reconcileSdkData(/*volumeUuid=*/null, packageName, subDirNames,
-                        userId, appId, /*previousAppId=*/-1, /*seInfo=*/"default", flags);
+                // TODO(b/224719352): Pass actual seinfo from here
+                mPackageManagerLocal.reconcileSdkData(
+                        volumeUuid,
+                        packageName,
+                        subDirNames,
+                        userId,
+                        appId,
+                        /*previousAppId=*/ -1,
+                        /*seInfo=*/ "default",
+                        flags);
             } catch (Exception e) {
                 // We will retry when sdk gets loaded
                 Log.w(TAG, "Failed to reconcileSdkData for " + packageName + " subDirNames: "
@@ -231,38 +267,46 @@ class SdkSandboxStorageManager {
     @GuardedBy("mLock")
     private void reconcileSdkDataPackageDirs(int userId) {
         Log.i(TAG, "Reconciling sdk data package directories for " + userId);
-
         PackageInfoHolder pmInfoHolder = new PackageInfoHolder(mContext, userId);
-
         reconcileSdkDataPackageDirs(userId, /*isCeData=*/true, pmInfoHolder);
         reconcileSdkDataPackageDirs(userId, /*isCeData=*/false, pmInfoHolder);
     }
 
     @GuardedBy("mLock")
-    private void reconcileSdkDataPackageDirs(int userId, boolean isCeData,
-            PackageInfoHolder pmInfoHolder) {
+    private void reconcileSdkDataPackageDirs(
+            int userId, boolean isCeData, PackageInfoHolder pmInfoHolder) {
 
-        // Collect package names from root directory
-        //TODO(b/226095967): We should sync data on all volumes
-        final String volumeUuid = null;
-        final String rootDir = getSdkDataRootDirectory(volumeUuid, userId, isCeData);
-        final String[] sdkPackages = new File(rootDir).list();
-
-        // Now loop over package directories and remove the ones that are invalid
-        for (int i = 0; i < sdkPackages.length; i++) {
-            final String packageName = sdkPackages[i];
-            // Ignore packages that consume sdks or have been uninstalled
-            if (pmInfoHolder.usesSdk(packageName) || pmInfoHolder.isUninstalled(packageName)) {
+        final List<String> volumeUuids = getMountedVolumes();
+        for (int i = 0; i < volumeUuids.size(); i++) {
+            final String volumeUuid = volumeUuids.get(i);
+            final String rootDir = getSdkDataRootDirectory(volumeUuid, userId, isCeData);
+            final String[] sdkPackages = new File(rootDir).list();
+            if (sdkPackages == null) {
                 continue;
             }
-            destroySdkDataPackageDirectory(volumeUuid, userId, packageName, isCeData);
+            // Now loop over package directories and remove the ones that are invalid
+            for (int j = 0; j < sdkPackages.length; j++) {
+                final String packageName = sdkPackages[j];
+                // Only consider installed packages which are not instrumented and either
+                // not using sdk or on incorrect volume for destroying
+                final int uid = pmInfoHolder.getUid(packageName);
+                final boolean isInstrumented =
+                        mSdkSandboxManagerLocal.isInstrumentationRunning(packageName, uid);
+                final boolean hasCorrectVolume =
+                        TextUtils.equals(volumeUuid, pmInfoHolder.getVolumeUuid(packageName));
+                final boolean isInstalled = !pmInfoHolder.isUninstalled(packageName);
+                final boolean usesSdk = pmInfoHolder.usesSdk(packageName);
+                if (!isInstrumented && isInstalled && (!hasCorrectVolume || !usesSdk)) {
+                    destroySdkDataPackageDirectory(volumeUuid, userId, packageName, isCeData);
+                }
+            }
         }
 
         // Now loop over all installed packages and ensure all packages have sdk data directories
         final Iterator<String> it = pmInfoHolder.getInstalledPackagesUsingSdks().iterator();
         while (it.hasNext()) {
             final String packageName = it.next();
-
+            final String volumeUuid = pmInfoHolder.getVolumeUuid(packageName);
             // Verify if package dir contains a subdir for each sdk and a shared directory
             final String packageDir = getSdkDataPackageDirectory(volumeUuid, userId, packageName,
                     isCeData);
@@ -306,10 +350,10 @@ class SdkSandboxStorageManager {
     }
 
     @GuardedBy("mLock")
-    private void destroySdkDataPackageDirectory(@Nullable String volumeUuid, int userId,
-            String packageName, boolean isCeData) {
-        final Path packageDir = Paths.get(getSdkDataPackageDirectory(volumeUuid, userId,
-                    packageName, isCeData));
+    private void destroySdkDataPackageDirectory(
+            @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
+        final Path packageDir =
+                Paths.get(getSdkDataPackageDirectory(volumeUuid, userId, packageName, isCeData));
         if (!Files.exists(packageDir)) {
             return;
         }
@@ -334,27 +378,34 @@ class SdkSandboxStorageManager {
         try {
             Files.delete(packageDir);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to destroy sdk data on user unlock for userId: " + userId
-                    + " packageName: " + packageName +  " error: " + e.getMessage());
+            Log.e(
+                    TAG,
+                    "Failed to destroy sdk data on user unlock for userId: "
+                            + userId
+                            + " packageName: "
+                            + packageName
+                            + " error: "
+                            + e.getMessage());
         }
     }
 
-    private static String getDataDirectory(@Nullable String volumeUuid) {
+    private String getDataDirectory(@Nullable String volumeUuid) {
         if (TextUtils.isEmpty(volumeUuid)) {
-            return "/data";
+            return mRootDir + "/data";
         } else {
-            return "/mnt/expand/" + volumeUuid;
+            return mRootDir + "/mnt/expand/" + volumeUuid;
         }
     }
 
-    private static String getSdkDataRootDirectory(@Nullable String volumeUuid, int userId,
-            boolean isCeData) {
+    private String getSdkDataRootDirectory(
+            @Nullable String volumeUuid, int userId, boolean isCeData) {
         return getDataDirectory(volumeUuid) + (isCeData ? "/misc_ce/" : "/misc_de/") + userId
             + "/sdksandbox";
     }
 
-    private static String getSdkDataPackageDirectory(@Nullable String volumeUuid, int userId,
-            String packageName, boolean isCeData) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    String getSdkDataPackageDirectory(
+            @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
         return getSdkDataRootDirectory(volumeUuid, userId, isCeData) + "/" + packageName;
     }
 
@@ -362,6 +413,7 @@ class SdkSandboxStorageManager {
         private final Context mContext;
         final ArrayMap<String, Set<String>> mPackagesWithSdks = new ArrayMap<>();
         final ArrayMap<String, Integer> mPackageNameToUid = new ArrayMap<>();
+        final ArrayMap<String, String> mPackageNameToVolumeUuid = new ArrayMap<>();
         final Set<String> mUninstalledPackages = new ArraySet<>();
 
         PackageInfoHolder(Context context, int userId) {
@@ -375,19 +427,23 @@ class SdkSandboxStorageManager {
             for (int i = 0; i < packageInfoList.size(); i++) {
                 final PackageInfo info = packageInfoList.get(i);
                 installedPackages.add(info.packageName);
+                final String volumeUuid =
+                        StorageUuuidConverter.convertToVolumeUuid(info.applicationInfo.storageUuid);
+                mPackageNameToVolumeUuid.put(info.packageName, volumeUuid);
+                mPackageNameToUid.put(info.packageName, info.applicationInfo.uid);
+
                 final List<String> sdksUsedNames =
                         SdkSandboxStorageManager.getSdksUsed(info.applicationInfo);
                 if (sdksUsedNames.isEmpty()) {
                     continue;
                 }
                 mPackagesWithSdks.put(info.packageName, new ArraySet<>(sdksUsedNames));
-                mPackageNameToUid.put(info.packageName, info.applicationInfo.uid);
             }
 
             // If an app is uninstalled with DELETE_KEEP_DATA flag, we need to preserve its sdk
             // data. For that, we need names of uninstalled packages.
-            final List<PackageInfo> allPackages = pm.getInstalledPackages(
-                    PackageManager.MATCH_UNINSTALLED_PACKAGES);
+            final List<PackageInfo> allPackages =
+                    pm.getInstalledPackages(PackageManager.MATCH_UNINSTALLED_PACKAGES);
             for (int i = 0; i < allPackages.size(); i++) {
                 final String packageName = allPackages.get(i).packageName;
                 if (!installedPackages.contains(packageName)) {
@@ -415,6 +471,75 @@ class SdkSandboxStorageManager {
         public boolean usesSdk(String packageName) {
             return mPackagesWithSdks.containsKey(packageName);
         }
+
+        public String getVolumeUuid(String packageName) {
+            return mPackageNameToVolumeUuid.get(packageName);
+        }
+    }
+
+    // TODO(b/234023859): We will remove this class once the required APIs get unhidden
+    // The class below has been copied from StorageManager's convert logic
+    private static class StorageUuuidConverter {
+        private static final String FAT_UUID_PREFIX = "fafafafa-fafa-5afa-8afa-fafa";
+        private static final UUID UUID_DEFAULT =
+                UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        private static final String UUID_SYSTEM = "system";
+        private static final UUID UUID_SYSTEM_ =
+                UUID.fromString("5d258386-e60d-59e3-826d-0089cdd42cc0");
+        private static final String UUID_PRIVATE_INTERNAL = null;
+        private static final String UUID_PRIMARY_PHYSICAL = "primary_physical";
+        private static final UUID UUID_PRIMARY_PHYSICAL_ =
+                UUID.fromString("0f95a519-dae7-5abf-9519-fbd6209e05fd");
+
+        private static @Nullable String convertToVolumeUuid(@NonNull UUID storageUuid) {
+            if (UUID_DEFAULT.equals(storageUuid)) {
+                return UUID_PRIVATE_INTERNAL;
+            } else if (UUID_PRIMARY_PHYSICAL_.equals(storageUuid)) {
+                return UUID_PRIMARY_PHYSICAL;
+            } else if (UUID_SYSTEM_.equals(storageUuid)) {
+                return UUID_SYSTEM;
+            } else {
+                String uuidString = storageUuid.toString();
+                // This prefix match will exclude fsUuids from private volumes because
+                // (a) linux fsUuids are generally Version 4 (random) UUIDs so the prefix
+                // will contain 4xxx instead of 5xxx and (b) we've already matched against
+                // known namespace (Version 5) UUIDs above.
+                if (uuidString.startsWith(FAT_UUID_PREFIX)) {
+                    String fatStr =
+                            uuidString.substring(FAT_UUID_PREFIX.length()).toUpperCase(Locale.US);
+                    return fatStr.substring(0, 4) + "-" + fatStr.substring(4);
+                }
+
+                return storageUuid.toString();
+            }
+        }
+    }
+
+    // We loop over "/mnt/expand" directory's children and find the volumeUuids
+    // TODO(b/234023859): We want to use storage manager api in future for this task
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    List<String> getMountedVolumes() {
+        // Collect package names from root directory
+        final List<String> volumeUuids = new ArrayList<>();
+        volumeUuids.add(null);
+
+        final String[] mountedVolumes = new File(mRootDir + "/mnt/expand").list();
+        if (mountedVolumes == null) {
+            return volumeUuids;
+        }
+
+        for (int i = 0; i < mountedVolumes.length; i++) {
+            final String volumeUuid = mountedVolumes[i];
+            volumeUuids.add(volumeUuid);
+        }
+        return volumeUuids;
+    }
+
+    private @Nullable String getVolumeUuidForPackage(int userId, String packageName)
+            throws PackageManager.NameNotFoundException {
+        PackageManager pm = getPackageManager(userId);
+        ApplicationInfo info = pm.getApplicationInfo(packageName, /*flags=*/ 0);
+        return StorageUuuidConverter.convertToVolumeUuid(info.storageUuid);
     }
 
     /**

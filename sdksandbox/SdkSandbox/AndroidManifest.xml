@@ -22,6 +22,10 @@
     android:versionCode="1"
     android:versionName="T-initial">
 
+    <uses-sdk
+        android:minSdkVersion="33"
+        android:targetSdkVersion="33" />
+
     <!-- Allows SdkSandbox to start activities. -->
     <!-- TODO(b/209599396): temporary workaround, remove once proper solution is implemented. -->
     <uses-permission android:name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
@@ -29,7 +33,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Permissions to access PP APIs. -->
-    <!-- TODO(b/213488783): Remove these after adding a check in PP APIs for SDK manifest -->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />

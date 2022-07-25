@@ -17,37 +17,77 @@ package com.android.adservices.ui.settings;
 
 import android.app.ActionBar;
 import android.os.Bundle;
+import android.view.MenuItem;
 
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
 public class AdServicesSettingsActivity extends FragmentActivity {
     private ActionDelegate mActionDelegate;
+    private ViewModelProvider mViewModelProvider;
 
+    /** @return the {@link ActionDelegate} for the activity. */
     public ActionDelegate getActionDelegate() {
         return mActionDelegate;
+    }
+
+    /**
+     * Gets the {@link ViewModelProvider} for the activity. Need to use this implementation for
+     * testing/mocking limitations.
+     *
+     * @return the {@link ViewModelProvider} for the activity.
+     */
+    public ViewModelProvider getViewModelProvider() {
+        if (mViewModelProvider == null) {
+            mViewModelProvider = new ViewModelProvider(this);
+        }
+        return mViewModelProvider;
+    }
+
+    public AdServicesSettingsActivity() {}
+
+    @VisibleForTesting
+    AdServicesSettingsActivity(ViewModelProvider viewModelProvider) {
+        mViewModelProvider = viewModelProvider;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initActionDelegate();
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.adservices_settings_main_activity);
+        initActionDelegate();
         initActionBar();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     // TODO(b/230372790): update to another action bar.
     private void initActionBar() {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle(R.string.settingsUI_privacy_sandbox_beta_title);
+        actionBar.setTitle("");
     }
 
     private void initActionDelegate() {
@@ -55,7 +95,8 @@ public class AdServicesSettingsActivity extends FragmentActivity {
                 new ActionDelegate(
                         this,
                         getSupportFragmentManager(),
-                        new ViewModelProvider(this).get(MainViewModel.class),
-                        new ViewModelProvider(this).get(TopicsViewModel.class));
+                        getViewModelProvider().get(MainViewModel.class),
+                        getViewModelProvider().get(TopicsViewModel.class),
+                        getViewModelProvider().get(AppsViewModel.class));
     }
 }

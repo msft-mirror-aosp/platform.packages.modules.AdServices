@@ -57,13 +57,13 @@ class TestObjectProvider {
     static MeasurementImpl getMeasurementImpl(@Type int type, DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
         if (type == Type.DENOISED) {
-            MeasurementImpl measurementImpl = spy(new MeasurementImpl(new MockContentResolver(),
-                    datastoreManager, sourceFetcher, triggerFetcher));
+            MeasurementImpl measurementImpl = spy(new MeasurementImpl(null, null,
+                    new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher));
             // Disable Impression Noise
             doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
             return measurementImpl;
         } else if (type == Type.NOISY) {
-            MeasurementImpl measurementImpl = spy(new MeasurementImpl(
+            MeasurementImpl measurementImpl = spy(new MeasurementImpl(null, null,
                     new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
@@ -75,8 +75,7 @@ class TestObjectProvider {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(0)
-                                        .setAttributionDestination(
-                                                source.getAttributionDestination())
+                                        .setAttributionDestination(source.getAppDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
@@ -89,7 +88,7 @@ class TestObjectProvider {
             return measurementImpl;
         }
 
-        return new MeasurementImpl(
-                new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher);
+        return new MeasurementImpl(null, null, new MockContentResolver(), datastoreManager,
+                sourceFetcher, triggerFetcher);
     }
 }

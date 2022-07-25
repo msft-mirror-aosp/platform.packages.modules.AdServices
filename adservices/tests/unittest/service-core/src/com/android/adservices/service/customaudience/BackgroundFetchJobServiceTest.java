@@ -18,38 +18,63 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import android.app.job.JobInfo;
+import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mock;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class BackgroundFetchJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
 
+    @Spy
+    private final BackgroundFetchJobService mBgFJobServiceSpy = new BackgroundFetchJobService();
+
+    @Mock private BackgroundFetchWorker mBgFWorkerMock;
+    @Mock private JobParameters mJobParametersMock;
+
+    // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
+    private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
+
     private MockitoSession mStaticMockSession = null;
+
+    private final Flags mFlagsWithEnabledBgF = new FlagsWithEnabledBgF();
+    private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
 
     @Before
     public void setup() {
@@ -58,9 +83,11 @@ public class BackgroundFetchJobServiceTest {
         // the BackgroundFetchJobService, and adding them is non-trivial.
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(BackgroundFetchJobService.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(BackgroundFetchJobService.class)
+                        .spyStatic(BackgroundFetchWorker.class)
+                        .initMocks(this)
                         .startMocking();
-        MockitoAnnotations.initMocks(this);
 
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
@@ -75,22 +102,162 @@ public class BackgroundFetchJobServiceTest {
     }
 
     @Test
+    public void testOnStartJobFlagDisabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
+        doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+
+        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobUpdateSuccess()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mBgFJobServiceSpy)
+                .jobFinished(mJobParametersMock, false);
+
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        jobFinishedCountDown.await();
+
+        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobUpdateTimeoutHandled()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doThrow(TimeoutException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mBgFJobServiceSpy)
+                .jobFinished(mJobParametersMock, false);
+
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        jobFinishedCountDown.await();
+
+        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobUpdateInterruptedHandled()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doThrow(InterruptedException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mBgFJobServiceSpy)
+                .jobFinished(mJobParametersMock, false);
+
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        jobFinishedCountDown.await();
+
+        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobUpdateExecutionExceptionHandled()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doThrow(ExecutionException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mBgFJobServiceSpy)
+                .jobFinished(mJobParametersMock, false);
+
+        assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+        jobFinishedCountDown.await();
+
+        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeededFlagDisabled() {
+        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
+        doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
+
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
+
+        verify(() -> BackgroundFetchJobService.schedule(any()), never());
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
     public void testScheduleIfNeededSuccess() {
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
         doNothing().when(() -> BackgroundFetchJobService.schedule(any()));
 
         BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any()));
-        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchJobService.class));
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
-    public void testScheduleIfNeededSkipped() {
+    public void testScheduleIfNeededSkippedAlreadyScheduled() {
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
                                 new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
@@ -100,15 +267,18 @@ public class BackgroundFetchJobServiceTest {
         BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
 
         verify(() -> BackgroundFetchJobService.schedule(any()), never());
-        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchJobService.class));
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
     public void testScheduleIfNeededForceSuccess() {
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
                                 new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
@@ -119,6 +289,39 @@ public class BackgroundFetchJobServiceTest {
         BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, true);
 
         verify(() -> BackgroundFetchJobService.schedule(any()));
-        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchJobService.class));
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testScheduleFlagDisabled() {
+        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
+
+        BackgroundFetchJobService.schedule(CONTEXT);
+
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    private static class FlagsWithEnabledBgF implements Flags {
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return true;
+        }
+    }
+
+    private static class FlagsWithDisabledBgF implements Flags {
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return false;
+        }
+
+        @Override
+        public long getFledgeBackgroundFetchJobPeriodMs() {
+            throw new IllegalStateException("This configured value should not be called");
+        }
+
+        @Override
+        public long getFledgeBackgroundFetchJobFlexMs() {
+            throw new IllegalStateException("This configured value should not be called");
+        }
     }
 }

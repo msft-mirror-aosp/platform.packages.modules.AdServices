@@ -22,6 +22,7 @@ import android.adservices.exceptions.GetTopicsException;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.OutcomeReceiver;
@@ -34,13 +35,16 @@ import com.android.adservices.ServiceBinder;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * Topics Manager.
+ * TopicsManager provides APIs for App and Ad-Sdks to get the user interest topics in a privacy
+ * preserving way.
  */
-public class TopicsManager {
+public final class TopicsManager {
 
     /**
      * Result codes from {@link TopicsManager#getTopics(GetTopicsRequest, Executor,
@@ -142,24 +146,24 @@ public class TopicsManager {
                 .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                 .build();
         final ITopicsService service = getService();
-        String sdkName = "";
-        if (mContext instanceof SandboxedSdkContext) {
-            sdkName = ((SandboxedSdkContext) mContext).getSdkName();
-            if (!sdkName.equals(getTopicsRequest.getSdkName())) {
-                callback.onError(
-                        new GetTopicsException(
-                                RESULT_INTERNAL_ERROR,
-                                "SdkName get from SandboxedSdkContext is different "
-                                        + "from SdkName get from getTopicsRequest"));
-            }
-        } else {
-            sdkName = getTopicsRequest.getSdkName();
+        String sdkName = getTopicsRequest.getSdkName();
+        String appPackageName = "";
+        String sdkPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        Context getTopicsRequestContext = getTopicsRequest.getContext();
+        if (getTopicsRequestContext instanceof SandboxedSdkContext) {
+            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getTopicsRequestContext);
+            sdkPackageName = requestContext.getSdkPackageName();
+            appPackageName = requestContext.getClientPackageName();
+        } else { // This is the case without the Sandbox.
+            appPackageName = getTopicsRequestContext.getPackageName();
         }
         try {
             service.getTopics(
                     new GetTopicsParam.Builder()
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setAppPackageName(appPackageName)
                             .setSdkName(sdkName)
+                            .setSdkPackageName(sdkPackageName)
                             .build(),
                     callerMetadata,
                     new IGetTopicsCallback.Stub() {
@@ -170,12 +174,7 @@ public class TopicsManager {
                                         if (resultParcel.isSuccess()) {
                                             callback.onResult(
                                                     new GetTopicsResponse.Builder()
-                                                            .setTaxonomyVersions(
-                                                                    resultParcel
-                                                                            .getTaxonomyVersions())
-                                                            .setModelVersions(
-                                                                    resultParcel.getModelVersions())
-                                                            .setTopics(resultParcel.getTopics())
+                                                            .setTopics(getTopicList(resultParcel))
                                                             .build());
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
@@ -200,9 +199,27 @@ public class TopicsManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-            callback.onError(new GetTopicsException(RESULT_INTERNAL_ERROR, "Internal Error!"));
+            LogUtil.e(e, "RemoteException");
+            callback.onError(e);
         }
+    }
+
+    private List<Topic> getTopicList(GetTopicsResult resultParcel) {
+        List<Long> taxonomyVersionsList = resultParcel.getTaxonomyVersions();
+        List<Long> modelVersionsList = resultParcel.getModelVersions();
+        List<Integer> topicsCodeList = resultParcel.getTopics();
+        List<Topic> topicList = new ArrayList<>();
+        int size = taxonomyVersionsList.size();
+        for (int i = 0; i < size; i++) {
+            Topic topic =
+                    new Topic(
+                            taxonomyVersionsList.get(i),
+                            modelVersionsList.get(i),
+                            topicsCodeList.get(i));
+            topicList.add(topic);
+        }
+
+        return topicList;
     }
 
     /**
@@ -213,6 +230,7 @@ public class TopicsManager {
      *     performance testing to simulate "cold-start" situations.
      */
     // TODO: change to @VisibleForTesting
+    @TestApi
     public void unbindFromService() {
         mServiceBinder.unbindFromService();
     }

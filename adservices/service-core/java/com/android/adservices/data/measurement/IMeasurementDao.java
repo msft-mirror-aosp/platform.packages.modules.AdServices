@@ -16,17 +16,17 @@
 
 package com.android.adservices.data.measurement;
 
+import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import java.time.Instant;
 import java.util.List;
@@ -41,16 +41,7 @@ public interface IMeasurementDao {
     void setTransaction(ITransaction transaction);
 
     /** Add an entry to the Trigger datastore. */
-    void insertTrigger(
-            @NonNull Uri attributionDestination,
-            @NonNull Uri adTechDomain,
-            @NonNull Uri registrant,
-            @NonNull Long triggerTime,
-            @NonNull String eventTriggers,
-            @Nullable String aggregateTriggerData,
-            @Nullable String aggregateValues,
-            @Nullable String filters)
-            throws DatastoreException;
+    void insertTrigger(Trigger trigger) throws DatastoreException;
 
     /**
      * Returns list of ids for all pending {@link Trigger}.
@@ -83,14 +74,7 @@ public interface IMeasurementDao {
     /**
      * Add an entry to the Source datastore.
      */
-    void insertSource(@NonNull Long sourceEventId, @NonNull Uri publisher,
-            @NonNull Uri attributionDestination, @NonNull Uri adTechDomain, @NonNull Uri registrant,
-            @NonNull Long sourceEventTime, @NonNull Long expiryTime, @NonNull Long priority,
-            @NonNull Source.SourceType sourceType, @NonNull Long installAttributionWindow,
-            @NonNull Long installCooldownWindow,
-            @Source.AttributionMode int attributionMode,
-            @Nullable String aggregateSource,
-            @Nullable String aggregateFilterData) throws DatastoreException;
+    void insertSource(Source source) throws DatastoreException;
 
     /**
      * Queries and returns the list of matching {@link Source} for the provided {@link Trigger}.
@@ -140,12 +124,12 @@ public interface IMeasurementDao {
     EventReport getEventReport(String eventReportId) throws DatastoreException;
 
     /**
-     * Queries and returns the {@link CleartextAggregatePayload}
+     * Queries and returns the {@link AggregateReport}
      * @param aggregateReportId Id of the request Aggregate Report
      * @return the request Aggregate Report; Null in case of SQL failure
      */
     @Nullable
-    CleartextAggregatePayload getAggregateReport(String aggregateReportId)
+    AggregateReport getAggregateReport(String aggregateReportId)
             throws DatastoreException;
 
     /**
@@ -200,33 +184,6 @@ public interface IMeasurementDao {
     void insertAttributionRateLimit(Source source, Trigger trigger) throws DatastoreException;
 
     /**
-     * Given one postback urls, queries and returns all the postback urls with the same adtech id.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    List<String> getAllAdtechUrls(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Queries and returns the {@link AdtechUrl}.
-     *
-     * @param postbackUrl the postback Url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    AdtechUrl getAdtechEnrollmentData(String postbackUrl) throws DatastoreException;
-
-    /**
-     * Saves the {@link AdtechUrl} to datastore.
-     */
-    void insertAdtechUrl(AdtechUrl adtechUrl) throws DatastoreException;
-
-    /**
-     * Deletes the {@link AdtechUrl} from datastore using the given postback url.
-     */
-    void deleteAdtechUrl(String postbackUrl) throws DatastoreException;
-
-    /**
      * Deletes all records in measurement tables that correspond with the provided Uri.
      *
      * @param uri the Uri to match on
@@ -243,15 +200,22 @@ public interface IMeasurementDao {
      * and/or a range of dates.
      *
      * @param registrant who owns the data
-     * @param origin uri for deletion. May be null
      * @param start time for deletion range. May be null. If null, end must be null as well
      * @param end time for deletion range. May be null. If null, start must be null as well
+     * @param origins list of origins which should be used for matching
+     * @param domains list of domains which should be used for matching
+     * @param matchBehavior {@link DeletionRequest.MatchBehavior} to be used for matching
+     * @param deletionMode {@link DeletionRequest.DeletionMode} for selecting data to be deleted
      */
     void deleteMeasurementData(
             @NonNull Uri registrant,
-            @Nullable Uri origin,
             @Nullable Instant start,
-            @Nullable Instant end) throws DatastoreException;
+            @Nullable Instant end,
+            @NonNull List<Uri> origins,
+            @NonNull List<Uri> domains,
+            @DeletionRequest.MatchBehavior int matchBehavior,
+            @DeletionRequest.DeletionMode int deletionMode)
+            throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -275,14 +239,21 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Save unencrypted aggregate payload to datastore.
+     * Retrieve all aggregate encryption keys from the datastore whose expiry time is greater than
+     * or equal to {@code expiry}.
      */
-    void insertAggregateReport(CleartextAggregatePayload payload) throws DatastoreException;
+    List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
+            throws DatastoreException;
 
     /**
-     * Get CleartextAggregatePayload using unique Id.
+     *  Remove aggregate encryption keys from the datastore older than {@code expiry}.
      */
-    List<CleartextAggregatePayload> getAllCleartextAggregatePayload() throws DatastoreException;
+    void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
+
+    /**
+     * Save unencrypted aggregate payload to datastore.
+     */
+    void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given
@@ -295,4 +266,12 @@ public interface IMeasurementDao {
      * Returns list of all pending aggregate reports for a given app right away.
      */
     List<String> getPendingAggregateReportIdsForGivenApp(Uri appName) throws DatastoreException;
+
+    /**
+     * Delete all data generated by Measurement API, except for tables in the exclusion list.
+     *
+     * @param tablesToExclude a {@link List} of tables that won't be deleted. An empty list will
+     *     delete every table.
+     */
+    void deleteAllMeasurementData(List<String> tablesToExclude) throws DatastoreException;
 }
