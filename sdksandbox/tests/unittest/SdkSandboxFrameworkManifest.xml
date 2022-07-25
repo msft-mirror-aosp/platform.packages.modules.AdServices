@@ -18,6 +18,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="android.app.sdksandbox" >
 
+    <queries>
+        <package android:name="com.android.codeproviderresources_1" />
+    </queries>
+
     <application android:debuggable="true">
         <uses-library android:name="android.test.runner" />
         <uses-sdk-library android:name="com.android.codeproviderresources" android:versionMajor="1"
