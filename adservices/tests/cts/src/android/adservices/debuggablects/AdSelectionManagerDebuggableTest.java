@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
@@ -26,7 +27,9 @@ import android.content.Context;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -75,6 +78,15 @@ public class AdSelectionManagerDebuggableTest {
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
+
+        // Tests are running in background
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
     }
 
     @Test

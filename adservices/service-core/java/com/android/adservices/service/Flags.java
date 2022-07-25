@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
+
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.util.Dumpable;
@@ -827,5 +829,40 @@ public interface Flags extends Dumpable {
 
     default boolean isDisableTopicsEnrollmentCheck() {
         return DISABLE_TOPICS_ENROLLMENT_CHECK;
+    }
+
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
+
+    /**
+     * @return true if FLEDGE runAdSelection API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+    }
+
+    /**
+     * @return true if FLEDGE reportImpression API should require that the calling API is running in
+     *     foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeReportImpression() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+    }
+
+    /**
+     * @return true if FLEDGE override API methods (for Custom Audience and Ad Selection) should
+     *     require that the calling API is running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeOverrides() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
+    }
+
+    int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;
+
+    /** @return the importance level to use to check if an application is in foreground. */
+    default int getForegroundStatuslLevelForValidation() {
+        return FOREGROUND_STATUS_LEVEL;
     }
 }
