@@ -16,6 +16,12 @@
 
 package android.adservices.measurement;
 
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
+import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+
 import android.adservices.exceptions.AdServicesException;
 import android.adservices.exceptions.MeasurementException;
 import android.adservices.measurement.MeasurementManager.ResultCode;
@@ -96,21 +102,24 @@ public final class MeasurementErrorResponse implements Parcelable {
 
         Exception innerException;
         switch (mResultCode) {
-            case MeasurementManager.RESULT_INVALID_ARGUMENT:
+            case RESULT_INVALID_ARGUMENT:
                 innerException = new IllegalArgumentException();
                 break;
-            case MeasurementManager.RESULT_INTERNAL_ERROR:
+            case RESULT_INTERNAL_ERROR:
                 innerException = new IllegalStateException();
                 break;
-            case MeasurementManager.RESULT_IO_ERROR:
+            case RESULT_IO_ERROR:
                 innerException = new IOException();
                 break;
-            case MeasurementManager.RESULT_OK: // Intentional fallthrough
+            case RESULT_UNAUTHORIZED_CALL:
+                innerException = new SecurityException(mErrorMessage);
+                break;
+            case RESULT_OK: // Intentional fallthrough
             default:
                 innerException = new Exception();
                 break;
         }
-        return new MeasurementException(mResultCode, mErrorMessage, innerException);
+        return new MeasurementException(mErrorMessage, innerException);
     }
 
     /**
@@ -119,7 +128,7 @@ public final class MeasurementErrorResponse implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        @ResultCode private int mResultCode = MeasurementManager.RESULT_OK;
+        @ResultCode private int mResultCode = RESULT_OK;
         @Nullable private String mErrorMessage;
 
         public Builder() {}

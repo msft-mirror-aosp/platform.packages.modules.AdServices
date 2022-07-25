@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
+
 /**
  * Wrapper class for {@link AdServicesSettingsActivity} used for testing purposes only. Instantiates
  * a {@link AdServicesSettingsActivity} with the custom constructor that can be passed a a mocked

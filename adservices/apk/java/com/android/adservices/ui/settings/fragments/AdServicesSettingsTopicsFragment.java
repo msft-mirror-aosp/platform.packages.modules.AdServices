@@ -65,7 +65,7 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
         TopicsListViewAdapter adapter = new TopicsListViewAdapter(viewModel, false);
         recyclerView.setAdapter(adapter);
 
-        View noTopicsText = rootView.findViewById(R.id.no_topics_text);
+        View noTopicsMessage = rootView.findViewById(R.id.no_topics_message);
         View emptyTopicsHiddenSection = rootView.findViewById(R.id.empty_topics_hidden_section);
 
         viewModel
@@ -73,10 +73,11 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
                 .observe(
                         getViewLifecycleOwner(),
                         topicsList -> {
-                            noTopicsText.setVisibility(
+                            noTopicsMessage.setVisibility(
                                     topicsList.isEmpty() ? View.VISIBLE : View.GONE);
                             emptyTopicsHiddenSection.setVisibility(
                                     topicsList.isEmpty() ? View.GONE : View.VISIBLE);
+                            adapter.notifyDataSetChanged();
                         });
     }
 }

@@ -86,12 +86,13 @@
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
 
+    <!-- Allows JobScheduler to persist jobs across reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
-            android:label="Android AdServices"
+            android:label="@string/app_label"
             android:forceQueryable="true"
             android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/FilterTouches">
         <service android:name="com.android.adservices.adselection.AdSelectionService"
@@ -148,6 +149,11 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
+        <!-- Mdd background Job. -->
+        <service android:name="com.android.adservices.download.MddJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
         <!-- Activity for Adservices Settings UI -->
         <activity
                 android:name="com.android.adservices.ui.settings.AdServicesSettingsActivity"
@@ -163,7 +169,7 @@
         <activity
             android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/AdServices.NotificationTheme">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.ui.NOTIFICATIONS" />
                 <category android:name="android.intent.category.DEFAULT" />

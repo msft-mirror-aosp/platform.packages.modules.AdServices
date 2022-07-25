@@ -27,22 +27,35 @@ import java.util.concurrent.Executor;
  * AdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest, Executor,
  * OutcomeReceiver)} request
  *
- * <p>It contains two fields, a {@link AdSelectionConfig} which will serve as the identifier for the
- * specific override, and a {@code String} decisionLogicJs field representing the override value
+ * <p>It contains, a {@link AdSelectionConfig} which will serve as the identifier for the specific
+ * override, a {@code String} decisionLogicJs and {@code String} trustedScoringSignals field
+ * representing the override value
  */
 public class AddAdSelectionOverrideRequest {
     @NonNull private final AdSelectionConfig mAdSelectionConfig;
 
     @NonNull private final String mDecisionLogicJs;
 
-    private AddAdSelectionOverrideRequest(
-            AdSelectionConfig adSelectionConfig, String decisionLogicJs) {
+    @NonNull private final String mTrustedScoringSignals;
+
+    /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
+    public AddAdSelectionOverrideRequest(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJs,
+            @NonNull String trustedScoringSignals) {
+        Objects.requireNonNull(adSelectionConfig);
+        Objects.requireNonNull(decisionLogicJs);
+        Objects.requireNonNull(trustedScoringSignals);
+
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
+        mTrustedScoringSignals = trustedScoringSignals;
     }
 
     /**
-     * @return AdSelectionConfig, the configuration of the ad selection process.
+     * @return an instance of {@link AdSelectionConfig}, the configuration of the ad selection
+     *     process. This configuration provides the data necessary to run Ad Selection flow that
+     *     generates bids and scores to find a wining ad for rendering.
      */
     @NonNull
     public AdSelectionConfig getAdSelectionConfig() {
@@ -50,47 +63,20 @@ public class AddAdSelectionOverrideRequest {
     }
 
     /**
-     * @return The override javascript result
+     * @return The override javascript result, should be a string that contains valid JS code. The
+     *     code should contain the scoring logic that will be executed during Ad selection.
      */
     @NonNull
     public String getDecisionLogicJs() {
         return mDecisionLogicJs;
     }
 
-    /** Builder for {@link AddAdSelectionOverrideRequest} objects. */
-    public static final class Builder {
-        private AdSelectionConfig mAdSelectionConfig;
-        private String mDecisionLogicJs;
-
-        public Builder() {}
-
-        /** Set the override decision logic javascript. */
-        @NonNull
-        public AddAdSelectionOverrideRequest.Builder setDecisionLogicJs(
-                @NonNull String decisionLogicJs) {
-            Objects.requireNonNull(decisionLogicJs);
-
-            this.mDecisionLogicJs = decisionLogicJs;
-            return this;
-        }
-
-        /** Set the AdSelectionConfig. */
-        @NonNull
-        public AddAdSelectionOverrideRequest.Builder setAdSelectionConfig(
-                @NonNull AdSelectionConfig adSelectionConfig) {
-            Objects.requireNonNull(adSelectionConfig);
-
-            this.mAdSelectionConfig = adSelectionConfig;
-            return this;
-        }
-
-        /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
-        @NonNull
-        public AddAdSelectionOverrideRequest build() {
-            Objects.requireNonNull(mAdSelectionConfig);
-            Objects.requireNonNull(mDecisionLogicJs);
-
-            return new AddAdSelectionOverrideRequest(mAdSelectionConfig, mDecisionLogicJs);
-        }
+    /**
+     * @return The override trusted scoring signals, should be a valid json string. The trusted
+     *     signals would be fed into the scoring logic during Ad Selection.
+     */
+    @NonNull
+    public String getTrustedScoringSignals() {
+        return mTrustedScoringSignals;
     }
 }

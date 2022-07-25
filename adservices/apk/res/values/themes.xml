@@ -21,16 +21,7 @@
         <item name="android:windowNoTitle">false</item>
     </style>
 
-    <!-- TODO(b/230373237):styling for header title, keep for future changes -->
-    <style name="TextAppearance.CategoryTitle"
-        parent="@android:style/TextAppearance.DeviceDefault.Medium">
-        <item name="android:textAllCaps">true</item>
-        <item name="android:textSize">11sp</item>
-        <!-- 0.8 Spacing, 0.8/11 = 0.072727273 -->
-        <item name="android:letterSpacing">0.072727273</item>
-    </style>
-
-    <style name="AdServices.Settings" parent="android:Theme.DeviceDefault.Settings">
+    <style name="AdServices.MainTheme" parent="android:Theme.DeviceDefault.Settings">
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:navigationBarDividerColor">@null</item>
@@ -43,6 +34,21 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:background">@color/background_color</item>
+    </style>
+
+    <style name="AdServices.NotificationTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarDividerColor">@null</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowNoTitle">true</item>
     </style>
 

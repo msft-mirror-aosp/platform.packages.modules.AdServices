@@ -16,20 +16,31 @@
 
 package android.adservices.common;
 
+import android.adservices.exceptions.AdServicesException;
+import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.content.Context;
+import android.os.OutcomeReceiver;
+import android.os.RemoteException;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
+import java.util.concurrent.Executor;
+
 /**
- * AdServicesCommonManager class.
- * Ths contains APIs common across the various PPAPIs.
+ * AdServicesCommonManager contains APIs common across the various Adservices. Current we set It to
+ * SystemApi as all two methods, isAdServicesEnabled and setAdServicesEntryPointEnabled, Are all
+ * systemApi.
+ *
  * @hide
  */
+@SystemApi
 public class AdServicesCommonManager {
-    public static final String AD_SERVICES_COMMON_SERVICE =
-            "ad_services_common_service";
+    /** @hide */
+    public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService>
@@ -55,5 +66,57 @@ public class AdServicesCommonManager {
             throw new IllegalStateException("Unable to find the service");
         }
         return service;
+    }
+
+    /**
+     * Get the adservices status.
+     *
+     * @hide
+     */
+    @SystemApi
+    public void isAdServicesEnabled(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, AdServicesException> callback) {
+        final IAdServicesCommonService service = getService();
+        try {
+            service.isAdServicesEnabled(
+                    new IAdServicesCommonCallback.Stub() {
+                        @Override
+                        public void onResult(IsAdServicesEnabledResult result) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onResult(result.getAdServicesEnabled());
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onError(new AdServicesException(errorMessage));
+                                    });
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(() -> callback.onError(new AdServicesException("Internal Error!")));
+        }
+    }
+
+    /**
+     * Send the privacy sandbox UI entry point enable status to AdServices, indicating whether
+     * Privacy sandbox is enabled or not. If this is enabled, and AdServices is enabled, AdServices
+     * will send out notification to user.
+     *
+     * @hide
+     */
+    @SystemApi
+    public void setAdServicesEntryPointEnabled(@NonNull boolean adservicesEntryPointEnabled) {
+        final IAdServicesCommonService service = getService();
+        try {
+            service.setAdServicesEntryPointEnabled(adservicesEntryPointEnabled);
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+        }
     }
 }
