@@ -477,4 +477,17 @@ public interface Flags extends Dumpable {
     default String getPpapiAppAllowList() {
         return PPAPI_APP_ALLOW_LIST;
     }
+
+    // Rate Limit Flags.
+
+    /**
+     * PP API Rate Limit for each SDK. This is the max allowed QPS for one SDK to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
+
+    /** Returns the Sdk Request Permits Per Second. */
+    default float getSdkRequestPermitsPerSecond() {
+        return SDK_REQUEST_PERMITS_PER_SECOND;
+    }
 }
