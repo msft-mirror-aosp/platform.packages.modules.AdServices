@@ -72,7 +72,7 @@ public class CustomAudienceManagerTest {
 
         client.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME)
                 .get();
 

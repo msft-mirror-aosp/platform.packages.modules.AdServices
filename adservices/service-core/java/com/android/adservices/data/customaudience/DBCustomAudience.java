@@ -215,7 +215,8 @@ public class DBCustomAudience {
                                 updatableData.getAttemptedUpdateTime());
 
         if (updatableData.getUserBiddingSignals() != null) {
-            customAudienceBuilder.setUserBiddingSignals(updatableData.getUserBiddingSignals());
+            customAudienceBuilder.setUserBiddingSignals(
+                    updatableData.getUserBiddingSignals().getStringForm());
         }
 
         if (updatableData.getTrustedBiddingData() != null) {

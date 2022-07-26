@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -119,12 +120,13 @@ public class CustomAudienceImpl {
 
     /** Delete a custom audience with given key. No-op if not exist. */
     public void leaveCustomAudience(
-            @Nullable String owner, @NonNull String buyer, @NonNull String name) {
-        Preconditions.checkStringNotEmpty(buyer);
+            @Nullable String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Preconditions.checkStringNotEmpty(name);
 
         mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(
-                Optional.ofNullable(owner).orElse("not.implemented.yet"), buyer, name);
+                Optional.ofNullable(owner).orElse("not.implemented.yet"),
+                buyer.getStringForm(),
+                name);
     }
 
     /** Returns DAO to be used in {@link CustomAudienceServiceImpl} */

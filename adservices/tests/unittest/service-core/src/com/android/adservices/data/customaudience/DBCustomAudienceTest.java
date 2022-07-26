@@ -19,6 +19,7 @@ package com.android.adservices.data.customaudience;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -204,7 +205,8 @@ public class DBCustomAudienceTest {
         DBCustomAudience originalCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
-                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setUserBiddingSignals(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                                 CommonFixture.VALID_BUYER)
@@ -232,7 +234,8 @@ public class DBCustomAudienceTest {
         DBCustomAudience originalCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
-                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setUserBiddingSignals(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                                 CommonFixture.VALID_BUYER)
@@ -265,7 +268,8 @@ public class DBCustomAudienceTest {
         DBCustomAudience originalCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
-                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setUserBiddingSignals(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                                 CommonFixture.VALID_BUYER)
@@ -276,7 +280,7 @@ public class DBCustomAudienceTest {
                         .build();
 
         Instant attemptedUpdateTime = originalUpdateTime.plusSeconds(10);
-        String updatedUserBiddingSignals = "{'new':1}";
+        AdSelectionSignals updatedUserBiddingSignals = AdSelectionSignals.fromString("{'new':1}");
         DBTrustedBiddingData updatedTrustedBiddingData =
                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setKeys(Arrays.asList("new", "updated"))
@@ -293,7 +297,7 @@ public class DBCustomAudienceTest {
         DBCustomAudience expectedCustomAudience =
                 new DBCustomAudience.Builder(originalCustomAudience)
                         .setLastAdsAndBiddingDataUpdatedTime(attemptedUpdateTime)
-                        .setUserBiddingSignals(updatedUserBiddingSignals)
+                        .setUserBiddingSignals(updatedUserBiddingSignals.getStringForm())
                         .setTrustedBiddingData(updatedTrustedBiddingData)
                         .setAds(updatedAds)
                         .build();
