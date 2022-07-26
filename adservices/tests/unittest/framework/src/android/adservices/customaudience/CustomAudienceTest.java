@@ -207,33 +207,6 @@ public final class CustomAudienceTest {
     }
 
     @Test
-    public void testSetInvalidBeforeNowExpirationTimeCustomAudienceFails() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    // The expiry is in the past
-                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                            .setExpirationTime(
-                                    CustomAudienceFixture.INVALID_BEFORE_NOW_EXPIRATION_TIME)
-                            .build();
-                });
-    }
-
-    @Test
-    public void testSetInvalidBeforeDelayedExpirationTimeCustomAudienceFails() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    // The activation time is delayed, but the CA expires before it activates
-                    CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                            .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
-                            .setExpirationTime(
-                                    CustomAudienceFixture.INVALID_BEFORE_DELAYED_EXPIRATION_TIME)
-                            .build();
-                });
-    }
-
-    @Test
     public void testBuildNullAdsCustomAudienceSuccess() {
         // Ads are not set, so the CustomAudience gets built with empty list.
         CustomAudience nullAdsCustomAudience =

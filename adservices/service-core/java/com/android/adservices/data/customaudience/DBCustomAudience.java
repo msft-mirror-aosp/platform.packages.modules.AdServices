@@ -54,10 +54,6 @@ import java.util.stream.Collectors;
 @TypeConverters({DBCustomAudience.Converters.class})
 public class DBCustomAudience {
     public static final String TABLE_NAME = "custom_audience";
-    // Default to 60-day expiry
-    private static final Duration DEFAULT_EXPIRE_IN = Duration.ofDays(60);
-    private static final Duration MAX_ACTIVATE_IN = Duration.ofDays(60);
-    private static final Duration MAX_EXPIRE_IN = Duration.ofDays(60);
 
     @ColumnInfo(name = "owner", index = true)
     @NonNull
@@ -141,17 +137,22 @@ public class DBCustomAudience {
     /**
      * Parse parcelable {@link CustomAudience} to storage model {@link DBCustomAudience}.
      *
-     * @param parcelable     the service model.
+     * @param parcelable the service model.
      * @param callingAppName the app name where the call came from.
-     * @param currentTime    the timestamp when calling the method.
+     * @param currentTime the timestamp when calling the method.
+     * @param defaultExpireIn the default expiration from activation.
      * @return storage model
      */
     @NonNull
-    public static DBCustomAudience fromServiceObject(@NonNull CustomAudience parcelable,
-            @NonNull String callingAppName, @NonNull Instant currentTime) {
+    public static DBCustomAudience fromServiceObject(
+            @NonNull CustomAudience parcelable,
+            @NonNull String callingAppName,
+            @NonNull Instant currentTime,
+            @NonNull Duration defaultExpireIn) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callingAppName);
         Objects.requireNonNull(currentTime);
+        Objects.requireNonNull(defaultExpireIn);
 
         String owner = Optional.ofNullable(parcelable.getOwner()).orElse(callingAppName);
 
@@ -159,15 +160,14 @@ public class DBCustomAudience {
         // Make it easier at query for activated CAs.
         Instant activationTime = Optional.ofNullable(parcelable.getActivationTime()).orElse(
                 currentTime);
+
         if (activationTime.isBefore(currentTime)) {
             activationTime = currentTime;
         }
-        Preconditions.checkArgument(!activationTime.isAfter(currentTime.plus(getMaxActivateIn())));
 
-        Instant expirationTime = Optional.ofNullable(parcelable.getExpirationTime())
-                .orElse(activationTime.plus(getDefaultExpireIn()));
-        Preconditions.checkArgument(expirationTime.isAfter(activationTime));
-        Preconditions.checkArgument(!expirationTime.isAfter(activationTime.plus(getMaxExpireIn())));
+        Instant expirationTime =
+                Optional.ofNullable(parcelable.getExpirationTime())
+                        .orElse(activationTime.plus(defaultExpireIn));
 
         Instant lastAdsAndBiddingDataUpdatedTime = parcelable.getAds().isEmpty()
                 || parcelable.getTrustedBiddingData() == null
@@ -227,36 +227,6 @@ public class DBCustomAudience {
         }
 
         return customAudienceBuilder.build();
-    }
-
-    /**
-     * See {@link #getExpirationTime()} for more information about expiration times.
-     *
-     * @return the default amount of time (in seconds) a {@link CustomAudience} object will live
-     * before being expiring and being removed
-     */
-    public static Duration getDefaultExpireIn() {
-        return DEFAULT_EXPIRE_IN;
-    }
-
-    /**
-     * See {@link #getActivationTime()} for more information about activation times.
-     *
-     * @return the maximum permitted difference in seconds between the {@link CustomAudience}
-     * object's creation time and its activation time
-     */
-    public static Duration getMaxActivateIn() {
-        return MAX_ACTIVATE_IN;
-    }
-
-    /**
-     * See {@link #getExpirationTime()} for more information about expiration times.
-     *
-     * @return the maximum permitted difference in seconds between the {@link CustomAudience}
-     * object's creation time and its activation time
-     */
-    public static Duration getMaxExpireIn() {
-        return MAX_EXPIRE_IN;
     }
 
     /**

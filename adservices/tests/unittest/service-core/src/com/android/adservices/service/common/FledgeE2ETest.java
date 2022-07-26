@@ -58,7 +58,9 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
+import com.android.adservices.service.customaudience.CustomAudienceQuantityChecker;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
+import com.android.adservices.service.customaudience.CustomAudienceValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -170,7 +172,12 @@ public class FledgeE2ETest {
                 new CustomAudienceServiceImpl(
                         CONTEXT,
                         new CustomAudienceImpl(
-                                mCustomAudienceDao, CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI),
+                                mCustomAudienceDao,
+                                new CustomAudienceQuantityChecker(mCustomAudienceDao, mFlags),
+                                new CustomAudienceValidator(
+                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, mFlags),
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                mFlags),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);

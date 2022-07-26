@@ -28,6 +28,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.common.Validator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,13 +48,21 @@ public class CustomAudienceImplTest {
 
     @Mock
     private CustomAudienceDao mCustomAudienceDao;
+    @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
+    @Mock private Validator<CustomAudience> mCustomAudienceValidator;
     @Mock private Clock mClock;
 
     public CustomAudienceImpl mImpl;
 
     @Before
     public void setup() {
-        mImpl = new CustomAudienceImpl(mCustomAudienceDao, mClock);
+        mImpl =
+                new CustomAudienceImpl(
+                        mCustomAudienceDao,
+                        mCustomAudienceQuantityChecker,
+                        mCustomAudienceValidator,
+                        mClock,
+                        CommonFixture.FLAGS_FOR_TEST);
     }
 
     @Test
@@ -69,7 +78,9 @@ public class CustomAudienceImplTest {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER));
         verify(mClock).instant();
-        verifyNoMoreInteractions(mClock, mCustomAudienceDao);
+        verify(mCustomAudienceQuantityChecker).check(VALID_CUSTOM_AUDIENCE);
+        verify(mCustomAudienceValidator).validate(VALID_CUSTOM_AUDIENCE);
+        verifyNoMoreInteractions(mClock, mCustomAudienceDao, mCustomAudienceValidator);
     }
 
     @Test
@@ -85,6 +96,10 @@ public class CustomAudienceImplTest {
                         CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME);
 
-        verifyNoMoreInteractions(mClock, mCustomAudienceDao);
+        verifyNoMoreInteractions(
+                mClock,
+                mCustomAudienceDao,
+                mCustomAudienceQuantityChecker,
+                mCustomAudienceValidator);
     }
 }
