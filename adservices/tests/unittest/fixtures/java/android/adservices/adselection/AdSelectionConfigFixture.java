@@ -32,9 +32,11 @@ public class AdSelectionConfigFixture {
 
     // Uri Constants
     public static final String SCHEME = "testScheme";
-    public static final String FRAGMENT = "testFragment";
+    public static final String DECISION_LOGIC_FRAGMENT = "decisionFragment";
+    public static final String TRUSTED_SCORING_SIGNAL_FRAGMENT = "trustedScoringSignalsFragment";
 
-    public static final Uri DECISION_LOGIC_URI = Uri.fromParts("https", SELLER, FRAGMENT);
+    public static final Uri DECISION_LOGIC_URI =
+            Uri.fromParts("https", SELLER, DECISION_LOGIC_FRAGMENT);
 
     public static final String BUYER_1 = "developer.android.com";
     public static final String BUYER_2 = "google.com";
@@ -73,7 +75,7 @@ public class AdSelectionConfigFixture {
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
 
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.parse("https://www.kv-server.example");
+            Uri.fromParts("https", SELLER, TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
     private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
         AdData asData = new AdData(renderUri, metaData);

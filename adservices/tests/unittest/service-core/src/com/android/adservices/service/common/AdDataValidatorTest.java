@@ -46,7 +46,7 @@ public class AdDataValidatorTest {
                         .setRenderUri(Uri.parse("https://" + uriHost + "/aaa"))
                         .setMetadata("{\"a\":1}")
                         .build();
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(adData),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
@@ -67,7 +67,7 @@ public class AdDataValidatorTest {
                         .setRenderUri(Uri.parse("https://" + CommonFixture.VALID_BUYER + "/aaa"))
                         .setMetadata("invalid[json]field")
                         .build();
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(adData),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,

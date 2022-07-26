@@ -43,7 +43,7 @@ public class TrustedBiddingDataValidatorTest {
     @Test
     public void testInvalidUri() {
         String buyer = "b.com";
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer)),
                 String.format(

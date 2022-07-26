@@ -34,7 +34,7 @@ public class AdTechIdentifierValidatorTest {
 
     @Test
     public void testNullIdentifier() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mAdTechIdentifierValidator.getValidationViolations(null),
                 String.format(
                         AdTechIdentifierValidator.IDENTIFIER_SHOULD_NOT_BE_NULL_OR_EMPTY,
@@ -44,7 +44,7 @@ public class AdTechIdentifierValidatorTest {
 
     @Test
     public void testEmptyIdentifier() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mAdTechIdentifierValidator.getValidationViolations(""),
                 String.format(
                         AdTechIdentifierValidator.IDENTIFIER_SHOULD_NOT_BE_NULL_OR_EMPTY,
@@ -54,7 +54,7 @@ public class AdTechIdentifierValidatorTest {
 
     @Test
     public void testMissingHost() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mAdTechIdentifierValidator.getValidationViolations("test@"),
                 String.format(
                         AdTechIdentifierValidator.IDENTIFIER_HAS_MISSING_DOMAIN_NAME,
@@ -64,7 +64,7 @@ public class AdTechIdentifierValidatorTest {
 
     @Test
     public void testMissingDomainIdentifier() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mAdTechIdentifierValidator.getValidationViolations("a/b/c"),
                 String.format(
                         AdTechIdentifierValidator.IDENTIFIER_IS_AN_INVALID_DOMAIN_NAME,
@@ -74,7 +74,7 @@ public class AdTechIdentifierValidatorTest {
 
     @Test
     public void testDomainHasPort() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mAdTechIdentifierValidator.getValidationViolations("localhost:3000"),
                 String.format(
                         AdTechIdentifierValidator.IDENTIFIER_IS_AN_INVALID_DOMAIN_NAME,
