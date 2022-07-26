@@ -44,6 +44,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -58,6 +59,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +71,7 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
+    @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
 
     @VisibleForTesting
     static final String ERROR_AD_SELECTION_FAILURE = "Encountered failure during Ad Selection";
@@ -83,7 +87,6 @@ public final class AdSelectionRunner {
     static final String ERROR_NO_BUYERS_AVAILABLE =
             "The list of the custom audience buyers should not be empty.";
 
-    private static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
@@ -114,7 +117,8 @@ public final class AdSelectionRunner {
                         mExecutorService,
                         new AdServicesHttpsClient(mExecutorService),
                         devContext,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        flags);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         context, executorService, devContext, mCustomAudienceDao, flags);
@@ -188,11 +192,11 @@ public final class AdSelectionRunner {
             callback.onSuccess(
                     new AdSelectionResponse.Builder()
                             .setAdSelectionId(result.getAdSelectionId())
-                            .setRenderUrl(result.getWinningAdRenderUrl())
+                            .setRenderUri(result.getWinningAdRenderUri())
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             // TODO(b/233681870): Investigate implementation of actual failures in
@@ -219,7 +223,7 @@ public final class AdSelectionRunner {
             LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -277,8 +281,14 @@ public final class AdSelectionRunner {
                     return persistAdSelection(adSelectionAndJs.first, adSelectionAndJs.second);
                 };
 
-        return Futures.transformAsync(
-                dbAdSelectionBuilder, saveResultToPersistence, mExecutorService);
+        return FluentFuture.from(dbAdSelectionBuilder)
+                .transformAsync(saveResultToPersistence, mExecutorService)
+                .withTimeout(
+                        mFlags.getAdSelectionOverallTimeoutMs(),
+                        TimeUnit.MILLISECONDS,
+                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
+                        //  use a global scheduled executor
+                        new ScheduledThreadPoolExecutor(1));
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
@@ -332,11 +342,11 @@ public final class AdSelectionRunner {
                     .get();
         } catch (InterruptedException e) {
             final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new InterruptedException(exceptionReason);
         } catch (ExecutionException e) {
             final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new ExecutionException(e.getCause());
         } finally {
             customThreadPool.shutdownNow();
@@ -414,9 +424,9 @@ public final class AdSelectionRunner {
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(
                         scoringWinner.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setWinningAdRenderUrl(
-                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUrl())
-                .setBiddingLogicUrl(
+                .setWinningAdRenderUri(
+                        scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
+                .setBiddingLogicUri(
                         scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUrl())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
@@ -443,7 +453,7 @@ public final class AdSelectionRunner {
                     mAdSelectionEntryDao.persistBuyerDecisionLogic(
                             new DBBuyerDecisionLogic.Builder()
                                     .setBuyerDecisionLogicJs(buyerDecisionLogicJS)
-                                    .setBiddingLogicUrl(dbAdSelection.getBiddingLogicUrl())
+                                    .setBiddingLogicUri(dbAdSelection.getBiddingLogicUri())
                                     .build());
                     return dbAdSelection;
                 });

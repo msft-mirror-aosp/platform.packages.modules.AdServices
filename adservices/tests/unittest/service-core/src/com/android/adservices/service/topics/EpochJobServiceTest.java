@@ -19,11 +19,13 @@ package com.android.adservices.service.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 import android.app.job.JobParameters;
 import android.content.Context;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -49,6 +51,7 @@ public class EpochJobServiceTest {
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock JobParameters mMockJobParameters;
+    @Mock Flags mMockFlags;
 
     @Before
     public void setup() {
@@ -58,7 +61,7 @@ public class EpochJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob() throws InterruptedException {
+    public void testOnStartJob_killSwitchOff() throws InterruptedException {
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -71,9 +74,18 @@ public class EpochJobServiceTest {
 
         // Start a mockitoSession to mock static method
         MockitoSession session =
-                ExtendedMockito.mockitoSession().spyStatic(TopicsWorker.class).startMocking();
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
 
         try {
+            // Killswitch is off.
+            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
             // Mock static method TopicsWorker.getInstance, let it return the local topicsWorker
             // in order to get a test instance.
             ExtendedMockito.doReturn(topicsWorker)
@@ -90,6 +102,71 @@ public class EpochJobServiceTest {
             ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
             verify(mMockEpochManager).processEpoch();
             verify(mMockCacheManager).loadCache();
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testOnStartJob_killSwitchOn() throws InterruptedException {
+        // Add a countDownLatch to ensure background thread gets executed
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
+
+        try {
+            // Killswitch is on.
+            doReturn(true).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
+            mEpochJobService.onStartJob(mMockJobParameters);
+
+            // The countDownLatch doesn't get decreased and waits until timeout.
+            assertThat(countDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                    .isFalse();
+
+            // When the kill switch is on, the EpochJobService exits early and do nothing.
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testOnStartJob_globalKillSwitchOverridesAll() throws InterruptedException {
+        // Add a countDownLatch to ensure background thread gets executed
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        // Start a mockitoSession to mock static method
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(TopicsWorker.class)
+                        .spyStatic(FlagsFactory.class)
+                        .startMocking();
+
+        try {
+            // Global Killswitch is on.
+            doReturn(true).when(mMockFlags).getGlobalKillSwitch();
+
+            // Topics API Killswitch off but is overridden by global killswitch.
+            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+
+            // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+
+            mEpochJobService.onStartJob(mMockJobParameters);
+
+            // The countDownLatch doesn't get decreased and waits until timeout.
+            assertThat(countDownLatch.await(BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                    .isFalse();
+
+            // When the kill switch is on, the EpochJobService exits early and do nothing.
         } finally {
             session.finishMocking();
         }

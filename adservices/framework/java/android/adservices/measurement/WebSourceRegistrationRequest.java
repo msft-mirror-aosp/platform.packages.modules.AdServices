@@ -61,20 +61,13 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     /** Verified destination by the caller. This is where the user actually landed. */
     @Nullable private final Uri mVerifiedDestination;
 
-    /** Constructor for {@link WebSourceRegistrationRequest}. */
-    private WebSourceRegistrationRequest(
-            @NonNull List<WebSourceParams> webSourceParams,
-            @Nullable InputEvent inputEvent,
-            @NonNull Uri topOriginUri,
-            @Nullable Uri osDestination,
-            @Nullable Uri webDestination,
-            @Nullable Uri verifiedDestination) {
-        mWebSourceParams = webSourceParams;
-        mInputEvent = inputEvent;
-        mTopOriginUri = topOriginUri;
-        mOsDestination = osDestination;
-        mWebDestination = webDestination;
-        mVerifiedDestination = verifiedDestination;
+    private WebSourceRegistrationRequest(@NonNull Builder builder) {
+        mWebSourceParams = builder.mWebSourceParams;
+        mInputEvent = builder.mInputEvent;
+        mTopOriginUri = builder.mTopOriginUri;
+        mOsDestination = builder.mOsDestination;
+        mWebDestination = builder.mWebDestination;
+        mVerifiedDestination = builder.mVerifiedDestination;
     }
 
     private WebSourceRegistrationRequest(@NonNull Parcel in) {
@@ -307,13 +300,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
 
             Objects.requireNonNull(mTopOriginUri);
 
-            return new WebSourceRegistrationRequest(
-                    mWebSourceParams,
-                    mInputEvent,
-                    mTopOriginUri,
-                    mOsDestination,
-                    mWebDestination,
-                    mVerifiedDestination);
+            return new WebSourceRegistrationRequest(this);
         }
     }
 }

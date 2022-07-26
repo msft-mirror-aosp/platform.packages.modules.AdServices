@@ -102,7 +102,7 @@ public class ImpressionReporter {
                             .build());
             resultCode = statusCode;
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send failed result to the callback", e);
+            LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -118,7 +118,7 @@ public class ImpressionReporter {
             callback.onSuccess();
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send successful result to the callback", e);
+            LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -248,7 +248,7 @@ public class ImpressionReporter {
                         jsOverride -> {
                             if (jsOverride == null) {
                                 return mAdServicesHttpsClient.fetchPayload(
-                                        ctx.mAdSelectionConfig.getDecisionLogicUrl());
+                                        ctx.mAdSelectionConfig.getDecisionLogicUri());
                             } else {
                                 LogUtil.i(
                                         "Developer options enabled and an override JS is provided "
@@ -269,7 +269,7 @@ public class ImpressionReporter {
                             mJsEngine.reportResult(
                                     decisionLogicJs,
                                     ctx.mAdSelectionConfig,
-                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUrl(),
+                                    ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
                                     ctx.mDBAdSelectionEntry.getWinningAdBid(),
                                     ctx.mDBAdSelectionEntry.getContextualSignals()))
                     .transform(

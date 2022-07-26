@@ -49,6 +49,7 @@ android_app {
         "androidx.recyclerview_recyclerview",
         // TODO(b/230653497): Try to remove this.
         "androidx.room_room-runtime",
+        "mobile_data_downloader_lib",
         "tflite_support_classifiers_java",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",

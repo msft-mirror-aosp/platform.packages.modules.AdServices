@@ -23,7 +23,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
@@ -210,7 +209,7 @@ public class CustomAudienceOverrider {
                             .setErrorMessage(errorMessage)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send failed result to the callback", e);
+            LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -224,7 +223,7 @@ public class CustomAudienceOverrider {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send successful result to the callback", e);
+            LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -240,7 +239,7 @@ public class CustomAudienceOverrider {
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                     t.getMessage(),
                     apiName);
-        } else if (t instanceof ApiNotAuthorizedException) {
+        } else if (t instanceof SecurityException) {
             invokeFailure(
                     callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
         } else {
