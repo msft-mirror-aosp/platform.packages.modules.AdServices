@@ -705,6 +705,7 @@ public final class EpochManagerTest {
     public void testIsTopicLearnableByCaller() {
         final String app = "app";
         final String sdk = "sdk";
+        final int numberOfTopicTopics = 5;
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -721,46 +722,47 @@ public final class EpochManagerTest {
 
         // Both app and sdk can learn topic6, which is the random topic
         assertThat(
-                        mEpochManager.isTopicLearnableByCaller(
-                                randomTopic, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                randomTopic,
+                                app,
+                                callersCanLearnMap,
+                                topTopics,
+                                numberOfTopicTopics))
                 .isTrue();
         assertThat(
-                        mEpochManager.isTopicLearnableByCaller(
-                                randomTopic, sdk, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                randomTopic,
+                                sdk,
+                                callersCanLearnMap,
+                                topTopics,
+                                numberOfTopicTopics))
                 .isTrue();
 
         // Only app can learn topic1
         assertThat(
-                        mEpochManager.isTopicLearnableByCaller(
-                                topic1, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic1, app, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isTrue();
         assertThat(
-                        mEpochManager.isTopicLearnableByCaller(
-                                topic1, sdk, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic1, sdk, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isFalse();
 
         // No caller can learn topic 7, which is not in the list of top topics
         assertThat(
-                        mEpochManager.isTopicLearnableByCaller(
-                                topic7, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic7, app, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isFalse();
         assertThat(
-                        mEpochManager.isTopicLearnableByCaller(
-                                topic7, sdk, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic7, sdk, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isFalse();
     }
 
     @Test
     public void testIsTopicLearnableByCaller_configurableNumberOfTopics() {
-        // Mock the flags so that only first 3 topics are regular topics, the rest are random ones.
-        // Use a local EpochManager to user mocked Flags,
-        Flags flags = mock(Flags.class);
-        when(flags.getTopicsNumberOfTopTopics()).thenReturn(3);
-        EpochManager epochManager =
-                new EpochManager(
-                        mTopicsDao, mDbHelper, new Random(), mMockClassifier, flags, mMockClock);
-
         final String app = "app";
+        final int numberOfTopicTopics = 3;
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -768,7 +770,7 @@ public final class EpochManagerTest {
         Topic randomTopic1 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
         Topic randomTopic2 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
         Topic randomTopic3 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
-        // Top topic list contains 5 topics and 1 random topic
+        // Top topic list contains 3 topics and 3 random topics
         List<Topic> topTopics =
                 List.of(topic1, topic2, topic3, randomTopic1, randomTopic2, randomTopic3);
 
@@ -777,33 +779,43 @@ public final class EpochManagerTest {
 
         // All random topics can be learned.
         assertThat(
-                        epochManager.isTopicLearnableByCaller(
-                                randomTopic1, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                randomTopic1,
+                                app,
+                                callersCanLearnMap,
+                                topTopics,
+                                numberOfTopicTopics))
                 .isTrue();
         assertThat(
-                        epochManager.isTopicLearnableByCaller(
-                                randomTopic2, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                randomTopic2,
+                                app,
+                                callersCanLearnMap,
+                                topTopics,
+                                numberOfTopicTopics))
                 .isTrue();
         assertThat(
-                        epochManager.isTopicLearnableByCaller(
-                                randomTopic3, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                randomTopic3,
+                                app,
+                                callersCanLearnMap,
+                                topTopics,
+                                numberOfTopicTopics))
                 .isTrue();
 
         // For regular topics, only topic 1 can be learned.
         assertThat(
-                        epochManager.isTopicLearnableByCaller(
-                                topic1, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic1, app, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isTrue();
         assertThat(
-                        epochManager.isTopicLearnableByCaller(
-                                topic2, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic2, app, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isFalse();
         assertThat(
-                        epochManager.isTopicLearnableByCaller(
-                                topic3, app, callersCanLearnMap, topTopics))
+                        EpochManager.isTopicLearnableByCaller(
+                                topic3, app, callersCanLearnMap, topTopics, numberOfTopicTopics))
                 .isFalse();
-
-        verify(flags, times(6)).getTopicsNumberOfTopTopics();
     }
 
     @Test

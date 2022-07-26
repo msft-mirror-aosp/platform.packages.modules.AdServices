@@ -49,7 +49,7 @@ public final class MaintenanceJobService extends JobService {
         LogUtil.d("MaintenanceJobService.onStartJob");
         ListenableFuture<Void> appReconciliationFuture =
                 Futures.submit(
-                        () -> TopicsWorker.getInstance(this).reconcileUninstalledApps(this),
+                        () -> TopicsWorker.getInstance(this).reconcileApplicationUpdate(this),
                         AdServicesExecutors.getBackgroundExecutor());
 
         Futures.addCallback(
@@ -57,7 +57,7 @@ public final class MaintenanceJobService extends JobService {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        LogUtil.d("App Unhandled Uninstallation Reconciliation is done!");
+                        LogUtil.d("App Update Reconciliation is done!");
                         jobFinished(params, /* wantsReschedule = */ false);
                     }
 
