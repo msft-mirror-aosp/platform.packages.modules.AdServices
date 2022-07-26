@@ -62,6 +62,17 @@ public class PrecomputedClassifierTest {
     }
 
     @Test
+    public void testGetInstance() {
+        PrecomputedClassifier firstInstance = PrecomputedClassifier.getInstance(sContext);
+        PrecomputedClassifier secondInstance = PrecomputedClassifier.getInstance(sContext);
+
+        assertThat(firstInstance).isNotNull();
+        assertThat(secondInstance).isNotNull();
+        // Verify singleton behaviour.
+        assertThat(firstInstance).isEqualTo(secondInstance);
+    }
+
+    @Test
     public void testClassify_existingApp() {
         // Using What's App. This app has 1 classification topic.
         List<Topic> expectedWhatsAppTopics = createTopics(Arrays.asList(222));
