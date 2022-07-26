@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data;
+package com.android.adservices.data.enrollment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -22,9 +22,9 @@ import static org.junit.Assert.assertNull;
 
 import android.database.Cursor;
 
-import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.data.measurement.SqliteObjectMapper;
-import com.android.adservices.service.EnrollmentData;
+import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.enrollment.EnrollmentData;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,7 +74,7 @@ public class EnrollmentDaoTest {
                 mDbHelper
                         .getReadableDatabase()
                         .query(
-                                MeasurementTables.EnrollmentDataContract.TABLE,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
                                 null,
                                 null,
                                 null,

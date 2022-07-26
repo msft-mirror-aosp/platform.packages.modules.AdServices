@@ -21,7 +21,6 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.service.EnrollmentData;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -147,41 +146,6 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
-        return builder.build();
-    }
-
-    /** Create {@link EnrollmentData} object from SQLite datastore. */
-    public static EnrollmentData constructEnrollmentDataFromCursor(Cursor cursor) {
-        EnrollmentData.Builder builder = new EnrollmentData.Builder();
-        setTextColumn(
-                cursor,
-                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID,
-                builder::setEnrollmentId);
-        setTextColumn(
-                cursor, MeasurementTables.EnrollmentDataContract.COMPANY_ID, builder::setCompanyId);
-        setTextColumn(
-                cursor, MeasurementTables.EnrollmentDataContract.SDK_NAMES, builder::setSdkNames);
-        setTextColumn(
-                cursor,
-                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
-                builder::setAttributionSourceRegistrationUrl);
-        setTextColumn(
-                cursor,
-                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
-                builder::setAttributionTriggerRegistrationUrl);
-        setTextColumn(
-                cursor,
-                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
-                builder::setAttributionReportingUrl);
-        setTextColumn(
-                cursor,
-                MeasurementTables.EnrollmentDataContract
-                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
-                builder::setRemarketingResponseBasedRegistrationUrl);
-        setTextColumn(
-                cursor,
-                MeasurementTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
-                builder::setEncryptionKeyUrl);
         return builder.build();
     }
 
