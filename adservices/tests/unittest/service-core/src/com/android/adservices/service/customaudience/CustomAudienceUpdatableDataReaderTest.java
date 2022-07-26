@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -268,7 +269,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         RESPONSE_IDENTIFIER,
-                        "other.domain",
+                        AdTechIdentifier.fromString("other.domain"),
                         mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         mFlags.getFledgeCustomAudienceMaxAdsSizeB(),

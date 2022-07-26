@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
 
@@ -86,7 +87,10 @@ public class BackgroundFetchRunner {
 
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUrl());
+                        jobStartTime,
+                        // TODO(b/240302866): Implement AdTechIdentifier conversion in Room DB
+                        AdTechIdentifier.fromString(fetchData.getBuyer()),
+                        fetchData.getDailyUpdateUrl());
         fetchData = fetchData.copyWithUpdatableData(updatableData);
 
         if (updatableData.getContainsSuccessfulUpdate()) {
@@ -104,7 +108,9 @@ public class BackgroundFetchRunner {
      */
     @NonNull
     public CustomAudienceUpdatableData fetchAndValidateCustomAudienceUpdatableData(
-            @NonNull Instant jobStartTime, @NonNull String buyer, @NonNull Uri dailyFetchUri) {
+            @NonNull Instant jobStartTime,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull Uri dailyFetchUri) {
         Objects.requireNonNull(jobStartTime);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(dailyFetchUri);
