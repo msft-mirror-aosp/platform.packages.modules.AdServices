@@ -157,7 +157,6 @@ public class SdkSandboxRestrictionsTest {
     }
 
     /** Tests that sandbox cannot execute code in read-write locations. */
-    @Ignore("b/238610482")
     @Test
     public void testSandboxCannotExecute_WriteLocation() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();

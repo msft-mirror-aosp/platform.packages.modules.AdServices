@@ -33,7 +33,6 @@ import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.server.LocalManagerRegistry;
 import com.android.server.pm.PackageManagerLocal;
 
 import java.io.File;
@@ -56,20 +55,30 @@ class SdkSandboxStorageManager {
     private static final String TAG = "SdkSandboxManager";
 
     private final Context mContext;
-    private final PackageManagerLocal mPackageManagerLocal;
     private final Object mLock = new Object();
 
     // Prefix to prepend with all sdk storage paths.
     private final String mRootDir;
 
-    SdkSandboxStorageManager(Context context) {
-        this(context, /*rootDir=*/ "");
+    private final SdkSandboxManagerLocal mSdkSandboxManagerLocal;
+    private final PackageManagerLocal mPackageManagerLocal;
+
+    SdkSandboxStorageManager(
+            Context context,
+            SdkSandboxManagerLocal sdkSandboxManagerLocal,
+            PackageManagerLocal packageManagerLocal) {
+        this(context, sdkSandboxManagerLocal, packageManagerLocal, /*rootDir=*/ "");
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    SdkSandboxStorageManager(Context context, String rootDir) {
+    SdkSandboxStorageManager(
+            Context context,
+            SdkSandboxManagerLocal sdkSandboxManagerLocal,
+            PackageManagerLocal packageManagerLocal,
+            String rootDir) {
         mContext = context;
-        mPackageManagerLocal = LocalManagerRegistry.getManager(PackageManagerLocal.class);
+        mSdkSandboxManagerLocal = sdkSandboxManagerLocal;
+        mPackageManagerLocal = packageManagerLocal;
         mRootDir = rootDir;
     }
 
@@ -278,13 +287,16 @@ class SdkSandboxStorageManager {
             // Now loop over package directories and remove the ones that are invalid
             for (int j = 0; j < sdkPackages.length; j++) {
                 final String packageName = sdkPackages[j];
-                // Only consider installed packages which are either
+                // Only consider installed packages which are not instrumented and either
                 // not using sdk or on incorrect volume for destroying
+                final int uid = pmInfoHolder.getUid(packageName);
+                final boolean isInstrumented =
+                        mSdkSandboxManagerLocal.isInstrumentationRunning(packageName, uid);
                 final boolean hasCorrectVolume =
                         TextUtils.equals(volumeUuid, pmInfoHolder.getVolumeUuid(packageName));
                 final boolean isInstalled = !pmInfoHolder.isUninstalled(packageName);
                 final boolean usesSdk = pmInfoHolder.usesSdk(packageName);
-                if (isInstalled && (!hasCorrectVolume || !usesSdk)) {
+                if (!isInstrumented && isInstalled && (!hasCorrectVolume || !usesSdk)) {
                     destroySdkDataPackageDirectory(volumeUuid, userId, packageName, isCeData);
                 }
             }
@@ -366,8 +378,14 @@ class SdkSandboxStorageManager {
         try {
             Files.delete(packageDir);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to destroy sdk data on user unlock for userId: " + userId
-                    + " packageName: " + packageName +  " error: " + e.getMessage());
+            Log.e(
+                    TAG,
+                    "Failed to destroy sdk data on user unlock for userId: "
+                            + userId
+                            + " packageName: "
+                            + packageName
+                            + " error: "
+                            + e.getMessage());
         }
     }
 
@@ -412,13 +430,14 @@ class SdkSandboxStorageManager {
                 final String volumeUuid =
                         StorageUuuidConverter.convertToVolumeUuid(info.applicationInfo.storageUuid);
                 mPackageNameToVolumeUuid.put(info.packageName, volumeUuid);
+                mPackageNameToUid.put(info.packageName, info.applicationInfo.uid);
+
                 final List<String> sdksUsedNames =
                         SdkSandboxStorageManager.getSdksUsed(info.applicationInfo);
                 if (sdksUsedNames.isEmpty()) {
                     continue;
                 }
                 mPackagesWithSdks.put(info.packageName, new ArraySet<>(sdksUsedNames));
-                mPackageNameToUid.put(info.packageName, info.applicationInfo.uid);
             }
 
             // If an app is uninstalled with DELETE_KEEP_DATA flag, we need to preserve its sdk
