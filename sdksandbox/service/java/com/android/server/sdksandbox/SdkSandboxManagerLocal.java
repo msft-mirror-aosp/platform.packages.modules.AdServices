@@ -103,4 +103,14 @@ public interface SdkSandboxManagerLocal {
      * @param clientAppUid         uid of the client app
      */
     void notifyInstrumentationFinished(@NonNull String clientAppPackageName, int clientAppUid);
+
+    /**
+     * Returns true if instrumentation of the sdk sandbox process belonging to the client app is
+     * currently running, false otherwise.
+     *
+     * @param clientAppPackageName package name of the client app
+     * @param clientAppUid uid of the client app
+     * @hide
+     */
+    boolean isInstrumentationRunning(@NonNull String clientAppPackageName, int clientAppUid);
 }

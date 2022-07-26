@@ -26,6 +26,7 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -62,18 +63,27 @@ public class FledgeCtsTest {
     private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
 
-    private static final String AD_URL_PREFIX = "http://www.domain.com/adverts/123/";
+    private static final String SELLER_DECISION_LOGIC_URI = "/ssp/decision/logic/";
+    private static final String BUYER_BIDDING_LOGIC_URI_PREFIX = "/buyer/bidding/logic/";
+    private static final Uri TRUSTED_SCORING_SIGNALS_URI = Uri.parse("ssp/trusted/signals");
+    private static final String TRUSTED_SCORING_SIGNALS =
+            "{\n"
+                    + "\t\"render_url_1\": \"signals_for_1\",\n"
+                    + "\t\"render_url_2\": \"signals_for_2\"\n"
+                    + "}";
 
-    private static final String SELLER_DECISION_LOGIC_URL = "/ssp/decision/logic/";
-    private static final String BUYER_BIDDING_LOGIC_URL_PREFIX = "/buyer/bidding/logic/";
-
+    private static final String SELLER = "developer.android.com";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                    .setDecisionLogicUrl(Uri.parse(SELLER_DECISION_LOGIC_URL))
+                    .setSeller(SELLER)
+                    .setDecisionLogicUri(
+                            Uri.parse("https://" + SELLER + "/" + SELLER_DECISION_LOGIC_URI))
+                    .setTrustedScoringSignalsUri(
+                            Uri.parse("https://" + SELLER + "/" + TRUSTED_SCORING_SIGNALS_URI))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -134,13 +144,11 @@ public class FledgeCtsTest {
         CustomAudience customAudience1 =
                 createCustomAudience(
                         BUYER_1,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_1),
                         bidsForBuyer1);
 
         CustomAudience customAudience2 =
                 createCustomAudience(
                         BUYER_2,
-                        Uri.parse(BUYER_BIDDING_LOGIC_URL_PREFIX + BUYER_2),
                         bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
@@ -150,10 +158,8 @@ public class FledgeCtsTest {
 
         // Adding AdSelection override, asserting a failure since app is not debuggable.
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(decisionLogicJs)
-                        .build();
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
@@ -165,8 +171,7 @@ public class FledgeCtsTest {
                         () -> {
                             adSelectionOverrideResult.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(adSelectionOverrideException.getCause())
-                .isInstanceOf(IllegalStateException.class);
+        assertThat(adSelectionOverrideException.getCause()).isInstanceOf(SecurityException.class);
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
@@ -174,7 +179,7 @@ public class FledgeCtsTest {
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
-                        .setTrustedBiddingData("")
+                        .setTrustedBiddingData("{}")
                         .build();
 
         // Adding Custom audience override, asserting a failure since app is not debuggable.
@@ -189,7 +194,7 @@ public class FledgeCtsTest {
                             customAudienceOverrideResult.get(10, TimeUnit.SECONDS);
                         });
         assertThat(customAudienceOverrideException.getCause())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(SecurityException.class);
 
         // Running ad selection and asserting that a failure is returned since the fetch calls
         // should fail.
@@ -199,7 +204,7 @@ public class FledgeCtsTest {
                         () -> {
                             mAdSelectionClient
                                     .runAdSelection(AD_SELECTION_CONFIG)
-                                    .get(10, TimeUnit.SECONDS);
+                                    .get(30, TimeUnit.SECONDS);
                         });
         assertThat(runAdSelectionException.getCause().getCause())
                 .isInstanceOf(IllegalStateException.class);
@@ -208,13 +213,11 @@ public class FledgeCtsTest {
 
     /**
      * @param buyer The name of the buyer for this Custom Audience
-     * @param biddingUri path from where the bidding logic for this CA can be fetched from
      * @param bids these bids, are added to its metadata. Our JS logic then picks this value and
      *     creates ad with the provided value as bid
      * @return a real Custom Audience object that can be persisted and used in bidding and scoring
      */
-    private CustomAudience createCustomAudience(
-            final String buyer, final Uri biddingUri, List<Double> bids) {
+    private CustomAudience createCustomAudience(final String buyer, List<Double> bids) {
 
         // Generate ads for with bids provided
         List<AdData> ads = new ArrayList<>();
@@ -224,7 +227,7 @@ public class FledgeCtsTest {
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
-                            .setRenderUrl(Uri.parse(AD_URL_PREFIX + buyer + "/ad" + (i + 1)))
+                            .setRenderUri(CommonFixture.getUri(buyer, "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }
@@ -235,10 +238,12 @@ public class FledgeCtsTest {
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
+                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
-                .setBiddingLogicUrl(biddingUri)
+                .setTrustedBiddingData(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUrl(
+                        CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer))
                 .setAds(ads)
                 .build();
     }

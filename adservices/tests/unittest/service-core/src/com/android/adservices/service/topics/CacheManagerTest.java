@@ -582,7 +582,7 @@ public final class CacheManagerTest {
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
 
         assertThat(cacheManager.getKnownTopicsWithConsent())
-                .isEqualTo(Arrays.asList(topic1, topic2, topic4));
+                .containsExactly(topic1, topic2, topic4);
     }
 
     @Test
@@ -633,8 +633,7 @@ public final class CacheManagerTest {
         verify(mMockEpochManager).getCurrentEpochId();
         verify(mMockFlags).getTopicsNumberOfLookBackEpochs();
 
-        assertThat(cacheManager.getKnownTopicsWithConsent())
-                .isEqualTo(Arrays.asList(topic1, topic4));
+        assertThat(cacheManager.getKnownTopicsWithConsent()).containsExactly(topic1, topic4);
     }
 
     @Test

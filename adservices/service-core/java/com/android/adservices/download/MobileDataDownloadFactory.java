@@ -57,48 +57,56 @@ import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
 public class MobileDataDownloadFactory {
-    private static MobileDataDownload sSingleton;
+    private static MobileDataDownload sSingletonMdd;
 
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
+    private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
 
-    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
-    // when we actually upload the models.
-    private static final String TOPICS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/webref-ondevice/manifest_configs/nga-dev/webref_manifest_config.pb";
-
-    /** Returns a singleton of MobileDataDownload. */
+    /** Returns a singleton of MobileDataDownload for the whole PPAPI app. */
     @NonNull
-    public static synchronized MobileDataDownload getMdd(
-            @NonNull Context context, @NonNull Flags flags) {
+    public static MobileDataDownload getMdd(@NonNull Context context, @NonNull Flags flags) {
         synchronized (MobileDataDownloadFactory.class) {
-            if (sSingleton == null) {
+            if (sSingletonMdd == null) {
                 // TODO(b/236761740): This only adds the core MDD code. We still need other
                 //  components:
-                // Add TaskScheduler
                 // Add Logger
                 // Add Configurator.
 
+                context = context.getApplicationContext();
                 SynchronousFileStorage fileStorage = getFileStorage(context);
                 FileDownloader fileDownloader = getFileDownloader(context, flags, fileStorage);
                 NetworkUsageMonitor networkUsageMonitor =
                         new NetworkUsageMonitor(context, System::currentTimeMillis);
 
-                sSingleton =
-                        MobileDataDownloadBuilder.newBuilder()
-                                .setContext(context)
-                                .setControlExecutor(getControlExecutor())
-                                .setNetworkUsageMonitor(networkUsageMonitor)
-                                .setFileStorage(fileStorage)
-                                .setFileDownloaderSupplier(() -> fileDownloader)
-                                .addFileGroupPopulator(
-                                        getTopicsManifestPopulator(
-                                                context, flags, fileStorage, fileDownloader))
-                                .setLoggerOptional(Optional.absent())
-                                .build();
+                sSingletonMdd =
+                        sSingletonMdd =
+                                MobileDataDownloadBuilder.newBuilder()
+                                        .setContext(context)
+                                        .setControlExecutor(getControlExecutor())
+                                        .setTaskScheduler(
+                                                Optional.of(new MddTaskScheduler(context)))
+                                        .setNetworkUsageMonitor(networkUsageMonitor)
+                                        .setFileStorage(fileStorage)
+                                        .setFileDownloaderSupplier(() -> fileDownloader)
+                                        .addFileGroupPopulator(
+                                                getTopicsManifestPopulator(
+                                                        context,
+                                                        flags,
+                                                        fileStorage,
+                                                        fileDownloader))
+                                        .addFileGroupPopulator(
+                                                getMeasurementManifestPopulator(
+                                                        context,
+                                                        flags,
+                                                        fileStorage,
+                                                        fileDownloader))
+                                        .setLoggerOptional(Optional.absent())
+                                        .setFlagsOptional(Optional.of(new MddFlags()))
+                                        .build();
             }
 
-            return sSingleton;
+            return sSingletonMdd;
         }
     }
 
@@ -180,6 +188,7 @@ public class MobileDataDownloadFactory {
         return downloadMetadataStore;
     }
 
+    // Create the Manifest File Group Populator for Topics Classifier.
     @NonNull
     private static ManifestFileGroupPopulator getTopicsManifestPopulator(
             @NonNull Context context,
@@ -190,7 +199,7 @@ public class MobileDataDownloadFactory {
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
                         .setManifestId(TOPICS_MANIFEST_ID)
-                        .setManifestFileUrl(TOPICS_MANIFEST_FILE_URL)
+                        .setManifestFileUrl(flags.getMddTopicsClassifierManifestFileUrl())
                         .build();
 
         ManifestConfigFileParser manifestConfigFileParser =
@@ -209,6 +218,50 @@ public class MobileDataDownloadFactory {
                                 context, /*InstanceId*/
                                 Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable Dedup using Etag.
+                .setDedupDownloadWithEtag(false)
+                // TODO(b/236761740): user proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    @NonNull
+    private static ManifestFileGroupPopulator getMeasurementManifestPopulator(
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull SynchronousFileStorage fileStorage,
+            @NonNull FileDownloader fileDownloader) {
+
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(MEASUREMENT_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getMeasurementManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
                 // TODO(b/236761740): user proper Logger.
                 .setLogger(
                         new Logger() {

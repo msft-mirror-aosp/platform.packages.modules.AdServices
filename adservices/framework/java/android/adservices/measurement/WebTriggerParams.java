@@ -44,15 +44,9 @@ public final class WebTriggerParams implements Parcelable {
     /** True, if debugKey should be allowed in reports. */
     private final boolean mAllowDebugKey;
 
-    /**
-     * Constructor for {@link WebTriggerParams}.
-     *
-     * @param registrationUri registration URI
-     * @param allowDebugKey flag for allowing or disallowing debug keys in reports
-     */
-    private WebTriggerParams(@NonNull Uri registrationUri, boolean allowDebugKey) {
-        mRegistrationUri = registrationUri;
-        mAllowDebugKey = allowDebugKey;
+    private WebTriggerParams(@NonNull Builder builder) {
+        mRegistrationUri = builder.mRegistrationUri;
+        mAllowDebugKey = builder.mAllowDebugKey;
     }
 
     /** Unpack a TriggerRegistration from a Parcel. */
@@ -149,7 +143,7 @@ public final class WebTriggerParams implements Parcelable {
                 throw new IllegalArgumentException("registration URI unset");
             }
 
-            return new WebTriggerParams(mRegistrationUri, mAllowDebugKey);
+            return new WebTriggerParams(this);
         }
     }
 }

@@ -17,7 +17,6 @@
 package android.adservices.measurement;
 
 import android.annotation.NonNull;
-import android.content.AttributionSource;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -47,19 +46,17 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     /** Holds input to measurement trigger registration calls from web context. */
     @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
     /** Holds package info of where the request is coming from. */
-    @NonNull private final AttributionSource mAttributionSource;
+    @NonNull private final String mPackageName;
 
-    private WebTriggerRegistrationRequestInternal(
-            WebTriggerRegistrationRequest triggerRegistrationRequest,
-            AttributionSource attributionSource) {
-        mTriggerRegistrationRequest = triggerRegistrationRequest;
-        mAttributionSource = attributionSource;
+    private WebTriggerRegistrationRequestInternal(@NonNull Builder builder) {
+        mTriggerRegistrationRequest = builder.mTriggerRegistrationRequest;
+        mPackageName = builder.mPackageName;
     }
 
     private WebTriggerRegistrationRequestInternal(Parcel in) {
         Objects.requireNonNull(in);
         mTriggerRegistrationRequest = WebTriggerRegistrationRequest.CREATOR.createFromParcel(in);
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
+        mPackageName = in.readString();
     }
 
     /** Getter for {@link #mTriggerRegistrationRequest}. */
@@ -67,9 +64,9 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         return mTriggerRegistrationRequest;
     }
 
-    /** Getter for {@link #mAttributionSource}. */
-    public AttributionSource getAttributionSource() {
-        return mAttributionSource;
+    /** Getter for {@link #mPackageName}. */
+    public String getPackageName() {
+        return mPackageName;
     }
 
     @Override
@@ -78,12 +75,12 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         if (!(o instanceof WebTriggerRegistrationRequestInternal)) return false;
         WebTriggerRegistrationRequestInternal that = (WebTriggerRegistrationRequestInternal) o;
         return Objects.equals(mTriggerRegistrationRequest, that.mTriggerRegistrationRequest)
-                && Objects.equals(mAttributionSource, that.mAttributionSource);
+                && Objects.equals(mPackageName, that.mPackageName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerRegistrationRequest, mAttributionSource);
+        return Objects.hash(mTriggerRegistrationRequest, mPackageName);
     }
 
     @Override
@@ -95,15 +92,15 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         mTriggerRegistrationRequest.writeToParcel(out, flags);
-        mAttributionSource.writeToParcel(out, flags);
+        out.writeString(mPackageName);
     }
 
     /** Builder for {@link WebTriggerRegistrationRequestInternal}. */
     public static final class Builder {
         /** External trigger registration request from client app SDK. */
         @NonNull private WebTriggerRegistrationRequest mTriggerRegistrationRequest;
-        /** AttributionSource of the registration. Used to determine the registrant. */
-        @NonNull private AttributionSource mAttributionSource;
+        /** Package name used for the registration. Used to determine the registrant. */
+        @NonNull private String mPackageName;
 
         /**
          * Setter for {@link #mTriggerRegistrationRequest}.
@@ -119,14 +116,14 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         }
 
         /**
-         * Setter for {@link #mAttributionSource}.
+         * Setter for {@link #mPackageName}.
          *
-         * @param attributionSource app that is calling PP API
+         * @param packageName that is calling PP API
          * @return builder
          */
         @NonNull
-        public Builder setAttributionSource(@NonNull AttributionSource attributionSource) {
-            mAttributionSource = attributionSource;
+        public Builder setPackageName(@NonNull String packageName) {
+            mPackageName = packageName;
             return this;
         }
 
@@ -134,10 +131,9 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
         @NonNull
         public WebTriggerRegistrationRequestInternal build() {
             Objects.requireNonNull(mTriggerRegistrationRequest);
-            Objects.requireNonNull(mAttributionSource);
+            Objects.requireNonNull(mPackageName);
 
-            return new WebTriggerRegistrationRequestInternal(
-                    mTriggerRegistrationRequest, mAttributionSource);
+            return new WebTriggerRegistrationRequestInternal(this);
         }
     }
 }
