@@ -18,26 +18,32 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.common.AdSelectionSignals;
+
 import org.junit.Test;
 
 public class AddAdSelectionOverrideRequestTest {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
-    private static final String TRUSTED_SCORING_SIGNALS =
-            "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2\"\n"
-                    + "}";
+    private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"render_url_1\": \"signals_for_1\",\n"
+                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "}");
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+                        AD_SELECTION_CONFIG,
+                        DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS.getStringForm());
 
         assertThat(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
         assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
-        assertThat(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
+        assertThat(request.getTrustedScoringSignals())
+                .isEqualTo(TRUSTED_SCORING_SIGNALS.getStringForm());
     }
 }

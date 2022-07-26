@@ -17,6 +17,7 @@
 package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -110,15 +111,21 @@ public class AdSelectionDevOverridesHelper {
      * {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
-    public String getTrustedScoringSignalsOverride(@NonNull AdSelectionConfig adSelectionConfig) {
+    public AdSelectionSignals getTrustedScoringSignalsOverride(
+            @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
         if (!mDevContext.getDevOptionsEnabled()) {
             return null;
         }
-        return mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
-                calculateAdSelectionConfigId(adSelectionConfig),
-                mDevContext.getCallingAppPackageName());
+        String overrideSignals =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        calculateAdSelectionConfigId(adSelectionConfig),
+                        mDevContext.getCallingAppPackageName());
+        if (overrideSignals == null) {
+            return null;
+        }
+        return AdSelectionSignals.fromString(overrideSignals);
     }
 
     /**
@@ -131,7 +138,7 @@ public class AdSelectionDevOverridesHelper {
     public void addAdSelectionSellerOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
@@ -143,7 +150,7 @@ public class AdSelectionDevOverridesHelper {
                         .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
                         .setAppPackageName(mDevContext.getCallingAppPackageName())
                         .setDecisionLogicJS(decisionLogicJS)
-                        .setTrustedScoringSignals(trustedScoringSignals)
+                        .setTrustedScoringSignals(trustedScoringSignals.getStringForm())
                         .build());
     }
 

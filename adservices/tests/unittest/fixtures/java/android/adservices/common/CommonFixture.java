@@ -36,7 +36,8 @@ public class CommonFixture {
     public static final Clock FIXED_CLOCK_TRUNCATED_TO_MILLI =
             Clock.fixed(FIXED_NOW.truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC);
 
-    public static final String VALID_BUYER = "validbuyer.example.com";
+    public static final AdTechIdentifier VALID_BUYER =
+            AdTechIdentifier.fromString("validbuyer.example.com");
 
     public static Uri getUri(String authority, String path) {
         return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + authority + path);

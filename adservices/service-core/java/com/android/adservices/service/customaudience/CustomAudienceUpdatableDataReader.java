@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -99,7 +100,7 @@ public class CustomAudienceUpdatableDataReader {
      * @throws IllegalArgumentException if the extracted signals fail data validation
      */
     @Nullable
-    public String getUserBiddingSignalsFromJsonObject()
+    public AdSelectionSignals getUserBiddingSignalsFromJsonObject()
             throws JSONException, NullPointerException, IllegalArgumentException {
         if (mResponseObject.has(USER_BIDDING_SIGNALS_KEY)) {
             JSONObject signalsJsonObj =
@@ -111,7 +112,7 @@ public class CustomAudienceUpdatableDataReader {
             }
 
             LogUtil.v(SUCCESS_VALID_LOG_FORMAT, mResponseHash, USER_BIDDING_SIGNALS_KEY);
-            return signalsString;
+            return AdSelectionSignals.fromString(signalsString);
         } else {
             LogUtil.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, USER_BIDDING_SIGNALS_KEY);
             return null;

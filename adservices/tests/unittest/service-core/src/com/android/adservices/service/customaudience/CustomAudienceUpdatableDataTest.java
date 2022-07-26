@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -46,9 +47,10 @@ public class CustomAudienceUpdatableDataTest {
 
     @Test
     public void testBuildUpdatableDataSuccess() throws JSONException {
-        String validUserBiddingSignalsAsJsonObjectString =
-                CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm()));
         boolean expectedContainsSuccessfulUpdate = true;
         CustomAudienceUpdatableData updatableDataFromBuilder =
                 CustomAudienceUpdatableData.builder()
@@ -76,7 +78,7 @@ public class CustomAudienceUpdatableDataTest {
 
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
-                        validUserBiddingSignalsAsJsonObjectString,
+                        validUserBiddingSignalsAsJsonObjectString.getStringForm(),
                         VALID_DB_TRUSTED_BIDDING_DATA,
                         VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataFromResponseString =
@@ -197,7 +199,7 @@ public class CustomAudienceUpdatableDataTest {
         // In this case, a regular full response was parsed without any extra fields
         final String jsonResponseWithoutHarmlessJunk =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm(),
                         null,
                         VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataWithoutHarmlessJunk =
@@ -210,7 +212,7 @@ public class CustomAudienceUpdatableDataTest {
         // Harmless junk was added to the same response
         final String jsonResponseWithHarmlessJunk =
                 CustomAudienceUpdatableDataFixture.toJsonResponseStringWithHarmlessJunk(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm(),
                         null,
                         VALID_DB_AD_DATA_LIST);
         CustomAudienceUpdatableData updatableDataWithHarmlessJunk =
@@ -302,7 +304,7 @@ public class CustomAudienceUpdatableDataTest {
 
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
                         validUserBiddingSignalsAsJsonObjectString,
@@ -347,7 +349,7 @@ public class CustomAudienceUpdatableDataTest {
 
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
         final String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
                         validUserBiddingSignalsAsJsonObjectString,

@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
@@ -271,7 +272,8 @@ public class ImpressionReporter {
                                     ctx.mAdSelectionConfig,
                                     ctx.mDBAdSelectionEntry.getWinningAdRenderUri(),
                                     ctx.mDBAdSelectionEntry.getWinningAdBid(),
-                                    ctx.mDBAdSelectionEntry.getContextualSignals()))
+                                    AdSelectionSignals.fromString(
+                                            ctx.mDBAdSelectionEntry.getContextualSignals())))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mListeningExecutorService);
@@ -301,12 +303,15 @@ public class ImpressionReporter {
             return FluentFuture.from(
                             mJsEngine.reportWin(
                                     ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
-                                    ctx.mAdSelectionConfig.getAdSelectionSignals(),
-                                    ctx.mAdSelectionConfig
-                                            .getPerBuyerSignals()
-                                            .get(customAudienceSignals.getBuyer()),
+                                    AdSelectionSignals.fromString(
+                                            ctx.mAdSelectionConfig.getAdSelectionSignals()),
+                                    AdSelectionSignals.fromString(
+                                            ctx.mAdSelectionConfig
+                                                    .getPerBuyerSignals()
+                                                    .get(customAudienceSignals.getBuyer())),
                                     sellerReportingResult.getSignalsForBuyer(),
-                                    ctx.mDBAdSelectionEntry.getContextualSignals(),
+                                    AdSelectionSignals.fromString(
+                                            ctx.mDBAdSelectionEntry.getContextualSignals()),
                                     ctx.mDBAdSelectionEntry.getCustomAudienceSignals()))
                     .transform(
                             resultUri ->

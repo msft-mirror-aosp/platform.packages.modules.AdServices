@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -49,7 +50,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -64,7 +65,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxNumAds());
 
         assertEquals(
-                validUserBiddingSignalsAsJsonObjectString,
+                AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
                 reader.getUserBiddingSignalsFromJsonObject());
     }
 
@@ -73,7 +74,7 @@ public class CustomAudienceUpdatableDataReaderTest {
             throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -88,7 +89,7 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeCustomAudienceMaxNumAds());
 
         assertEquals(
-                validUserBiddingSignalsAsJsonObjectString,
+                AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
                 reader.getUserBiddingSignalsFromJsonObject());
     }
 
@@ -141,7 +142,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromJsonObjectInvalidSize() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
