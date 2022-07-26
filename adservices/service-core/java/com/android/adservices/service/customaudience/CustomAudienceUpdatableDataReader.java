@@ -25,6 +25,8 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.common.AdTechUriValidator;
+import com.android.adservices.service.common.ValidatorUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,6 +57,7 @@ public class CustomAudienceUpdatableDataReader {
 
     private final JSONObject mResponseObject;
     private final String mResponseHash;
+    private final String mBuyer;
     private final int mMaxUserBiddingSignalsSizeB;
     private final int mMaxTrustedBiddingDataSizeB;
     private final int mMaxAdsSizeB;
@@ -67,6 +70,7 @@ public class CustomAudienceUpdatableDataReader {
      * @param responseObject a {@link JSONObject} that may contain user bidding signals, trusted
      *     bidding data, and/or a list of ads
      * @param responseHash a String that uniquely identifies the response which is used in logging
+     * @param buyer the buyer ad tech's eTLD+1
      * @param maxUserBiddingSignalsSizeB the configured maximum size in bytes allocated for user
      *     bidding signals
      * @param maxTrustedBiddingDataSizeB the configured maximum size in bytes allocated for trusted
@@ -77,15 +81,18 @@ public class CustomAudienceUpdatableDataReader {
     protected CustomAudienceUpdatableDataReader(
             @NonNull JSONObject responseObject,
             @NonNull String responseHash,
+            @NonNull String buyer,
             int maxUserBiddingSignalsSizeB,
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds) {
         Objects.requireNonNull(responseObject);
         Objects.requireNonNull(responseHash);
+        Objects.requireNonNull(buyer);
 
         mResponseObject = responseObject;
         mResponseHash = responseHash;
+        mBuyer = buyer;
         mMaxUserBiddingSignalsSizeB = maxUserBiddingSignalsSizeB;
         mMaxTrustedBiddingDataSizeB = maxTrustedBiddingDataSizeB;
         mMaxAdsSizeB = maxAdsSizeB;
@@ -160,6 +167,14 @@ public class CustomAudienceUpdatableDataReader {
                             TRUSTED_BIDDING_KEYS_KEY);
                 }
             }
+
+            AdTechUriValidator uriValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            mBuyer,
+                            this.getClass().getSimpleName(),
+                            TrustedBiddingDataValidator.TRUSTED_BIDDING_URI_FIELD_NAME);
+            uriValidator.validate(parsedUri);
 
             DBTrustedBiddingData trustedBiddingData =
                     new DBTrustedBiddingData.Builder().setUrl(parsedUri).setKeys(keysList).build();
