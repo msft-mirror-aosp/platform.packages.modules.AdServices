@@ -86,7 +86,7 @@ public class BackgroundFetchRunner {
 
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime, fetchData.getDailyUpdateUrl());
+                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUrl());
         fetchData = fetchData.copyWithUpdatableData(updatableData);
 
         if (updatableData.getContainsSuccessfulUpdate()) {
@@ -104,8 +104,9 @@ public class BackgroundFetchRunner {
      */
     @NonNull
     public CustomAudienceUpdatableData fetchAndValidateCustomAudienceUpdatableData(
-            @NonNull Instant jobStartTime, @NonNull Uri dailyFetchUri) {
+            @NonNull Instant jobStartTime, @NonNull String buyer, @NonNull Uri dailyFetchUri) {
         Objects.requireNonNull(jobStartTime);
+        Objects.requireNonNull(buyer);
         Objects.requireNonNull(dailyFetchUri);
 
         UpdateResultType fetchResult = UpdateResultType.SUCCESS;
@@ -157,6 +158,6 @@ public class BackgroundFetchRunner {
         }
 
         return CustomAudienceUpdatableData.createFromResponseString(
-                jobStartTime, fetchResult, updateResponse, mFlags);
+                jobStartTime, buyer, fetchResult, updateResponse, mFlags);
     }
 }

@@ -79,8 +79,8 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * @return the result type for the update attempt before {@link
-     *     #createFromResponseString(Instant, BackgroundFetchRunner.UpdateResultType, String,
-     *     Flags)} was called
+     *     #createFromResponseString(Instant, String, BackgroundFetchRunner.UpdateResultType,
+     *     String, Flags)} was called
      */
     public abstract BackgroundFetchRunner.UpdateResultType getInitialUpdateResult();
 
@@ -121,6 +121,7 @@ public abstract class CustomAudienceUpdatableData {
      *
      * @param attemptedUpdateTime the time at which the update for this custom audience was
      *     attempted
+     * @param buyer the buyer ad tech's eTLD+1
      * @param initialUpdateResult the result type of the fetch attempt prior to parsing the {@code
      *     response}
      * @param response the String response returned from querying the custom audience's daily fetch
@@ -131,10 +132,12 @@ public abstract class CustomAudienceUpdatableData {
     @NonNull
     public static CustomAudienceUpdatableData createFromResponseString(
             @NonNull Instant attemptedUpdateTime,
+            @NonNull String buyer,
             BackgroundFetchRunner.UpdateResultType initialUpdateResult,
             @NonNull final String response,
             @NonNull Flags flags) {
         Objects.requireNonNull(attemptedUpdateTime);
+        Objects.requireNonNull(buyer);
         Objects.requireNonNull(response);
         Objects.requireNonNull(flags);
 
@@ -175,6 +178,7 @@ public abstract class CustomAudienceUpdatableData {
                 new CustomAudienceUpdatableDataReader(
                         responseObject,
                         responseHash,
+                        buyer,
                         flags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         flags.getFledgeCustomAudienceMaxAdsSizeB(),
@@ -306,7 +310,7 @@ public abstract class CustomAudienceUpdatableData {
     }
 
     /**
-     * Gets a Builder to make {@link #createFromResponseString(Instant,
+     * Gets a Builder to make {@link #createFromResponseString(Instant, String,
      * BackgroundFetchRunner.UpdateResultType, String, Flags)} easier.
      */
     @VisibleForTesting
@@ -317,8 +321,8 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * This is a hidden (visible for testing) AutoValue builder to make {@link
-     * #createFromResponseString(Instant, BackgroundFetchRunner.UpdateResultType, String, Flags)}
-     * easier.
+     * #createFromResponseString(Instant, String, BackgroundFetchRunner.UpdateResultType, String,
+     * Flags)} easier.
      */
     @VisibleForTesting
     @AutoValue.Builder
