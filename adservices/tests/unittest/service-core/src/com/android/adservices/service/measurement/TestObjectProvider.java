@@ -57,14 +57,26 @@ class TestObjectProvider {
     static MeasurementImpl getMeasurementImpl(@Type int type, DatastoreManager datastoreManager,
             SourceFetcher sourceFetcher, TriggerFetcher triggerFetcher) {
         if (type == Type.DENOISED) {
-            MeasurementImpl measurementImpl = spy(new MeasurementImpl(null, null,
-                    new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher));
+            MeasurementImpl measurementImpl =
+                    spy(
+                            new MeasurementImpl(
+                                    null,
+                                    new MockContentResolver(),
+                                    datastoreManager,
+                                    sourceFetcher,
+                                    triggerFetcher));
             // Disable Impression Noise
             doReturn(Collections.emptyList()).when(measurementImpl).getSourceEventReports(any());
             return measurementImpl;
         } else if (type == Type.NOISY) {
-            MeasurementImpl measurementImpl = spy(new MeasurementImpl(null, null,
-                    new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher));
+            MeasurementImpl measurementImpl =
+                    spy(
+                            new MeasurementImpl(
+                                    null,
+                                    new MockContentResolver(),
+                                    datastoreManager,
+                                    sourceFetcher,
+                                    triggerFetcher));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
@@ -88,7 +100,7 @@ class TestObjectProvider {
             return measurementImpl;
         }
 
-        return new MeasurementImpl(null, null, new MockContentResolver(), datastoreManager,
-                sourceFetcher, triggerFetcher);
+        return new MeasurementImpl(
+                null, new MockContentResolver(), datastoreManager, sourceFetcher, triggerFetcher);
     }
 }
