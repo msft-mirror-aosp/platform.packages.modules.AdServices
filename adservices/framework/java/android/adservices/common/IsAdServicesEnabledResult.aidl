@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+ package android.adservices.common;
 
-import android.net.Uri;
-import android.adservices.common.IAdServicesCommonCallback;
-/**
-  * Common AdServices service.
-  * {@hide}
-  */
-interface IAdServicesCommonService {
-     /**
-     * get adservice status service.
-     */
-    void isAdServicesEnabled(
-            in IAdServicesCommonCallback callback
-    );
-
-    void setAdServicesEntryPointEnabled(in boolean adservicesEntryPointEnabled);
-}
+ parcelable IsAdServicesEnabledResult;
