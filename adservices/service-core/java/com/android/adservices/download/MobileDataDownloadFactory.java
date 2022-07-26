@@ -61,6 +61,7 @@ public class MobileDataDownloadFactory {
 
     private static final String MDD_METADATA_SHARED_PREFERENCES = "mdd_metadata_store";
     private static final String TOPICS_MANIFEST_ID = "TopicsManifestId";
+    private static final String MEASUREMENT_MANIFEST_ID = "MeasurementManifestId";
 
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
@@ -93,6 +94,9 @@ public class MobileDataDownloadFactory {
                                 .setFileDownloaderSupplier(() -> fileDownloader)
                                 .addFileGroupPopulator(
                                         getTopicsManifestPopulator(
+                                                context, flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulator(
+                                        getMeasurementManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(Optional.absent())
                                 .build();
@@ -209,6 +213,48 @@ public class MobileDataDownloadFactory {
                                 context, /*InstanceId*/
                                 Optional.absent(),
                                 AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/236761740): user proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    @NonNull
+    private static ManifestFileGroupPopulator getMeasurementManifestPopulator(
+            @NonNull Context context,
+            @NonNull Flags flags,
+            @NonNull SynchronousFileStorage fileStorage,
+            @NonNull FileDownloader fileDownloader) {
+
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(MEASUREMENT_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getMeasurementManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
                 // TODO(b/236761740): user proper Logger.
                 .setLogger(
                         new Logger() {

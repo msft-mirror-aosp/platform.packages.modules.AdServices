@@ -55,6 +55,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
+    static final String KEY_MEASUREMENT_MANIFEST_FILE_URL = "mdd_measurement_manifest_file_url";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -263,6 +264,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_APP_NAME,
                 /* defaultValue */ MEASUREMENT_APP_NAME);
+    }
+
+    @Override
+    public String getMeasurementManifestFileUrl() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MANIFEST_FILE_URL,
+                /* defaultValue */ MEASUREMENT_MANIFEST_FILE_URL);
     }
 
     @Override
@@ -559,6 +569,10 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
+
+        writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
+        writer.println(
+                "\t" + KEY_MEASUREMENT_MANIFEST_FILE_URL + " = " + getMeasurementManifestFileUrl());
 
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
