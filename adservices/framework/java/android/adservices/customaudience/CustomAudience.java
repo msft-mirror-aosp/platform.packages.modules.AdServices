@@ -260,8 +260,8 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
-     * This list of {@link AdData} objects is a full and complete list of the ads served by this
-     * {@link CustomAudience} during the ad selection process.
+     * This list of {@link AdData} objects is a full and complete list of the ads that will be
+     * served by this {@link CustomAudience} during the ad selection process.
      *
      * <p>If not specified, or if an empty list is provided, the {@link CustomAudience} will not
      * participate in ad selection until a valid list of ads are provided via the daily update for
