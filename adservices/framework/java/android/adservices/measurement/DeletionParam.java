@@ -38,28 +38,17 @@ public final class DeletionParam implements Parcelable {
     private final Instant mStart;
     private final Instant mEnd;
     private final String mPackageName;
-    private final @DeletionRequest.DeletionMode int mDeletionMode;
-    private final @DeletionRequest.MatchBehavior int mMatchBehavior;
+    @DeletionRequest.DeletionMode private final int mDeletionMode;
+    @DeletionRequest.MatchBehavior private final int mMatchBehavior;
 
-    /** Create a deletion request. */
-    private DeletionParam(
-            @Nullable Instant start,
-            @Nullable Instant end,
-            @NonNull List<Uri> originUris,
-            @NonNull List<Uri> domainUris,
-            @DeletionRequest.DeletionMode int deletionMode,
-            @DeletionRequest.MatchBehavior int matchBehavior,
-            @NonNull String packageName) {
-        Objects.requireNonNull(packageName);
-        Objects.requireNonNull(originUris);
-        Objects.requireNonNull(domainUris);
-        mOriginUris = originUris;
-        mDomainUris = domainUris;
-        mDeletionMode = deletionMode;
-        mMatchBehavior = matchBehavior;
-        mStart = start;
-        mEnd = end;
-        mPackageName = packageName;
+    private DeletionParam(@NonNull Builder builder) {
+        mOriginUris = builder.mOriginUris;
+        mDomainUris = builder.mDomainUris;
+        mDeletionMode = builder.mDeletionMode;
+        mMatchBehavior = builder.mMatchBehavior;
+        mStart = builder.mStart;
+        mEnd = builder.mEnd;
+        mPackageName = builder.mPackageName;
     }
 
     /** Unpack an DeletionRequest from a Parcel. */
@@ -254,14 +243,7 @@ public final class DeletionParam implements Parcelable {
                 throw new IllegalArgumentException(
                         "PackageName, OriginUris, or DomainUris is null");
             }
-            return new DeletionParam(
-                    mStart,
-                    mEnd,
-                    mOriginUris,
-                    mDomainUris,
-                    mDeletionMode,
-                    mMatchBehavior,
-                    mPackageName);
+            return new DeletionParam(this);
         }
     }
 }
