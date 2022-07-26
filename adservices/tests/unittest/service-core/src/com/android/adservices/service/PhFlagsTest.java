@@ -53,6 +53,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORT
 import static com.android.adservices.service.Flags.MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -97,6 +98,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_KILL_SWITCH;
@@ -919,6 +921,24 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetSdkRequestPermitsPerSecond() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond())
+                .isEqualTo(SDK_REQUEST_PERMITS_PER_SECOND);
+
+        final float phOverridingValue = 6;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        // Now verify that the PhFlag value was overridden.
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getSdkRequestPermitsPerSecond()).isEqualTo(phOverridingValue);
     }
 
     @Test
