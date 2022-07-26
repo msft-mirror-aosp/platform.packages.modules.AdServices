@@ -308,7 +308,7 @@ public class CustomAudienceDaoTest {
             new DBCustomAudience.Builder()
                     .setOwner(OWNER_1)
                     .setBuyer(BUYER_1)
-                    .setName(NAME_1)
+                    .setName(NAME_3)
                     .setActivationTime(ACTIVATION_TIME_MINUS_ONE_HOUR)
                     .setCreationTime(CREATION_TIME_MINUS_THREE_DAYS)
                     .setExpirationTime(EXPIRATION_TIME_1)
@@ -317,6 +317,18 @@ public class CustomAudienceDaoTest {
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
                     .setAds(List.of(ADS_1))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
+                    .build();
+
+    private static final DBCustomAudienceBackgroundFetchData CUSTOM_AUDIENCE_BGF_DATA_UPDATED =
+            DBCustomAudienceBackgroundFetchData.builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setName(NAME_3)
+                    .setDailyUpdateUrl(DAILY_UPDATE_URL_1)
+                    .setEligibleUpdateTime(
+                            DBCustomAudienceBackgroundFetchData
+                                    .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
+                                            CREATION_TIME_MINUS_THREE_DAYS, TEST_FLAGS))
                     .build();
 
     private static final DBCustomAudience CUSTOM_AUDIENCE_OUTDATED =
@@ -898,6 +910,63 @@ public class CustomAudienceDaoTest {
         List<DBCustomAudience> result =
                 mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetNumActiveEligibleCustomAudienceBackgroundFetchData() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        // Prepopulate with three CAs, only one of which is eligible for update
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URL_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_UPDATED, DAILY_UPDATE_URL_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URL_2);
+        assertEquals(
+                CUSTOM_AUDIENCE_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_1,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_UPDATED,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_UPDATED.getOwner(),
+                        CUSTOM_AUDIENCE_UPDATED.getBuyer(),
+                        CUSTOM_AUDIENCE_UPDATED.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_UPDATED,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_UPDATED.getOwner(),
+                        CUSTOM_AUDIENCE_UPDATED.getBuyer(),
+                        CUSTOM_AUDIENCE_UPDATED.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_EXPIRED,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+        assertEquals(
+                CUSTOM_AUDIENCE_BGF_DATA_EXPIRED,
+                mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_EXPIRED.getOwner(),
+                        CUSTOM_AUDIENCE_EXPIRED.getBuyer(),
+                        CUSTOM_AUDIENCE_EXPIRED.getName()));
+
+        assertEquals(
+                1,
+                mCustomAudienceDao.getNumActiveEligibleCustomAudienceBackgroundFetchData(
+                        CURRENT_TIME));
+        assertThat(
+                        mCustomAudienceDao.getActiveEligibleCustomAudienceBackgroundFetchData(
+                                CURRENT_TIME, 10))
+                .containsExactly(CUSTOM_AUDIENCE_BGF_DATA_UPDATED);
     }
 
     @Test
