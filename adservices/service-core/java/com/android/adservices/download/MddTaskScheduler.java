@@ -49,7 +49,8 @@ public class MddTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public void schedulePeriodicTask(String mddTaskTag, long period, NetworkState networkState) {
+    public void schedulePeriodicTask(
+            String mddTaskTag, long periodSeconds, NetworkState networkState) {
         // Doing this work here to avoid doing real work in the constructor.
 
         SharedPreferences prefs =
@@ -57,20 +58,20 @@ public class MddTaskScheduler implements TaskScheduler {
 
         // When the period change, we will need to update the existing works.
         boolean updateCurrent = false;
-        if (prefs.getLong(mddTaskTag, 0) != period) {
+        if (prefs.getLong(mddTaskTag, 0) != periodSeconds) {
             Editor editor = prefs.edit();
-            editor.putLong(mddTaskTag, period);
+            editor.putLong(mddTaskTag, periodSeconds);
             editor.apply();
             updateCurrent = true;
         }
 
         if (updateCurrent) {
-            schedulePeriodicTaskWithUpdate(mddTaskTag, period, networkState);
+            schedulePeriodicTaskWithUpdate(mddTaskTag, periodSeconds, networkState);
         }
     }
 
     private void schedulePeriodicTaskWithUpdate(
-            @NonNull String mddTag, long period, @NonNull NetworkState networkState) {
+            @NonNull String mddTag, long periodSeconds, @NonNull NetworkState networkState) {
         final JobScheduler jobScheduler = mContext.getSystemService(JobScheduler.class);
 
         // We use Extra to pass the MDD Task Tag. This will be used in the MddJobService.
@@ -82,7 +83,7 @@ public class MddTaskScheduler implements TaskScheduler {
                                 getMddTaskJobId(mddTag),
                                 new ComponentName(mContext, MddJobService.class))
                         .setRequiresCharging(true)
-                        .setPeriodic(period)
+                        .setPeriodic(1000 * periodSeconds) // JobScheduler uses Milliseconds.
                         // persist this job across boots
                         .setPersisted(true)
                         .setRequiredNetworkType(getNetworkConstraints(networkState))
