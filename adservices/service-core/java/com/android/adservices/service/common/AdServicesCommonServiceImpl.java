@@ -65,7 +65,7 @@ public class AdServicesCommonServiceImpl extends
                         try {
                             callback.onFailure("getting AdServices status error");
                         } catch (RemoteException re) {
-                            LogUtil.e("Unable to send result to the callback", re);
+                            LogUtil.e(re, "Unable to send result to the callback");
                         }
                     }
                 });

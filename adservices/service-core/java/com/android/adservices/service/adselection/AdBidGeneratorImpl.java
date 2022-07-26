@@ -189,7 +189,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
     @Nullable
     private AdBiddingOutcome handleTimeoutError(ExecutionException e) {
-        LogUtil.w("Bid Generation exceeded time limit", e);
+        LogUtil.w(e, "Bid Generation exceeded time limit");
         throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
     }
 
@@ -197,7 +197,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     private AdBiddingOutcome handleBiddingError(JSONException e) {
         // TODO(b/231326420): Define and implement the certain non-expected exceptions should be
         // re-throw from the AdBidGenerator.
-        LogUtil.e("Failed to generate bids for the ads in this custom audience.", e);
+        LogUtil.e(e, "Failed to generate bids for the ads in this custom audience.");
         return null;
     }
 
@@ -241,7 +241,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.w("Exception encountered when fetching trusted signals", e);
+                            LogUtil.w(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_BIDDING_SIGNALS);
                         },
                         mListeningExecutorService);

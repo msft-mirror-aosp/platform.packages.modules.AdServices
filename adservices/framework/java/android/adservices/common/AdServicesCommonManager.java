@@ -98,7 +98,7 @@ public class AdServicesCommonManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new AdServicesException("Internal Error!")));
         }
     }
@@ -116,7 +116,7 @@ public class AdServicesCommonManager {
         try {
             service.setAdServicesEntryPointEnabled(adservicesEntryPointEnabled);
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
         }
     }
 }

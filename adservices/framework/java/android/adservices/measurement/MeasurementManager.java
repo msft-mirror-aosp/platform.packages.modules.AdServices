@@ -160,7 +160,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new AdServicesException("Internal Error", e)));
@@ -242,7 +242,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new MeasurementException("Internal Error", e)));
@@ -296,7 +296,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new MeasurementException("Internal Error", e)));
@@ -359,7 +359,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new MeasurementException("Internal Error", e)));
         }
     }
@@ -426,7 +426,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new AdServicesException("Internal Error", e)));
         }
     }
