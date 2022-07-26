@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -57,7 +58,7 @@ public class CustomAudienceUpdatableDataReader {
 
     private final JSONObject mResponseObject;
     private final String mResponseHash;
-    private final String mBuyer;
+    private final AdTechIdentifier mBuyer;
     private final int mMaxUserBiddingSignalsSizeB;
     private final int mMaxTrustedBiddingDataSizeB;
     private final int mMaxAdsSizeB;
@@ -81,7 +82,7 @@ public class CustomAudienceUpdatableDataReader {
     protected CustomAudienceUpdatableDataReader(
             @NonNull JSONObject responseObject,
             @NonNull String responseHash,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             int maxUserBiddingSignalsSizeB,
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
@@ -171,7 +172,7 @@ public class CustomAudienceUpdatableDataReader {
             AdTechUriValidator uriValidator =
                     new AdTechUriValidator(
                             ValidatorUtil.AD_TECH_ROLE_BUYER,
-                            mBuyer,
+                            mBuyer.getStringForm(),
                             this.getClass().getSimpleName(),
                             TrustedBiddingDataValidator.TRUSTED_BIDDING_URI_FIELD_NAME);
             uriValidator.validate(parsedUri);

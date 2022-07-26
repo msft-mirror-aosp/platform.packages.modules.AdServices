@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -81,8 +82,8 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * @return the result type for the update attempt before {@link
-     *     #createFromResponseString(Instant, String, BackgroundFetchRunner.UpdateResultType,
-     *     String, Flags)} was called
+     *     #createFromResponseString(Instant, AdTechIdentifier,
+     *     BackgroundFetchRunner.UpdateResultType, String, Flags)} was called
      */
     public abstract BackgroundFetchRunner.UpdateResultType getInitialUpdateResult();
 
@@ -134,7 +135,7 @@ public abstract class CustomAudienceUpdatableData {
     @NonNull
     public static CustomAudienceUpdatableData createFromResponseString(
             @NonNull Instant attemptedUpdateTime,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             BackgroundFetchRunner.UpdateResultType initialUpdateResult,
             @NonNull final String response,
             @NonNull Flags flags) {
@@ -312,7 +313,7 @@ public abstract class CustomAudienceUpdatableData {
     }
 
     /**
-     * Gets a Builder to make {@link #createFromResponseString(Instant, String,
+     * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
      * BackgroundFetchRunner.UpdateResultType, String, Flags)} easier.
      */
     @VisibleForTesting
@@ -323,8 +324,8 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * This is a hidden (visible for testing) AutoValue builder to make {@link
-     * #createFromResponseString(Instant, String, BackgroundFetchRunner.UpdateResultType, String,
-     * Flags)} easier.
+     * #createFromResponseString(Instant, AdTechIdentifier, BackgroundFetchRunner.UpdateResultType,
+     * String, Flags)} easier.
      */
     @VisibleForTesting
     @AutoValue.Builder
