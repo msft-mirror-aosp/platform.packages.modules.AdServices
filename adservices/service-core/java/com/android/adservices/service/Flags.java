@@ -221,6 +221,7 @@ public interface Flags extends Dumpable {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
     }
 
+    boolean FLEDGE_BACKGROUND_FETCH_ENABLED = true;
     long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
     long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
     long FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
@@ -231,7 +232,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
 
-    boolean ADSERVICES_ENABLE_STATUS = false;
+    /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
+    default boolean getFledgeBackgroundFetchEnabled() {
+        return FLEDGE_BACKGROUND_FETCH_ENABLED;
+    }
 
     /**
      * Returns the best effort max time (in milliseconds) between each FLEDGE Background Fetch job
@@ -333,6 +337,8 @@ public interface Flags extends Dumpable {
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
     }
+
+    boolean ADSERVICES_ENABLE_STATUS = false;
 
     default boolean getAdservicesEnableStatus() {
         return ADSERVICES_ENABLE_STATUS;

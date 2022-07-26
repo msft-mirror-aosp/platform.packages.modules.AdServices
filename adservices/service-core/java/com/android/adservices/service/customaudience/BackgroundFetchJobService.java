@@ -27,6 +27,7 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -44,7 +45,13 @@ public class BackgroundFetchJobService extends JobService {
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("BackgroundFetchJobService.onStartJob");
 
-        // TODO(b/237128962): Feature enable flag
+        if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
+            LogUtil.v("FLEDGE background fetch is disabled; skipping and cancelling job");
+            this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+
+            jobFinished(params, false);
+            return false;
+        }
 
         // TODO(b/234642471): Stop and cancel the job if the FLEDGE APIs no longer have user consent
 
@@ -96,6 +103,11 @@ public class BackgroundFetchJobService extends JobService {
      * prunes the custom audience database of any expired data.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
+        if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
+            LogUtil.v("FLEDGE background fetch is disabled; skipping schedule");
+            return;
+        }
+
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
 
         // Scheduling a job can be expensive, and forcing a schedule could interrupt a job that is
@@ -116,7 +128,12 @@ public class BackgroundFetchJobService extends JobService {
      */
     @VisibleForTesting
     protected static void schedule(Context context) {
-        // TODO(b/237128962): Feature enable flag
+        Flags flags = FlagsFactory.getFlags();
+
+        if (!flags.getFledgeBackgroundFetchEnabled()) {
+            LogUtil.v("FLEDGE background fetch is disabled; skipping schedule");
+            return;
+        }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         final JobInfo job =
@@ -126,8 +143,8 @@ public class BackgroundFetchJobService extends JobService {
                         .setRequiresBatteryNotLow(true)
                         .setRequiresDeviceIdle(true)
                         .setPeriodic(
-                                FlagsFactory.getFlags().getFledgeBackgroundFetchJobPeriodMs(),
-                                FlagsFactory.getFlags().getFledgeBackgroundFetchJobFlexMs())
+                                flags.getFledgeBackgroundFetchJobPeriodMs(),
+                                flags.getFledgeBackgroundFetchJobFlexMs())
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                         .setPersisted(true)
                         .build();
