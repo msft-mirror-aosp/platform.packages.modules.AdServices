@@ -17,5 +17,5 @@
 <ad-services-config>
     <attribution allowAllToAccess="false" />
     <custom-audiences allowAllToAccess="false" />
-    <topics allowAllToAccess="false" allowSdkToAccess="com.android.tests.providers.sdk1" />
+    <topics allowAllToAccess="false" allowAdPartnersToAccess="com.android.tests.providers.sdk1" />
 </ad-services-config>
