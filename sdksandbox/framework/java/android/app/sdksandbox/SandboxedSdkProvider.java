@@ -46,7 +46,8 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
      *
      * @param newBase The new base context.
      */
-    public void attachBaseContext(@NonNull Context newBase) {
+    @Override
+    public final void attachBaseContext(@NonNull Context newBase) {
         super.attachBaseContext(newBase);
     }
 
