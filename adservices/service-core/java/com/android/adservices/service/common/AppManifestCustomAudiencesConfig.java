@@ -23,18 +23,18 @@ import java.util.List;
 /** Custom Audiences part of the app manifest config (<ad-services-config>). */
 public class AppManifestCustomAudiencesConfig {
     private final boolean mAllowAllToAccess;
-    private final List<String> mAllowSdksToAccess;
+    private final List<String> mAllowAdPartnersToAccess;
 
     /**
      * Constructor.
      *
      * @param allowAllToAccess corresponds to the boolean in the config.
-     * @param allowSdksToAccess corresponds to the list in the config.
+     * @param allowAdPartnersToAccess corresponds to the list in the config.
      */
     public AppManifestCustomAudiencesConfig(
-            boolean allowAllToAccess, @NonNull List<String> allowSdksToAccess) {
+            boolean allowAllToAccess, @NonNull List<String> allowAdPartnersToAccess) {
         mAllowAllToAccess = allowAllToAccess;
-        mAllowSdksToAccess = allowSdksToAccess;
+        mAllowAdPartnersToAccess = allowAdPartnersToAccess;
     }
 
     /** Getter for allowAllToAccess. */
@@ -43,10 +43,10 @@ public class AppManifestCustomAudiencesConfig {
         return mAllowAllToAccess;
     }
 
-    /** Getter for allowSdksToAccess. */
+    /** Getter for allowAdPartnersToAccess. */
     @NonNull
-    public List<String> getAllowSdksToAccess() {
-        return mAllowSdksToAccess;
+    public List<String> getAllowAdPartnersToAccess() {
+        return mAllowAdPartnersToAccess;
     }
 
     // TODO(b/237445006): Add app install related fields.

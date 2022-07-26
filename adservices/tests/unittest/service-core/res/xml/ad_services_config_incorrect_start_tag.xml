@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 <bad-services-config>
-    <attribution allowSdkToAccess="com.xyz" allowAllToAccess="false" />
-    <custom-audiences allowAllToAccess="false" allowSdkToAccess="com.abc, com.xyz" />
+    <attribution allowAdPartnersToAccess="com.xyz" allowAllToAccess="false" />
+    <custom-audiences allowAllToAccess="false" allowAdPartnersToAccess="com.abc, com.xyz" />
     <topics allowAllToAccess="true" />
 </bad-services-config>
