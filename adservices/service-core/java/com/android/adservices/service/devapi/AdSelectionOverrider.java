@@ -76,12 +76,13 @@ public class AdSelectionOverrider {
     public void addOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
+            @NonNull String trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
-        callAddOverride(adSelectionConfig, decisionLogicJS)
+        callAddOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -159,12 +160,14 @@ public class AdSelectionOverrider {
     }
 
     private FluentFuture<Void> callAddOverride(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJS) {
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJS,
+            @NonNull String trustedScoringSignals) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
-                            mAdSelectionDevOverridesHelper.addDecisionLogicOverride(
-                                    adSelectionConfig, decisionLogicJS);
+                            mAdSelectionDevOverridesHelper.addAdSelectionSellerOverride(
+                                    adSelectionConfig, decisionLogicJS, trustedScoringSignals);
                             return null;
                         }));
     }
@@ -173,7 +176,7 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
-                            mAdSelectionDevOverridesHelper.removeDecisionLogicOverride(
+                            mAdSelectionDevOverridesHelper.removeAdSelectionSellerOverride(
                                     adSelectionConfig);
                             return null;
                         }));
@@ -202,7 +205,7 @@ public class AdSelectionOverrider {
                             .setErrorMessage(errorMessage)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send failed result to the callback", e);
+            LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -216,7 +219,7 @@ public class AdSelectionOverrider {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send successful result to the callback", e);
+            LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {

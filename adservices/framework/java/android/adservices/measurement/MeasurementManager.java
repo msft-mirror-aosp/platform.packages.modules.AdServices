@@ -15,6 +15,12 @@
  */
 package android.adservices.measurement;
 
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
+import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+
 import android.adservices.AdServicesApiUtil;
 import android.adservices.exceptions.AdServicesException;
 import android.adservices.exceptions.MeasurementException;
@@ -22,6 +28,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
@@ -35,8 +42,6 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -56,39 +61,34 @@ public class MeasurementManager {
             value = {
                 RESULT_OK,
                 RESULT_INTERNAL_ERROR,
+                RESULT_UNAUTHORIZED_CALL,
                 RESULT_INVALID_ARGUMENT,
                 RESULT_IO_ERROR,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ResultCode {}
 
-    /** The call was successful. */
-    public static final int RESULT_OK = 0;
-
-    /**
-     * An internal error occurred within Measurement API, which the caller cannot address. A retry
-     * might succeed.
-     *
-     * <p>This error may be considered similar to {@link IllegalStateException}
-     */
-    public static final int RESULT_INTERNAL_ERROR = 1;
-
-    /**
-     * The caller supplied invalid arguments to the call.
-     *
-     * <p>This error may be considered similar to {@link IllegalArgumentException}.
-     */
-    public static final int RESULT_INVALID_ARGUMENT = 2;
-
-    /**
-     * An issue occurred reading or writing to storage. A retry might succeed.
-     *
-     * <p>This error may be considered similar to {@link java.io.IOException}.
-     */
-    public static final int RESULT_IO_ERROR = 3;
-
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
+
+     /**
+     * This state indicates that Measurement APIs are unavailable.
+     * Invoking them will result in an {@link UnsupportedOperationException}.
+     */
+    public static final int MEASUREMENT_API_STATE_DISABLED = 0;
+
+    /**
+     * This state indicates that Measurement APIs are enabled.
+     */
+    public static final int MEASUREMENT_API_STATE_ENABLED = 1;
+
+    /** @hide */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(prefix = "MEASUREMENT_API_STATE_", value = {
+            MEASUREMENT_API_STATE_DISABLED,
+            MEASUREMENT_API_STATE_ENABLED,
+    })
+    public @interface MeasurementApiState {}
 
     private final Context mContext;
     private final ServiceBinder<IMeasurementService> mServiceBinder;
@@ -106,8 +106,14 @@ public class MeasurementManager {
                 IMeasurementService.Stub::asInterface);
     }
 
+    /**
+     * Retrieves an {@link IMeasurementService} implementation
+     *
+     * @hide
+     */
+    @VisibleForTesting
     @NonNull
-    private IMeasurementService getService() {
+    public IMeasurementService getService() {
         IMeasurementService service = mServiceBinder.getService();
         if (service == null) {
             throw new IllegalStateException("Unable to find the service");
@@ -142,14 +148,22 @@ public class MeasurementManager {
                         }
 
                         @Override
-                        public void onFailure(MeasurementErrorResponse failureParcel) {}
+                        public void onFailure(MeasurementErrorResponse failureParcel) {
+                            if (callback != null
+                                    && executor != null
+                                    && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
+                                executor.execute(
+                                        () -> {
+                                            callback.onError(failureParcel.asException());
+                                        });
+                            }
+                        }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
-                executor.execute(() ->
-                        callback.onError(new AdServicesException("Internal Error"))
-                );
+                executor.execute(
+                        () -> callback.onError(new AdServicesException("Internal Error", e)));
             }
         }
     }
@@ -172,13 +186,13 @@ public class MeasurementManager {
         Objects.requireNonNull(attributionSource);
         register(
                 new RegistrationRequest.Builder()
-                .setRegistrationType(
-                    RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(attributionSource)
-                .setInputEvent(inputEvent)
-                .setAttributionSource(mContext.getAttributionSource())
-                .build(),
-                executor, callback);
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(attributionSource)
+                        .setInputEvent(inputEvent)
+                        .setPackageName(getPackageName())
+                        .build(),
+                executor,
+                callback);
     }
 
     /**
@@ -205,7 +219,7 @@ public class MeasurementManager {
             service.registerWebSource(
                     new WebSourceRegistrationRequestInternal.Builder()
                             .setSourceRegistrationRequest(request)
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setPackageName(getPackageName())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
@@ -216,16 +230,22 @@ public class MeasurementManager {
                         }
 
                         @Override
-                        public void onFailure(MeasurementErrorResponse failureParcel) {}
+                        public void onFailure(MeasurementErrorResponse failureParcel) {
+                            if (callback != null
+                                    && executor != null
+                                    && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
+                                executor.execute(
+                                        () -> {
+                                            callback.onError(failureParcel.asException());
+                                        });
+                            }
+                        }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
-                        () ->
-                                callback.onError(
-                                        new MeasurementException(
-                                                RESULT_INTERNAL_ERROR, "Internal Error")));
+                        () -> callback.onError(new MeasurementException("Internal Error", e)));
             }
         }
     }
@@ -253,7 +273,7 @@ public class MeasurementManager {
             service.registerWebTrigger(
                     new WebTriggerRegistrationRequestInternal.Builder()
                             .setTriggerRegistrationRequest(request)
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setPackageName(getPackageName())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
@@ -264,16 +284,22 @@ public class MeasurementManager {
                         }
 
                         @Override
-                        public void onFailure(MeasurementErrorResponse failureParcel) {}
+                        public void onFailure(MeasurementErrorResponse failureParcel) {
+                            if (callback != null
+                                    && executor != null
+                                    && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
+                                executor.execute(
+                                        () -> {
+                                            callback.onError(failureParcel.asException());
+                                        });
+                            }
+                        }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
-                        () ->
-                                callback.onError(
-                                        new MeasurementException(
-                                                RESULT_INTERNAL_ERROR, "Internal Error")));
+                        () -> callback.onError(new MeasurementException("Internal Error", e)));
             }
         }
     }
@@ -293,12 +319,12 @@ public class MeasurementManager {
         Objects.requireNonNull(trigger);
         register(
                 new RegistrationRequest.Builder()
-                .setRegistrationType(
-                    RegistrationRequest.REGISTER_TRIGGER)
-                .setRegistrationUri(trigger)
-                .setAttributionSource(mContext.getAttributionSource())
-                .build(),
-                executor, callback);
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .setRegistrationUri(trigger)
+                        .setPackageName(getPackageName())
+                        .build(),
+                executor,
+                callback);
     }
 
     /**
@@ -333,9 +359,8 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-            executor.execute(
-                    () -> callback.onError(new MeasurementException(RESULT_INTERNAL_ERROR)));
+            LogUtil.e(e, "RemoteException");
+            executor.execute(() -> callback.onError(new MeasurementException("Internal Error", e)));
         }
     }
 
@@ -353,19 +378,15 @@ public class MeasurementManager {
             @NonNull DeletionRequest deletionRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, Exception> callback) {
-        List<Uri> origins =
-                deletionRequest.getOriginUri() == null
-                        ? Collections.emptyList()
-                        : Collections.singletonList(deletionRequest.getOriginUri());
         deleteRegistrations(
                 new DeletionParam.Builder()
-                        .setOriginUris(origins)
-                        .setDomainUris(Collections.emptyList())
-                        .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
-                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
+                        .setOriginUris(deletionRequest.getOriginUris())
+                        .setDomainUris(deletionRequest.getDomainUris())
+                        .setDeletionMode(deletionRequest.getDeletionMode())
+                        .setMatchBehavior(deletionRequest.getMatchBehavior())
                         .setStart(deletionRequest.getStart())
                         .setEnd(deletionRequest.getEnd())
-                        .setAttributionSource(mContext.getAttributionSource())
+                        .setPackageName(getPackageName())
                         .build(),
                 executor,
                 callback);
@@ -389,7 +410,7 @@ public class MeasurementManager {
         if (AdServicesApiUtil.getAdServicesApiState()
                 == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
             executor.execute(() -> {
-                callback.onResult(MeasurementApiUtil.MEASUREMENT_API_STATE_DISABLED);
+                callback.onResult(MEASUREMENT_API_STATE_DISABLED);
             });
             return;
         }
@@ -405,9 +426,8 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-            executor.execute(() ->
-                    callback.onError(new AdServicesException("Internal Error")));
+            LogUtil.e(e, "RemoteException");
+            executor.execute(() -> callback.onError(new AdServicesException("Internal Error", e)));
         }
     }
 
@@ -420,5 +440,14 @@ public class MeasurementManager {
     @VisibleForTesting
     public void unbindFromService() {
         mServiceBinder.unbindFromService();
+    }
+
+    /** Returns the client's (caller's) package name from the SDK or app context */
+    private String getPackageName() {
+        if (mContext instanceof SandboxedSdkContext) {
+            return ((SandboxedSdkContext) mContext).getClientPackageName();
+        } else {
+            return mContext.getPackageName();
+        }
     }
 }

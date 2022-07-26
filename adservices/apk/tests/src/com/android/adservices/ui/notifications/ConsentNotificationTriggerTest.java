@@ -25,6 +25,8 @@ import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.api.R;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,15 +39,17 @@ public class ConsentNotificationTriggerTest {
     private Context mContext;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         mContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     }
 
     @Test
     public void testEuNotification() throws InterruptedException {
         mNotificationManager = mContext.getSystemService(NotificationManager.class);
-        final String expectedTitle = "Join the ads privacy beta";
-        final String expectedContent = "Test new features that will restrict cross-app tracking";
+        final String expectedTitle =
+                mContext.getString(R.string.notificationUI_notification_title_eu);
+        final String expectedContent =
+                mContext.getString(R.string.notificationUI_notification_content_eu);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, true);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -58,14 +62,15 @@ public class ConsentNotificationTriggerTest {
                 .isEqualTo(expectedTitle);
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                 .isEqualTo(expectedContent);
+        Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
     }
 
     @Test
     public void testNonEuNotifications() throws InterruptedException {
         mNotificationManager = mContext.getSystemService(NotificationManager.class);
-        final String expectedTitle = "Android's ads privacy beta";
+        final String expectedTitle = mContext.getString(R.string.notificationUI_notification_title);
         final String expectedContent =
-                "You're testing new features that restrict cross-app tracking";
+                mContext.getString(R.string.notificationUI_notification_content);
 
         ConsentNotificationTrigger.showConsentNotification(mContext, false);
         Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
@@ -78,5 +83,6 @@ public class ConsentNotificationTriggerTest {
                 .isEqualTo(expectedTitle);
         assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT))
                 .isEqualTo(expectedContent);
+        Thread.sleep(5000); // wait 5s to make sure that Notification disappears.
     }
 }

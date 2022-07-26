@@ -21,6 +21,8 @@ android_test {
         "src/**/*.java",
         ":adservicesapk-filegroup",
     ],
+    certificate: "platform",
+    privileged: true,
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
@@ -34,14 +36,17 @@ android_test {
         "androidx.test.rules",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
+        "androidx.room_room-runtime",
     ],
     libs: [
         "android.test.base",
         "android.test.mock.stubs",
         "framework-adservices.impl",
     ],
+    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
+        "mts-adservices",
     ],
     instrumentation_for: "AdServicesApk",
 }
