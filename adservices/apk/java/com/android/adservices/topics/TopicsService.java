@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.consent.ConsentManager;
@@ -68,6 +69,9 @@ public class TopicsService extends Service {
     private void schedulePeriodicJobs() {
         MaintenanceJobService.schedule(this);
         EpochJobService.schedule(this);
+
+        // TODO(b/238674236): Schedule this after the boot complete.
+        MddJobService.schedule(this);
     }
 
     @Override
