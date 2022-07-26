@@ -202,12 +202,13 @@ public final class SourceFetcherTest {
 
     @Test
     public void testSourceRequestWithPostInstallAttributes() throws Exception {
-        RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setTopOriginUri(Uri.parse("https://baz.com"))
-                .setAttributionSource(sContext.getAttributionSource())
-                .build();
+        RegistrationRequest request =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("https://foo.com"))
+                        .setTopOriginUri(Uri.parse("https://baz.com"))
+                        .setPackageName(sContext.getAttributionSource().getPackageName())
+                        .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -237,12 +238,13 @@ public final class SourceFetcherTest {
 
     @Test
     public void testSourceRequestWithPostInstallAttributesReceivedAsNull() throws Exception {
-        RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setTopOriginUri(Uri.parse("https://baz.com"))
-                .setAttributionSource(sContext.getAttributionSource())
-                .build();
+        RegistrationRequest request =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("https://foo.com"))
+                        .setTopOriginUri(Uri.parse("https://baz.com"))
+                        .setPackageName(sContext.getAttributionSource().getPackageName())
+                        .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -278,12 +280,13 @@ public final class SourceFetcherTest {
 
     @Test
     public void testSourceRequestWithInstallAttributesOutofBounds() throws IOException {
-        RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setTopOriginUri(Uri.parse("https://baz.com"))
-                .setAttributionSource(sContext.getAttributionSource())
-                .build();
+        RegistrationRequest request =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("https://foo.com"))
+                        .setTopOriginUri(Uri.parse("https://baz.com"))
+                        .setPackageName(sContext.getAttributionSource().getPackageName())
+                        .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -399,12 +402,13 @@ public final class SourceFetcherTest {
 
     @Test
     public void testBasicSourceRequestMinimumFieldsAndRestNull() throws Exception {
-        RegistrationRequest request = new RegistrationRequest.Builder()
-                .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(Uri.parse("https://foo.com"))
-                .setTopOriginUri(Uri.parse("https://baz.com"))
-                .setAttributionSource(sContext.getAttributionSource())
-                .build();
+        RegistrationRequest request =
+                new RegistrationRequest.Builder()
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(Uri.parse("https://foo.com"))
+                        .setTopOriginUri(Uri.parse("https://baz.com"))
+                        .setPackageName(sContext.getAttributionSource().getPackageName())
+                        .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL("https://foo.com"));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -1318,7 +1322,7 @@ public final class SourceFetcherTest {
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .setRegistrationUri(Uri.parse(registrationUri))
                 .setTopOriginUri(Uri.parse(topOrigin))
-                .setAttributionSource(sContext.getAttributionSource())
+                .setPackageName(sContext.getAttributionSource().getPackageName())
                 .build();
     }
 

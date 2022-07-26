@@ -54,7 +54,7 @@ public final class RegisterTrigger implements Action {
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                        .setAttributionSource(attributionSource)
+                        .setPackageName(attributionSource.getPackageName())
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
