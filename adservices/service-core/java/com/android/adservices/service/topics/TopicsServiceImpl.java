@@ -34,6 +34,8 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -57,18 +59,21 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
     private final Clock mClock;
+    private final Flags mFlags;
 
     public TopicsServiceImpl(
             Context context,
             TopicsWorker topicsWorker,
             ConsentManager consentManager,
             AdServicesLogger adServicesLogger,
-            Clock clock) {
+            Clock clock,
+            Flags flags) {
         mContext = context;
         mTopicsWorker = topicsWorker;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
+        mFlags = flags;
     }
 
     @Override
@@ -102,11 +107,18 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                     int resultCode = RESULT_OK;
 
                     try {
+
                         AdServicesApiConsent userConsent =
                                 mConsentManager.getConsent(mContext.getPackageManager());
+
+                        // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
+                        // is not granted for binder thread. So we have to check it here with one
+                        // of non-binder thread of the PPAPI.
+                        boolean appCanUsePpapi = AllowLists.appCanUsePpapi(mFlags, packageName);
+
                         // Check if caller has permission to invoke this API and user has given
                         // a consent
-                        if (!permitted || !userConsent.isGiven()) {
+                        if (!appCanUsePpapi || !permitted || !userConsent.isGiven()) {
                             resultCode = RESULT_UNAUTHORIZED_CALL;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);

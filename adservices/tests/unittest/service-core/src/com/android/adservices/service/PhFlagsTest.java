@@ -52,6 +52,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_RE
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -95,6 +96,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_FALLB
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_KILL_SWITCH;
@@ -900,6 +902,23 @@ public class PhFlagsTest {
 
         // Global Killswitch is on and overrides the getTopicsKillswitch.
         assertThat(FlagsFactory.getFlags().getTopicsKillSwitch()).isEqualTo(true);
+    }
+
+    @Test
+    public void testGetPpapiAppAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getPpapiAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
+
+        // Now overriding with the value from PH.
+        final String phOverridingValue = "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PPAPI_APP_ALLOW_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
     }
 
     @Test
