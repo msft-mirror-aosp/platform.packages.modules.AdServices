@@ -85,17 +85,9 @@ public final class MeasurementTables {
         String DEBUG_KEY = "debug_key";
     }
 
-    // TODO: delete all AdtechUrl related methods.
-    /** Contract for AdTechUrls. */
-    public interface AdTechUrlsContract {
-        String TABLE = MSMT_TABLE_PREFIX + "adtech_urls";
-        String POSTBACK_URL = "postback_url";
-        String AD_TECH_ID = "ad_tech_id";
-    }
-
     /** Contract for Adtech enrollment data. */
     public interface EnrollmentDataContract {
-        String TABLE = MSMT_TABLE_PREFIX + "enrollment_data";
+        String TABLE = "enrollment_data";
         String ENROLLMENT_ID = "enrollment_id";
         String COMPANY_ID = "company_id";
         // Following six string columns each consist of a space separated list.
@@ -233,14 +225,6 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + TriggerContract.DEBUG_KEY
                     + " INTEGER "
-                    + ")";
-
-    public static final String CREATE_TABLE_ADTECH_URLS =
-            "CREATE TABLE "
-                    + AdTechUrlsContract.TABLE
-                    + " ("
-                    + AdTechUrlsContract.POSTBACK_URL + " TEXT PRIMARY KEY, "
-                    + AdTechUrlsContract.AD_TECH_ID + " TEXT"
                     + ")";
 
     public static final String CREATE_TABLE_EVENT_REPORT =
@@ -416,7 +400,6 @@ public final class MeasurementTables {
                     Arrays.asList(
                             CREATE_TABLE_SOURCE,
                             CREATE_TABLE_TRIGGER,
-                            CREATE_TABLE_ADTECH_URLS,
                             CREATE_TABLE_EVENT_REPORT,
                             CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
                             CREATE_TABLE_AGGREGATE_REPORT,
