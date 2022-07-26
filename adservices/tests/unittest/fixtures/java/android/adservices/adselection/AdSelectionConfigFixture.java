@@ -17,6 +17,8 @@
 package android.adservices.adselection;
 
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -24,11 +26,12 @@ import androidx.annotation.NonNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
 
-    public static final String SELLER = "store.google.com";
+    public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("store.google.com");
 
     // Uri Constants
     public static final String SCHEME = "testScheme";
@@ -36,30 +39,34 @@ public class AdSelectionConfigFixture {
     public static final String TRUSTED_SCORING_SIGNAL_FRAGMENT = "trustedScoringSignalsFragment";
 
     public static final Uri DECISION_LOGIC_URI =
-            Uri.fromParts("https", SELLER, DECISION_LOGIC_FRAGMENT);
+            Uri.fromParts("https", SELLER.getStringForm(), DECISION_LOGIC_FRAGMENT);
 
-    public static final String BUYER_1 = "developer.android.com";
-    public static final String BUYER_2 = "google.com";
-    public static final String BUYER_3 = "cs.android.com";
-    public static final List<String> CUSTOM_AUDIENCE_BUYERS =
+    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
+    public static final AdTechIdentifier BUYER_1 =
+            AdTechIdentifier.fromString("developer.android.com");
+    public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("google.com");
+    public static final AdTechIdentifier BUYER_3 = AdTechIdentifier.fromString("cs.android.com");
+    public static final List<AdTechIdentifier> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
 
-    public static final String EMPTY_SIGNALS = "{}";
+    public static final AdSelectionSignals EMPTY_SIGNALS = AdSelectionSignals.EMPTY;
 
-    public static final String AD_SELECTION_SIGNALS = "{\"ad_selection_signals\":1}";
+    public static final AdSelectionSignals AD_SELECTION_SIGNALS =
+            AdSelectionSignals.fromString("{\"ad_selection_signals\":1}");
 
-    public static final String SELLER_SIGNALS = "{\"test_seller_signals\":1}";
+    public static final AdSelectionSignals SELLER_SIGNALS =
+            AdSelectionSignals.fromString("{\"test_seller_signals\":1}");
 
-    public static final Map<String, String> PER_BUYER_SIGNALS =
+    public static final Map<AdTechIdentifier, AdSelectionSignals> PER_BUYER_SIGNALS =
             Map.of(
                     BUYER_1,
-                    "{\"buyer_signals\":1}",
+                    AdSelectionSignals.fromString("{\"buyer_signals\":1}"),
                     BUYER_2,
-                    "{\"buyer_signals\":2}",
+                    AdSelectionSignals.fromString("{\"buyer_signals\":2}"),
                     BUYER_3,
-                    "{\"buyer_signals\":3}",
-                    "buyer",
-                    "{\"buyer_signals\":0}");
+                    AdSelectionSignals.fromString("{\"buyer_signals\":3}"),
+                    BUYER,
+                    AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
 
     // Contextual Ads Components
     public static final AdWithBid ADS_WITH_BID_1 =
@@ -75,7 +82,7 @@ public class AdSelectionConfigFixture {
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
 
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.fromParts("https", SELLER, TRUSTED_SCORING_SIGNAL_FRAGMENT);
+            Uri.fromParts("https", SELLER.getStringForm(), TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
     private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
         AdData asData = new AdData(renderUri, metaData);
@@ -94,12 +101,20 @@ public class AdSelectionConfigFixture {
      */
     public static AdSelectionConfig.Builder anAdSelectionConfigBuilder() {
         return new AdSelectionConfig.Builder()
-                .setSeller(SELLER)
+                .setSeller(SELLER.getStringForm())
                 .setDecisionLogicUri(DECISION_LOGIC_URI)
-                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
-                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
-                .setSellerSignals(SELLER_SIGNALS)
-                .setPerBuyerSignals(PER_BUYER_SIGNALS)
+                .setCustomAudienceBuyers(
+                        CUSTOM_AUDIENCE_BUYERS.stream()
+                                .map(AdTechIdentifier::getStringForm)
+                                .collect(Collectors.toList()))
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS.getStringForm())
+                .setSellerSignals(SELLER_SIGNALS.getStringForm())
+                .setPerBuyerSignals(
+                        PER_BUYER_SIGNALS.entrySet().stream()
+                                .collect(
+                                        Collectors.toMap(
+                                                e -> e.getKey().getStringForm(),
+                                                e -> e.getValue().getStringForm())))
                 .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
@@ -110,12 +125,20 @@ public class AdSelectionConfigFixture {
      */
     public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUri) {
         return new AdSelectionConfig.Builder()
-                .setSeller(SELLER)
+                .setSeller(SELLER.getStringForm())
                 .setDecisionLogicUri(decisionLogicUri)
-                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
-                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
-                .setSellerSignals(SELLER_SIGNALS)
-                .setPerBuyerSignals(PER_BUYER_SIGNALS)
+                .setCustomAudienceBuyers(
+                        CUSTOM_AUDIENCE_BUYERS.stream()
+                                .map(AdTechIdentifier::getStringForm)
+                                .collect(Collectors.toList()))
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS.getStringForm())
+                .setSellerSignals(SELLER_SIGNALS.getStringForm())
+                .setPerBuyerSignals(
+                        PER_BUYER_SIGNALS.entrySet().stream()
+                                .collect(
+                                        Collectors.toMap(
+                                                e -> e.getKey().getStringForm(),
+                                                e -> e.getValue().getStringForm())))
                 .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();

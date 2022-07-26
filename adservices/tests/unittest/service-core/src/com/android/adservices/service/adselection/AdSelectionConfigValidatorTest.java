@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import com.android.adservices.service.common.ValidatorTestUtil;
@@ -34,12 +35,16 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 public class AdSelectionConfigValidatorTest {
-    private static final String EMPTY_STRING = "";
-    private static final String SELLER_VALID = "developer.android.com";
-    private static final String SELLER_VALID_WITH_PREFIX = "www.developer.android.com";
-    private static final String SELLER_NOT_DOMAIN_NAME = "developer.android.com/test";
-    private static final String SELLER_INVALID = "developer%$android.com";
-    private static final String SELLER_NO_HOST = "test@";
+    private static final AdTechIdentifier EMPTY_STRING = AdTechIdentifier.fromString("");
+    private static final AdTechIdentifier SELLER_VALID =
+            AdTechIdentifier.fromString("developer.android.com");
+    private static final AdTechIdentifier SELLER_VALID_WITH_PREFIX =
+            AdTechIdentifier.fromString("www.developer.android.com");
+    private static final AdTechIdentifier SELLER_NOT_DOMAIN_NAME =
+            AdTechIdentifier.fromString("developer.android.com/test");
+    private static final AdTechIdentifier SELLER_INVALID =
+            AdTechIdentifier.fromString("developer%$android.com");
+    private static final AdTechIdentifier SELLER_NO_HOST = AdTechIdentifier.fromString("test@");
     private static final Uri DECISION_LOGIC_URI_CONSISTENT =
             Uri.parse("https://developer.android.com/test/decisions_logic_urls");
     private static final Uri DECISION_LOGIC_URI_CONSISTENT_WITH_PREFIX =
@@ -60,7 +65,7 @@ public class AdSelectionConfigValidatorTest {
 
     private final AdSelectionConfig.Builder mAdSelectionConfigBuilder =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                    .setSeller(SELLER_VALID)
+                    .setSeller(SELLER_VALID.getStringForm())
                     .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                     .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI_CONSISTENT);
 
@@ -84,7 +89,7 @@ public class AdSelectionConfigValidatorTest {
     public void testVerifyAdSelectionConfigSuccessSellerWithPrefix() {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
-                        .setSeller(SELLER_VALID_WITH_PREFIX)
+                        .setSeller(SELLER_VALID_WITH_PREFIX.getStringForm())
                         .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT_WITH_PREFIX)
                         .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI_CONSISTENT_WITH_PREFIX)
                         .build();
@@ -95,7 +100,7 @@ public class AdSelectionConfigValidatorTest {
     @Test
     public void testVerifyEmptySeller() {
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setSeller(EMPTY_STRING).build();
+                mAdSelectionConfigBuilder.setSeller(EMPTY_STRING.getStringForm()).build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
                 assertThrows(
@@ -110,7 +115,7 @@ public class AdSelectionConfigValidatorTest {
     @Test
     public void testVerifyNotDomainNameSeller() {
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setSeller(SELLER_NOT_DOMAIN_NAME).build();
+                mAdSelectionConfigBuilder.setSeller(SELLER_NOT_DOMAIN_NAME.getStringForm()).build();
 
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
@@ -126,7 +131,7 @@ public class AdSelectionConfigValidatorTest {
     @Test
     public void testVerifyInvalidSeller() {
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setSeller(SELLER_INVALID).build();
+                mAdSelectionConfigBuilder.setSeller(SELLER_INVALID.getStringForm()).build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
                 assertThrows(
@@ -139,14 +144,14 @@ public class AdSelectionConfigValidatorTest {
                         AdSelectionConfigValidator.SELLER_IS_AN_INVALID_DOMAIN_NAME,
                         generateInconsistentSellerAndDecisionLogicUrlMessage(
                                 DECISION_LOGIC_URI_TYPE,
-                                SELLER_INVALID,
+                                SELLER_INVALID.getStringForm(),
                                 DECISION_LOGIC_URI_CONSISTENT)));
     }
 
     @Test
     public void testVerifyNoHostSeller() {
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setSeller(SELLER_NO_HOST).build();
+                mAdSelectionConfigBuilder.setSeller(SELLER_NO_HOST.getStringForm()).build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
                 assertThrows(
@@ -194,7 +199,7 @@ public class AdSelectionConfigValidatorTest {
                 ImmutableList.of(
                         generateInconsistentSellerAndDecisionLogicUrlMessage(
                                 DECISION_LOGIC_URI_TYPE,
-                                SELLER_VALID,
+                                SELLER_VALID.getStringForm(),
                                 DECISION_LOGIC_URI_INCONSISTENT)));
     }
 
@@ -238,7 +243,7 @@ public class AdSelectionConfigValidatorTest {
     public void testVerifyInconsistentSellerUrlsByPrefix() {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder
-                        .setSeller(SELLER_VALID_WITH_PREFIX)
+                        .setSeller(SELLER_VALID_WITH_PREFIX.getStringForm())
                         .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI_INCONSISTENT)
                         .build();
@@ -253,11 +258,11 @@ public class AdSelectionConfigValidatorTest {
                 ImmutableList.of(
                         generateInconsistentSellerAndDecisionLogicUrlMessage(
                                 DECISION_LOGIC_URI_TYPE,
-                                SELLER_VALID_WITH_PREFIX,
+                                SELLER_VALID_WITH_PREFIX.getStringForm(),
                                 DECISION_LOGIC_URI_CONSISTENT),
                         generateInconsistentSellerAndDecisionLogicUrlMessage(
                                 TRUSTED_SCORING_SIGNALS_URI_TYPE,
-                                SELLER_VALID_WITH_PREFIX,
+                                SELLER_VALID_WITH_PREFIX.getStringForm(),
                                 TRUSTED_SIGNALS_URI_INCONSISTENT)));
     }
 }

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 
@@ -28,7 +29,7 @@ import org.junit.Test;
 
 public class TrustedBiddingDataValidatorTest {
     private final TrustedBiddingDataValidator mValidator =
-            new TrustedBiddingDataValidator(CommonFixture.VALID_BUYER);
+            new TrustedBiddingDataValidator(CommonFixture.VALID_BUYER.getStringForm());
 
     @Test
     public void testValidTrustedBiddingData() {
@@ -42,7 +43,7 @@ public class TrustedBiddingDataValidatorTest {
 
     @Test
     public void testInvalidUri() {
-        String buyer = "b.com";
+        AdTechIdentifier buyer = AdTechIdentifier.fromString("b.com");
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer)),

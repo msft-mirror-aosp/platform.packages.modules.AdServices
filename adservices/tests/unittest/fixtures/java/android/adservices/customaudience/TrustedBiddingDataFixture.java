@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
@@ -29,11 +30,11 @@ public class TrustedBiddingDataFixture {
     public static final ArrayList<String> VALID_TRUSTED_BIDDING_KEYS = new ArrayList<String>(
             Arrays.asList("example", "valid", "list", "of", "keys"));
 
-    public static Uri getValidTrustedBiddingUrlByBuyer(String buyer) {
-        return CommonFixture.getUri(buyer, VALID_TRUSTED_BIDDING_URL_PATH);
+    public static Uri getValidTrustedBiddingUrlByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer.getStringForm(), VALID_TRUSTED_BIDDING_URL_PATH);
     }
 
-    public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(String buyer) {
+    public static TrustedBiddingData getValidTrustedBiddingDataByBuyer(AdTechIdentifier buyer) {
         return new TrustedBiddingData.Builder()
                 .setTrustedBiddingKeys(VALID_TRUSTED_BIDDING_KEYS)
                 .setTrustedBiddingUrl(getValidTrustedBiddingUrlByBuyer(buyer))

@@ -89,6 +89,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     /**
      * Validate the seller and seller-provided decision_logic_url in the {@link AdSelectionConfig}.
      *
+     * <p>TODO(b/238849930) Replace seller validation with validation in AdTechIdentifier
+     *
      * @param seller is the string name of the ssp.
      * @param decisionLogicUri is the seller provided decision logic url.
      * @return a list of strings of messages from each violation.
