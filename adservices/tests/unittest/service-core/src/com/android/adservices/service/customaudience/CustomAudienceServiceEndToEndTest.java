@@ -35,7 +35,9 @@ import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
+import android.os.Binder;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -47,6 +49,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -115,6 +118,7 @@ public class CustomAudienceServiceEndToEndTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(Binder.class)
                         .initMocks(this)
                         .startMocking();
 
@@ -139,6 +143,8 @@ public class CustomAudienceServiceEndToEndTest {
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 CommonFixture.FLAGS_FOR_TEST),
+                        new FledgeAuthorizationFilter(
+                                CONTEXT.getPackageManager(), mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);
@@ -146,14 +152,51 @@ public class CustomAudienceServiceEndToEndTest {
 
     @After
     public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        mStaticMockSession.finishMocking();
     }
 
     @Test
-    public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() throws Exception {
+    public void testJoinCustomAudience_notInBinderThread_fail() {
+        when(Binder.getCallingUidOrThrow()).thenThrow(IllegalStateException.class);
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        assertThrows(
+                IllegalStateException.class,
+                () -> {
+                    mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
+                });
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CustomAudienceFixture.VALID_NAME));
+    }
+
+    @Test
+    public void testJoinCustomAudience_notAuthorized_fail() {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        assertThrows(
+                SecurityException.class,
+                () -> {
+                    mService.joinCustomAudience(
+                            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                    .setOwner("other_owner")
+                                    .build(),
+                            callback);
+                });
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CustomAudienceFixture.VALID_NAME));
+    }
+
+    @Test
+    public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
@@ -178,6 +221,8 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testJoinCustomAudience_beyondMaxExpirationTime_fail() {
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME, callback);
         assertFalse(callback.isSuccess());
@@ -191,8 +236,41 @@ public class CustomAudienceServiceEndToEndTest {
     }
 
     @Test
+    public void testLeaveCustomAudience_notInBinderThread_fail() {
+        when(Binder.getCallingUidOrThrow()).thenThrow(IllegalStateException.class);
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        assertThrows(
+                IllegalStateException.class,
+                () -> {
+                    mService.leaveCustomAudience(
+                            CustomAudienceFixture.VALID_OWNER,
+                            CommonFixture.VALID_BUYER.getStringForm(),
+                            CustomAudienceFixture.VALID_NAME,
+                            callback);
+                });
+    }
+
+    @Test
+    public void testLeaveCustomAudience_notAuthorized_fail() {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        assertThrows(
+                SecurityException.class,
+                () -> {
+                    mService.leaveCustomAudience(
+                            "other_owner",
+                            CommonFixture.VALID_BUYER.getStringForm(),
+                            CustomAudienceFixture.VALID_NAME,
+                            callback);
+                });
+    }
+
+    @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
@@ -220,6 +298,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     @Test
     public void testLeaveCustomAudience_leaveNotJoinedCustomAudience_doesNotFail() {
+        when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
