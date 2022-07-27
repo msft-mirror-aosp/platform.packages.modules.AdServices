@@ -41,7 +41,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class DBCustomAudienceTest {
-    private static final String CALLING_APP_NAME = "not.impled.yet";
     private static final Flags FLAGS = FlagsFactory.getFlagsForTest();
     private static final Duration DEFAULT_EXPIRE_IN =
             Duration.ofMillis(FLAGS.getFledgeCustomAudienceDefaultExpireInMs());
@@ -53,7 +52,6 @@ public class DBCustomAudienceTest {
                 DBCustomAudience.fromServiceObject(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .build(),
-                        CALLING_APP_NAME,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -64,21 +62,6 @@ public class DBCustomAudienceTest {
                 NullPointerException.class,
                 () ->
                         DBCustomAudience.fromServiceObject(
-                                null,
-                                CALLING_APP_NAME,
-                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                                DEFAULT_EXPIRE_IN));
-    }
-
-    @Test
-    public void testFromServiceObject_nullCallingAppName() {
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        DBCustomAudience.fromServiceObject(
-                                CustomAudienceFixture.getValidBuilderForBuyer(
-                                                CommonFixture.VALID_BUYER)
-                                        .build(),
                                 null,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 DEFAULT_EXPIRE_IN));
@@ -93,7 +76,6 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.getValidBuilderForBuyer(
                                                 CommonFixture.VALID_BUYER)
                                         .build(),
-                                CALLING_APP_NAME,
                                 null,
                                 DEFAULT_EXPIRE_IN));
     }
@@ -107,7 +89,6 @@ public class DBCustomAudienceTest {
                                 CustomAudienceFixture.getValidBuilderForBuyer(
                                                 CommonFixture.VALID_BUYER)
                                         .build(),
-                                CALLING_APP_NAME,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                                 null));
     }
@@ -123,7 +104,6 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setAds(null)
                                 .build(),
-                        CALLING_APP_NAME,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -140,7 +120,6 @@ public class DBCustomAudienceTest {
                                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(
                                                 200))
                                 .build(),
-                        CALLING_APP_NAME,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -155,7 +134,6 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setActivationTime(null)
                                 .build(),
-                        CALLING_APP_NAME,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }
@@ -171,22 +149,6 @@ public class DBCustomAudienceTest {
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setExpirationTime(null)
                                 .build(),
-                        CALLING_APP_NAME,
-                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
-    }
-
-    @Test
-    public void testFromServiceObject_nullOwner() {
-        assertEquals(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
-                        .setOwner(CALLING_APP_NAME)
-                        .build(),
-                DBCustomAudience.fromServiceObject(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                .setOwner(null)
-                                .build(),
-                        CALLING_APP_NAME,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         DEFAULT_EXPIRE_IN));
     }

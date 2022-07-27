@@ -17,6 +17,7 @@
 package android.adservices.common;
 
 import android.net.Uri;
+import android.os.Process;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -28,6 +29,8 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 public class CommonFixture {
+    public static final String TEST_PACKAGE_NAME = Process.myProcessName();
+
     public static final Flags FLAGS_FOR_TEST = FlagsFactory.getFlagsForTest();
 
     public static final Instant FIXED_NOW = Instant.now();

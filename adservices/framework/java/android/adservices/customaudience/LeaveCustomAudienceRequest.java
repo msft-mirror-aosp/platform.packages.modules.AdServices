@@ -18,8 +18,10 @@ package android.adservices.customaudience;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.OutcomeReceiver;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * The request object used to leave a custom audience.
@@ -40,8 +42,12 @@ public final class LeaveCustomAudienceRequest {
     }
 
     /**
-     * Returns a String representing the custom audience's owner application or null to be the
-     * calling application.
+     * Returns a String representing the custom audience's owner application package name.
+     *
+     * <p>The value of this field should be the package name of the calling app. Supplying another
+     * app's package name will result in failure when calling {@link
+     * CustomAudienceManager#leaveCustomAudience(LeaveCustomAudienceRequest, Executor,
+     * OutcomeReceiver)}.
      */
     @Nullable
     public String getOwner() {
@@ -102,11 +108,14 @@ public final class LeaveCustomAudienceRequest {
         }
 
         /**
-         * Sets the owner application.
-         * <p>
-         * See {@link #getOwner()} for more information.
+         * Sets the owner application package name.
          *
-         * @param owner application name or leave null to default to the calling app.
+         * <p>The value of this field should be the package name of the calling app. Supplying
+         * another app's package name will result in failure when calling {@link
+         * CustomAudienceManager#leaveCustomAudience(LeaveCustomAudienceRequest, Executor,
+         * OutcomeReceiver)}.
+         *
+         * <p>See {@link #getOwner()} for more information.
          */
         @NonNull
         public LeaveCustomAudienceRequest.Builder setOwner(@Nullable String owner) {
@@ -145,6 +154,7 @@ public final class LeaveCustomAudienceRequest {
          */
         @NonNull
         public LeaveCustomAudienceRequest build() {
+            Objects.requireNonNull(mOwner);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
 

@@ -45,7 +45,9 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -108,7 +110,7 @@ public class FledgeE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
-    private static final String MY_APP_PACKAGE_NAME = "com.google.ppapi.test";
+    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -152,9 +154,11 @@ public class FledgeE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(Binder.class)
                         .initMocks(this)
                         .startMocking();
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
@@ -182,6 +186,7 @@ public class FledgeE2ETest {
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, mFlags),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 mFlags),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);
