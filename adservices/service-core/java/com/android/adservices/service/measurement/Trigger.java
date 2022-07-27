@@ -24,7 +24,7 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.validation.Validation;
+import com.android.adservices.service.measurement.util.Validation;
 
 import org.json.JSONArray;
 import org.json.JSONException;

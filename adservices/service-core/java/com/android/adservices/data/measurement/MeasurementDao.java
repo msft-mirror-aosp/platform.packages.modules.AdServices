@@ -36,7 +36,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 
 import java.time.Instant;
 import java.util.ArrayList;

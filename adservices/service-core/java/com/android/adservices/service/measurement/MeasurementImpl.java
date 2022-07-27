@@ -20,8 +20,8 @@ import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
 import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
 import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
 import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.service.measurement.attribution.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.MeasurementManager;
