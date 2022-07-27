@@ -228,10 +228,12 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -242,6 +244,23 @@ public class AdsScoreGeneratorImplTest {
                         () -> {
                             return scoringResultFuture;
                         });
+
+        Mockito.verify(mMockAdSelectionScriptEngine)
+                .scoreAds(
+                        mSellerDecisionLogicJs,
+                        mAdBiddingOutcomeList.stream()
+                                .map(a -> a.getAdWithBid())
+                                .collect(Collectors.toList()),
+                        mAdSelectionConfig,
+                        AdSelectionSignals.fromString(mAdSelectionConfig.getSellerSignals()),
+                        mTrustedScoringSignals,
+                        AdSelectionSignals.EMPTY,
+                        mAdBiddingOutcomeList.stream()
+                                .map(
+                                        a ->
+                                                a.getCustomAudienceBiddingInfo()
+                                                        .getCustomAudienceSignals())
+                                .collect(Collectors.toList()));
 
         mMockWebServerRule.verifyMockServerRequests(
                 server,
@@ -358,10 +377,12 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -399,10 +420,12 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenThrow(new JSONException("Badly formatted JSON"));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -452,10 +475,12 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =

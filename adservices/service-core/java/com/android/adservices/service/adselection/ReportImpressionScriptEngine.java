@@ -159,8 +159,8 @@ public class ReportImpressionScriptEngine {
                         .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
                         .add(
-                                CustomAudienceSignalsArgument.asScriptArgument(
-                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
                         .build();
 
         return transform(
