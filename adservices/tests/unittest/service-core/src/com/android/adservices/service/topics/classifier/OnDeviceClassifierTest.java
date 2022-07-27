@@ -67,6 +67,17 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
+    public void testGetInstance() {
+        OnDeviceClassifier firstInstance = OnDeviceClassifier.getInstance(sContext);
+        OnDeviceClassifier secondInstance = OnDeviceClassifier.getInstance(sContext);
+
+        assertThat(firstInstance).isNotNull();
+        assertThat(secondInstance).isNotNull();
+        // Verify singleton behaviour.
+        assertThat(firstInstance).isEqualTo(secondInstance);
+    }
+
+    @Test
     public void testClassify_packageManagerError_returnsDefaultClassifications() {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
