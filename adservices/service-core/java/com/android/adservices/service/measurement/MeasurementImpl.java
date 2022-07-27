@@ -72,7 +72,6 @@ public final class MeasurementImpl {
     private static volatile MeasurementImpl sMeasurementImpl;
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
-    private final ConsentManager mConsentManager;
     private final DatastoreManager mDatastoreManager;
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
@@ -80,7 +79,6 @@ public final class MeasurementImpl {
 
     private MeasurementImpl(Context context) {
         mContext = context;
-        mConsentManager = ConsentManager.getInstance(context);
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
@@ -88,11 +86,13 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    MeasurementImpl(Context context, ConsentManager consentManager, ContentResolver contentResolver,
-            DatastoreManager datastoreManager, SourceFetcher sourceFetcher,
+    MeasurementImpl(
+            Context context,
+            ContentResolver contentResolver,
+            DatastoreManager datastoreManager,
+            SourceFetcher sourceFetcher,
             TriggerFetcher triggerFetcher) {
         mContext = context;
-        mConsentManager = consentManager;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
@@ -242,7 +242,8 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent = mConsentManager.getConsent(mContext.getPackageManager());
+        AdServicesApiConsent consent =
+                ConsentManager.getInstance(mContext).getConsent(mContext.getPackageManager());
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
