@@ -50,22 +50,25 @@ public class AppManifestConfigParserTest {
 
         // Verify Attribution tags.
         assertEquals(appManifestConfig.getAttributionConfig().getAllowAllToAccess(), false);
-        assertEquals(appManifestConfig.getAttributionConfig().getAllowSdksToAccess().size(), 1);
-        assertThat(appManifestConfig.getAttributionConfig().getAllowSdksToAccess())
+        assertEquals(
+                appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess().size(), 1);
+        assertThat(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
                 .contains("com.xyz");
 
         // Verify Custom Audience tags.
         assertEquals(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess(), false);
-        assertEquals(appManifestConfig.getCustomAudiencesConfig().getAllowSdksToAccess().size(), 2);
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowSdksToAccess())
+        assertEquals(
+                appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess().size(),
+                2);
+        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
                 .contains("com.abc");
-        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowSdksToAccess())
+        assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
                 .contains("com.xyz");
 
         // Verify Topics tags.
         assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), true);
-        assertThat(appManifestConfig.getTopicsConfig().getAllowSdksToAccess()).isNotNull();
-        assertEquals(appManifestConfig.getTopicsConfig().getAllowSdksToAccess().size(), 0);
+        assertThat(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess()).isNotNull();
+        assertEquals(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess().size(), 0);
     }
 
     @Test
