@@ -88,15 +88,9 @@ public final class SourceFetcherTest {
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
             Uri.parse("https://subdomain.web-destination.com");
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -1071,7 +1065,7 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void fetchWebSources_osDestinationDoNotMatch_failsDropsSource() throws IOException {
+    public void fetchWebSources_appDestinationDoNotMatch_failsDropsSource() throws IOException {
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -1317,7 +1311,7 @@ public final class SourceFetcherTest {
                                 List.of(
                                         "{\n"
                                                 + "\"destination\": \""
-                                                + DEFAULT_DESTINATION_WITHOUT_SCHEME
+                                                + DEFAULT_DESTINATION
                                                 + "\",\n"
                                                 + "\"source_event_id\": \""
                                                 + EVENT_ID_1
@@ -1383,13 +1377,11 @@ public final class SourceFetcherTest {
     private WebSourceRegistrationRequest buildWebSourceRegistrationRequest(
             List<WebSourceParams> sourceParamsList,
             String topOrigin,
-            Uri osDestination,
+            Uri appDestination,
             Uri webDestination) {
         WebSourceRegistrationRequest.Builder webSourceRegistrationRequestBuilder =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(sourceParamsList)
-                        .setTopOriginUri(Uri.parse(topOrigin))
-                        .setOsDestination(osDestination);
+                new WebSourceRegistrationRequest.Builder(sourceParamsList, Uri.parse(topOrigin))
+                        .setAppDestination(appDestination);
 
         if (webDestination != null) {
             webSourceRegistrationRequestBuilder.setWebDestination(webDestination);
