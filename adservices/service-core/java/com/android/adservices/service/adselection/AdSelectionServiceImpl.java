@@ -177,7 +177,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals,
+            @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         try {
             Objects.requireNonNull(adSelectionConfig);
@@ -204,11 +204,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
 
-        overrider.addOverride(
-                adSelectionConfig,
-                decisionLogicJS,
-                AdSelectionSignals.fromString(trustedScoringSignals),
-                callback);
+        overrider.addOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
     }
 
     @Override

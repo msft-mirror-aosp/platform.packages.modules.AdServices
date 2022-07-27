@@ -70,7 +70,7 @@ public class CustomAudienceOverrider {
 
     /**
      * Configures our fetching logic relating to the combination of {@code owner}, {@code buyer},
-     * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingData} instead of
+     * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingSignals} instead of
      * fetching from remote servers
      *
      * @param callback callback function to be called in case of success or failure
@@ -80,12 +80,12 @@ public class CustomAudienceOverrider {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull AdSelectionSignals trustedBiddingData,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 
-        callAddOverride(owner, buyer, name, biddingLogicJS, trustedBiddingData)
+        callAddOverride(owner, buyer, name, biddingLogicJS, trustedBiddingSignals)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override

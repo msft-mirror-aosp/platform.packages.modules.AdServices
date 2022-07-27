@@ -224,8 +224,7 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                AdSelectionSignals.fromString(
-                                        mAdSelectionConfig.getSellerSignals()),
+                                mAdSelectionConfig.getSellerSignals(),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
                                 mAdBiddingOutcomeList.stream()
@@ -252,7 +251,7 @@ public class AdsScoreGeneratorImplTest {
                                 .map(a -> a.getAdWithBid())
                                 .collect(Collectors.toList()),
                         mAdSelectionConfig,
-                        AdSelectionSignals.fromString(mAdSelectionConfig.getSellerSignals()),
+                        mAdSelectionConfig.getSellerSignals(),
                         mTrustedScoringSignals,
                         AdSelectionSignals.EMPTY,
                         mAdBiddingOutcomeList.stream()
@@ -373,8 +372,7 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                AdSelectionSignals.fromString(
-                                        mAdSelectionConfig.getSellerSignals()),
+                                mAdSelectionConfig.getSellerSignals(),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
                                 mAdBiddingOutcomeList.stream()
@@ -416,8 +414,7 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                AdSelectionSignals.fromString(
-                                        mAdSelectionConfig.getSellerSignals()),
+                                mAdSelectionConfig.getSellerSignals(),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
                                 mAdBiddingOutcomeList.stream()
@@ -471,8 +468,7 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                AdSelectionSignals.fromString(
-                                        mAdSelectionConfig.getSellerSignals()),
+                                mAdSelectionConfig.getSellerSignals(),
                                 mTrustedScoringSignals,
                                 AdSelectionSignals.EMPTY,
                                 mAdBiddingOutcomeList.stream()
