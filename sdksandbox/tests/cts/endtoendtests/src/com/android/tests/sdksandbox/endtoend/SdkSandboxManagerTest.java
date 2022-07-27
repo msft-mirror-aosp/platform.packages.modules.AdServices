@@ -18,6 +18,8 @@ package com.android.tests.sdksandbox.endtoend;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
@@ -57,6 +59,7 @@ public class SdkSandboxManagerTest {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        mSdkSandboxManager.unloadSdk(sdkName);
     }
 
     @Test
@@ -93,6 +96,48 @@ public class SdkSandboxManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
         assertThat(callback.getLoadSdkErrorCode())
                 .isEqualTo(SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR);
+    }
+
+    @Test
+    public void unloadAndReloadSdk() {
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        mSdkSandboxManager.unloadSdk(sdkName);
+
+        // Calls to an unloaded SDK should throw an exception.
+        final FakeSendDataCallback sendDataCallback = new FakeSendDataCallback();
+        final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
+                new FakeRequestSurfacePackageCallback();
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        mSdkSandboxManager.sendData(
+                                sdkName, new Bundle(), Runnable::run, sendDataCallback));
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        mSdkSandboxManager.requestSurfacePackage(
+                                sdkName,
+                                0,
+                                500,
+                                500,
+                                new Bundle(),
+                                Runnable::run,
+                                requestSurfacePackageCallback));
+
+        // SDK can be reloaded after being unloaded.
+        final FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback2);
+        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+    }
+
+    @Test
+    public void unloadingNonexistentSdkThrowsException() {
+        final String sdkName = "com.android.nonexistent";
+        assertThrows(SecurityException.class, () -> mSdkSandboxManager.unloadSdk(sdkName));
     }
 
     @Test
