@@ -30,6 +30,12 @@
     <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
 
+    <!-- Title of an application permission that lets it access Advertising ID API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesAdId">Access to AdId API</string>
+    <!-- Description of an application permission that lets it access AdId API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesAdId">Allows an application to access AdId API.</string>
+
+
     <!-- Title of an application permission that lets it access AdServices Consent API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesConsent">access AdServices Consent API</string>
     <!--Description of an application permission that lets it access AdServices Consent API. [CHAR LIMIT=NONE] -->
