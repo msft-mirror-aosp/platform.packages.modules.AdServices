@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -124,7 +125,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @Nullable
     private List<AdScoringOutcome> handleTimeoutError(ExecutionException e) {
-        LogUtil.w("Scoring exceeded time limit", e);
+        LogUtil.w(e, "Scoring exceeded time limit");
         throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
     }
 
@@ -155,10 +156,11 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull String scoringLogic,
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig) {
-        final String sellerSignals = adSelectionConfig.getSellerSignals();
-        final FluentFuture<String> trustedScoringSignals =
+        final AdSelectionSignals sellerSignals =
+                AdSelectionSignals.fromString(adSelectionConfig.getSellerSignals());
+        final FluentFuture<AdSelectionSignals> trustedScoringSignals =
                 getTrustedScoringSignals(adSelectionConfig, adBiddingOutcomes);
-        final String contextualSignals = getContextualSignals();
+        final AdSelectionSignals contextualSignals = getContextualSignals();
         ListenableFuture<List<Double>> adScores =
                 trustedScoringSignals.transformAsync(
                         trustedSignals -> {
@@ -183,12 +185,12 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     }
 
     @VisibleForTesting
-    String getContextualSignals() {
+    AdSelectionSignals getContextualSignals() {
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-        return "{}";
+        return AdSelectionSignals.EMPTY;
     }
 
-    private FluentFuture<String> getTrustedScoringSignals(
+    private FluentFuture<AdSelectionSignals> getTrustedScoringSignals(
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
         final List<String> adRenderUrls =
@@ -204,7 +206,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         .appendQueryParameter(QUERY_PARAM_RENDER_URLS, queryParams)
                         .build();
 
-        FluentFuture<String> jsOverrideFuture =
+        FluentFuture<AdSelectionSignals> jsOverrideFuture =
                 FluentFuture.from(
                         mListeningExecutorService.submit(
                                 () ->
@@ -215,8 +217,11 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        trustedScoringSignalsUri);
+                                return Futures.transform(
+                                        mAdServicesHttpsClient.fetchPayload(
+                                                trustedScoringSignalsUri),
+                                        AdSelectionSignals::fromString,
+                                        mListeningExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override trusted scoring"
@@ -229,7 +234,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.w("Exception encountered when fetching trusted signals", e);
+                            LogUtil.w(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },
                         mListeningExecutorService);

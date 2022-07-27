@@ -237,7 +237,7 @@ public class SourceFetcher {
                     return false;
                 }
             } catch (JSONException e) {
-                LogUtil.d("Invalid JSON %s", e);
+                LogUtil.d(e, "Invalid JSON");
                 return false;
             }
             additionalResult = true;
@@ -286,14 +286,14 @@ public class SourceFetcher {
         try {
             url = new URL(registrationUri.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.e("Failed to open registration target URL %s", e);
+            LogUtil.e(e, "Failed to open registration target URL");
             return;
         }
         try {
@@ -337,7 +337,7 @@ public class SourceFetcher {
                 }
             }
         } catch (IOException e) {
-            LogUtil.e("Failed to get registration response %s", e);
+            LogUtil.e(e, "Failed to get registration response");
         } finally {
             urlConnection.disconnect();
         }
@@ -373,7 +373,7 @@ public class SourceFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
@@ -442,7 +442,7 @@ public class SourceFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 

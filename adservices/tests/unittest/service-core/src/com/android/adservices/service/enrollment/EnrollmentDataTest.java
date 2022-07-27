@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.enrollment;
+package com.android.adservices.service.enrollment;
 
 import static com.google.common.truth.Truth.assertThat;
 

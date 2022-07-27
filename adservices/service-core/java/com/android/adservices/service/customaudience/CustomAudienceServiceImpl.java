@@ -22,7 +22,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
@@ -135,7 +137,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                             .build());
                         }
                     } catch (Exception exception) {
-                        LogUtil.e("Unable to send result to the callback", exception);
+                        LogUtil.e(exception, "Unable to send result to the callback");
                         resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
                     } finally {
                         mAdServicesLogger.logFledgeApiCallStats(
@@ -149,7 +151,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      *
      * @hide
      */
-    @Override
     public void leaveCustomAudience(
             @Nullable String owner,
             @NonNull String buyer,
@@ -171,9 +172,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 () -> {
                     int resultCode = AdServicesStatusUtils.STATUS_UNSET;
                     try {
-                        mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
+                        mCustomAudienceImpl.leaveCustomAudience(
+                                owner, AdTechIdentifier.fromString(buyer), name);
                     } catch (Exception exception) {
-                        LogUtil.e("Unexpected error leave custom audience.", exception);
+                        LogUtil.e(exception, "Unexpected error leave custom audience.");
                     }
                     try {
                         callback.onSuccess();
@@ -181,7 +183,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         //  logs/metrics
                         resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                     } catch (Exception exception) {
-                        LogUtil.e("Unable to send result to the callback", exception);
+                        LogUtil.e(exception, "Unable to send result to the callback");
                         resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
                     } finally {
                         mAdServicesLogger.logFledgeApiCallStats(
@@ -196,7 +198,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      *
      * @hide
      */
-    @Override
     public void overrideCustomAudienceRemoteInfo(
             @NonNull String owner,
             @NonNull String buyer,
@@ -234,7 +235,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 new CustomAudienceOverrider(
                         devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
-        overrider.addOverride(owner, buyer, name, biddingLogicJS, trustedBiddingData, callback);
+        overrider.addOverride(
+                owner,
+                AdTechIdentifier.fromString(buyer),
+                name,
+                biddingLogicJS,
+                AdSelectionSignals.fromString(trustedBiddingData),
+                callback);
     }
 
     /**
@@ -276,7 +283,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 new CustomAudienceOverrider(
                         devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
-        overrider.removeOverride(owner, buyer, name, callback);
+        overrider.removeOverride(owner, AdTechIdentifier.fromString(buyer), name, callback);
     }
 
     /**

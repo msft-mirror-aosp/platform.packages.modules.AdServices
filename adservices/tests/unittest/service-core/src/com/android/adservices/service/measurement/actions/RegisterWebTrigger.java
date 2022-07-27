@@ -62,7 +62,7 @@ public final class RegisterWebTrigger implements Action {
         mRegistrationRequest =
                 new WebTriggerRegistrationRequestInternal.Builder()
                         .setTriggerRegistrationRequest(registrationRequest)
-                        .setAttributionSource(attributionSource)
+                        .setPackageName(attributionSource.getPackageName())
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);

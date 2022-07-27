@@ -19,8 +19,6 @@ package com.android.adservices.data.measurement;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -31,7 +29,6 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -40,7 +37,6 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
-import com.android.adservices.service.measurement.enrollment.EnrollmentData;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -61,7 +57,6 @@ import java.util.stream.Stream;
 public class MeasurementDaoTest {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final String TAG = "MeasurementDaoTest";
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
     private static final Uri APP_NO_SOURCE = Uri.parse("android-app://com.example3.no-sources");
@@ -721,100 +716,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testInsertAndGetAndDeleteEnrollmentData() {
-        List<String> sdkNames = Arrays.asList("Admob", "Firebase");
-        List<String> sourceRegistrationUrls =
-                Arrays.asList("https://source.example1.com", "https://source.example2.com");
-        List<String> triggerRegistrationUrls = Arrays.asList("https://trigger.example1.com");
-        List<String> reportingUrls = Arrays.asList("https://reporting.example1.com");
-        List<String> remarketingRegistrationUrls =
-                Arrays.asList("https://remarketing.example1.com");
-        List<String> encryptionUrls = Arrays.asList("https://encryption.example1.com");
-        EnrollmentData enrollmentData =
-                new EnrollmentData.Builder()
-                        .setEnrollmentId("1")
-                        .setCompanyId("1001")
-                        .setSdkNames(sdkNames)
-                        .setAttributionSourceRegistrationUrl(sourceRegistrationUrls)
-                        .setAttributionTriggerRegistrationUrl(triggerRegistrationUrls)
-                        .setAttributionReportingUrl(reportingUrls)
-                        .setRemarketingResponseBasedRegistrationUrl(remarketingRegistrationUrls)
-                        .setEncryptionKeyUrl(encryptionUrls)
-                        .build();
-
-        EnrollmentData enrollmentData1 =
-                new EnrollmentData.Builder()
-                        .setEnrollmentId("2")
-                        .setCompanyId("1002")
-                        .setSdkNames(sdkNames)
-                        .build();
-
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction((dao) -> dao.insertEnrollmentData(enrollmentData));
-        dm.runInTransaction((dao) -> dao.insertEnrollmentData(enrollmentData1));
-
-        try (Cursor cursor =
-                DbHelper.getInstance(sContext)
-                        .getReadableDatabase()
-                        .query(
-                                MeasurementTables.EnrollmentDataContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
-            Assert.assertTrue(cursor.moveToNext());
-            EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
-            Assert.assertNotNull(data);
-            assertEquals(data.getEnrollmentId(), "1");
-            assertEquals(data.getCompanyId(), "1001");
-            assertEquals(data.getSdkNames(), sdkNames);
-            assertEquals(data.getAttributionSourceRegistrationUrl(), sourceRegistrationUrls);
-            assertEquals(data.getAttributionTriggerRegistrationUrl(), triggerRegistrationUrls);
-            assertEquals(data.getAttributionReportingUrl(), reportingUrls);
-            assertEquals(
-                    data.getRemarketingResponseBasedRegistrationUrl(), remarketingRegistrationUrls);
-            assertEquals(data.getEncryptionKeyUrl(), encryptionUrls);
-        }
-
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertNotNull(measurementDao.getEnrollmentData("1"));
-                });
-
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            Objects.requireNonNull(
-                                            measurementDao.getEnrollmentDataGivenUrl(
-                                                    "https://source.example1.com"))
-                                    .getEnrollmentId(),
-                            "1");
-                });
-
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            Objects.requireNonNull(
-                                            measurementDao.getEnrollmentDataGivenSdkName("Admob"))
-                                    .getEnrollmentId(),
-                            "1");
-                });
-
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertNull(measurementDao.getEnrollmentDataGivenSdkName("null"));
-                });
-
-        dm.runInTransaction((dao) -> dao.deleteEnrollmentData("1"));
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertNull(measurementDao.getEnrollmentData("1"));
-                });
-    }
-
-    @Test
     public void testDeleteAllMeasurementDataWithEmptyList() {
         SQLiteDatabase db = DbHelper.getInstance(sContext).safeGetWritableDatabase();
 
@@ -842,16 +743,6 @@ public class MeasurementDaoTest {
         ContentValues rateLimitValue = new ContentValues();
         rateLimitValue.put("_id", rateLimit.getId());
         db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, rateLimitValue);
-
-        AdtechUrl adTechUrl =
-                new AdtechUrl.Builder()
-                        .setPostbackUrl("https://example.com")
-                        .setAdtechId("AD1")
-                        .build();
-        ContentValues adTechUrlValues = new ContentValues();
-        adTechUrlValues.put("postback_url", adTechUrl.getPostbackUrl());
-        adTechUrlValues.put("ad_tech_id", adTechUrl.getAdtechId());
-        db.insert(MeasurementTables.AdTechUrlsContract.TABLE, null, adTechUrlValues);
 
         AggregateEncryptionKey key =
                 new AggregateEncryptionKey.Builder()
@@ -909,16 +800,6 @@ public class MeasurementDaoTest {
         ContentValues rateLimitValue = new ContentValues();
         rateLimitValue.put("_id", rateLimit.getId());
         db.insert(MeasurementTables.AttributionRateLimitContract.TABLE, null, rateLimitValue);
-
-        AdtechUrl adTechUrl =
-                new AdtechUrl.Builder()
-                        .setPostbackUrl("https://example.com")
-                        .setAdtechId("AD1")
-                        .build();
-        ContentValues adTechUrlValues = new ContentValues();
-        adTechUrlValues.put("postback_url", adTechUrl.getPostbackUrl());
-        adTechUrlValues.put("ad_tech_id", adTechUrl.getAdtechId());
-        db.insert(MeasurementTables.AdTechUrlsContract.TABLE, null, adTechUrlValues);
 
         AggregateEncryptionKey key =
                 new AggregateEncryptionKey.Builder()
@@ -983,11 +864,7 @@ public class MeasurementDaoTest {
         List<String> tableNames = new ArrayList<>();
         while (cursor.moveToNext()) {
             String tableName = cursor.getString(cursor.getColumnIndex("name"));
-            if (!tableName.equals(MeasurementTables.AdTechUrlsContract.TABLE)) {
-                // The AdTechUrls table is not included in the Measurement tables because it will be
-                // used for a more general purpose.
-                tableNames.add(tableName);
-            }
+            tableNames.add(tableName);
         }
         assertThat(tableNames.size()).isEqualTo(MeasurementTables.ALL_MSMT_TABLES.length);
         for (String tableName : tableNames) {

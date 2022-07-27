@@ -25,6 +25,8 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -88,12 +90,13 @@ public class CustomAudienceServiceEndToEndTest {
                     .build();
 
     private static final String MY_APP_PACKAGE_NAME = "com.google.ppapi.test";
-    private static final String BUYER_1 = "BUYER_1";
-    private static final String BUYER_2 = "BUYER_1";
+    private static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("BUYER_1");
+    private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("BUYER_1");
     private static final String NAME_1 = "NAME_1";
     private static final String NAME_2 = "NAME_2";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
-    private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
+    private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
+            AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
     private CustomAudienceDao mCustomAudienceDao;
 
@@ -120,11 +123,22 @@ public class CustomAudienceServiceEndToEndTest {
                         .build()
                         .customAudienceDao();
 
+        CustomAudienceQuantityChecker customAudienceQuantityChecker =
+                new CustomAudienceQuantityChecker(mCustomAudienceDao, CommonFixture.FLAGS_FOR_TEST);
+
+        CustomAudienceValidator customAudienceValidator =
+                new CustomAudienceValidator(
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, CommonFixture.FLAGS_FOR_TEST);
+
         mService =
                 new CustomAudienceServiceImpl(
                         CONTEXT,
                         new CustomAudienceImpl(
-                                mCustomAudienceDao, CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI),
+                                mCustomAudienceDao,
+                                customAudienceQuantityChecker,
+                                customAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                CommonFixture.FLAGS_FOR_TEST),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);
@@ -148,7 +162,7 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
@@ -158,7 +172,7 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_2,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -172,7 +186,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -187,20 +201,20 @@ public class CustomAudienceServiceEndToEndTest {
                 DB_CUSTOM_AUDIENCE_PK1_1,
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME));
 
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER.getStringForm(),
                 CustomAudienceFixture.VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -209,14 +223,14 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER,
+                CommonFixture.VALID_BUYER.getStringForm(),
                 "Not exist name",
                 callback);
         assertTrue(callback.isSuccess());
         assertNull(
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME));
     }
 
@@ -241,7 +255,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertTrue(callback.mIsSuccess);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
     }
 
     @Test
@@ -267,7 +281,8 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertTrue(callback.mIsSuccess);
         assertFalse(
-                mCustomAudienceDao.doesCustomAudienceOverrideExist(otherOwner, BUYER_1, NAME_1));
+                mCustomAudienceDao.doesCustomAudienceOverrideExist(
+                        otherOwner, BUYER_1.getStringForm(), NAME_1));
     }
 
     @Test
@@ -288,7 +303,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
     }
 
     @Test
@@ -303,17 +318,17 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_1)
+                        .setBuyer(BUYER_1.getStringForm())
                         .setName(NAME_1)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
 
         CustomAudienceOverrideTestCallback callback =
                 callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
@@ -321,7 +336,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertTrue(callback.mIsSuccess);
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
     }
 
     @Test
@@ -339,17 +354,17 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_1)
+                        .setBuyer(BUYER_1.getStringForm())
                         .setName(NAME_1)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
 
         CustomAudienceOverrideTestCallback callback =
                 callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
@@ -357,7 +372,7 @@ public class CustomAudienceServiceEndToEndTest {
         assertTrue(callback.mIsSuccess);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
     }
 
     @Test
@@ -369,17 +384,17 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudienceOverride dbCustomAudienceOverride =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_1)
+                        .setBuyer(BUYER_1.getStringForm())
                         .setName(NAME_1)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
 
         assertThrows(
                 SecurityException.class,
@@ -387,7 +402,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
     }
 
     @Test
@@ -402,20 +417,20 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_1)
+                        .setBuyer(BUYER_1.getStringForm())
                         .setName(NAME_1)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         DBCustomAudienceOverride dbCustomAudienceOverride2 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_2)
+                        .setBuyer(BUYER_2.getStringForm())
                         .setName(NAME_2)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -424,20 +439,20 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
 
         CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
 
         assertTrue(callback.mIsSuccess);
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
     }
 
     @Test
@@ -455,20 +470,20 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_1)
+                        .setBuyer(BUYER_1.getStringForm())
                         .setName(NAME_1)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         DBCustomAudienceOverride dbCustomAudienceOverride2 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_2)
+                        .setBuyer(BUYER_2.getStringForm())
                         .setName(NAME_2)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -477,20 +492,20 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
 
         CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
 
         assertTrue(callback.mIsSuccess);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
     }
 
     @Test
@@ -502,20 +517,20 @@ public class CustomAudienceServiceEndToEndTest {
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_1)
+                        .setBuyer(BUYER_1.getStringForm())
                         .setName(NAME_1)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
         DBCustomAudienceOverride dbCustomAudienceOverride2 =
                 DBCustomAudienceOverride.builder()
                         .setOwner(MY_APP_PACKAGE_NAME)
-                        .setBuyer(BUYER_2)
+                        .setBuyer(BUYER_2.getStringForm())
                         .setName(NAME_2)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
                         .build();
 
@@ -524,27 +539,27 @@ public class CustomAudienceServiceEndToEndTest {
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
 
         assertThrows(SecurityException.class, () -> callResetAllOverrides(mService));
 
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
+                        MY_APP_PACKAGE_NAME, BUYER_1.getStringForm(), NAME_1));
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
-                        MY_APP_PACKAGE_NAME, BUYER_2, NAME_2));
+                        MY_APP_PACKAGE_NAME, BUYER_2.getStringForm(), NAME_2));
     }
 
     private CustomAudienceOverrideTestCallback callAddOverride(
             String owner,
-            String buyer,
+            AdTechIdentifier buyer,
             String name,
             String biddingLogicJs,
-            String trustedBiddingData,
+            AdSelectionSignals trustedBiddingData,
             CustomAudienceServiceImpl customAudienceService)
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
@@ -552,14 +567,19 @@ public class CustomAudienceServiceEndToEndTest {
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
-                owner, buyer, name, biddingLogicJs, trustedBiddingData, callback);
+                owner,
+                buyer.getStringForm(),
+                name,
+                biddingLogicJs,
+                trustedBiddingData.getStringForm(),
+                callback);
         resultLatch.await();
         return callback;
     }
 
     private CustomAudienceOverrideTestCallback callRemoveOverride(
             String owner,
-            String buyer,
+            AdTechIdentifier buyer,
             String name,
             CustomAudienceServiceImpl customAudienceService)
             throws Exception {
@@ -567,7 +587,8 @@ public class CustomAudienceServiceEndToEndTest {
         CustomAudienceOverrideTestCallback callback =
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
-        customAudienceService.removeCustomAudienceRemoteInfoOverride(owner, buyer, name, callback);
+        customAudienceService.removeCustomAudienceRemoteInfoOverride(
+                owner, buyer.getStringForm(), name, callback);
 
         resultLatch.await();
         return callback;

@@ -25,6 +25,7 @@ import static com.google.common.util.concurrent.Futures.transform;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -136,11 +137,11 @@ public class AdSelectionScriptEngine {
     public ListenableFuture<List<AdWithBid>> generateBids(
             @NonNull String generateBidJS,
             @NonNull List<AdData> ads,
-            @NonNull String auctionSignals,
-            @NonNull String perBuyerSignals,
-            @NonNull String trustedBiddingSignals,
-            @NonNull String contextualSignals,
-            @NonNull String userSignals,
+            @NonNull AdSelectionSignals auctionSignals,
+            @NonNull AdSelectionSignals perBuyerSignals,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull AdSelectionSignals userSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException {
         Objects.requireNonNull(generateBidJS);
@@ -185,9 +186,9 @@ public class AdSelectionScriptEngine {
             @NonNull String scoreAdJS,
             @NonNull List<AdWithBid> adsWithBid,
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull String sellerSignals,
-            @NonNull String trustedScoringSignals,
-            @NonNull String contextualSignals,
+            @NonNull AdSelectionSignals sellerSignals,
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException {
         Objects.requireNonNull(scoreAdJS);
@@ -244,9 +245,9 @@ public class AdSelectionScriptEngine {
                 return result.build();
             } catch (IllegalArgumentException e) {
                 LogUtil.w(
-                        "Invalid ad with bid returned by a generateBid script %s. Returning"
-                                + " empty list of ad with bids.",
-                        e);
+                        e,
+                        "Invalid ad with bid returned by a generateBid script. Returning empty"
+                                + " list of ad with bids.");
                 return ImmutableList.of();
             }
         }

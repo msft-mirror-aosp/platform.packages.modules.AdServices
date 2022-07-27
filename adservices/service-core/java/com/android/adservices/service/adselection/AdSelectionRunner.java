@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
@@ -196,7 +197,7 @@ public final class AdSelectionRunner {
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             // TODO(b/233681870): Investigate implementation of actual failures in
@@ -223,7 +224,7 @@ public final class AdSelectionRunner {
             LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -342,11 +343,11 @@ public final class AdSelectionRunner {
                     .get();
         } catch (InterruptedException e) {
             final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new InterruptedException(exceptionReason);
         } catch (ExecutionException e) {
             final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new ExecutionException(e.getCause());
         } finally {
             customThreadPool.shutdownNow();
@@ -366,17 +367,18 @@ public final class AdSelectionRunner {
         LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
-        String buyerSignal =
+        AdSelectionSignals buyerSignal =
                 Optional.ofNullable(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(customAudience.getBuyer()))
-                        .orElse("{}");
+                                AdSelectionSignals.fromString(
+                                        adSelectionConfig
+                                                .getPerBuyerSignals()
+                                                .get(customAudience.getBuyer())))
+                        .orElse(AdSelectionSignals.EMPTY);
         return mAdBidGenerator.runAdBiddingPerCA(
                 customAudience,
-                adSelectionConfig.getAdSelectionSignals(),
+                AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
                 buyerSignal,
-                "{}",
+                AdSelectionSignals.EMPTY,
                 adSelectionConfig);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }

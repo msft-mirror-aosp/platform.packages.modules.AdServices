@@ -70,6 +70,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         break;
                     case PACKAGE_ADDED:
                         onPackageAdded(context, packageUri);
+                        topicsOnPackageAdded(context, packageUri);
                         break;
                     case PACKAGE_DATA_CLEARED:
                         onPackageDataCleared(context, packageUri);
@@ -110,5 +111,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Deleting topics data for package: " + packageUri.toString());
         sBackgroundExecutor.execute(
                 () -> TopicsWorker.getInstance(context).deletePackageData(packageUri));
+    }
+
+    private void topicsOnPackageAdded(Context context, @NonNull Uri packageUri) {
+        LogUtil.d("Package Added for topics API: " + packageUri.toString());
+        sBackgroundExecutor.execute(
+                () -> TopicsWorker.getInstance(context).handleAppInstallation(packageUri));
     }
 }

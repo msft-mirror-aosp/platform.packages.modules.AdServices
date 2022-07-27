@@ -21,6 +21,8 @@ import static android.adservices.topics.TopicsManager.RESULT_OK;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +50,7 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -71,6 +74,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -81,6 +85,7 @@ public class TopicsServiceImplTest {
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
+    private static final String TOPICS_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final AdServicesLogger mAdServicesLogger =
@@ -99,6 +104,7 @@ public class TopicsServiceImplTest {
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private SandboxedSdkContext mMockSdkContext;
+    @Mock private Throttler mMockThrottler;
 
     @Before
     public void setup() {
@@ -112,7 +118,8 @@ public class TopicsServiceImplTest {
         CacheManager cacheManager = new CacheManager(mMockEpochManager, mTopicsDao, mMockFlags);
 
         mBlockedTopicsManager = new BlockedTopicsManager(mTopicsDao);
-        AppUpdateManager appUpdateManager = new AppUpdateManager(mTopicsDao);
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mTopicsDao, new Random(), mMockFlags);
         mTopicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -134,6 +141,26 @@ public class TopicsServiceImplTest {
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mMockSdkContext.getSdkName()).thenReturn(SOME_SDK_NAME);
+        when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);
+
+        // Rate Limit is not reached.
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API), anyString()))
+                .thenReturn(true);
+    }
+
+    @Test
+    public void checkAllowList_emptyList() {
+        // Empty allow list, don't allow any app.
+        when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_UNAUTHORIZED_CALL);
+    }
+
+    @Test
+    public void checkThrottler_rateLimitReached() {
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API), anyString()))
+                .thenReturn(false);
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED);
     }
 
     @Test
@@ -150,7 +177,7 @@ public class TopicsServiceImplTest {
                         return mPackageManager;
                     }
                 };
-        invokeGetTopics(context);
+        invokeGetTopicsAndVerifyError(context, ResultCode.RESULT_UNAUTHORIZED_CALL);
     }
 
     @Test
@@ -158,7 +185,7 @@ public class TopicsServiceImplTest {
         when(mPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        invokeGetTopics(mMockSdkContext);
+        invokeGetTopicsAndVerifyError(mMockSdkContext, ResultCode.RESULT_UNAUTHORIZED_CALL);
     }
 
     @Test
@@ -180,7 +207,13 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
-                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        context,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,
@@ -206,7 +239,13 @@ public class TopicsServiceImplTest {
     public void getTopics() throws Exception {
         runGetTopics(
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock));
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler));
     }
 
     @Test
@@ -231,7 +270,13 @@ public class TopicsServiceImplTest {
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         runGetTopics(
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock));
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler));
     }
 
     @Test
@@ -257,7 +302,13 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -281,10 +332,10 @@ public class TopicsServiceImplTest {
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
-        // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        // Invocations Summary
+        // loadCache() : 1, getTopics(): 1 * 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -314,7 +365,13 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -331,10 +388,11 @@ public class TopicsServiceImplTest {
 
         assertThat(getTopicsResult).isEqualTo(expectedGetTopicsResult);
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        // Invocation Summary:
+        // loadCache(): 1, getTopics(): 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -358,7 +416,13 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -382,10 +446,10 @@ public class TopicsServiceImplTest {
         assertThat(getTopicsResult.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
-        // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        // Invocations Summary
+        // loadCache() : 1, getTopics(): 1 * 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -409,7 +473,13 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsServiceImpl =
                 new TopicsServiceImpl(
-                        mContext, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        mContext,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -494,10 +564,10 @@ public class TopicsServiceImplTest {
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
         assertThat(argument.getValue().getLatencyMillisecond()).isEqualTo(150);
 
-        // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
-        // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        // Invocations Summary
+        // loadCache() : 1, getTopics(): 1 * 2
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @Test
@@ -524,7 +594,13 @@ public class TopicsServiceImplTest {
 
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
-                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        context,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
 
         // A request with an invalid package name.
         mRequest =
@@ -565,10 +641,16 @@ public class TopicsServiceImplTest {
     }
 
     @NonNull
-    private void invokeGetTopics(Context context) {
+    private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode) {
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
-                        context, mTopicsWorker, mConsentManager, mAdServicesLogger, mClock);
+                        context,
+                        mTopicsWorker,
+                        mConsentManager,
+                        mAdServicesLogger,
+                        mClock,
+                        mMockFlags,
+                        mMockThrottler);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,
@@ -580,7 +662,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(expectedResultCode);
                     }
 
                     @Override
@@ -627,9 +709,9 @@ public class TopicsServiceImplTest {
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
         // loadcache() and getTopics() in CacheManager calls this mock
-        verify(mMockEpochManager, Mockito.times(2)).getCurrentEpochId();
+        verify(mMockEpochManager, Mockito.times(3)).getCurrentEpochId();
         // getTopics in CacheManager and TopicsWorker calls this mock
-        verify(mMockFlags, Mockito.times(2)).getTopicsNumberOfLookBackEpochs();
+        verify(mMockFlags, Mockito.times(3)).getTopicsNumberOfLookBackEpochs();
     }
 
     @NonNull

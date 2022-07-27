@@ -28,6 +28,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
@@ -105,8 +106,14 @@ public class MeasurementManager {
                 IMeasurementService.Stub::asInterface);
     }
 
+    /**
+     * Retrieves an {@link IMeasurementService} implementation
+     *
+     * @hide
+     */
+    @VisibleForTesting
     @NonNull
-    private IMeasurementService getService() {
+    public IMeasurementService getService() {
         IMeasurementService service = mServiceBinder.getService();
         if (service == null) {
             throw new IllegalStateException("Unable to find the service");
@@ -153,7 +160,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new AdServicesException("Internal Error", e)));
@@ -179,13 +186,13 @@ public class MeasurementManager {
         Objects.requireNonNull(attributionSource);
         register(
                 new RegistrationRequest.Builder()
-                .setRegistrationType(
-                    RegistrationRequest.REGISTER_SOURCE)
-                .setRegistrationUri(attributionSource)
-                .setInputEvent(inputEvent)
-                .setAttributionSource(mContext.getAttributionSource())
-                .build(),
-                executor, callback);
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setRegistrationUri(attributionSource)
+                        .setInputEvent(inputEvent)
+                        .setPackageName(getPackageName())
+                        .build(),
+                executor,
+                callback);
     }
 
     /**
@@ -212,7 +219,7 @@ public class MeasurementManager {
             service.registerWebSource(
                     new WebSourceRegistrationRequestInternal.Builder()
                             .setSourceRegistrationRequest(request)
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setPackageName(getPackageName())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
@@ -235,7 +242,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new MeasurementException("Internal Error", e)));
@@ -266,7 +273,7 @@ public class MeasurementManager {
             service.registerWebTrigger(
                     new WebTriggerRegistrationRequestInternal.Builder()
                             .setTriggerRegistrationRequest(request)
-                            .setAttributionSource(mContext.getAttributionSource())
+                            .setPackageName(getPackageName())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
@@ -289,7 +296,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new MeasurementException("Internal Error", e)));
@@ -312,12 +319,12 @@ public class MeasurementManager {
         Objects.requireNonNull(trigger);
         register(
                 new RegistrationRequest.Builder()
-                .setRegistrationType(
-                    RegistrationRequest.REGISTER_TRIGGER)
-                .setRegistrationUri(trigger)
-                .setAttributionSource(mContext.getAttributionSource())
-                .build(),
-                executor, callback);
+                        .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                        .setRegistrationUri(trigger)
+                        .setPackageName(getPackageName())
+                        .build(),
+                executor,
+                callback);
     }
 
     /**
@@ -352,7 +359,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new MeasurementException("Internal Error", e)));
         }
     }
@@ -379,7 +386,7 @@ public class MeasurementManager {
                         .setMatchBehavior(deletionRequest.getMatchBehavior())
                         .setStart(deletionRequest.getStart())
                         .setEnd(deletionRequest.getEnd())
-                        .setAttributionSource(mContext.getAttributionSource())
+                        .setPackageName(getPackageName())
                         .build(),
                 executor,
                 callback);
@@ -419,7 +426,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new AdServicesException("Internal Error", e)));
         }
     }
@@ -433,5 +440,14 @@ public class MeasurementManager {
     @VisibleForTesting
     public void unbindFromService() {
         mServiceBinder.unbindFromService();
+    }
+
+    /** Returns the client's (caller's) package name from the SDK or app context */
+    private String getPackageName() {
+        if (mContext instanceof SandboxedSdkContext) {
+            return ((SandboxedSdkContext) mContext).getClientPackageName();
+        } else {
+            return mContext.getPackageName();
+        }
     }
 }

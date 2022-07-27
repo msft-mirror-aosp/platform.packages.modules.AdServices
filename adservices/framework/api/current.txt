@@ -13,6 +13,20 @@ package android.adservices {
 
 }
 
+package android.adservices.adid {
+
+  public class AdId {
+    ctor public AdId(@NonNull String, boolean);
+    method @NonNull public String getAdId();
+    method public boolean isLimitAdTrackingEnabled();
+  }
+
+  public class AdIdManager {
+    method @NonNull public void getAdId(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adid.AdId,java.lang.Exception>);
+  }
+
+}
+
 package android.adservices.adselection {
 
   public final class AdSelectionConfig implements android.os.Parcelable {
@@ -109,6 +123,22 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.ReportImpressionRequest build();
     method @NonNull public android.adservices.adselection.ReportImpressionRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
     method @NonNull public android.adservices.adselection.ReportImpressionRequest.Builder setAdSelectionId(long);
+  }
+
+}
+
+package android.adservices.appsetid {
+
+  public class AppsetId {
+    ctor public AppsetId(@NonNull String, int);
+    method @NonNull public String getAppsetId();
+    method public int getAppsetIdScope();
+    field public static final int SCOPE_APP = 1; // 0x1
+    field public static final int SCOPE_DEVELOPER = 2; // 0x2
+  }
+
+  public class AppsetIdManager {
+    method @NonNull public void getAppsetId(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.appsetid.AppsetId,java.lang.Exception>);
   }
 
 }
@@ -254,6 +284,13 @@ package android.adservices.exceptions {
   public class AdServicesException extends java.lang.Exception {
     ctor public AdServicesException(@Nullable String, @Nullable Throwable);
     ctor public AdServicesException(@Nullable String);
+  }
+
+  public class GetAppsetIdException extends android.adservices.exceptions.AdServicesException {
+    ctor public GetAppsetIdException(int);
+    ctor public GetAppsetIdException(int, @Nullable String);
+    ctor public GetAppsetIdException(int, @Nullable String, @Nullable Throwable);
+    method public int getResultCode();
   }
 
   public class GetTopicsException extends android.adservices.exceptions.AdServicesException {

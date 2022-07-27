@@ -111,6 +111,15 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default URL for fetching public encryption keys for aggregatable reports. */
+    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
+
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
+    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
+    }
+
     /* The default min time period (in millis) between each aggregate main reporting job run. */
     long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -127,21 +136,21 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
-    /* The default URL for fetching public encryption keys for aggregatable reports. */
-    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
-
-    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
-    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
-    }
-
     /* The default measurement app name. */
     String MEASUREMENT_APP_NAME = "";
 
     /** Returns the app name. */
     default String getMeasurementAppName() {
         return MEASUREMENT_APP_NAME;
+    }
+
+    /** Measurement manifest file url, used for MDD download. */
+    String MEASUREMENT_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1657831410387.binaryproto";
+
+    /** Measurement manifest file url. */
+    default String getMeasurementManifestFileUrl() {
+        return MEASUREMENT_MANIFEST_FILE_URL;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -221,6 +230,7 @@ public interface Flags extends Dumpable {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
     }
 
+    boolean FLEDGE_BACKGROUND_FETCH_ENABLED = true;
     long FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS = 4L * 60L * 60L * 1000L; // 4 hours
     long FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS = 30L * 60L * 1000L; // 30 minutes
     long FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS = 10L * 60L * 1000L; // 5 minutes
@@ -230,6 +240,11 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
+
+    /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
+    default boolean getFledgeBackgroundFetchEnabled() {
+        return FLEDGE_BACKGROUND_FETCH_ENABLED;
+    }
 
     /**
      * Returns the best effort max time (in milliseconds) between each FLEDGE Background Fetch job
@@ -332,6 +347,12 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
     }
 
+    boolean ADSERVICES_ENABLE_STATUS = false;
+
+    default boolean getAdservicesEnableStatus() {
+        return ADSERVICES_ENABLE_STATUS;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
@@ -339,8 +360,11 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
+     *
+     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
+     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS + 1;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
 
     /*
      * Return the number of epochs to keep in the history
@@ -373,6 +397,16 @@ public interface Flags extends Dumpable {
     /** Returns the Downloader Read Timeout in Milliseconds. */
     default int getDownloaderMaxDownloadThreads() {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
+    }
+
+    /** MDD Topics API Classifier Manifest Url */
+    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
+    // when we actually upload the models.
+    String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1/manifest_config_1657744589741.binaryproto";
+
+    default String getMddTopicsClassifierManifestFileUrl() {
+        return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
     }
 
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
@@ -420,5 +454,40 @@ public interface Flags extends Dumpable {
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    /*
+     * The Allow List for PP APIs. This list has the list of app package names that we allow
+     * to use PP APIs.
+     * App Package Name that does not belongs to this Allow List will not be able use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    String PPAPI_APP_ALLOW_LIST =
+            "com.android.tests.sandbox.topics,"
+                    + "com.android.adservices.tests.cts.endtoendtest,"
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.noperm,"
+                    + "com.android.adservices.tests.permissions.valid";
+
+    /**
+     * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
+     * use PP APIs.
+     */
+    default String getPpapiAppAllowList() {
+        return PPAPI_APP_ALLOW_LIST;
+    }
+
+    // Rate Limit Flags.
+
+    /**
+     * PP API Rate Limit for each SDK. This is the max allowed QPS for one SDK to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
+
+    /** Returns the Sdk Request Permits Per Second. */
+    default float getSdkRequestPermitsPerSecond() {
+        return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 }
