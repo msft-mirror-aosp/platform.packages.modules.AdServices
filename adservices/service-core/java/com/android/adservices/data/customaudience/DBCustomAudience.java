@@ -138,7 +138,6 @@ public class DBCustomAudience {
      * Parse parcelable {@link CustomAudience} to storage model {@link DBCustomAudience}.
      *
      * @param parcelable the service model.
-     * @param callingAppName the app name where the call came from.
      * @param currentTime the timestamp when calling the method.
      * @param defaultExpireIn the default expiration from activation.
      * @return storage model
@@ -146,21 +145,16 @@ public class DBCustomAudience {
     @NonNull
     public static DBCustomAudience fromServiceObject(
             @NonNull CustomAudience parcelable,
-            @NonNull String callingAppName,
             @NonNull Instant currentTime,
             @NonNull Duration defaultExpireIn) {
         Objects.requireNonNull(parcelable);
-        Objects.requireNonNull(callingAppName);
         Objects.requireNonNull(currentTime);
         Objects.requireNonNull(defaultExpireIn);
-
-        String owner = Optional.ofNullable(parcelable.getOwner()).orElse(callingAppName);
 
         // Setting default value to be currentTime.
         // Make it easier at query for activated CAs.
         Instant activationTime = Optional.ofNullable(parcelable.getActivationTime()).orElse(
                 currentTime);
-
         if (activationTime.isBefore(currentTime)) {
             activationTime = currentTime;
         }
@@ -177,8 +171,7 @@ public class DBCustomAudience {
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
                 .setBuyer(parcelable.getBuyer())
-                // TODO(b/221861002): Implement default owner population
-                .setOwner(owner)
+                .setOwner(parcelable.getOwner())
                 .setActivationTime(activationTime)
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
@@ -230,10 +223,7 @@ public class DBCustomAudience {
         return customAudienceBuilder.build();
     }
 
-    /**
-     * The App that adds the user to this CustomAudience.
-     * <p>Value must be &lt;App UID&gt;-&lt;package name&gt;.
-     */
+    /** The package name of the App that adds the user to this custom audience. */
     @NonNull
     public String getOwner() {
         return mOwner;
@@ -249,7 +239,6 @@ public class DBCustomAudience {
     public String getBuyer() {
         return mBuyer;
     }
-
 
     /**
      * Identifies the CustomAudience within the set of ones created for this combination of owner
