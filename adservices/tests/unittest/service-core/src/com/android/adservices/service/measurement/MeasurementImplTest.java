@@ -51,7 +51,6 @@ import android.content.AttributionSource;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.view.InputEvent;
@@ -65,11 +64,12 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -79,6 +79,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
@@ -276,8 +277,14 @@ public final class MeasurementImplTest {
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
         // Test
-        MeasurementImpl measurement = spy(new MeasurementImpl(
-                null, null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher));
+        MeasurementImpl measurement =
+                spy(
+                        new MeasurementImpl(
+                                null,
+                                mContentResolver,
+                                mDatastoreManager,
+                                mSourceFetcher,
+                                mTriggerFetcher));
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
         doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
@@ -315,8 +322,14 @@ public final class MeasurementImplTest {
     @Test
     public void testRegister_registrationTypeSource_sourceFetchFailure() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement = spy(new MeasurementImpl(
-                null, null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher));
+        MeasurementImpl measurement =
+                spy(
+                        new MeasurementImpl(
+                                null,
+                                mContentResolver,
+                                mDatastoreManager,
+                                mSourceFetcher,
+                                mTriggerFetcher));
         // Disable Impression Noise
         doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
         final int result = measurement.register(SOURCE_REGISTRATION_REQUEST,
@@ -329,8 +342,9 @@ public final class MeasurementImplTest {
     @Test
     public void testRegister_registrationTypeTrigger_triggerFetchSuccess() throws Exception {
         // Setup
-        MeasurementImpl measurement = new MeasurementImpl(
-                null, null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
         final long triggerTime = System.currentTimeMillis();
@@ -364,8 +378,9 @@ public final class MeasurementImplTest {
     @Test
     public void testRegister_registrationTypeTrigger_triggerFetchFailure() throws RemoteException {
         when(mTriggerFetcher.fetchTrigger(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement = new MeasurementImpl(
-                null, null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
         assertEquals(RESULT_IO_ERROR, result);
@@ -457,8 +472,13 @@ public final class MeasurementImplTest {
 
     @Test
     public void testDeleteRegistrations_internalError() {
-        MeasurementImpl measurement = new MeasurementImpl(null, null, mContentResolver,
-                mDatastoreManager, new SourceFetcher(), new TriggerFetcher());
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null,
+                        mContentResolver,
+                        mDatastoreManager,
+                        new SourceFetcher(),
+                        new TriggerFetcher());
         Mockito.when(mDatastoreManager.runInTransaction(ArgumentMatchers.any()))
                 .thenReturn(false);
         final int result =
@@ -504,7 +524,7 @@ public final class MeasurementImplTest {
                 spy(
                         new MeasurementImpl(
                                 null,
-                                null,
+
                                 mContentResolver,
                                 mDatastoreManager,
                                 mSourceFetcher,
@@ -559,7 +579,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         null,
-                        null,
+
                         mContentResolver,
                         mockDatastoreManager,
                         mockSourceFetcher,
@@ -599,8 +619,9 @@ public final class MeasurementImplTest {
     public void testInstallAttribution() throws DatastoreException {
         // Setup
         long systemTime = System.currentTimeMillis();
-        MeasurementImpl measurement = new MeasurementImpl(
-                null, null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
@@ -623,18 +644,31 @@ public final class MeasurementImplTest {
 
     @Test
     public void testGetMeasurementApiStatus_disabled() {
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.REVOKED);
-        MeasurementImpl measurement =
-                new MeasurementImpl(DEFAULT_CONTEXT, mConsentManager, null, null, null, null);
-        final int result = measurement.getMeasurementApiStatus();
-        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, result);
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ConsentManager.class)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(AdServicesApiConsent.REVOKED)
+                    .when(mConsentManager)
+                    .getConsent(any());
+            ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(DEFAULT_CONTEXT, null, null, null, null);
+            final int result = measurement.getMeasurementApiStatus();
+            assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, result);
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
     public void testDeleteAllMeasurementData() throws DatastoreException {
-        MeasurementImpl measurement = new MeasurementImpl(null, null, mContentResolver,
-                mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
@@ -661,7 +695,6 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 spy(
                         new MeasurementImpl(
-                                null,
                                 null,
                                 mContentResolver,
                                 mDatastoreManager,
@@ -708,7 +741,6 @@ public final class MeasurementImplTest {
                 spy(
                         new MeasurementImpl(
                                 null,
-                                null,
                                 mContentResolver,
                                 mDatastoreManager,
                                 mSourceFetcher,
@@ -728,8 +760,9 @@ public final class MeasurementImplTest {
         // Setup
         when(mTriggerFetcher.fetchWebTriggers(any()))
                 .thenReturn(Optional.of(Collections.singletonList(VALID_TRIGGER_REGISTRATION)));
-        MeasurementImpl measurement = new MeasurementImpl(null, null, mContentResolver,
-                mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
         final long triggerTime = System.currentTimeMillis();
@@ -756,8 +789,9 @@ public final class MeasurementImplTest {
     @Test
     public void registerWebTrigger_triggerFetchFailure() throws RemoteException {
         when(mTriggerFetcher.fetchWebTriggers(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement = new MeasurementImpl(null, null, mContentResolver,
-                mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         final int result =
                 measurement.registerWebTrigger(
                         createWebTriggerRegistrationRequest(), System.currentTimeMillis());

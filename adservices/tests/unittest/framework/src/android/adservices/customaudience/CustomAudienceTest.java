@@ -19,7 +19,6 @@ package android.adservices.customaudience;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
@@ -68,40 +67,6 @@ public final class CustomAudienceTest {
         assertEquals(
                 AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER),
                 validCustomAudience.getAds());
-    }
-
-    @Test
-    public void testBuildNullOwnerCustomAudienceSuccess() {
-        CustomAudience nullOwnerCustomAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                        .setOwner(null)
-                        .build();
-
-        assertNull(nullOwnerCustomAudience.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER.getStringForm(), nullOwnerCustomAudience.getBuyer());
-        assertEquals(CustomAudienceFixture.VALID_NAME, nullOwnerCustomAudience.getName());
-        assertEquals(
-                CustomAudienceFixture.VALID_ACTIVATION_TIME,
-                nullOwnerCustomAudience.getActivationTime());
-        assertEquals(
-                CustomAudienceFixture.VALID_EXPIRATION_TIME,
-                nullOwnerCustomAudience.getExpirationTime());
-        assertEquals(
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
-                nullOwnerCustomAudience.getDailyUpdateUrl());
-        assertEquals(
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm(),
-                nullOwnerCustomAudience.getUserBiddingSignals());
-        assertEquals(
-                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                        CommonFixture.VALID_BUYER),
-                nullOwnerCustomAudience.getTrustedBiddingData());
-        assertEquals(
-                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER),
-                nullOwnerCustomAudience.getBiddingLogicUrl());
-        assertEquals(
-                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER),
-                nullOwnerCustomAudience.getAds());
     }
 
     @Test

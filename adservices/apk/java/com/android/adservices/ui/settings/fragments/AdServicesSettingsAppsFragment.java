@@ -69,7 +69,6 @@ public class AdServicesSettingsAppsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         View noAppsMessage = rootView.findViewById(R.id.no_apps_message);
-        View blockedAppsButton = rootView.findViewById(R.id.blocked_apps_button);
         View emptyAppsHiddenSection = rootView.findViewById(R.id.empty_apps_hidden_section);
 
         viewModel
@@ -82,14 +81,6 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                             emptyAppsHiddenSection.setVisibility(
                                     appsList.isEmpty() ? View.GONE : View.VISIBLE);
                             adapter.notifyDataSetChanged();
-                        });
-        viewModel
-                .getBlockedApps()
-                .observe(
-                        getViewLifecycleOwner(),
-                        blockedAppsList -> {
-                            blockedAppsButton.setVisibility(
-                                    blockedAppsList.isEmpty() ? View.GONE : View.VISIBLE);
                         });
     }
 }
