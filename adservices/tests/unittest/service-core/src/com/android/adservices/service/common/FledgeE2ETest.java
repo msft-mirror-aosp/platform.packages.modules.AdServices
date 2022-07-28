@@ -191,7 +191,9 @@ public class FledgeE2ETest {
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());

@@ -50,6 +50,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -110,6 +111,7 @@ public class CustomAudienceServiceEndToEndTest {
 
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
+    @Mock private AppImportanceFilter mAppImportanceFilter;
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
 
     @Before
@@ -150,7 +152,9 @@ public class CustomAudienceServiceEndToEndTest {
                                 mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        FlagsFactory.getFlagsForTest());
     }
 
     @After
