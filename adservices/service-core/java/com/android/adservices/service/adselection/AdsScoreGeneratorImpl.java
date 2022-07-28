@@ -173,11 +173,12 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                     sellerSignals,
                                     trustedSignals,
                                     contextualSignals,
-                                    // TODO(b/230432251): align JS logic to use multi CA signals
-                                    adBiddingOutcomes
-                                            .get(0)
-                                            .getCustomAudienceBiddingInfo()
-                                            .getCustomAudienceSignals());
+                                    adBiddingOutcomes.stream()
+                                            .map(
+                                                    a ->
+                                                            a.getCustomAudienceBiddingInfo()
+                                                                    .getCustomAudienceSignals())
+                                            .collect(Collectors.toList()));
                         },
                         mListeningExecutorService);
 
