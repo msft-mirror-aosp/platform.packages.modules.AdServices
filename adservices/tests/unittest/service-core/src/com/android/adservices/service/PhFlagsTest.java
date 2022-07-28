@@ -17,6 +17,9 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
+import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -64,6 +67,9 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPIC
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
+import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
+import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -374,6 +380,68 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetDownloaderConnectionTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getDownloaderConnectionTimeoutMs())
+                .isEqualTo(DOWNLOADER_CONNECTION_TIMEOUT_MS);
+
+        final int phOverrideValue = 923;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDownloaderConnectionTimeoutMs()).isEqualTo(phOverrideValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getDownloaderConnectionTimeoutMs())
+                .isEqualTo(DOWNLOADER_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Test
+    public void testGetDownloaderReadTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getDownloaderReadTimeoutMs())
+                .isEqualTo(DOWNLOADER_READ_TIMEOUT_MS);
+
+        final int phOverrideValue = 349;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DOWNLOADER_READ_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDownloaderReadTimeoutMs()).isEqualTo(phOverrideValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getDownloaderReadTimeoutMs()).isEqualTo(DOWNLOADER_READ_TIMEOUT_MS);
+    }
+
+    @Test
+    public void testGetDownloaderMaxDownloadThreads() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getDownloaderMaxDownloadThreads())
+                .isEqualTo(DOWNLOADER_MAX_DOWNLOAD_THREADS);
+
+        final int phOverrideValue = 5;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDownloaderMaxDownloadThreads()).isEqualTo(phOverrideValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getDownloaderMaxDownloadThreads())
+                .isEqualTo(DOWNLOADER_MAX_DOWNLOAD_THREADS);
+    }
+
+    @Test
     public void testGetMeasurementEventMainReportingJobPeriodMs() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs())
@@ -390,6 +458,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEventMainReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementEventMainReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
@@ -409,6 +481,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEventFallbackReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementEventFallbackReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
@@ -428,6 +504,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
+                .isEqualTo(MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
     }
 
     @Test
@@ -447,6 +527,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAggregateMainReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAggregateMainReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
@@ -466,6 +550,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAggregateFallbackReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
@@ -483,6 +571,9 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAppName()).isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAppName()).isEqualTo(MEASUREMENT_APP_NAME);
     }
 
     @Test
@@ -500,6 +591,9 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementManifestFileUrl()).isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementManifestFileUrl()).isEqualTo(MEASUREMENT_MANIFEST_FILE_URL);
     }
 
     @Test
