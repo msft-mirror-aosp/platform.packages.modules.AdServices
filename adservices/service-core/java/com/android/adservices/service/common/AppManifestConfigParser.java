@@ -144,7 +144,7 @@ public class AppManifestConfigParser {
         }
         if (allowAllToAccess) {
             throw new XmlParseException(
-                    "allowAll cannot be set to true when allowAdPartner is also set");
+                    "allowAll cannot be set to true when allowAdPartners is also set");
         }
         return Arrays.asList(allowAdPartnersToAccess.split("\\s*,\\s*"));
     }
