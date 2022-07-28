@@ -80,7 +80,8 @@ public class ConsentNotificationTrigger {
                 getConsentNotificationBuilder(context, isEuDevice);
 
         notificationManager.notify(NOTIFICATION_ID, consentNotificationBuilder.build());
-        ConsentManager.getInstance(context).recordNotificationDisplayed();
+        ConsentManager.getInstance(context)
+                .recordNotificationDisplayed(context.getPackageManager());
     }
 
     private static void createNotificationChannel(@NonNull Context context) {
