@@ -17,7 +17,6 @@
 package android.adservices.customaudience;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import java.util.Objects;
@@ -28,8 +27,7 @@ import java.util.concurrent.Executor;
  */
 public final class LeaveCustomAudienceRequest {
 
-    @Nullable
-    private final String mOwner;
+    @NonNull private final String mOwner;
     @NonNull
     private final String mBuyer;
     @NonNull
@@ -49,7 +47,7 @@ public final class LeaveCustomAudienceRequest {
      * CustomAudienceManager#leaveCustomAudience(LeaveCustomAudienceRequest, Executor,
      * OutcomeReceiver)}.
      */
-    @Nullable
+    @NonNull
     public String getOwner() {
         return mOwner;
     }
@@ -97,8 +95,7 @@ public final class LeaveCustomAudienceRequest {
 
     /** Builder for {@link LeaveCustomAudienceRequest} objects. */
     public static final class Builder {
-        @Nullable
-        private String mOwner;
+        @NonNull private String mOwner;
         @NonNull
         private String mBuyer;
         @NonNull
@@ -118,7 +115,7 @@ public final class LeaveCustomAudienceRequest {
          * <p>See {@link #getOwner()} for more information.
          */
         @NonNull
-        public LeaveCustomAudienceRequest.Builder setOwner(@Nullable String owner) {
+        public LeaveCustomAudienceRequest.Builder setOwner(@NonNull String owner) {
             mOwner = owner;
             return this;
         }
