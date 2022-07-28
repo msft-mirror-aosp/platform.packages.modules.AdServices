@@ -107,4 +107,16 @@ public class PrecomputedLoaderTest {
         List<Integer> validTestApp2Topics = Arrays.asList(143, 15);
         assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
     }
+
+    @Test
+    public void testAppsWithOnlyEmptyTopics() {
+        // This app has all topics as `None` in `assets/precomputed_test_app_list.csv`
+        String appWithEmptyTopics = "com.emptytopics";
+
+        // Load precomputed labels from the test source `assets/precomputed_test_app_list.csv`
+        Map<String, List<Integer>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
+
+        // Verify this entry is not present in the map.
+        assertThat(appTopic).doesNotContainKey(appWithEmptyTopics);
+    }
 }

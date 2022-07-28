@@ -500,9 +500,9 @@ public class CommonClassifierHelperTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "50a5ea88e8789d689544a988668aacc7814feff2f6393e5497dad4e08416b0da"
+        // its value should be "eb5ab79995a5352bc47a1bf3289cdc4fd58a7b10e03419bf2b410f3ce98ddacf"
         assertThat(testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("50a5ea88e8789d689544a988668aacc7814feff2f6393e5497dad4e08416b0da");
+                .isEqualTo("eb5ab79995a5352bc47a1bf3289cdc4fd58a7b10e03419bf2b410f3ce98ddacf");
     }
 
     @Test
