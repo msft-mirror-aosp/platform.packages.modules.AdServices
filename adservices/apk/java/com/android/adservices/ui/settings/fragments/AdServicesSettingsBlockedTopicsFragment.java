@@ -67,8 +67,14 @@ public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
+        View noBlockedTopicsMessage = rootView.findViewById(R.id.no_blocked_topics_message);
+
         viewModel
                 .getBlockedTopics()
-                .observe(getViewLifecycleOwner(), topics -> adapter.notifyDataSetChanged());
+                .observe(getViewLifecycleOwner(), blockedTopicsList -> {
+                    noBlockedTopicsMessage.setVisibility(
+                            blockedTopicsList.isEmpty() ? View.VISIBLE : View.GONE);
+                    adapter.notifyDataSetChanged();
+                });
     }
 }
