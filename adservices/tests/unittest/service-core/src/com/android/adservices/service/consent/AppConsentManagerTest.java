@@ -237,4 +237,14 @@ public class AppConsentManagerTest {
                         mAppConsentManager.clearConsentForUninstalledApp(
                                 null, AppConsentDaoFixture.APP10_UID));
     }
+
+    @Test
+    public void testGetInstance() {
+        AppConsentManager firstAppConsentManager = AppConsentManager.getInstance(mContext);
+        AppConsentManager secondAppConsentManager = AppConsentManager.getInstance(mContext);
+
+        assertNotNull(firstAppConsentManager);
+        assertNotNull(secondAppConsentManager);
+        assertEquals(firstAppConsentManager, secondAppConsentManager);
+    }
 }
