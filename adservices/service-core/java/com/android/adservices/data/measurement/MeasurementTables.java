@@ -67,6 +67,7 @@ public final class MeasurementTables {
         String ID = "_id";
         String EVENT_ID = "event_id";
         String PUBLISHER = "publisher";
+        String PUBLISHER_TYPE = "publisher_type";
         String APP_DESTINATION = "app_destination";
         String WEB_DESTINATION = "web_destination";
         String DEDUP_KEYS = "dedup_keys";
@@ -92,6 +93,7 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "trigger";
         String ID = "_id";
         String ATTRIBUTION_DESTINATION = "attribution_destination";
+        String DESTINATION_TYPE = "destination_type";
         String TRIGGER_TIME = "trigger_time";
         String STATUS = "status";
         String REGISTRANT = "registrant";
@@ -198,6 +200,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + SourceContract.PUBLISHER
                     + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
                     + SourceContract.APP_DESTINATION
                     + " TEXT, "
                     + SourceContract.AD_TECH_DOMAIN
@@ -244,6 +248,8 @@ public final class MeasurementTables {
                     + " TEXT PRIMARY KEY NOT NULL, "
                     + TriggerContract.ATTRIBUTION_DESTINATION
                     + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
                     + TriggerContract.AD_TECH_DOMAIN
                     + " TEXT, "
                     + TriggerContract.TRIGGER_TIME

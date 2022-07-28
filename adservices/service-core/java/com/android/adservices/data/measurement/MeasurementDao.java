@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -57,7 +58,6 @@ import java.util.stream.Stream;
  */
 class MeasurementDao implements IMeasurementDao {
 
-    private static final String ANDROID_APP_SCHEME = "android-app";
     private SQLTransaction mSQLTransaction;
 
     @Override
@@ -74,6 +74,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.TriggerContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 trigger.getAttributionDestination().toString());
+        values.put(MeasurementTables.TriggerContract.DESTINATION_TYPE,
+                trigger.getDestinationType());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                 trigger.getEventTriggers());
@@ -177,6 +179,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
+        values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
                 getNullableUriString(source.getAppDestination()));
@@ -1124,7 +1127,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private static Optional<Pair<String, String>> getDestinationColumnAndValue(Trigger trigger) {
-        if (hasAndroidAppScheme(trigger.getAttributionDestination())) {
+        if (trigger.getDestinationType() == EventSurfaceType.APP) {
             return Optional.of(Pair.create(
                     MeasurementTables.SourceContract.APP_DESTINATION,
                     trigger.getAttributionDestination().toString()));
@@ -1145,12 +1148,12 @@ class MeasurementDao implements IMeasurementDao {
             Source source, Trigger trigger) {
         Uri attributionDestination = trigger.getAttributionDestination();
         Optional<Uri> triggerDestinationTopPrivateDomain =
-                hasAndroidAppScheme(attributionDestination)
+                trigger.getDestinationType() == EventSurfaceType.APP
                         ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
                         : Web.topPrivateDomainAndScheme(attributionDestination);
         Uri publisher = source.getPublisher();
         Optional<Uri> publisherTopPrivateDomain =
-                hasAndroidAppScheme(publisher)
+                source.getPublisherType() == EventSurfaceType.APP
                 ? Optional.of(publisher)
                 : Web.topPrivateDomainAndScheme(publisher);
         if (!triggerDestinationTopPrivateDomain.isPresent()
@@ -1164,10 +1167,5 @@ class MeasurementDao implements IMeasurementDao {
 
     private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
-    }
-
-    private static boolean hasAndroidAppScheme(Uri uri) {
-        String scheme = uri.getScheme();
-        return scheme != null && scheme.equals(ANDROID_APP_SCHEME);
     }
 }
