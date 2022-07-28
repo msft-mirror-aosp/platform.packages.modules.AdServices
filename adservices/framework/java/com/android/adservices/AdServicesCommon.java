@@ -15,6 +15,8 @@
  */
 package com.android.adservices;
 
+import android.adservices.adid.AdIdProviderService;
+
 /**
  * Common constants for AdServices
  *
@@ -38,8 +40,11 @@ public class AdServicesCommon {
     public static final String ACTION_MEASUREMENT_SERVICE =
             "android.adservices.MEASUREMENT_SERVICE";
 
-    /** Intent action to discover the Adid service in the APK. */
+    /** Intent action to discover the AdId service in the APK. */
     public static final String ACTION_ADID_SERVICE = "android.adservices.ADID_SERVICE";
+
+    /** Intent action to discover the AdId Provider service. */
+    public static final String ACTION_ADID_PROVIDER_SERVICE = AdIdProviderService.SERVICE_INTERFACE;
 
     /** Intent action to discover the AppsetId service in the APK. */
     public static final String ACTION_APPSETID_SERVICE = "android.adservices.APPSETID_SERVICE";

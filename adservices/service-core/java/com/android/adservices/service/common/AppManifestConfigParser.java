@@ -35,6 +35,7 @@ public class AppManifestConfigParser {
     private static final String TAG_ATTRIBUTION = "attribution";
     private static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
     private static final String TAG_TOPICS = "topics";
+    private static final String TAG_ADID = "adid";
     private static final String ATTR_ALLOW_ALL_TO_ACCESS = "allowAllToAccess";
     private static final String ATTR_ALLOW_AD_PARTNERS_TO_ACCESS = "allowAdPartnersToAccess";
 
@@ -53,6 +54,7 @@ public class AppManifestConfigParser {
         AppManifestAttributionConfig attributionConfig = null;
         AppManifestCustomAudiencesConfig customAudiencesConfig = null;
         AppManifestTopicsConfig topicsConfig = null;
+        AppManifestAdIdConfig adIdConfig = null;
 
         // The first next goes to START_DOCUMENT, so we need another next to go to START_TAG.
         parser.next();
@@ -116,6 +118,18 @@ public class AppManifestConfigParser {
                                     getAllowAdPartnersToAccess(parser, allowAllToAccess));
                     break;
 
+                case TAG_ADID:
+                    allowAllToAccess = getAllowAllToAccess(parser);
+                    if (adIdConfig != null) {
+                        throw new XmlParseException(
+                                "Tag " + parser.getName() + " appears more than once");
+                    }
+                    adIdConfig =
+                            new AppManifestAdIdConfig(
+                                    allowAllToAccess,
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
+                    break;
+
                 default:
                     throw new XmlParseException(
                             "Unknown tag: "
@@ -125,7 +139,8 @@ public class AppManifestConfigParser {
             parser.next();
         }
 
-        return new AppManifestConfig(attributionConfig, customAudiencesConfig, topicsConfig);
+        return new AppManifestConfig(
+                attributionConfig, customAudiencesConfig, topicsConfig, adIdConfig);
     }
 
     private static boolean getAllowAllToAccess(@NonNull XmlResourceParser parser) {
