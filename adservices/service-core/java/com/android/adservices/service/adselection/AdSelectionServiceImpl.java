@@ -169,7 +169,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         devContext,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mFlags);
         reporter.reportImpression(requestParams, callback);
     }
 
