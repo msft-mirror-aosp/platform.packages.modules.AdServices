@@ -143,7 +143,7 @@ public class ConsentNotificationJobService extends JobService {
                 .execute(
                         () -> {
                             try {
-                                if (mConsentManager.wasNotificationDisplayed()) {
+                                if (mConsentManager.wasNotificationDisplayed(getPackageManager())) {
                                     return;
                                 }
 
