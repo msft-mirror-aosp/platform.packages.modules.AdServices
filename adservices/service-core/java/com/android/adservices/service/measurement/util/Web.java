@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.util;
 
 import android.net.Uri;
 
@@ -23,9 +23,9 @@ import com.google.common.net.InternetDomainName;
 import java.util.Optional;
 
 /** Filtering utilities for measurement. */
-public final class WebUtil {
+public final class Web {
 
-    private WebUtil() { }
+    private Web() { }
 
     /**
      * Returns a {@code Uri} of the scheme concatenated with the first subdomain of the provided
