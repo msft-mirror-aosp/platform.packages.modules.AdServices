@@ -25,6 +25,7 @@ import android.os.Binder;
 import android.provider.Settings;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -73,7 +74,8 @@ public class DevContextFilter {
      *     transaction.
      */
     public DevContext createDevContext() throws IllegalStateException {
-        return createDevContext(Binder.getCallingUidOrThrow());
+        int callingAppUid = SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
+        return createDevContext(callingAppUid);
     }
 
     /**
