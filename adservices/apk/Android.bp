@@ -53,6 +53,8 @@ android_app {
         "tflite_support_classifiers_java",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",
+        "SettingsLibCollapsingToolbarBaseActivity",
+        "SettingsLibMainSwitchPreference",
     ],
     resource_dirs: ["res"],
     aaptflags: [

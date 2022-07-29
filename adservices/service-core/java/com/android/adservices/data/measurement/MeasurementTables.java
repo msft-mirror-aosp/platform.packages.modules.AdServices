@@ -39,8 +39,27 @@ public final class MeasurementTables {
         MeasurementTables.EventReportContract.TABLE,
         MeasurementTables.AggregateReport.TABLE,
         MeasurementTables.AggregateEncryptionKey.TABLE,
-        MeasurementTables.AttributionRateLimitContract.TABLE
+        MeasurementTables.AttributionRateLimitContract.TABLE,
+        MeasurementTables.AsyncRegistrationContract.TABLE
     };
+
+    /** Contract for asynchronous Registration. */
+    public interface AsyncRegistrationContract {
+        String TABLE = MSMT_TABLE_PREFIX + "async_registration_contract";
+        String ID = "_id";
+        String REGISTRATION_URI = "registration_uri";
+        String TOP_ORIGIN = "top_origin";
+        String INPUT_EVENT = "input_event";
+        String REDIRECT = "redirect";
+        String REGISTRANT = "registrant";
+        String SCHEDULE_TIME = "scheduled_time";
+        String RETRY_COUNT = "retry_count";
+        String LAST_TIME_PROCESSING = "last_processing_time";
+        String TYPE = "type";
+        String WEB_DESTINATION = "web_destination";
+        String OS_DESTINATION = "os_destination";
+        String VERIFIED_DESTINATION = "verified_destination";
+    }
 
     /** Contract for Source. */
     public interface SourceContract {
@@ -106,7 +125,9 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "attribution_rate_limit";
         String ID = "_id";
         String SOURCE_SITE = "source_site";
+        String SOURCE_ORIGIN = "source_origin";
         String DESTINATION_SITE = "attribution_destination_site";
+        String DESTINATION_ORIGIN = "destination_origin";
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
         String AD_TECH_DOMAIN = "ad_tech_domain";
@@ -134,6 +155,38 @@ public final class MeasurementTables {
         String PUBLIC_KEY = "public_key";
         String EXPIRY = "expiry";
     }
+
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION =
+            "CREATE TABLE "
+                    + AsyncRegistrationContract.TABLE
+                    + " ("
+                    + AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REDIRECT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.INPUT_EVENT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + AsyncRegistrationContract.SCHEDULE_TIME
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.LAST_TIME_PROCESSING
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.TYPE
+                    + " INTEGER "
+                    + ")";
 
     public static final String CREATE_TABLE_SOURCE =
             "CREATE TABLE "
@@ -249,7 +302,11 @@ public final class MeasurementTables {
                     + " TEXT PRIMARY KEY NOT NULL, "
                     + AttributionRateLimitContract.SOURCE_SITE
                     + " TEXT, "
+                    + AttributionRateLimitContract.SOURCE_ORIGIN
+                    + " TEXT, "
                     + AttributionRateLimitContract.DESTINATION_SITE
+                    + " TEXT, "
+                    + AttributionRateLimitContract.DESTINATION_ORIGIN
                     + " TEXT, "
                     + AttributionRateLimitContract.AD_TECH_DOMAIN
                     + " TEXT, "
@@ -342,13 +399,17 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + AttributionRateLimitContract.TABLE
-                + "_ss_ds_atd_tt"
+                + "_ss_so_ds_do_atd_tt"
                 + " ON "
                 + AttributionRateLimitContract.TABLE
                 + "("
                 + AttributionRateLimitContract.SOURCE_SITE
                 + ", "
+                + AttributionRateLimitContract.SOURCE_ORIGIN
+                + ", "
                 + AttributionRateLimitContract.DESTINATION_SITE
+                + ", "
+                + AttributionRateLimitContract.DESTINATION_ORIGIN
                 + ", "
                 + AttributionRateLimitContract.AD_TECH_DOMAIN
                 + ", "
@@ -365,7 +426,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_EVENT_REPORT,
                             CREATE_TABLE_ATTRIBUTION_RATE_LIMIT,
                             CREATE_TABLE_AGGREGATE_REPORT,
-                            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY));
+                            CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY,
+                            CREATE_TABLE_ASYNC_REGISTRATION));
 
     // Private constructor to prevent instantiation.
     private MeasurementTables() {

@@ -45,8 +45,9 @@ public class DbHelperTest {
         assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 21));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 11));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 13));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 12));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution_rate_limit", 6));
+        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution_rate_limit", 8));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 9));
         assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
         assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
@@ -54,6 +55,6 @@ public class DbHelperTest {
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_atd_tt"));
         assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
         assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_rate_limit_ss_ds_atd_tt"));
+        assertTrue(doesIndexExist(db, "idx_msmt_attribution_rate_limit_ss_so_ds_do_atd_tt"));
     }
 }

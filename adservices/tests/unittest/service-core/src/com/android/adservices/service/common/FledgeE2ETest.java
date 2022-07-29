@@ -32,6 +32,8 @@ import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
@@ -43,7 +45,9 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -91,9 +95,9 @@ public class FledgeE2ETest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final Uri BUYER_DOMAIN_1 =
-            CommonFixture.getUri(AdSelectionConfigFixture.BUYER_1, "");
+            CommonFixture.getUri(AdSelectionConfigFixture.BUYER_1.getStringForm(), "");
     private static final Uri BUYER_DOMAIN_2 =
-            CommonFixture.getUri(AdSelectionConfigFixture.BUYER_2, "");
+            CommonFixture.getUri(AdSelectionConfigFixture.BUYER_2.getStringForm(), "");
 
     private static final String AD_URI_PREFIX = "/adverts/123";
 
@@ -106,20 +110,22 @@ public class FledgeE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
-    private static final String MY_APP_PACKAGE_NAME = "com.google.ppapi.test";
-    private static final String TRUSTED_BIDDING_SIGNALS =
-            "{\n"
-                    + "\t\"example\": \"example\",\n"
-                    + "\t\"valid\": \"Also valid\",\n"
-                    + "\t\"list\": \"list\",\n"
-                    + "\t\"of\": \"of\",\n"
-                    + "\t\"keys\": \"trusted bidding signal Values\"\n"
-                    + "}";
-    private static final String TRUSTED_SCORING_SIGNALS =
-            "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2\"\n"
-                    + "}";
+    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"example\": \"example\",\n"
+                            + "\t\"valid\": \"Also valid\",\n"
+                            + "\t\"list\": \"list\",\n"
+                            + "\t\"of\": \"of\",\n"
+                            + "\t\"keys\": \"trusted bidding signal Values\"\n"
+                            + "}");
+    private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"render_url_1\": \"signals_for_1\",\n"
+                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "}");
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);
     private static final List<Double> BIDS_FOR_BUYER_2 = ImmutableList.of(4.5, 6.7, 10.0);
     private static final List<Double> INVALID_BIDS = ImmutableList.of(0.0, -1.0, -2.0);
@@ -148,9 +154,11 @@ public class FledgeE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(Binder.class)
                         .initMocks(this)
                         .startMocking();
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
@@ -178,6 +186,7 @@ public class FledgeE2ETest {
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, mFlags),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 mFlags),
+                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);
@@ -289,7 +298,7 @@ public class FledgeE2ETest {
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
                         customAudience1.getOwner(),
-                        customAudience1.getBuyer(),
+                        AdTechIdentifier.fromString(customAudience1.getBuyer()),
                         customAudience1.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
@@ -300,7 +309,7 @@ public class FledgeE2ETest {
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
                         customAudience2.getOwner(),
-                        customAudience2.getBuyer(),
+                        AdTechIdentifier.fromString(customAudience2.getBuyer()),
                         customAudience2.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
@@ -419,7 +428,7 @@ public class FledgeE2ETest {
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
                         customAudience1.getOwner(),
-                        customAudience1.getBuyer(),
+                        AdTechIdentifier.fromString(customAudience1.getBuyer()),
                         customAudience1.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
@@ -430,7 +439,7 @@ public class FledgeE2ETest {
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
                         customAudience2.getOwner(),
-                        customAudience2.getBuyer(),
+                        AdTechIdentifier.fromString(customAudience2.getBuyer()),
                         customAudience2.getName(),
                         biddingLogicJs,
                         TRUSTED_BIDDING_SIGNALS,
@@ -554,10 +563,10 @@ public class FledgeE2ETest {
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
                         customAudience1.getOwner(),
-                        customAudience1.getBuyer(),
+                        AdTechIdentifier.fromString(customAudience1.getBuyer()),
                         customAudience1.getName(),
                         biddingLogicJs,
-                        "",
+                        AdSelectionSignals.EMPTY,
                         mCustomAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
@@ -565,10 +574,10 @@ public class FledgeE2ETest {
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
                         customAudience2.getOwner(),
-                        customAudience2.getBuyer(),
+                        AdTechIdentifier.fromString(customAudience2.getBuyer()),
                         customAudience2.getName(),
                         biddingLogicJs,
-                        "",
+                        AdSelectionSignals.EMPTY,
                         mCustomAudienceService);
 
         assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
@@ -662,7 +671,8 @@ public class FledgeE2ETest {
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
+                                    return new MockResponse()
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -671,7 +681,8 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
+                                return new MockResponse()
+                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -787,7 +798,8 @@ public class FledgeE2ETest {
                                 case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
+                                    return new MockResponse()
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -796,7 +808,8 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
+                                return new MockResponse()
+                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -907,7 +920,8 @@ public class FledgeE2ETest {
                                 case BUYER_BIDDING_LOGIC_URI_PATH:
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
-                                    return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS);
+                                    return new MockResponse()
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -916,7 +930,8 @@ public class FledgeE2ETest {
                                     .startsWith(
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS);
+                                return new MockResponse()
+                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -970,24 +985,27 @@ public class FledgeE2ETest {
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
-            String trustedScoringSignals)
+            AdSelectionSignals trustedScoringSignals)
             throws Exception {
         // Counted down in 1) callback
         CountDownLatch resultLatch = new CountDownLatch(1);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
-                adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
+                adSelectionConfig,
+                decisionLogicJS,
+                trustedScoringSignals.getStringForm(),
+                callback);
         resultLatch.await();
         return callback;
     }
 
     private CustomAudienceOverrideTestCallback callAddCustomAudienceOverride(
             String owner,
-            String buyer,
+            AdTechIdentifier buyer,
             String name,
             String biddingLogicJs,
-            String trustedBiddingData,
+            AdSelectionSignals trustedBiddingData,
             CustomAudienceServiceImpl customAudienceService)
             throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(1);
@@ -995,7 +1013,12 @@ public class FledgeE2ETest {
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
-                owner, buyer, name, biddingLogicJs, trustedBiddingData, callback);
+                owner,
+                buyer.getStringForm(),
+                name,
+                biddingLogicJs,
+                trustedBiddingData.getStringForm(),
+                callback);
         resultLatch.await();
         return callback;
     }
@@ -1054,8 +1077,9 @@ public class FledgeE2ETest {
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
-                                buyerDomain.getAuthority()))
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                                AdTechIdentifier.fromString(buyerDomain.getAuthority())))
+                .setUserBiddingSignals(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                 .setTrustedBiddingData(
                         new TrustedBiddingData.Builder()
                                 .setTrustedBiddingUrl(

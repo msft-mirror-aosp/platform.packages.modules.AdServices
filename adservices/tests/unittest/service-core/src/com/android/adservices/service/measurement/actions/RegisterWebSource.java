@@ -60,7 +60,7 @@ public final class RegisterWebSource implements Action {
                 getAttributionSource(
                         regParamsJson.optString(TestFormatJsonMapping.ATTRIBUTION_SOURCE_KEY));
 
-        WebSourceRegistrationRequest registrationRequest =
+        WebSourceRegistrationRequest.Builder registrationRequestBuilder =
                 new WebSourceRegistrationRequest.Builder()
                         .setTopOriginUri(
                                 Uri.parse(
@@ -73,14 +73,18 @@ public final class RegisterWebSource implements Action {
                                                 .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
                                         ? null
                                         : getInputEvent())
-                        .setOsDestination(appDestination)
-                        .setWebDestination(webDestination)
-                        .setVerifiedDestination(verifiedDestination)
-                        .build();
+                        .setVerifiedDestination(verifiedDestination);
+
+        if (appDestination != null) {
+            registrationRequestBuilder.setOsDestination(appDestination);
+        }
+        if (webDestination != null) {
+            registrationRequestBuilder.setWebDestination(webDestination);
+        }
 
         mRegistrationRequest =
                 new WebSourceRegistrationRequestInternal.Builder()
-                        .setSourceRegistrationRequest(registrationRequest)
+                        .setSourceRegistrationRequest(registrationRequestBuilder.build())
                         .setPackageName(attributionSource.getPackageName())
                         .build();
 
