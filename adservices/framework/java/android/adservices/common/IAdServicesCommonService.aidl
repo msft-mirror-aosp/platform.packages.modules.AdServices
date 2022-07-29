@@ -30,5 +30,7 @@ interface IAdServicesCommonService {
             in IAdServicesCommonCallback callback
     );
 
-    void setAdServicesEntryPointEnabled(in boolean adservicesEntryPointEnabled);
+    void setAdServicesNotificationConditions(
+            in boolean adServicesEntryPointEnabled,
+            in boolean adIdEnabled);
 }
