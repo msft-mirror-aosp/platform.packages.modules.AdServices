@@ -39,6 +39,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -46,7 +47,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-
 
 import java.util.concurrent.Executor;
 
@@ -177,14 +177,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
     // Enforce that the callingPackage has the callingUid.
     private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
-        int appCallingUid;
-        // Check the Calling Package Name
-        if (Process.isSdkSandboxUid(callingUid)) {
-            // The callingUid is the Sandbox UId, convert it to the app UId.
-            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
-        } else {
-            appCallingUid = callingUid;
-        }
+        int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
         try {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
@@ -199,19 +192,19 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         return RESULT_OK;
     }
 
-    /**
-     * Init the Topics Service.
-     */
+    /** Init the Topics Service. */
     public void init() {
-        sBackgroundExecutor.execute(() -> {
-            // This is to prevent cold-start latency on getTopics API.
-            // Load cache when the service is created.
-            // The recommended pattern is:
-            // 1) In app startup, wake up the TopicsService.
-            // 2) The TopicsService will load the Topics Cache from DB into memory.
-            // 3) Later, when the app calls Topics API, the returned Topics will be served from
-            // Cache in memory.
-            mTopicsWorker.loadCache();
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    // This is to prevent cold-start latency on getTopics API.
+                    // Load cache when the service is created.
+                    // The recommended pattern is:
+                    // 1) In app startup, wake up the TopicsService.
+                    // 2) The TopicsService will load the Topics Cache from DB into memory.
+                    // 3) Later, when the app calls Topics API, the returned Topics will be served
+                    // from
+                    // Cache in memory.
+                    mTopicsWorker.loadCache();
+                });
     }
 }
