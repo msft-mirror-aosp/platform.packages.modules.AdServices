@@ -125,7 +125,9 @@ public final class MeasurementTables {
         String TABLE = MSMT_TABLE_PREFIX + "attribution_rate_limit";
         String ID = "_id";
         String SOURCE_SITE = "source_site";
+        String SOURCE_ORIGIN = "source_origin";
         String DESTINATION_SITE = "attribution_destination_site";
+        String DESTINATION_ORIGIN = "destination_origin";
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
         String AD_TECH_DOMAIN = "ad_tech_domain";
@@ -300,7 +302,11 @@ public final class MeasurementTables {
                     + " TEXT PRIMARY KEY NOT NULL, "
                     + AttributionRateLimitContract.SOURCE_SITE
                     + " TEXT, "
+                    + AttributionRateLimitContract.SOURCE_ORIGIN
+                    + " TEXT, "
                     + AttributionRateLimitContract.DESTINATION_SITE
+                    + " TEXT, "
+                    + AttributionRateLimitContract.DESTINATION_ORIGIN
                     + " TEXT, "
                     + AttributionRateLimitContract.AD_TECH_DOMAIN
                     + " TEXT, "
@@ -393,13 +399,17 @@ public final class MeasurementTables {
         "CREATE INDEX "
                 + INDEX_PREFIX
                 + AttributionRateLimitContract.TABLE
-                + "_ss_ds_atd_tt"
+                + "_ss_so_ds_do_atd_tt"
                 + " ON "
                 + AttributionRateLimitContract.TABLE
                 + "("
                 + AttributionRateLimitContract.SOURCE_SITE
                 + ", "
+                + AttributionRateLimitContract.SOURCE_ORIGIN
+                + ", "
                 + AttributionRateLimitContract.DESTINATION_SITE
+                + ", "
+                + AttributionRateLimitContract.DESTINATION_ORIGIN
                 + ", "
                 + AttributionRateLimitContract.AD_TECH_DOMAIN
                 + ", "

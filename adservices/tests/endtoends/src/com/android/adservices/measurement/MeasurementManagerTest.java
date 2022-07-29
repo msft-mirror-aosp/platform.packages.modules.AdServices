@@ -280,7 +280,7 @@ public class MeasurementManagerTest {
                         .setSourceParams(Collections.singletonList(webSourceParams))
                         .setTopOriginUri(Uri.parse("https://example.com"))
                         .setInputEvent(null)
-                        .setOsDestination(Uri.parse("https://example.com"))
+                        .setOsDestination(Uri.parse("android-app://com.example"))
                         .setWebDestination(Uri.parse("https://example.com"))
                         .setVerifiedDestination(null)
                         .build();
@@ -314,7 +314,7 @@ public class MeasurementManagerTest {
                         .setSourceParams(Collections.singletonList(webSourceParams))
                         .setTopOriginUri(Uri.parse("https://example.com"))
                         .setInputEvent(null)
-                        .setOsDestination(Uri.parse("https://example.com"))
+                        .setOsDestination(Uri.parse("android-app://com.example"))
                         .setWebDestination(Uri.parse("https://example.com"))
                         .setVerifiedDestination(null)
                         .build();
