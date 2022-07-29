@@ -31,6 +31,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -128,13 +129,6 @@ public class SourceFetcher {
                     json.getJSONObject(EventSourceContract.FILTER_DATA).toString());
         }
 
-        if (shouldValidateDestination
-                && !doUriFieldsMatch(
-                        json, EventSourceContract.DESTINATION, osDestinationFromRequest)) {
-            LogUtil.d("Expected destination to match with the supplied one!");
-            return false;
-        }
-
         if (!json.isNull(EventSourceContract.DESTINATION)) {
             Uri appUri = Uri.parse(json.getString(EventSourceContract.DESTINATION));
             if (appUri.getScheme() == null) {
@@ -146,6 +140,11 @@ public class SourceFetcher {
                 LogUtil.e(
                         "Invalid scheme for app destination: %s; dropping the source.",
                         appUri.getScheme());
+                return false;
+            }
+
+            if (osDestinationFromRequest != null && !osDestinationFromRequest.equals(appUri)) {
+                LogUtil.d("Expected destination to match with the supplied one!");
                 return false;
             }
 
@@ -161,7 +160,14 @@ public class SourceFetcher {
 
         if (!json.isNull(EventSourceContract.WEB_DESTINATION)) {
             Uri webDestination = Uri.parse(json.getString(EventSourceContract.WEB_DESTINATION));
-            result.setWebDestination(webDestination);
+            Optional<Uri> topPrivateDomainAndScheme =
+                    WebUtil.topPrivateDomainAndScheme(webDestination);
+            if (!topPrivateDomainAndScheme.isPresent()) {
+                LogUtil.d("Unable to extract top private domain and scheme from web destination.");
+                return false;
+            } else {
+                result.setWebDestination(topPrivateDomainAndScheme.get());
+            }
         }
 
         return true;

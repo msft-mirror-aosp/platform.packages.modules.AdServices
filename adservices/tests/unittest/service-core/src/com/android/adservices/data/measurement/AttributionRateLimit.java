@@ -26,7 +26,9 @@ import java.util.Objects;
 class AttributionRateLimit {
     private String mId;
     private String mSourceSite;
+    private String mSourceOrigin;
     private String mDestinationSite;
+    private String mDestinationOrigin;
     private String mAdTechDomain;
     private long mTriggerTime;
     private String mRegistrant;
@@ -39,7 +41,9 @@ class AttributionRateLimit {
         AttributionRateLimit attr = (AttributionRateLimit) obj;
         return mTriggerTime == attr.mTriggerTime
                 && Objects.equals(mSourceSite, attr.mSourceSite)
+                && Objects.equals(mSourceOrigin, attr.mSourceOrigin)
                 && Objects.equals(mDestinationSite, attr.mDestinationSite)
+                && Objects.equals(mDestinationOrigin, attr.mDestinationOrigin)
                 && Objects.equals(mAdTechDomain, attr.mAdTechDomain)
                 && Objects.equals(mRegistrant, attr.mRegistrant);
     }
@@ -47,7 +51,8 @@ class AttributionRateLimit {
     @Override
     public int hashCode() {
         return Objects.hash(
-                mId, mSourceSite, mDestinationSite, mAdTechDomain, mTriggerTime, mRegistrant);
+                mId, mSourceSite, mSourceOrigin, mDestinationSite, mDestinationOrigin,
+                mAdTechDomain, mTriggerTime, mRegistrant);
     }
 
     public String getId() {
@@ -58,8 +63,16 @@ class AttributionRateLimit {
         return mSourceSite;
     }
 
+    public String getSourceOrigin() {
+        return mSourceOrigin;
+    }
+
     public String getDestinationSite() {
         return mDestinationSite;
+    }
+
+    public String getDestinationOrigin() {
+        return mDestinationOrigin;
     }
 
     public String getAdTechDomain() {
@@ -94,8 +107,18 @@ class AttributionRateLimit {
             return this;
         }
 
+        public Builder setSourceOrigin(String origin) {
+            mBuilding.mSourceOrigin = origin;
+            return this;
+        }
+
         public Builder setDestinationSite(String dest) {
             mBuilding.mDestinationSite = dest;
+            return this;
+        }
+
+        public Builder setDestinationOrigin(String origin) {
+            mBuilding.mDestinationOrigin = origin;
             return this;
         }
 
