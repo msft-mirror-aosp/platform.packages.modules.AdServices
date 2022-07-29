@@ -81,7 +81,8 @@ public class AppManifestConfigParserTest {
         Exception e =
                 assertThrows(
                         XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
-        assertEquals("allowAll cannot be set to true when allowSdk is also set", e.getMessage());
+        assertEquals(
+                "allowAll cannot be set to true when allowAdPartners is also set", e.getMessage());
     }
 
     @Test

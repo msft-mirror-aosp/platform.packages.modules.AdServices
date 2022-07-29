@@ -215,7 +215,7 @@ public class AppUpdateManager {
      * installed, the returned topic for an SDK can only be assigned when user calls getTopic().
      *
      * <p>If an app calls Topics API via an SDK, and this app has a returned topic while SDK
-     * doesn't, assign this topic to the SDK if it can learn this topic in past observable epochs.
+     * doesn't, assign this topic to the SDK if it can learn this topic from past observable epochs.
      *
      * @param app the app
      * @param sdk the sdk. In case the app calls the Topics API directly, the sdk == empty string.
@@ -255,17 +255,16 @@ public class AppUpdateManager {
                 epochId--) {
             // Validate for an app-sdk pair, whether it satisfies
             // 1) In current epoch, app as the single caller has a returned topic
-            // 2) The sdk can learn this topic in last numberOfLookBackEpochs epochs
-            // If so, the same topic should be assigned to the sdk
+            // 2) The sdk can learn this topic from last numberOfLookBackEpochs epochs
+            // If so, the same topic should be assigned to the sdk.
             if (pastReturnedTopics.get(epochId) != null
                     && pastReturnedTopics.get(epochId).containsKey(appOnlyCaller)) {
                 Topic appReturnedTopic = pastReturnedTopics.get(epochId).get(appOnlyCaller);
 
                 // For current epoch, check whether sdk can learn this topic for past observed
-                // epochs in [epochId - numberOfLookBackEpochs, epochId - 1]
+                // epochs in [epochId - numberOfLookBackEpochs + 1, epochId]
                 Map<Topic, Set<String>> pastCallerCanLearnTopicsMap =
-                        mTopicsDao.retrieveCallerCanLearnTopicsMap(
-                                epochId - 1, numberOfLookBackEpochs);
+                        mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId, numberOfLookBackEpochs);
                 List<Topic> pastTopTopic = mTopicsDao.retrieveTopTopics(epochId);
 
                 if (EpochManager.isTopicLearnableByCaller(

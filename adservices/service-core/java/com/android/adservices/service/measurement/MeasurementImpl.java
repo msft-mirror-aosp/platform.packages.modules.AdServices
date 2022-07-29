@@ -33,9 +33,11 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
+import android.content.ComponentName;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.view.InputEvent;
@@ -49,8 +51,10 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +72,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {
-    private static final String ANDROID_APP_SCHEME = "android-app://";
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private static volatile MeasurementImpl sMeasurementImpl;
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
@@ -162,6 +166,10 @@ public final class MeasurementImpl {
     int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
+        if (!isValid(sourceRegistrationRequest)) {
+            LogUtil.e("registerWebSource received invalid parameters");
+            return RESULT_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<SourceRegistration>> fetch =
@@ -191,6 +199,10 @@ public final class MeasurementImpl {
             @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
+        if (!isValid(triggerRegistrationRequest)) {
+            LogUtil.e("registerWebTrigger received invalid parameters");
+            return RESULT_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<TriggerRegistration>> fetch =
@@ -350,7 +362,7 @@ public final class MeasurementImpl {
             Uri webDestination) {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
-                .setPublisher(topOriginUri)
+                .setPublisher(getBaseUri(topOriginUri))
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
@@ -450,10 +462,90 @@ public final class MeasurementImpl {
     }
 
     private Uri getRegistrant(String packageName) {
-        return Uri.parse(ANDROID_APP_SCHEME + packageName);
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
     private Uri getAppUri(Uri packageUri) {
-        return Uri.parse(ANDROID_APP_SCHEME + packageUri.getEncodedSchemeSpecificPart());
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart());
+    }
+
+    private boolean isValid(WebSourceRegistrationRequest sourceRegistrationRequest) {
+        Uri verifiedDestination = sourceRegistrationRequest.getVerifiedDestination();
+        Uri webDestination = sourceRegistrationRequest.getWebDestination();
+
+        if (verifiedDestination == null) {
+            return webDestination == null
+                    ? true
+                    : Web.topPrivateDomainAndScheme(webDestination).isPresent();
+        }
+
+        return isVerifiedDestination(verifiedDestination, webDestination,
+                sourceRegistrationRequest.getOsDestination());
+    }
+
+    private boolean isVerifiedDestination(Uri verifiedDestination, Uri webDestination,
+            Uri osDestination) {
+        String destinationPackage = null;
+        if (osDestination != null) {
+            destinationPackage = osDestination.getHost();
+        }
+        String verifiedScheme = verifiedDestination.getScheme();
+        String verifiedHost = verifiedDestination.getHost();
+
+        // Verified destination matches osDestination value
+        if (destinationPackage != null && verifiedHost != null
+                && (verifiedScheme == null || verifiedScheme.equals(ANDROID_APP_SCHEME))
+                && verifiedHost.equals(destinationPackage)) {
+            return true;
+        }
+
+        try {
+            Intent intent = Intent.parseUri(verifiedDestination.toString(), 0);
+            ComponentName componentName = intent.resolveActivity(mContext.getPackageManager());
+            if (componentName == null) {
+                return false;
+            }
+
+            // (ComponentName::getPackageName cannot be null)
+            String verifiedPackage = componentName.getPackageName();
+
+            // Try to match an app vendor store and extract a target package
+            if (destinationPackage != null
+                    && verifiedPackage.equals(AppVendorPackages.PLAY_STORE)) {
+                String targetPackage = getTargetPackageFromPlayStoreUri(verifiedDestination);
+                return targetPackage != null && targetPackage.equals(destinationPackage);
+
+            // Try to match web destination
+            } else if (webDestination == null) {
+                return false;
+            } else {
+                Optional<Uri> webDestinationTopPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(webDestination);
+                Optional<Uri> verifiedDestinationTopPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(verifiedDestination);
+                return webDestinationTopPrivateDomainAndScheme.isPresent()
+                        && verifiedDestinationTopPrivateDomainAndScheme.isPresent()
+                        && webDestinationTopPrivateDomainAndScheme.get().equals(
+                                verifiedDestinationTopPrivateDomainAndScheme.get());
+            }
+        } catch (URISyntaxException e) {
+            LogUtil.e(e,
+                    "MeasurementImpl::handleVerifiedDestination: failed to parse intent URI: %s",
+                    verifiedDestination.toString());
+            return false;
+        }
+    }
+
+    private static boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
+        Uri destination = triggerRegistrationRequest.getDestination();
+        return Web.topPrivateDomainAndScheme(destination).isPresent();
+    }
+
+    private static String getTargetPackageFromPlayStoreUri(Uri uri) {
+        return uri.getQueryParameter("id");
+    }
+
+    private interface AppVendorPackages {
+        String PLAY_STORE = "com.android.vending";
     }
 }

@@ -111,7 +111,9 @@
       {
         "id": "A1",
         "sourceSite": "android-app://com.site1.triggerTimeInRangeForDeletion",
+        "sourceOrigin": "android-app://com.site1.triggerTimeInRangeForDeletion",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -119,7 +121,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+        "sourceOrigin": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -181,7 +185,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
+        "sourceOrigin": "android-app://com.site1.triggerTimeNotInRangeForDeletion",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"

@@ -321,8 +321,12 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.AttributionRateLimitContract.ID, attrRateLimit.getId());
         values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
                 attrRateLimit.getSourceSite());
+        values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN,
+                attrRateLimit.getSourceOrigin());
         values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
                 attrRateLimit.getDestinationSite());
+        values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN,
+                attrRateLimit.getDestinationOrigin());
         values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
                 attrRateLimit.getAdTechDomain());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,

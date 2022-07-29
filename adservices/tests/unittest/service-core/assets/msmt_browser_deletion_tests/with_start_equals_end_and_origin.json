@@ -167,7 +167,9 @@
       {
         "id": "A1",
         "sourceSite": "android-app://com.site.deleteCandidate",
+        "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -175,7 +177,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site.deleteCandidate",
+        "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -183,7 +187,9 @@
       {
         "id": "A3",
         "sourceSite": "android-app://com.site3",
+        "sourceOrigin": "android-app://com.site3",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -289,7 +295,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site.deleteCandidate",
+        "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -297,7 +305,9 @@
       {
         "id": "A3",
         "sourceSite": "android-app://com.site3",
+        "sourceOrigin": "android-app://com.site3",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733600,
         "registrant": "android-app://com.registrant.deleteCandidate"

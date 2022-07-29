@@ -183,6 +183,11 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
+    public void testClassify_emptyInput_emptyOutput() {
+        assertThat(mOnDeviceClassifier.classify(ImmutableSet.of())).isEmpty();
+    }
+
+    @Test
     public void testGetTopTopics_fetchTopAndRandomTopics() {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         String appPackage2 = "com.example.adservices.samples.topics.sampleapp2";

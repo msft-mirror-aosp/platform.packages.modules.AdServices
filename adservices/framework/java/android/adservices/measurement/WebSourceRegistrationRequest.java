@@ -29,6 +29,8 @@ import java.util.Objects;
 
 /** Class to hold input to measurement source registration calls from web context. */
 public final class WebSourceRegistrationRequest implements Parcelable {
+    private static final String ANDROID_APP_SCHEME = "android-app";
+
     /** Creator for Paracelable (via reflection). */
     @NonNull
     public static final Parcelable.Creator<WebSourceRegistrationRequest> CREATOR =
@@ -245,6 +247,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
          */
         @NonNull
         public Builder setTopOriginUri(@NonNull Uri topOriginUri) {
+            validateScheme("Publisher origin", topOriginUri);
             mTopOriginUri = topOriginUri;
             return this;
         }
@@ -257,7 +260,17 @@ public final class WebSourceRegistrationRequest implements Parcelable {
          */
         @NonNull
         public Builder setOsDestination(@NonNull Uri osDestination) {
-            mOsDestination = osDestination;
+            String scheme = osDestination.getScheme();
+            Uri destination;
+            if (scheme == null) {
+                destination = Uri.parse(ANDROID_APP_SCHEME + "://" + osDestination.toString());
+            } else if (!scheme.equals(ANDROID_APP_SCHEME)) {
+                throw new IllegalArgumentException(String.format("osDestination scheme must be %s "
+                        + "or null. Received: %s", ANDROID_APP_SCHEME, scheme));
+            } else {
+                destination = osDestination;
+            }
+            mOsDestination = destination;
             return this;
         }
 
@@ -270,6 +283,7 @@ public final class WebSourceRegistrationRequest implements Parcelable {
          */
         @NonNull
         public Builder setWebDestination(@NonNull Uri webDestination) {
+            validateScheme("Web destination", webDestination);
             mWebDestination = webDestination;
             return this;
         }
@@ -301,6 +315,12 @@ public final class WebSourceRegistrationRequest implements Parcelable {
             Objects.requireNonNull(mTopOriginUri);
 
             return new WebSourceRegistrationRequest(this);
+        }
+    }
+
+    private static void validateScheme(String name, Uri uri) throws IllegalArgumentException {
+        if (uri.getScheme() == null) {
+            throw new IllegalArgumentException(name + " must have a scheme.");
         }
     }
 }
