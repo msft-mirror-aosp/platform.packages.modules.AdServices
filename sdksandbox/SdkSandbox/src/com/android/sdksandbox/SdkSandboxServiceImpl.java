@@ -143,6 +143,7 @@ public class SdkSandboxServiceImpl extends Service {
             // TODO(b/239403323): Add support for non-string keys
             editor.putString(key, data.getString(key));
         }
+        // TODO(b/239403323): What if writing to persistent storage fails?
         editor.apply();
     }
 

@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.ArraySet;
 
 import androidx.test.InstrumentationRegistry;
 
@@ -36,6 +37,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -66,17 +69,42 @@ public class SharedPreferencesSyncManagerUnitTest {
         getDefaultSharedPreferences().edit().clear().commit();
     }
 
-    // TODO(b/239403323): Bulk sync should be syncing a subset of keys as defined by app
     @Test
-    public void test_syncData_syncsAllKeys() throws Exception {
+    public void test_syncData_doesNotSyncIfKeysNotSpecified() throws Exception {
         // Populate default shared preference with test data
         populateDefaultSharedPreference(TEST_DATA);
+
+        // Sync data without specifying list of keys to sync
+        mSyncManager.syncData();
+
+        // Verify that sync manager does not try to sync at all
+        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(0);
+    }
+
+    @Test
+    public void test_syncData_doesNotSyncEmptyUpdates() throws Exception {
+        // Unpopulated shared preference. There is nothing to sync.
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
+
+        mSyncManager.syncData();
+
+        // Verify that sync manager does not try to sync with empty data
+        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(0);
+    }
+
+    @Test
+    public void test_syncData_syncSpecifiedKeys() throws Exception {
+        // Populate default shared preference with test data
+        populateDefaultSharedPreference(TEST_DATA);
+        // Set specific shared keys that we want to sync
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
+
         mSyncManager.syncData();
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
         assertThat(mSdkSandboxManagerService.getCallingPackageName())
                 .isEqualTo(mContext.getPackageName());
-        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
         assertThat(capturedData.keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
         for (String key : TEST_DATA.keySet()) {
             assertThat(capturedData.getString(key)).isEqualTo(TEST_DATA.get(key));
@@ -84,9 +112,26 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
-    public void test_syncData_multipleCalls() throws Exception {
-        // Populate default shared preference with test data
+    public void test_syncData_ignoreUnspecifiedKeys() throws Exception {
+        // Populate default shared preference and set specific keys for sycing
         populateDefaultSharedPreference(TEST_DATA);
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
+
+        // Populate extra data outside of shared key list
+        populateDefaultSharedPreference(Map.of("extraKey", "notSpecifiedByApi"));
+
+        mSyncManager.syncData();
+
+        // Verify that sync manager passes the correct data to SdkSandboxManager
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(capturedData.keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+    }
+
+    @Test
+    public void test_syncData_multipleCalls() throws Exception {
+        // Populate default shared preference and set specific keys for sycing
+        populateDefaultSharedPreference(TEST_DATA);
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
 
         // Sync data multiple times
         mSyncManager.syncData();
@@ -97,7 +142,7 @@ public class SharedPreferencesSyncManagerUnitTest {
     }
 
     @Test
-    public void test_syncData_syncsAllKeys_ignoresUnsupportedValues() throws Exception {
+    public void test_syncData_ignoresUnsupportedValues() throws Exception {
         // Populate default shared preference with test data
         populateDefaultSharedPreference(TEST_DATA);
 
@@ -107,9 +152,14 @@ public class SharedPreferencesSyncManagerUnitTest {
         editor.putFloat("float", 1.2f);
         editor.putInt("int", 1);
         editor.putLong("long", 1L);
-        editor.putStringSet("long", Set.of("value"));
+        editor.putStringSet("set", Set.of("value"));
         editor.commit();
 
+        // Set keys to sync and then sync data
+        final Set<String> keysToSync =
+                new ArraySet<>(Arrays.asList("boolean", "float", "int", "long", "set"));
+        keysToSync.addAll(TEST_DATA.keySet());
+        mSyncManager.setKeysToSync(keysToSync);
         mSyncManager.syncData();
 
         // Verify that sync manager passes the correct data to SdkSandboxManager
@@ -120,34 +170,69 @@ public class SharedPreferencesSyncManagerUnitTest {
         }
     }
 
+    // TODO(b/239403323): We probably want to allow client update this the list dynamically.
     @Test
-    public void test_syncData_registerListener_syncsFurtherUpdates() throws Exception {
-        // Populate default shared preference with test data
+    public void test_setKeysToSync_canBeSetOnlyOnce() throws Exception {
+        // Populate default shared preference and set specific keys for sycing
         populateDefaultSharedPreference(TEST_DATA);
+        // Setting keys to sync for the first time should return true
+        assertThat(mSyncManager.setKeysToSync(TEST_DATA.keySet())).isTrue();
+
+        // Try to update keys to sync again
+        assertThat(mSyncManager.setKeysToSync(Collections.emptySet())).isFalse();
 
         mSyncManager.syncData();
 
+        // Verify that sync manager is still using first set of keys
+        final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
+        assertThat(capturedData.keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+    }
+
+    @Test
+    public void test_updateListener_syncsFurtherUpdates() throws Exception {
+        // Set specified keys for sycing and register listener
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
+        mSyncManager.syncData();
+
         // Update the SharedPreference to trigger listeners
-        getDefaultSharedPreferences().edit().putString("update", "value").commit();
+        final String keyToUpdate = TEST_DATA.keySet().toArray()[0].toString();
+        getDefaultSharedPreferences().edit().putString(keyToUpdate, "update").commit();
 
         // Verify we registered a listener that called SdkSandboxManagerService
-        mSdkSandboxManagerService.blockForReceivingUpdates(2);
+        mSdkSandboxManagerService.blockForReceivingUpdates(1);
         final Bundle capturedData = mSdkSandboxManagerService.getLastUpdate();
-        assertThat(capturedData.keySet()).containsExactly("update");
+        assertThat(capturedData.keySet()).containsExactly(keyToUpdate);
+        assertThat(capturedData.getString(keyToUpdate)).isEqualTo("update");
+    }
+
+    @Test
+    public void test_updateListener_ignoresUnspecifiedKeys() throws Exception {
+        // Set specified keys for sycing and register listener
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
+        mSyncManager.syncData();
+
+        // Update the SharedPreference to trigger listeners
+        getDefaultSharedPreferences().edit().putString("unspecified_key", "update").commit();
+
+        // Verify SdkSandboxManagerService does not receive the update for unspecified key
+        Thread.sleep(5000);
+        assertThat(mSdkSandboxManagerService.getNumberOfUpdatesReceived()).isEqualTo(0);
     }
 
     /** Test that listener for live update is registered only once */
     @Test
-    public void test_syncData_registerListener_onlyOnce() throws Exception {
-        // Populate default shared preference with test data
+    public void test_updateListener_registersOnlyOnce() throws Exception {
+        // Populate default shared preference and set specific keys for sycing
         populateDefaultSharedPreference(TEST_DATA);
+        mSyncManager.setKeysToSync(TEST_DATA.keySet());
 
         // Sync data multiple times
         mSyncManager.syncData();
         mSyncManager.syncData();
 
         // Update the SharedPreference to trigger listeners
-        getDefaultSharedPreferences().edit().putString("update", "value").commit();
+        final String keyToUpdate = TEST_DATA.keySet().toArray()[0].toString();
+        getDefaultSharedPreferences().edit().putString(keyToUpdate, "update").commit();
 
         // Verify that SyncManager tried to sync only twice: once for bulk and once for live update.
         mSdkSandboxManagerService.blockForReceivingUpdates(2);
@@ -197,7 +282,8 @@ public class SharedPreferencesSyncManagerUnitTest {
         @Nullable
         public synchronized Bundle getLastUpdate() {
             if (mDataCache.isEmpty()) {
-                return null;
+                throw new AssertionError(
+                        "Fake SdkSandboxManagerService did not receive any update");
             }
             return mDataCache.get(mDataCache.size() - 1);
         }
