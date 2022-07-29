@@ -85,6 +85,8 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
     private static final String SDK_NAME = "com.android.codeprovider";
     private static final String SDK_PROVIDER_PACKAGE = "com.android.codeprovider_1";
+    private static final String SDK_PROVIDER_RESOURCES_SDK_NAME =
+            "com.android.codeproviderresources";
     private static final String SDK_PROVIDER_RESOURCES_PACKAGE =
             "com.android.codeproviderresources_1";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
@@ -612,6 +614,40 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(mService.getAdServicesPackageName()).contains("adservices");
     }
 
+    @Test
+    public void testUnloadSdkThatIsNotLoaded() {
+        assertThrows(SecurityException.class, () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME));
+    }
+
+    @Test
+    public void testUnloadSdkThatIsLoaded() throws Exception {
+        disableNetworkPermissionChecks();
+        disableKillUid();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        FakeLoadSdkCallbackBinder callback2 = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, new Bundle(), callback2);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+
+        final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME);
+
+        // One SDK should still be loaded, therefore the sandbox should still be alive.
+        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
+
+        mService.unloadSdk(TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME);
+
+        // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
+        Mockito.verify(mAmSpy, Mockito.only())
+                .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
+        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+    }
+
     /**
      * Fake service provider that returns local instance of {@link SdkSandboxServiceProvider}
      */
@@ -674,6 +710,9 @@ public class SdkSandboxManagerServiceUnitTest {
                 ILoadSdkInSandboxCallback callback) {
             mLoadSdkInSandboxCallback = callback;
         }
+
+        @Override
+        public void unloadSdk(IBinder sdkToken, String sdkName) {}
 
         void sendLoadCodeSuccessful() throws RemoteException {
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(new Bundle(), mManagerToSdkCallback);
