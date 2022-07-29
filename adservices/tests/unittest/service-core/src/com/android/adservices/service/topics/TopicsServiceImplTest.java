@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -225,7 +226,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(RESULT_UNAUTHORIZED_CALL);
                     }
 
                     @Override
@@ -558,7 +559,7 @@ public class TopicsServiceImplTest {
                 .isTrue();
 
         verify(mAdServicesLogger).logApiCallStats(argument.capture());
-        assertThat(argument.getValue().getResultCode()).isEqualTo(ResultCode.RESULT_OK);
+        assertThat(argument.getValue().getResultCode()).isEqualTo(RESULT_OK);
         assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
@@ -623,7 +624,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(RESULT_UNAUTHORIZED_CALL);
                         mGetTopicsCallbackLatch.countDown();
                     }
 
