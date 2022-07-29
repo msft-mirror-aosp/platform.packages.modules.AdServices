@@ -38,6 +38,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -329,7 +330,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
     private int getCallingUid(int apiNameLoggingId) {
         try {
-            return Binder.getCallingUidOrThrow();
+            return SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
         } catch (IllegalStateException illegalStateException) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
