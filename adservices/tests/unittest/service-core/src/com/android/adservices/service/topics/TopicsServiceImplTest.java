@@ -144,7 +144,10 @@ public class TopicsServiceImplTest {
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);
 
         // Rate Limit is not reached.
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API), anyString()))
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
+                .thenReturn(true);
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
     }
 
@@ -156,11 +159,36 @@ public class TopicsServiceImplTest {
     }
 
     @Test
-    public void checkThrottler_rateLimitReached() {
+    public void checkThrottler_rateLimitReached_forSdkName() {
+        // A SDK calls Topics API.
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
         // Rate Limit Reached.
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API), anyString()))
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED);
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED, request);
+    }
+
+    @Test
+    public void checkThrottler_rateLimitReached_forAppPackageName() {
+        // App calls Topics API directly, not via a SDK.
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName("") // Empty SdkName implies the app calls Topic API directly.
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(false);
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED, request);
     }
 
     @Test
@@ -642,6 +670,12 @@ public class TopicsServiceImplTest {
 
     @NonNull
     private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode) {
+        invokeGetTopicsAndVerifyError(context, expectedResultCode, mRequest);
+    }
+
+    @NonNull
+    private void invokeGetTopicsAndVerifyError(
+            Context context, int expectedResultCode, GetTopicsParam request) {
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
                         context,
@@ -652,7 +686,7 @@ public class TopicsServiceImplTest {
                         mMockFlags,
                         mMockThrottler);
         topicsService.getTopics(
-                mRequest,
+                request,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
