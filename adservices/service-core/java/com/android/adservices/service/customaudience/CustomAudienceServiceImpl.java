@@ -57,7 +57,7 @@ import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
-
+    @NonNull private final Context mContext;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final ExecutorService mExecutorService;
@@ -101,6 +101,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(appImportanceFilter);
+        mContext = context;
         mCustomAudienceImpl = customAudienceImpl;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mDevContextFilter = devContextFilter;
@@ -146,6 +147,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                             }
 
                             mCustomAudienceImpl.joinCustomAudience(customAudience);
+                            BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
                             callback.onSuccess();
                             // TODO(b/233681870): Investigate implementation of actual failures in
                             //  logs/metrics
