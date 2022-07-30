@@ -661,6 +661,9 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
+        // Reporting should ping twice (once each for buyer/seller)
+        CountDownLatch reportingResponseLatch = new CountDownLatch(2);
+
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         request -> {
@@ -673,6 +676,10 @@ public class FledgeE2ETest {
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
                                             .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                case SELLER_REPORTING_PATH: // Intentional fallthrough
+                                case BUYER_REPORTING_PATH:
+                                    reportingResponseLatch.countDown();
+                                    return new MockResponse().setResponseCode(200);
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -721,9 +728,10 @@ public class FledgeE2ETest {
                 callReportImpression(mAdSelectionService, reportImpressioninput);
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
+        reportingResponseLatch.await();
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                7,
+                9,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
@@ -788,6 +796,9 @@ public class FledgeE2ETest {
         CustomAudience customAudience2 =
                 createCustomAudience(mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, INVALID_BIDS);
 
+        // Reporting should ping twice (once each for buyer/seller)
+        CountDownLatch reportingResponseLatch = new CountDownLatch(2);
+
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         request -> {
@@ -800,6 +811,10 @@ public class FledgeE2ETest {
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
                                             .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                case SELLER_REPORTING_PATH: // Intentional fallthrough
+                                case BUYER_REPORTING_PATH:
+                                    reportingResponseLatch.countDown();
+                                    return new MockResponse().setResponseCode(200);
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -850,9 +865,10 @@ public class FledgeE2ETest {
                 callReportImpression(mAdSelectionService, input);
 
         assertTrue(reportImpressionTestCallback.mIsSuccess);
+        reportingResponseLatch.await();
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                7,
+                9,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH,
