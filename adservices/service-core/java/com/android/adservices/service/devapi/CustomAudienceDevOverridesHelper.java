@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.devapi;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -77,15 +79,17 @@ public class CustomAudienceDevOverridesHelper {
      * {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
-    public String getTrustedBiddingSignalsOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+    public AdSelectionSignals getTrustedBiddingSignalsOverride(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 
-        return mCustomAudienceDao.getTrustedBiddingDataOverride(owner, buyer, name, appPackageName);
+        return AdSelectionSignals.fromString(
+                mCustomAudienceDao.getTrustedBiddingDataOverride(
+                        owner, buyer.getStringForm(), name, appPackageName));
     }
 
     /**
@@ -98,10 +102,10 @@ public class CustomAudienceDevOverridesHelper {
      */
     public void addOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingSignals) {
+            @NonNull AdSelectionSignals trustedBiddingSignals) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
@@ -118,10 +122,10 @@ public class CustomAudienceDevOverridesHelper {
             mCustomAudienceDao.persistCustomAudienceOverride(
                     DBCustomAudienceOverride.builder()
                             .setOwner(owner)
-                            .setBuyer(buyer)
+                            .setBuyer(buyer.getStringForm())
                             .setName(name)
                             .setBiddingLogicJS(biddingLogicJS)
-                            .setTrustedBiddingData(trustedBiddingSignals)
+                            .setTrustedBiddingData(trustedBiddingSignals.getStringForm())
                             .setAppPackageName(appPackageName)
                             .build());
         }
@@ -134,7 +138,8 @@ public class CustomAudienceDevOverridesHelper {
      * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
      *     {@link DevContext}
      */
-    public void removeOverride(@NonNull String owner, @NonNull String buyer, @NonNull String name) {
+    public void removeOverride(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
@@ -146,7 +151,7 @@ public class CustomAudienceDevOverridesHelper {
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         mCustomAudienceDao.removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
-                owner, buyer, name, appPackageName);
+                owner, buyer.getStringForm(), name, appPackageName);
     }
 
     /**

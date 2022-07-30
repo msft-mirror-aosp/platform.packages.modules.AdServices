@@ -680,7 +680,7 @@ public class AppUpdateManagerTest {
 
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
             // SDK needs to be able to learn this topic in past epochs
-            mTopicsDao.persistCallerCanLearnTopics(epochId - 1, Map.of(topic, Set.of(sdk)));
+            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
         }
 
         // Check app-sdk doesn't have returned topic before calling the method
@@ -760,7 +760,7 @@ public class AppUpdateManagerTest {
                         app, sdk, /* currentEpochId */ 3L));
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, Map.of(otherAppOnlyCaller, topic));
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 1L, Map.of(topic, Set.of(sdk)));
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
 
         // Epoch 2 won't be assigned topics as app doesn't have a returned Topic
         assertFalse(
@@ -808,21 +808,21 @@ public class AppUpdateManagerTest {
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 3L, Map.of(topic, Set.of(sdk)));
 
-        // No topic will be assigned as topic is only learned in current Epoch 2
+        // No topic will be assigned as topic is only learned in current Epoch 3
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 1L, Map.of(topic, Set.of(otherSDK)));
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(otherSDK)));
 
         // No topic will be assigned as topic is not learned by "sdk" in past epochs
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 1L, Map.of(topic, Set.of(sdk)));
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
 
         // Topic will be assigned as both app and sdk are satisfied
         assertTrue(

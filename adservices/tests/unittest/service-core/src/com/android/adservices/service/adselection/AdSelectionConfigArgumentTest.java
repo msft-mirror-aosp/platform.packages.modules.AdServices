@@ -27,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
@@ -39,6 +40,8 @@ import org.junit.Test;
 
 @SmallTest
 public class AdSelectionConfigArgumentTest {
+    public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1");
+    public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("buyer2");
     public static final AdWithBid AD_WITH_BID =
             new AdWithBid(new AdData(Uri.parse("http://buyer.com/ads/1"), "{\"metadata\":1}"), 10);
     public static final AdSelectionConfig AD_SELECTION_CONFIG =
@@ -47,13 +50,16 @@ public class AdSelectionConfigArgumentTest {
                     .setAdSelectionSignals("{\"ad_selection_signals\":1}")
                     .setDecisionLogicUri(Uri.parse("http://seller.com/decision_logic"))
                     .setContextualAds(ImmutableList.of(AD_WITH_BID))
-                    .setCustomAudienceBuyers(ImmutableList.of("buyer1", "buyer2"))
+                    .setCustomAudienceBuyers(
+                            ImmutableList.of(BUYER_1.getStringForm(), BUYER_2.getStringForm()))
                     .setSellerSignals("{\"seller_signals\":1}")
                     .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                     .setPerBuyerSignals(
                             ImmutableMap.of(
-                                    "buyer1", "{\"buyer_signals\":1}",
-                                    "buyer2", "{\"buyer_signals\":2}"))
+                                    BUYER_1.getStringForm(),
+                                    "{\"buyer_signals\":1}",
+                                    BUYER_2.getStringForm(),
+                                    "{\"buyer_signals\":2}"))
                     .build();
 
     @Test

@@ -15,10 +15,16 @@
  */
 package android.adservices.topics;
 
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
+import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
 import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
+
 import android.adservices.common.CallerMetadata;
-import android.adservices.exceptions.GetTopicsException;
+import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -60,39 +66,9 @@ public final class TopicsManager {
                 RESULT_IO_ERROR,
                 RESULT_RATE_LIMIT_REACHED,
             })
+
     @Retention(RetentionPolicy.SOURCE)
     public @interface ResultCode {}
-
-    /** The call was successful. */
-    public static final int RESULT_OK = 0;
-
-    /**
-     * An internal error occurred within Topics API, which the caller cannot address.
-     *
-     * <p>This error may be considered similar to {@link IllegalStateException}
-     */
-    public static final int RESULT_INTERNAL_ERROR = 1;
-
-    /**
-     * The caller supplied invalid arguments to the call.
-     *
-     * <p>This error may be considered similar to {@link IllegalArgumentException}.
-     */
-    public static final int RESULT_INVALID_ARGUMENT = 2;
-
-    /**
-     * An issue occurred reading or writing to storage. The call might succeed if repeated.
-     *
-     * <p>This error may be considered similar to {@link java.io.IOException}.
-     */
-    public static final int RESULT_IO_ERROR = 3;
-
-    /**
-     * The caller has reached the API call limit.
-     *
-     * <p>The caller should back off and try later.
-     */
-    public static final int RESULT_RATE_LIMIT_REACHED = 4;
 
     public static final String TOPICS_SERVICE = "topics_service";
 
@@ -131,8 +107,8 @@ public final class TopicsManager {
      * @param getTopicsRequest The request for obtaining Topics.
      * @param executor The executor to run callback.
      * @param callback The callback that's called after topics are available or an error occurs.
-     * @throws SecurityException if caller is not authorized to call this API.
-     * @throws GetTopicsException if call results in an internal error.
+     * @throws Exception if caller is not authorized to call this API.
+     * @throws Exception if call results in an internal error.
      */
     @NonNull
     public void getTopics(
@@ -179,8 +155,9 @@ public final class TopicsManager {
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
                                             callback.onError(
-                                                    new GetTopicsException(
-                                                            resultParcel.getResultCode()));
+                                                    new AdServicesException(
+                                                            "Encountered failure during "
+                                                                    + "getTopics call."));
                                         }
                                     });
                         }
@@ -190,17 +167,20 @@ public final class TopicsManager {
                             executor.execute(
                                     () -> {
                                         if (resultCode == RESULT_UNAUTHORIZED_CALL) {
+                                            String errorMessage =
+                                                    "Got SecurityException, Caller is not"
+                                                            + " authorized to call this API.";
                                             callback.onError(
-                                                    new SecurityException(
-                                                            "Caller is not authorized to call this"
-                                                                    + " API."));
+                                                    new AdServicesException(
+                                                            errorMessage,
+                                                            new SecurityException(errorMessage)));
                                         }
                                     });
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "RemoteException");
-            callback.onError(e);
+            LogUtil.e("RemoteException", e);
+            callback.onError(new AdServicesException("Internal Error", e));
         }
     }
 

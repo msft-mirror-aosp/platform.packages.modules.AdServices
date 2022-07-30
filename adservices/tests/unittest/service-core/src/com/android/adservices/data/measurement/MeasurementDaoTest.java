@@ -452,7 +452,8 @@ public class MeasurementDaoTest {
         Objects.requireNonNull(db);
         Uri adTechDomain = Uri.parse("https://www.example.xyz");
         Uri appDestination = Uri.parse("android-app://com.example.abc");
-        Uri webDestination = Uri.parse("https://com.example.abc");
+        Uri webDestination = Uri.parse("https://example.com");
+        Uri webDestinationWithSubdomain = Uri.parse("https://xyz.example.com");
         Source sApp1 =
                 SourceFixture.getValidSourceBuilder()
                         .setId("1")
@@ -627,7 +628,7 @@ public class MeasurementDaoTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setTriggerTime(21)
                         .setAdTechDomain(adTechDomain)
-                        .setAttributionDestination(webDestination)
+                        .setAttributionDestination(webDestinationWithSubdomain)
                         .build();
 
         List<Source> result6 = runFunc.apply(trigger6MatchSource67);
@@ -866,7 +867,7 @@ public class MeasurementDaoTest {
             String tableName = cursor.getString(cursor.getColumnIndex("name"));
             tableNames.add(tableName);
         }
-        assertThat(tableNames.size()).isEqualTo(MeasurementTables.ALL_MSMT_TABLES.length - 1);
+        assertThat(tableNames.size()).isEqualTo(MeasurementTables.ALL_MSMT_TABLES.length);
         for (String tableName : tableNames) {
             assertThat(MeasurementTables.ALL_MSMT_TABLES).asList().contains(tableName);
         }

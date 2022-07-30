@@ -209,6 +209,25 @@ public final class SdkSandboxManager {
     }
 
     /**
+     * Unloads an SDK that has been previously loaded by the caller.
+     *
+     * <p>It is not guaranteed that the memory allocated for this SDK will be freed immediately. All
+     * subsequent calls to {@link #sendData(String, Bundle, Executor, OutcomeReceiver)} or {@link
+     * #requestSurfacePackage(String, int, int, int, Bundle, Executor, OutcomeReceiver)} for the
+     * given {@code sdkName} will fail.
+     *
+     * @param sdkName name of the SDK to be unloaded.
+     * @throws SecurityException if the SDK is not loaded.
+     */
+    public void unloadSdk(@NonNull String sdkName) {
+        try {
+            mService.unloadSdk(mContext.getPackageName(), sdkName);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Send a request for a surface package to the sdk.
      *
      * <p>After client application receives a signal about a successful SDK loading, it is then able

@@ -55,21 +55,12 @@ public final class RegistrationRequest implements Parcelable {
     private final InputEvent mInputEvent;
     private final String mPackageName;
 
-    /** Create a registration request. */
-    private RegistrationRequest(
-            @RegistrationType int registrationType,
-            @NonNull Uri registrationUri,
-            @NonNull Uri topOriginUri,
-            @Nullable InputEvent inputEvent,
-            @NonNull String packageName) {
-        Objects.requireNonNull(registrationUri);
-        Objects.requireNonNull(topOriginUri);
-        Objects.requireNonNull(packageName);
-        mRegistrationType = registrationType;
-        mRegistrationUri = registrationUri;
-        mTopOriginUri = topOriginUri;
-        mInputEvent = inputEvent;
-        mPackageName = packageName;
+    private RegistrationRequest(@NonNull Builder builder) {
+        mRegistrationType = builder.mRegistrationType;
+        mRegistrationUri = builder.mRegistrationUri;
+        mTopOriginUri = builder.mTopOriginUri;
+        mInputEvent = builder.mInputEvent;
+        mPackageName = builder.mPackageName;
     }
 
     /**
@@ -249,8 +240,7 @@ public final class RegistrationRequest implements Parcelable {
                 mTopOriginUri = Uri.parse("android-app://" + mPackageName);
             }
 
-            return new RegistrationRequest(
-                    mRegistrationType, mRegistrationUri, mTopOriginUri, mInputEvent, mPackageName);
+            return new RegistrationRequest(this);
         }
     }
 }

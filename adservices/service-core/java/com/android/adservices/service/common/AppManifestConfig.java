@@ -51,7 +51,7 @@ public class AppManifestConfig {
      */
     public boolean isAllowedAttributionAccess(@NonNull String sdk) {
         return mAttributionConfig.getAllowAllToAccess()
-                || mAttributionConfig.getAllowSdksToAccess().contains(sdk);
+                || mAttributionConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 
     /** Getter for CustomAudiencesConfig. */
@@ -67,7 +67,7 @@ public class AppManifestConfig {
     @NonNull
     public boolean isAllowedCustomAudiencesAccess(@NonNull String sdk) {
         return mCustomAudiencesConfig.getAllowAllToAccess()
-                || mCustomAudiencesConfig.getAllowSdksToAccess().contains(sdk);
+                || mCustomAudiencesConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 
     /** Getter for TopicsConfig. */
@@ -79,6 +79,6 @@ public class AppManifestConfig {
     /** Returns if sdk is permitted to access Topics API for config represented by this object. */
     public boolean isAllowedTopicsAccess(@NonNull String sdk) {
         return mTopicsConfig.getAllowAllToAccess()
-                || mTopicsConfig.getAllowSdksToAccess().contains(sdk);
+                || mTopicsConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 }

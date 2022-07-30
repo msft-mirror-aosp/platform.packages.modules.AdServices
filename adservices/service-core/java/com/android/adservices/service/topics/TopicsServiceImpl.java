@@ -17,6 +17,7 @@ package com.android.adservices.service.topics;
 
 import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
 import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
@@ -38,6 +39,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.SdkRuntimeUtil;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -60,6 +63,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
     private final ConsentManager mConsentManager;
     private final Clock mClock;
     private final Flags mFlags;
+    private final Throttler mThrottler;
 
     public TopicsServiceImpl(
             Context context,
@@ -67,13 +71,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             ConsentManager consentManager,
             AdServicesLogger adServicesLogger,
             Clock clock,
-            Flags flags) {
+            Flags flags,
+            Throttler throttler) {
         mContext = context;
         mTopicsWorker = topicsWorker;
         mConsentManager = consentManager;
         mAdServicesLogger = adServicesLogger;
         mClock = clock;
         mFlags = flags;
+        mThrottler = throttler;
     }
 
     @Override
@@ -81,6 +87,16 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull GetTopicsParam topicsParam,
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetTopicsCallback callback) {
+
+        if (!mThrottler.tryAcquire(Throttler.ApiKey.TOPICS_API, topicsParam.getSdkName())) {
+            LogUtil.e("Rate Limit Reached for TOPICS_API and SDK = %s", topicsParam.getSdkName());
+            try {
+                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return;
+        }
 
         final long startServiceTime = mClock.elapsedRealtime();
         // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
@@ -161,14 +177,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
     // Enforce that the callingPackage has the callingUid.
     private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
-        int appCallingUid;
-        // Check the Calling Package Name
-        if (Process.isSdkSandboxUid(callingUid)) {
-            // The callingUid is the Sandbox UId, convert it to the app UId.
-            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
-        } else {
-            appCallingUid = callingUid;
-        }
+        int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
         try {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
@@ -183,19 +192,19 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         return RESULT_OK;
     }
 
-    /**
-     * Init the Topics Service.
-     */
+    /** Init the Topics Service. */
     public void init() {
-        sBackgroundExecutor.execute(() -> {
-            // This is to prevent cold-start latency on getTopics API.
-            // Load cache when the service is created.
-            // The recommended pattern is:
-            // 1) In app startup, wake up the TopicsService.
-            // 2) The TopicsService will load the Topics Cache from DB into memory.
-            // 3) Later, when the app calls Topics API, the returned Topics will be served from
-            // Cache in memory.
-            mTopicsWorker.loadCache();
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    // This is to prevent cold-start latency on getTopics API.
+                    // Load cache when the service is created.
+                    // The recommended pattern is:
+                    // 1) In app startup, wake up the TopicsService.
+                    // 2) The TopicsService will load the Topics Cache from DB into memory.
+                    // 3) Later, when the app calls Topics API, the returned Topics will be served
+                    // from
+                    // Cache in memory.
+                    mTopicsWorker.loadCache();
+                });
     }
 }

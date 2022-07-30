@@ -24,12 +24,12 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.job.JobParameters;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -41,6 +41,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -59,11 +60,13 @@ public class ConsentNotificationJobServiceTest {
             new ConsentNotificationJobService();
 
     @Mock JobParameters mMockJobParameters;
+    @Mock PackageManager mPackageManager;
     private MockitoSession mStaticMockSession = null;
 
     /** Initialize static spies. */
     @Before
     public void setup() {
+        MockitoAnnotations.initMocks(this);
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
@@ -90,8 +93,11 @@ public class ConsentNotificationJobServiceTest {
     public void testOnStartJobNotificationNotDisplayed() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        when(mConsentManager.wasNotificationDisplayed()).thenReturn(Boolean.FALSE);
-        doNothing().when(mConsentManager).recordNotificationDisplayed();
+        doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
+        doReturn(Boolean.FALSE)
+                .when(mConsentManager)
+                .wasNotificationDisplayed(any(PackageManager.class));
+        doNothing().when(mConsentManager).recordNotificationDisplayed(any());
         mConsentNotificationJobService.setConsentManager(mConsentManager);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));
@@ -108,7 +114,7 @@ public class ConsentNotificationJobServiceTest {
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
 
-        verify(mConsentManager).wasNotificationDisplayed();
+        verify(mConsentManager).wasNotificationDisplayed(any());
         verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
         verify(
                 () ->
@@ -121,8 +127,11 @@ public class ConsentNotificationJobServiceTest {
     public void testOnStartJobNotificationDisplayed() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        when(mConsentManager.wasNotificationDisplayed()).thenReturn(Boolean.TRUE);
-        doNothing().when(mConsentManager).recordNotificationDisplayed();
+        doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
+        doReturn(Boolean.TRUE)
+                .when(mConsentManager)
+                .wasNotificationDisplayed(any(PackageManager.class));
+        doNothing().when(mConsentManager).recordNotificationDisplayed(any());
         mConsentNotificationJobService.setConsentManager(mConsentManager);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(true).when(() -> ConsentNotificationJobService.isEuDevice(any(Context.class)));

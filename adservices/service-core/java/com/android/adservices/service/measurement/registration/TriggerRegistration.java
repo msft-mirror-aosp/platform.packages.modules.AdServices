@@ -19,7 +19,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.validation.Validation;
+import com.android.adservices.service.measurement.util.Validation;
 
 import java.util.Objects;
 
