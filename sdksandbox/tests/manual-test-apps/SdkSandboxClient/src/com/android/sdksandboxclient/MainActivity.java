@@ -63,21 +63,28 @@ public class MainActivity extends Activity {
     private void registerLoadSdkProviderButton() {
         mLoadButton.setOnClickListener(
                 v -> {
-                    Bundle params = new Bundle();
-                    OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver =
-                            new OutcomeReceiver<LoadSdkResponse, LoadSdkException>() {
-                                @Override
-                                public void onResult(LoadSdkResponse response) {
-                                    mSdkLoaded = true;
-                                    makeToast("Loaded successfully!");
-                                }
+                    if (!mSdkLoaded) {
+                        Bundle params = new Bundle();
+                        OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver =
+                                new OutcomeReceiver<LoadSdkResponse, LoadSdkException>() {
+                                    @Override
+                                    public void onResult(LoadSdkResponse response) {
+                                        mSdkLoaded = true;
+                                        makeToast("Loaded successfully!");
+                                        mLoadButton.setText("Unload SDK");
+                                    }
 
-                                @Override
-                                public void onError(LoadSdkException error) {
-                                    makeToast("Failed: " + error);
-                                }
-                            };
-                    mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
+                                    @Override
+                                    public void onError(LoadSdkException error) {
+                                        makeToast("Failed: " + error);
+                                    }
+                                };
+                        mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
+                    } else {
+                        mSdkSandboxManager.unloadSdk(SDK_NAME);
+                        mLoadButton.setText("Load SDK");
+                        mSdkLoaded = false;
+                    }
                 });
     }
 

@@ -45,7 +45,7 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         return rootView;
     }
 
-    // initialize all action listeners except for actions in blocked topics list
+    // initialize all action listeners except for actions in blocked apps list
     private void initActionListeners() {
         ActionDelegate actionDelegate =
                 ((AdServicesSettingsActivity) requireActivity()).getActionDelegate();
@@ -67,8 +67,14 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
+        View noBlockedAppsMessage = rootView.findViewById(R.id.no_blocked_apps_message);
+
         viewModel
                 .getBlockedApps()
-                .observe(getViewLifecycleOwner(), apps -> adapter.notifyDataSetChanged());
+                .observe(getViewLifecycleOwner(), blockedAppsList -> {
+                    noBlockedAppsMessage.setVisibility(
+                            blockedAppsList.isEmpty() ? View.VISIBLE : View.GONE);
+                    adapter.notifyDataSetChanged();
+                });
     }
 }

@@ -293,13 +293,6 @@ package android.adservices.exceptions {
     method public int getResultCode();
   }
 
-  public class GetTopicsException extends android.adservices.exceptions.AdServicesException {
-    ctor public GetTopicsException(int);
-    ctor public GetTopicsException(int, @Nullable String);
-    ctor public GetTopicsException(int, @Nullable String, @Nullable Throwable);
-    method public int getResultCode();
-  }
-
   public class MeasurementException extends android.adservices.exceptions.AdServicesException {
     ctor public MeasurementException();
     ctor public MeasurementException(@NonNull String);
@@ -447,11 +440,6 @@ package android.adservices.topics {
 
   public final class TopicsManager {
     method @NonNull public void getTopics(@NonNull android.adservices.topics.GetTopicsRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.topics.GetTopicsResponse,java.lang.Exception>);
-    field public static final int RESULT_INTERNAL_ERROR = 1; // 0x1
-    field public static final int RESULT_INVALID_ARGUMENT = 2; // 0x2
-    field public static final int RESULT_IO_ERROR = 3; // 0x3
-    field public static final int RESULT_OK = 0; // 0x0
-    field public static final int RESULT_RATE_LIMIT_REACHED = 4; // 0x4
     field public static final String TOPICS_SERVICE = "topics_service";
   }
 
