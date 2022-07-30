@@ -133,6 +133,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                             .setErrorMessage(exception.getMessage())
                                             .build());
                         } catch (Exception exception) {
+                            LogUtil.e(exception, "Exception joining CA: ");
                             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
                             callback.onFailure(
                                     new FledgeErrorResponse.Builder()
