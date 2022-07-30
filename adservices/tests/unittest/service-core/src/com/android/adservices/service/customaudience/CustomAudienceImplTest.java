@@ -93,7 +93,7 @@ public class CustomAudienceImplTest {
         verify(mCustomAudienceDao)
                 .deleteAllCustomAudienceDataByPrimaryKey(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME);
 
         verifyNoMoreInteractions(

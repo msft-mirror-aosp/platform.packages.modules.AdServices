@@ -73,19 +73,13 @@ public class DeletionRequest {
     private final @MatchBehavior int mMatchBehavior;
     private final @DeletionMode int mDeletionMode;
 
-    private DeletionRequest(
-            @NonNull List<Uri> originUris,
-            @NonNull List<Uri> domainUris,
-            @MatchBehavior int matchBehavior,
-            @DeletionMode int deletionMode,
-            @Nullable Instant start,
-            @Nullable Instant end) {
-        mOriginUris = originUris;
-        mDomainUris = domainUris;
-        mMatchBehavior = matchBehavior;
-        mDeletionMode = deletionMode;
-        mStart = start;
-        mEnd = end;
+    private DeletionRequest(@NonNull Builder builder) {
+        mOriginUris = builder.mOriginUris;
+        mDomainUris = builder.mDomainUris;
+        mMatchBehavior = builder.mMatchBehavior;
+        mDeletionMode = builder.mDeletionMode;
+        mStart = builder.mStart;
+        mEnd = builder.mEnd;
     }
 
     /** Get the list of origin URIs. */
@@ -199,8 +193,7 @@ public class DeletionRequest {
             if (mOriginUris == null) {
                 mOriginUris = new ArrayList<>();
             }
-            return new DeletionRequest(
-                    mOriginUris, mDomainUris, mMatchBehavior, mDeletionMode, mStart, mEnd);
+            return new DeletionRequest(this);
         }
     }
 }

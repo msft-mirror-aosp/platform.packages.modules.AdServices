@@ -1,6 +1,14 @@
 {
   "mainline-presubmit": [
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
+      "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
       "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]"
     },

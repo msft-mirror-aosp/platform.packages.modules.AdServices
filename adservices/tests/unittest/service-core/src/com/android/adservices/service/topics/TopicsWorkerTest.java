@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_OK;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -283,7 +283,7 @@ public class TopicsWorkerTest {
 
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
             // SDK needs to be able to learn this topic in past epochs
-            mTopicsDao.persistCallerCanLearnTopics(epochId - 1, Map.of(topic, Set.of(sdk)));
+            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
         }
 
         when(mMockEpochManager.getCurrentEpochId()).thenReturn(currentEpochId);

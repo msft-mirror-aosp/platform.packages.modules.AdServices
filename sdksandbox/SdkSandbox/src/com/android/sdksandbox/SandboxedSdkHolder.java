@@ -95,6 +95,10 @@ class SandboxedSdkHolder {
         }
     }
 
+    void unloadSdk() {
+        mSdk.beforeUnloadSdk();
+    }
+
     void dump(PrintWriter writer) {
         writer.print("mInitialized: " + mInitialized);
         final String sdkClass = mSdk == null ? "null" : mSdk.getClass().getName();

@@ -26,6 +26,7 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -203,7 +204,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
 
-        overrider.addOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
+        overrider.addOverride(
+                adSelectionConfig,
+                decisionLogicJS,
+                AdSelectionSignals.fromString(trustedScoringSignals),
+                callback);
     }
 
     @Override

@@ -16,7 +16,7 @@
 
 package android.adservices.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_OK;
 
 import android.adservices.topics.TopicsManager.ResultCode;
 import android.annotation.NonNull;

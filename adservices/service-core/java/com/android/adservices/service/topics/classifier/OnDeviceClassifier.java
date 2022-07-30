@@ -113,6 +113,10 @@ public class OnDeviceClassifier implements Classifier {
     @Override
     @NonNull
     public ImmutableMap<String, List<Topic>> classify(@NonNull Set<String> appPackageNames) {
+        if (appPackageNames.isEmpty()) {
+            return ImmutableMap.of();
+        }
+
         // Load the assets if not loaded already.
         if (!isLoaded()) {
             mLoaded = load();

@@ -25,7 +25,7 @@ package android.adservices.common {
 
   public class AdServicesCommonManager {
     method public void isAdServicesEnabled(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Boolean,android.adservices.exceptions.AdServicesException>);
-    method public void setAdServicesEntryPointEnabled(@NonNull boolean);
+    method public void setAdServicesNotificationConditions(boolean, boolean);
   }
 
 }
