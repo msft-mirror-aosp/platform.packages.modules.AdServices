@@ -122,14 +122,14 @@ public class AdServicesCommonServiceImplTest {
         when(mEditor.putInt(anyString(), anyInt())).thenReturn(mEditor);
         Mockito.doNothing().when(mEditor).apply();
         mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
-        mCommonService.setAdServicesEntryPointEnabled(true);
+        mCommonService.setAdServicesNotificationConditions(true, false);
         Thread.sleep(1000);
         Mockito.verify(mEditor)
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
         assertThat(mStringArgumentCaptor.getValue()).isEqualTo(KEY_ADSERVICES_ENTRY_POINT_STATUS);
         assertThat(mIntegerArgumentCaptor.getValue())
                 .isEqualTo(ADSERVICES_ENTRY_POINT_STATUS_ENABLE);
-        mCommonService.setAdServicesEntryPointEnabled(false);
+        mCommonService.setAdServicesNotificationConditions(false, false);
         Thread.sleep(1000);
         Mockito.verify(mEditor, times(2))
                 .putInt(mStringArgumentCaptor.capture(), mIntegerArgumentCaptor.capture());
