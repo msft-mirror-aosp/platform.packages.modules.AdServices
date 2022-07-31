@@ -26,6 +26,7 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
@@ -60,8 +61,8 @@ public class FledgeCtsTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
-    private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
+    private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
 
     private static final String SELLER_DECISION_LOGIC_URI = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PREFIX = "/buyer/bidding/logic/";
@@ -72,14 +73,16 @@ public class FledgeCtsTest {
                     + "\t\"render_url_2\": \"signals_for_2\"\n"
                     + "}";
 
-    private static final String SELLER = "developer.android.com";
+    private static final AdTechIdentifier SELLER =
+            AdTechIdentifier.fromString("developer.android.com");
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                    .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
-                    .setSeller(SELLER)
+                    .setCustomAudienceBuyers(
+                            Arrays.asList(BUYER_1.getStringForm(), BUYER_2.getStringForm()))
+                    .setSeller(SELLER.getStringForm())
                     .setDecisionLogicUri(
                             Uri.parse("https://" + SELLER + "/" + SELLER_DECISION_LOGIC_URI))
                     .setTrustedScoringSignalsUri(
@@ -217,7 +220,7 @@ public class FledgeCtsTest {
      *     creates ad with the provided value as bid
      * @return a real Custom Audience object that can be persisted and used in bidding and scoring
      */
-    private CustomAudience createCustomAudience(final String buyer, List<Double> bids) {
+    private CustomAudience createCustomAudience(final AdTechIdentifier buyer, List<Double> bids) {
 
         // Generate ads for with bids provided
         List<AdData> ads = new ArrayList<>();
@@ -227,23 +230,26 @@ public class FledgeCtsTest {
         for (int i = 0; i < bids.size(); i++) {
             ads.add(
                     new AdData.Builder()
-                            .setRenderUri(CommonFixture.getUri(buyer, "/ad" + (i + 1)))
+                            .setRenderUri(
+                                    CommonFixture.getUri(buyer.getStringForm(), "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }
 
         return new CustomAudience.Builder()
-                .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer)
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setBuyer(buyer.getStringForm())
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setUserBiddingSignals(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUrl(
-                        CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer))
+                        CommonFixture.getUri(
+                                buyer.getStringForm(), BUYER_BIDDING_LOGIC_URI_PREFIX + buyer))
                 .setAds(ads)
                 .build();
     }

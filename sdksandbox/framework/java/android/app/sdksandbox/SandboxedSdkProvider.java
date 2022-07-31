@@ -54,7 +54,7 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
     /**
      * Does the work needed for the SDK to start handling requests.
      *
-     * <p>This function is called by SDK sandbox after it loads SDK
+     * <p>This function is called by the SDK sandbox after it loads the SDK.
      *
      * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
      * initialization logic that depends on other SDKs being loaded into the SDK sandbox. Any
@@ -69,6 +69,13 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
             @NonNull Bundle params,
             @NonNull Executor executor,
             @NonNull OnLoadSdkCallback callback);
+
+    /**
+     * Does the work needed for the SDK to free its resources before being unloaded.
+     *
+     * <p>This function is called by the SDK sandbox manager before it unloads the SDK.
+     */
+    public void beforeUnloadSdk() {}
 
     /**
      * Requests a view to be remotely rendered to the client app process.

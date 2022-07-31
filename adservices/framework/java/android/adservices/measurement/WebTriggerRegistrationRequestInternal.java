@@ -48,10 +48,9 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     /** Holds package info of where the request is coming from. */
     @NonNull private final String mPackageName;
 
-    private WebTriggerRegistrationRequestInternal(
-            WebTriggerRegistrationRequest triggerRegistrationRequest, String packageName) {
-        mTriggerRegistrationRequest = triggerRegistrationRequest;
-        mPackageName = packageName;
+    private WebTriggerRegistrationRequestInternal(@NonNull Builder builder) {
+        mTriggerRegistrationRequest = builder.mTriggerRegistrationRequest;
+        mPackageName = builder.mPackageName;
     }
 
     private WebTriggerRegistrationRequestInternal(Parcel in) {
@@ -134,8 +133,7 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
             Objects.requireNonNull(mTriggerRegistrationRequest);
             Objects.requireNonNull(mPackageName);
 
-            return new WebTriggerRegistrationRequestInternal(
-                    mTriggerRegistrationRequest, mPackageName);
+            return new WebTriggerRegistrationRequestInternal(this);
         }
     }
 }

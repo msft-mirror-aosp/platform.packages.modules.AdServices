@@ -29,7 +29,7 @@ public class AdTechUriValidatorTest {
     private final AdTechUriValidator mValidator =
             new AdTechUriValidator(
                     ValidatorUtil.AD_TECH_ROLE_BUYER,
-                    CommonFixture.VALID_BUYER,
+                    CommonFixture.VALID_BUYER.getStringForm(),
                     CLASS_NAME,
                     URI_FIELD_NAME);
 

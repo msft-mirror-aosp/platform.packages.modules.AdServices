@@ -42,9 +42,9 @@ public final class MeasurementErrorResponse implements Parcelable {
     @ResultCode private final int mResultCode;
     @Nullable private final String mErrorMessage;
 
-    private MeasurementErrorResponse(@ResultCode int resultCode, @Nullable String errorMessage) {
-        mResultCode = resultCode;
-        mErrorMessage = errorMessage;
+    private MeasurementErrorResponse(@NonNull Builder builder) {
+        mResultCode = builder.mResultCode;
+        mErrorMessage = builder.mErrorMessage;
     }
 
     private MeasurementErrorResponse(@NonNull Parcel in) {
@@ -150,7 +150,7 @@ public final class MeasurementErrorResponse implements Parcelable {
         /** Builds a {@link MeasurementErrorResponse} instance. */
         @NonNull
         public MeasurementErrorResponse build() {
-            return new MeasurementErrorResponse(mResultCode, mErrorMessage);
+            return new MeasurementErrorResponse(this);
         }
     }
 }

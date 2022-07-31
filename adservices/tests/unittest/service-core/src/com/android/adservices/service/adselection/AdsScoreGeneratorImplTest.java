@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.adselection.AdBiddingOutcomeFixture;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.http.MockWebServerRule;
 import android.net.Uri;
 
@@ -73,8 +75,8 @@ import java.util.stream.Collectors;
 
 public class AdsScoreGeneratorImplTest {
 
-    private static final String BUYER_1 = AdSelectionConfigFixture.BUYER_1;
-    private static final String BUYER_2 = AdSelectionConfigFixture.BUYER_2;
+    private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
+    private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
     private final String mTrustedScoringSignalsPath = "/getTrustedScoringSignals/";
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -97,7 +99,7 @@ public class AdsScoreGeneratorImplTest {
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
-    private String mTrustedScoringSignals;
+    private AdSelectionSignals mTrustedScoringSignals;
     private String mTrustedScoringParams;
     private List<String> mTrustedScoringSignalsKeys;
 
@@ -156,20 +158,21 @@ public class AdsScoreGeneratorImplTest {
                         Uri.encode(String.join(",", mTrustedScoringSignalsKeys)));
 
         mTrustedScoringSignals =
-                "{\n"
-                        + mAdBiddingOutcomeBuyer1
-                                .getAdWithBid()
-                                .getAdData()
-                                .getRenderUri()
-                                .getEncodedPath()
-                        + ": signalsForUrl1,\n"
-                        + mAdBiddingOutcomeBuyer2
-                                .getAdWithBid()
-                                .getAdData()
-                                .getRenderUri()
-                                .getEncodedPath()
-                        + ": signalsForUrl2,\n"
-                        + "}";
+                AdSelectionSignals.fromString(
+                        "{\n"
+                                + mAdBiddingOutcomeBuyer1
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri()
+                                        .getEncodedPath()
+                                + ": signalsForUrl1,\n"
+                                + mAdBiddingOutcomeBuyer2
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri()
+                                        .getEncodedPath()
+                                + ": signalsForUrl2,\n"
+                                + "}");
 
         mDefaultDispatcher =
                 new Dispatcher() {
@@ -180,7 +183,8 @@ public class AdsScoreGeneratorImplTest {
                         } else if (mTrustedScoringSignalsPath
                                 .concat(mTrustedScoringParams)
                                 .equals(request.getPath())) {
-                            return new MockResponse().setBody(mTrustedScoringSignals);
+                            return new MockResponse()
+                                    .setBody(mTrustedScoringSignals.getStringForm());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -220,13 +224,16 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                mAdSelectionConfig.getSellerSignals(),
+                                AdSelectionSignals.fromString(
+                                        mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
-                                "{}",
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                AdSelectionSignals.EMPTY,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -237,6 +244,23 @@ public class AdsScoreGeneratorImplTest {
                         () -> {
                             return scoringResultFuture;
                         });
+
+        Mockito.verify(mMockAdSelectionScriptEngine)
+                .scoreAds(
+                        mSellerDecisionLogicJs,
+                        mAdBiddingOutcomeList.stream()
+                                .map(a -> a.getAdWithBid())
+                                .collect(Collectors.toList()),
+                        mAdSelectionConfig,
+                        AdSelectionSignals.fromString(mAdSelectionConfig.getSellerSignals()),
+                        mTrustedScoringSignals,
+                        AdSelectionSignals.EMPTY,
+                        mAdBiddingOutcomeList.stream()
+                                .map(
+                                        a ->
+                                                a.getCustomAudienceBiddingInfo()
+                                                        .getCustomAudienceSignals())
+                                .collect(Collectors.toList()));
 
         mMockWebServerRule.verifyMockServerRequests(
                 server,
@@ -322,7 +346,7 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(differentSellerDecisionLogicJs)
-                        .setTrustedScoringSignals(mTrustedScoringSignals)
+                        .setTrustedScoringSignals(mTrustedScoringSignals.getStringForm())
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
@@ -349,13 +373,16 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                mAdSelectionConfig.getSellerSignals(),
+                                AdSelectionSignals.fromString(
+                                        mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
-                                "{}",
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                AdSelectionSignals.EMPTY,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -389,13 +416,16 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                mAdSelectionConfig.getSellerSignals(),
+                                AdSelectionSignals.fromString(
+                                        mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
-                                "{}",
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                AdSelectionSignals.EMPTY,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenThrow(new JSONException("Badly formatted JSON"));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
@@ -441,13 +471,16 @@ public class AdsScoreGeneratorImplTest {
                                         .map(a -> a.getAdWithBid())
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
-                                mAdSelectionConfig.getSellerSignals(),
+                                AdSelectionSignals.fromString(
+                                        mAdSelectionConfig.getSellerSignals()),
                                 mTrustedScoringSignals,
-                                "{}",
-                                mAdBiddingOutcomeList
-                                        .get(0)
-                                        .getCustomAudienceBiddingInfo()
-                                        .getCustomAudienceSignals()))
+                                AdSelectionSignals.EMPTY,
+                                mAdBiddingOutcomeList.stream()
+                                        .map(
+                                                a ->
+                                                        a.getCustomAudienceBiddingInfo()
+                                                                .getCustomAudienceSignals())
+                                        .collect(Collectors.toList())))
                 .thenReturn(Futures.immediateFuture(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =

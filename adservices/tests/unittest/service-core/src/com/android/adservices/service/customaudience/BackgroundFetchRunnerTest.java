@@ -110,7 +110,7 @@ public class BackgroundFetchRunnerTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
         doReturn(updatableData)
                 .when(mBackgroundFetchRunnerSpy)
-                .fetchAndValidateCustomAudienceUpdatableData(any(), any());
+                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         Instant expectedEligibleUpdateTime =
@@ -142,7 +142,7 @@ public class BackgroundFetchRunnerTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse().build();
         doReturn(updatableData)
                 .when(mBackgroundFetchRunnerSpy)
-                .fetchAndValidateCustomAudienceUpdatableData(any(), any());
+                .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
 
         Instant originalEligibleUpdateTime = CommonFixture.FIXED_NOW.minusMillis(60L * 1000L);
         DBCustomAudienceBackgroundFetchData originalFetchData =
@@ -179,7 +179,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -202,7 +202,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -258,7 +258,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
         assertEquals(expectedUpdatableData, updatableData);
@@ -285,7 +285,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, invalidFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, invalidFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -319,7 +319,7 @@ public class BackgroundFetchRunnerTest {
 
         CustomAudienceUpdatableData updatableData =
                 runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, mFetchUri);
+                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER, mFetchUri);
 
         assertEquals(expectedUpdatableData, updatableData);
 

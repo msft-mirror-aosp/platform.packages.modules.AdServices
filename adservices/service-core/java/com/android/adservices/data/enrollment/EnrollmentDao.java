@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data;
+package com.android.adservices.data.enrollment;
 
 import android.annotation.NonNull;
 import android.content.ContentValues;
@@ -26,15 +26,14 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.data.measurement.SqliteObjectMapper;
-import com.android.adservices.service.EnrollmentData;
+import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 
 /** Data Access Object for the EnrollmentData. */
-public class EnrollmentDao {
+public class EnrollmentDao implements IEnrollmentDao {
 
     private static EnrollmentDao sSingleton;
 
@@ -61,12 +60,7 @@ public class EnrollmentDao {
         }
     }
 
-    /**
-     * Returns the {@link EnrollmentData}.
-     *
-     * @param enrollmentId ID provided to the adtech during the enrollment process.
-     * @return the EnrollmentData; Null in case of SQL failure
-     */
+    @Override
     @Nullable
     @VisibleForTesting
     public EnrollmentData getEnrollmentData(String enrollmentId) {
@@ -76,9 +70,9 @@ public class EnrollmentDao {
         }
         try (Cursor cursor =
                 db.query(
-                        MeasurementTables.EnrollmentDataContract.TABLE,
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
                         /*columns=*/ null,
-                        MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID + " = ? ",
+                        EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " = ? ",
                         new String[] {enrollmentId},
                         /*groupBy=*/ null,
                         /*having=*/ null,
@@ -92,12 +86,7 @@ public class EnrollmentDao {
         }
     }
 
-    /**
-     * Returns the {@link EnrollmentData} given measurement registration URLs.
-     *
-     * @param url could be source registration url or trigger registration url.
-     * @return the EnrollmentData; Null in case of SQL failure.
-     */
+    @Override
     @Nullable
     @VisibleForTesting
     public EnrollmentData getEnrollmentDataGivenUrl(String url) {
@@ -107,13 +96,13 @@ public class EnrollmentDao {
         }
         try (Cursor cursor =
                 db.query(
-                        MeasurementTables.EnrollmentDataContract.TABLE,
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
                         /*columns=*/ null,
-                        MeasurementTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
+                        EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
                                 + " LIKE '%"
                                 + url
                                 + "%' OR "
-                                + MeasurementTables.EnrollmentDataContract
+                                + EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_TRIGGER_REGISTRATION_URL
                                 + " LIKE '%"
                                 + url
@@ -131,12 +120,7 @@ public class EnrollmentDao {
         }
     }
 
-    /**
-     * Returns the {@link EnrollmentData} given AdTech SDK Name.
-     *
-     * @param sdkName List of SDKs belonging to the same enrollment.
-     * @return the EnrollmentData; Null in case of SQL failure
-     */
+    @Override
     @Nullable
     @VisibleForTesting
     public EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) {
@@ -146,9 +130,9 @@ public class EnrollmentDao {
         }
         try (Cursor cursor =
                 db.query(
-                        MeasurementTables.EnrollmentDataContract.TABLE,
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
                         /*columns=*/ null,
-                        MeasurementTables.EnrollmentDataContract.SDK_NAMES
+                        EnrollmentTables.EnrollmentDataContract.SDK_NAMES
                                 + " LIKE '%"
                                 + sdkName
                                 + "%'",
@@ -165,11 +149,7 @@ public class EnrollmentDao {
         }
     }
 
-    /**
-     * Inserts {@link EnrollmentData} into DB table.
-     *
-     * @param enrollmentData the EnrollmentData to insert.
-     */
+    @Override
     @VisibleForTesting
     public void insertEnrollmentData(EnrollmentData enrollmentData) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
@@ -179,32 +159,31 @@ public class EnrollmentDao {
 
         ContentValues values = new ContentValues();
         values.put(
-                MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID,
+                EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
                 enrollmentData.getEnrollmentId());
         values.put(
-                MeasurementTables.EnrollmentDataContract.COMPANY_ID, enrollmentData.getCompanyId());
+                EnrollmentTables.EnrollmentDataContract.COMPANY_ID, enrollmentData.getCompanyId());
         values.put(
-                MeasurementTables.EnrollmentDataContract.SDK_NAMES,
+                EnrollmentTables.EnrollmentDataContract.SDK_NAMES,
                 String.join(" ", enrollmentData.getSdkNames()));
         values.put(
-                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
                 String.join(" ", enrollmentData.getAttributionSourceRegistrationUrl()));
         values.put(
-                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
                 String.join(" ", enrollmentData.getAttributionTriggerRegistrationUrl()));
         values.put(
-                MeasurementTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
                 String.join(" ", enrollmentData.getAttributionReportingUrl()));
         values.put(
-                MeasurementTables.EnrollmentDataContract
-                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                EnrollmentTables.EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
                 String.join(" ", enrollmentData.getRemarketingResponseBasedRegistrationUrl()));
         values.put(
-                MeasurementTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
+                EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL,
                 String.join(" ", enrollmentData.getEncryptionKeyUrl()));
         try {
             db.insert(
-                    MeasurementTables.EnrollmentDataContract.TABLE,
+                    EnrollmentTables.EnrollmentDataContract.TABLE,
                     /*nullColumnHack=*/ null,
                     values);
         } catch (SQLException e) {
@@ -212,11 +191,7 @@ public class EnrollmentDao {
         }
     }
 
-    /**
-     * Deletes {@link EnrollmentData} from DB table.
-     *
-     * @param enrollmentId ID provided to the adtech at the end of the enrollment process.
-     */
+    @Override
     @VisibleForTesting
     public void deleteEnrollmentData(String enrollmentId) {
         Objects.requireNonNull(enrollmentId);
@@ -226,8 +201,8 @@ public class EnrollmentDao {
         }
         try {
             db.delete(
-                    MeasurementTables.EnrollmentDataContract.TABLE,
-                    MeasurementTables.EnrollmentDataContract.ENROLLMENT_ID + " = ?",
+                    EnrollmentTables.EnrollmentDataContract.TABLE,
+                    EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " = ?",
                     new String[] {enrollmentId});
         } catch (SQLException e) {
             LogUtil.e("Failed to delete EnrollmentData." + e.getMessage());
@@ -235,7 +210,7 @@ public class EnrollmentDao {
     }
 
     /** Deletes the whole EnrollmentData table. */
-    @VisibleForTesting
+    @Override
     public void deleteEnrollmentDataTable() {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -245,7 +220,7 @@ public class EnrollmentDao {
         // Handle this in a transaction.
         db.beginTransaction();
         try {
-            db.delete(MeasurementTables.EnrollmentDataContract.TABLE, null, null);
+            db.delete(EnrollmentTables.EnrollmentDataContract.TABLE, null, null);
             // Mark the transaction successful.
             db.setTransactionSuccessful();
         } finally {

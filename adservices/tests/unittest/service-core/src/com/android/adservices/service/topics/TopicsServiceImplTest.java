@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +51,7 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -101,6 +105,7 @@ public class TopicsServiceImplTest {
     @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private SandboxedSdkContext mMockSdkContext;
+    @Mock private Throttler mMockThrottler;
 
     @Before
     public void setup() {
@@ -138,13 +143,53 @@ public class TopicsServiceImplTest {
         when(mMockSdkContext.getPackageManager()).thenReturn(mPackageManager);
         when(mMockSdkContext.getSdkName()).thenReturn(SOME_SDK_NAME);
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);
+
+        // Rate Limit is not reached.
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
+                .thenReturn(true);
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(true);
     }
 
     @Test
     public void checkAllowList_emptyList() {
         // Empty allow list, don't allow any app.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
-        invokeGetTopicsAndVerifyUnauthorized(mContext);
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_UNAUTHORIZED_CALL);
+    }
+
+    @Test
+    public void checkThrottler_rateLimitReached_forSdkName() {
+        // A SDK calls Topics API.
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
+                .thenReturn(false);
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED, request);
+    }
+
+    @Test
+    public void checkThrottler_rateLimitReached_forAppPackageName() {
+        // App calls Topics API directly, not via a SDK.
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName("") // Empty SdkName implies the app calls Topic API directly.
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(false);
+        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED, request);
     }
 
     @Test
@@ -161,7 +206,7 @@ public class TopicsServiceImplTest {
                         return mPackageManager;
                     }
                 };
-        invokeGetTopicsAndVerifyUnauthorized(context);
+        invokeGetTopicsAndVerifyError(context, ResultCode.RESULT_UNAUTHORIZED_CALL);
     }
 
     @Test
@@ -169,7 +214,7 @@ public class TopicsServiceImplTest {
         when(mPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        invokeGetTopicsAndVerifyUnauthorized(mMockSdkContext);
+        invokeGetTopicsAndVerifyError(mMockSdkContext, ResultCode.RESULT_UNAUTHORIZED_CALL);
     }
 
     @Test
@@ -196,7 +241,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
         topicsService.getTopics(
                 mRequest,
                 mCallerMetadata,
@@ -208,7 +254,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(RESULT_UNAUTHORIZED_CALL);
                     }
 
                     @Override
@@ -227,7 +273,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags));
+                        mMockFlags,
+                        mMockThrottler));
     }
 
     @Test
@@ -257,7 +304,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags));
+                        mMockFlags,
+                        mMockThrottler));
     }
 
     @Test
@@ -288,7 +336,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -350,7 +399,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -400,7 +450,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -456,7 +507,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
 
         // Call init() to load the cache
         topicsServiceImpl.init();
@@ -535,7 +587,7 @@ public class TopicsServiceImplTest {
                 .isTrue();
 
         verify(mAdServicesLogger).logApiCallStats(argument.capture());
-        assertThat(argument.getValue().getResultCode()).isEqualTo(ResultCode.RESULT_OK);
+        assertThat(argument.getValue().getResultCode()).isEqualTo(RESULT_OK);
         assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
@@ -576,7 +628,8 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
 
         // A request with an invalid package name.
         mRequest =
@@ -599,7 +652,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(RESULT_UNAUTHORIZED_CALL);
                         mGetTopicsCallbackLatch.countDown();
                     }
 
@@ -617,7 +670,13 @@ public class TopicsServiceImplTest {
     }
 
     @NonNull
-    private void invokeGetTopicsAndVerifyUnauthorized(Context context) {
+    private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode) {
+        invokeGetTopicsAndVerifyError(context, expectedResultCode, mRequest);
+    }
+
+    @NonNull
+    private void invokeGetTopicsAndVerifyError(
+            Context context, int expectedResultCode, GetTopicsParam request) {
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
                         context,
@@ -625,9 +684,10 @@ public class TopicsServiceImplTest {
                         mConsentManager,
                         mAdServicesLogger,
                         mClock,
-                        mMockFlags);
+                        mMockFlags,
+                        mMockThrottler);
         topicsService.getTopics(
-                mRequest,
+                request,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
@@ -637,7 +697,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(expectedResultCode);
                     }
 
                     @Override

@@ -16,12 +16,15 @@
 
 package com.android.adservices.service;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
 import java.io.PrintWriter;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
@@ -77,6 +80,36 @@ public interface Flags extends Dumpable {
      */
     default int getTopicsNumberOfLookBackEpochs() {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
+    }
+
+    /** Available types of classifier behaviours for the Topics API. */
+    @IntDef(
+            flag = true,
+            value = {
+                UNKNOWN_CLASSIFIER,
+                ON_DEVICE_CLASSIFIER,
+                PRECOMPUTED_CLASSIFIER,
+                PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface ClassifierType {}
+
+    /** Unknown classifier option. */
+    int UNKNOWN_CLASSIFIER = 0;
+    /** Only on-device classification. */
+    int ON_DEVICE_CLASSIFIER = 1;
+    /** Only Precomputed classification. */
+    int PRECOMPUTED_CLASSIFIER = 2;
+    /** Precomputed classification values are preferred over on-device classification values. */
+    int PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER = 3;
+
+    /* Type of classifier intended to be used by default. */
+    @ClassifierType int DEFAULT_CLASSIFIER_TYPE = PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER;
+
+    /** Returns the type of classifier currently used by Topics. */
+    @ClassifierType
+    default int getClassifierType() {
+        return DEFAULT_CLASSIFIER_TYPE;
     }
 
     /* The default period for the Maintenance job. */
@@ -146,7 +179,8 @@ public interface Flags extends Dumpable {
 
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1657831410387.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
+                    + "/manifest_config_1657831410387.binaryproto";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -403,7 +437,8 @@ public interface Flags extends Dumpable {
     // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
     // when we actually upload the models.
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1/manifest_config_1657744589741.binaryproto";
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
+                    + "/manifest_config_1657744589741.binaryproto";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -476,5 +511,18 @@ public interface Flags extends Dumpable {
      */
     default String getPpapiAppAllowList() {
         return PPAPI_APP_ALLOW_LIST;
+    }
+
+    // Rate Limit Flags.
+
+    /**
+     * PP API Rate Limit for each SDK. This is the max allowed QPS for one SDK to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
+
+    /** Returns the Sdk Request Permits Per Second. */
+    default float getSdkRequestPermitsPerSecond() {
+        return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 }

@@ -121,6 +121,17 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
+    /** Unloads SDK. */
+    public void unloadSdk(IBinder sdkToken, String sdkName) {
+        enforceCallerIsSystemServer();
+        final long token = Binder.clearCallingIdentity();
+        try {
+            unloadSdkInternal(sdkToken, sdkName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
     @Override
     @RequiresPermission(android.Manifest.permission.DUMP)
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
@@ -205,6 +216,16 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
+    private void unloadSdkInternal(@NonNull IBinder sdkToken, @NonNull String sdkName) {
+        synchronized (mHeldSdk) {
+            SandboxedSdkHolder sandboxedSdkHolder = mHeldSdk.get(sdkToken);
+            if (sandboxedSdkHolder != null) {
+                sandboxedSdkHolder.unloadSdk();
+                mHeldSdk.remove(sdkToken);
+            }
+        }
+    }
+
     private void sendLoadError(ILoadSdkInSandboxCallback callback, int errorCode, String message) {
         try {
             callback.onLoadSdkError(errorCode, message);
@@ -251,6 +272,13 @@ public class SdkSandboxServiceImpl extends Service {
                     sdkDeDataDir,
                     params,
                     callback);
+        }
+
+        @Override
+        public void unloadSdk(@NonNull IBinder sdkToken, @NonNull String sdkName) {
+            Objects.requireNonNull(sdkToken, "sdkToken should not be null");
+            Objects.requireNonNull(sdkName, "sdkName should not be null");
+            SdkSandboxServiceImpl.this.unloadSdk(sdkToken, sdkName);
         }
     }
 }

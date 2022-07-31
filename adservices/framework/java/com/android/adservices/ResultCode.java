@@ -31,4 +31,6 @@ public class ResultCode {
     public static final int RESULT_INVALID_ARGUMENT = 3;
     /** Result code for I/O error. */
     public static final int RESULT_IO_ERROR = 4;
+    /** Result code for Rate Limit Reached. */
+    public static final int RESULT_RATE_LIMIT_REACHED = 5;
 }
