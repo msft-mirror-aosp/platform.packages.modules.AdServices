@@ -46,9 +46,7 @@ public class CustomAudienceQuantityChecker {
             "The max number of custom audience for the owner had reached.";
 
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
-    private final long mCustomAudienceMaxOwnerCount;
-    private final long mCustomAudienceMaxCount;
-    private final long mCustomAudiencePerAppMaxCount;
+    @NonNull private final Flags mFlags;
 
     public CustomAudienceQuantityChecker(
             @NonNull CustomAudienceDao customAudienceDao, @NonNull Flags flags) {
@@ -56,9 +54,7 @@ public class CustomAudienceQuantityChecker {
         Objects.requireNonNull(flags);
 
         mCustomAudienceDao = customAudienceDao;
-        mCustomAudienceMaxOwnerCount = flags.getFledgeCustomAudienceMaxOwnerCount();
-        mCustomAudienceMaxCount = flags.getFledgeCustomAudienceMaxCount();
-        mCustomAudiencePerAppMaxCount = flags.getFledgeCustomAudiencePerAppMaxCount();
+        mFlags = flags;
     }
 
     /**
@@ -74,6 +70,10 @@ public class CustomAudienceQuantityChecker {
      */
     public void check(@NonNull CustomAudience customAudience) {
         Objects.requireNonNull(customAudience);
+
+        long mCustomAudienceMaxOwnerCount = mFlags.getFledgeCustomAudienceMaxOwnerCount();
+        long mCustomAudienceMaxCount = mFlags.getFledgeCustomAudienceMaxCount();
+        long mCustomAudiencePerAppMaxCount = mFlags.getFledgeCustomAudiencePerAppMaxCount();
 
         List<String> violations = new ArrayList<>();
         CustomAudienceDao.CustomAudienceStats customAudienceStats =
