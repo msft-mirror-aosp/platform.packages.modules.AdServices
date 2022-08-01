@@ -165,7 +165,12 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(callback);
         try {
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    orchestrateAdSelection(adSelectionConfig);
+                    FluentFuture.from(getBuyersCustomAudience(adSelectionConfig))
+                            .transformAsync(
+                                    buyersCustomAudiences ->
+                                            orchestrateAdSelection(
+                                                    adSelectionConfig, buyersCustomAudiences),
+                                    mExecutorService);
 
             Futures.addCallback(
                     dbAdSelectionFuture,
@@ -240,18 +245,12 @@ public final class AdSelectionRunner {
      * @return {@link AdSelectionResponse}
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig) {
-
-        ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
-                getBuyersCustomAudience(adSelectionConfig);
-
-        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
-                buyerCAs -> {
-                    return runAdBidding(buyerCAs, adSelectionConfig);
-                };
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull List<DBCustomAudience> buyerCustomAudience)
+            throws ExecutionException, InterruptedException {
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
+                runAdBidding(buyerCustomAudience, adSelectionConfig);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
