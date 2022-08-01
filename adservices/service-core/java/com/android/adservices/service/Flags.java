@@ -468,7 +468,14 @@ public interface Flags extends Dumpable {
                     + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
-                    + "com.android.adservices.tests.permissions.valid";
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "android.adservices.crystalball,"
+                    + "com.example.adservices.samples.topics.sampleapp1,"
+                    + "com.example.adservices.samples.topics.sampleapp2,"
+                    + "com.example.adservices.samples.topics.sampleapp3,"
+                    + "com.example.adservices.samples.topics.sampleapp4,"
+                    + "com.example.adservices.samples.topics.sampleapp5,"
+                    + "com.example.adservices.samples.topics.sampleapp6";
 
     /**
      * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
