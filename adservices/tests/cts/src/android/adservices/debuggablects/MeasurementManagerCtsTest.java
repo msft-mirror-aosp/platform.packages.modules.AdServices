@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.adservices.cts;
+package android.adservices.debuggablects;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -28,6 +28,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
+import android.provider.DeviceConfig;
 import android.test.suitebuilder.annotation.SmallTest;
 
 import androidx.annotation.NonNull;
@@ -35,12 +36,18 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.MeasurementServiceImpl;
+import com.android.modules.utils.testing.TestableDeviceConfig;
+
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -52,11 +59,17 @@ import java.util.concurrent.Executors;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-public class CtsMeasurementManagerTest {
+public class MeasurementManagerCtsTest {
+    // This rule is used for configuring P/H flags
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private MeasurementClient mMeasurementClient;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
+    private static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND =
+            "sdk_request_permits_per_second";
     private static final String INVALID_SERVER_ADDRESS = "http://example.com";
     private static final Uri SOURCE_ORIGIN = Uri.parse("http://source-origin.com");
     private static final Uri DESTINATION = Uri.parse("http://trigger-origin.com");
@@ -70,9 +83,24 @@ public class CtsMeasurementManagerTest {
 
     @Before
     public void setup() {
+        // To avoid throttling on this test, setting max value of request per second
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Integer.toString(Integer.MAX_VALUE),
+                /* makeDefault */ false);
+
+        // Mocking context passed to measurement client so updated DeviceConfigs can be read
+        final Context mockContext = Mockito.mock(Context.class);
+        final MeasurementManager mm = Mockito.spy(new MeasurementManager(sContext));
+        Mockito.doReturn(mm).when(mockContext).getSystemService(MeasurementManager.class);
+        Mockito.doReturn(new MeasurementServiceImpl(sContext, ConsentManager.getInstance(sContext)))
+                .when(mm)
+                .getService();
+
         mMeasurementClient =
                 new MeasurementClient.Builder()
-                        .setContext(sContext)
+                        .setContext(mockContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
     }
