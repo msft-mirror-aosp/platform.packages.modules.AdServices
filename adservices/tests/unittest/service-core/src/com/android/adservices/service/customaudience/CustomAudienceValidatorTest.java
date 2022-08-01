@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -194,7 +195,8 @@ public class CustomAudienceValidatorTest {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                .setUserBiddingSignals("Not[A]VALID[JSON]")
+                                .setUserBiddingSignals(
+                                        AdSelectionSignals.fromString("Not[A]VALID[JSON]"))
                                 .build()),
                 String.format(
                         JsonValidator.SHOULD_BE_A_VALID_JSON,

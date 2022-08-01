@@ -112,7 +112,10 @@ public class ReportImpressionScriptEngine {
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
                         .add(stringArg(RENDER_URL_ARG_NAME, renderUrl.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(
+                                jsonArg(
+                                        CONTEXTUAL_SIGNALS_ARG_NAME,
+                                        contextualSignals.getStringForm()))
                         .build();
 
         return transform(
@@ -154,10 +157,16 @@ public class ReportImpressionScriptEngine {
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(
+                                jsonArg(
+                                        AD_SELECTION_SIGNALS_ARG_NAME,
+                                        adSelectionSignals.getStringForm()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.getStringForm()))
+                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.getStringForm()))
+                        .add(
+                                jsonArg(
+                                        CONTEXTUAL_SIGNALS_ARG_NAME,
+                                        contextualSignals.getStringForm()))
                         .add(
                                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))

@@ -17,6 +17,8 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -39,8 +41,7 @@ import java.util.concurrent.Executor;
 public final class CustomAudience implements Parcelable {
 
     @NonNull private final String mOwner;
-    @NonNull
-    private final String mBuyer;
+    @NonNull private final AdTechIdentifier mBuyer;
     @NonNull
     private final String mName;
     @Nullable
@@ -49,8 +50,7 @@ public final class CustomAudience implements Parcelable {
     private final Instant mExpirationTime;
     @NonNull
     private final Uri mDailyUpdateUrl;
-    @Nullable
-    private final String mUserBiddingSignals;
+    @Nullable private final AdSelectionSignals mUserBiddingSignals;
     @Nullable
     private final TrustedBiddingData mTrustedBiddingData;
     @NonNull
@@ -90,12 +90,13 @@ public final class CustomAudience implements Parcelable {
         Objects.requireNonNull(in);
 
         mOwner = in.readString();
-        mBuyer = in.readString();
+        mBuyer = AdTechIdentifier.CREATOR.createFromParcel(in);
         mName = in.readString();
         mActivationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
         mExpirationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
         mDailyUpdateUrl = Uri.CREATOR.createFromParcel(in);
-        mUserBiddingSignals = in.readBoolean() ? in.readString() : null;
+        mUserBiddingSignals =
+                in.readBoolean() ? AdSelectionSignals.CREATOR.createFromParcel(in) : null;
         mTrustedBiddingData = in.readBoolean()
                 ? TrustedBiddingData.CREATOR.createFromParcel(in) : null;
         mBiddingLogicUrl = Uri.CREATOR.createFromParcel(in);
@@ -107,14 +108,15 @@ public final class CustomAudience implements Parcelable {
         Objects.requireNonNull(dest);
 
         dest.writeString(mOwner);
-        dest.writeString(mBuyer);
+        mBuyer.writeToParcel(dest, flags);
         dest.writeString(mName);
         writeNullable(dest, mActivationTime,
                 () -> dest.writeLong(mActivationTime.toEpochMilli()));
         writeNullable(dest, mExpirationTime,
                 () -> dest.writeLong(mExpirationTime.toEpochMilli()));
         mDailyUpdateUrl.writeToParcel(dest, flags);
-        writeNullable(dest, mUserBiddingSignals, () -> dest.writeString(mUserBiddingSignals));
+        writeNullable(
+                dest, mUserBiddingSignals, () -> mUserBiddingSignals.writeToParcel(dest, flags));
         writeNullable(dest, mTrustedBiddingData,
                 () -> mTrustedBiddingData.writeToParcel(dest, flags));
         mBiddingLogicUrl.writeToParcel(dest, flags);
@@ -151,10 +153,10 @@ public final class CustomAudience implements Parcelable {
     /**
      * A buyer is identified by a domain in the form "buyerexample.com".
      *
-     * @return a String containing the custom audience's buyer's domain
+     * @return an AdTechIdentifier containing the custom audience's buyer's domain
      */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
@@ -220,8 +222,7 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * User bidding signals are optionally provided by buyers to be consumed by buyer-provided
-     * JavaScript during ad selection in an isolated execution environment. These signals should be
-     * represented as a valid JSON object serialized into a string.
+     * JavaScript during ad selection in an isolated execution environment.
      *
      * <p>If the user bidding signals are not a valid JSON object that can be consumed by the
      * buyer's JS, the custom audience will not be eligible for ad selection.
@@ -229,10 +230,11 @@ public final class CustomAudience implements Parcelable {
      * <p>If not specified, the {@link CustomAudience} will not participate in ad selection until
      * user bidding signals are provided via the daily update for the custom audience.
      *
-     * @return a JSON String representing the user bidding signals for the custom audience
+     * @return an AdSelectionSignals object representing the user bidding signals for the custom
+     *     audience
      */
     @Nullable
-    public String getUserBiddingSignals() {
+    public AdSelectionSignals getUserBiddingSignals() {
         return mUserBiddingSignals;
     }
 
@@ -310,8 +312,7 @@ public final class CustomAudience implements Parcelable {
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
         @NonNull private String mOwner;
-        @NonNull
-        private String mBuyer;
+        @NonNull private AdTechIdentifier mBuyer;
         @NonNull
         private String mName;
         @Nullable
@@ -320,8 +321,7 @@ public final class CustomAudience implements Parcelable {
         private Instant mExpirationTime;
         @NonNull
         private Uri mDailyUpdateUrl;
-        @Nullable
-        private String mUserBiddingSignals;
+        @Nullable private AdSelectionSignals mUserBiddingSignals;
         @Nullable
         private TrustedBiddingData mTrustedBiddingData;
         @NonNull
@@ -351,12 +351,12 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the buyer domain URL.
-         * <p>
-         * See {@link #getBuyer()} for more information.
+         * Sets the buyer AdTechIdentifier.
+         *
+         * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setBuyer(@NonNull String buyer) {
+        public CustomAudience.Builder setBuyer(@NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
             mBuyer = buyer;
             return this;
@@ -415,11 +415,12 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the user bidding signals used in the ad selection process.
-         * <p>
-         * See {@link #getUserBiddingSignals()} for more information.
+         *
+         * <p>See {@link #getUserBiddingSignals()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setUserBiddingSignals(@Nullable String userBiddingSignals) {
+        public CustomAudience.Builder setUserBiddingSignals(
+                @Nullable AdSelectionSignals userBiddingSignals) {
             mUserBiddingSignals = userBiddingSignals;
             return this;
         }

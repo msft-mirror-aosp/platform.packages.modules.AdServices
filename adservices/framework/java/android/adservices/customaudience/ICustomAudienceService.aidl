@@ -16,6 +16,8 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
@@ -28,7 +30,7 @@ import android.net.Uri;
   */
 interface ICustomAudienceService {
     void joinCustomAudience(in CustomAudience customAudience, in ICustomAudienceCallback callback);
-    void leaveCustomAudience(in String owner, in String buyer, in String name,
+    void leaveCustomAudience(in String owner, in AdTechIdentifier buyer, in String name,
             in ICustomAudienceCallback callback);
 
     /**
@@ -45,10 +47,10 @@ interface ICustomAudienceService {
      */
     void overrideCustomAudienceRemoteInfo(
         in String owner,
-        in String buyer,
+        in AdTechIdentifier buyer,
         in String name,
         in String biddingLogicJS,
-        in String trustedBiddingData,
+        in AdSelectionSignals trustedBiddingData,
         in CustomAudienceOverrideCallback callback);
 
     /**
@@ -64,7 +66,7 @@ interface ICustomAudienceService {
      */
     void removeCustomAudienceRemoteInfoOverride(
         in String owner,
-        in String buyer,
+        in AdTechIdentifier buyer,
         in String name,
         in CustomAudienceOverrideCallback callback);
 

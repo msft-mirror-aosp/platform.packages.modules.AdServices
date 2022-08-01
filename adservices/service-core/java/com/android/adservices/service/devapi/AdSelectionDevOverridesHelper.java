@@ -18,6 +18,7 @@ package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -63,12 +64,14 @@ public class AdSelectionDevOverridesHelper {
             @NonNull AdSelectionConfig adSelectionConfig) {
         // See go/hashing#java
         Hasher hasher = sHashFunction.newHasher();
-        hasher.putUnencodedChars(adSelectionConfig.getSeller())
+        hasher.putUnencodedChars(adSelectionConfig.getSeller().getStringForm())
                 .putUnencodedChars(adSelectionConfig.getDecisionLogicUri().toString())
-                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals())
-                .putUnencodedChars(adSelectionConfig.getSellerSignals());
+                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals().getStringForm())
+                .putUnencodedChars(adSelectionConfig.getSellerSignals().getStringForm());
 
-        adSelectionConfig.getCustomAudienceBuyers().stream().forEach(hasher::putUnencodedChars);
+        adSelectionConfig.getCustomAudienceBuyers().stream()
+                .map(AdTechIdentifier::getStringForm)
+                .forEach(hasher::putUnencodedChars);
         adSelectionConfig.getContextualAds().stream()
                 .forEach(
                         adWithBid -> {
@@ -80,8 +83,8 @@ public class AdSelectionDevOverridesHelper {
         adSelectionConfig.getPerBuyerSignals().entrySet().stream()
                 .forEach(
                         buyerAndSignals -> {
-                            hasher.putUnencodedChars(buyerAndSignals.getKey())
-                                    .putUnencodedChars(buyerAndSignals.getValue());
+                            hasher.putUnencodedChars(buyerAndSignals.getKey().getStringForm())
+                                    .putUnencodedChars(buyerAndSignals.getValue().getStringForm());
                         });
         return hasher.hash().toString();
     }
@@ -122,10 +125,7 @@ public class AdSelectionDevOverridesHelper {
                 mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
                         calculateAdSelectionConfigId(adSelectionConfig),
                         mDevContext.getCallingAppPackageName());
-        if (overrideSignals == null) {
-            return null;
-        }
-        return AdSelectionSignals.fromString(overrideSignals);
+        return overrideSignals == null ? null : AdSelectionSignals.fromString(overrideSignals);
     }
 
     /**

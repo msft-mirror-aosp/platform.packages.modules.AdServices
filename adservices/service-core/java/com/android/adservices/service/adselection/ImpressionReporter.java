@@ -23,6 +23,7 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -303,12 +304,12 @@ public class ImpressionReporter {
             return FluentFuture.from(
                             mJsEngine.reportWin(
                                     ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
-                                    AdSelectionSignals.fromString(
-                                            ctx.mAdSelectionConfig.getAdSelectionSignals()),
-                                    AdSelectionSignals.fromString(
-                                            ctx.mAdSelectionConfig
-                                                    .getPerBuyerSignals()
-                                                    .get(customAudienceSignals.getBuyer())),
+                                    ctx.mAdSelectionConfig.getAdSelectionSignals(),
+                                    ctx.mAdSelectionConfig
+                                            .getPerBuyerSignals()
+                                            .get(
+                                                    AdTechIdentifier.fromString(
+                                                            customAudienceSignals.getBuyer())),
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
