@@ -154,6 +154,7 @@ public class AppUpdateTest {
     @Test
     @Ignore("b/241309845")
     public void testAppUpdate() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
@@ -217,6 +218,7 @@ public class AppUpdateTest {
                 .isEqualTo(EXPECTED_TOPIC_RESPONSE_BROADCASTS.length);
 
         // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
     }
@@ -266,6 +268,13 @@ public class AppUpdateTest {
                 };
 
         sContext.registerReceiver(mTopicsResponseReceiver, topicResponseIntentFilter);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.

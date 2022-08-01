@@ -44,9 +44,6 @@ import java.util.concurrent.Executors;
 
 @RunWith(AndroidJUnit4.class)
 public class TopicsManagerTest {
-    @SuppressWarnings({"unused"})
-    private static final String TAG = "TopicsManagerTest";
-
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
@@ -68,7 +65,7 @@ public class TopicsManagerTest {
     private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup() throws Exception {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -76,6 +73,7 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManager() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
@@ -129,8 +127,16 @@ public class TopicsManagerTest {
         assertThat(sdk2Result2.getTopics()).isEmpty();
 
         // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.

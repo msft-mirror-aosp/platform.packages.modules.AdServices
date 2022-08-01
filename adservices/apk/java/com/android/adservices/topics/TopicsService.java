@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -63,7 +64,8 @@ public class TopicsService extends Service {
                             Clock.SYSTEM_CLOCK,
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(
-                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()));
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()),
+                            EnrollmentDao.getInstance(this));
             mTopicsService.init();
         }
 
