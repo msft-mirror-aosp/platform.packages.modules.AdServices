@@ -17,6 +17,7 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
@@ -29,6 +30,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class WebTriggerRegistrationRequestInternalTest {
     private static final Context CONTEXT =
@@ -90,6 +92,37 @@ public class WebTriggerRegistrationRequestInternalTest {
                                 .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
                                 .setPackageName(null)
                                 .build());
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistrationRequest().describeContents());
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final WebTriggerRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        final WebTriggerRegistrationRequestInternal request2 = createExampleRegistrationRequest();
+        final Set<WebTriggerRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        final Set<WebTriggerRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        assertEquals(request1.hashCode(), request2.hashCode());
+        assertEquals(request1, request2);
+        assertEquals(requestSet1, requestSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final WebTriggerRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        final WebTriggerRegistrationRequestInternal request2 =
+                new WebTriggerRegistrationRequestInternal.Builder()
+                        .setTriggerRegistrationRequest(EXAMPLE_EXTERNAL_TRIGGER_REG_REQUEST)
+                        .setPackageName("com.foo")
+                        .build();
+        final Set<WebTriggerRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        final Set<WebTriggerRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        assertNotEquals(request1.hashCode(), request2.hashCode());
+        assertNotEquals(request1, request2);
+        assertNotEquals(requestSet1, requestSet2);
     }
 
     private WebTriggerRegistrationRequestInternal createExampleRegistrationRequest() {
