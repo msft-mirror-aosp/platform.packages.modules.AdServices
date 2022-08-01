@@ -18,14 +18,15 @@ package android.app.sdksandbox.testutils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.LoadSdkException;
+import android.app.sdksandbox.LoadSdkResponse;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback;
-import android.os.Bundle;
+import android.os.OutcomeReceiver;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class FakeLoadSdkCallback implements LoadSdkCallback {
+public class FakeLoadSdkCallback implements OutcomeReceiver<LoadSdkResponse, LoadSdkException> {
     private final CountDownLatch mLoadSdkLatch = new CountDownLatch(1);
 
     private boolean mLoadSdkSuccess;
@@ -34,16 +35,16 @@ public class FakeLoadSdkCallback implements LoadSdkCallback {
     private String mErrorMsg;
 
     @Override
-    public void onLoadSdkSuccess(Bundle params) {
+    public void onResult(LoadSdkResponse response) {
         mLoadSdkSuccess = true;
         mLoadSdkLatch.countDown();
     }
 
     @Override
-    public void onLoadSdkFailure(int errorCode, String errorMsg) {
+    public void onError(LoadSdkException exception) {
         mLoadSdkSuccess = false;
-        mErrorCode = errorCode;
-        mErrorMsg = errorMsg;
+        mErrorCode = exception.getLoadSdkErrorCode();
+        mErrorMsg = exception.getMessage();
         mLoadSdkLatch.countDown();
     }
 

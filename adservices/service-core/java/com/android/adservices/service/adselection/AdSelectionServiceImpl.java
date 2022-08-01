@@ -26,6 +26,7 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -113,7 +114,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
+
+            AdSelectionConfigValidator adSelectionConfigValidator =
+                    new AdSelectionConfigValidator();
+            adSelectionConfigValidator.validate(adSelectionConfig);
+        } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
@@ -144,7 +149,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(requestParams);
             Objects.requireNonNull(callback);
-        } catch (NullPointerException exception) {
+            AdSelectionConfigValidator adSelectionConfigValidator =
+                    new AdSelectionConfigValidator();
+            adSelectionConfigValidator.validate(requestParams.getAdSelectionConfig());
+        } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
@@ -169,6 +177,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
+            @NonNull String trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         try {
             Objects.requireNonNull(adSelectionConfig);
@@ -188,14 +197,18 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
                         devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
 
-        overrider.addOverride(adSelectionConfig, decisionLogicJS, callback);
+        overrider.addOverride(
+                adSelectionConfig,
+                decisionLogicJS,
+                AdSelectionSignals.fromString(trustedScoringSignals),
+                callback);
     }
 
     @Override
@@ -221,7 +234,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         AdSelectionOverrider overrider =
@@ -252,7 +265,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         if (!devContext.getDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     shortApiName, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            throw new IllegalStateException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         AdSelectionOverrider overrider =
@@ -263,6 +276,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     /** Close down method to be invoked when the PPAPI process is shut down. */
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void destroy() {
         LogUtil.i("Shutting down AdSelectionService");
         JSScriptEngine.getInstance(mContext).shutdown();

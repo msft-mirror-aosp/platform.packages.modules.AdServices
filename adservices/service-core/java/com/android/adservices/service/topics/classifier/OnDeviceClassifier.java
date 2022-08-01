@@ -22,6 +22,7 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -56,8 +57,17 @@ public class OnDeviceClassifier implements Classifier {
 
     private static final String EMPTY = "";
     private static final AppInfo EMPTY_APP_INFO = new AppInfo(EMPTY, EMPTY);
+
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private static final String LABELS_FILE_PATH = "classifier/labels_topics.txt";
+    private static final String CLASSIFIER_ASSETS_METADATA_PATH =
+            "classifier/classifier_assets_metadata.json";
+
+    private static final String MODEL_ASSET_FIELD = "tflite_model";
+    private static final String LABELS_ASSET_FIELD = "labels_topics";
+    private static final String ASSET_VERSION_FIELD = "asset_version";
+
+    private static final String NO_VERSION_INFO = "NO_VERSION_INFO";
 
     private final Preprocessor mPreprocessor;
     private final PackageManagerUtil mPackageManagerUtil;
@@ -66,6 +76,8 @@ public class OnDeviceClassifier implements Classifier {
 
     private BertNLClassifier mBertNLClassifier;
     private ImmutableList<Integer> mLabels;
+    private long mModelVersion;
+    private long mLabelsVersion;
     private boolean mLoaded;
     private ImmutableMap<String, AppInfo> mAppInfoMap;
 
@@ -100,37 +112,41 @@ public class OnDeviceClassifier implements Classifier {
 
     @Override
     @NonNull
-    public ImmutableMap<String, List<Integer>> classify(@NonNull Set<String> appPackageNames) {
+    public ImmutableMap<String, List<Topic>> classify(@NonNull Set<String> appPackageNames) {
+        if (appPackageNames.isEmpty()) {
+            return ImmutableMap.of();
+        }
+
         // Load the assets if not loaded already.
         if (!isLoaded()) {
             mLoaded = load();
         }
 
-        // Load latest app info for every call.
+        // Load test app info for every call.
         mAppInfoMap = mPackageManagerUtil.getAppInformation(appPackageNames);
         if (mAppInfoMap.isEmpty()) {
             LogUtil.w("Loaded app description map is empty.");
         }
 
-        ImmutableMap.Builder<String, List<Integer>> packageNameToTopicIds = ImmutableMap.builder();
+        ImmutableMap.Builder<String, List<Topic>> packageNameToTopics = ImmutableMap.builder();
         for (String appPackageName : appPackageNames) {
             String appDescription = getProcessedAppDescription(appPackageName);
-            List<Integer> appClassificationTopicIds = getAppClassificationTopics(appDescription);
+            List<Topic> appClassificationTopics = getAppClassificationTopics(appDescription);
             LogUtil.v(
                     "[ML] Top classification for app description \""
                             + appDescription
                             + "\" is "
-                            + Iterables.getFirst(appClassificationTopicIds, /*default value*/ -1));
-            packageNameToTopicIds.put(appPackageName, appClassificationTopicIds);
+                            + Iterables.getFirst(appClassificationTopics, /*default value*/ -1));
+            packageNameToTopics.put(appPackageName, appClassificationTopics);
         }
 
-        return packageNameToTopicIds.build();
+        return packageNameToTopics.build();
     }
 
     @Override
     @NonNull
-    public List<Integer> getTopTopics(
-            Map<String, List<Integer>> appTopics, int numberOfTopTopics, int numberOfRandomTopics) {
+    public List<Topic> getTopTopics(
+            Map<String, List<Topic>> appTopics, int numberOfTopTopics, int numberOfRandomTopics) {
         // Load assets if necessary.
         if (!isLoaded()) {
             load();
@@ -142,7 +158,7 @@ public class OnDeviceClassifier implements Classifier {
 
     // Uses the BertNLClassifier to fetch the most relevant topic id based on the input app
     // description.
-    private List<Integer> getAppClassificationTopics(@NonNull String appDescription) {
+    private List<Topic> getAppClassificationTopics(@NonNull String appDescription) {
         // Returns list of labelIds with their corresponding score in Category for the app
         // description.
         List<Category> classifications = mBertNLClassifier.classify(appDescription);
@@ -153,6 +169,7 @@ public class OnDeviceClassifier implements Classifier {
         // TODO(b/235435229): Evaluate the strategy to use first x elements.
         return classifications.stream()
                 .map(OnDeviceClassifier::convertCategoryLabelToTopicId)
+                .map(this::createTopic)
                 .limit(MAX_LABELS_PER_APP)
                 .collect(Collectors.toList());
     }
@@ -184,6 +201,56 @@ public class OnDeviceClassifier implements Classifier {
         return appDescription;
     }
 
+    long getModelVersion() {
+        // Load assets if not loaded already.
+        if (!isLoaded()) {
+            load();
+        }
+
+        return mModelVersion;
+    }
+
+    long getBertModelVersion() {
+        // Load assets if necessary.
+        if (!isLoaded()) {
+            load();
+        }
+
+        String modelVersion = mBertNLClassifier.getModelVersion();
+        if (modelVersion.equals(NO_VERSION_INFO)) {
+            return 0;
+        }
+
+        return Long.parseLong(modelVersion);
+    }
+
+    long getLabelsVersion() {
+        // Load assets if not loaded already.
+        if (!isLoaded()) {
+            load();
+        }
+
+        return mLabelsVersion;
+    }
+
+    long getBertLabelsVersion() {
+        // Load assets if necessary.
+        if (!isLoaded()) {
+            load();
+        }
+
+        String labelsVersion = mBertNLClassifier.getLabelsVersion();
+        if (labelsVersion.equals(NO_VERSION_INFO)) {
+            return 0;
+        }
+
+        return Long.parseLong(labelsVersion);
+    }
+
+    private Topic createTopic(int topicId) {
+        return Topic.create(topicId, mLabelsVersion, mModelVersion);
+    }
+
     // Indicates whether assets are loaded.
     private boolean isLoaded() {
         return mLoaded;
@@ -203,6 +270,17 @@ public class OnDeviceClassifier implements Classifier {
 
         // Load labels.
         mLabels = CommonClassifierHelper.retrieveLabels(mAssetManager, LABELS_FILE_PATH);
+
+        // Load classifier assets metadata.
+        ImmutableMap<String, ImmutableMap<String, String>> classifierAssetsMetadata =
+                CommonClassifierHelper.getAssetsMetadata(
+                        mAssetManager, CLASSIFIER_ASSETS_METADATA_PATH);
+        mModelVersion =
+                Long.parseLong(
+                        classifierAssetsMetadata.get(MODEL_ASSET_FIELD).get(ASSET_VERSION_FIELD));
+        mLabelsVersion =
+                Long.parseLong(
+                        classifierAssetsMetadata.get(LABELS_ASSET_FIELD).get(ASSET_VERSION_FIELD));
 
         return true;
     }

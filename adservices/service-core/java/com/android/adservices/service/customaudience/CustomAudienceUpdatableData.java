@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
-import android.net.Uri;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,38 +25,42 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /** This class represents the result of a daily fetch that will update a custom audience. */
 @AutoValue
 public abstract class CustomAudienceUpdatableData {
-    public static final String USER_BIDDING_SIGNALS_KEY = "user_bidding_signals";
-    public static final String TRUSTED_BIDDING_DATA_KEY = "trusted_bidding_data";
-    public static final String TRUSTED_BIDDING_URL_KEY = "trusted_bidding_url";
-    public static final String TRUSTED_BIDDING_KEYS_KEY = "trusted_bidding_keys";
-    public static final String ADS_KEY = "ads";
-    public static final String RENDER_URL_KEY = "render_url";
-    public static final String METADATA_KEY = "metadata";
+    @VisibleForTesting
+    enum ReadStatus {
+        STATUS_UNKNOWN,
+        STATUS_NOT_FOUND,
+        STATUS_FOUND_VALID,
+        STATUS_FOUND_INVALID
+    }
+
+    private static final String INVALID_JSON_TYPE_ERROR_FORMAT =
+            "%s Invalid JSON type while parsing %s found in JSON response";
+    private static final String VALIDATION_FAILED_ERROR_FORMAT =
+            "%s Data validation failed while parsing %s found in JSON response";
 
     /**
-     * @return the user bidding signals as a JSON object serialized as a string that were sent in
-     *     the update response. If there were no valid user bidding signals, returns {@code null}.
+     * @return the user bidding signals that were sent in the update response. If there were no
+     *     valid user bidding signals, returns {@code null}.
      */
     @Nullable
-    public abstract String getUserBiddingSignals();
+    public abstract AdSelectionSignals getUserBiddingSignals();
 
     /**
      * @return trusted bidding data that was sent in the update response. If no valid trusted
@@ -77,8 +82,8 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * @return the result type for the update attempt before {@link
-     *     #createFromResponseString(Instant, BackgroundFetchRunner.UpdateResultType, String)} was
-     *     called
+     *     #createFromResponseString(Instant, AdTechIdentifier,
+     *     BackgroundFetchRunner.UpdateResultType, String, Flags)} was called
      */
     public abstract BackgroundFetchRunner.UpdateResultType getInitialUpdateResult();
 
@@ -119,17 +124,25 @@ public abstract class CustomAudienceUpdatableData {
      *
      * @param attemptedUpdateTime the time at which the update for this custom audience was
      *     attempted
+     * @param buyer the buyer ad tech's eTLD+1
      * @param initialUpdateResult the result type of the fetch attempt prior to parsing the {@code
      *     response}
      * @param response the String response returned from querying the custom audience's daily fetch
      *     URL
+     * @param flags the {@link Flags} used to get configurable limits for validating the {@code
+     *     response}
      */
     @NonNull
     public static CustomAudienceUpdatableData createFromResponseString(
             @NonNull Instant attemptedUpdateTime,
+            @NonNull AdTechIdentifier buyer,
             BackgroundFetchRunner.UpdateResultType initialUpdateResult,
-            @NonNull final String response) {
+            @NonNull final String response,
+            @NonNull Flags flags) {
+        Objects.requireNonNull(attemptedUpdateTime);
+        Objects.requireNonNull(buyer);
         Objects.requireNonNull(response);
+        Objects.requireNonNull(flags);
 
         // Use the hash of the response string as a session identifier for logging purposes
         final String responseHash = "[" + response.hashCode() + "]";
@@ -164,75 +177,31 @@ public abstract class CustomAudienceUpdatableData {
             return dataBuilder.build();
         }
 
-        boolean foundUserBiddingSignals = true;
-        boolean errorParsingUserBiddingSignals = false;
-        boolean foundTrustedBiddingData = true;
-        boolean errorParsingTrustedBiddingData = false;
-        boolean foundAds = true;
-        boolean errorParsingAds = false;
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        responseHash,
+                        buyer,
+                        flags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        flags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        flags.getFledgeCustomAudienceMaxNumAds());
 
-        // TODO(b/233739309): Implement data validation for the number of ads allowed, per-field
-        //  size constraints, URL schema, etc.
-
-        try {
-            dataBuilder.setUserBiddingSignals(getUserBiddingSignalsFromJsonObject(responseObject));
-            LogUtil.v("%s Found valid %s in JSON response", responseHash, USER_BIDDING_SIGNALS_KEY);
-        } catch (JSONException | NullPointerException exception) {
-            LogUtil.e(
-                    exception,
-                    "%s Invalid JSON type while parsing %s found in JSON response",
-                    responseHash,
-                    USER_BIDDING_SIGNALS_KEY);
-            errorParsingUserBiddingSignals = true;
-            dataBuilder.setUserBiddingSignals(null);
-        } catch (IllegalArgumentException ignoredException) {
-            LogUtil.v("%s %s not found in JSON response", responseHash, USER_BIDDING_SIGNALS_KEY);
-            foundUserBiddingSignals = false;
-            dataBuilder.setUserBiddingSignals(null);
-        }
-
-        try {
-            dataBuilder.setTrustedBiddingData(
-                    getTrustedBiddingDataFromJsonObject(responseObject, responseHash));
-            LogUtil.v("%s Found valid %s in JSON response", responseHash, TRUSTED_BIDDING_DATA_KEY);
-        } catch (JSONException | NullPointerException exception) {
-            LogUtil.e(
-                    exception,
-                    "%s Invalid JSON type while parsing %s found in JSON response",
-                    responseHash,
-                    TRUSTED_BIDDING_DATA_KEY);
-            errorParsingTrustedBiddingData = true;
-            dataBuilder.setTrustedBiddingData(null);
-        } catch (IllegalArgumentException ignoredException) {
-            LogUtil.v("%s %s not found in JSON response", responseHash, TRUSTED_BIDDING_DATA_KEY);
-            foundTrustedBiddingData = false;
-            dataBuilder.setTrustedBiddingData(null);
-        }
-
-        try {
-            dataBuilder.setAds(getAdsFromJsonObject(responseObject, responseHash));
-            LogUtil.v("%s Found valid %s in JSON response", responseHash, ADS_KEY);
-        } catch (JSONException | NullPointerException exception) {
-            LogUtil.e(
-                    exception,
-                    "%s Invalid JSON type while parsing %s found in JSON response",
-                    responseHash,
-                    ADS_KEY);
-            errorParsingAds = true;
-            dataBuilder.setAds(null);
-        } catch (IllegalArgumentException ignoredException) {
-            LogUtil.v("%s %s not found in JSON response", responseHash, ADS_KEY);
-            foundAds = false;
-            dataBuilder.setAds(null);
-        }
+        ReadStatus userBiddingSignalsReadStatus =
+                readUserBiddingSignals(reader, responseHash, dataBuilder);
+        ReadStatus trustedBiddingDataReadStatus =
+                readTrustedBiddingData(reader, responseHash, dataBuilder);
+        ReadStatus adsReadStatus = readAds(reader, responseHash, dataBuilder);
 
         // If there were no useful fields found, or if there was something useful found and
         // successfully updated, then this object should signal a successful update.
         boolean containsSuccessfulUpdate =
-                !(foundUserBiddingSignals || foundTrustedBiddingData || foundAds)
-                        || (foundUserBiddingSignals && !errorParsingUserBiddingSignals)
-                        || (foundTrustedBiddingData && !errorParsingTrustedBiddingData)
-                        || (foundAds && !errorParsingAds);
+                (userBiddingSignalsReadStatus == ReadStatus.STATUS_FOUND_VALID
+                                || trustedBiddingDataReadStatus == ReadStatus.STATUS_FOUND_VALID
+                                || adsReadStatus == ReadStatus.STATUS_FOUND_VALID)
+                        || (userBiddingSignalsReadStatus == ReadStatus.STATUS_NOT_FOUND
+                                && trustedBiddingDataReadStatus == ReadStatus.STATUS_NOT_FOUND
+                                && adsReadStatus == ReadStatus.STATUS_NOT_FOUND);
         LogUtil.v(
                 "%s Completed parsing JSON response with containsSuccessfulUpdate = %b",
                 responseHash, containsSuccessfulUpdate);
@@ -241,129 +210,111 @@ public abstract class CustomAudienceUpdatableData {
         return dataBuilder.build();
     }
 
-    /**
-     * Returns the user bidding signals extracted from the input object, if found.
-     *
-     * @throws IllegalArgumentException if the {@code responseObject} does not contain user bidding
-     *     signals
-     * @throws JSONException if the key is found but the schema is incorrect
-     * @throws NullPointerException if the key found by the field is null
-     */
     @VisibleForTesting
     @NonNull
-    public static String getUserBiddingSignalsFromJsonObject(@NonNull JSONObject responseObject)
-            throws IllegalArgumentException, JSONException, NullPointerException {
-        if (responseObject.has(USER_BIDDING_SIGNALS_KEY)) {
-            JSONObject signalsJsonObj =
-                    Objects.requireNonNull(responseObject.getJSONObject(USER_BIDDING_SIGNALS_KEY));
-            return signalsJsonObj.toString();
-        } else {
-            throw new IllegalArgumentException();
-        }
-    }
+    static ReadStatus readUserBiddingSignals(
+            @NonNull CustomAudienceUpdatableDataReader reader,
+            @NonNull String responseHash,
+            @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
+        try {
+            AdSelectionSignals userBiddingSignals = reader.getUserBiddingSignalsFromJsonObject();
+            dataBuilder.setUserBiddingSignals(userBiddingSignals);
 
-    /**
-     * Returns the trusted bidding data extracted from the input object, if found.
-     *
-     * @throws IllegalArgumentException if the {@code responseObject} does not contain trusted
-     *     bidding data
-     * @throws JSONException if the key is found but the schema is incorrect
-     * @throws NullPointerException if the key found by the field is null
-     */
-    @VisibleForTesting
-    @NonNull
-    public static DBTrustedBiddingData getTrustedBiddingDataFromJsonObject(
-            @NonNull JSONObject responseObject, @NonNull String responseHash)
-            throws IllegalArgumentException, JSONException, NullPointerException {
-        if (responseObject.has(TRUSTED_BIDDING_DATA_KEY)) {
-            JSONObject dataJsonObj = responseObject.getJSONObject(TRUSTED_BIDDING_DATA_KEY);
-
-            String urlString = dataJsonObj.getString(TRUSTED_BIDDING_URL_KEY);
-            Uri parsedUrl = Uri.parse(urlString);
-
-            JSONArray keysJsonArray = dataJsonObj.getJSONArray(TRUSTED_BIDDING_KEYS_KEY);
-            int keysListLength = keysJsonArray.length();
-            List<String> keysList = new ArrayList<>(keysListLength);
-            for (int i = 0; i < keysListLength; i++) {
-                try {
-                    // Note: getString() coerces values to be strings; use get() instead
-                    Object key = keysJsonArray.get(i);
-                    if (key instanceof String) {
-                        keysList.add(Objects.requireNonNull((String) key));
-                    } else {
-                        LogUtil.v(
-                                "%s Invalid JSON type while parsing a single key in the %s found"
-                                        + " in JSON response; ignoring and continuing",
-                                responseHash, TRUSTED_BIDDING_KEYS_KEY);
-                    }
-                } catch (JSONException | NullPointerException ignoredException) {
-                    // Skip any keys that are malformed and continue to the next in the list; note
-                    // that if the entire given list of keys is junk, then any existing trusted
-                    // bidding keys are cleared from the custom audience
-                    LogUtil.v(
-                            "%s Invalid JSON type while parsing a single key in the %s found in"
-                                    + " JSON response; ignoring and continuing",
-                            responseHash, TRUSTED_BIDDING_KEYS_KEY);
-                }
+            if (userBiddingSignals == null) {
+                return ReadStatus.STATUS_NOT_FOUND;
+            } else {
+                return ReadStatus.STATUS_FOUND_VALID;
             }
-
-            return new DBTrustedBiddingData.Builder().setUrl(parsedUrl).setKeys(keysList).build();
-        } else {
-            throw new IllegalArgumentException();
+        } catch (JSONException | NullPointerException exception) {
+            LogUtil.e(
+                    exception,
+                    INVALID_JSON_TYPE_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY);
+            dataBuilder.setUserBiddingSignals(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        } catch (IllegalArgumentException exception) {
+            LogUtil.e(
+                    exception,
+                    VALIDATION_FAILED_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY);
+            dataBuilder.setUserBiddingSignals(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
         }
     }
 
-    /**
-     * Returns the list of ads extracted from the input object, if found.
-     *
-     * @throws IllegalArgumentException if the {@code responseObject} does not contain any ads
-     * @throws JSONException if the key is found but the schema is incorrect
-     * @throws NullPointerException if the key found by the field is null
-     */
     @VisibleForTesting
     @NonNull
-    public static List<DBAdData> getAdsFromJsonObject(
-            @NonNull JSONObject responseObject, @NonNull String responseHash)
-            throws IllegalArgumentException, JSONException, NullPointerException {
-        if (responseObject.has(ADS_KEY)) {
-            JSONArray adsJsonArray = responseObject.getJSONArray(ADS_KEY);
-            int adsListLength = adsJsonArray.length();
-            List<DBAdData> adsList = new ArrayList<>();
-            for (int i = 0; i < adsListLength; i++) {
-                try {
-                    JSONObject adDataJsonObj = adsJsonArray.getJSONObject(i);
+    static ReadStatus readTrustedBiddingData(
+            @NonNull CustomAudienceUpdatableDataReader reader,
+            @NonNull String responseHash,
+            @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
+        try {
+            DBTrustedBiddingData trustedBiddingData = reader.getTrustedBiddingDataFromJsonObject();
+            dataBuilder.setTrustedBiddingData(trustedBiddingData);
 
-                    String urlString = adDataJsonObj.getString(RENDER_URL_KEY);
-                    Uri parsedUrl = Uri.parse(urlString);
-
-                    String metadata = Objects.requireNonNull(adDataJsonObj.getString(METADATA_KEY));
-
-                    DBAdData adData =
-                            new DBAdData.Builder()
-                                    .setRenderUrl(parsedUrl)
-                                    .setMetadata(metadata)
-                                    .build();
-                    adsList.add(adData);
-                } catch (JSONException | NullPointerException ignoredException) {
-                    // Skip any ads that are malformed and continue to the next in the list; note
-                    // that if the entire given list of ads is junk, then any existing ads are
-                    // cleared from the custom audience
-                    LogUtil.v(
-                            "%s Invalid JSON type while parsing a single ad in the %s found in"
-                                    + " JSON response; ignoring and continuing",
-                            responseHash, ADS_KEY);
-                }
+            if (trustedBiddingData == null) {
+                return ReadStatus.STATUS_NOT_FOUND;
+            } else {
+                return ReadStatus.STATUS_FOUND_VALID;
             }
+        } catch (JSONException | NullPointerException exception) {
+            LogUtil.e(
+                    exception,
+                    INVALID_JSON_TYPE_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY);
+            dataBuilder.setTrustedBiddingData(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        } catch (IllegalArgumentException exception) {
+            LogUtil.e(
+                    exception,
+                    VALIDATION_FAILED_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY);
+            dataBuilder.setTrustedBiddingData(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        }
+    }
 
-            return adsList;
-        } else {
-            throw new IllegalArgumentException();
+    @VisibleForTesting
+    @NonNull
+    static ReadStatus readAds(
+            @NonNull CustomAudienceUpdatableDataReader reader,
+            @NonNull String responseHash,
+            @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
+        try {
+            List<DBAdData> ads = reader.getAdsFromJsonObject();
+            dataBuilder.setAds(ads);
+
+            if (ads == null) {
+                return ReadStatus.STATUS_NOT_FOUND;
+            } else {
+                return ReadStatus.STATUS_FOUND_VALID;
+            }
+        } catch (JSONException | NullPointerException exception) {
+            LogUtil.e(
+                    exception,
+                    INVALID_JSON_TYPE_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.ADS_KEY);
+            dataBuilder.setAds(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        } catch (IllegalArgumentException exception) {
+            LogUtil.e(
+                    exception,
+                    VALIDATION_FAILED_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.ADS_KEY);
+            dataBuilder.setAds(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
         }
     }
 
     /**
-     * Gets a Builder to make {@link #createFromResponseString(Instant,
-     * BackgroundFetchRunner.UpdateResultType, String)} easier.
+     * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
+     * BackgroundFetchRunner.UpdateResultType, String, Flags)} easier.
      */
     @VisibleForTesting
     @NonNull
@@ -373,14 +324,15 @@ public abstract class CustomAudienceUpdatableData {
 
     /**
      * This is a hidden (visible for testing) AutoValue builder to make {@link
-     * #createFromResponseString(Instant, BackgroundFetchRunner.UpdateResultType, String)} easier.
+     * #createFromResponseString(Instant, AdTechIdentifier, BackgroundFetchRunner.UpdateResultType,
+     * String, Flags)} easier.
      */
     @VisibleForTesting
     @AutoValue.Builder
     public abstract static class Builder {
         /** Sets the user bidding signals found in the response string. */
         @NonNull
-        public abstract Builder setUserBiddingSignals(@Nullable String value);
+        public abstract Builder setUserBiddingSignals(@Nullable AdSelectionSignals value);
 
         /** Sets the trusted bidding data found in the response string. */
         @NonNull

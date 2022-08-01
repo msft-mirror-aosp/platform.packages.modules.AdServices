@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -33,6 +34,7 @@ import android.content.Context;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -51,13 +53,24 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class BackgroundFetchWorkerTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags =
+            new Flags() {
+                @Override
+                public int getFledgeBackgroundFetchThreadPoolSize() {
+                    return 4;
+                }
+            };
+    private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
 
@@ -163,7 +176,8 @@ public class BackgroundFetchWorkerTest {
 
         // Mock a custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .build();
         doReturn(Arrays.asList(fetchData))
@@ -195,7 +209,8 @@ public class BackgroundFetchWorkerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         // Mock a single custom audience eligible for update
         DBCustomAudienceBackgroundFetchData fetchData =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW)
                         .build();
         doReturn(Arrays.asList(fetchData))
@@ -215,7 +230,8 @@ public class BackgroundFetchWorkerTest {
 
         // Mock a list of custom audiences eligible for update
         DBCustomAudienceBackgroundFetchData.Builder fetchDataBuilder =
-                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilder()
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
                         .setEligibleUpdateTime(CommonFixture.FIXED_NOW);
         List<DBCustomAudienceBackgroundFetchData> fetchDataList = new ArrayList<>();
         for (int i = 0; i < numEligibleCustomAudiences; i++) {
@@ -231,5 +247,113 @@ public class BackgroundFetchWorkerTest {
 
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
+    }
+
+    @Test
+    public void testRunBackgroundFetchChecksWorkInProgress()
+            throws InterruptedException, ExecutionException, TimeoutException {
+        int numEligibleCustomAudiences = 16;
+        CountDownLatch partialCompletionLatch = new CountDownLatch(numEligibleCustomAudiences / 4);
+
+        // Mock a list of custom audiences eligible for update
+        DBCustomAudienceBackgroundFetchData.Builder fetchDataBuilder =
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
+                        .setEligibleUpdateTime(CommonFixture.FIXED_NOW);
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList = new ArrayList<>();
+        for (int i = 0; i < numEligibleCustomAudiences; i++) {
+            fetchDataList.add(fetchDataBuilder.setName("ca" + i).build());
+        }
+
+        doReturn(fetchDataList)
+                .when(mCustomAudienceDaoSpy)
+                .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
+        doNothing().when(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            Thread.sleep(100);
+                            partialCompletionLatch.countDown();
+                            return null;
+                        })
+                .when(mBackgroundFetchRunnerSpy)
+                .updateCustomAudience(any(), any());
+
+        CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
+        mExecutorService.execute(
+                () -> {
+                    try {
+                        mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
+                    } catch (Exception exception) {
+                        LogUtil.e(
+                                exception, "Exception encountered while running background fetch");
+                    } finally {
+                        bgfWorkStoppedLatch.countDown();
+                    }
+                });
+
+        // Wait til updates are partially complete, then try running background fetch again and
+        // verify nothing is done
+        partialCompletionLatch.await();
+        mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW.plusSeconds(1));
+
+        bgfWorkStoppedLatch.await();
+        verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
+        verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
+                .updateCustomAudience(any(), any());
+    }
+
+    @Test
+    public void testStopWorkWithoutRunningFetchDoesNothing() {
+        // Verify no errors/exceptions thrown when no work in progress
+        mBackgroundFetchWorker.stopWork();
+    }
+
+    @Test
+    public void testStopWorkGracefullyStopsBackgroundFetch() throws InterruptedException {
+        int numEligibleCustomAudiences = 16;
+        CountDownLatch partialCompletionLatch = new CountDownLatch(numEligibleCustomAudiences / 4);
+
+        // Mock a list of custom audiences eligible for update
+        DBCustomAudienceBackgroundFetchData.Builder fetchDataBuilder =
+                DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
+                                CommonFixture.VALID_BUYER)
+                        .setEligibleUpdateTime(CommonFixture.FIXED_NOW);
+        List<DBCustomAudienceBackgroundFetchData> fetchDataList = new ArrayList<>();
+        for (int i = 0; i < numEligibleCustomAudiences; i++) {
+            fetchDataList.add(fetchDataBuilder.setName("ca" + i).build());
+        }
+
+        doReturn(fetchDataList)
+                .when(mCustomAudienceDaoSpy)
+                .getActiveEligibleCustomAudienceBackgroundFetchData(any(), anyLong());
+        doNothing().when(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            Thread.sleep(100);
+                            partialCompletionLatch.countDown();
+                            return null;
+                        })
+                .when(mBackgroundFetchRunnerSpy)
+                .updateCustomAudience(any(), any());
+
+        CountDownLatch bgfWorkStoppedLatch = new CountDownLatch(1);
+        mExecutorService.execute(
+                () -> {
+                    try {
+                        mBackgroundFetchWorker.runBackgroundFetch(CommonFixture.FIXED_NOW);
+                    } catch (Exception exception) {
+                        LogUtil.e(
+                                exception, "Exception encountered while running background fetch");
+                    } finally {
+                        bgfWorkStoppedLatch.countDown();
+                    }
+                });
+
+        // Wait til updates are partially complete, then try stopping background fetch
+        partialCompletionLatch.await();
+        mBackgroundFetchWorker.stopWork();
+        // stopWork() should wait for full stoppage before returning, so the bgfWorkStoppedLatch
+        // should have already counted down
+        assertTrue(bgfWorkStoppedLatch.await(0, TimeUnit.MILLISECONDS));
     }
 }

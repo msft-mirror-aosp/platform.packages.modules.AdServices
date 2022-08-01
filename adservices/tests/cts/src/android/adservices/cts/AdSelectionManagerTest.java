@@ -27,8 +27,11 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -55,8 +58,24 @@ public class AdSelectionManagerTest {
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
+    private static final AdTechIdentifier SELLER =
+            AdTechIdentifier.fromString("developer.android.com");
+    private static final Uri DECISION_LOGIC_URI =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+    private static final Uri TRUSTED_SCORING_SIGNALS_URI =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+    private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"render_url_1\": \"signals_for_1\",\n"
+                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
-            AdSelectionConfigFixture.anAdSelectionConfig();
+            AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                    .setSeller(SELLER.getStringForm())
+                    .setDecisionLogicUri(DECISION_LOGIC_URI)
+                    .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
+                    .build();
 
     private AdSelectionClient mAdSelectionClient;
     private boolean mIsDebugMode;
@@ -105,10 +124,10 @@ public class AdSelectionManagerTest {
         Assume.assumeFalse(mIsDebugMode);
 
         AddAdSelectionOverrideRequest request =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG,
+                        DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS.getStringForm());
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
@@ -119,7 +138,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -127,9 +146,7 @@ public class AdSelectionManagerTest {
         Assume.assumeFalse(mIsDebugMode);
 
         RemoveAdSelectionOverrideRequest request =
-                new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+                new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
@@ -140,7 +157,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -162,7 +179,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
+        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -170,7 +187,10 @@ public class AdSelectionManagerTest {
         LogUtil.i("Calling Ad Selection");
         AdSelectionConfig adSelectionConfigNoBuyers =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setSeller(SELLER.getStringForm())
+                        .setDecisionLogicUri(DECISION_LOGIC_URI)
                         .setCustomAudienceBuyers(new ArrayList<String>())
+                        .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                         .build();
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()

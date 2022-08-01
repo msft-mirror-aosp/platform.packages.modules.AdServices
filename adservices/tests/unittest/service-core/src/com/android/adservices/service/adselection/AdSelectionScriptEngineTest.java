@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -57,14 +58,19 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AdSelectionScriptEngineTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String TAG = "AdSelectionScriptEngineTest";
+    private static final Instant NOW = Instant.now();
+    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_1 =
+            new CustomAudienceSignals(
+                    "owner", "buyer_1", "name", NOW, NOW.plus(Duration.ofDays(1)), "{}");
+    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS_2 =
+            new CustomAudienceSignals(
+                    "owner", "buyer_2", "name", NOW, NOW.plus(Duration.ofDays(1)), "{}");
+    private static final List<CustomAudienceSignals> CUSTOM_AUDIENCE_SIGNALS_LIST =
+            ImmutableList.of(CUSTOM_AUDIENCE_SIGNALS_1, CUSTOM_AUDIENCE_SIGNALS_2);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     private final AdSelectionScriptEngine mAdSelectionScriptEngine =
             new AdSelectionScriptEngine(sContext);
-    private static final Instant NOW = Instant.now();
-    private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
-            new CustomAudienceSignals("owner", "buyer", "name",
-                    NOW, NOW.plus(Duration.ofDays(1)),
-                    "{}");
+
     @Test
     public void testAuctionScriptIsInvalidIfRequiredFunctionDoesNotExist() throws Exception {
         assertFalse(
@@ -164,12 +170,12 @@ public class AdSelectionScriptEngineTest {
                                 + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
         assertThat(result).containsExactly(new AdWithBid(ad1, 1.1), new AdWithBid(ad2, 2.1));
     }
 
@@ -188,12 +194,12 @@ public class AdSelectionScriptEngineTest {
                                 + "  return {'status': 1, 'ad': ad, 'bid': ad.metadata.result };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
         assertThat(result).isEmpty();
     }
 
@@ -215,12 +221,12 @@ public class AdSelectionScriptEngineTest {
                                 + " else return {'status': 0, 'ad': ad, 'bid': 10 };\n"
                                 + "}",
                         ads,
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_1);
         assertThat(result).isEmpty();
     }
 
@@ -241,10 +247,10 @@ public class AdSelectionScriptEngineTest {
                                 + "}",
                         adWithBids,
                         anAdSelectionConfig(),
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
         assertThat(result).containsExactly(100.0, 200.0);
     }
 
@@ -265,10 +271,10 @@ public class AdSelectionScriptEngineTest {
                                 + "}",
                         adWithBids,
                         anAdSelectionConfig(),
-                        "{}",
-                        "{}",
-                        "{}",
-                        CUSTOM_AUDIENCE_SIGNALS);
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        CUSTOM_AUDIENCE_SIGNALS_LIST);
         assertThat(result).isEmpty();
     }
 
@@ -290,10 +296,11 @@ public class AdSelectionScriptEngineTest {
                 .setSeller("www.mydomain.com")
                 .setPerBuyerSignals(ImmutableMap.of())
                 .setContextualAds(ImmutableList.of())
-                .setDecisionLogicUrl(Uri.parse("http://www.mydomain.com/updateAds"))
+                .setDecisionLogicUri(Uri.parse("http://www.mydomain.com/updateAds"))
                 .setSellerSignals("{}")
                 .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
                 .setAdSelectionSignals("{}")
+                .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                 .build();
     }
 
@@ -310,11 +317,11 @@ public class AdSelectionScriptEngineTest {
     private List<AdWithBid> generateBids(
             String jsScript,
             List<AdData> ads,
-            String auctionSignals,
-            String perBuyerSignals,
-            String trustedBiddingSignals,
-            String contextualSignals,
-            String userSignals,
+            AdSelectionSignals auctionSignals,
+            AdSelectionSignals perBuyerSignals,
+            AdSelectionSignals trustedBiddingSignals,
+            AdSelectionSignals contextualSignals,
+            AdSelectionSignals userSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(
@@ -336,14 +343,14 @@ public class AdSelectionScriptEngineTest {
             String jsScript,
             List<AdWithBid> adsWithBids,
             AdSelectionConfig adSelectionConfig,
-            String sellerSignals,
-            String trustedScoringSignals,
-            String contextualSignals,
-            CustomAudienceSignals customAudienceSignals)
+            AdSelectionSignals sellerSignals,
+            AdSelectionSignals trustedScoringSignals,
+            AdSelectionSignals contextualSignals,
+            List<CustomAudienceSignals> customAudienceSignals)
             throws Exception {
         return waitForFuture(
                 () -> {
-                    Log.i(TAG, "Calling generateBids");
+                    Log.i(TAG, "Calling scoreAds");
                     return mAdSelectionScriptEngine.scoreAds(
                             jsScript,
                             adsWithBids,

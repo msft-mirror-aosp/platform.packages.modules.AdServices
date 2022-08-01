@@ -15,5 +15,5 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <attribution allowSdkToAccess="com.xyz" allowAllToAccess="true" />
+    <attribution allowAdPartnersToAccess="com.xyz" allowAllToAccess="true" />
 </ad-services-config>

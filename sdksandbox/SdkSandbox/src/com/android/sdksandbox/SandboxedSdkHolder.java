@@ -71,18 +71,18 @@ class SandboxedSdkHolder {
         try {
             Class<?> clz = Class.forName(sdkProviderClassName, true, loader);
             mSdk = (SandboxedSdkProvider) clz.getConstructor().newInstance();
-            mSdk.initSdk(
-                    sandboxedSdkContext,
+            mSdk.attachBaseContext(sandboxedSdkContext);
+            mSdk.onLoadSdk(
                     params,
                     mContext.getMainExecutor(),
-                    new SandboxedSdkProvider.InitSdkCallback() {
+                    new SandboxedSdkProvider.OnLoadSdkCallback() {
                         @Override
-                        public void onInitSdkFinished(Bundle extraParams) {
+                        public void onLoadSdkFinished(Bundle extraParams) {
                             sendLoadSdkSuccess(callback);
                         }
 
                         @Override
-                        public void onInitSdkError(String errorMessage) {
+                        public void onLoadSdkError(String errorMessage) {
                             sendLoadSdkError(errorMessage, callback);
                         }
                     });
@@ -93,6 +93,10 @@ class SandboxedSdkHolder {
         } catch (Throwable e) {
             sendLoadSdkError("Error thrown during init: " + e, callback);
         }
+    }
+
+    void unloadSdk() {
+        mSdk.beforeUnloadSdk();
     }
 
     void dump(PrintWriter writer) {

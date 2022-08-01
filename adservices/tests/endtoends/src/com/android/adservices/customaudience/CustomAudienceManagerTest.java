@@ -19,10 +19,9 @@ package com.android.adservices.customaudience;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
-import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
-import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.content.Context;
 import android.util.Log;
 
@@ -43,18 +42,8 @@ public class CustomAudienceManagerTest {
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    private static final CustomAudience CUSTOM_AUDIENCE = new CustomAudience.Builder()
-            .setOwner(CustomAudienceFixture.VALID_OWNER)
-            .setBuyer(CustomAudienceFixture.VALID_BUYER)
-            .setName(CustomAudienceFixture.VALID_NAME)
-            .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
-            .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-            .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
-            .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-            .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
-            .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-            .setAds(AdDataFixture.VALID_ADS)
-            .build();
+    private static final CustomAudience CUSTOM_AUDIENCE =
+            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
 
     private void measureJoinCustomAudience(String label) throws Exception {
         Log.i(TAG, "Calling joinCustomAudience()");
@@ -65,7 +54,10 @@ public class CustomAudienceManagerTest {
                 .setExecutor(CALLBACK_EXECUTOR)
                 .build();
 
-        client.joinCustomAudience(CUSTOM_AUDIENCE).get();
+        client.joinCustomAudience(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .build())
+                .get();
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took "
@@ -81,8 +73,11 @@ public class CustomAudienceManagerTest {
                 .setExecutor(CALLBACK_EXECUTOR)
                 .build();
 
-        client.leaveCustomAudience(CustomAudienceFixture.VALID_OWNER,
-                CustomAudienceFixture.VALID_BUYER, CustomAudienceFixture.VALID_NAME).get();
+        client.leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CustomAudienceFixture.VALID_NAME)
+                .get();
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took "

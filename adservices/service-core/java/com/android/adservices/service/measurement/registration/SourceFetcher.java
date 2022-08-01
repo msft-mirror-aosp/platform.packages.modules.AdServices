@@ -31,6 +31,8 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.measurement.util.Web;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,14 +58,28 @@ import java.util.function.Function;
  * @hide
  */
 public class SourceFetcher {
-    private static final ExecutorService sIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
+    private final String mDefaultAndroidAppScheme = "android-app";
+    private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
 
-    private static boolean parseEventSource(
+    public SourceFetcher() {
+        this(new AdIdPermissionFetcher());
+    }
+
+    @VisibleForTesting
+    SourceFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
+        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    }
+
+    private boolean parseEventSource(
             @NonNull String text,
             @Nullable Uri osDestinationFromRequest,
             @Nullable Uri webDestinationFromRequest,
             boolean shouldValidateDestination,
-            SourceRegistration.Builder result)
+            SourceRegistration.Builder result,
+            boolean isWebSource,
+            boolean isAllowDebugKey)
             throws JSONException {
         final JSONObject json = new JSONObject(text);
         final boolean hasRequiredParams = hasRequiredParams(json, shouldValidateDestination);
@@ -85,7 +101,11 @@ public class SourceFetcher {
         if (!json.isNull(EventSourceContract.PRIORITY)) {
             result.setSourcePriority(json.getLong(EventSourceContract.PRIORITY));
         }
-
+        boolean isWebAllow = isWebSource && isAllowDebugKey;
+        boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+        if (!json.isNull(EventSourceContract.DEBUG_KEY) && (isWebAllow || isAppAllow)) {
+            result.setDebugKey(json.getLong(EventSourceContract.DEBUG_KEY));
+        }
         if (!json.isNull(EventSourceContract.INSTALL_ATTRIBUTION_WINDOW_KEY)) {
             long installAttributionWindow =
                     extractValidValue(
@@ -109,16 +129,26 @@ public class SourceFetcher {
                     json.getJSONObject(EventSourceContract.FILTER_DATA).toString());
         }
 
-        if (shouldValidateDestination
-                && !doUriFieldsMatch(
-                        json, EventSourceContract.DESTINATION, osDestinationFromRequest)) {
-            LogUtil.d("Expected destination to match with the supplied one!");
-            return false;
-        }
-
         if (!json.isNull(EventSourceContract.DESTINATION)) {
-            Uri destination = Uri.parse(json.getString(EventSourceContract.DESTINATION));
-            result.setDestination(destination);
+            Uri appUri = Uri.parse(json.getString(EventSourceContract.DESTINATION));
+            if (appUri.getScheme() == null) {
+                LogUtil.d("App destination is missing app scheme, adding.");
+                appUri = Uri.parse(mDefaultAndroidAppUriPrefix + appUri);
+            }
+
+            if (!mDefaultAndroidAppScheme.equals(appUri.getScheme())) {
+                LogUtil.e(
+                        "Invalid scheme for app destination: %s; dropping the source.",
+                        appUri.getScheme());
+                return false;
+            }
+
+            if (osDestinationFromRequest != null && !osDestinationFromRequest.equals(appUri)) {
+                LogUtil.d("Expected destination to match with the supplied one!");
+                return false;
+            }
+
+            result.setAppDestination(appUri);
         }
 
         if (shouldValidateDestination
@@ -130,13 +160,20 @@ public class SourceFetcher {
 
         if (!json.isNull(EventSourceContract.WEB_DESTINATION)) {
             Uri webDestination = Uri.parse(json.getString(EventSourceContract.WEB_DESTINATION));
-            result.setWebDestination(webDestination);
+            Optional<Uri> topPrivateDomainAndScheme =
+                    Web.topPrivateDomainAndScheme(webDestination);
+            if (!topPrivateDomainAndScheme.isPresent()) {
+                LogUtil.d("Unable to extract top private domain and scheme from web destination.");
+                return false;
+            } else {
+                result.setWebDestination(topPrivateDomainAndScheme.get());
+            }
         }
 
         return true;
     }
 
-    private static boolean hasRequiredParams(JSONObject json, boolean shouldValidateDestinations) {
+    private boolean hasRequiredParams(JSONObject json, boolean shouldValidateDestinations) {
         boolean isDestinationAvailable;
         if (shouldValidateDestinations) {
             // This is multiple-destinations case (web or app). At least one of them should be
@@ -151,7 +188,7 @@ public class SourceFetcher {
         return !json.isNull(EventSourceContract.SOURCE_EVENT_ID) && isDestinationAvailable;
     }
 
-    private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
+    private boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
             throws JSONException {
         if (json.isNull(fieldName) && expectedValue == null) {
             return true;
@@ -161,7 +198,7 @@ public class SourceFetcher {
                 && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
     }
 
-    private static long extractValidValue(long value, long lowerLimit, long upperLimit) {
+    private long extractValidValue(long value, long lowerLimit, long upperLimit) {
         if (value < lowerLimit) {
             return lowerLimit;
         } else if (value > upperLimit) {
@@ -171,14 +208,16 @@ public class SourceFetcher {
         return value;
     }
 
-    private static boolean parseSource(
+    private boolean parseSource(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
             @Nullable Uri osDestination,
             @Nullable Uri webDestination,
             boolean shouldValidateDestination,
             @NonNull Map<String, List<String>> headers,
-            @NonNull List<SourceRegistration> addToResults) {
+            @NonNull List<SourceRegistration> addToResults,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         boolean additionalResult = false;
         SourceRegistration.Builder result = new SourceRegistration.Builder();
         result.setTopOrigin(topOrigin);
@@ -197,12 +236,14 @@ public class SourceFetcher {
                                 osDestination,
                                 webDestination,
                                 shouldValidateDestination,
-                                result);
+                                result,
+                                isWebSource,
+                                isAllowDebugKey);
                 if (!isValid) {
                     return false;
                 }
             } catch (JSONException e) {
-                LogUtil.d("Invalid JSON %s", e);
+                LogUtil.d(e, "Invalid JSON");
                 return false;
             }
             additionalResult = true;
@@ -240,7 +281,9 @@ public class SourceFetcher {
             boolean shouldValidateDestination,
             @NonNull String sourceType,
             boolean shouldProcessRedirects,
-            @NonNull List<SourceRegistration> registrationsOut) {
+            @NonNull List<SourceRegistration> registrationsOut,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         // Require https.
         if (!registrationUri.getScheme().equals("https")) {
             return;
@@ -249,14 +292,14 @@ public class SourceFetcher {
         try {
             url = new URL(registrationUri.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.e("Failed to open registration target URL %s", e);
+            LogUtil.e(e, "Failed to open registration target URL");
             return;
         }
         try {
@@ -279,7 +322,9 @@ public class SourceFetcher {
                             webDestination,
                             shouldValidateDestination,
                             headers,
-                            registrationsOut);
+                            registrationsOut,
+                            isWebSource,
+                            isAllowDebugKey);
             if (!parsed) {
                 LogUtil.d("Failed to parse");
                 return;
@@ -288,11 +333,17 @@ public class SourceFetcher {
             if (shouldProcessRedirects) {
                 List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
                 if (!redirects.isEmpty()) {
-                    processAsyncRedirects(redirects, topOrigin, sourceType, registrationsOut);
+                    processAsyncRedirects(
+                            redirects,
+                            topOrigin,
+                            sourceType,
+                            registrationsOut,
+                            isWebSource,
+                            isAllowDebugKey);
                 }
             }
         } catch (IOException e) {
-            LogUtil.e("Failed to get registration response %s", e);
+            LogUtil.e(e, "Failed to get registration response");
         } finally {
             urlConnection.disconnect();
         }
@@ -302,7 +353,9 @@ public class SourceFetcher {
             List<Uri> redirects,
             Uri topOrigin,
             String sourceInfo,
-            List<SourceRegistration> registrationsOut) {
+            List<SourceRegistration> registrationsOut,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         try {
             Function<Uri, CompletableFuture<Void>> fetchSourceFromRedirectFuture =
                     redirect ->
@@ -316,15 +369,17 @@ public class SourceFetcher {
                                                     /* shouldValidateDestination*/ false,
                                                     sourceInfo,
                                                     /*shouldProcessRedirects*/ false,
-                                                    registrationsOut),
-                                    sIoExecutor);
+                                                    registrationsOut,
+                                                    isWebSource,
+                                                    isAllowDebugKey),
+                                    mIoExecutor);
             CompletableFuture.allOf(
                             redirects.stream()
                                     .map(fetchSourceFromRedirectFuture)
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
@@ -343,7 +398,9 @@ public class SourceFetcher {
                 false,
                 request.getInputEvent() == null ? "event" : "navigation",
                 true,
-                out);
+                out,
+                false,
+                false);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -391,7 +448,7 @@ public class SourceFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
@@ -412,12 +469,15 @@ public class SourceFetcher {
                                 /* shouldValidateDestination */ true,
                                 sourceType,
                                 /* shouldProcessRedirects*/ false,
-                                registrationsOut),
-                sIoExecutor);
+                                registrationsOut,
+                                true,
+                                sourceParams.isAllowDebugKey()),
+                mIoExecutor);
     }
 
     private interface EventSourceContract {
         String SOURCE_EVENT_ID = "source_event_id";
+        String DEBUG_KEY = "debug_key";
         String DESTINATION = "destination";
         String EXPIRY = "expiry";
         String PRIORITY = "priority";

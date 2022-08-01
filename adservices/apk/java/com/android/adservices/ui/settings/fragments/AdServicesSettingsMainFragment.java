@@ -15,67 +15,42 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
-import android.app.ActionBar;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-import androidx.lifecycle.ViewModelProvider;
-import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SwitchPreference;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.ActionDelegate;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-import com.android.settingslib.widget.ActionBarShadowController;
+import com.android.settingslib.widget.MainSwitchBar;
 
 import java.util.Objects;
 
-/**
- * Fragment for the main view of the AdServices Settings App.
- */
-public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
-
+/** Fragment for the main view of the AdServices Settings App. */
+public class AdServicesSettingsMainFragment extends Fragment {
     public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
             "getConsent method failed. Will not change consent value in view model.";
     public static final String PRIVACY_SANDBOX_BETA_SWITCH_KEY = "privacy_sandbox_beta_switch";
     public static final String TOPICS_PREFERENCE_BUTTON_KEY = "topics_preference";
-
-    protected boolean mUseShadowController = true;
+    public static final String APPS_PREFERENCE_BUTTON_KEY = "apps_preference";
 
     @Override
-    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        setPreferencesFromResource(R.xml.main_preferences, rootKey);
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.main_fragment, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         setupViewModel();
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        initActionBar();
         initActionListeners();
-    }
-
-    /**
-     * Attaching {@link ActionBarShadowController} from SettingsLib to have the same action bar
-     * style as the Android Settings App.
-     */
-    private void initActionBar() {
-        if (getListView() != null) {
-            ActionBar ab = requireActivity().getActionBar();
-
-            if (ab != null) {
-                ab.setDisplayHomeAsUpEnabled(true);
-                ab.setTitle(R.string.settingsUI_privacy_sandbox_beta_title);
-                ab.setElevation(0);
-            }
-
-            if (mUseShadowController) {
-                ActionBarShadowController.attachToView(
-                        getActivity(), getLifecycle(), getListView());
-            }
-        }
     }
 
     // initialize all action listeners
@@ -86,10 +61,23 @@ public class AdServicesSettingsMainFragment extends PreferenceFragmentCompat {
     }
 
     private void setupViewModel() {
-        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        MainViewModel model =
+                ((AdServicesSettingsActivity) requireActivity())
+                        .getViewModelProvider()
+                        .get(MainViewModel.class);
 
-        SwitchPreference switchPreference =
-                Objects.requireNonNull(findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
-        model.getConsent().observe(this, switchPreference::setChecked);
+        MainSwitchBar mainSwitchBar =
+                Objects.requireNonNull(requireActivity().findViewById(R.id.main_switch_bar));
+        View privacySandboxControls = requireActivity().findViewById(R.id.privacy_sandbox_controls);
+        model.getConsent()
+                .observe(
+                        getViewLifecycleOwner(),
+                        consentGiven -> {
+                            mainSwitchBar.setChecked(consentGiven);
+                            privacySandboxControls.setVisibility(consentGiven
+                                    ? View.VISIBLE
+                                    : View.GONE);
+                        });
     }
+
 }

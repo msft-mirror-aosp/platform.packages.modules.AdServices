@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
-import com.android.adservices.service.measurement.FilterUtil;
+import com.android.adservices.service.measurement.util.Filter;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -55,12 +55,12 @@ public class AggregatePayloadGenerator {
                 Optional<AggregateFilterData> notFilterData = triggerData.getNotFilter();
                 // Skip this trigger data when filter doesn't match.
                 if (filterData.isPresent()
-                        && !FilterUtil.isFilterMatch(sourceFilterData, filterData.get(), true)) {
+                        && !Filter.isFilterMatch(sourceFilterData, filterData.get(), true)) {
                     continue;
                 }
                 // Skip this trigger data when not_filters doesn't match.
                 if (notFilterData.isPresent()
-                        && !FilterUtil.isFilterMatch(
+                        && !Filter.isFilterMatch(
                                 sourceFilterData, notFilterData.get(), false)) {
                     continue;
                 }

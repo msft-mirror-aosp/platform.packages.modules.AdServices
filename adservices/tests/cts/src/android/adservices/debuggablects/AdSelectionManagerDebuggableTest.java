@@ -21,6 +21,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.common.AdSelectionSignals;
 import android.content.Context;
 import android.os.Process;
 
@@ -44,6 +45,12 @@ public class AdSelectionManagerDebuggableTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
+    private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"render_url_1\": \"signals_for_1\",\n"
+                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
 
@@ -75,10 +82,10 @@ public class AdSelectionManagerDebuggableTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddAdSelectionOverrideRequest request =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG,
+                        DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS.getStringForm());
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
@@ -92,9 +99,7 @@ public class AdSelectionManagerDebuggableTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         RemoveAdSelectionOverrideRequest request =
-                new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+                new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
@@ -108,10 +113,10 @@ public class AdSelectionManagerDebuggableTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
         AddAdSelectionOverrideRequest addRequest =
-                new AddAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .setDecisionLogicJs(DECISION_LOGIC_JS)
-                        .build();
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG,
+                        DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS.getStringForm());
 
         ListenableFuture<Void> addResult =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(addRequest);
@@ -120,9 +125,7 @@ public class AdSelectionManagerDebuggableTest {
         addResult.get(10, TimeUnit.SECONDS);
 
         RemoveAdSelectionOverrideRequest removeRequest =
-                new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+                new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> removeResult =
                 mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(removeRequest);

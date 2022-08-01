@@ -17,60 +17,80 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.data.customaudience.DBCustomAudience;
-
+import java.time.Duration;
 import java.time.Instant;
 
 /** Utility class supporting custom audience API unit tests */
 public final class CustomAudienceFixture {
 
+    public static final Duration CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN =
+            Duration.ofMillis(
+                    CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxActivationDelayInMs());
+    public static final Duration CUSTOM_AUDIENCE_MAX_EXPIRE_IN =
+            Duration.ofMillis(CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxExpireInMs());
+    public static final Duration CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN =
+            Duration.ofMillis(
+                    CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceDefaultExpireInMs());
     public static final long DAY_IN_SECONDS = 60 * 60 * 24;
-    public static final String VALID_OWNER = "testOwnerApplication";
-    public static final String VALID_BUYER = "valid-buyer.example.com";
+
+    public static final String VALID_OWNER = CommonFixture.TEST_PACKAGE_NAME;
     public static final String VALID_NAME = "testCustomAudienceName";
 
     public static final Instant VALID_ACTIVATION_TIME =
             CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI;
     public static final Instant VALID_DELAYED_ACTIVATION_TIME =
-            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI
-                    .plus(DBCustomAudience.getMaxActivateIn().dividedBy(2));
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plus(
+                    CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN.dividedBy(2));
     public static final Instant INVALID_DELAYED_ACTIVATION_TIME =
-            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI
-                    .plus(DBCustomAudience.getMaxActivateIn().multipliedBy(2));
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plus(
+                    CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN.multipliedBy(2));
 
     public static final Instant VALID_EXPIRATION_TIME =
-            VALID_ACTIVATION_TIME.plus(DBCustomAudience.getDefaultExpireIn());
+            VALID_ACTIVATION_TIME.plus(CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN);
     public static final Instant VALID_DELAYED_EXPIRATION_TIME =
             VALID_DELAYED_ACTIVATION_TIME.plusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEFORE_NOW_EXPIRATION_TIME =
             VALID_ACTIVATION_TIME.minusSeconds(DAY_IN_SECONDS);
+    public static final Instant INVALID_NOW_EXPIRATION_TIME =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEFORE_DELAYED_EXPIRATION_TIME =
             VALID_DELAYED_ACTIVATION_TIME.minusSeconds(DAY_IN_SECONDS);
     public static final Instant INVALID_BEYOND_MAX_EXPIRATION_TIME =
-            VALID_ACTIVATION_TIME.plus(DBCustomAudience.getMaxExpireIn().multipliedBy(2));
+            VALID_ACTIVATION_TIME.plus(CUSTOM_AUDIENCE_MAX_EXPIRE_IN.multipliedBy(2));
+    public static final Instant VALID_LAST_UPDATE_TIME_24_HRS_BEFORE =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS);
+    public static final Instant INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 3);
 
-    public static final Uri VALID_DAILY_UPDATE_URL =
-            new Uri.Builder().path("valid-update-url.example.com").build();
-    public static final String VALID_USER_BIDDING_SIGNALS =
-            "{'valid': 'yep', 'opaque': 'definitely'}";
+    public static final AdSelectionSignals VALID_USER_BIDDING_SIGNALS =
+            AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
 
-    public static final Uri VALID_BIDDING_LOGIC_URL =
-            new Uri.Builder().path("valid-buyer.example.com/bidding/logic/here/").build();
+    public static Uri getValidDailyUpdateUriByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer.getStringForm(), "/update");
+    }
 
-    public static CustomAudience.Builder getValidBuilder() {
+    public static Uri getValidBiddingLogicUrlByBuyer(AdTechIdentifier buyer) {
+        return CommonFixture.getUri(buyer.getStringForm(), "/bidding/logic/here/");
+    }
+
+    public static CustomAudience.Builder getValidBuilderForBuyer(AdTechIdentifier buyer) {
         return new CustomAudience.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(CustomAudienceFixture.VALID_BUYER)
+                .setBuyer(buyer.getStringForm())
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
-                .setTrustedBiddingData(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_DATA)
-                .setBiddingLogicUrl(CustomAudienceFixture.VALID_BIDDING_LOGIC_URL)
-                .setAds(AdDataFixture.VALID_ADS);
+                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setUserBiddingSignals(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setTrustedBiddingData(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))
+                .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
     }
 }
