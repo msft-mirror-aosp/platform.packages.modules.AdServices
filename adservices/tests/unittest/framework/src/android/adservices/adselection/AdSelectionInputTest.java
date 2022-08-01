@@ -29,10 +29,9 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link ReportImpressionInput} */
+/** Unit tests for {@link AdSelectionInput} */
 @SmallTest
-public final class ReportImpressionInputTest {
-    private static final long AUCTION_ID = 123;
+public final class AdSelectionInputTest {
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
 
     @Test
@@ -40,9 +39,8 @@ public final class ReportImpressionInputTest {
 
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
 
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionId(AUCTION_ID)
+        AdSelectionInput input =
+                new AdSelectionInput.Builder()
                         .setAdSelectionConfig(testAdSelectionConfig)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
@@ -50,26 +48,10 @@ public final class ReportImpressionInputTest {
         input.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        ReportImpressionInput fromParcel = ReportImpressionInput.CREATOR.createFromParcel(p);
+        AdSelectionInput fromParcel = AdSelectionInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionId()).isEqualTo(AUCTION_ID);
         assertThat(fromParcel.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
         assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-    }
-
-    @Test
-    public void testFailsToBuildWithUnsetAdSelectionId() {
-
-        AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new ReportImpressionInput.Builder()
-                            // Not setting AdSelectionId making it null.
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setAdSelectionConfig(testAdSelectionConfig)
-                            .build();
-                });
     }
 
     @Test
@@ -79,8 +61,7 @@ public final class ReportImpressionInputTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportImpressionInput.Builder()
-                            .setAdSelectionId(AUCTION_ID)
+                    new AdSelectionInput.Builder()
                             .setAdSelectionConfig(testAdSelectionConfig)
                             // Not setting CallerPackageName making it null.
                             .build();
@@ -93,8 +74,7 @@ public final class ReportImpressionInputTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportImpressionInput.Builder()
-                            .setAdSelectionId(AUCTION_ID)
+                    new AdSelectionInput.Builder()
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
                             // Not setting AdSelectionConfig making it null.
                             .build();
@@ -102,12 +82,11 @@ public final class ReportImpressionInputTest {
     }
 
     @Test
-    public void testReportImpressionInputDescribeContents() {
+    public void testAdSelectionInputDescribeContents() {
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
 
-        ReportImpressionInput obj =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionId(AUCTION_ID)
+        AdSelectionInput obj =
+                new AdSelectionInput.Builder()
                         .setAdSelectionConfig(testAdSelectionConfig)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
