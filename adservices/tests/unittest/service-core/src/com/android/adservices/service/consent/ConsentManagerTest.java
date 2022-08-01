@@ -28,6 +28,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +45,7 @@ import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -65,11 +68,12 @@ public class ConsentManagerTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
     private BooleanFileDatastore mDatastore;
+    private ConsentManager mConsentManager;
     private AppConsentDao mAppConsentDao;
 
-    private ConsentManager mConsentManager;
     @Mock private PackageManager mPackageManager;
     @Mock private TopicsWorker mTopicsWorker;
+    @Mock private MeasurementImpl mMeasurementImpl;
 
     @Mock private AppUpdateManager mAppUpdateManager;
     @Mock private CacheManager mCacheManager;
@@ -83,9 +87,10 @@ public class ConsentManagerTest {
 
         mDatastore =
                 new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
-        mAppConsentDao = new AppConsentDao(mDatastore, mPackageManager);
+        mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManager));
 
-        mConsentManager = new ConsentManager(mContext, mTopicsWorker, mAppConsentDao);
+        mConsentManager = new ConsentManager(
+                mContext, mTopicsWorker, mAppConsentDao, mMeasurementImpl);
     }
 
     @After
@@ -107,6 +112,17 @@ public class ConsentManagerTest {
         mConsentManager.disable(mPackageManager);
 
         assertFalse(mConsentManager.getConsent(mPackageManager).isGiven());
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsRevoked() throws IOException {
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.disable(mPackageManager);
+
+        verify(mTopicsWorker, times(1)).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDao, times(1)).clearAllConsentData();
+        verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
     }
 
     @Test
@@ -427,7 +443,8 @@ public class ConsentManagerTest {
                                 mBlockedTopicsManager,
                                 mAppUpdateManager,
                                 mMockFlags),
-                        mAppConsentDao);
+                        mAppConsentDao,
+                        mMeasurementImpl);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
         doNothing().when(mCacheManager).clearAllTopicsData(any());
