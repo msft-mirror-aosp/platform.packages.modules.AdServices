@@ -18,6 +18,15 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public final class TriggerFixture {
     private TriggerFixture() { }
 
@@ -92,5 +101,27 @@ public final class TriggerFixture {
                 + "}";
 
         public static final Long DEBUG_KEY = 27836L;
+
+        public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
+            final AggregateFilterData filter =
+                    new AggregateFilterData.Builder()
+                            .setAttributionFilterMap(
+                                    Map.of(
+                                            "product",
+                                            List.of("1234", "4321"),
+                                            "conversion_subdomain",
+                                            List.of("electronics.megastore")))
+                            .build();
+            return new AggregatableAttributionTrigger.Builder()
+                    .setValues(Map.of("x", 1))
+                    .setTriggerData(
+                            List.of(
+                                    new AggregateTriggerData.Builder()
+                                            .setKey(BigInteger.ONE)
+                                            .setSourceKeys(Set.of("sourceKey"))
+                                            .setFilter(filter)
+                                            .build()))
+                    .build();
+        }
     }
 }

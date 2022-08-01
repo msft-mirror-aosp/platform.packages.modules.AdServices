@@ -17,6 +17,7 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
@@ -29,6 +30,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebTriggerRegistrationRequestTest {
@@ -94,6 +96,37 @@ public class WebTriggerRegistrationRequestTest {
                                 .setTriggerParams(Collections.emptyList())
                                 .setDestination(TOP_ORIGIN_URI)
                                 .build());
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistrationRequest().describeContents());
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
+        final WebTriggerRegistrationRequest request2 = createExampleRegistrationRequest();
+        final Set<WebTriggerRegistrationRequest> requestSet1 = Set.of(request1);
+        final Set<WebTriggerRegistrationRequest> requestSet2 = Set.of(request2);
+        assertEquals(request1.hashCode(), request2.hashCode());
+        assertEquals(request1, request2);
+        assertEquals(requestSet1, requestSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final WebTriggerRegistrationRequest request1 = createExampleRegistrationRequest();
+        final WebTriggerRegistrationRequest request2 =
+                new WebTriggerRegistrationRequest.Builder()
+                        .setTriggerParams(TRIGGER_REGISTRATIONS)
+                        .setDestination(Uri.parse("https://notEqual"))
+                        .build();
+        final Set<WebTriggerRegistrationRequest> requestSet1 = Set.of(request1);
+        final Set<WebTriggerRegistrationRequest> requestSet2 = Set.of(request2);
+        assertNotEquals(request1.hashCode(), request2.hashCode());
+        assertNotEquals(request1, request2);
+        assertNotEquals(requestSet1, requestSet2);
     }
 
     private WebTriggerRegistrationRequest createExampleRegistrationRequest() {

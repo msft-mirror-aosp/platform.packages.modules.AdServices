@@ -120,4 +120,9 @@ public final class DeletionParamTest {
         verifyDefaultExample(DeletionParam.CREATOR.createFromParcel(p));
         p.recycle();
     }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExample().describeContents());
+    }
 }

@@ -26,7 +26,7 @@ import android.os.Parcel;
 import org.junit.Test;
 
 /** Unit tests for {@link WebSourceParams}. */
-public class SourceParamsTest {
+public class WebSourceParamsTest {
     private static final Uri REGISTRATION_URI = Uri.parse("http://foo.com");
 
     private WebSourceParams createExampleRegistration() {
@@ -61,5 +61,10 @@ public class SourceParamsTest {
         p.setDataPosition(0);
         verifyExampleRegistration(WebSourceParams.CREATOR.createFromParcel(p));
         p.recycle();
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistration().describeContents());
     }
 }
