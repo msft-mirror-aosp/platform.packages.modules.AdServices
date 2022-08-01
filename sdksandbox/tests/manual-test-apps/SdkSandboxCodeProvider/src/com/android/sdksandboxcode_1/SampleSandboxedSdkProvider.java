@@ -45,9 +45,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         Log.i(TAG, "SDK unloaded");
     }
 
-    @Override
-    public View getView(Context windowContext, Bundle params) {
-        return new TestView(windowContext, getBaseContext());
+    public View getView(Context windowContext, Bundle params, int width, int height) {
+        return new TestView(windowContext, getBaseContext(), width, height);
     }
 
     @Override
@@ -57,7 +56,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
         private Context mSdkContext;
 
-        TestView(Context windowContext, Context sdkContext) {
+        TestView(Context windowContext, Context sdkContext, int width, int height) {
             super(windowContext);
             mSdkContext = sdkContext;
         }
@@ -75,7 +74,6 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-
             setOnClickListener(this::onClickListener);
         }
 
