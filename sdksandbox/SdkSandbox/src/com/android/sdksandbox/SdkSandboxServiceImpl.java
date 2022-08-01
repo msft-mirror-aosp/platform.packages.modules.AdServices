@@ -156,8 +156,10 @@ public class SdkSandboxServiceImpl extends Service {
     private void updateSharedPreferences(
             SharedPreferences.Editor editor, Bundle data, KeyWithType keyInUpdate) {
         final String key = keyInUpdate.getName();
-        // TODO(b/239403323): Support removal of keys
+
         if (!data.containsKey(key)) {
+            // key was specified but bundle didn't have the key; meaning it has been removed.
+            editor.remove(key);
             return;
         }
 
@@ -329,8 +331,7 @@ public class SdkSandboxServiceImpl extends Service {
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
             Objects.requireNonNull(applicationInfo, "applicationInfo should not be null");
             Objects.requireNonNull(sdkName, "sdkName should not be null");
-            Objects.requireNonNull(sdkProviderClassName,
-                    "sdkProviderClassName should not be null");
+            Objects.requireNonNull(sdkProviderClassName, "sdkProviderClassName should not be null");
             Objects.requireNonNull(params, "params should not be null");
             Objects.requireNonNull(callback, "callback should not be null");
             if (TextUtils.isEmpty(sdkProviderClassName)) {

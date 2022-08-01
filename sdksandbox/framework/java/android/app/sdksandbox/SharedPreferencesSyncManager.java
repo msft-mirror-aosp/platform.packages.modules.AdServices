@@ -132,22 +132,13 @@ public class SharedPreferencesSyncManager {
 
     @GuardedBy("mLock")
     private void bulkSyncData() {
+        // Collect data in a bundle
         final Bundle data = new Bundle();
         final SharedPreferences pref = getDefaultSharedPreferences();
         for (int i = 0; i < mTypeOfKey.size(); i++) {
             final String key = mTypeOfKey.keyAt(i);
-            // TODO(b/239403323): Add support for removal of keys
-            if (!pref.contains(key)) {
-                continue;
-            }
             updateBundle(data, pref, key);
         }
-
-        // No need to sync if there data is empty
-        if (data.isEmpty()) {
-            return;
-        }
-
         final SharedPreferencesUpdate update = new SharedPreferencesUpdate(mKeysToSync, data);
         try {
             mService.syncDataFromClient(
@@ -169,16 +160,17 @@ public class SharedPreferencesSyncManager {
         public void onSharedPreferenceChanged(SharedPreferences pref, @Nullable String key) {
             // Sync specified keys only
             synchronized (mLock) {
-                if (key == null || mTypeOfKey == null || !mTypeOfKey.containsKey(key)) {
+                if (key == null) {
+                    // All keys have been cleared. Bulk sync so that we send null for every key.
+                    bulkSyncData();
+                    return;
+                }
+                if (mTypeOfKey == null || !mTypeOfKey.containsKey(key)) {
                     return;
                 }
 
                 final Bundle data = new Bundle();
                 updateBundle(data, pref, key);
-                // No need to sync if there data is empty
-                if (data.isEmpty()) {
-                    return;
-                }
 
                 final KeyWithType keyWithType = new KeyWithType(key, mTypeOfKey.get(key));
                 final SharedPreferencesUpdate update =
@@ -199,8 +191,8 @@ public class SharedPreferencesSyncManager {
     // Add key to bundle based on type of value
     @GuardedBy("mLock")
     private void updateBundle(Bundle data, SharedPreferences pref, String key) {
-        // TODO(b/239403323): Support removal of keys
         if (!pref.contains(key)) {
+            // Keep the key missing from the bundle; that means key has been removed.
             return;
         }
 

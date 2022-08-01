@@ -70,11 +70,13 @@ public class SdkSandboxTest {
     private static final long TIME_SANDBOX_CALLED_SYSTEM_SERVER = 11;
 
     private static final String KEY_TO_UPDATE = "hello1";
+    private static final KeyWithType KEY_WITH_TYPE_TO_UPDATE =
+            new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING);
     private static final Map<String, String> TEST_DATA =
             Map.of(KEY_TO_UPDATE, "world1", "hello2", "world2", "empty", "");
     private static final List<KeyWithType> KEYS_TO_SYNC =
             List.of(
-                    new KeyWithType(KEY_TO_UPDATE, KeyWithType.KEY_TYPE_STRING),
+                    KEY_WITH_TYPE_TO_UPDATE,
                     new KeyWithType("hello2", KeyWithType.KEY_TYPE_STRING),
                     new KeyWithType("empty", KeyWithType.KEY_TYPE_STRING));
     private static final SharedPreferencesUpdate TEST_UPDATE =
@@ -316,10 +318,41 @@ public class SdkSandboxTest {
                 .containsExactly("list1", "list2");
     }
 
+    @Test
+    public void testSyncDataFromClient_KeyCanBeUpdated() throws Exception {
+        // Preload some data
+        mService.syncDataFromClient(TEST_UPDATE);
+
+        // Now send in a new update
+        final Bundle newData = getBundleFromMap(Map.of(KEY_TO_UPDATE, "update"));
+        final SharedPreferencesUpdate newUpdate =
+                new SharedPreferencesUpdate(List.of(KEY_WITH_TYPE_TO_UPDATE), newData);
+        mService.syncDataFromClient(newUpdate);
+
+        // Verify that ClientSharedPreference contains the synced data
+        SharedPreferences pref = getClientSharedPreference();
+        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+        assertThat(pref.getString(KEY_TO_UPDATE, "")).isEqualTo("update");
+    }
+
+    @Test
+    public void testSyncDataFromClient_KeyCanBeRemoved() throws Exception {
+        // Preload some data
+        mService.syncDataFromClient(TEST_UPDATE);
+
+        // Now send in a new update
+        final SharedPreferencesUpdate newUpdate =
+                new SharedPreferencesUpdate(TEST_UPDATE.getKeysInUpdate(), new Bundle());
+        mService.syncDataFromClient(newUpdate);
+
+        // Verify that ClientSharedPreference contains the synced data
+        SharedPreferences pref = getClientSharedPreference();
+        assertThat(pref.getAll().keySet()).doesNotContain(KEY_TO_UPDATE);
+    }
+
     private static Bundle getBundleFromMap(Map<String, String> data) {
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
-            // TODO(b/239403323): add support for non-string values
             bundle.putString(key, data.get(key));
         }
         return bundle;
