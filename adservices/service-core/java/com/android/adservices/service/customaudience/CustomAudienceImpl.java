@@ -48,11 +48,11 @@ public class CustomAudienceImpl {
     @GuardedBy("SINGLETON_LOCK")
     private static CustomAudienceImpl sSingleton;
 
-    private final CustomAudienceDao mCustomAudienceDao;
-    private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
-    private final Validator<CustomAudience> mCustomAudienceValidator;
-    private final Clock mClock;
-    private final Duration mCustomAudienceDefaultExpireIn;
+    @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
+    @NonNull private final Validator<CustomAudience> mCustomAudienceValidator;
+    @NonNull private final Clock mClock;
+    @NonNull private final Flags mFlags;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -61,12 +61,17 @@ public class CustomAudienceImpl {
             @NonNull Validator<CustomAudience> customAudienceValidator,
             @NonNull Clock clock,
             @NonNull Flags flags) {
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(customAudienceQuantityChecker);
+        Objects.requireNonNull(customAudienceValidator);
+        Objects.requireNonNull(clock);
+        Objects.requireNonNull(flags);
+
         mCustomAudienceDao = customAudienceDao;
         mCustomAudienceQuantityChecker = customAudienceQuantityChecker;
         mCustomAudienceValidator = customAudienceValidator;
         mClock = clock;
-        mCustomAudienceDefaultExpireIn =
-                Duration.ofMillis(flags.getFledgeCustomAudienceDefaultExpireInMs());
+        mFlags = flags;
     }
 
     /**
@@ -106,11 +111,12 @@ public class CustomAudienceImpl {
         mCustomAudienceQuantityChecker.check(customAudience);
         mCustomAudienceValidator.validate(customAudience);
 
+        Duration customAudienceDefaultExpireIn =
+                Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
+
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
-                        customAudience,
-                        currentTime,
-                        mCustomAudienceDefaultExpireIn);
+                        customAudience, currentTime, customAudienceDefaultExpireIn);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUrl());

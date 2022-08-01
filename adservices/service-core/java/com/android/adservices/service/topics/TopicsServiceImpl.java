@@ -32,6 +32,7 @@ import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -88,15 +89,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetTopicsCallback callback) {
 
-        if (!mThrottler.tryAcquire(Throttler.ApiKey.TOPICS_API, topicsParam.getSdkName())) {
-            LogUtil.e("Rate Limit Reached for TOPICS_API and SDK = %s", topicsParam.getSdkName());
-            try {
-                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
-            } catch (RemoteException e) {
-                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
-            }
-            return;
-        }
+        if (isThrottled(topicsParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
         // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
@@ -173,6 +166,33 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    // Throttle the Topics API.
+    // Return true if we should throttle (don't allow the API call).
+    private boolean isThrottled(GetTopicsParam topicsParam, IGetTopicsCallback callback) {
+        // There are 2 cases for throttling:
+        // Case 1: the App calls Topics API directly, not via a SDK. In this case,
+        // the SdkName == Empty
+        // Case 2: the SDK calls Topics API.
+        boolean throttled =
+                TextUtils.isEmpty(topicsParam.getSdkName())
+                        ? !mThrottler.tryAcquire(
+                                Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME,
+                                topicsParam.getAppPackageName())
+                        : !mThrottler.tryAcquire(
+                                Throttler.ApiKey.TOPICS_API_SDK_NAME, topicsParam.getSdkName());
+
+        if (throttled) {
+            LogUtil.e("Rate Limit Reached for TOPICS_API");
+            try {
+                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return true;
+        }
+        return false;
     }
 
     // Enforce that the callingPackage has the callingUid.
