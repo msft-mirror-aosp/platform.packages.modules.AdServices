@@ -63,6 +63,14 @@ public class SqliteObjectMapper {
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setDoubleColumn(cursor, MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE,
                 builder::setRandomizedTriggerRate);
+        setLongColumn(
+                cursor,
+                MeasurementTables.EventReportContract.SOURCE_DEBUG_KEY,
+                builder::setSourceDebugKey);
+        setLongColumn(
+                cursor,
+                MeasurementTables.EventReportContract.TRIGGER_DEBUG_KEY,
+                builder::setTriggerDebugKey);
         return builder.build();
     }
 
@@ -121,6 +129,7 @@ public class SqliteObjectMapper {
                 builder::setAggregateSource);
         setIntColumn(cursor, MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 builder::setAggregateContributions);
+        setLongColumn(cursor, MeasurementTables.SourceContract.DEBUG_KEY, builder::setDebugKey);
         return builder.build();
     }
 
@@ -150,6 +159,7 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
+        setLongColumn(cursor, MeasurementTables.TriggerContract.DEBUG_KEY, builder::setDebugKey);
         return builder.build();
     }
 
@@ -176,6 +186,14 @@ public class SqliteObjectMapper {
                 builder::setStatus);
         setTextColumn(cursor, MeasurementTables.AggregateReport.API_VERSION,
                 builder::setApiVersion);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY,
+                builder::setSourceDebugKey);
+        setLongColumn(
+                cursor,
+                MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY,
+                builder::setTriggerDebugKey);
         return builder.build();
     }
 
