@@ -648,6 +648,43 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
     }
 
+    @Test
+    public void test_syncDataFromClient_verifiesCallingPackageName() {
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        "does.not.exist",
+                                        SDK_NAME,
+                                        new Bundle(),
+                                        new FakeLoadSdkCallbackBinder()));
+        assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
+    }
+
+    @Test
+    public void test_syncDataFromClient_sandboxServiceIsNotBound() {
+        // Sync data from client
+        mService.syncDataFromClient(TEST_PACKAGE, new Bundle());
+
+        // Verify when sandbox is not bound, manager service does not try to sync
+        assertThat(mSdkSandboxService.getLastUpdate()).isNull();
+    }
+
+    @Test
+    public void test_syncDataFromClient_sandboxServiceIsAlreadyBound() {
+        // Ensure a sandbox service is already bound for the client
+        final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+        mProvider.bindService(callingInfo, Mockito.mock(ServiceConnection.class));
+
+        // Sync data from client
+        final Bundle data = new Bundle();
+        mService.syncDataFromClient(TEST_PACKAGE, data);
+
+        // Verify that manager service calls sandbox to sync data
+        assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
+    }
+
     /**
      * Fake service provider that returns local instance of {@link SdkSandboxServiceProvider}
      */
@@ -691,7 +728,8 @@ public class SdkSandboxManagerServiceUnitTest {
         private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
         private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
 
-        boolean mSurfacePackageRequested = false;
+        private boolean mSurfacePackageRequested = false;
+        private Bundle mLastSyncUpdate = null;
 
         FakeSdkSandboxService() {
             mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -713,6 +751,16 @@ public class SdkSandboxManagerServiceUnitTest {
 
         @Override
         public void unloadSdk(IBinder sdkToken, String sdkName) {}
+
+        @Override
+        public void syncDataFromClient(Bundle data) {
+            mLastSyncUpdate = data;
+        }
+
+        @Nullable
+        public Bundle getLastUpdate() {
+            return mLastSyncUpdate;
+        }
 
         void sendLoadCodeSuccessful() throws RemoteException {
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(new Bundle(), mManagerToSdkCallback);
