@@ -74,7 +74,7 @@ public class SourceFetcher {
 
     private boolean parseEventSource(
             @NonNull String text,
-            @Nullable Uri osDestinationFromRequest,
+            @Nullable Uri appDestinationFromRequest,
             @Nullable Uri webDestinationFromRequest,
             boolean shouldValidateDestination,
             SourceRegistration.Builder result,
@@ -143,7 +143,7 @@ public class SourceFetcher {
                 return false;
             }
 
-            if (osDestinationFromRequest != null && !osDestinationFromRequest.equals(appUri)) {
+            if (appDestinationFromRequest != null && !appDestinationFromRequest.equals(appUri)) {
                 LogUtil.d("Expected destination to match with the supplied one!");
                 return false;
             }
@@ -211,7 +211,7 @@ public class SourceFetcher {
     private boolean parseSource(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
-            @Nullable Uri osDestination,
+            @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             boolean shouldValidateDestination,
             @NonNull Map<String, List<String>> headers,
@@ -233,7 +233,7 @@ public class SourceFetcher {
                 boolean isValid =
                         parseEventSource(
                                 field.get(0),
-                                osDestination,
+                                appDestination,
                                 webDestination,
                                 shouldValidateDestination,
                                 result,
@@ -276,7 +276,7 @@ public class SourceFetcher {
     private void fetchSource(
             @NonNull Uri topOrigin,
             @NonNull Uri registrationUri,
-            @Nullable Uri osDestination,
+            @Nullable Uri appDestination,
             @Nullable Uri webDestination,
             boolean shouldValidateDestination,
             @NonNull String sourceType,
@@ -318,7 +318,7 @@ public class SourceFetcher {
                     parseSource(
                             topOrigin,
                             registrationUri,
-                            osDestination,
+                            appDestination,
                             webDestination,
                             shouldValidateDestination,
                             headers,
@@ -364,7 +364,7 @@ public class SourceFetcher {
                                             fetchSource(
                                                     topOrigin,
                                                     redirect,
-                                                    /* osDestination */ null,
+                                                    /* appDestination */ null,
                                                     /* webDestination */ null,
                                                     /* shouldValidateDestination*/ false,
                                                     sourceInfo,
@@ -415,7 +415,7 @@ public class SourceFetcher {
         processWebSourcesFetch(
                 request.getTopOriginUri(),
                 request.getSourceParams(),
-                request.getOsDestination(),
+                request.getAppDestination(),
                 request.getWebDestination(),
                 request.getInputEvent() == null ? "event" : "navigation",
                 out);
@@ -429,7 +429,7 @@ public class SourceFetcher {
     private void processWebSourcesFetch(
             Uri topOrigin,
             List<WebSourceParams> sourceParamsList,
-            Uri osDestination,
+            Uri appDestination,
             Uri webDestination,
             String sourceType,
             List<SourceRegistration> registrationsOut) {
@@ -440,7 +440,7 @@ public class SourceFetcher {
                                             sourceParams ->
                                                     createFutureToFetchWebSource(
                                                             topOrigin,
-                                                            osDestination,
+                                                            appDestination,
                                                             webDestination,
                                                             sourceType,
                                                             registrationsOut,
@@ -454,7 +454,7 @@ public class SourceFetcher {
 
     private CompletableFuture<Void> createFutureToFetchWebSource(
             Uri topOrigin,
-            Uri osDestination,
+            Uri appDestination,
             Uri webDestination,
             String sourceType,
             List<SourceRegistration> registrationsOut,
@@ -464,14 +464,14 @@ public class SourceFetcher {
                         fetchSource(
                                 topOrigin,
                                 sourceParams.getRegistrationUri(),
-                                osDestination,
+                                appDestination,
                                 webDestination,
                                 /* shouldValidateDestination */ true,
                                 sourceType,
                                 /* shouldProcessRedirects*/ false,
                                 registrationsOut,
                                 true,
-                                sourceParams.isAllowDebugKey()),
+                                sourceParams.isDebugKeyAllowed()),
                 mIoExecutor);
     }
 

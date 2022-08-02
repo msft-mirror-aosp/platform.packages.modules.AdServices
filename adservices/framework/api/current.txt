@@ -341,22 +341,21 @@ package android.adservices.measurement {
   public final class WebSourceParams implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public android.net.Uri getRegistrationUri();
-    method public boolean isAllowDebugKey();
+    method public boolean isDebugKeyAllowed();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebSourceParams> CREATOR;
   }
 
   public static final class WebSourceParams.Builder {
-    ctor public WebSourceParams.Builder();
+    ctor public WebSourceParams.Builder(@NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceParams build();
-    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setAllowDebugKey(boolean);
-    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setRegistrationUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setDebugKeyAllowed(boolean);
   }
 
   public final class WebSourceRegistrationRequest implements android.os.Parcelable {
     method public int describeContents();
+    method @Nullable public android.net.Uri getAppDestination();
     method @Nullable public android.view.InputEvent getInputEvent();
-    method @Nullable public android.net.Uri getOsDestination();
     method @NonNull public java.util.List<android.adservices.measurement.WebSourceParams> getSourceParams();
     method @NonNull public android.net.Uri getTopOriginUri();
     method @Nullable public android.net.Uri getVerifiedDestination();
@@ -366,29 +365,26 @@ package android.adservices.measurement {
   }
 
   public static final class WebSourceRegistrationRequest.Builder {
-    ctor public WebSourceRegistrationRequest.Builder();
+    ctor public WebSourceRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebSourceParams>, @NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest build();
+    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setAppDestination(@Nullable android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setOsDestination(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setSourceParams(@NonNull java.util.List<android.adservices.measurement.WebSourceParams>);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setTopOriginUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setVerifiedDestination(@Nullable android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setWebDestination(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setWebDestination(@Nullable android.net.Uri);
   }
 
   public final class WebTriggerParams implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public android.net.Uri getRegistrationUri();
-    method public boolean isAllowDebugKey();
+    method public boolean isDebugKeyAllowed();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebTriggerParams> CREATOR;
   }
 
   public static final class WebTriggerParams.Builder {
-    ctor public WebTriggerParams.Builder();
+    ctor public WebTriggerParams.Builder(@NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebTriggerParams build();
-    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setAllowDebugKey(boolean);
-    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setRegistrationUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setDebugKeyAllowed(boolean);
   }
 
   public final class WebTriggerRegistrationRequest implements android.os.Parcelable {
@@ -400,10 +396,8 @@ package android.adservices.measurement {
   }
 
   public static final class WebTriggerRegistrationRequest.Builder {
-    ctor public WebTriggerRegistrationRequest.Builder();
+    ctor public WebTriggerRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>, @NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest build();
-    method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest.Builder setDestination(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest.Builder setTriggerParams(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>);
   }
 
 }
