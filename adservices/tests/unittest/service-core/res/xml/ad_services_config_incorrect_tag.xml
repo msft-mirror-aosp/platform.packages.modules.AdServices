@@ -15,8 +15,8 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
-    <attribution allowSdkToAccess="com.xyz" allowAllToAccess="false" />
-    <custom-audiences allowAllToAccess="false" allowSdkToAccess="com.abc, com.xyz" />
+    <attribution allowAdPartnersToAccess="com.xyz" allowAllToAccess="false" />
+    <custom-audiences allowAllToAccess="false" allowAdPartnersToAccess="com.abc, com.xyz" />
     <topics allowAllToAccess="true" />
     <foobar allowAllToAccess="true" />
 </ad-services-config>

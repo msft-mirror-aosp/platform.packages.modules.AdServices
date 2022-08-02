@@ -47,11 +47,9 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
     /** Destination {@link Uri}. */
     @NonNull private final Uri mDestination;
 
-    /** Constructor for {@link WebTriggerRegistrationRequest}. */
-    private WebTriggerRegistrationRequest(
-            @NonNull List<WebTriggerParams> webTriggerParams, @NonNull Uri destination) {
-        mWebTriggerParams = webTriggerParams;
-        mDestination = destination;
+    private WebTriggerRegistrationRequest(@NonNull Builder builder) {
+        mWebTriggerParams = builder.mWebTriggerParams;
+        mDestination = builder.mDestination;
     }
 
     private WebTriggerRegistrationRequest(Parcel in) {
@@ -132,6 +130,9 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
          */
         @NonNull
         public Builder setDestination(@NonNull Uri destination) {
+            if (destination.getScheme() == null) {
+                throw new IllegalArgumentException("Destination origin must have a scheme.");
+            }
             mDestination = destination;
             return this;
         }
@@ -145,7 +146,7 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
 
             Objects.requireNonNull(mDestination);
 
-            return new WebTriggerRegistrationRequest(mWebTriggerParams, mDestination);
+            return new WebTriggerRegistrationRequest(this);
         }
     }
 }

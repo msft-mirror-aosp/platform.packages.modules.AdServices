@@ -153,14 +153,14 @@ public class TriggerFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open registration target URL %s", e);
+            LogUtil.d(e, "Failed to open registration target URL");
             return;
         }
         try {
@@ -202,7 +202,7 @@ public class TriggerFetcher {
                 }
             }
         } catch (IOException e) {
-            LogUtil.d("Failed to get registration response %s", e);
+            LogUtil.d(e, "Failed to get registration response");
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();

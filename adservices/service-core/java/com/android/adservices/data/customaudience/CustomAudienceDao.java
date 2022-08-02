@@ -346,8 +346,8 @@ public abstract class CustomAudienceDao {
             List<String> buyers, Instant currentTime);
 
     /**
-     * Gets all {@link DBCustomAudienceBackgroundFetchData} for custom audiences that are active,
-     * not expired, and eligible for update.
+     * Gets up to {@code maxRowsReturned} rows of {@link DBCustomAudienceBackgroundFetchData} which
+     * correspond to custom audiences that are active, not expired, and eligible for update.
      */
     @Query(
             "SELECT bgf.* FROM custom_audience_background_fetch_data AS bgf "
@@ -362,6 +362,20 @@ public abstract class CustomAudienceDao {
     public abstract List<DBCustomAudienceBackgroundFetchData>
             getActiveEligibleCustomAudienceBackgroundFetchData(
                     @NonNull Instant currentTime, long maxRowsReturned);
+
+    /**
+     * Gets the number of all {@link DBCustomAudienceBackgroundFetchData} for custom audiences that
+     * are active, not expired, and eligible for update.
+     */
+    @Query(
+            "SELECT COUNT(DISTINCT bgf.ROWID) FROM custom_audience_background_fetch_data AS bgf "
+                    + "INNER JOIN custom_audience AS ca "
+                    + "ON bgf.buyer = ca.buyer AND bgf.owner = ca.owner AND bgf.name = ca.name "
+                    + "WHERE bgf.eligible_update_time <= :currentTime "
+                    + "AND ca.activation_time <= :currentTime "
+                    + "AND :currentTime < ca.expiration_time")
+    public abstract int getNumActiveEligibleCustomAudienceBackgroundFetchData(
+            @NonNull Instant currentTime);
 
     /** Class represents custom audience stats query result. */
     public static class CustomAudienceStats {

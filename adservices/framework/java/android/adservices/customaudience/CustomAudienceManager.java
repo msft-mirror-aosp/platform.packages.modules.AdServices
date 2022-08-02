@@ -69,10 +69,20 @@ public class CustomAudienceManager {
      *
      * <p>Note that the ads list can be completely overwritten by the daily background fetch job.
      *
-     * <p>This call fails with an {@link IllegalArgumentException} if the call comes from an
-     * unauthorized party, if the storage limit has been exceeded by the calling party, or if any
-     * URL parameters in the {@link CustomAudience} given are not authenticated with the {@link
-     * CustomAudience} buyer.
+     * <p>This call fails with an {@link SecurityException} if
+     *
+     * <ol>
+     *   <li>the owner is not calling app's package name and/or
+     *   <li>the buyer is not authorized to use the API.
+     * </ol>
+     *
+     * <p>This call fails with an {@link IllegalArgumentException} if
+     *
+     * <ol>
+     *   <li>the storage limit has been exceeded by the calling application and/or
+     *   <li>any URL parameters in the {@link CustomAudience} given are not authenticated with the
+     *       {@link CustomAudience} buyer.
+     * </ol>
      *
      * <p>This call fails with an {@link IllegalStateException} if an internal service error is
      * encountered.
@@ -119,9 +129,15 @@ public class CustomAudienceManager {
      * Attempts to remove a user from a custom audience by deleting any existing {@link
      * CustomAudience} data, identified by {@code owner}, {@code buyer}, and {@code name}.
      *
-     * <p>This call does not communicate errors back to the caller, except for the case of invalid
-     * parameters and remote exceptions. It does not inform the caller whether the custom audience
-     * specified existed in on-device storage and/or whether the caller was authorized to leave the
+     * <p>This call fails with an {@link SecurityException} if
+     *
+     * <ol>
+     *   <li>the owner is not calling app's package name; and/or
+     *   <li>the buyer is not authorized to use the API.
+     * </ol>
+     *
+     * <p>This call does not inform the caller whether the custom audience specified existed in
+     * on-device storage. In another word, it will fail silently when try to leave a not joined
      * custom audience.
      */
     public void leaveCustomAudience(

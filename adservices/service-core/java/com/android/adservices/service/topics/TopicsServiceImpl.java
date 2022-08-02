@@ -15,10 +15,11 @@
  */
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 
@@ -32,6 +33,7 @@ import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -39,6 +41,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -46,7 +49,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
-
 
 import java.util.concurrent.Executor;
 
@@ -88,15 +90,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             @NonNull CallerMetadata callerMetadata,
             @NonNull IGetTopicsCallback callback) {
 
-        if (!mThrottler.tryAcquire(Throttler.ApiKey.TOPICS_API, topicsParam.getSdkName())) {
-            LogUtil.e("Rate Limit Reached for TOPICS_API and SDK = %s", topicsParam.getSdkName());
-            try {
-                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
-            } catch (RemoteException e) {
-                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
-            }
-            return;
-        }
+        if (isThrottled(topicsParam, callback)) return;
 
         final long startServiceTime = mClock.elapsedRealtime();
         // TODO(b/236380919): Verify that the passed App PackageName belongs to the caller uid
@@ -120,7 +114,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
-                    int resultCode = RESULT_OK;
+                    int resultCode = STATUS_SUCCESS;
 
                     try {
 
@@ -135,14 +129,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         // Check if caller has permission to invoke this API and user has given
                         // a consent
                         if (!appCanUsePpapi || !permitted || !userConsent.isGiven()) {
-                            resultCode = RESULT_UNAUTHORIZED_CALL;
+                            resultCode = STATUS_UNAUTHORIZED;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);
                             return;
                         }
 
                         resultCode = enforceCallingPackageBelongsToUid(packageName, callingUid);
-                        if (resultCode != RESULT_OK) {
+                        if (resultCode != STATUS_SUCCESS) {
                             callback.onFailure(resultCode);
                             return;
                         }
@@ -153,7 +147,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 topicsParam.getAppPackageName(), topicsParam.getSdkName());
                     } catch (RemoteException e) {
                         LogUtil.e(e, "Unable to send result to the callback");
-                        resultCode = RESULT_INTERNAL_ERROR;
+                        resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -175,43 +169,63 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 });
     }
 
+    // Throttle the Topics API.
+    // Return true if we should throttle (don't allow the API call).
+    private boolean isThrottled(GetTopicsParam topicsParam, IGetTopicsCallback callback) {
+        // There are 2 cases for throttling:
+        // Case 1: the App calls Topics API directly, not via a SDK. In this case,
+        // the SdkName == Empty
+        // Case 2: the SDK calls Topics API.
+        boolean throttled =
+                TextUtils.isEmpty(topicsParam.getSdkName())
+                        ? !mThrottler.tryAcquire(
+                                Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME,
+                                topicsParam.getAppPackageName())
+                        : !mThrottler.tryAcquire(
+                                Throttler.ApiKey.TOPICS_API_SDK_NAME, topicsParam.getSdkName());
+
+        if (throttled) {
+            LogUtil.e("Rate Limit Reached for TOPICS_API");
+            try {
+                callback.onFailure(STATUS_RATE_LIMIT_REACHED);
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+            }
+            return true;
+        }
+        return false;
+    }
+
     // Enforce that the callingPackage has the callingUid.
     private int enforceCallingPackageBelongsToUid(String callingPackage, int callingUid) {
-        int appCallingUid;
-        // Check the Calling Package Name
-        if (Process.isSdkSandboxUid(callingUid)) {
-            // The callingUid is the Sandbox UId, convert it to the app UId.
-            appCallingUid = Process.getAppUidForSdkSandboxUid(callingUid);
-        } else {
-            appCallingUid = callingUid;
-        }
+        int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
         try {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, callingPackage + " not found");
-            return RESULT_UNAUTHORIZED_CALL;
+            return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
-            return RESULT_UNAUTHORIZED_CALL;
+            return STATUS_UNAUTHORIZED;
         }
-        return RESULT_OK;
+        return STATUS_SUCCESS;
     }
 
-    /**
-     * Init the Topics Service.
-     */
+    /** Init the Topics Service. */
     public void init() {
-        sBackgroundExecutor.execute(() -> {
-            // This is to prevent cold-start latency on getTopics API.
-            // Load cache when the service is created.
-            // The recommended pattern is:
-            // 1) In app startup, wake up the TopicsService.
-            // 2) The TopicsService will load the Topics Cache from DB into memory.
-            // 3) Later, when the app calls Topics API, the returned Topics will be served from
-            // Cache in memory.
-            mTopicsWorker.loadCache();
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    // This is to prevent cold-start latency on getTopics API.
+                    // Load cache when the service is created.
+                    // The recommended pattern is:
+                    // 1) In app startup, wake up the TopicsService.
+                    // 2) The TopicsService will load the Topics Cache from DB into memory.
+                    // 3) Later, when the app calls Topics API, the returned Topics will be served
+                    // from
+                    // Cache in memory.
+                    mTopicsWorker.loadCache();
+                });
     }
 }

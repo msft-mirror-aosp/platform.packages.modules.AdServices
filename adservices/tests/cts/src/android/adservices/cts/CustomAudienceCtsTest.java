@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
@@ -51,10 +53,11 @@ public class CustomAudienceCtsTest {
     private AdvertisingCustomAudienceClient mClient;
 
     private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
-    private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
+    private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
+            AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
     private boolean mIsDebugMode;
 
@@ -80,6 +83,21 @@ public class CustomAudienceCtsTest {
     }
 
     @Test
+    public void testJoinCustomAudience_ownerIsNotCallingApp_fail() {
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.joinCustomAudience(
+                                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                                CommonFixture.VALID_BUYER)
+                                                        .setOwner("Invalid_owner")
+                                                        .build())
+                                        .get());
+        assertTrue(exception.getCause() instanceof SecurityException);
+    }
+
+    @Test
     public void testJoinCustomAudience_illegalExpirationTime_fail() {
         CustomAudience customAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
@@ -102,7 +120,7 @@ public class CustomAudienceCtsTest {
                 .get();
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME)
                 .get();
     }
@@ -112,9 +130,23 @@ public class CustomAudienceCtsTest {
             throws ExecutionException, InterruptedException {
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         "not_exist_name")
                 .get();
+    }
+
+    @Test
+    public void testLeaveCustomAudience_ownerNotCallingApp_fail() {
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mClient.leaveCustomAudience(
+                                                "Invalid_owner",
+                                                CommonFixture.VALID_BUYER.getStringForm(),
+                                                CustomAudienceFixture.VALID_NAME)
+                                        .get());
+        assertTrue(exception.getCause() instanceof SecurityException);
     }
 
     @Test
@@ -124,10 +156,10 @@ public class CustomAudienceCtsTest {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setOwner(OWNER)
-                        .setBuyer(BUYER)
+                        .setBuyer(BUYER.getStringForm())
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
                         .build();
 
         ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
@@ -148,7 +180,7 @@ public class CustomAudienceCtsTest {
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
                         .setOwner(OWNER)
-                        .setBuyer(BUYER)
+                        .setBuyer(BUYER.getStringForm())
                         .setName(NAME)
                         .build();
 

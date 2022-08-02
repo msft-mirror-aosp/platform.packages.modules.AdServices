@@ -80,21 +80,30 @@ public class MobileDataDownloadFactory {
                         new NetworkUsageMonitor(context, System::currentTimeMillis);
 
                 sSingletonMdd =
-                        MobileDataDownloadBuilder.newBuilder()
-                                .setContext(context)
-                                .setControlExecutor(getControlExecutor())
-                                .setTaskScheduler(Optional.of(new MddTaskScheduler(context)))
-                                .setNetworkUsageMonitor(networkUsageMonitor)
-                                .setFileStorage(fileStorage)
-                                .setFileDownloaderSupplier(() -> fileDownloader)
-                                .addFileGroupPopulator(
-                                        getTopicsManifestPopulator(
-                                                context, flags, fileStorage, fileDownloader))
-                                .addFileGroupPopulator(
-                                        getMeasurementManifestPopulator(
-                                                context, flags, fileStorage, fileDownloader))
-                                .setLoggerOptional(Optional.absent())
-                                .build();
+                        sSingletonMdd =
+                                MobileDataDownloadBuilder.newBuilder()
+                                        .setContext(context)
+                                        .setControlExecutor(getControlExecutor())
+                                        .setTaskScheduler(
+                                                Optional.of(new MddTaskScheduler(context)))
+                                        .setNetworkUsageMonitor(networkUsageMonitor)
+                                        .setFileStorage(fileStorage)
+                                        .setFileDownloaderSupplier(() -> fileDownloader)
+                                        .addFileGroupPopulator(
+                                                getTopicsManifestPopulator(
+                                                        context,
+                                                        flags,
+                                                        fileStorage,
+                                                        fileDownloader))
+                                        .addFileGroupPopulator(
+                                                getMeasurementManifestPopulator(
+                                                        context,
+                                                        flags,
+                                                        fileStorage,
+                                                        fileDownloader))
+                                        .setLoggerOptional(Optional.absent())
+                                        .setFlagsOptional(Optional.of(new MddFlags()))
+                                        .build();
             }
 
             return sSingletonMdd;

@@ -293,8 +293,9 @@ public class ConsentManager {
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(@NonNull PackageManager packageManager) {
         try {
+            init(packageManager);
             // TODO(b/229725886): add metrics / logging
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
         } catch (IOException e) {
@@ -307,8 +308,14 @@ public class ConsentManager {
      *
      * @return true if Consent Notification was displayed, otherwise false.
      */
-    public Boolean wasNotificationDisplayed() {
-        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+    public Boolean wasNotificationDisplayed(@NonNull PackageManager packageManager) {
+        try {
+            init(packageManager);
+            return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+        } catch (IOException e) {
+            LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+            return false;
+        }
     }
 
     private void setConsent(AdServicesApiConsent state)
@@ -322,7 +329,7 @@ public class ConsentManager {
                 || mDatastore.get(CONSENT_KEY) == null) {
             boolean initialConsent = getInitialConsent(packageManager);
             setInitialConsent(initialConsent);
-
+            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
             mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
         }
     }

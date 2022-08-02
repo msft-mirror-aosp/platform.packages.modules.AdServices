@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.validation;
+package com.android.adservices.service.measurement.util;
 
 import android.net.Uri;
 

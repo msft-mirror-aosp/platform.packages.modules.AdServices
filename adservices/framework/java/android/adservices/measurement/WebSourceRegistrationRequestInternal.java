@@ -48,10 +48,9 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Holds package info of where the request is coming from. */
     @NonNull private final String mPackageName;
 
-    private WebSourceRegistrationRequestInternal(
-            WebSourceRegistrationRequest sourceRegistrationRequest, String packageName) {
-        mSourceRegistrationRequest = sourceRegistrationRequest;
-        mPackageName = packageName;
+    private WebSourceRegistrationRequestInternal(@NonNull Builder builder) {
+        mSourceRegistrationRequest = builder.mSourceRegistrationRequest;
+        mPackageName = builder.mPackageName;
     }
 
     private WebSourceRegistrationRequestInternal(Parcel in) {
@@ -134,8 +133,7 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
             Objects.requireNonNull(mSourceRegistrationRequest);
             Objects.requireNonNull(mPackageName);
 
-            return new WebSourceRegistrationRequestInternal(
-                    mSourceRegistrationRequest, mPackageName);
+            return new WebSourceRegistrationRequestInternal(this);
         }
     }
 }

@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -25,6 +26,7 @@ import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
+import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,7 +35,9 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class TriggerTest {
     private static final String TOP_LEVEL_FILTERS_JSON_STRING =
@@ -92,6 +96,9 @@ public class TriggerTest {
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
+                        .setAggregatableAttributionTrigger(
+                                TriggerFixture.getValidTrigger()
+                                        .getAggregatableAttributionTrigger())
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -105,6 +112,9 @@ public class TriggerTest {
                         .setAggregateValues(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
+                        .setAggregatableAttributionTrigger(
+                                TriggerFixture.getValidTrigger()
+                                        .getAggregatableAttributionTrigger())
                         .build());
     }
 
@@ -170,6 +180,28 @@ public class TriggerTest {
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING_X).build());
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().build();
+        final Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().build();
+        final Set<Trigger> triggerSet1 = Set.of(trigger1);
+        final Set<Trigger> triggerSet2 = Set.of(trigger2);
+        assertEquals(trigger1.hashCode(), trigger2.hashCode());
+        assertEquals(trigger1, trigger2);
+        assertEquals(triggerSet1, triggerSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().build();
+        final Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("100").build();
+        final Set<Trigger> triggerSet1 = Set.of(trigger1);
+        final Set<Trigger> triggerSet2 = Set.of(trigger2);
+        assertNotEquals(trigger1.hashCode(), trigger2.hashCode());
+        assertNotEquals(trigger1, trigger2);
+        assertNotEquals(triggerSet1, triggerSet2);
     }
 
     @Test
@@ -244,6 +276,27 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY);
     }
 
+    @Test
+    public void testAggregatableAttributionTrigger() throws Exception {
+        final Map<String, Integer> values = Map.of("foo", 93);
+        final List<AggregateTriggerData> triggerData =
+                List.of(new AggregateTriggerData.Builder().build());
+        final AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setValues(values)
+                        .setTriggerData(triggerData)
+                        .build();
+
+        final Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+
+        assertNotNull(trigger.getAggregatableAttributionTrigger());
+        assertNotNull(trigger.getAggregatableAttributionTrigger().getTriggerData());
+        assertEquals(values, trigger.getAggregatableAttributionTrigger().getValues());
+        assertEquals(triggerData, trigger.getAggregatableAttributionTrigger().getTriggerData());
+    }
 
     @Test
     public void testParseAggregateTrigger() throws JSONException {

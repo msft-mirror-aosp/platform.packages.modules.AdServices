@@ -17,12 +17,14 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
+
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,13 +33,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebSourceRegistrationRequestTest {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo1.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri TOP_ORIGIN_URI = Uri.parse("https://top-origin.com");
-    private static final Uri OS_DESTINATION_URI = Uri.parse("https://os-destination.com");
+    private static final Uri OS_DESTINATION_URI = Uri.parse("android-app://com.os-destination");
     private static final Uri WEB_DESTINATION_URI = Uri.parse("https://web-destination.com");
     private static final Uri VERIFIED_DESTINATION = Uri.parse("https://verified-dest.com");
     private static final KeyEvent INPUT_KEY_EVENT =
@@ -90,8 +93,6 @@ public class WebSourceRegistrationRequestTest {
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .setVerifiedDestination(VERIFIED_DESTINATION)
                                 .setTopOriginUri(TOP_ORIGIN_URI)
-                                .setOsDestination(null)
-                                .setWebDestination(null)
                                 .build());
     }
 
@@ -123,6 +124,41 @@ public class WebSourceRegistrationRequestTest {
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .setTopOriginUri(TOP_ORIGIN_URI)
                                 .build());
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistrationRequest().describeContents());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        final WebSourceRegistrationRequest request2 = createExampleRegistrationRequest();
+        final Set<WebSourceRegistrationRequest> requestData1 = Set.of(request1);
+        final Set<WebSourceRegistrationRequest> requestData2 = Set.of(request2);
+        assertEquals(request1.hashCode(), request2.hashCode());
+        assertEquals(request1, request2);
+        assertEquals(requestData1, requestData2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        final WebSourceRegistrationRequest request2 =
+                new WebSourceRegistrationRequest.Builder()
+                        .setSourceParams(SOURCE_REGISTRATIONS)
+                        .setInputEvent(null)
+                        .setVerifiedDestination(VERIFIED_DESTINATION)
+                        .setTopOriginUri(TOP_ORIGIN_URI)
+                        .setOsDestination(OS_DESTINATION_URI)
+                        .setWebDestination(WEB_DESTINATION_URI)
+                        .build();
+        final Set<WebSourceRegistrationRequest> requestData1 = Set.of(request1);
+        final Set<WebSourceRegistrationRequest> requestData2 = Set.of(request2);
+        assertNotEquals(request1.hashCode(), request2.hashCode());
+        assertNotEquals(request1, request2);
+        assertNotEquals(requestData1, requestData2);
     }
 
     private WebSourceRegistrationRequest createExampleRegistrationRequest() {

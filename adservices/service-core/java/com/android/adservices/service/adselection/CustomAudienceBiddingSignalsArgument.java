@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.JSScriptArgument;
 
+
 import org.json.JSONException;
 
 import java.time.Instant;
@@ -36,7 +37,7 @@ import java.util.Optional;
  * A utility class to convert instances of {@link CustomAudienceSignals} into {@link
  * JSScriptArgument}
  */
-public class CustomAudienceSignalsArgument {
+public class CustomAudienceBiddingSignalsArgument {
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String OWNER_FIELD_NAME = "owner";
     public static final String BUYER_FIELD_NAME = "buyer";
@@ -46,15 +47,15 @@ public class CustomAudienceSignalsArgument {
     public static final String USER_BIDDING_SIGNALS_FIELD_NAME = "user_bidding_signals";
 
     // No instance of this class is supposed to be created
-    private CustomAudienceSignalsArgument() {}
+    private CustomAudienceBiddingSignalsArgument() {}
 
     /**
      * @return A {@link JSScriptArgument} with the given {@code name} to represent this instance of
-     *     {@link CustomAudienceSignalsArgument}
+     *     {@link CustomAudienceBiddingSignalsArgument}
      * @throws JSONException if any of the signals in this class is not valid JSON.
      */
     public static JSScriptArgument asScriptArgument(
-            CustomAudienceSignals customAudienceSignals, String name) throws JSONException {
+            String name, CustomAudienceSignals customAudienceSignals) throws JSONException {
         return recordArg(
                 name,
                 stringArg(OWNER_FIELD_NAME, customAudienceSignals.getOwner()),

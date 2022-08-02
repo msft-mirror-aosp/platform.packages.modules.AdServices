@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.util;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FilterUtilTest {
+public class FilterTest {
     @Test
     public void testIsFilterMatchReturnTrue() {
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
@@ -48,7 +48,7 @@ public class FilterUtilTest {
         AggregateFilterData triggerFilter =
                 new AggregateFilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertTrue(FilterUtil.isFilterMatch(sourceFilter, triggerFilter, true));
+        assertTrue(Filter.isFilterMatch(sourceFilter, triggerFilter, true));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class FilterUtilTest {
         AggregateFilterData triggerFilter =
                 new AggregateFilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertFalse(FilterUtil.isFilterMatch(sourceFilter, triggerFilter, true));
+        assertFalse(Filter.isFilterMatch(sourceFilter, triggerFilter, true));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class FilterUtilTest {
         triggerFilterMap.put("id", Arrays.asList("1", "2"));
         AggregateFilterData triggerFilter =
                 new AggregateFilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
-        assertTrue(FilterUtil.isFilterMatch(sourceFilter, triggerFilter, false));
+        assertTrue(Filter.isFilterMatch(sourceFilter, triggerFilter, false));
     }
 
     @Test
@@ -109,6 +109,6 @@ public class FilterUtilTest {
         AggregateFilterData triggerFilter =
                 new AggregateFilterData.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertFalse(FilterUtil.isFilterMatch(sourceFilter, triggerFilter, false));
+        assertFalse(Filter.isFilterMatch(sourceFilter, triggerFilter, false));
     }
 }
