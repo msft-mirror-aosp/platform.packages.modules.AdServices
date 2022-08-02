@@ -66,6 +66,10 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
 
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
+
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         return mCustomAudienceDao.getBiddingLogicUrlOverride(owner, buyer, name, appPackageName);
@@ -84,6 +88,10 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 

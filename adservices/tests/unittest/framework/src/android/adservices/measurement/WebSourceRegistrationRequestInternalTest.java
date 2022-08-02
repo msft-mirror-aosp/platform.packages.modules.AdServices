@@ -17,6 +17,7 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
@@ -30,6 +31,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 public class WebSourceRegistrationRequestInternalTest {
     private static final Context CONTEXT =
@@ -100,6 +102,38 @@ public class WebSourceRegistrationRequestInternalTest {
                                 .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
                                 .setPackageName(null)
                                 .build());
+    }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistrationRequest().describeContents());
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        final WebSourceRegistrationRequestInternal request2 = createExampleRegistrationRequest();
+        final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        final Set<WebSourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        assertEquals(request1.hashCode(), request2.hashCode());
+        assertEquals(request1, request2);
+        assertEquals(requestSet1, requestSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final WebSourceRegistrationRequestInternal request1 = createExampleRegistrationRequest();
+        final WebSourceRegistrationRequestInternal request2 =
+                new WebSourceRegistrationRequestInternal.Builder()
+                        .setSourceRegistrationRequest(EXAMPLE_EXTERNAL_SOURCE_REG_REQUEST)
+                        .setPackageName("com.foo")
+                        .build();
+
+        final Set<WebSourceRegistrationRequestInternal> requestSet1 = Set.of(request1);
+        final Set<WebSourceRegistrationRequestInternal> requestSet2 = Set.of(request2);
+        assertNotEquals(request1.hashCode(), request2.hashCode());
+        assertNotEquals(request1, request2);
+        assertNotEquals(requestSet1, requestSet2);
     }
 
     private WebSourceRegistrationRequestInternal createExampleRegistrationRequest() {

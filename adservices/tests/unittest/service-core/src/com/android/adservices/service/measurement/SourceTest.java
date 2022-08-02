@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -28,6 +29,7 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 
 import org.json.JSONArray;
@@ -35,9 +37,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -95,6 +99,8 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
+                        .setAggregatableAttributionSource(
+                                SourceFixture.getValidSource().getAggregatableAttributionSource())
                         .build(),
                 new Source.Builder()
                         .setAdTechDomain(Uri.parse("https://example.com"))
@@ -114,6 +120,8 @@ public class SourceTest {
                         .setAggregateSource(aggregateSource.toString())
                         .setAggregateContributions(50001)
                         .setDebugKey(DEBUG_KEY_1)
+                        .setAggregatableAttributionSource(
+                                SourceFixture.getValidSource().getAggregatableAttributionSource())
                         .build());
     }
 
@@ -185,6 +193,12 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getValidSourceBuilder()
                         .setRegistrant(Uri.parse("android-app://com.example.xyz"))
+                        .build());
+        assertNotEquals(
+                SourceFixture.ValidSourceParams.buildAggregatableAttributionSource(),
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregatableAttributionSource(
+                                new AggregatableAttributionSource.Builder().build())
                         .build());
         JSONArray aggregateSource1 = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
@@ -578,6 +592,37 @@ public class SourceTest {
         assertEquals(
                 sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
                 source.getReportingTime(triggerTime, DestinationType.APP));
+    }
+
+    @Test
+    public void testAggregatableAttributionSource() throws Exception {
+        final Map<String, BigInteger> aggregatableSource = Map.of("2", new BigInteger("71"));
+        final Map<String, List<String>> filterMap = Map.of("x", List.of("1"));
+        final AggregatableAttributionSource attributionSource =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .setAggregateFilterData(
+                                new AggregateFilterData.Builder()
+                                        .setAttributionFilterMap(filterMap)
+                                        .build())
+                        .build();
+
+        final Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregatableAttributionSource(attributionSource)
+                        .build();
+
+        assertNotNull(source.getAggregatableAttributionSource());
+        assertNotNull(source.getAggregatableAttributionSource().getAggregatableSource());
+        assertNotNull(source.getAggregatableAttributionSource().getAggregateFilterData());
+        assertEquals(
+                aggregatableSource,
+                source.getAggregatableAttributionSource().getAggregatableSource());
+        assertEquals(
+                filterMap,
+                source.getAggregatableAttributionSource()
+                        .getAggregateFilterData()
+                        .getAttributionFilterMap());
     }
 
     @Test
