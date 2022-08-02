@@ -15,10 +15,11 @@
  */
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 
@@ -113,7 +114,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
-                    int resultCode = RESULT_OK;
+                    int resultCode = STATUS_SUCCESS;
 
                     try {
 
@@ -128,14 +129,14 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         // Check if caller has permission to invoke this API and user has given
                         // a consent
                         if (!appCanUsePpapi || !permitted || !userConsent.isGiven()) {
-                            resultCode = RESULT_UNAUTHORIZED_CALL;
+                            resultCode = STATUS_UNAUTHORIZED;
                             LogUtil.e("Unauthorized caller " + sdkName);
                             callback.onFailure(resultCode);
                             return;
                         }
 
                         resultCode = enforceCallingPackageBelongsToUid(packageName, callingUid);
-                        if (resultCode != RESULT_OK) {
+                        if (resultCode != STATUS_SUCCESS) {
                             callback.onFailure(resultCode);
                             return;
                         }
@@ -146,7 +147,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 topicsParam.getAppPackageName(), topicsParam.getSdkName());
                     } catch (RemoteException e) {
                         LogUtil.e(e, "Unable to send result to the callback");
-                        resultCode = RESULT_INTERNAL_ERROR;
+                        resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -186,7 +187,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         if (throttled) {
             LogUtil.e("Rate Limit Reached for TOPICS_API");
             try {
-                callback.onFailure(RESULT_RATE_LIMIT_REACHED);
+                callback.onFailure(STATUS_RATE_LIMIT_REACHED);
             } catch (RemoteException e) {
                 LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
             }
@@ -203,13 +204,13 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, callingPackage + " not found");
-            return RESULT_UNAUTHORIZED_CALL;
+            return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
-            return RESULT_UNAUTHORIZED_CALL;
+            return STATUS_UNAUTHORIZED;
         }
-        return RESULT_OK;
+        return STATUS_SUCCESS;
     }
 
     /** Init the Topics Service. */
