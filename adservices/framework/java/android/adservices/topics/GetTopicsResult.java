@@ -16,9 +16,10 @@
 
 package android.adservices.topics;
 
-import static com.android.adservices.ResultCode.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import android.adservices.topics.TopicsManager.ResultCode;
+import android.adservices.common.AdServicesResponse;
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
@@ -34,29 +35,25 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class GetTopicsResult implements Parcelable {
-    private final @ResultCode int mResultCode;
-    @Nullable private final String mErrorMessage;
+public final class GetTopicsResult extends AdServicesResponse {
     private final List<Long> mTaxonomyVersions;
     private final List<Long> mModelVersions;
     private final List<Integer> mTopics;
 
     private GetTopicsResult(
-            @ResultCode int resultCode,
+            @AdServicesStatusUtils.StatusCode int resultCode,
             @Nullable String errorMessage,
             @NonNull List<Long> taxonomyVersions,
             @NonNull List<Long> modelVersions,
             @NonNull List<Integer> topics) {
-        mResultCode = resultCode;
-        mErrorMessage = errorMessage;
+        super(resultCode, errorMessage);
         mTaxonomyVersions = taxonomyVersions;
         mModelVersions = modelVersions;
         mTopics = topics;
     }
 
     private GetTopicsResult(@NonNull Parcel in) {
-        mResultCode = in.readInt();
-        mErrorMessage = in.readString();
+        super(in.readInt(), in.readString());
 
         mTaxonomyVersions = Collections.unmodifiableList(readLongList(in));
         mModelVersions = Collections.unmodifiableList(readLongList(in));
@@ -85,21 +82,24 @@ public final class GetTopicsResult implements Parcelable {
     /** @hide */
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
-        out.writeInt(mResultCode);
+        out.writeInt(mStatusCode);
         out.writeString(mErrorMessage);
         writeLongList(out, mTaxonomyVersions);
         writeLongList(out, mModelVersions);
         writeIntegerList(out, mTopics);
     }
 
-    /** Returns {@code true} if {@link #getResultCode} equals {@link GetTopicsResult#RESULT_OK}. */
+    /**
+     * Returns {@code true} if {@link #getResultCode} equals {@link
+     * AdServicesStatusUtils#STATUS_SUCCESS}.
+     */
     public boolean isSuccess() {
-        return getResultCode() == RESULT_OK;
+        return getResultCode() == STATUS_SUCCESS;
     }
 
     /** Returns one of the {@code RESULT} constants defined in {@link GetTopicsResult}. */
-    public @ResultCode int getResultCode() {
-        return mResultCode;
+    public @AdServicesStatusUtils.StatusCode int getResultCode() {
+        return mStatusCode;
     }
 
     /**
@@ -131,11 +131,17 @@ public final class GetTopicsResult implements Parcelable {
     @Override
     public String toString() {
         return "GetTopicsResult{"
-                + "mResultCode=" + mResultCode
-                + ", mErrorMessage='" + mErrorMessage
-                + '\'' + ", mTaxonomyVersions=" + mTaxonomyVersions
-                +  ", mModelVersions=" + mModelVersions
-                + ", mTopics=" + mTopics
+                + "mResultCode="
+                + mStatusCode
+                + ", mErrorMessage='"
+                + mErrorMessage
+                + '\''
+                + ", mTaxonomyVersions="
+                + mTaxonomyVersions
+                + ", mModelVersions="
+                + mModelVersions
+                + ", mTopics="
+                + mTopics
                 + '}';
     }
 
@@ -151,7 +157,7 @@ public final class GetTopicsResult implements Parcelable {
 
         GetTopicsResult that = (GetTopicsResult) o;
 
-        return mResultCode == that.mResultCode
+        return mStatusCode == that.mStatusCode
                 && Objects.equals(mErrorMessage, that.mErrorMessage)
                 && mTaxonomyVersions.equals(that.mTaxonomyVersions)
                 && mModelVersions.equals(that.mModelVersions)
@@ -160,7 +166,7 @@ public final class GetTopicsResult implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mResultCode, mErrorMessage, mTaxonomyVersions, mModelVersions, mTopics);
+        return Objects.hash(mStatusCode, mErrorMessage, mTaxonomyVersions, mModelVersions, mTopics);
     }
 
     // Read the list of long from parcel.
@@ -219,7 +225,7 @@ public final class GetTopicsResult implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private @ResultCode int mResultCode;
+        private @AdServicesStatusUtils.StatusCode int mResultCode;
         @Nullable private String mErrorMessage;
         private List<Long> mTaxonomyVersions = new ArrayList<>();
         private List<Long> mModelVersions = new ArrayList<>();
@@ -228,7 +234,7 @@ public final class GetTopicsResult implements Parcelable {
         public Builder() {}
 
         /** Set the Result Code. */
-        public @NonNull Builder setResultCode(@ResultCode int resultCode) {
+        public @NonNull Builder setResultCode(@AdServicesStatusUtils.StatusCode int resultCode) {
             mResultCode = resultCode;
             return this;
         }
