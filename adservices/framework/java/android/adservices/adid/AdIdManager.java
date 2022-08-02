@@ -15,13 +15,12 @@
  */
 package android.adservices.adid;
 
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
-
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
-import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -30,8 +29,6 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -42,34 +39,6 @@ import java.util.concurrent.Executor;
  * personalized ads (formerly known as interest-based ads).
  */
 public class AdIdManager {
-
-    /**
-     * Result codes from {@link AdIdManager#getAdId(Executor, OutcomeReceiver)} methods.
-     *
-     * @hide
-     */
-    @IntDef(
-            value = {
-                RESULT_OK,
-                RESULT_INTERNAL_ERROR,
-            })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ResultCode {}
-
-    /**
-     * The call was successful.
-     *
-     * @hide
-     */
-    public static final int RESULT_OK = 0;
-
-    /**
-     * An internal error occurred within AdId API, which the caller cannot address.
-     *
-     * @hide
-     */
-    public static final int RESULT_INTERNAL_ERROR = 1;
-
     /**
      * Service used for registering AdIdManager in the system service registry.
      *
@@ -114,7 +83,8 @@ public class AdIdManager {
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
      * @throws SecurityException if caller is not authorized to call this API.
-     * @throws GetAdIdException if call results in an internal error.
+     * @throws IllegalStateException if this API is not available.
+     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
     public void getAdId(
@@ -142,10 +112,8 @@ public class AdIdManager {
                                                             resultParcel.isLatEnabled()));
                                         } else {
                                             callback.onError(
-                                                    new Exception(
-                                                            "Got Exception and the result code is "
-                                                                    + resultParcel
-                                                                            .getResultCode()));
+                                                    AdServicesStatusUtils.asException(
+                                                            resultParcel));
                                         }
                                     });
                         }
@@ -153,15 +121,9 @@ public class AdIdManager {
                         @Override
                         public void onFailure(int resultCode) {
                             executor.execute(
-                                    () -> {
-                                        if (resultCode == RESULT_UNAUTHORIZED_CALL) {
+                                    () ->
                                             callback.onError(
-                                                    new Exception(
-                                                            "Got SecurityException, Caller is not"
-                                                                    + " authorized to call this"
-                                                                    + " API."));
-                                        }
-                                    });
+                                                    AdServicesStatusUtils.asException(resultCode)));
                         }
                     });
         } catch (RemoteException e) {
