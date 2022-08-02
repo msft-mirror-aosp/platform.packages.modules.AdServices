@@ -359,9 +359,11 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
     }
 
-    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 1000;
-    long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 1000;
-    long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 2000;
+    // TODO(b/240647148): Limits are increased temporarily, decrease these numbers after
+    //  implementing a solution for more accurately scoped timeout
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
+    long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
 
     /** Returns the time out constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
