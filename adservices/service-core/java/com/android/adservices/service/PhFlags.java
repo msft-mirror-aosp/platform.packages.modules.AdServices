@@ -16,12 +16,16 @@
 
 package com.android.adservices.service;
 
+import static java.lang.Float.parseFloat;
+
 import android.annotation.NonNull;
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.PrintWriter;
@@ -44,6 +48,9 @@ public final class PhFlags implements Flags {
     static final String KEY_TOPICS_NUMBER_OF_TOP_TOPICS = "topics_number_of_top_topics";
     static final String KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS = "topics_number_of_random_topics";
     static final String KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS = "topics_number_of_lookback_epochs";
+
+    // Topics classifier keys
+    static final String KEY_CLASSIFIER_TYPE = "classifier_type";
 
     // Measurement keys
     static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -205,6 +212,18 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
                 /* defaultValue */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
+    }
+
+    @Override
+    public int getClassifierType() {
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return SystemProperties.getInt(
+                getSystemPropertyName(KEY_CLASSIFIER_TYPE),
+                DeviceConfig.getInt(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_CLASSIFIER_TYPE,
+                        /* defaultValue */ DEFAULT_CLASSIFIER_TYPE));
     }
 
     @Override
@@ -571,6 +590,7 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
+
     // TOPICS AllowLists
     @Override
     public String getPpapiAppAllowList() {
@@ -584,7 +604,19 @@ public final class PhFlags implements Flags {
     // Rate Limit Flags.
     @Override
     public float getSdkRequestPermitsPerSecond() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        try {
+            String sdkPermitString =
+                    SystemProperties.get(getSystemPropertyName(KEY_SDK_REQUEST_PERMITS_PER_SECOND));
+            if (!TextUtils.isEmpty(sdkPermitString)) {
+                return parseFloat(sdkPermitString);
+            }
+        } catch (NumberFormatException e) {
+            LogUtil.e(e, "Failed to parse SdkRequestPermitsPerSecond");
+            return SDK_REQUEST_PERMITS_PER_SECOND;
+        }
+
         return DeviceConfig.getFloat(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
@@ -618,6 +650,11 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_SDK_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getSdkRequestPermitsPerSecond());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -626,6 +663,7 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump Topics related flags ====");
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_PERIOD_MS + " = " + getTopicsEpochJobPeriodMs());
         writer.println("\t" + KEY_TOPICS_EPOCH_JOB_FLEX_MS + " = " + getTopicsEpochJobFlexMs());
+        writer.println("\t" + KEY_CLASSIFIER_TYPE + " = " + getClassifierType());
 
         writer.println("==== AdServices PH Flags Dump Measurement related flags: ====");
         writer.println(

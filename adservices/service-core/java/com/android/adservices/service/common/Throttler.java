@@ -67,7 +67,7 @@ public class Throttler {
      */
     public boolean tryAcquire(ApiKey apiKey, String requester) {
         // Negative Permits Per Second turns off rate limiting.
-        if (mSdkRequestPermitsPerSecond < 0) {
+        if (mSdkRequestPermitsPerSecond <= 0) {
             return true;
         }
 
