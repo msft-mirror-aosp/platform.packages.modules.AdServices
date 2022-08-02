@@ -24,6 +24,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -293,13 +294,14 @@ public class AdSelectionScriptEngineTest {
 
     private AdSelectionConfig anAdSelectionConfig() throws MalformedURLException {
         return new AdSelectionConfig.Builder()
-                .setSeller("www.mydomain.com")
+                .setSeller(AdTechIdentifier.fromString("www.mydomain.com"))
                 .setPerBuyerSignals(ImmutableMap.of())
                 .setContextualAds(ImmutableList.of())
                 .setDecisionLogicUri(Uri.parse("http://www.mydomain.com/updateAds"))
-                .setSellerSignals("{}")
-                .setCustomAudienceBuyers(ImmutableList.of("www.buyer.com"))
-                .setAdSelectionSignals("{}")
+                .setSellerSignals(AdSelectionSignals.EMPTY)
+                .setCustomAudienceBuyers(
+                        ImmutableList.of(AdTechIdentifier.fromString("www.buyer.com")))
+                .setAdSelectionSignals(AdSelectionSignals.EMPTY)
                 .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
                 .build();
     }

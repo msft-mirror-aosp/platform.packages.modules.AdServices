@@ -245,7 +245,7 @@ public class CustomAudienceServiceEndToEndTest {
                 () -> {
                     mService.leaveCustomAudience(
                             CustomAudienceFixture.VALID_OWNER,
-                            CommonFixture.VALID_BUYER.getStringForm(),
+                            CommonFixture.VALID_BUYER,
                             CustomAudienceFixture.VALID_NAME,
                             callback);
                 });
@@ -261,7 +261,7 @@ public class CustomAudienceServiceEndToEndTest {
                 () -> {
                     mService.leaveCustomAudience(
                             "other_owner",
-                            CommonFixture.VALID_BUYER.getStringForm(),
+                            CommonFixture.VALID_BUYER,
                             CustomAudienceFixture.VALID_NAME,
                             callback);
                 });
@@ -285,7 +285,7 @@ public class CustomAudienceServiceEndToEndTest {
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
@@ -302,7 +302,7 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 "Not exist name",
                 callback);
         assertTrue(callback.isSuccess());
@@ -646,12 +646,7 @@ public class CustomAudienceServiceEndToEndTest {
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
-                owner,
-                buyer.getStringForm(),
-                name,
-                biddingLogicJs,
-                trustedBiddingData.getStringForm(),
-                callback);
+                owner, buyer, name, biddingLogicJs, trustedBiddingData, callback);
         resultLatch.await();
         return callback;
     }
@@ -666,8 +661,7 @@ public class CustomAudienceServiceEndToEndTest {
         CustomAudienceOverrideTestCallback callback =
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
-        customAudienceService.removeCustomAudienceRemoteInfoOverride(
-                owner, buyer.getStringForm(), name, callback);
+        customAudienceService.removeCustomAudienceRemoteInfoOverride(owner, buyer, name, callback);
 
         resultLatch.await();
         return callback;

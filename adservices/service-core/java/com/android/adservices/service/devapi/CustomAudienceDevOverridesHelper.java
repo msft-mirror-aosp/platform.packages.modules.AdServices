@@ -95,9 +95,10 @@ public class CustomAudienceDevOverridesHelper {
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 
-        return AdSelectionSignals.fromString(
+        String biddingSignal =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
-                        owner, buyer.getStringForm(), name, appPackageName));
+                        owner, buyer.getStringForm(), name, appPackageName);
+        return biddingSignal == null ? null : AdSelectionSignals.fromString(biddingSignal);
     }
 
     /**

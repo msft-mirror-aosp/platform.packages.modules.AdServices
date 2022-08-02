@@ -26,7 +26,6 @@ import androidx.annotation.NonNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /** This is a static class meant to help with tests that involve creating an AdSelectionConfig. */
 public class AdSelectionConfigFixture {
@@ -101,20 +100,12 @@ public class AdSelectionConfigFixture {
      */
     public static AdSelectionConfig.Builder anAdSelectionConfigBuilder() {
         return new AdSelectionConfig.Builder()
-                .setSeller(SELLER.getStringForm())
+                .setSeller(SELLER)
                 .setDecisionLogicUri(DECISION_LOGIC_URI)
-                .setCustomAudienceBuyers(
-                        CUSTOM_AUDIENCE_BUYERS.stream()
-                                .map(AdTechIdentifier::getStringForm)
-                                .collect(Collectors.toList()))
-                .setAdSelectionSignals(AD_SELECTION_SIGNALS.getStringForm())
-                .setSellerSignals(SELLER_SIGNALS.getStringForm())
-                .setPerBuyerSignals(
-                        PER_BUYER_SIGNALS.entrySet().stream()
-                                .collect(
-                                        Collectors.toMap(
-                                                e -> e.getKey().getStringForm(),
-                                                e -> e.getValue().getStringForm())))
+                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
+                .setSellerSignals(SELLER_SIGNALS)
+                .setPerBuyerSignals(PER_BUYER_SIGNALS)
                 .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
@@ -125,20 +116,12 @@ public class AdSelectionConfigFixture {
      */
     public static AdSelectionConfig anAdSelectionConfig(@NonNull Uri decisionLogicUri) {
         return new AdSelectionConfig.Builder()
-                .setSeller(SELLER.getStringForm())
+                .setSeller(SELLER)
                 .setDecisionLogicUri(decisionLogicUri)
-                .setCustomAudienceBuyers(
-                        CUSTOM_AUDIENCE_BUYERS.stream()
-                                .map(AdTechIdentifier::getStringForm)
-                                .collect(Collectors.toList()))
-                .setAdSelectionSignals(AD_SELECTION_SIGNALS.getStringForm())
-                .setSellerSignals(SELLER_SIGNALS.getStringForm())
-                .setPerBuyerSignals(
-                        PER_BUYER_SIGNALS.entrySet().stream()
-                                .collect(
-                                        Collectors.toMap(
-                                                e -> e.getKey().getStringForm(),
-                                                e -> e.getValue().getStringForm())))
+                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
+                .setSellerSignals(SELLER_SIGNALS)
+                .setPerBuyerSignals(PER_BUYER_SIGNALS)
                 .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();

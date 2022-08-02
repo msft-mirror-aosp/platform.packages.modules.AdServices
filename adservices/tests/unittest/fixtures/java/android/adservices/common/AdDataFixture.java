@@ -27,7 +27,7 @@ public class AdDataFixture {
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
 
     public static Uri getValidRenderUrlByBuyer(AdTechIdentifier buyer, int sequence) {
-        return CommonFixture.getUri(buyer.getStringForm(), "/testing/hello" + sequence);
+        return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
 
     public static List<AdData> getValidAdsByBuyer(AdTechIdentifier buyer) {

@@ -170,7 +170,7 @@ public class DBCustomAudience {
 
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
-                .setBuyer(parcelable.getBuyer())
+                .setBuyer(parcelable.getBuyer().getStringForm())
                 .setOwner(parcelable.getOwner())
                 .setActivationTime(activationTime)
                 .setCreationTime(currentTime)
@@ -185,7 +185,7 @@ public class DBCustomAudience {
                                 : parcelable.getAds().stream()
                                         .map(DBAdData::fromServiceObject)
                                         .collect(Collectors.toList()))
-                .setUserBiddingSignals(parcelable.getUserBiddingSignals())
+                .setUserBiddingSignals(parcelable.getUserBiddingSignals().getStringForm())
                 .build();
     }
 

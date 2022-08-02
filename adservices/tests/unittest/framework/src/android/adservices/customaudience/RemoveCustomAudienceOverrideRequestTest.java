@@ -32,12 +32,12 @@ public class RemoveCustomAudienceOverrideRequestTest {
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
                         .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
         assertEquals(request.getOwner(), OWNER);
-        assertEquals(request.getBuyer(), BUYER.getStringForm());
+        assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
     }
 }

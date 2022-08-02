@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
@@ -32,11 +33,11 @@ import java.util.concurrent.Executor;
  */
 public class RemoveCustomAudienceOverrideRequest {
     @NonNull private final String mOwner;
-    @NonNull private final String mBuyer;
+    @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
 
     public RemoveCustomAudienceOverrideRequest(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         mOwner = owner;
         mBuyer = buyer;
         mName = name;
@@ -50,11 +51,9 @@ public class RemoveCustomAudienceOverrideRequest {
         return mOwner;
     }
 
-    /**
-     * @return the buyer
-     */
+    /** @return the buyer */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
@@ -69,7 +68,7 @@ public class RemoveCustomAudienceOverrideRequest {
     /** Builder for {@link RemoveCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
         private String mOwner;
-        private String mBuyer;
+        private AdTechIdentifier mBuyer;
         private String mName;
 
         public Builder() {}
@@ -85,7 +84,8 @@ public class RemoveCustomAudienceOverrideRequest {
 
         /** Set the Buyer. */
         @NonNull
-        public RemoveCustomAudienceOverrideRequest.Builder setBuyer(@NonNull String buyer) {
+        public RemoveCustomAudienceOverrideRequest.Builder setBuyer(
+                @NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
 
             this.mBuyer = buyer;
