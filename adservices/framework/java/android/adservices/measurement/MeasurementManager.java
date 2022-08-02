@@ -402,7 +402,7 @@ public class MeasurementManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
-        // TODO: Remove here and apply across the board.
+        // TODO (b/241149306): Remove here and apply across the board.
         if (AdServicesApiUtil.getAdServicesApiState()
                 == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
             executor.execute(() -> {
