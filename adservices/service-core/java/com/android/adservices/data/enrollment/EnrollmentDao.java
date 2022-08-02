@@ -62,7 +62,6 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    @VisibleForTesting
     public EnrollmentData getEnrollmentData(String enrollmentId) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -88,7 +87,6 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    @VisibleForTesting
     public EnrollmentData getEnrollmentDataGivenUrl(String url) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -122,7 +120,6 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @Override
     @Nullable
-    @VisibleForTesting
     public EnrollmentData getEnrollmentDataGivenSdkName(String sdkName) {
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
@@ -150,7 +147,6 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @VisibleForTesting
     public void insertEnrollmentData(EnrollmentData enrollmentData) {
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -192,7 +188,6 @@ public class EnrollmentDao implements IEnrollmentDao {
     }
 
     @Override
-    @VisibleForTesting
     public void deleteEnrollmentData(String enrollmentId) {
         Objects.requireNonNull(enrollmentId);
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
