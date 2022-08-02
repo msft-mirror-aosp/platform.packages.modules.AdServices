@@ -63,7 +63,7 @@ public class PrecomputedLoaderTest {
         // Check size of map
         // The app topics file contains 1000 apps + 11 sample apps + 2 test valid topics' apps
         // + 1 end2end test app.
-        assertThat(appTopic.size()).isEqualTo(1014);
+        assertThat(appTopic.size()).isEqualTo(1015);
 
         // Check whatsApp, chrome and a sample app topics in map
         // The topicId of "com.whatsapp" in assets/precomputed_test_app_list.csv
