@@ -36,7 +36,7 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
 
         handlePhase(params);
         return new View(windowContext);
