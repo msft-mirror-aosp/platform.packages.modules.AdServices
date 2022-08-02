@@ -393,6 +393,32 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         writer.println();
     }
 
+    @Override
+    public void syncDataFromClient(String callingPackageName, Bundle data) {
+        final int callingUid = Binder.getCallingUid();
+        final long token = Binder.clearCallingIdentity();
+
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+        try {
+            syncDataFromClientInternal(callingInfo, data);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    private void syncDataFromClientInternal(CallingInfo callingInfo, Bundle data) {
+        // check first if service already bound
+        ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
+        if (service != null) {
+            try {
+                service.syncDataFromClient(data);
+            } catch (RemoteException ignore) {
+                // TODO(b/239403323): Sandbox has died. Register lifecycle callback to retry.
+            }
+        }
+    }
+
     static class SandboxServiceConnection implements ServiceConnection {
 
         interface Callback {
@@ -480,6 +506,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             // Sandbox had already died, cleanup sdk tokens and links.
                             removeAllSdkTokensAndLinks(callingInfo);
                         }
+
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
@@ -581,6 +608,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
                 }
             }
+
             return shouldStopSandbox;
         }
     }

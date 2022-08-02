@@ -30,4 +30,5 @@ oneway interface ISdkSandboxService {
                   in String sdkCeDataDir, in String sdkDeDataDir,
                   in Bundle params, in ILoadSdkInSandboxCallback callback);
     void unloadSdk(IBinder sdkToken, in String sdkName);
+    void syncDataFromClient(in Bundle data);
 }
