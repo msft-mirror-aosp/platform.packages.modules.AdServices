@@ -808,7 +808,7 @@ public final class PhFlags implements Flags {
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
-                        + getAdSelectionScoringTimeoutMs());
+                        + getAdSelectionOverallTimeoutMs());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
     }

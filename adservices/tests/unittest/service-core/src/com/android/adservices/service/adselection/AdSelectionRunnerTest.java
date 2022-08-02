@@ -1189,6 +1189,14 @@ public class AdSelectionRunnerTest {
     public void testRunAdSelectionOrchestrationTimesOut() throws AdServicesException {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionOverallTimeoutMs() {
+                        return 100;
+                    }
+                };
+
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1234,7 +1242,10 @@ public class AdSelectionRunnerTest {
         when(mClock.instant()).thenReturn(adSelectionCreationTs);
 
         when(mMockAdSelectionIdGenerator.generateId())
-                .thenAnswer(new AnswersWithDelay(5000, new Returns(AD_SELECTION_ID)));
+                .thenAnswer(
+                        new AnswersWithDelay(
+                                2 * mFlags.getAdSelectionOverallTimeoutMs(),
+                                new Returns(AD_SELECTION_ID)));
 
         mAdSelectionRunner =
                 new AdSelectionRunner(
@@ -1247,37 +1258,10 @@ public class AdSelectionRunnerTest {
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerSpy,
-                        mFlags);
-
-        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+                        flagsWithSmallerLimits);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig);
-
-        Mockito.verify(mMockAdBidGenerator)
-                .runAdBiddingPerCA(
-                        mDBCustomAudienceForBuyer1,
-                        adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig
-                                .getPerBuyerSignals()
-                                .get(
-                                        AdTechIdentifier.fromString(
-                                                mDBCustomAudienceForBuyer1.getBuyer())),
-                        AdSelectionSignals.EMPTY,
-                        adSelectionConfig);
-        Mockito.verify(mMockAdBidGenerator)
-                .runAdBiddingPerCA(
-                        mDBCustomAudienceForBuyer2,
-                        adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig
-                                .getPerBuyerSignals()
-                                .get(
-                                        AdTechIdentifier.fromString(
-                                                mDBCustomAudienceForBuyer2.getBuyer())),
-                        AdSelectionSignals.EMPTY,
-                        adSelectionConfig);
-        Mockito.verify(mMockAdsScoreGenerator)
-                .runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
