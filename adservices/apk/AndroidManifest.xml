@@ -40,6 +40,14 @@
     <!-- Used for persisting scheduled jobs -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!--
+        Used to verify if the calling application is running in foreground.
+        Although this permission is deprecated, it is still checked for privileged apps (see
+        http://go/aocs/android/platform/superproject/+/master:frameworks/base/services/core/java/com/android/server/wm/ActivityTaskManagerService.java;l=3130?q=ActivityTaskManagerService)
+        and we want to use privileged flags as REAL_GET_TASKS.
+    -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
+
     <!-- Allows an application to access AdServices Topics API. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"
         android:label="@string/permlab_accessAdServicesTopics"
