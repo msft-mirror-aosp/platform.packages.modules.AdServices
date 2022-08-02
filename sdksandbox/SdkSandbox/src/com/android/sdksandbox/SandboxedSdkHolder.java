@@ -184,7 +184,8 @@ class SandboxedSdkHolder {
                 mHandler.post(
                         () -> {
                             try {
-                                final View view = mSdk.getView(windowContext, params);
+                                final View view =
+                                        mSdk.getView(windowContext, params, width, height);
                                 SurfaceControlViewHost host =
                                         new SurfaceControlViewHost(
                                                 windowContext,
