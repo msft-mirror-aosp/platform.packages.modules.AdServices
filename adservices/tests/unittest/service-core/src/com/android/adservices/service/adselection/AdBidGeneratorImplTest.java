@@ -419,6 +419,14 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionBiddingTimeoutPerCaMs() {
+                        return 100;
+                    }
+                };
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -426,7 +434,7 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        flagsWithSmallerLimits);
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
                                 mBuyerDecisionLogicJs,

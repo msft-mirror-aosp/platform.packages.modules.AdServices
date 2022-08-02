@@ -192,7 +192,9 @@ public class AdsScoreGeneratorImplTest {
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
+
         mFlags = FlagsFactory.getFlagsForTest();
+
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
@@ -448,9 +450,24 @@ public class AdsScoreGeneratorImplTest {
 
     @Test
     public void testRunAdScoringTimesOut() throws Exception {
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionScoringTimeoutMs() {
+                        return 100;
+                    }
+                };
+        mAdsScoreGenerator =
+                new AdsScoreGeneratorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mListeningExecutorService,
+                        mWebClient,
+                        mDevContext,
+                        mAdSelectionEntryDao,
+                        flagsWithSmallerLimits);
+
         List<Double> scores = Arrays.asList(1.0, 2.0);
-        mMockWebServerRule.startMockWebServer(
-                List.of(new MockResponse().setBody(mSellerDecisionLogicJs)));
+        mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
         Uri decisionLogicUri = mMockWebServerRule.uriForPath(mFetchJavaScriptPath);
 
@@ -477,7 +494,7 @@ public class AdsScoreGeneratorImplTest {
                                                         a.getCustomAudienceBiddingInfo()
                                                                 .getCustomAudienceSignals())
                                         .collect(Collectors.toList())))
-                .thenReturn(Futures.immediateFuture(scores));
+                .thenReturn(getScoresWithDelay(scores));
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
@@ -490,7 +507,7 @@ public class AdsScoreGeneratorImplTest {
     private ListenableFuture<List<Double>> getScoresWithDelay(List<Double> scores) {
         return mListeningExecutorService.submit(
                 () -> {
-                    Thread.sleep(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
+                    Thread.sleep(2 * mFlags.getAdSelectionScoringTimeoutMs());
                     return scores;
                 });
     }
