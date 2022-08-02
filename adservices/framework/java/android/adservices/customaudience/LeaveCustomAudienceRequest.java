@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
@@ -28,8 +29,7 @@ import java.util.concurrent.Executor;
 public final class LeaveCustomAudienceRequest {
 
     @NonNull private final String mOwner;
-    @NonNull
-    private final String mBuyer;
+    @NonNull private final AdTechIdentifier mBuyer;
     @NonNull
     private final String mName;
 
@@ -55,10 +55,10 @@ public final class LeaveCustomAudienceRequest {
     /**
      * A buyer is identified by a domain in the form "buyerexample.com".
      *
-     * @return a String containing the custom audience's buyer's domain
+     * @return an AdTechIdentifier containing the custom audience's buyer's domain
      */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
@@ -96,8 +96,7 @@ public final class LeaveCustomAudienceRequest {
     /** Builder for {@link LeaveCustomAudienceRequest} objects. */
     public static final class Builder {
         @NonNull private String mOwner;
-        @NonNull
-        private String mBuyer;
+        @NonNull private AdTechIdentifier mBuyer;
         @NonNull
         private String mName;
 
@@ -121,12 +120,12 @@ public final class LeaveCustomAudienceRequest {
         }
 
         /**
-         * Sets the buyer domain URL.
-         * <p>
-         * See {@link #getBuyer()} for more information.
+         * Sets the buyer AdTechIdentifier.
+         *
+         * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
-        public LeaveCustomAudienceRequest.Builder setBuyer(@NonNull String buyer) {
+        public LeaveCustomAudienceRequest.Builder setBuyer(@NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
             mBuyer = buyer;
             return this;

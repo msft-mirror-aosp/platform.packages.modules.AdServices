@@ -90,7 +90,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 /**
  * This test covers strictly the unit of {@link AdSelectionRunner} The dependencies in this test are
@@ -157,10 +156,7 @@ public class AdSelectionRunnerTest {
 
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                Arrays.asList(BUYER_1, BUYER_2).stream()
-                                        .map(AdTechIdentifier::getStringForm)
-                                        .collect(Collectors.toList()));
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2));
 
         mDBCustomAudienceForBuyer1 = createDBCustomAudience(BUYER_1);
         mDBCustomAudienceForBuyer2 = createDBCustomAudience(BUYER_2);
@@ -214,22 +210,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -287,21 +285,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdsScoreGenerator)
@@ -351,7 +351,7 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
+                        adSelectionConfig.getAdSelectionSignals(),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
@@ -359,7 +359,7 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
+                        adSelectionConfig.getAdSelectionSignals(),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
@@ -414,14 +414,14 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
+                        adSelectionConfig.getAdSelectionSignals(),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
+                        adSelectionConfig.getAdSelectionSignals(),
                         AdSelectionSignals.EMPTY,
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
@@ -512,22 +512,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(null)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -586,21 +588,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdsScoreGenerator)
@@ -647,22 +651,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(null)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -688,21 +694,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -742,22 +750,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -785,21 +795,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdsScoreGenerator)
@@ -840,22 +852,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -890,21 +904,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdsScoreGenerator)
@@ -945,22 +961,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -999,21 +1017,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdsScoreGenerator)
@@ -1068,7 +1088,9 @@ public class AdSelectionRunnerTest {
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder.setAdSelectionSignals("{/}").build();
+                mAdSelectionConfigBuilder
+                        .setAdSelectionSignals(AdSelectionSignals.fromString("{/}"))
+                        .build();
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -1083,22 +1105,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -1126,21 +1150,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -1179,22 +1205,24 @@ public class AdSelectionRunnerTest {
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         doReturn(FluentFuture.from(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
 
@@ -1229,21 +1257,23 @@ public class AdSelectionRunnerTest {
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer1,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer1.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer1.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdBidGenerator)
                 .runAdBiddingPerCA(
                         mDBCustomAudienceForBuyer2,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(mDBCustomAudienceForBuyer2.getBuyer())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig
+                                .getPerBuyerSignals()
+                                .get(
+                                        AdTechIdentifier.fromString(
+                                                mDBCustomAudienceForBuyer2.getBuyer())),
                         AdSelectionSignals.EMPTY,
                         adSelectionConfig);
         Mockito.verify(mMockAdsScoreGenerator)
