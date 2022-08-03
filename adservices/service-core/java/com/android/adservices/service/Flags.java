@@ -365,6 +365,8 @@ public interface Flags extends Dumpable {
     long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
 
+    long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
+
     /** Returns the time out constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -381,6 +383,14 @@ public interface Flags extends Dumpable {
      */
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the time out constant in milliseconds that limits the overall impression reporting
+     * execution
+     */
+    default long getReportImpressionOverallTimeoutMs() {
+        return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
     boolean ADSERVICES_ENABLE_STATUS = false;
