@@ -16,8 +16,8 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
@@ -52,12 +52,12 @@ public class TestCustomAudienceManager {
      *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     *     Exception} indicates the error.
      */
     public void overrideCustomAudienceRemoteInfo(
             @NonNull AddCustomAudienceOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -77,12 +77,16 @@ public class TestCustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
     /**
@@ -94,13 +98,13 @@ public class TestCustomAudienceManager {
      *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The {@link RemoveCustomAudienceOverrideRequest} is provided by the Ads SDK. The
-     *     receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     *     receiver either returns a {@code void} for a successful run, or an {@link Exception}
+     *     indicates the error.
      */
     public void removeCustomAudienceRemoteInfoOverride(
             @NonNull RemoveCustomAudienceOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -118,12 +122,16 @@ public class TestCustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
     /**
@@ -134,11 +142,11 @@ public class TestCustomAudienceManager {
      *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     *     Exception} indicates the error.
      */
     public void resetAllCustomAudienceOverrides(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
         try {
@@ -152,12 +160,16 @@ public class TestCustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
 }

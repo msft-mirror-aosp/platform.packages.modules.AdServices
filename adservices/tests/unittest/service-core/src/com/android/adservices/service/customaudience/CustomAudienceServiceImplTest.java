@@ -19,7 +19,6 @@ package com.android.adservices.service.customaudience;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
@@ -629,12 +628,12 @@ public class CustomAudienceServiceImplTest {
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
-                        STATUS_UNKNOWN_ERROR);
+                        STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
                                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
-                                STATUS_UNKNOWN_ERROR));
+                                STATUS_INTERNAL_ERROR));
 
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
