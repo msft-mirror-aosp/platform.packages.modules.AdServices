@@ -26,6 +26,7 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -168,7 +169,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         devContext,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mFlags);
         reporter.reportImpression(requestParams, callback);
     }
 
@@ -176,7 +178,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals,
+            @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         try {
             Objects.requireNonNull(adSelectionConfig);

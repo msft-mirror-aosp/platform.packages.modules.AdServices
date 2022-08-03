@@ -65,15 +65,18 @@ public class AdServicesCommonServiceImpl extends
                         try {
                             callback.onFailure("getting AdServices status error");
                         } catch (RemoteException re) {
-                            LogUtil.e("Unable to send result to the callback", re);
+                            LogUtil.e(re, "Unable to send result to the callback");
                         }
                     }
                 });
     }
 
-    /** Set the adservices entry point Status from UI side */
-    @Override
-    public void setAdServicesEntryPointEnabled(boolean adservicesEntryPointStatus) {
+    /**
+     * Set the adservices entry point Status from UI side, and also check adid zero-out status, and
+     * Set it to disable if adid is zero-out
+     */
+    public void setAdServicesNotificationConditions(
+            boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
@@ -82,7 +85,7 @@ public class AdServicesCommonServiceImpl extends
                                         ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
 
                         int adserviceEntryPointStatusInt =
-                                adservicesEntryPointStatus
+                                adServicesEntryPointEnabled
                                         ? ADSERVICES_ENTRY_POINT_STATUS_ENABLE
                                         : ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
                         SharedPreferences.Editor editor = preferences.edit();

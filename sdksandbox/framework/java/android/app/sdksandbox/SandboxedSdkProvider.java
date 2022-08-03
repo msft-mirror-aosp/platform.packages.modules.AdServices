@@ -54,7 +54,7 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
     /**
      * Does the work needed for the SDK to start handling requests.
      *
-     * <p>This function is called by SDK sandbox after it loads SDK
+     * <p>This function is called by the SDK sandbox after it loads the SDK.
      *
      * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
      * initialization logic that depends on other SDKs being loaded into the SDK sandbox. Any
@@ -71,6 +71,13 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
             @NonNull OnLoadSdkCallback callback);
 
     /**
+     * Does the work needed for the SDK to free its resources before being unloaded.
+     *
+     * <p>This function is called by the SDK sandbox manager before it unloads the SDK.
+     */
+    public void beforeUnloadSdk() {}
+
+    /**
      * Requests a view to be remotely rendered to the client app process.
      *
      * <p>Returns {@link View} will be wrapped into {@link SurfacePackage}. the resulting {@link
@@ -78,10 +85,13 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
+     * @param width The view returned will be laid as if in a window of this width, in pixels.
+     * @param height The view returned will be laid as if in a window of this height, in pixels.
      * @return a {@link View} which SDK sandbox pass to the client application requesting the view
      */
     @NonNull
-    public abstract View getView(@NonNull Context windowContext, @NonNull Bundle params);
+    public abstract View getView(
+            @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
 
     /**
      * Called when data sent from the app is received by an SDK.

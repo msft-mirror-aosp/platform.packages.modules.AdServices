@@ -25,8 +25,12 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
@@ -38,6 +42,14 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
+import com.android.adservices.data.topics.Topic;
+import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.topics.AppUpdateManager;
+import com.android.adservices.service.topics.BlockedTopicsManager;
+import com.android.adservices.service.topics.CacheManager;
+import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
 
 import com.google.common.collect.ImmutableList;
@@ -49,16 +61,25 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
+import java.util.List;
 
 @SmallTest
 public class ConsentManagerTest {
     private final Context mContext = ApplicationProvider.getApplicationContext();
 
     private BooleanFileDatastore mDatastore;
+    private ConsentManager mConsentManager;
     private AppConsentDao mAppConsentDao;
 
-    private ConsentManager mConsentManager;
     @Mock private PackageManager mPackageManager;
+    @Mock private TopicsWorker mTopicsWorker;
+    @Mock private MeasurementImpl mMeasurementImpl;
+
+    @Mock private AppUpdateManager mAppUpdateManager;
+    @Mock private CacheManager mCacheManager;
+    @Mock private BlockedTopicsManager mBlockedTopicsManager;
+    @Mock private EpochManager mMockEpochManager;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() throws IOException {
@@ -66,10 +87,10 @@ public class ConsentManagerTest {
 
         mDatastore =
                 new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
-        mAppConsentDao = new AppConsentDao(mDatastore, mPackageManager);
+        mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManager));
 
-        mConsentManager =
-                new ConsentManager(mContext, TopicsWorker.getInstance(mContext), mAppConsentDao);
+        mConsentManager = new ConsentManager(
+                mContext, mTopicsWorker, mAppConsentDao, mMeasurementImpl);
     }
 
     @After
@@ -91,6 +112,17 @@ public class ConsentManagerTest {
         mConsentManager.disable(mPackageManager);
 
         assertFalse(mConsentManager.getConsent(mPackageManager).isGiven());
+    }
+
+    @Test
+    public void testDataIsResetAfterConsentIsRevoked() throws IOException {
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.disable(mPackageManager);
+
+        verify(mTopicsWorker, times(1)).clearAllTopicsData(any());
+        // TODO(b/240988406): change to test for correct method call
+        verify(mAppConsentDao, times(1)).clearAllConsentData();
+        verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
     }
 
     @Test
@@ -347,5 +379,82 @@ public class ConsentManagerTest {
         // all apps have received a consent
         assertThat(knownAppsWithConsent).hasSize(3);
         assertThat(appsWithRevokedConsent).isEmpty();
+    }
+
+    @Test
+    public void testGetKnownTopicsWithConsent() {
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
+        Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
+        ImmutableList<Topic> expectedKnownTopicsWithConsent = ImmutableList.of(topic1, topic2);
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doReturn(expectedKnownTopicsWithConsent).when(mTopicsWorker).getKnownTopicsWithConsent();
+
+        ImmutableList<Topic> knownTopicsWithConsent = mConsentManager.getKnownTopicsWithConsent();
+
+        assertThat(knownTopicsWithConsent)
+                .containsExactlyElementsIn(expectedKnownTopicsWithConsent);
+    }
+
+    @Test
+    public void testGetTopicsWithRevokedConsent() {
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
+        Topic topic1 = Topic.create(1, taxonomyVersion, modelVersion);
+        Topic topic2 = Topic.create(2, taxonomyVersion, modelVersion);
+        ImmutableList<Topic> expectedTopicsWithRevokedConsent = ImmutableList.of(topic1, topic2);
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doReturn(expectedTopicsWithRevokedConsent)
+                .when(mTopicsWorker)
+                .getTopicsWithRevokedConsent();
+
+        ImmutableList<Topic> topicsWithRevokedConsent =
+                mConsentManager.getTopicsWithRevokedConsent();
+
+        assertThat(topicsWithRevokedConsent)
+                .containsExactlyElementsIn(expectedTopicsWithRevokedConsent);
+    }
+
+    @Test
+    public void testNotificationDisplayedRecorded() {
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        Boolean wasNotificationDisplayed =
+                mConsentManager.wasNotificationDisplayed(mPackageManager);
+
+        assertThat(wasNotificationDisplayed).isFalse();
+
+        mConsentManager.recordNotificationDisplayed(mPackageManager);
+        wasNotificationDisplayed = mConsentManager.wasNotificationDisplayed(mPackageManager);
+
+        assertThat(wasNotificationDisplayed).isTrue();
+    }
+
+    @Test
+    public void testProxyCalls() {
+        Topic topic = Topic.create(1, 1, 1);
+        List<String> tablesToBlock = List.of(TopicsTables.BlockedTopicsContract.TABLE);
+        ConsentManager consentManager =
+                new ConsentManager(
+                        mContext,
+                        new TopicsWorker(
+                                mMockEpochManager,
+                                mCacheManager,
+                                mBlockedTopicsManager,
+                                mAppUpdateManager,
+                                mMockFlags),
+                        mAppConsentDao,
+                        mMeasurementImpl);
+        doNothing().when(mBlockedTopicsManager).blockTopic(any());
+        doNothing().when(mBlockedTopicsManager).unblockTopic(any());
+        doNothing().when(mCacheManager).clearAllTopicsData(any());
+
+        consentManager.revokeConsentForTopic(topic);
+        consentManager.restoreConsentForTopic(topic);
+        consentManager.resetTopics();
+
+        verify(mBlockedTopicsManager).blockTopic(topic);
+        verify(mBlockedTopicsManager).unblockTopic(topic);
+        verify(mCacheManager).clearAllTopicsData(tablesToBlock);
     }
 }

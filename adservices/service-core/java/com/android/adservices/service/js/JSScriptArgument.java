@@ -18,6 +18,8 @@ package com.android.adservices.service.js;
 
 import static java.util.Arrays.asList;
 
+import android.adservices.common.AdSelectionSignals;
+
 import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
@@ -51,6 +53,18 @@ public abstract class JSScriptArgument {
         // Creating the JSONObject just to parse value and cause a JSONException if invalid.
         new JSONObject(value);
         return new JSScriptJsonArgument(name, value);
+    }
+
+    /**
+     * @return a JS object with the given {@code name} and value obtained parsing the given {@code
+     *     value}.
+     * @throws JSONException if {@code value} doesn't represent a valid JSON object
+     */
+    public static JSScriptJsonArgument jsonArg(String name, AdSelectionSignals value)
+            throws JSONException {
+        // TODO(b/238849930) Merge this validation with AdSelectionSignals validation
+        new JSONObject(value.getStringForm());
+        return new JSScriptJsonArgument(name, value.getStringForm());
     }
 
     /**

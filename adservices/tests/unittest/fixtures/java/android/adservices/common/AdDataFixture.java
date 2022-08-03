@@ -26,11 +26,11 @@ import java.util.List;
 public class AdDataFixture {
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
 
-    public static Uri getValidRenderUrlByBuyer(String buyer, int sequence) {
+    public static Uri getValidRenderUrlByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
 
-    public static List<AdData> getValidAdsByBuyer(String buyer) {
+    public static List<AdData> getValidAdsByBuyer(AdTechIdentifier buyer) {
         return ImmutableList.of(
                 new AdData.Builder()
                         .setRenderUri(getValidRenderUrlByBuyer(buyer, 1))

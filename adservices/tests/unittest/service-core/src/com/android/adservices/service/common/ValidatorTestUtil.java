@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import org.junit.Assert;
 
 import java.util.Arrays;
@@ -23,7 +25,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class ValidatorTestUtil {
-    public static void assertViolationContaiinsOnly(
+    public static void assertViolationContainsOnly(
             Collection<String> errors, String... expectedErrors) {
         List<String> expectedErrorsList = Arrays.asList(expectedErrors);
         Assert.assertEquals(
@@ -36,5 +38,16 @@ public class ValidatorTestUtil {
         Assert.assertTrue(
                 String.format("expected %s / actual %s", expectedErrorsList, errors),
                 expectedErrorsList.containsAll(errors));
+    }
+
+    public static void assertValidationFailuresMatch(
+            final IllegalArgumentException actualException,
+            final String expectedViolationsPrefix,
+            final List<String> expectedViolations) {
+
+        assertThat(actualException).hasMessageThat().startsWith(expectedViolationsPrefix);
+        for (String violation : expectedViolations) {
+            assertThat(actualException).hasMessageThat().contains(violation);
+        }
     }
 }

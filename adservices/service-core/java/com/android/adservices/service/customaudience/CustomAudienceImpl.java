@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.content.Context;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -48,11 +48,11 @@ public class CustomAudienceImpl {
     @GuardedBy("SINGLETON_LOCK")
     private static CustomAudienceImpl sSingleton;
 
-    private final CustomAudienceDao mCustomAudienceDao;
-    private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
-    private final Validator<CustomAudience> mCustomAudienceValidator;
-    private final Clock mClock;
-    private final Duration mCustomAudienceDefaultExpireIn;
+    @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
+    @NonNull private final Validator<CustomAudience> mCustomAudienceValidator;
+    @NonNull private final Clock mClock;
+    @NonNull private final Flags mFlags;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -61,12 +61,17 @@ public class CustomAudienceImpl {
             @NonNull Validator<CustomAudience> customAudienceValidator,
             @NonNull Clock clock,
             @NonNull Flags flags) {
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(customAudienceQuantityChecker);
+        Objects.requireNonNull(customAudienceValidator);
+        Objects.requireNonNull(clock);
+        Objects.requireNonNull(flags);
+
         mCustomAudienceDao = customAudienceDao;
         mCustomAudienceQuantityChecker = customAudienceQuantityChecker;
         mCustomAudienceValidator = customAudienceValidator;
         mClock = clock;
-        mCustomAudienceDefaultExpireIn =
-                Duration.ofMillis(flags.getFledgeCustomAudienceDefaultExpireInMs());
+        mFlags = flags;
     }
 
     /**
@@ -106,12 +111,12 @@ public class CustomAudienceImpl {
         mCustomAudienceQuantityChecker.check(customAudience);
         mCustomAudienceValidator.validate(customAudience);
 
+        Duration customAudienceDefaultExpireIn =
+                Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
+
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
-                        customAudience,
-                        "not.implemented.yet",
-                        currentTime,
-                        mCustomAudienceDefaultExpireIn);
+                        customAudience, currentTime, customAudienceDefaultExpireIn);
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUrl());
@@ -119,12 +124,15 @@ public class CustomAudienceImpl {
 
     /** Delete a custom audience with given key. No-op if not exist. */
     public void leaveCustomAudience(
-            @Nullable String owner, @NonNull String buyer, @NonNull String name) {
-        Preconditions.checkStringNotEmpty(buyer);
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
+        Preconditions.checkStringNotEmpty(owner);
+        Objects.requireNonNull(buyer);
         Preconditions.checkStringNotEmpty(name);
 
         mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(
-                Optional.ofNullable(owner).orElse("not.implemented.yet"), buyer, name);
+                Optional.ofNullable(owner).orElse("not.implemented.yet"),
+                buyer.getStringForm(),
+                name);
     }
 
     /** Returns DAO to be used in {@link CustomAudienceServiceImpl} */

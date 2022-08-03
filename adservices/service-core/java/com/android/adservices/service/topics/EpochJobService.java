@@ -73,7 +73,7 @@ public final class EpochJobService extends JobService {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        LogUtil.e("Failed to handle JobService: " + params.getJobId(), t);
+                        LogUtil.e(t, "Failed to handle JobService: " + params.getJobId());
                         //  When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         // TODO(b/225909845): Revisit this. We need a retry policy.

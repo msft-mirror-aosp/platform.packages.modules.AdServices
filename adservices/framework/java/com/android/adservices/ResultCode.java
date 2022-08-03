@@ -16,9 +16,13 @@
 
 package com.android.adservices;
 
+import android.adservices.common.AdServicesStatusUtils;
+
 /**
  * Result Code for log call result.
+ *
  * @hide
+ * @deprecated use {@link AdServicesStatusUtils} instead.
  */
 public class ResultCode {
     /** Result code for success */
@@ -31,4 +35,6 @@ public class ResultCode {
     public static final int RESULT_INVALID_ARGUMENT = 3;
     /** Result code for I/O error. */
     public static final int RESULT_IO_ERROR = 4;
+    /** Result code for Rate Limit Reached. */
+    public static final int RESULT_RATE_LIMIT_REACHED = 5;
 }

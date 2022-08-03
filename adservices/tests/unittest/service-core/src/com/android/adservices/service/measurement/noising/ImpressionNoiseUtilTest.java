@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
 
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Unit tests for ImpressionNoiseUtil class.
@@ -207,5 +209,41 @@ public class ImpressionNoiseUtilTest {
                 /*impressionNoise=*/ eventWithInstallAttributionNoiseParams,
                 /*expectedReports=*/ Collections.singletonList(new int[]{1, 1}),
                 /*sequenceIndex=*/ 10);
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final ImpressionNoiseParams data1 = createExample();
+        final ImpressionNoiseParams data2 = createExample();
+        final Set<ImpressionNoiseParams> dataSet1 = Set.of(data1);
+        final Set<ImpressionNoiseParams> dataSet2 = Set.of(data2);
+        assertEquals(data1.hashCode(), data2.hashCode());
+        assertEquals(data1, data2);
+        assertEquals(dataSet1, dataSet2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final ImpressionNoiseParams data1 = createExample();
+        final ImpressionNoiseParams data2 = new ImpressionNoiseParams(1, 1, 1);
+        final Set<ImpressionNoiseParams> dataSet1 = Set.of(data1);
+        final Set<ImpressionNoiseParams> dataSet2 = Set.of(data2);
+        assertNotEquals(data1.hashCode(), data2.hashCode());
+        assertNotEquals(data1, data2);
+        assertNotEquals(dataSet1, dataSet2);
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        final ImpressionNoiseParams data1 = createExample();
+        final ImpressionNoiseParams data2 = createExample();
+        assertEquals(data1.toString(), data2.toString());
+    }
+
+    private ImpressionNoiseParams createExample() {
+        return new ImpressionNoiseParams(
+                /* reportCount= */ 2,
+                /* triggerDataCardinality= */ 4,
+                /* reportingWindowCount= */ 8);
     }
 }

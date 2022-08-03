@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -58,7 +59,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                         .build();
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER, fetchData.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER, AdTechIdentifier.fromString(fetchData.getBuyer()));
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
@@ -73,7 +74,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(CustomAudienceFixture.VALID_OWNER)
-                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setBuyer(CommonFixture.VALID_BUYER.getStringForm())
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setDailyUpdateUrl(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
@@ -82,7 +83,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                         .build();
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER, fetchData.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER, AdTechIdentifier.fromString(fetchData.getBuyer()));
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),
@@ -115,7 +116,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.create(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER,
+                        CommonFixture.VALID_BUYER.getStringForm(),
                         CustomAudienceFixture.VALID_NAME,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER),
@@ -124,7 +125,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                         NUM_TIMEOUT_FAILURES_POSITIVE);
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
-        assertEquals(CommonFixture.VALID_BUYER, fetchData.getBuyer());
+        assertEquals(CommonFixture.VALID_BUYER, AdTechIdentifier.fromString(fetchData.getBuyer()));
         assertEquals(CustomAudienceFixture.VALID_NAME, fetchData.getName());
         assertEquals(
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER),

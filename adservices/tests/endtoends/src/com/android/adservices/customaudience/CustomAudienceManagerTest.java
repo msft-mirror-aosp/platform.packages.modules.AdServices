@@ -54,7 +54,10 @@ public class CustomAudienceManagerTest {
                 .setExecutor(CALLBACK_EXECUTOR)
                 .build();
 
-        client.joinCustomAudience(CUSTOM_AUDIENCE).get();
+        client.joinCustomAudience(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .build())
+                .get();
 
         final long duration = System.currentTimeMillis() - start;
         Log.i(TAG, "joinCustomAudience() took "

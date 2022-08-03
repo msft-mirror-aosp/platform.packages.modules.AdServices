@@ -17,6 +17,8 @@
 package android.adservices.debuggablects;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.content.Context;
@@ -41,10 +43,11 @@ public class CustomAudienceCtsDebuggableTest {
     private AdvertisingCustomAudienceClient mClient;
 
     private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
-    private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
+    private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
+            AdSelectionSignals.fromString("{\"trusted_bidding_signal\":1}");
 
     private boolean mHasAccessToDevOverrides;
 
@@ -78,7 +81,7 @@ public class CustomAudienceCtsDebuggableTest {
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
@@ -114,7 +117,7 @@ public class CustomAudienceCtsDebuggableTest {
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         ListenableFuture<Void> addResult = mClient.overrideCustomAudienceRemoteInfo(addRequest);

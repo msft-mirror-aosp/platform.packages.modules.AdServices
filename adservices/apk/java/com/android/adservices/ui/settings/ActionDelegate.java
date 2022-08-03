@@ -15,17 +15,10 @@
  */
 package com.android.adservices.ui.settings;
 
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.APPS_PREFERENCE_BUTTON_KEY;
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.PRIVACY_SANDBOX_BETA_SWITCH_KEY;
-import static com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment.TOPICS_PREFERENCE_BUTTON_KEY;
-
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.preference.Preference;
-import androidx.preference.SwitchPreference;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
@@ -33,34 +26,34 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
-import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainPreferenceFragment;
+import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel.TopicsViewModelUiEvent;
+import com.android.settingslib.widget.MainSwitchBar;
 
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
 public class ActionDelegate {
 
-    private final LifecycleOwner mLifecycleOwner;
+    private final AdServicesSettingsActivity mAdServicesSettingsActivity;
     private final FragmentManager mFragmentManager;
     private final MainViewModel mMainViewModel;
     private final TopicsViewModel mTopicsViewModel;
     private final AppsViewModel mAppsViewModel;
 
     public ActionDelegate(
-            LifecycleOwner lifecycleOwner,
+            AdServicesSettingsActivity adServicesSettingsActivity,
             FragmentManager fragmentManager,
             MainViewModel mainViewModel,
             TopicsViewModel topicsViewModel,
             AppsViewModel appsViewModel) {
-        mLifecycleOwner = lifecycleOwner;
+        mAdServicesSettingsActivity = adServicesSettingsActivity;
         mFragmentManager = fragmentManager;
         mMainViewModel = mainViewModel;
         mTopicsViewModel = topicsViewModel;
@@ -79,7 +72,7 @@ public class ActionDelegate {
         mMainViewModel
                 .getUiEvents()
                 .observe(
-                        mLifecycleOwner,
+                        mAdServicesSettingsActivity,
                         event -> {
                             if (event == null) {
                                 return;
@@ -129,7 +122,7 @@ public class ActionDelegate {
         mTopicsViewModel
                 .getUiEvents()
                 .observe(
-                        mLifecycleOwner,
+                        mAdServicesSettingsActivity,
                         eventTopicPair -> {
                             if (eventTopicPair == null) {
                                 return;
@@ -180,7 +173,7 @@ public class ActionDelegate {
         mAppsViewModel
                 .getUiEvents()
                 .observe(
-                        mLifecycleOwner,
+                        mAdServicesSettingsActivity,
                         eventAppPair -> {
                             AppsViewModel.AppsViewModelUiEvent event = eventAppPair.first;
                             App app = eventAppPair.second;
@@ -229,51 +222,39 @@ public class ActionDelegate {
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Configure all UI elements in {@link AdServicesSettingsMainPreferenceFragment} to handle user
+     * Configure all UI elements in {@link AdServicesSettingsMainFragment} to handle user
      * actions.
      *
      * @param fragment the fragment to be initialized.
      */
-    public void initMainFragment(AdServicesSettingsMainPreferenceFragment fragment) {
+    public void initMainFragment(AdServicesSettingsMainFragment fragment) {
+        mAdServicesSettingsActivity.setTitle(R.string.settingsUI_main_view_title);
         configureConsentSwitch(fragment);
-        configureTopicsButton(fragment);
-        configureAppsButton(fragment);
+        configureTopicsButton();
+        configureAppsButton();
     }
 
-    private void configureConsentSwitch(AdServicesSettingsMainPreferenceFragment fragment) {
-        SwitchPreference switchPreference =
-                Objects.requireNonNull(fragment.findPreference(PRIVACY_SANDBOX_BETA_SWITCH_KEY));
+    private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
+        MainSwitchBar mainSwitchBar =
+                mAdServicesSettingsActivity.findViewById(R.id.main_switch_bar);
 
-        mMainViewModel.getConsent().observe(fragment, switchPreference::setChecked);
+        mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
-        switchPreference.setOnPreferenceClickListener(
-                preference -> {
-                    mMainViewModel.consentSwitchClickHandler(
-                            ((SwitchPreference) preference).isChecked());
-                    return true;
-                });
+        mainSwitchBar.setOnClickListener(
+                switchBar -> mMainViewModel.consentSwitchClickHandler(
+                        ((MainSwitchBar) switchBar).isChecked()));
     }
 
-    private void configureTopicsButton(AdServicesSettingsMainPreferenceFragment fragment) {
-        Preference topicsButton =
-                Objects.requireNonNull(fragment.findPreference(TOPICS_PREFERENCE_BUTTON_KEY));
+    private void configureTopicsButton() {
+        View topicsButton = mAdServicesSettingsActivity.findViewById(R.id.topics_preference);
 
-        topicsButton.setOnPreferenceClickListener(
-                preference -> {
-                    mMainViewModel.topicsButtonClickHandler();
-                    return true;
-                });
+        topicsButton.setOnClickListener(preference -> mMainViewModel.topicsButtonClickHandler());
     }
 
-    private void configureAppsButton(AdServicesSettingsMainPreferenceFragment fragment) {
-        Preference appsButton =
-                Objects.requireNonNull(fragment.findPreference(APPS_PREFERENCE_BUTTON_KEY));
+    private void configureAppsButton() {
+        View appsButton = mAdServicesSettingsActivity.findViewById(R.id.apps_preference);
 
-        appsButton.setOnPreferenceClickListener(
-                preference -> {
-                    mMainViewModel.appsButtonClickHandler();
-                    return true;
-                });
+        appsButton.setOnClickListener(preference -> mMainViewModel.appsButtonClickHandler());
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -285,6 +266,7 @@ public class ActionDelegate {
      * handle user actions.
      */
     public void initTopicsFragment(AdServicesSettingsTopicsFragment fragment) {
+        mAdServicesSettingsActivity.setTitle(R.string.settingsUI_topics_view_title);
         configureBlockedTopicsFragmentButton(fragment);
         configureResetTopicsButton(fragment);
     }
@@ -316,6 +298,7 @@ public class ActionDelegate {
      * handle user actions.
      */
     public void initAppsFragment(AdServicesSettingsAppsFragment fragment) {
+        mAdServicesSettingsActivity.setTitle(R.string.settingsUI_apps_view_title);
         configureBlockedAppsFragmentButton(fragment);
     }
 
@@ -327,4 +310,29 @@ public class ActionDelegate {
                     mAppsViewModel.blockedAppsFragmentButtonClickHandler();
                 });
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // Blocked Topics Fragment
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Configure all UI elements (except blocked topics list) in
+     * {@link AdServicesSettingsBlockedTopicsFragment} to handle user actions.
+     */
+    public void initBlockedTopicsFragment() {
+        mAdServicesSettingsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Blocked Apps Fragment
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Configure all UI elements (except blocked apps list) in
+     * {@link AdServicesSettingsBlockedAppsFragment} to handle user actions.
+     */
+    public void initBlockedAppsFragment() {
+        mAdServicesSettingsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
+    }
+
 }

@@ -21,7 +21,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -164,7 +166,15 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(callback);
         try {
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    orchestrateAdSelection(adSelectionConfig);
+                    FluentFuture.from(getBuyersCustomAudience(adSelectionConfig))
+                            .transformAsync(
+                                    buyersCustomAudiences -> {
+                                        // PH flags need to be read outside the Binder thread
+                                        long timeouts = mFlags.getAdSelectionOverallTimeoutMs();
+                                        return orchestrateAdSelection(
+                                                adSelectionConfig, buyersCustomAudiences, timeouts);
+                                    },
+                                    mExecutorService);
 
             Futures.addCallback(
                     dbAdSelectionFuture,
@@ -196,7 +206,7 @@ public final class AdSelectionRunner {
                             .build());
             resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             // TODO(b/233681870): Investigate implementation of actual failures in
@@ -223,7 +233,7 @@ public final class AdSelectionRunner {
             LogUtil.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e("Encountered exception during notifying AdSelection callback", e);
+            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -239,18 +249,13 @@ public final class AdSelectionRunner {
      * @return {@link AdSelectionResponse}
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig) {
-
-        ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
-                getBuyersCustomAudience(adSelectionConfig);
-
-        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
-                buyerCAs -> {
-                    return runAdBidding(buyerCAs, adSelectionConfig);
-                };
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull List<DBCustomAudience> buyerCustomAudience,
+            @NonNull long timeout)
+            throws ExecutionException, InterruptedException {
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
+                runAdBidding(buyerCustomAudience, adSelectionConfig);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
@@ -284,7 +289,7 @@ public final class AdSelectionRunner {
         return FluentFuture.from(dbAdSelectionBuilder)
                 .transformAsync(saveResultToPersistence, mExecutorService)
                 .withTimeout(
-                        mFlags.getAdSelectionOverallTimeoutMs(),
+                        timeout,
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
@@ -299,7 +304,10 @@ public final class AdSelectionRunner {
 
         return listeningExecutorService.submit(
                 () -> {
-                    List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
+                    List<String> buyers =
+                            adSelectionConfig.getCustomAudienceBuyers().stream()
+                                    .map(AdTechIdentifier::getStringForm)
+                                    .collect(Collectors.toList());
                     Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
@@ -342,11 +350,11 @@ public final class AdSelectionRunner {
                     .get();
         } catch (InterruptedException e) {
             final String exceptionReason = "Bidding Interrupted Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new InterruptedException(exceptionReason);
         } catch (ExecutionException e) {
             final String exceptionReason = "Bidding Execution Exception";
-            LogUtil.e(exceptionReason, e);
+            LogUtil.e(e, exceptionReason);
             throw new ExecutionException(e.getCause());
         } finally {
             customThreadPool.shutdownNow();
@@ -366,17 +374,19 @@ public final class AdSelectionRunner {
         LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
-        String buyerSignal =
+        AdSelectionSignals buyerSignal =
                 Optional.ofNullable(
                                 adSelectionConfig
                                         .getPerBuyerSignals()
-                                        .get(customAudience.getBuyer()))
-                        .orElse("{}");
+                                        .get(
+                                                AdTechIdentifier.fromString(
+                                                        customAudience.getBuyer())))
+                        .orElse(AdSelectionSignals.EMPTY);
         return mAdBidGenerator.runAdBiddingPerCA(
                 customAudience,
                 adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
-                "{}",
+                AdSelectionSignals.EMPTY,
                 adSelectionConfig);
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }

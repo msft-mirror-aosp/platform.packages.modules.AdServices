@@ -27,6 +27,7 @@ import android.os.IBinder;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -67,6 +68,7 @@ public class TopicsServiceTest {
                         .spyStatic(AdServicesLoggerImpl.class)
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(EpochJobService.class)
+                        .spyStatic(MddJobService.class)
                         .startMocking();
 
         try {
@@ -85,6 +87,7 @@ public class TopicsServiceTest {
             ExtendedMockito.doNothing()
                     .when(() -> MaintenanceJobService.schedule(any(Context.class)));
             ExtendedMockito.doNothing().when(() -> EpochJobService.schedule(any(Context.class)));
+            ExtendedMockito.doNothing().when(() -> MddJobService.schedule(any(Context.class)));
 
             TopicsService topicsService = new TopicsService();
             topicsService.onCreate();
@@ -102,7 +105,7 @@ public class TopicsServiceTest {
                 ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
 
         try {
-            // Killswitch is off.
+            // Killswitch is on.
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.

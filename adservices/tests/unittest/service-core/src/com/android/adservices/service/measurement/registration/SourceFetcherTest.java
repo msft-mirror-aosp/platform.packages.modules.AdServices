@@ -85,16 +85,12 @@ public final class SourceFetcherTest {
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os-destination");
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination.com");
+    private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
+            Uri.parse("https://subdomain.web-destination.com");
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -1069,7 +1065,7 @@ public final class SourceFetcherTest {
     }
 
     @Test
-    public void fetchWebSources_osDestinationDoNotMatch_failsDropsSource() throws IOException {
+    public void fetchWebSources_appDestinationDoNotMatch_failsDropsSource() throws IOException {
         // Setup
         WebSourceRegistrationRequest request =
                 buildWebSourceRegistrationRequest(
@@ -1205,6 +1201,58 @@ public final class SourceFetcherTest {
     }
 
     @Test
+    public void fetchWebSources_extractsTopPrivateDomain() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Collections.singletonList(SOURCE_REGISTRATION_1),
+                        DEFAULT_TOP_ORIGIN,
+                        OS_DESTINATION,
+                        WEB_DESTINATION_WITH_SUBDOMAIN);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"456789\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + "  \"destination\": \""
+                                                + OS_DESTINATION
+                                                + "\",\n"
+                                                + "\"web_destination\": \""
+                                                + WEB_DESTINATION_WITH_SUBDOMAIN
+                                                + "\""
+                                                + "}")));
+        SourceRegistration expectedSourceRegistration =
+                new SourceRegistration.Builder()
+                        .setAppDestination(OS_DESTINATION)
+                        .setWebDestination(WEB_DESTINATION)
+                        .setSourcePriority(123)
+                        .setExpiry(456789)
+                        .setSourceEventId(987654321)
+                        .setTopOrigin(Uri.parse(DEFAULT_TOP_ORIGIN))
+                        .setReportingOrigin(REGISTRATION_URI_1)
+                        .build();
+
+        // Execution
+        Optional<List<SourceRegistration>> fetch = mFetcher.fetchWebSources(request);
+
+        // Assertion
+        assertTrue(fetch.isPresent());
+        List<SourceRegistration> result = fetch.get();
+        assertEquals(1, result.size());
+        assertEquals(expectedSourceRegistration, result.get(0));
+
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void fetchWebSources_missingDestinations_dropsSource() throws Exception {
         // Setup
         WebSourceRegistrationRequest request =
@@ -1263,7 +1311,7 @@ public final class SourceFetcherTest {
                                 List.of(
                                         "{\n"
                                                 + "\"destination\": \""
-                                                + DEFAULT_DESTINATION_WITHOUT_SCHEME
+                                                + DEFAULT_DESTINATION
                                                 + "\",\n"
                                                 + "\"source_event_id\": \""
                                                 + EVENT_ID_1
@@ -1329,14 +1377,17 @@ public final class SourceFetcherTest {
     private WebSourceRegistrationRequest buildWebSourceRegistrationRequest(
             List<WebSourceParams> sourceParamsList,
             String topOrigin,
-            Uri osDestination,
+            Uri appDestination,
             Uri webDestination) {
-        return new WebSourceRegistrationRequest.Builder()
-                .setSourceParams(sourceParamsList)
-                .setTopOriginUri(Uri.parse(topOrigin))
-                .setOsDestination(osDestination)
-                .setWebDestination(webDestination)
-                .build();
+        WebSourceRegistrationRequest.Builder webSourceRegistrationRequestBuilder =
+                new WebSourceRegistrationRequest.Builder(sourceParamsList, Uri.parse(topOrigin))
+                        .setAppDestination(appDestination);
+
+        if (webDestination != null) {
+            webSourceRegistrationRequestBuilder.setWebDestination(webDestination);
+        }
+
+        return webSourceRegistrationRequestBuilder.build();
     }
 
     private Map<String, List<String>> buildRegisterSourceDefaultHeader(

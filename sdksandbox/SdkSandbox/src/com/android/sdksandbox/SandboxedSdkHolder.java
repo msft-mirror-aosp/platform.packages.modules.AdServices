@@ -95,6 +95,10 @@ class SandboxedSdkHolder {
         }
     }
 
+    void unloadSdk() {
+        mSdk.beforeUnloadSdk();
+    }
+
     void dump(PrintWriter writer) {
         writer.print("mInitialized: " + mInitialized);
         final String sdkClass = mSdk == null ? "null" : mSdk.getClass().getName();
@@ -180,7 +184,8 @@ class SandboxedSdkHolder {
                 mHandler.post(
                         () -> {
                             try {
-                                final View view = mSdk.getView(windowContext, params);
+                                final View view =
+                                        mSdk.getView(windowContext, params, width, height);
                                 SurfaceControlViewHost host =
                                         new SurfaceControlViewHost(
                                                 windowContext,

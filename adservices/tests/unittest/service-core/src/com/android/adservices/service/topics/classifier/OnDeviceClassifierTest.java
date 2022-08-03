@@ -67,6 +67,17 @@ public class OnDeviceClassifierTest {
     }
 
     @Test
+    public void testGetInstance() {
+        OnDeviceClassifier firstInstance = OnDeviceClassifier.getInstance(sContext);
+        OnDeviceClassifier secondInstance = OnDeviceClassifier.getInstance(sContext);
+
+        assertThat(firstInstance).isNotNull();
+        assertThat(secondInstance).isNotNull();
+        // Verify singleton behaviour.
+        assertThat(firstInstance).isEqualTo(secondInstance);
+    }
+
+    @Test
     public void testClassify_packageManagerError_returnsDefaultClassifications() {
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
@@ -169,6 +180,11 @@ public class OnDeviceClassifierTest {
         // Expected top 10: 93, 88, 90, 99, 101, 96, 1, 232, 91, 3
         assertThat(secondClassifications.get(appPackage1))
                 .containsAtLeastElementsIn(createTopics(Arrays.asList(93, 88, 90, 99, 101)));
+    }
+
+    @Test
+    public void testClassify_emptyInput_emptyOutput() {
+        assertThat(mOnDeviceClassifier.classify(ImmutableSet.of())).isEmpty();
     }
 
     @Test

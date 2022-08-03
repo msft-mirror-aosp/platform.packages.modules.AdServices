@@ -98,7 +98,7 @@ public class AdServicesCommonManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new AdServicesException("Internal Error!")));
         }
     }
@@ -106,17 +106,21 @@ public class AdServicesCommonManager {
     /**
      * Send the privacy sandbox UI entry point enable status to AdServices, indicating whether
      * Privacy sandbox is enabled or not. If this is enabled, and AdServices is enabled, AdServices
-     * will send out notification to user.
+     * Will send out notification to user. Also send adid zero out status, if user opt-out adid, Its
+     * adid will become all 0s.
      *
+     * @param adServicesEntryPointEnabled indicate entry point enabled or not
+     * @param adIdEnabled indicate user opt-out of adid or not
      * @hide
      */
     @SystemApi
-    public void setAdServicesEntryPointEnabled(@NonNull boolean adservicesEntryPointEnabled) {
+    public void setAdServicesNotificationConditions(
+            boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesEntryPointEnabled(adservicesEntryPointEnabled);
+            service.setAdServicesNotificationConditions(adServicesEntryPointEnabled, adIdEnabled);
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
         }
     }
 }

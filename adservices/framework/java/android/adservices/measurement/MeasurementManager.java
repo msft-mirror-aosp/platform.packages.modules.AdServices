@@ -160,7 +160,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new AdServicesException("Internal Error", e)));
@@ -198,7 +198,7 @@ public class MeasurementManager {
     /**
      * Register an attribution source(click or view) from web context. This API will not process any
      * redirects, all registration URLs should be supplied with the request. At least one of
-     * osDestination or webDestination parameters are required to be provided. If the registration
+     * appDestination or webDestination parameters are required to be provided. If the registration
      * is successful, {@code callback}'s {@link OutcomeReceiver#onResult} is invoked with null. In
      * case of failure, a {@link MeasurementException} is sent through {@code callback}'s {@link
      * OutcomeReceiver#onError}. Both success and failure feedback are executed on the provided
@@ -217,9 +217,7 @@ public class MeasurementManager {
 
         try {
             service.registerWebSource(
-                    new WebSourceRegistrationRequestInternal.Builder()
-                            .setSourceRegistrationRequest(request)
-                            .setPackageName(getPackageName())
+                    new WebSourceRegistrationRequestInternal.Builder(request, getPackageName())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
@@ -242,7 +240,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new MeasurementException("Internal Error", e)));
@@ -271,9 +269,7 @@ public class MeasurementManager {
 
         try {
             service.registerWebTrigger(
-                    new WebTriggerRegistrationRequestInternal.Builder()
-                            .setTriggerRegistrationRequest(request)
-                            .setPackageName(getPackageName())
+                    new WebTriggerRegistrationRequestInternal.Builder(request, getPackageName())
                             .build(),
                     new IMeasurementCallback.Stub() {
                         @Override
@@ -296,7 +292,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             if (callback != null && executor != null) {
                 executor.execute(
                         () -> callback.onError(new MeasurementException("Internal Error", e)));
@@ -359,7 +355,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new MeasurementException("Internal Error", e)));
         }
     }
@@ -406,7 +402,7 @@ public class MeasurementManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
-        // TODO: Remove here and apply across the board.
+        // TODO (b/241149306): Remove here and apply across the board.
         if (AdServicesApiUtil.getAdServicesApiState()
                 == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
             executor.execute(() -> {
@@ -426,7 +422,7 @@ public class MeasurementManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
+            LogUtil.e(e, "RemoteException");
             executor.execute(() -> callback.onError(new AdServicesException("Internal Error", e)));
         }
     }

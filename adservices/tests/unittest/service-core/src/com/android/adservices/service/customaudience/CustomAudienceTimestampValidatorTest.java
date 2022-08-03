@@ -46,7 +46,7 @@ public class CustomAudienceTimestampValidatorTest {
     @Test
     public void testActivationTimeBeyondMaxAndExpireBeforeActivation() {
 
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setActivationTime(
@@ -65,7 +65,7 @@ public class CustomAudienceTimestampValidatorTest {
 
     @Test
     public void testExpirationTimeBeforeNow() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setExpirationTime(
@@ -78,7 +78,7 @@ public class CustomAudienceTimestampValidatorTest {
 
     @Test
     public void testExpirationTimeBeforeActivation() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
                                 .setExpirationTime(

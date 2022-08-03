@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class AggregateReportSenderTest {
 
@@ -83,5 +84,16 @@ public class AggregateReportSenderTest {
 
         assertEquals(outputStream.toString(), aggregateReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testCreateHttpUrlConnection() throws Exception {
+        HttpURLConnection mockConnection = Mockito.mock(HttpURLConnection.class);
+        URL spyUrl = Mockito.spy(new URL("https://foo"));
+        Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
+
+        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        HttpURLConnection connection = aggregateReportSender.createHttpUrlConnection(spyUrl);
+        assertEquals(mockConnection, connection);
     }
 }

@@ -27,15 +27,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
             android:orientation="vertical">
             <TextView
-                android:id="@+id/settingsUI_topics_title"
-                android:text="@string/settingsUI_topics_view_title"
-                style="@style/MainStyle.H1" />
-            <TextView
                 android:layout_marginTop="18dp"
+                android:paddingHorizontal="24dp"
                 android:text="@string/settingsUI_topics_view_subtitle"
                 style="@style/MainStyle.Body2" />
 
@@ -56,7 +51,9 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="48dp"
+                    android:layout_marginBottom="36dp"
+                    android:paddingHorizontal="24dp"
                     android:gravity="center"
                     android:text="@string/settingsUI_topics_view_no_topics_text"
                     android:textAppearance="@style/TextAppearance.Body2.Bold" />
@@ -67,6 +64,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
+                android:paddingHorizontal="24dp"
                 android:scrollbars="none" />
 
             <LinearLayout
@@ -74,12 +72,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:padding="24dp"
                 android:background="?android:attr/selectableItemBackground" >
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="24dp"
-                    android:paddingBottom="24dp"
                     android:key="blocked_topics"
                     android:text="@string/settingsUI_blocked_topics_title"
                     android:textAppearance="@style/TextAppearance.H5"
@@ -98,12 +95,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:padding="24dp"
                     android:background="?android:attr/selectableItemBackground" >
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:paddingTop="24dp"
-                        android:paddingBottom="24dp"
                         android:key="reset_topics"
                         android:text="@string/settingsUI_reset_topics_title"
                         android:textAppearance="@style/TextAppearance.H5"
@@ -116,14 +112,17 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
                     android:layout_marginStart="2dp"
+                    android:paddingHorizontal="24dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
 
                 <TextView
                     android:layout_marginStart="0dp"
+                    android:paddingHorizontal="24dp"
                     android:text="@string/settingsUI_topics_view_info_text1"
                     style="@style/MainStyle.Body1BoldBullet" />
                 <TextView
+                    android:paddingHorizontal="24dp"
                     android:text="@string/settingsUI_topics_view_info_text2"
                     style="@style/MainStyle.Body1" />
             </LinearLayout>

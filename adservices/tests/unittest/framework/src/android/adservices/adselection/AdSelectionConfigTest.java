@@ -24,6 +24,7 @@ import android.os.Parcel;
 
 import org.junit.Test;
 
+
 public class AdSelectionConfigTest {
     @Test
     public void testBuildValidAdSelectionConfigSuccess() {

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -60,13 +61,14 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testOnStartJob_killSwitchOff() throws InterruptedException {
+        Flags flags = FlagsFactory.getFlagsForTest();
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mMockCacheManager,
                         mBlockedTopicsManager,
                         mMockAppUpdateManager,
-                        FlagsFactory.getFlagsForTest());
+                        flags);
 
         // Start a mockitoSession to mock static method
         MockitoSession session =
@@ -80,7 +82,7 @@ public class MaintenanceJobServiceTest {
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             // Mock static method AppUpdateWorker.getInstance, let it return the local
             // appUpdateWorker in order to get a test instance.
@@ -94,6 +96,8 @@ public class MaintenanceJobServiceTest {
 
             ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
             verify(mMockAppUpdateManager).reconcileUninstalledApps(any(Context.class));
+            verify(mMockAppUpdateManager)
+                    .reconcileInstalledApps(any(Context.class), /* currentEpochId */ anyLong());
         } finally {
             session.finishMocking();
         }
@@ -110,7 +114,7 @@ public class MaintenanceJobServiceTest {
             doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             mMaintenanceJobService.onStartJob(mMockJobParameters);
 
@@ -135,7 +139,7 @@ public class MaintenanceJobServiceTest {
             doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-            ExtendedMockito.doReturn(mMockFlags).when(() -> FlagsFactory.getFlags());
+            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
             mMaintenanceJobService.onStartJob(mMockJobParameters);
 

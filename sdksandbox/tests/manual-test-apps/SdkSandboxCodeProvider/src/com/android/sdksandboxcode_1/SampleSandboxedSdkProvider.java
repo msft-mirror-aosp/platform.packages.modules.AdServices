@@ -24,6 +24,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -32,14 +33,20 @@ import java.util.concurrent.Executor;
 
 public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
+    private static final String TAG = "SampleSandboxedSdkProvider";
+
     @Override
     public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
         callback.onLoadSdkFinished(null);
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
-        return new TestView(windowContext, getBaseContext());
+    public void beforeUnloadSdk() {
+        Log.i(TAG, "SDK unloaded");
+    }
+
+    public View getView(Context windowContext, Bundle params, int width, int height) {
+        return new TestView(windowContext, getBaseContext(), width, height);
     }
 
     @Override
@@ -49,7 +56,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
         private Context mSdkContext;
 
-        TestView(Context windowContext, Context sdkContext) {
+        TestView(Context windowContext, Context sdkContext, int width, int height) {
             super(windowContext);
             mSdkContext = sdkContext;
         }
@@ -63,11 +70,10 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
             Random random = new Random();
-            String message = mContext.getResources().getString(R.string.view_message);
+            String message = mSdkContext.getResources().getString(R.string.view_message);
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-
             setOnClickListener(this::onClickListener);
         }
 

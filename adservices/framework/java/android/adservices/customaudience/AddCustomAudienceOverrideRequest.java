@@ -16,6 +16,8 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
@@ -33,22 +35,22 @@ import java.util.concurrent.Executor;
  */
 public class AddCustomAudienceOverrideRequest {
     @NonNull private final String mOwner;
-    @NonNull private final String mBuyer;
+    @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
     @NonNull private final String mBiddingLogicJs;
-    @NonNull private final String mTrustedBiddingData;
+    @NonNull private final AdSelectionSignals mTrustedBiddingSignals;
 
     public AddCustomAudienceOverrideRequest(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJs,
-            @NonNull String trustedBiddingData) {
+            @NonNull AdSelectionSignals trustedBiddingSignals) {
         mOwner = owner;
         mBuyer = buyer;
         mName = name;
         mBiddingLogicJs = biddingLogicJs;
-        mTrustedBiddingData = trustedBiddingData;
+        mTrustedBiddingSignals = trustedBiddingSignals;
     }
 
     /**
@@ -59,11 +61,9 @@ public class AddCustomAudienceOverrideRequest {
         return mOwner;
     }
 
-    /**
-     * @return the buyer
-     */
+    /** @return the buyer */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
@@ -81,21 +81,19 @@ public class AddCustomAudienceOverrideRequest {
         return mBiddingLogicJs;
     }
 
-    /**
-     * @return The override trusted bidding data result
-     */
+    /** @return The override trusted bidding signals result */
     @NonNull
-    public String getTrustedBiddingData() {
-        return mTrustedBiddingData;
+    public AdSelectionSignals getTrustedBiddingSignals() {
+        return mTrustedBiddingSignals;
     }
 
     /** Builder for {@link AddCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
         private String mOwner;
-        private String mBuyer;
+        private AdTechIdentifier mBuyer;
         private String mName;
         private String mBiddingLogicJs;
-        private String mTrustedBiddingData;
+        private AdSelectionSignals mTrustedBiddingSignals;
 
         public Builder() {}
 
@@ -110,7 +108,7 @@ public class AddCustomAudienceOverrideRequest {
 
         /** Set the Buyer. */
         @NonNull
-        public AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull String buyer) {
+        public AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
 
             this.mBuyer = buyer;
@@ -126,13 +124,13 @@ public class AddCustomAudienceOverrideRequest {
             return this;
         }
 
-        /** Set the TrustedBiddingData. */
+        /** Set the TrustedBiddingSignals. */
         @NonNull
-        public AddCustomAudienceOverrideRequest.Builder setTrustedBiddingData(
-                @NonNull String trustedBiddingData) {
-            Objects.requireNonNull(trustedBiddingData);
+        public AddCustomAudienceOverrideRequest.Builder setTrustedBiddingSignals(
+                @NonNull AdSelectionSignals trustedBiddingSignals) {
+            Objects.requireNonNull(trustedBiddingSignals);
 
-            this.mTrustedBiddingData = trustedBiddingData;
+            this.mTrustedBiddingSignals = trustedBiddingSignals;
             return this;
         }
 
@@ -153,10 +151,10 @@ public class AddCustomAudienceOverrideRequest {
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
             Objects.requireNonNull(mBiddingLogicJs);
-            Objects.requireNonNull(mTrustedBiddingData);
+            Objects.requireNonNull(mTrustedBiddingSignals);
 
             return new AddCustomAudienceOverrideRequest(
-                    mOwner, mBuyer, mName, mBiddingLogicJs, mTrustedBiddingData);
+                    mOwner, mBuyer, mName, mBiddingLogicJs, mTrustedBiddingSignals);
         }
     }
 }

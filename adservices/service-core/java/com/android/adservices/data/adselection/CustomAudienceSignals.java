@@ -26,8 +26,9 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * This class represents the custom_audience_signals passed into generateBid and scoreAd javascript.
- * It contains fields from a {@link DBCustomAudience} object.
+ * This class represents the custom_audience_signals passed into generateBid javascript. Part of
+ * these signals : buyer and name are passed into scoreAd javascript It contains fields from a
+ * {@link DBCustomAudience} object.
  */
 public class CustomAudienceSignals {
     @ColumnInfo(name = "owner")

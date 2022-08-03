@@ -15,25 +15,23 @@
  */
 package com.android.adservices.ui.settings;
 
-import android.app.ActionBar;
 import android.os.Bundle;
 import android.view.MenuItem;
 
-import androidx.core.view.WindowCompat;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
+import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 
 import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-public class AdServicesSettingsActivity extends FragmentActivity {
+public class AdServicesSettingsActivity extends CollapsingToolbarBaseActivity {
     private ActionDelegate mActionDelegate;
     private ViewModelProvider mViewModelProvider;
 
@@ -66,10 +64,8 @@ public class AdServicesSettingsActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.adservices_settings_main_activity);
         initActionDelegate();
-        initActionBar();
     }
 
     @Override
@@ -81,13 +77,6 @@ public class AdServicesSettingsActivity extends FragmentActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    // TODO(b/230372790): update to another action bar.
-    private void initActionBar() {
-        ActionBar actionBar = getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setTitle("");
     }
 
     private void initActionDelegate() {

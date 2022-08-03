@@ -28,6 +28,7 @@ import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 
 import com.google.common.collect.ImmutableList;
@@ -59,14 +60,17 @@ public class ConsentManager {
     private final TopicsWorker mTopicsWorker;
     private final BooleanFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
+    private final MeasurementImpl mMeasurementImpl;
 
     ConsentManager(
             @NonNull Context context,
             @NonNull TopicsWorker topicsWorker,
-            @NonNull AppConsentDao appConsentDao) {
+            @NonNull AppConsentDao appConsentDao,
+            @NonNull MeasurementImpl measurementImpl) {
         mTopicsWorker = topicsWorker;
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mAppConsentDao = appConsentDao;
+        mMeasurementImpl = measurementImpl;
     }
 
     /**
@@ -84,7 +88,8 @@ public class ConsentManager {
                             new ConsentManager(
                                     context,
                                     TopicsWorker.getInstance(context),
-                                    AppConsentDao.getInstance(context));
+                                    AppConsentDao.getInstance(context),
+                                    MeasurementImpl.getInstance(context));
                 }
             }
         }
@@ -112,6 +117,10 @@ public class ConsentManager {
         // Disable all the APIs
         try {
             init(packageManager);
+            // reset all data
+            resetTopicsAndBlockedTopics();
+            resetApps();
+            resetMeasurement();
             setConsent(AdServicesApiConsent.REVOKED);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -179,6 +188,11 @@ public class ConsentManager {
         mTopicsWorker.clearAllTopicsData(List.of(TopicsTables.BlockedTopicsContract.TABLE));
     }
 
+    /** Wipes out all the data gathered by Topics API. */
+    public void resetTopicsAndBlockedTopics() {
+        mTopicsWorker.clearAllTopicsData(List.of());
+    }
+
     /**
      * @return an {@link ImmutableList} of all known apps in the database that have not had user
      *     consent revoked
@@ -229,6 +243,11 @@ public class ConsentManager {
     @NonNull
     public void restoreConsentForApp(@NonNull App app) throws IOException {
         mAppConsentDao.setConsentForApp(app.getPackageName(), false);
+    }
+
+    /** Wipes out all the data gathered by Fledge API but blocked apps. */
+    public void resetApps() throws IOException {
+        mAppConsentDao.clearAllConsentData();
     }
 
     /**
@@ -289,12 +308,18 @@ public class ConsentManager {
         return mAppConsentDao.setConsentForAppIfNew(packageName, false);
     }
 
+    /** Wipes out all the data gathered by Measurement API. */
+    public void resetMeasurement() {
+        mMeasurementImpl.deleteAllMeasurementData(List.of());
+    }
+
     /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
-    public void recordNotificationDisplayed() {
+    public void recordNotificationDisplayed(@NonNull PackageManager packageManager) {
         try {
+            init(packageManager);
             // TODO(b/229725886): add metrics / logging
             mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
         } catch (IOException e) {
@@ -307,8 +332,14 @@ public class ConsentManager {
      *
      * @return true if Consent Notification was displayed, otherwise false.
      */
-    public Boolean wasNotificationDisplayed() {
-        return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+    public Boolean wasNotificationDisplayed(@NonNull PackageManager packageManager) {
+        try {
+            init(packageManager);
+            return mDatastore.get(NOTIFICATION_DISPLAYED_ONCE);
+        } catch (IOException e) {
+            LogUtil.e(e, "Record notification failed due to IOException thrown by Datastore.");
+            return false;
+        }
     }
 
     private void setConsent(AdServicesApiConsent state)
@@ -322,7 +353,7 @@ public class ConsentManager {
                 || mDatastore.get(CONSENT_KEY) == null) {
             boolean initialConsent = getInitialConsent(packageManager);
             setInitialConsent(initialConsent);
-
+            mDatastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
             mDatastore.put(CONSENT_ALREADY_INITIALIZED_KEY, true);
         }
     }
