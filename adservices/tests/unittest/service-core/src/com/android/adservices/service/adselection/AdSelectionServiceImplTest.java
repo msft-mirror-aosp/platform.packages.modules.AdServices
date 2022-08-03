@@ -164,7 +164,11 @@ public class AdSelectionServiceImplTest {
 
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setSeller(mMockWebServerRule.uriForPath(mFetchJavaScriptPath).getHost())
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(mFetchJavaScriptPath)
+                                                .getHost()))
                         .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
@@ -996,12 +1000,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
-                        .setSeller("adidas.com")
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
                         .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
-                        .setSeller("nike.com")
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
@@ -1097,12 +1101,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
-                        .setSeller("adidas.com")
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
                         .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
-                        .setSeller("nike.com")
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
@@ -1195,12 +1199,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
-                        .setSeller("adidas.com")
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
                         .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
-                        .setSeller("nike.com")
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
@@ -1314,10 +1318,7 @@ public class AdSelectionServiceImplTest {
         doAnswer(countDownAnswer).when(mAdServicesLoggerSpy).logApiCallStats(any());
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
-                adSelectionConfig,
-                decisionLogicJS,
-                trustedScoringSignals.getStringForm(),
-                callback);
+                adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
         resultLatch.await();
         return callback;
     }
@@ -1388,7 +1389,7 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
         AdSelectionConfig invalidAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setSeller(SELLER_VALID.getStringForm())
+                        .setSeller(SELLER_VALID)
                         .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
         when(mDevContextFilter.createDevContext())

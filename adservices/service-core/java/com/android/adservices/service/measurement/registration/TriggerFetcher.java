@@ -272,7 +272,7 @@ public class TriggerFetcher {
                                 /* should process redirects*/ false,
                                 registrationsOut,
                                 true,
-                                triggerParams.isAllowDebugKey()),
+                                triggerParams.isDebugKeyAllowed()),
                 mIoExecutor);
     }
 }

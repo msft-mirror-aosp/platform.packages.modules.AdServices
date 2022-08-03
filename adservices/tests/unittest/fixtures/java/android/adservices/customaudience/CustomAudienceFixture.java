@@ -71,23 +71,22 @@ public final class CustomAudienceFixture {
             AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
 
     public static Uri getValidDailyUpdateUriByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer.getStringForm(), "/update");
+        return CommonFixture.getUri(buyer, "/update");
     }
 
     public static Uri getValidBiddingLogicUrlByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer.getStringForm(), "/bidding/logic/here/");
+        return CommonFixture.getUri(buyer, "/bidding/logic/here/");
     }
 
     public static CustomAudience.Builder getValidBuilderForBuyer(AdTechIdentifier buyer) {
         return new CustomAudience.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer.getStringForm())
+                .setBuyer(buyer)
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))

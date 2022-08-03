@@ -31,13 +31,13 @@ package android.adservices.adselection {
 
   public final class AdSelectionConfig implements android.os.Parcelable {
     method public int describeContents();
-    method @NonNull public String getAdSelectionSignals();
+    method @NonNull public android.adservices.common.AdSelectionSignals getAdSelectionSignals();
     method @NonNull public java.util.List<android.adservices.adselection.AdWithBid> getContextualAds();
-    method @NonNull public java.util.List<java.lang.String> getCustomAudienceBuyers();
+    method @NonNull public java.util.List<android.adservices.common.AdTechIdentifier> getCustomAudienceBuyers();
     method @NonNull public android.net.Uri getDecisionLogicUri();
-    method @NonNull public java.util.Map<java.lang.String,java.lang.String> getPerBuyerSignals();
-    method @NonNull public String getSeller();
-    method @NonNull public String getSellerSignals();
+    method @NonNull public java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.common.AdSelectionSignals> getPerBuyerSignals();
+    method @NonNull public android.adservices.common.AdTechIdentifier getSeller();
+    method @NonNull public android.adservices.common.AdSelectionSignals getSellerSignals();
     method @NonNull public android.net.Uri getTrustedScoringSignalsUri();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.AdSelectionConfig> CREATOR;
@@ -46,13 +46,13 @@ package android.adservices.adselection {
   public static final class AdSelectionConfig.Builder {
     ctor public AdSelectionConfig.Builder();
     method @NonNull public android.adservices.adselection.AdSelectionConfig build();
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setAdSelectionSignals(@NonNull String);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setAdSelectionSignals(@NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setContextualAds(@NonNull java.util.List<android.adservices.adselection.AdWithBid>);
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setCustomAudienceBuyers(@NonNull java.util.List<java.lang.String>);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setCustomAudienceBuyers(@NonNull java.util.List<android.adservices.common.AdTechIdentifier>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setDecisionLogicUri(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignals(@NonNull java.util.Map<java.lang.String,java.lang.String>);
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSeller(@NonNull String);
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSellerSignals(@NonNull String);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignals(@NonNull java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.common.AdSelectionSignals>);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSeller(@NonNull android.adservices.common.AdTechIdentifier);
+    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setSellerSignals(@NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setTrustedScoringSignalsUri(@NonNull android.net.Uri);
   }
 
@@ -87,10 +87,10 @@ package android.adservices.adselection {
   }
 
   public class AddAdSelectionOverrideRequest {
-    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull String);
+    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method @NonNull public String getDecisionLogicJs();
-    method @NonNull public String getTrustedScoringSignals();
+    method @NonNull public android.adservices.common.AdSelectionSignals getTrustedScoringSignals();
   }
 
   public class RemoveAdSelectionOverrideRequest {
@@ -160,27 +160,48 @@ package android.adservices.common {
     method @NonNull public android.adservices.common.AdData.Builder setRenderUri(@NonNull android.net.Uri);
   }
 
+  public final class AdSelectionSignals implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public static android.adservices.common.AdSelectionSignals fromJson(@NonNull org.json.JSONObject);
+    method @NonNull public static android.adservices.common.AdSelectionSignals fromString(@NonNull String);
+    method @NonNull public static android.adservices.common.AdSelectionSignals fromString(@NonNull String, boolean);
+    method @NonNull public org.json.JSONObject getJsonForm() throws org.json.JSONException;
+    method @NonNull public String getStringForm();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdSelectionSignals> CREATOR;
+    field public static final android.adservices.common.AdSelectionSignals EMPTY;
+  }
+
+  public final class AdTechIdentifier implements android.os.Parcelable {
+    method public int describeContents();
+    method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String);
+    method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String, boolean);
+    method @NonNull public String getStringForm();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdTechIdentifier> CREATOR;
+  }
+
 }
 
 package android.adservices.customaudience {
 
   public class AddCustomAudienceOverrideRequest {
-    ctor public AddCustomAudienceOverrideRequest(@NonNull String, @NonNull String, @NonNull String, @NonNull String, @NonNull String);
+    ctor public AddCustomAudienceOverrideRequest(@NonNull String, @NonNull android.adservices.common.AdTechIdentifier, @NonNull String, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public String getBiddingLogicJs();
-    method @NonNull public String getBuyer();
+    method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
     method @NonNull public String getOwner();
-    method @NonNull public String getTrustedBiddingData();
+    method @NonNull public android.adservices.common.AdSelectionSignals getTrustedBiddingSignals();
   }
 
   public static final class AddCustomAudienceOverrideRequest.Builder {
     ctor public AddCustomAudienceOverrideRequest.Builder();
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest build();
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBiddingLogicJs(@NonNull String);
-    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull String);
+    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setOwner(@NonNull String);
-    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setTrustedBiddingData(@NonNull String);
+    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setTrustedBiddingSignals(@NonNull android.adservices.common.AdSelectionSignals);
   }
 
   public final class CustomAudience implements android.os.Parcelable {
@@ -188,13 +209,13 @@ package android.adservices.customaudience {
     method @Nullable public java.time.Instant getActivationTime();
     method @NonNull public java.util.List<android.adservices.common.AdData> getAds();
     method @NonNull public android.net.Uri getBiddingLogicUrl();
-    method @NonNull public String getBuyer();
+    method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public android.net.Uri getDailyUpdateUrl();
     method @Nullable public java.time.Instant getExpirationTime();
     method @NonNull public String getName();
     method @NonNull public String getOwner();
     method @Nullable public android.adservices.customaudience.TrustedBiddingData getTrustedBiddingData();
-    method @Nullable public String getUserBiddingSignals();
+    method @Nullable public android.adservices.common.AdSelectionSignals getUserBiddingSignals();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.customaudience.CustomAudience> CREATOR;
   }
@@ -205,13 +226,13 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setActivationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setAds(@Nullable java.util.List<android.adservices.common.AdData>);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBiddingLogicUrl(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBuyer(@NonNull String);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUrl(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setOwner(@NonNull String);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setTrustedBiddingData(@Nullable android.adservices.customaudience.TrustedBiddingData);
-    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setUserBiddingSignals(@Nullable String);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setUserBiddingSignals(@Nullable android.adservices.common.AdSelectionSignals);
   }
 
   public class CustomAudienceManager {
@@ -234,7 +255,7 @@ package android.adservices.customaudience {
   }
 
   public final class LeaveCustomAudienceRequest {
-    method @NonNull public String getBuyer();
+    method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
     method @NonNull public String getOwner();
   }
@@ -242,14 +263,14 @@ package android.adservices.customaudience {
   public static final class LeaveCustomAudienceRequest.Builder {
     ctor public LeaveCustomAudienceRequest.Builder();
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest build();
-    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setBuyer(@NonNull String);
+    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setOwner(@NonNull String);
   }
 
   public class RemoveCustomAudienceOverrideRequest {
-    ctor public RemoveCustomAudienceOverrideRequest(@NonNull String, @NonNull String, @NonNull String);
-    method @NonNull public String getBuyer();
+    ctor public RemoveCustomAudienceOverrideRequest(@NonNull String, @NonNull android.adservices.common.AdTechIdentifier, @NonNull String);
+    method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
     method @NonNull public String getOwner();
   }
@@ -257,7 +278,7 @@ package android.adservices.customaudience {
   public static final class RemoveCustomAudienceOverrideRequest.Builder {
     ctor public RemoveCustomAudienceOverrideRequest.Builder();
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest build();
-    method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setBuyer(@NonNull String);
+    method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setOwner(@NonNull String);
   }
@@ -341,22 +362,21 @@ package android.adservices.measurement {
   public final class WebSourceParams implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public android.net.Uri getRegistrationUri();
-    method public boolean isAllowDebugKey();
+    method public boolean isDebugKeyAllowed();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebSourceParams> CREATOR;
   }
 
   public static final class WebSourceParams.Builder {
-    ctor public WebSourceParams.Builder();
+    ctor public WebSourceParams.Builder(@NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceParams build();
-    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setAllowDebugKey(boolean);
-    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setRegistrationUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.measurement.WebSourceParams.Builder setDebugKeyAllowed(boolean);
   }
 
   public final class WebSourceRegistrationRequest implements android.os.Parcelable {
     method public int describeContents();
+    method @Nullable public android.net.Uri getAppDestination();
     method @Nullable public android.view.InputEvent getInputEvent();
-    method @Nullable public android.net.Uri getOsDestination();
     method @NonNull public java.util.List<android.adservices.measurement.WebSourceParams> getSourceParams();
     method @NonNull public android.net.Uri getTopOriginUri();
     method @Nullable public android.net.Uri getVerifiedDestination();
@@ -366,29 +386,26 @@ package android.adservices.measurement {
   }
 
   public static final class WebSourceRegistrationRequest.Builder {
-    ctor public WebSourceRegistrationRequest.Builder();
+    ctor public WebSourceRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebSourceParams>, @NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest build();
+    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setAppDestination(@Nullable android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setInputEvent(@Nullable android.view.InputEvent);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setOsDestination(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setSourceParams(@NonNull java.util.List<android.adservices.measurement.WebSourceParams>);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setTopOriginUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setVerifiedDestination(@Nullable android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setWebDestination(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.measurement.WebSourceRegistrationRequest.Builder setWebDestination(@Nullable android.net.Uri);
   }
 
   public final class WebTriggerParams implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public android.net.Uri getRegistrationUri();
-    method public boolean isAllowDebugKey();
+    method public boolean isDebugKeyAllowed();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.measurement.WebTriggerParams> CREATOR;
   }
 
   public static final class WebTriggerParams.Builder {
-    ctor public WebTriggerParams.Builder();
+    ctor public WebTriggerParams.Builder(@NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebTriggerParams build();
-    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setAllowDebugKey(boolean);
-    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setRegistrationUri(@NonNull android.net.Uri);
+    method @NonNull public android.adservices.measurement.WebTriggerParams.Builder setDebugKeyAllowed(boolean);
   }
 
   public final class WebTriggerRegistrationRequest implements android.os.Parcelable {
@@ -400,10 +417,8 @@ package android.adservices.measurement {
   }
 
   public static final class WebTriggerRegistrationRequest.Builder {
-    ctor public WebTriggerRegistrationRequest.Builder();
+    ctor public WebTriggerRegistrationRequest.Builder(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>, @NonNull android.net.Uri);
     method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest build();
-    method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest.Builder setDestination(@NonNull android.net.Uri);
-    method @NonNull public android.adservices.measurement.WebTriggerRegistrationRequest.Builder setTriggerParams(@NonNull java.util.List<android.adservices.measurement.WebTriggerParams>);
   }
 
 }

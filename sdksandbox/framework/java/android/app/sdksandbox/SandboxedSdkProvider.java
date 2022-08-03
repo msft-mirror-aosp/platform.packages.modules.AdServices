@@ -85,10 +85,13 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
+     * @param width The view returned will be laid as if in a window of this width, in pixels.
+     * @param height The view returned will be laid as if in a window of this height, in pixels.
      * @return a {@link View} which SDK sandbox pass to the client application requesting the view
      */
     @NonNull
-    public abstract View getView(@NonNull Context windowContext, @NonNull Bundle params);
+    public abstract View getView(
+            @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
 
     /**
      * Called when data sent from the app is received by an SDK.

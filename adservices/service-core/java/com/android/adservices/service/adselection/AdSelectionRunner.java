@@ -23,6 +23,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -165,7 +166,12 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(callback);
         try {
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    orchestrateAdSelection(adSelectionConfig);
+                    FluentFuture.from(getBuyersCustomAudience(adSelectionConfig))
+                            .transformAsync(
+                                    buyersCustomAudiences ->
+                                            orchestrateAdSelection(
+                                                    adSelectionConfig, buyersCustomAudiences),
+                                    mExecutorService);
 
             Futures.addCallback(
                     dbAdSelectionFuture,
@@ -240,18 +246,12 @@ public final class AdSelectionRunner {
      * @return {@link AdSelectionResponse}
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig) {
-
-        ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
-                getBuyersCustomAudience(adSelectionConfig);
-
-        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
-                buyerCAs -> {
-                    return runAdBidding(buyerCAs, adSelectionConfig);
-                };
+            @NonNull final AdSelectionConfig adSelectionConfig,
+            @NonNull List<DBCustomAudience> buyerCustomAudience)
+            throws ExecutionException, InterruptedException {
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
+                runAdBidding(buyerCustomAudience, adSelectionConfig);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
@@ -300,7 +300,10 @@ public final class AdSelectionRunner {
 
         return listeningExecutorService.submit(
                 () -> {
-                    List<String> buyers = adSelectionConfig.getCustomAudienceBuyers();
+                    List<String> buyers =
+                            adSelectionConfig.getCustomAudienceBuyers().stream()
+                                    .map(AdTechIdentifier::getStringForm)
+                                    .collect(Collectors.toList());
                     Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
@@ -369,14 +372,15 @@ public final class AdSelectionRunner {
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
         AdSelectionSignals buyerSignal =
                 Optional.ofNullable(
-                                AdSelectionSignals.fromString(
-                                        adSelectionConfig
-                                                .getPerBuyerSignals()
-                                                .get(customAudience.getBuyer())))
+                                adSelectionConfig
+                                        .getPerBuyerSignals()
+                                        .get(
+                                                AdTechIdentifier.fromString(
+                                                        customAudience.getBuyer())))
                         .orElse(AdSelectionSignals.EMPTY);
         return mAdBidGenerator.runAdBiddingPerCA(
                 customAudience,
-                AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
+                adSelectionConfig.getAdSelectionSignals(),
                 buyerSignal,
                 AdSelectionSignals.EMPTY,
                 adSelectionConfig);
