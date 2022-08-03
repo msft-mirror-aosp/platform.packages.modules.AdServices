@@ -114,7 +114,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
 
     private void validateFieldFormat(
             CustomAudience customAudience, ImmutableCollection.Builder<String> violations) {
-        String buyer = customAudience.getBuyer().getStringForm();
+        String buyer = customAudience.getBuyer().toString();
         mBuyerValidator.addValidation(buyer, violations);
         new AdTechUriValidator(
                         ValidatorUtil.AD_TECH_ROLE_BUYER,
@@ -130,7 +130,7 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                 .addValidation(customAudience.getBiddingLogicUrl(), violations);
         if (customAudience.getUserBiddingSignals() != null) {
             mUserBiddingSignalsValidator.addValidation(
-                    customAudience.getUserBiddingSignals().getStringForm(), violations);
+                    customAudience.getUserBiddingSignals().toString(), violations);
         }
         if (customAudience.getTrustedBiddingData() != null) {
             new TrustedBiddingDataValidator(buyer)

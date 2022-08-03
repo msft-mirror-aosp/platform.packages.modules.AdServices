@@ -130,9 +130,7 @@ public class CustomAudienceImpl {
         Preconditions.checkStringNotEmpty(name);
 
         mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(
-                Optional.ofNullable(owner).orElse("not.implemented.yet"),
-                buyer.getStringForm(),
-                name);
+                Optional.ofNullable(owner).orElse("not.implemented.yet"), buyer.toString(), name);
     }
 
     /** Returns DAO to be used in {@link CustomAudienceServiceImpl} */

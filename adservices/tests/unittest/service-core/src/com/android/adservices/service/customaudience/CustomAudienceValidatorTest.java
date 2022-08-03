@@ -71,7 +71,7 @@ public class CustomAudienceValidatorTest {
     @Test
     public void testInvalidBuyer() {
         AdTechIdentifier buyerWithPath =
-                AdTechIdentifier.fromString(CommonFixture.VALID_BUYER.getStringForm() + "/path");
+                AdTechIdentifier.fromString(CommonFixture.VALID_BUYER.toString() + "/path");
         List<AdData> adDataList = AdDataFixture.getValidAdsByBuyer(buyerWithPath);
 
         ValidatorTestUtil.assertViolationContainsOnly(
@@ -108,7 +108,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 CommonFixture.VALID_BUYER)),
@@ -118,7 +118,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 CommonFixture.VALID_BUYER)),
@@ -128,7 +128,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 CommonFixture.VALID_BUYER)),
