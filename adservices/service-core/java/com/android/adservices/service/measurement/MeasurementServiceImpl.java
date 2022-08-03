@@ -15,16 +15,16 @@
  */
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
 import android.adservices.measurement.IMeasurementCallback;
 import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.MeasurementErrorResponse;
-import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
@@ -160,13 +160,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-                        @ResultCode int resultCode = mMeasurementImpl.deleteRegistrations(request);
-                        if (resultCode == RESULT_OK) {
+                        @AdServicesStatusUtils.StatusCode
+                        int resultCode = mMeasurementImpl.deleteRegistrations(request);
+                        if (resultCode == STATUS_SUCCESS) {
                             callback.onResult();
                         } else {
                             callback.onFailure(
                                     new MeasurementErrorResponse.Builder()
-                                            .setResultCode(resultCode)
+                                            .setStatusCode(resultCode)
                                             .setErrorMessage(
                                                     "Encountered failure during "
                                                             + "Measurement deletion.")
@@ -198,7 +199,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             if (!userConsent.isGiven()) {
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
-                                .setResultCode(RESULT_UNAUTHORIZED_CALL)
+                                .setStatusCode(STATUS_USER_CONSENT_REVOKED)
                                 .setErrorMessage(UNAUTHORIZED_ERROR_MESSAGE)
                                 .build());
             } else {
@@ -220,7 +221,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             try {
                 callback.onFailure(
                         new MeasurementErrorResponse.Builder()
-                                .setResultCode(RESULT_RATE_LIMIT_REACHED)
+                                .setStatusCode(STATUS_RATE_LIMIT_REACHED)
                                 .setErrorMessage(RATE_LIMIT_REACHED)
                                 .build());
             } catch (RemoteException e) {

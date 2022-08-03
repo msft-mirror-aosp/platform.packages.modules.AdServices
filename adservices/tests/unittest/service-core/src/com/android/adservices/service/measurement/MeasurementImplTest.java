@@ -16,12 +16,12 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.data.measurement.DatastoreManager.ThrowingCheckedConsumer;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
@@ -295,7 +295,7 @@ public final class MeasurementImplTest {
         final int result = measurement.register(registrationRequest, eventTime);
 
         // Assert
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mDatastoreManager, times(2))
@@ -339,7 +339,7 @@ public final class MeasurementImplTest {
         final int result = measurement.register(SOURCE_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty()
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
     }
@@ -369,7 +369,7 @@ public final class MeasurementImplTest {
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
 
         // Assertions
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
@@ -389,7 +389,7 @@ public final class MeasurementImplTest {
                         null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
                 System.currentTimeMillis());
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
@@ -406,7 +406,7 @@ public final class MeasurementImplTest {
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .build());
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
     }
 
     @Test
@@ -424,7 +424,7 @@ public final class MeasurementImplTest {
                                 .setStart(Instant.now().minusSeconds(1))
                                 .setEnd(Instant.now())
                                 .build());
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
     }
 
     @Test
@@ -440,7 +440,7 @@ public final class MeasurementImplTest {
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
     }
     @Test
     public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
@@ -456,7 +456,7 @@ public final class MeasurementImplTest {
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setStart(Instant.now())
                                 .build());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
@@ -473,7 +473,7 @@ public final class MeasurementImplTest {
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setEnd(Instant.now())
                                 .build());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
@@ -497,7 +497,7 @@ public final class MeasurementImplTest {
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
-        assertEquals(RESULT_INTERNAL_ERROR, result);
+        assertEquals(STATUS_INTERNAL_ERROR, result);
     }
 
     @Test
@@ -546,7 +546,7 @@ public final class MeasurementImplTest {
                                 .setInputEvent(inputEvent)
                                 .build(),
                         eventTime);
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         ArgumentCaptor<Source> sourceArgs = ArgumentCaptor.forClass(Source.class);
         verify(measurement).getSourceEventReports(sourceArgs.capture());
         Source capturedSource = sourceArgs.getValue();
@@ -710,7 +710,7 @@ public final class MeasurementImplTest {
         final int result = measurement.registerWebSource(registrationRequest, eventTime);
 
         // Assert
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
         verify(mDatastoreManager, times(2))
@@ -754,7 +754,7 @@ public final class MeasurementImplTest {
         final int result = measurement.registerWebSource(
                 createWebSourceRegistrationRequest(APP_DESTINATION, WEB_DESTINATION, null),
                 System.currentTimeMillis());
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
     }
@@ -772,7 +772,7 @@ public final class MeasurementImplTest {
         final int result = measurement.registerWebSource(
                 createWebSourceRegistrationRequest(null, INVALID_WEB_DESTINATION, null),
                 System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, never()).fetchWebSources(any());
     }
 
@@ -792,7 +792,7 @@ public final class MeasurementImplTest {
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
@@ -813,7 +813,7 @@ public final class MeasurementImplTest {
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
@@ -834,7 +834,7 @@ public final class MeasurementImplTest {
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
@@ -853,7 +853,7 @@ public final class MeasurementImplTest {
                 createWebSourceRegistrationRequest(
                         APP_DESTINATION, WEB_DESTINATION, OTHER_WEB_DESTINATION),
                 System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, times(0)).fetchWebSources(any());
     }
 
@@ -874,7 +874,7 @@ public final class MeasurementImplTest {
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
@@ -893,7 +893,7 @@ public final class MeasurementImplTest {
                 createWebSourceRegistrationRequest(
                         APP_DESTINATION, WEB_DESTINATION, OTHER_APP_DESTINATION),
                 System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, times(0)).fetchWebSources(any());
     }
 
@@ -908,7 +908,7 @@ public final class MeasurementImplTest {
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
@@ -921,7 +921,7 @@ public final class MeasurementImplTest {
                 createWebSourceRegistrationRequest(
                         APP_DESTINATION, WEB_DESTINATION, vendingUri),
                 System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, times(0)).fetchWebSources(any());
     }
 
@@ -944,7 +944,7 @@ public final class MeasurementImplTest {
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
 
         // Assertions
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchWebTriggers(any());
@@ -965,7 +965,7 @@ public final class MeasurementImplTest {
                         null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         final int result = measurement.registerWebTrigger(
                 createWebTriggerRegistrationRequest(WEB_DESTINATION), System.currentTimeMillis());
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, never()).fetchWebSources(any());
         verify(mTriggerFetcher, times(1)).fetchWebTriggers(any());
@@ -978,7 +978,7 @@ public final class MeasurementImplTest {
         final int result = measurement.registerWebTrigger(
                 createWebTriggerRegistrationRequest(
                         INVALID_WEB_DESTINATION), System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
     }
 
