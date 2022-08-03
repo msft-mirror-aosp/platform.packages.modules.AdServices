@@ -18,7 +18,6 @@ package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
 
-
 /** The object representing the AdServices manifest config. */
 public class AppManifestConfig {
     private final AppManifestAttributionConfig mAttributionConfig;
@@ -62,13 +61,13 @@ public class AppManifestConfig {
     }
 
     /**
-     * Returns if ad tech has corresponding enrollment which is permitted to access Custom Audiences
-     * API for config represented by this object.
+     * Returns if sdk is permitted to access Custom Audiences API for config represented by this
+     * object.
      */
     @NonNull
-    public boolean isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
+    public boolean isAllowedCustomAudiencesAccess(@NonNull String sdk) {
         return mCustomAudiencesConfig.getAllowAllToAccess()
-                || mCustomAudiencesConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
+                || mCustomAudiencesConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 
     /** Getter for TopicsConfig. */
