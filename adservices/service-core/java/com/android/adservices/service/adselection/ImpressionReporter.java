@@ -36,6 +36,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -54,6 +55,8 @@ import org.json.JSONException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /** Encapsulates the Impression Reporting logic */
 public class ImpressionReporter {
@@ -65,6 +68,7 @@ public class ImpressionReporter {
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final Flags mFlags;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -72,7 +76,8 @@ public class ImpressionReporter {
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionEntryDao);
@@ -88,6 +93,7 @@ public class ImpressionReporter {
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
+        mFlags = flags;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -145,6 +151,32 @@ public class ImpressionReporter {
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
+        // Getting PH flags in a non binder thread
+        FluentFuture<Long> timeoutFuture =
+                FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                mFlags::getReportImpressionOverallTimeoutMs));
+
+        timeoutFuture.addCallback(
+                new FutureCallback<Long>() {
+                    @Override
+                    public void onSuccess(Long timeout) {
+                        invokeReporting(requestParams, callback, timeout);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        LogUtil.e(t, "Report Impression failed!");
+                        notifyFailureToCaller(callback, t);
+                    }
+                },
+                mListeningExecutorService);
+    }
+
+    private void invokeReporting(
+            @NonNull ReportImpressionInput requestParams,
+            @NonNull ReportImpressionCallback callback,
+            @NonNull Long timeout) {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
 
@@ -154,6 +186,12 @@ public class ImpressionReporter {
                 .transform(
                         reportingUrls -> notifySuccessToCaller(callback, reportingUrls),
                         mListeningExecutorService)
+                .withTimeout(
+                        timeout,
+                        TimeUnit.MILLISECONDS,
+                        // TODO(b/237103033): Comply with thread usage policy for AdServices;
+                        //  use a global scheduled executor
+                        new ScheduledThreadPoolExecutor(1))
                 .transformAsync(this::doReport, mListeningExecutorService)
                 .addCallback(
                         new FutureCallback<List<Void>>() {

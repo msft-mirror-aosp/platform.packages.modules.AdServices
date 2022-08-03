@@ -117,6 +117,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_scoring_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
+            "fledge_report_impression_overall_timeout_ms";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
 
@@ -525,6 +527,14 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
     }
 
+    @Override
+    public long getReportImpressionOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
+    }
+
     // MDD related flags.
     @Override
     public int getDownloaderConnectionTimeoutMs() {
@@ -809,6 +819,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getReportImpressionOverallTimeoutMs());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
     }
