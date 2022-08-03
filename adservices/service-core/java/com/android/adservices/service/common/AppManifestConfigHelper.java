@@ -83,15 +83,16 @@ public class AppManifestConfigHelper {
      * @param context the context for the API call. This needs to be the context where the calling
      *     UID is that of the API caller.
      * @param appPackageName the package name of the app whose manifest config will be read.
-     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
-     *     Update for adtech enrollment.
+     * @param enrollmentId the enrollment id associate with the ad tech identifier.
      */
     public static boolean isAllowedCustomAudiencesAccess(
-            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+            @NonNull Context context,
+            @NonNull String appPackageName,
+            @NonNull String enrollmentId) {
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
-            return appManifestConfig.isAllowedCustomAudiencesAccess(sdk);
+            return appManifestConfig.isAllowedCustomAudiencesAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");
         } catch (XmlParseException | XmlPullParserException | IOException e) {
