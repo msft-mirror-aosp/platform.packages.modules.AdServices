@@ -144,7 +144,7 @@ public class AdSelectionServiceImplTest {
             new Flags() {
                 @Override
                 public long getReportImpressionOverallTimeoutMs() {
-                    return 300;
+                    return 500;
                 }
             };
     private MockitoSession mStaticMockSession = null;
