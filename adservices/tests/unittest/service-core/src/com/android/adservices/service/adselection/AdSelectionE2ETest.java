@@ -545,7 +545,7 @@ public class AdSelectionE2ETest {
                         bidsForBuyer3,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
-                        CustomAudienceFixture.INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE);
+                        CustomAudienceFixture.INVALID_LAST_UPDATE_TIME_72_DAYS_BEFORE);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceInactive,

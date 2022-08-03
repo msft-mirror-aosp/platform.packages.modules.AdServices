@@ -198,6 +198,8 @@ public interface Flags extends Dumpable {
     int FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B = 10 * 1024; // 10 KiB
     int FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B = 10 * 1024; // 10 KiB
     int FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS = 100;
+    // Keeping TTL as long as expiry, could be reduced later as we get more fresh CAs with adoption
+    long FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS = 60 * 24 * 60L * 60L * 1000; // 60 days
 
     /** Returns the maximum number of custom audience can stay in the storage. */
     default long getFledgeCustomAudienceMaxCount() {
@@ -262,6 +264,14 @@ public interface Flags extends Dumpable {
     /** Returns the maximum allowed number of ads per FLEDGE custom audience. */
     default int getFledgeCustomAudienceMaxNumAds() {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
+    }
+
+    /**
+     * Returns the time window that defines how long after a successful update a custom audience can
+     * participate in ad selection.
+     */
+    default long getFledgeCustomAudienceActiveTimeWindowInMs() {
+        return FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
     }
 
     boolean FLEDGE_BACKGROUND_FETCH_ENABLED = true;
@@ -367,18 +377,18 @@ public interface Flags extends Dumpable {
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
-    /** Returns the time out constant in milliseconds that limits the bidding per CA */
+    /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
         return FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
     }
 
-    /** Returns the time out constant in milliseconds that limits the scoring */
+    /** Returns the timeout constant in milliseconds that limits the scoring */
     default long getAdSelectionScoringTimeoutMs() {
         return FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
     }
 
     /**
-     * Returns the time out constant in milliseconds that limits the overall ad selection
+     * Returns the timeout constant in milliseconds that limits the overall ad selection
      * orchestration
      */
     default long getAdSelectionOverallTimeoutMs() {
