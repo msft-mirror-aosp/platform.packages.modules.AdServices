@@ -307,13 +307,6 @@ package android.adservices.exceptions {
     ctor public AdServicesException(@Nullable String);
   }
 
-  public class GetAppsetIdException extends android.adservices.exceptions.AdServicesException {
-    ctor public GetAppsetIdException(int);
-    ctor public GetAppsetIdException(int, @Nullable String);
-    ctor public GetAppsetIdException(int, @Nullable String, @Nullable Throwable);
-    method public int getResultCode();
-  }
-
   public class MeasurementException extends android.adservices.exceptions.AdServicesException {
     ctor public MeasurementException();
     ctor public MeasurementException(@NonNull String);

@@ -16,7 +16,7 @@
 
 package android.adservices.appsetid;
 
-import static android.adservices.appsetid.AppsetIdManager.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -60,7 +60,7 @@ public abstract class AppsetIdProviderService extends Service {
                         AppsetId appsetId = onGetAppsetIdProvider(appUID, packageName);
                         GetAppsetIdResult appsetIdInternal =
                                 new GetAppsetIdResult.Builder()
-                                        .setResultCode(RESULT_OK)
+                                        .setStatusCode(STATUS_SUCCESS)
                                         .setErrorMessage("")
                                         .setAppsetId(appsetId.getAppsetId())
                                         .setAppsetIdScope(appsetId.getAppsetIdScope())

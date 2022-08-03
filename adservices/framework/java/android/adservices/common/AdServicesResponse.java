@@ -87,6 +87,14 @@ public class AdServicesResponse implements Parcelable {
         return mStatusCode;
     }
 
+    /**
+     * Returns {@code true} if {@link #getStatusCode} is {@link
+     * AdServicesStatusUtils#STATUS_SUCCESS}.
+     */
+    public boolean isSuccess() {
+        return getStatusCode() == STATUS_SUCCESS;
+    }
+
     /** Returns the error message associated with this response. */
     @Nullable
     public String getErrorMessage() {
