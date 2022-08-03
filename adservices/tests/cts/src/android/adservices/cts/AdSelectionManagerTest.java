@@ -27,6 +27,8 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.net.Uri;
@@ -56,18 +58,23 @@ public class AdSelectionManagerTest {
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final long AD_SELECTION_ID = 1;
-    private static final String SELLER = "developer.android.com";
+    private static final AdTechIdentifier SELLER =
+            AdTechIdentifier.fromString("developer.android.com");
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_urls");
-    private static final String TRUSTED_SCORING_SIGNALS =
-            "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2\"\n"
-                    + "}";
+    private static final Uri TRUSTED_SCORING_SIGNALS_URI =
+            Uri.parse("https://developer.android.com/test/decisions_logic_urls");
+    private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"render_url_1\": \"signals_for_1\",\n"
+                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setSeller(SELLER)
                     .setDecisionLogicUri(DECISION_LOGIC_URI)
+                    .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -180,7 +187,8 @@ public class AdSelectionManagerTest {
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER)
                         .setDecisionLogicUri(DECISION_LOGIC_URI)
-                        .setCustomAudienceBuyers(new ArrayList<String>())
+                        .setCustomAudienceBuyers(new ArrayList<>())
+                        .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                         .build();
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()

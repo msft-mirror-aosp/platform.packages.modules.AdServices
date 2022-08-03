@@ -16,6 +16,10 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
+import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -40,14 +44,22 @@ import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_OW
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_APP_NAME;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
+import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
@@ -55,6 +67,10 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_LOOK_BACK_EP
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.PhFlags.KEY_CLASSIFIER_TYPE;
+import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
+import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -79,14 +95,21 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.PhFlags.KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_APP_NAME;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MANIFEST_FILE_URL;
+import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_KILL_SWITCH;
@@ -101,6 +124,7 @@ import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.Flags.ClassifierType;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Rule;
@@ -115,145 +139,178 @@ import java.io.Writer;
 @SmallTest
 public class PhFlagsTest {
     @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule
-            mDeviceConfigRule = new TestableDeviceConfig.TestableDeviceConfigRule();
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     @Test
     public void testGetTopicsEpochJobPeriodMs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getTopicsEpochJobPeriodMs()).isEqualTo(
-                TOPICS_EPOCH_JOB_PERIOD_MS);
+        assertThat(FlagsFactory.getFlags().getTopicsEpochJobPeriodMs())
+                .isEqualTo(TOPICS_EPOCH_JOB_PERIOD_MS);
 
         // Now overriding with the value from PH.
         final long phOverridingValue = 1;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getTopicsEpochJobPeriodMs()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getTopicsEpochJobPeriodMs()).isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testGetTopicsEpochJobFlexMs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getTopicsEpochJobFlexMs()).isEqualTo(
-                TOPICS_EPOCH_JOB_FLEX_MS);
+        assertThat(FlagsFactory.getFlags().getTopicsEpochJobFlexMs())
+                .isEqualTo(TOPICS_EPOCH_JOB_FLEX_MS);
 
         // Now overriding with the value from PH.
         final long phOverridingValue = 2;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getTopicsEpochJobFlexMs()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getTopicsEpochJobFlexMs()).isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testGetTopicsPercentageForRandomTopic() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getTopicsPercentageForRandomTopic()).isEqualTo(
-                TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        assertThat(FlagsFactory.getFlags().getTopicsPercentageForRandomTopic())
+                .isEqualTo(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
         final long phOverridingValue = 3;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getTopicsPercentageForRandomTopic()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getTopicsPercentageForRandomTopic()).isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testGetTopicsNumberOfRandomTopics() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getTopicsNumberOfRandomTopics()).isEqualTo(
-                TOPICS_NUMBER_OF_RANDOM_TOPICS);
+        assertThat(FlagsFactory.getFlags().getTopicsNumberOfRandomTopics())
+                .isEqualTo(TOPICS_NUMBER_OF_RANDOM_TOPICS);
 
         final long phOverridingValue = 4;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getTopicsNumberOfRandomTopics()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getTopicsNumberOfRandomTopics()).isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testGetTopicsNumberOfTopTopics() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getTopicsNumberOfTopTopics()).isEqualTo(
-                TOPICS_NUMBER_OF_TOP_TOPICS);
+        assertThat(FlagsFactory.getFlags().getTopicsNumberOfTopTopics())
+                .isEqualTo(TOPICS_NUMBER_OF_TOP_TOPICS);
 
         final long phOverridingValue = 5;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getTopicsNumberOfTopTopics()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getTopicsNumberOfTopTopics()).isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testGetTopicsNumberOfLookBackEpochs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getTopicsNumberOfLookBackEpochs()).isEqualTo(
-                TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
+        assertThat(FlagsFactory.getFlags().getTopicsNumberOfLookBackEpochs())
+                .isEqualTo(TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
 
         final long phOverridingValue = 6;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getTopicsNumberOfLookBackEpochs()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getTopicsNumberOfLookBackEpochs()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testClassifierType() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getClassifierType()).isEqualTo(DEFAULT_CLASSIFIER_TYPE);
+
+        @ClassifierType int phOverridingValue = PRECOMPUTED_CLASSIFIER;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_CLASSIFIER_TYPE,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getClassifierType()).isEqualTo(PRECOMPUTED_CLASSIFIER);
     }
 
     @Test
     public void testGetMaintenanceJobPeriodMs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMaintenanceJobPeriodMs()).isEqualTo(
-                MAINTENANCE_JOB_PERIOD_MS);
+        assertThat(FlagsFactory.getFlags().getMaintenanceJobPeriodMs())
+                .isEqualTo(MAINTENANCE_JOB_PERIOD_MS);
 
         final long phOverridingValue = 7;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MAINTENANCE_JOB_PERIOD_MS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMaintenanceJobPeriodMs()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getMaintenanceJobPeriodMs()).isEqualTo(phOverridingValue);
     }
 
     @Test
     public void testGetMaintenanceJobFlexMs() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMaintenanceJobFlexMs()).isEqualTo(
-                MAINTENANCE_JOB_FLEX_MS);
+        assertThat(FlagsFactory.getFlags().getMaintenanceJobFlexMs())
+                .isEqualTo(MAINTENANCE_JOB_FLEX_MS);
 
         final long phOverridingValue = 8;
-        DeviceConfig.setProperty(DeviceConfig.NAMESPACE_ADSERVICES,
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MAINTENANCE_JOB_FLEX_MS,
                 Long.toString(phOverridingValue),
-                /* makeDefault */false);
+                /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMaintenanceJobFlexMs()).isEqualTo(
-                phOverridingValue);
+        assertThat(phFlags.getMaintenanceJobFlexMs()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMddTopicsClassifierManifestFileUrl() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMddTopicsClassifierManifestFileUrl())
+                .isEqualTo(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        final String phOverridingValue = "testFileUrl";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMddTopicsClassifierManifestFileUrl()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -325,6 +382,68 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetDownloaderConnectionTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getDownloaderConnectionTimeoutMs())
+                .isEqualTo(DOWNLOADER_CONNECTION_TIMEOUT_MS);
+
+        final int phOverrideValue = 923;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDownloaderConnectionTimeoutMs()).isEqualTo(phOverrideValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getDownloaderConnectionTimeoutMs())
+                .isEqualTo(DOWNLOADER_CONNECTION_TIMEOUT_MS);
+    }
+
+    @Test
+    public void testGetDownloaderReadTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getDownloaderReadTimeoutMs())
+                .isEqualTo(DOWNLOADER_READ_TIMEOUT_MS);
+
+        final int phOverrideValue = 349;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DOWNLOADER_READ_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDownloaderReadTimeoutMs()).isEqualTo(phOverrideValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getDownloaderReadTimeoutMs()).isEqualTo(DOWNLOADER_READ_TIMEOUT_MS);
+    }
+
+    @Test
+    public void testGetDownloaderMaxDownloadThreads() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getDownloaderMaxDownloadThreads())
+                .isEqualTo(DOWNLOADER_MAX_DOWNLOAD_THREADS);
+
+        final int phOverrideValue = 5;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getDownloaderMaxDownloadThreads()).isEqualTo(phOverrideValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getDownloaderMaxDownloadThreads())
+                .isEqualTo(DOWNLOADER_MAX_DOWNLOAD_THREADS);
+    }
+
+    @Test
     public void testGetMeasurementEventMainReportingJobPeriodMs() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs())
@@ -341,6 +460,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEventMainReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementEventMainReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
@@ -360,6 +483,33 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEventFallbackReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementEventFallbackReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Test
+    public void testGetMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl())
+                .isEqualTo(MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
+
+        final String phOverridingValue = "testCoordinatorUrl";
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
+                .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAggregateEncryptionKeyCoordinatorUrl())
+                .isEqualTo(MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
     }
 
     @Test
@@ -379,6 +529,10 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAggregateMainReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAggregateMainReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
@@ -398,13 +552,16 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAggregateFallbackReportingJobPeriodMs())
                 .isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAggregateFallbackReportingJobPeriodMs())
+                .isEqualTo(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
 
     @Test
     public void testGetMeasurementAppName() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMeasurementAppName())
-                .isEqualTo(MEASUREMENT_APP_NAME);
+        assertThat(FlagsFactory.getFlags().getMeasurementAppName()).isEqualTo(MEASUREMENT_APP_NAME);
 
         final String phOverridingValue = "testAppName";
 
@@ -416,6 +573,29 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementAppName()).isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementAppName()).isEqualTo(MEASUREMENT_APP_NAME);
+    }
+
+    @Test
+    public void testGetMeasurementManifestFileUrl() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementManifestFileUrl())
+                .isEqualTo(MEASUREMENT_MANIFEST_FILE_URL);
+
+        final String phOverridingValue = "testFileUrl";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MANIFEST_FILE_URL,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementManifestFileUrl()).isEqualTo(phOverridingValue);
+
+        Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getMeasurementManifestFileUrl()).isEqualTo(MEASUREMENT_MANIFEST_FILE_URL);
     }
 
     @Test
@@ -843,6 +1023,75 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetPpapiAppAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getPpapiAppAllowList()).isEqualTo(PPAPI_APP_ALLOW_LIST);
+
+        // Now overriding with the value from PH.
+        final String phOverridingValue = "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_PPAPI_APP_ALLOW_LIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getPpapiAppAllowList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetSdkRequestPermitsPerSecond() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond())
+                .isEqualTo(SDK_REQUEST_PERMITS_PER_SECOND);
+
+        final float phOverridingValue = 6;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_SDK_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        // Now verify that the PhFlag value was overridden.
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getSdkRequestPermitsPerSecond()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetNumberOfEpochsToKeepInHistory() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getNumberOfEpochsToKeepInHistory())
+                .isEqualTo(NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
+
+        final long phOverridingValue = 6;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getNumberOfEpochsToKeepInHistory()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetReportImpressionOverallTimeoutMs() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getReportImpressionOverallTimeoutMs())
+                .isEqualTo(FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
+
+        final int phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getReportImpressionOverallTimeoutMs()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
     public void testDump() throws FileNotFoundException {
         // Trigger the dump to verify no crash
         PrintWriter printWriter = new PrintWriter(new Writer() {
@@ -861,7 +1110,7 @@ public class PhFlagsTest {
 
             }
         });
-        String[] args = new String[]{};
+        String[] args = new String[] {};
         Flags phFlags = FlagsFactory.getFlags();
         phFlags.dump(printWriter, args);
     }

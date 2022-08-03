@@ -76,7 +76,7 @@ public final class SourceRegistrationTest {
     }
 
     @Test
-    public void sourceRegistration_onlyOsDestination_success() {
+    public void sourceRegistration_onlyAppDestination_success() {
         Uri destination = Uri.parse("android-app://baz.com");
         SourceRegistration response =
                 new SourceRegistration.Builder()

@@ -34,7 +34,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
-import com.android.adservices.service.topics.classifier.OnDeviceClassifier;
+import com.android.adservices.service.topics.classifier.ClassifierManager;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -122,7 +122,7 @@ public class EpochManager implements Dumpable {
                                 TopicsDao.getInstance(context),
                                 DbHelper.getInstance(context),
                                 new Random(),
-                                OnDeviceClassifier.getInstance(context),
+                                ClassifierManager.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 Clock.SYSTEM_CLOCK);
             }
@@ -247,19 +247,20 @@ public class EpochManager implements Dumpable {
      * @param callersCanLearnMap the map that stores topic->caller mapping which shows a topic can
      *     be learnt by a caller
      * @param topTopics a {@link List} of top topics
+     * @param numberOfTopTopics number of regular topics in top topics
      * @return a {@code boolean} that indicates if the caller can learn the topic
      */
-    // TODO(b/234444036): Enable this feature for newly installed apps
     // TODO(b/236834213): Create a class for Top Topics
-    public boolean isTopicLearnableByCaller(
+    public static boolean isTopicLearnableByCaller(
             @NonNull Topic topic,
             @NonNull String caller,
             @NonNull Map<Topic, Set<String>> callersCanLearnMap,
-            @NonNull List<Topic> topTopics) {
+            @NonNull List<Topic> topTopics,
+            int numberOfTopTopics) {
         // If a topic is the random topic in top topic list, it can be learnt by any caller.
         int index = topTopics.lastIndexOf(topic);
         // Regular top topics are placed in the front of the list. Topics after are random topics.
-        if (index >= mFlags.getTopicsNumberOfTopTopics()) {
+        if (index >= numberOfTopTopics) {
             return true;
         }
 
@@ -364,7 +365,12 @@ public class EpochManager implements Dumpable {
             String app = appSdks.getKey();
 
             // Check if the app can learn this topic.
-            if (isTopicLearnableByCaller(returnedTopic, app, callersCanLearnMap, topTopics)) {
+            if (isTopicLearnableByCaller(
+                    returnedTopic,
+                    app,
+                    callersCanLearnMap,
+                    topTopics,
+                    mFlags.getTopicsNumberOfTopTopics())) {
                 // The app calls Topics API directly. In this case, we set the sdk == empty string.
                 returnedAppSdkTopics.put(Pair.create(app, /* empty Sdk */ ""), returnedTopic);
                 // TODO(b/223159123): Do we need to filter out this log in prod build?
@@ -376,7 +382,12 @@ public class EpochManager implements Dumpable {
 
             // Then check all SDKs of the app.
             for (String sdk : appSdks.getValue()) {
-                if (isTopicLearnableByCaller(returnedTopic, sdk, callersCanLearnMap, topTopics)) {
+                if (isTopicLearnableByCaller(
+                        returnedTopic,
+                        sdk,
+                        callersCanLearnMap,
+                        topTopics,
+                        mFlags.getTopicsNumberOfTopTopics())) {
                     returnedAppSdkTopics.put(Pair.create(app, sdk), returnedTopic);
                     // TODO(b/223159123): Do we need to filter out this log in prod build?
                     LogUtil.v(

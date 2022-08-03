@@ -16,12 +16,15 @@
 
 package com.android.adservices.service;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
 import java.io.PrintWriter;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
@@ -79,6 +82,36 @@ public interface Flags extends Dumpable {
         return TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
     }
 
+    /** Available types of classifier behaviours for the Topics API. */
+    @IntDef(
+            flag = true,
+            value = {
+                UNKNOWN_CLASSIFIER,
+                ON_DEVICE_CLASSIFIER,
+                PRECOMPUTED_CLASSIFIER,
+                PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface ClassifierType {}
+
+    /** Unknown classifier option. */
+    int UNKNOWN_CLASSIFIER = 0;
+    /** Only on-device classification. */
+    int ON_DEVICE_CLASSIFIER = 1;
+    /** Only Precomputed classification. */
+    int PRECOMPUTED_CLASSIFIER = 2;
+    /** Precomputed classification values are preferred over on-device classification values. */
+    int PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER = 3;
+
+    /* Type of classifier intended to be used by default. */
+    @ClassifierType int DEFAULT_CLASSIFIER_TYPE = PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER;
+
+    /** Returns the type of classifier currently used by Topics. */
+    @ClassifierType
+    default int getClassifierType() {
+        return DEFAULT_CLASSIFIER_TYPE;
+    }
+
     /* The default period for the Maintenance job. */
     long MAINTENANCE_JOB_PERIOD_MS = 86_400_000; // 1 day.
 
@@ -111,6 +144,15 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default URL for fetching public encryption keys for aggregatable reports. */
+    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
+
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
+    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
+    }
+
     /* The default min time period (in millis) between each aggregate main reporting job run. */
     long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS = 4 * 60 * 60 * 1000; // 4 hours.
 
@@ -127,21 +169,22 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
-    /* The default URL for fetching public encryption keys for aggregatable reports. */
-    String MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
-            "https://publickeyservice.aws.privacysandboxservices.com/v1alpha/publicKeys";
-
-    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
-    default String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL;
-    }
-
     /* The default measurement app name. */
     String MEASUREMENT_APP_NAME = "";
 
     /** Returns the app name. */
     default String getMeasurementAppName() {
         return MEASUREMENT_APP_NAME;
+    }
+
+    /** Measurement manifest file url, used for MDD download. */
+    String MEASUREMENT_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
+                    + "/manifest_config_1657831410387.binaryproto";
+
+    /** Measurement manifest file url. */
+    default String getMeasurementManifestFileUrl() {
+        return MEASUREMENT_MANIFEST_FILE_URL;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -316,9 +359,13 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
     }
 
-    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 1000;
-    long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 1000;
-    long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 2000;
+    // TODO(b/240647148): Limits are increased temporarily, decrease these numbers after
+    //  implementing a solution for more accurately scoped timeout
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
+    long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
+
+    long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
     /** Returns the time out constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -338,6 +385,14 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
     }
 
+    /**
+     * Returns the time out constant in milliseconds that limits the overall impression reporting
+     * execution
+     */
+    default long getReportImpressionOverallTimeoutMs() {
+        return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+    }
+
     boolean ADSERVICES_ENABLE_STATUS = false;
 
     default boolean getAdservicesEnableStatus() {
@@ -351,8 +406,11 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
+     *
+     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
+     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS + 1;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
 
     /*
      * Return the number of epochs to keep in the history
@@ -385,6 +443,17 @@ public interface Flags extends Dumpable {
     /** Returns the Downloader Read Timeout in Milliseconds. */
     default int getDownloaderMaxDownloadThreads() {
         return DOWNLOADER_MAX_DOWNLOAD_THREADS;
+    }
+
+    /** MDD Topics API Classifier Manifest Url */
+    // TODO(b/236761740): We use this for now for testing. We need to update to the correct one
+    // when we actually upload the models.
+    String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
+            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/1"
+                    + "/manifest_config_1657744589741.binaryproto";
+
+    default String getMddTopicsClassifierManifestFileUrl() {
+        return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
     }
 
     long CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
@@ -432,5 +501,48 @@ public interface Flags extends Dumpable {
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    /*
+     * The Allow List for PP APIs. This list has the list of app package names that we allow
+     * to use PP APIs.
+     * App Package Name that does not belongs to this Allow List will not be able use PP APIs.
+     * If this list has special value "*", then all package names are allowed.
+     * There must be not any empty space between comma.
+     */
+    String PPAPI_APP_ALLOW_LIST =
+            "com.android.tests.sandbox.topics,"
+                    + "com.android.adservices.tests.cts.endtoendtest,"
+                    + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
+                    + "com.android.adservices.tests.permissions.appoptout,"
+                    + "com.android.adservices.tests.permissions.noperm,"
+                    + "com.android.adservices.tests.permissions.valid,"
+                    + "android.adservices.crystalball,"
+                    + "com.example.adservices.samples.topics.sampleapp1,"
+                    + "com.example.adservices.samples.topics.sampleapp2,"
+                    + "com.example.adservices.samples.topics.sampleapp3,"
+                    + "com.example.adservices.samples.topics.sampleapp4,"
+                    + "com.example.adservices.samples.topics.sampleapp5,"
+                    + "com.example.adservices.samples.topics.sampleapp6";
+
+    /**
+     * Returns the The Allow List for PP APIs. Only App Package Name belongs to this Allow List can
+     * use PP APIs.
+     */
+    default String getPpapiAppAllowList() {
+        return PPAPI_APP_ALLOW_LIST;
+    }
+
+    // Rate Limit Flags.
+
+    /**
+     * PP API Rate Limit for each SDK. This is the max allowed QPS for one SDK to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
+
+    /** Returns the Sdk Request Permits Per Second. */
+    default float getSdkRequestPermitsPerSecond() {
+        return SDK_REQUEST_PERMITS_PER_SECOND;
     }
 }

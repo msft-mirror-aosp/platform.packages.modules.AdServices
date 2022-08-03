@@ -33,7 +33,7 @@ public class TrustedBiddingDataValidator implements Validator<TrustedBiddingData
     @VisibleForTesting
     static final String TRUSTED_BIDDING_DATA_CLASS_NAME = TrustedBiddingData.class.getName();
 
-    @VisibleForTesting static final String TRUSTED_BIDDING_URI_FIELD_NAME = "trusted bidding uri";
+    public static final String TRUSTED_BIDDING_URI_FIELD_NAME = "trusted bidding URI";
 
     @NonNull private final AdTechUriValidator mTrustedBiddingUriValidator;
 

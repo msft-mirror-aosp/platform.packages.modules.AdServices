@@ -18,23 +18,36 @@ package com.android.adservices.ui.settings;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.pressBack;
 import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast;
 import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
+import android.graphics.Rect;
+import android.util.Log;
+import android.view.View;
+import android.widget.HorizontalScrollView;
+import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.Switch;
 
+import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.espresso.ViewInteraction;
-import androidx.test.espresso.contrib.RecyclerViewActions;
+import androidx.test.espresso.PerformException;
+import androidx.test.espresso.UiController;
+import androidx.test.espresso.ViewAction;
+import androidx.test.espresso.action.ViewActions;
+import androidx.test.espresso.matcher.ViewMatchers;
+import androidx.test.espresso.util.HumanReadables;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.adservices.api.R;
@@ -48,18 +61,70 @@ import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
 import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Tests for {@link AdServicesSettingsActivity}. */
 public class SettingsActivityTest {
     static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
-    static ConsentManager sConsentManager = Mockito.mock(ConsentManager.class);
+    static ConsentManager sConsentManager;
+
+    private static final class NestedScrollToAction implements ViewAction {
+        private static final String TAG =
+                androidx.test.espresso.action.ScrollToAction.class.getSimpleName();
+
+        @Override
+        public Matcher<View> getConstraints() {
+            return Matchers.allOf(
+                    ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
+                    ViewMatchers.isDescendantOfA(
+                            Matchers.anyOf(
+                                    ViewMatchers.isAssignableFrom(NestedScrollView.class),
+                                    ViewMatchers.isAssignableFrom(ScrollView.class),
+                                    ViewMatchers.isAssignableFrom(HorizontalScrollView.class),
+                                    ViewMatchers.isAssignableFrom(ListView.class))));
+        }
+
+        @Override
+        public void perform(UiController uiController, View view) {
+            if (isDisplayingAtLeast(90).matches(view)) {
+                Log.i(TAG, "View is already displayed. Returning.");
+                return;
+            }
+            Rect rect = new Rect();
+            view.getDrawingRect(rect);
+            if (!view.requestRectangleOnScreen(rect, true /* immediate */)) {
+                Log.w(TAG, "Scrolling to view was requested, but none of the parents scrolled.");
+            }
+            uiController.loopMainThreadUntilIdle();
+            if (!isDisplayingAtLeast(90).matches(view)) {
+                throw new PerformException.Builder()
+                        .withActionDescription(this.getDescription())
+                        .withViewDescription(HumanReadables.describe(view))
+                        .withCause(
+                                new RuntimeException(
+                                        "Scrolling to view was attempted, but the view is not " +
+                                                "displayed"))
+                        .build();
+            }
+        }
+
+        @Override
+        public String getDescription() {
+            return "scroll to";
+        }
+    }
+
+    private static ViewAction nestedScrollTo() {
+        return ViewActions.actionWithAssertions(new NestedScrollToAction());
+    }
 
     /**
      * {@link ActivityScenarioRule} is a JUnit {@link Rule @Rule} to launch your activity under
@@ -80,6 +145,8 @@ public class SettingsActivityTest {
      * @return the mocked {@link ViewModelProvider}
      */
     public static ViewModelProvider generateMockedViewModelProvider() {
+        sConsentManager =
+                spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
@@ -104,12 +171,20 @@ public class SettingsActivityTest {
         ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
         doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
 
+        doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
+        try {
+            doNothing().when(sConsentManager).resetApps();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        doNothing().when(sConsentManager).resetMeasurement();
+
         TopicsViewModel topicsViewModel =
                 new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         AppsViewModel appsViewModel =
                 new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         MainViewModel mainViewModel =
-                new MainViewModel(ApplicationProvider.getApplicationContext());
+                new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
         doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
         doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);
@@ -132,15 +207,15 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_MainFragmentView_isDisplayed() {
-        onPreferenceScreen()
-                .check(matches(hasDescendant(withText(R.string.settingsUI_topics_title))));
-        onPreferenceScreen()
-                .check(matches(hasDescendant(withText(R.string.settingsUI_apps_title))));
-        onPreferenceScreen()
-                .check(
-                        matches(
-                                hasDescendant(
-                                        withText(R.string.settingsUI_privacy_sandbox_beta_title))));
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_title))
+                .perform(nestedScrollTo())
+                .check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_topics_title))
+                .perform(nestedScrollTo())
+                .check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_apps_title))
+                .perform(nestedScrollTo())
+                .check(matches(isDisplayed()));
     }
 
     /**
@@ -148,21 +223,18 @@ public class SettingsActivityTest {
      */
     @Test
     public void test_MainViewModel_getConsent() {
-        onPreferenceScreen()
+        onView(withId(R.id.main_fragment))
                 .check(
                         matches(
                                 hasDescendant(
                                         Matchers.allOf(
                                                 withClassName(Matchers.is(Switch.class.getName())),
                                                 isChecked()))));
-        onPreferenceScreen()
-                .perform(
-                        RecyclerViewActions.actionOnItem(
-                                hasDescendant(withClassName(Matchers.is(Switch.class.getName()))),
-                                click()));
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_title))
+                .perform(nestedScrollTo(), click());
 
         mRule.getScenario().recreate();
-        onPreferenceScreen()
+        onView(withId(R.id.main_fragment))
                 .check(
                         matches(
                                 hasDescendant(
@@ -171,12 +243,9 @@ public class SettingsActivityTest {
                                                 Matchers.not(isChecked())))));
 
         // Give consent back
-        onPreferenceScreen()
-                .perform(
-                        RecyclerViewActions.actionOnItem(
-                                hasDescendant(withClassName(Matchers.is(Switch.class.getName()))),
-                                click()));
-        onPreferenceScreen()
+        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_title))
+                .perform(nestedScrollTo(), click());
+        onView(withId(R.id.main_fragment))
                 .check(
                         matches(
                                 hasDescendant(
@@ -193,11 +262,7 @@ public class SettingsActivityTest {
     public void test_TopicsView() {
         assertMainFragmentDisplayed();
 
-        onPreferenceScreen()
-                .perform(
-                        RecyclerViewActions.actionOnItem(
-                                hasDescendant(withText(R.string.settingsUI_topics_title)),
-                                click()));
+        onView(withText(R.string.settingsUI_topics_title)).perform(nestedScrollTo(), click());
 
         assertTopicsFragmentDisplayed();
 
@@ -214,15 +279,11 @@ public class SettingsActivityTest {
     public void test_BlockedTopicsView() {
         assertMainFragmentDisplayed();
 
-        onPreferenceScreen()
-                .perform(
-                        RecyclerViewActions.actionOnItem(
-                                hasDescendant(withText(R.string.settingsUI_topics_title)),
-                                click()));
+        onView(withText(R.string.settingsUI_topics_title)).perform(nestedScrollTo(), click());
 
         assertTopicsFragmentDisplayed();
 
-        onView(withId(R.id.blocked_topics_button)).perform(scrollTo(), click());
+        onView(withId(R.id.blocked_topics_button)).perform(nestedScrollTo(), click());
 
         assertBlockedTopicsFragmentDisplayed();
 
@@ -243,10 +304,7 @@ public class SettingsActivityTest {
     public void test_AppsView() {
         assertMainFragmentDisplayed();
 
-        onPreferenceScreen()
-                .perform(
-                        RecyclerViewActions.actionOnItem(
-                                hasDescendant(withText(R.string.settingsUI_apps_title)), click()));
+        onView(withText(R.string.settingsUI_apps_title)).perform(nestedScrollTo(), click());
 
         assertAppsFragmentDisplayed();
 
@@ -263,14 +321,11 @@ public class SettingsActivityTest {
     public void test_BlockedAppsView() {
         assertMainFragmentDisplayed();
 
-        onPreferenceScreen()
-                .perform(
-                        RecyclerViewActions.actionOnItem(
-                                hasDescendant(withText(R.string.settingsUI_apps_title)), click()));
+        onView(withText(R.string.settingsUI_apps_title)).perform(nestedScrollTo(), click());
 
         assertAppsFragmentDisplayed();
 
-        onView(withId(R.id.blocked_apps_button)).perform(scrollTo(), click());
+        onView(withId(R.id.blocked_apps_button)).perform(nestedScrollTo(), click());
 
         assertBlockedAppsFragmentDisplayed();
 
@@ -284,28 +339,28 @@ public class SettingsActivityTest {
     }
 
     private void assertMainFragmentDisplayed() {
-        onView(withText(R.string.settingsUI_privacy_sandbox_beta_switch_summary))
+        onView(withText(R.string.settingsUI_main_view_subtitle))
+                .perform(nestedScrollTo())
                 .check(matches(isDisplayed()));
     }
 
     private void assertTopicsFragmentDisplayed() {
-        onView(withId(R.id.settingsUI_topics_title)).check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_topics_view_subtitle))
+                .perform(nestedScrollTo())
+                .check(matches(isDisplayed()));
     }
 
     private void assertAppsFragmentDisplayed() {
-        onView(withId(R.id.settingsUI_apps_title)).check(matches(isDisplayed()));
+        onView(withText(R.string.settingsUI_apps_view_subtitle))
+                .perform(nestedScrollTo())
+                .check(matches(isDisplayed()));
     }
 
     private void assertBlockedTopicsFragmentDisplayed() {
-        onView(withId(R.id.settingsUI_blocked_topics_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.blocked_topics_list)).check(matches(isDisplayed()));
     }
 
     private void assertBlockedAppsFragmentDisplayed() {
-        onView(withId(R.id.settingsUI_blocked_apps_title)).check(matches(isDisplayed()));
-    }
-
-    private ViewInteraction onPreferenceScreen() {
-        // R.id.recycler_view refers to the RecyclerView used internally by PreferenceFragmentCompat
-        return onView(withId(R.id.recycler_view));
+        onView(withId(R.id.blocked_apps_list)).check(matches(isDisplayed()));
     }
 }

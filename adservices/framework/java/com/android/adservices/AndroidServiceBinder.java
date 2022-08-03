@@ -15,8 +15,12 @@
  */
 package com.android.adservices;
 
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
+
+import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SELECTION_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE;
+import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_CUSTOM_AUDIENCE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_MEASUREMENT_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_TOPICS_SERVICE;
@@ -33,6 +37,7 @@ import android.os.IBinder;
 
 import com.android.internal.annotations.GuardedBy;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -127,7 +132,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new RuntimeException("Failed to connect to the service");
+                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
             }
             return mService;
         }
@@ -179,21 +184,32 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_MEASUREMENT_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_CUSTOM_AUDIENCE_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SELECTION_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_ADID_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_APPSETID_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
             return null;
         }
         final Intent intent = new Intent(mServiceIntentAction);
 
-        final ResolveInfo resolveInfo =
+        final List<ResolveInfo> resolveInfos =
                 mContext.getPackageManager()
-                        .resolveService(intent, PackageManager.MATCH_SYSTEM_ONLY);
-        if (resolveInfo == null) {
-            LogUtil.e("Failed to find resolveInfo for adServices service");
+                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
+        if (resolveInfos == null || resolveInfos.isEmpty()) {
+            LogUtil.e(
+                    "Failed to find resolveInfo for adServices service. Intent action: "
+                            + mServiceIntentAction);
             return null;
         }
 
-        final ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+        if (resolveInfos.size() > 1) {
+            LogUtil.e(
+                    "Found multiple services (%1$s) for the same intent action (%2$s)",
+                    mServiceIntentAction, resolveInfos.toString());
+            return null;
+        }
+
+        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
         if (serviceInfo == null) {
             LogUtil.e("Failed to find serviceInfo for adServices service");
             return null;

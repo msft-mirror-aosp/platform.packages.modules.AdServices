@@ -48,10 +48,9 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     /** Holds package info of where the request is coming from. */
     @NonNull private final String mPackageName;
 
-    private WebTriggerRegistrationRequestInternal(
-            WebTriggerRegistrationRequest triggerRegistrationRequest, String packageName) {
-        mTriggerRegistrationRequest = triggerRegistrationRequest;
-        mPackageName = packageName;
+    private WebTriggerRegistrationRequestInternal(@NonNull Builder builder) {
+        mTriggerRegistrationRequest = builder.mTriggerRegistrationRequest;
+        mPackageName = builder.mPackageName;
     }
 
     private WebTriggerRegistrationRequestInternal(Parcel in) {
@@ -99,43 +98,29 @@ public class WebTriggerRegistrationRequestInternal implements Parcelable {
     /** Builder for {@link WebTriggerRegistrationRequestInternal}. */
     public static final class Builder {
         /** External trigger registration request from client app SDK. */
-        @NonNull private WebTriggerRegistrationRequest mTriggerRegistrationRequest;
+        @NonNull private final WebTriggerRegistrationRequest mTriggerRegistrationRequest;
         /** Package name used for the registration. Used to determine the registrant. */
-        @NonNull private String mPackageName;
+        @NonNull private final String mPackageName;
 
         /**
-         * Setter for {@link #mTriggerRegistrationRequest}.
+         * Builder constructor for {@link WebTriggerRegistrationRequestInternal}.
          *
-         * @param triggerRegistrationRequest trigger registration request
-         * @return builder
-         */
-        @NonNull
-        public Builder setTriggerRegistrationRequest(
-                @NonNull WebTriggerRegistrationRequest triggerRegistrationRequest) {
-            mTriggerRegistrationRequest = triggerRegistrationRequest;
-            return this;
-        }
-
-        /**
-         * Setter for {@link #mPackageName}.
-         *
+         * @param triggerRegistrationRequest external trigger registration request
          * @param packageName that is calling PP API
-         * @return builder
          */
-        @NonNull
-        public Builder setPackageName(@NonNull String packageName) {
+        public Builder(
+                @NonNull WebTriggerRegistrationRequest triggerRegistrationRequest,
+                @NonNull String packageName) {
+            Objects.requireNonNull(triggerRegistrationRequest);
+            Objects.requireNonNull(packageName);
+            mTriggerRegistrationRequest = triggerRegistrationRequest;
             mPackageName = packageName;
-            return this;
         }
 
-        /** Pre-validates paramerters and builds {@link WebTriggerRegistrationRequestInternal}. */
+        /** Pre-validates parameters and builds {@link WebTriggerRegistrationRequestInternal}. */
         @NonNull
         public WebTriggerRegistrationRequestInternal build() {
-            Objects.requireNonNull(mTriggerRegistrationRequest);
-            Objects.requireNonNull(mPackageName);
-
-            return new WebTriggerRegistrationRequestInternal(
-                    mTriggerRegistrationRequest, mPackageName);
+            return new WebTriggerRegistrationRequestInternal(this);
         }
     }
 }

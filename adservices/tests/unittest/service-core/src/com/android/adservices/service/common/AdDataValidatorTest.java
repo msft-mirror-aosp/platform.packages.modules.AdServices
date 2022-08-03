@@ -27,7 +27,8 @@ import org.junit.Test;
 public class AdDataValidatorTest {
 
     AdDataValidator mValidator =
-            new AdDataValidator(ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER);
+            new AdDataValidator(
+                    ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER.getStringForm());
 
     @Test
     public void testValidAdData() {
@@ -46,7 +47,7 @@ public class AdDataValidatorTest {
                         .setRenderUri(Uri.parse("https://" + uriHost + "/aaa"))
                         .setMetadata("{\"a\":1}")
                         .build();
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(adData),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,
@@ -67,7 +68,7 @@ public class AdDataValidatorTest {
                         .setRenderUri(Uri.parse("https://" + CommonFixture.VALID_BUYER + "/aaa"))
                         .setMetadata("invalid[json]field")
                         .build();
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(adData),
                 String.format(
                         AdDataValidator.VIOLATION_FORMAT,

@@ -46,6 +46,8 @@ android_test {
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
+        "mts-adservices",
     ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }

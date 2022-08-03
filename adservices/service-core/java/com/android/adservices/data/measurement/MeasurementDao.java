@@ -25,6 +25,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,7 +37,8 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.attribution.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Web;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -211,13 +213,23 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public List<Source> getMatchingActiveSources(@NonNull Trigger trigger)
             throws DatastoreException {
+        List<Source> sources = new ArrayList<>();
+        Optional<Pair<String, String>> destinationColumnAndValue =
+                getDestinationColumnAndValue(trigger);
+        if (!destinationColumnAndValue.isPresent()) {
+            LogUtil.d("getMatchingActiveSources: unable to obtain destination column and value: %s",
+                    trigger.getAttributionDestination().toString());
+            return sources;
+        }
+        String sourceDestinationColumn = destinationColumnAndValue.get().first;
+        String triggerDestinationValue = destinationColumnAndValue.get().second;
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
                         .query(
                                 MeasurementTables.SourceContract.TABLE,
                                 /*columns=*/ null,
-                                getSourceDestinationColumnForTrigger(trigger)
+                                sourceDestinationColumn
                                         + " = ? AND "
                                         + MeasurementTables.SourceContract.AD_TECH_DOMAIN
                                         + " = ? AND "
@@ -233,7 +245,7 @@ class MeasurementDao implements IMeasurementDao {
                                         + MeasurementTables.SourceContract.STATUS
                                         + " != ?",
                                 new String[] {
-                                    trigger.getAttributionDestination().toString(),
+                                    triggerDestinationValue,
                                     trigger.getAdTechDomain().toString(),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(trigger.getTriggerTime()),
@@ -243,7 +255,6 @@ class MeasurementDao implements IMeasurementDao {
                                 /*having=*/ null,
                                 /*orderBy=*/ null,
                                 /*limit=*/ null)) {
-            List<Source> sources = new ArrayList<>();
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
@@ -448,12 +459,35 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public void insertAttributionRateLimit(Source source, Trigger trigger)
             throws DatastoreException {
+        Optional<Pair<String, String>> sourceAndDestinationTopPrivateDomains =
+                getSourceAndDestinationTopPrivateDomains(source, trigger);
+
+        if (!sourceAndDestinationTopPrivateDomains.isPresent()) {
+            throw new IllegalArgumentException(String.format(
+                    "insertAttributionRateLimit: getSourceAndDestinationTopPrivateDomains failed. "
+                    + "Publisher: %s; Attribution destination: %s",
+                    source.getPublisher().toString(),
+                    trigger.getAttributionDestination().toString()));
+        }
+
+        String publisherTopPrivateDomain = sourceAndDestinationTopPrivateDomains.get().first;
+        String triggerDestinationTopPrivateDomain =
+                sourceAndDestinationTopPrivateDomains.get().second;
+
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AttributionRateLimitContract.ID,
                 UUID.randomUUID().toString());
-        values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
+        values.put(
+                MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
+                publisherTopPrivateDomain);
+        values.put(
+                MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN,
                 BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
-        values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
+        values.put(
+                MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
+                triggerDestinationTopPrivateDomain);
+        values.put(
+                MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN,
                 BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()).toString());
         values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
@@ -473,6 +507,21 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public long getAttributionsPerRateLimitWindow(Source source, Trigger trigger)
             throws DatastoreException {
+        Optional<Pair<String, String>> sourceAndDestinationTopPrivateDomains =
+                getSourceAndDestinationTopPrivateDomains(source, trigger);
+
+        if (!sourceAndDestinationTopPrivateDomains.isPresent()) {
+            throw new IllegalArgumentException(String.format(
+                    "getAttributionsPerRateLimitWindow: getSourceAndDestinationTopPrivateDomains "
+                    + "failed. Publisher: %s; Attribution destination: %s",
+                    source.getPublisher().toString(),
+                    trigger.getAttributionDestination().toString()));
+        }
+
+        String publisherTopPrivateDomain = sourceAndDestinationTopPrivateDomains.get().first;
+        String triggerDestinationTopPrivateDomain =
+                sourceAndDestinationTopPrivateDomains.get().second;
+
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.AttributionRateLimitContract.TABLE,
@@ -485,14 +534,14 @@ class MeasurementDao implements IMeasurementDao {
                         + " >= ? AND "
                         + MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME
                         + " <= ? ",
-                new String[]{
-                        BaseUriExtractor.getBaseUri(source.getPublisher()).toString(),
-                        BaseUriExtractor.getBaseUri(trigger.getAttributionDestination()).toString(),
+                new String[] {
+                        publisherTopPrivateDomain,
+                        triggerDestinationTopPrivateDomain,
                         trigger.getAdTechDomain().toString(),
                         String.valueOf(trigger.getTriggerTime()
                                 - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS),
-                        String.valueOf(trigger.getTriggerTime())}
-        );
+                        String.valueOf(trigger.getTriggerTime())
+                });
     }
 
     @Override
@@ -617,7 +666,7 @@ class MeasurementDao implements IMeasurementDao {
         }
         final SQLiteDatabase db = mSQLTransaction.getDatabase();
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
-        Function<String, String> siteMatcher = getsiteMatcher(origins, domains, matchBehavior);
+        Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
         Function<String, String> timeMatcher = getTimeMatcher(start, end);
 
         if (deletionMode == DeletionRequest.DELETION_MODE_ALL) {
@@ -728,7 +777,7 @@ class MeasurementDao implements IMeasurementDao {
             Function<String, String> timeMatcher) {
         // Where Statement:
         // (registrant - RegistrantMatching) AND
-        // ((destinationSite - OriginMatching) OR (sourceSite - OriginMatching)) AND
+        // ((destinationOrigin - OriginMatching) OR (sourceOrigin - OriginMatching)) AND
         // (triggerTime - TimeMatching)
         db.delete(
                 MeasurementTables.AttributionRateLimitContract.TABLE,
@@ -740,10 +789,10 @@ class MeasurementDao implements IMeasurementDao {
                                 " OR ",
                                 siteMatcher.apply(
                                         MeasurementTables.AttributionRateLimitContract
-                                                .DESTINATION_SITE),
+                                                .DESTINATION_ORIGIN),
                                 siteMatcher.apply(
                                         MeasurementTables.AttributionRateLimitContract
-                                                .SOURCE_SITE)),
+                                                .SOURCE_ORIGIN)),
                         timeMatcher.apply(
                                 MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME)),
                 null);
@@ -770,7 +819,7 @@ class MeasurementDao implements IMeasurementDao {
         };
     }
 
-    private static Function<String, String> getsiteMatcher(
+    private static Function<String, String> getSiteMatcher(
             List<Uri> origins,
             List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior) {
@@ -1074,15 +1123,51 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-    private String getSourceDestinationColumnForTrigger(Trigger trigger) {
-        boolean isAppDestination =
-                trigger.getAttributionDestination().getScheme().startsWith(ANDROID_APP_SCHEME);
-        return isAppDestination
-                ? MeasurementTables.SourceContract.APP_DESTINATION
-                : MeasurementTables.SourceContract.WEB_DESTINATION;
+    private static Optional<Pair<String, String>> getDestinationColumnAndValue(Trigger trigger) {
+        if (hasAndroidAppScheme(trigger.getAttributionDestination())) {
+            return Optional.of(Pair.create(
+                    MeasurementTables.SourceContract.APP_DESTINATION,
+                    trigger.getAttributionDestination().toString()));
+        } else {
+            Optional<Uri> topPrivateDomainAndScheme =
+                    Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
+            if (topPrivateDomainAndScheme.isPresent()) {
+                return Optional.of(Pair.create(
+                        MeasurementTables.SourceContract.WEB_DESTINATION,
+                        topPrivateDomainAndScheme.get().toString()));
+            } else {
+                return Optional.empty();
+            }
+        }
     }
 
-    private String getNullableUriString(@Nullable Uri uri) {
+    private static Optional<Pair<String, String>> getSourceAndDestinationTopPrivateDomains(
+            Source source, Trigger trigger) {
+        Uri attributionDestination = trigger.getAttributionDestination();
+        Optional<Uri> triggerDestinationTopPrivateDomain =
+                hasAndroidAppScheme(attributionDestination)
+                        ? Optional.of(BaseUriExtractor.getBaseUri(attributionDestination))
+                        : Web.topPrivateDomainAndScheme(attributionDestination);
+        Uri publisher = source.getPublisher();
+        Optional<Uri> publisherTopPrivateDomain =
+                hasAndroidAppScheme(publisher)
+                ? Optional.of(publisher)
+                : Web.topPrivateDomainAndScheme(publisher);
+        if (!triggerDestinationTopPrivateDomain.isPresent()
+                || !publisherTopPrivateDomain.isPresent()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(Pair.create(publisherTopPrivateDomain.get().toString(),
+                    triggerDestinationTopPrivateDomain.get().toString()));
+        }
+    }
+
+    private static String getNullableUriString(@Nullable Uri uri) {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
+    }
+
+    private static boolean hasAndroidAppScheme(Uri uri) {
+        String scheme = uri.getScheme();
+        return scheme != null && scheme.equals(ANDROID_APP_SCHEME);
     }
 }

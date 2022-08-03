@@ -40,6 +40,14 @@
     <!-- Used for persisting scheduled jobs -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!--
+        Used to verify if the calling application is running in foreground.
+        Although this permission is deprecated, it is still checked for privileged apps (see
+        http://go/aocs/android/platform/superproject/+/master:frameworks/base/services/core/java/com/android/server/wm/ActivityTaskManagerService.java;l=3130?q=ActivityTaskManagerService)
+        and we want to use privileged flags as REAL_GET_TASKS.
+    -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
+
     <!-- Allows an application to access AdServices Topics API. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"
         android:label="@string/permlab_accessAdServicesTopics"
@@ -56,6 +64,12 @@
     <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE"
         android:label="@string/permlab_accessAdServicesCustomAudience"
         android:description="@string/permdesc_accessAdServicesCustomAudience"
+        android:protectionLevel="normal" />
+
+    <!-- Allows an application to access AdServices Ad Id API. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_ADID"
+        android:label="@string/permlab_accessAdServicesAdId"
+        android:description="@string/permdesc_accessAdServicesAdId"
         android:protectionLevel="normal" />
 
     <!-- Allows Consent Service to access AdServices. -->
@@ -85,6 +99,9 @@
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_AD_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_APP_SET_ID" />
     <uses-permission android:name="android.permission.ADSERVICES_ACCESS_CONSENT_SERVICE" />
+
+    <!-- Allows JobScheduler to persist jobs across reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
             android:label="@string/app_label"
@@ -118,6 +135,14 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.android.adservices.adid.AdIdService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.ADID_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.measurement.MeasurementService"
             android:exported="true"
             android:visibleToInstantApps="false"
@@ -144,6 +169,11 @@
         <!-- Epoch computation Job. -->
         <service android:name="com.android.adservices.service.topics.EpochJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Mdd background Job. -->
+        <service android:name="com.android.adservices.download.MddJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
         <!-- Activity for Adservices Settings UI -->

@@ -121,7 +121,7 @@ public class TriggerFetcher {
             try {
                 result.setDebugKey(Long.parseLong(field.get(0)));
             } catch (NumberFormatException e) {
-                LogUtil.e("Parsing debug key failed", e);
+                LogUtil.e(e, "Parsing debug key failed");
             }
         }
 
@@ -153,14 +153,14 @@ public class TriggerFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open registration target URL %s", e);
+            LogUtil.d(e, "Failed to open registration target URL");
             return;
         }
         try {
@@ -202,7 +202,7 @@ public class TriggerFetcher {
                 }
             }
         } catch (IOException e) {
-            LogUtil.d("Failed to get registration response %s", e);
+            LogUtil.d(e, "Failed to get registration response");
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -256,7 +256,7 @@ public class TriggerFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
@@ -272,7 +272,7 @@ public class TriggerFetcher {
                                 /* should process redirects*/ false,
                                 registrationsOut,
                                 true,
-                                triggerParams.isAllowDebugKey()),
+                                triggerParams.isDebugKeyAllowed()),
                 mIoExecutor);
     }
 }

@@ -43,14 +43,14 @@ public class JsonValidatorTest {
 
     @Test
     public void testValidJsonArray() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mJsonValidator.getValidationViolations("[\"a\", \"b\"]"),
                 String.format(JsonValidator.SHOULD_BE_A_VALID_JSON, CLASS_NAME, FIELD_NAME));
     }
 
     @Test
     public void testInvalidJson() {
-        ValidatorTestUtil.assertViolationContaiinsOnly(
+        ValidatorTestUtil.assertViolationContainsOnly(
                 mJsonValidator.getValidationViolations("invalid[json]field"),
                 String.format(JsonValidator.SHOULD_BE_A_VALID_JSON, CLASS_NAME, FIELD_NAME));
     }

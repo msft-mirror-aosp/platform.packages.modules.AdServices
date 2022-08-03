@@ -25,7 +25,6 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.measurement.DestinationType;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventTrigger;
-import com.android.adservices.service.measurement.FilterUtil;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -37,6 +36,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateFilterDat
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.Filter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -358,10 +358,10 @@ class AttributionJobHandler {
         try {
             AggregateFilterData sourceFiltersData = extractFilterMap(sourceFilters);
             AggregateFilterData triggerFiltersData = extractFilterMap(triggerFilters);
-            return FilterUtil.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
+            return Filter.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e("Malformed JSON string.", e);
+            LogUtil.e(e, "Malformed JSON string.");
             return false;
         }
     }
@@ -392,7 +392,7 @@ class AttributionJobHandler {
                     .findFirst();
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e("Malformed JSON string.", e);
+            LogUtil.e(e, "Malformed JSON string.");
             return Optional.empty();
         }
     }
@@ -400,13 +400,13 @@ class AttributionJobHandler {
     private boolean doEventLevelFiltersMatch(
             AggregateFilterData sourceFiltersData, EventTrigger eventTrigger) {
         if (eventTrigger.getFilterData().isPresent()
-                && !FilterUtil.isFilterMatch(
+                && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
             return false;
         }
 
         if (eventTrigger.getNotFilterData().isPresent()
-                && !FilterUtil.isFilterMatch(
+                && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getNotFilterData().get(), false)) {
             return false;
         }
@@ -439,7 +439,7 @@ class AttributionJobHandler {
                     return OptionalInt.empty();
                 }
             } catch (ArithmeticException e) {
-                LogUtil.e("Error adding aggregate contribution values.", e);
+                LogUtil.e(e, "Error adding aggregate contribution values.");
                 return OptionalInt.empty();
             }
         }

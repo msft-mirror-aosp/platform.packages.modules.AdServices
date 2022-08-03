@@ -21,8 +21,10 @@ import android.os.Build;
 import android.os.IBinder;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.Clock;
@@ -58,7 +60,10 @@ public class TopicsService extends Service {
                             TopicsWorker.getInstance(this),
                             ConsentManager.getInstance(this),
                             AdServicesLoggerImpl.getInstance(),
-                            Clock.SYSTEM_CLOCK);
+                            Clock.SYSTEM_CLOCK,
+                            FlagsFactory.getFlags(),
+                            Throttler.getInstance(
+                                    FlagsFactory.getFlags().getSdkRequestPermitsPerSecond()));
             mTopicsService.init();
         }
 
@@ -68,6 +73,9 @@ public class TopicsService extends Service {
     private void schedulePeriodicJobs() {
         MaintenanceJobService.schedule(this);
         EpochJobService.schedule(this);
+
+        // TODO(b/238674236): Schedule this after the boot complete.
+        MddJobService.schedule(this);
     }
 
     @Override

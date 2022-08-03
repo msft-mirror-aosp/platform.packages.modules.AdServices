@@ -270,17 +270,16 @@ public class MeasurementManagerTest {
                 .registerWebSource(captor.capture(), ArgumentMatchers.any());
 
         WebSourceParams webSourceParams =
-                new WebSourceParams.Builder()
-                        .setRegistrationUri(Uri.parse("https://example.com"))
-                        .setAllowDebugKey(false)
+                new WebSourceParams.Builder(Uri.parse("https://example.com"))
+                        .setDebugKeyAllowed(false)
                         .build();
 
         WebSourceRegistrationRequest webSourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(Collections.singletonList(webSourceParams))
-                        .setTopOriginUri(Uri.parse("https://example.com"))
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(webSourceParams),
+                                Uri.parse("https://example.com"))
                         .setInputEvent(null)
-                        .setOsDestination(Uri.parse("https://example.com"))
+                        .setAppDestination(Uri.parse("android-app://com.example"))
                         .setWebDestination(Uri.parse("https://example.com"))
                         .setVerifiedDestination(null)
                         .build();
@@ -304,17 +303,16 @@ public class MeasurementManagerTest {
                 .registerWebSource(captor.capture(), ArgumentMatchers.any());
 
         WebSourceParams webSourceParams =
-                new WebSourceParams.Builder()
-                        .setRegistrationUri(Uri.parse("https://example.com"))
-                        .setAllowDebugKey(false)
+                new WebSourceParams.Builder(Uri.parse("https://example.com"))
+                        .setDebugKeyAllowed(false)
                         .build();
 
         WebSourceRegistrationRequest webSourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(Collections.singletonList(webSourceParams))
-                        .setTopOriginUri(Uri.parse("https://example.com"))
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(webSourceParams),
+                                Uri.parse("https://example.com"))
                         .setInputEvent(null)
-                        .setOsDestination(Uri.parse("https://example.com"))
+                        .setAppDestination(Uri.parse("android-app://com.example"))
                         .setWebDestination(Uri.parse("https://example.com"))
                         .setVerifiedDestination(null)
                         .build();
@@ -337,14 +335,13 @@ public class MeasurementManagerTest {
                 .registerWebTrigger(captor.capture(), ArgumentMatchers.any());
 
         WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder()
-                        .setRegistrationUri(Uri.parse("https://example.com"))
-                        .setAllowDebugKey(false)
+                new WebTriggerParams.Builder(Uri.parse("https://example.com"))
+                        .setDebugKeyAllowed(false)
                         .build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(Collections.singletonList(webTriggerParams))
-                        .setDestination(Uri.parse("https://example.com"))
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(webTriggerParams),
+                                Uri.parse("https://example.com"))
                         .build();
         mm.registerWebTrigger(
                 webTriggerRegistrationRequest, /* executor = */ null, /* callback = */ null);
@@ -366,14 +363,13 @@ public class MeasurementManagerTest {
                 .registerWebTrigger(captor.capture(), ArgumentMatchers.any());
 
         WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder()
-                        .setRegistrationUri(Uri.parse("https://example.com"))
-                        .setAllowDebugKey(false)
+                new WebTriggerParams.Builder(Uri.parse("https://example.com"))
+                        .setDebugKeyAllowed(false)
                         .build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(Collections.singletonList(webTriggerParams))
-                        .setDestination(Uri.parse("https://example.com"))
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(webTriggerParams),
+                                Uri.parse("https://example.com"))
                         .build();
         mm.registerWebTrigger(
                 webTriggerRegistrationRequest, /* executor = */ null, /* callback = */ null);

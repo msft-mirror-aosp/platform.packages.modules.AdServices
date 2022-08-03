@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
@@ -44,6 +45,8 @@ import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
@@ -63,8 +66,8 @@ import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -74,11 +77,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Truth;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -89,16 +92,15 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
 
-import java.net.URL;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class AdSelectionServiceImplTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -109,16 +111,18 @@ public class AdSelectionServiceImplTest {
     private static final long AD_SELECTION_ID = 1;
     private static final long INCORRECT_AD_SELECTION_ID = 2;
     private static final double BID = 5.0;
-    private static final String SELLER_VALID = "developer.android.com";
+    private static final AdTechIdentifier SELLER_VALID =
+            AdTechIdentifier.fromString("developer.android.com");
     private static final Uri DECISION_LOGIC_URI_INCONSISTENT =
             Uri.parse("https://developer%$android.com/test/decisions_logic_urls");
     private static final String DUMMY_DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; }";
-    private static final String DUMMY_TRUSTED_SCORING_SIGNALS =
-            "{\n"
-                    + "\t\"render_url_1\": \"signals_for_1\",\n"
-                    + "\t\"render_url_2\": \"signals_for_2\"\n"
-                    + "}";
+    private static final AdSelectionSignals DUMMY_TRUSTED_SCORING_SIGNALS =
+            AdSelectionSignals.fromString(
+                    "{\n"
+                            + "\t\"render_url_1\": \"signals_for_1\",\n"
+                            + "\t\"render_url_2\": \"signals_for_2\"\n"
+                            + "}");
     // Auto-generated variable names are too long for lint check
     private static final int SHORT_API_NAME_OVERRIDE =
             AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -130,9 +134,20 @@ public class AdSelectionServiceImplTest {
     private final String mSellerReportingPath = "/reporting/seller";
     private final String mBuyerReportingPath = "/reporting/buyer";
     private final String mFetchJavaScriptPath = "/fetchJavascript/";
-    private final String mContextualSignals = "{\"contextual_signals\":1}";
+    private final String mFetchTrustedScoringSignalsPath = "/fetchTrustedSignals/";
+    private final AdTechIdentifier mContextualSignals =
+            AdTechIdentifier.fromString("{\"contextual_signals\":1}");
+    private static final String TIMEOUT_MESSAGE = "Timed out:";
+    private final int mBytesPerPeriod = 1;
     private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
-    private final Flags mFlags = FlagsFactory.getFlagsForTest();
+    private final Flags mFlags =
+            new Flags() {
+                @Override
+                public long getReportImpressionOverallTimeoutMs() {
+                    return 300;
+                }
+            };
+    private MockitoSession mStaticMockSession = null;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
@@ -158,8 +173,14 @@ public class AdSelectionServiceImplTest {
 
         mAdSelectionConfigBuilder =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setSeller(mMockWebServerRule.uriForPath(mFetchJavaScriptPath).getHost())
-                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath));
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(mFetchJavaScriptPath)
+                                                .getHost()))
+                        .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
     }
 
     @Test
@@ -204,7 +225,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
@@ -214,7 +235,6 @@ public class AdSelectionServiceImplTest {
         mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
         mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
 
-        URL sellerFetchUrl = server.getUrl(mFetchJavaScriptPath);
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         when(mDevContextFilter.createDevContext())
@@ -258,6 +278,381 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        String jsWaitMoreThanAllowed =
+                insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + jsWaitMoreThanAllowed
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + sellerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + buyerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+        assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INTERNAL_ERROR));
+    }
+
+    @Test
+    public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        String jsWaitMoreThanAllowed =
+                insertJsWait(2 * mFlags.getReportImpressionOverallTimeoutMs());
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + sellerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + jsWaitMoreThanAllowed
+                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + buyerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse().setBody(sellerDecisionLogicJs),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+        assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INTERNAL_ERROR));
+    }
+
+    @Test
+    public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        String jsWaitMoreThanAllowed =
+                insertJsWait((long) (.25 * mFlags.getReportImpressionOverallTimeoutMs()));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + jsWaitMoreThanAllowed
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + sellerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + jsWaitMoreThanAllowed
+                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + buyerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse()
+                                .setBody(sellerDecisionLogicJs)
+                                .throttleBody(
+                                        mBytesPerPeriod,
+                                        (long) (.5 * mFlags.getReportImpressionOverallTimeoutMs()),
+                                        TimeUnit.MILLISECONDS),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+        assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INTERNAL_ERROR));
+    }
+
+    @Test
+    public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
+        Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_url': '"
+                        + sellerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_url': '"
+                        + buyerReportingUrl
+                        + "' } };\n"
+                        + "}";
+
+        mMockWebServerRule.startMockWebServer(
+                List.of(
+                        new MockResponse()
+                                .setBody(sellerDecisionLogicJs)
+                                .throttleBody(
+                                        mBytesPerPeriod,
+                                        mFlags.getReportImpressionOverallTimeoutMs(),
+                                        TimeUnit.MILLISECONDS),
+                        new MockResponse(),
+                        new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
+                        .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URL)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INTERNAL_ERROR);
+        assertTrue(callback.mFledgeErrorResponse.getErrorMessage().contains(TIMEOUT_MESSAGE));
+
+        verify(mAdServicesLoggerSpy)
+                .logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, STATUS_INTERNAL_ERROR);
+        verify(mAdServicesLoggerSpy)
+                .logApiCallStats(
+                        aCallStatForFledgeApiWithStatus(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                STATUS_INTERNAL_ERROR));
+    }
+
+    @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
         Uri sellerReportingUrl = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUrl = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -298,7 +693,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
@@ -389,7 +784,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
@@ -477,7 +872,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
@@ -546,7 +941,7 @@ public class AdSelectionServiceImplTest {
         DBAdSelection dbAdSelection =
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
@@ -636,7 +1031,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
@@ -660,7 +1055,7 @@ public class AdSelectionServiceImplTest {
                                         adSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(sellerDecisionLogicJs)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
@@ -824,7 +1219,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride);
@@ -878,7 +1273,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride);
@@ -936,7 +1331,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride);
@@ -988,12 +1383,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
-                        .setSeller("adidas.com")
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
                         .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
-                        .setSeller("nike.com")
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
@@ -1009,7 +1404,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId1)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride2 =
@@ -1017,7 +1412,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId2)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride3 =
@@ -1025,7 +1420,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId3)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
@@ -1089,12 +1484,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
-                        .setSeller("adidas.com")
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
                         .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
-                        .setSeller("nike.com")
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
@@ -1110,7 +1505,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId1)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride2 =
@@ -1118,7 +1513,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId2)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride3 =
@@ -1126,7 +1521,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId3)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
@@ -1187,12 +1582,12 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
                 mAdSelectionConfigBuilder
-                        .setSeller("adidas.com")
+                        .setSeller(AdTechIdentifier.fromString("adidas.com"))
                         .setDecisionLogicUri(Uri.parse("https://adidas.com/decisoin_logic_url"))
                         .build();
         AdSelectionConfig adSelectionConfig3 =
                 mAdSelectionConfigBuilder
-                        .setSeller("nike.com")
+                        .setSeller(AdTechIdentifier.fromString("nike.com"))
                         .setDecisionLogicUri(Uri.parse("https://nike.com/decisoin_logic_url"))
                         .build();
 
@@ -1208,7 +1603,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId1)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride2 =
@@ -1216,7 +1611,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId2)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         DBAdSelectionOverride dbAdSelectionOverride3 =
@@ -1224,7 +1619,7 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfigId(adSelectionConfigId3)
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(DUMMY_DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS)
+                        .setTrustedScoringSignals(DUMMY_TRUSTED_SCORING_SIGNALS.getStringForm())
                         .build();
 
         mAdSelectionEntryDao.persistAdSelectionOverride(dbAdSelectionOverride1);
@@ -1263,35 +1658,31 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
-        MockitoSession staticMockitoSession =
+        mStaticMockSession =
                 ExtendedMockito.mockitoSession().spyStatic(JSScriptEngine.class).startMocking();
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
         when(JSScriptEngine.getInstance(any())).thenReturn(jsScriptEngineMock);
 
-        try {
-            AdSelectionServiceImpl adSelectionService =
-                    new AdSelectionServiceImpl(
-                            mAdSelectionEntryDao,
-                            mCustomAudienceDao,
-                            mClient,
-                            mDevContextFilter,
-                            mExecutorService,
-                            CONTEXT,
-                            mAdServicesLoggerSpy,
-                            mFlags);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
 
-            adSelectionService.destroy();
-            verify(jsScriptEngineMock).shutdown();
-        } finally {
-            staticMockitoSession.finishMocking();
-        }
+        adSelectionService.destroy();
+        verify(jsScriptEngineMock).shutdown();
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
-            String trustedScoringSignals)
+            AdSelectionSignals trustedScoringSignals)
             throws Exception {
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch resultLatch = new CountDownLatch(2);
@@ -1366,7 +1757,7 @@ public class AdSelectionServiceImplTest {
                 new DBAdSelection.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(customAudienceSignals)
-                        .setContextualSignals(mContextualSignals)
+                        .setContextualSignals(mContextualSignals.getStringForm())
                         .setBiddingLogicUri(BUYER_BIDDING_LOGIC_URI)
                         .setWinningAdRenderUri(RENDER_URL)
                         .setWinningAdBid(BID)
@@ -1403,17 +1794,18 @@ public class AdSelectionServiceImplTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> callReportImpression(adSelectionService, request));
-        String expected =
+
+        ValidatorTestUtil.assertValidationFailuresMatch(
+                thrown,
                 String.format(
-                        "Invalid object of type %s. The violations are: %s",
-                        AdSelectionConfig.class.getName(),
-                        Arrays.asList(
-                                String.format(
-                                        AdSelectionConfigValidator
-                                                .SELLER_AND_DECISION_LOGIC_URL_ARE_INCONSISTENT,
-                                        Uri.parse("https://" + SELLER_VALID).getHost(),
-                                        DECISION_LOGIC_URI_INCONSISTENT.getHost())));
-        Truth.assertThat(thrown).hasMessageThat().isEqualTo(expected);
+                        "Invalid object of type %s. The violations are:",
+                        AdSelectionConfig.class.getName()),
+                ImmutableList.of(
+                        String.format(
+                                AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
+                                Uri.parse("https://" + SELLER_VALID).getHost(),
+                                DECISION_LOGIC_URI_INCONSISTENT.getHost(),
+                                DECISION_LOGIC_URI_TYPE)));
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
@@ -1462,6 +1854,24 @@ public class AdSelectionServiceImplTest {
         adSelectionService.reportImpression(requestParams, callback);
         resultLatch.await();
         return callback;
+    }
+
+    private String insertJsWait(long waitTime) {
+        return "    const wait = (ms) => {\n"
+                + "       var start = new Date().getTime();\n"
+                + "       var end = start;\n"
+                + "       while(end < start + ms) {\n"
+                + "         end = new Date().getTime();\n"
+                + "      }\n"
+                + "    }\n"
+                + String.format("    wait(\"%d\");\n", waitTime);
+    }
+
+    @After
+    public void tearDown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {

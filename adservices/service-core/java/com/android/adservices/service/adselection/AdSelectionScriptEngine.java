@@ -25,6 +25,7 @@ import static com.google.common.util.concurrent.Futures.transform;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
 
@@ -59,11 +60,8 @@ import java.util.stream.Collectors;
  */
 public class AdSelectionScriptEngine {
 
-    private static final String TAG = AdSelectionScriptEngine.class.getName();
-
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String FUNCTION_NAMES_ARG_NAME = "__rb_functionNames";
-    private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
     public static final String RESULTS_FIELD_NAME = "results";
     public static final String STATUS_FIELD_NAME = "status";
     // This is a local variable and doesn't need any prefix.
@@ -78,7 +76,6 @@ public class AdSelectionScriptEngine {
     public static final String AUCTION_CONFIG_ARG_NAME = "__rb_auction_config";
     public static final String SELLER_SIGNALS_ARG_NAME = "__rb_seller_signals";
     public static final String TRUSTED_SCORING_SIGNALS_ARG_NAME = "__rb_trusted_scoring_signals";
-
     /**
      * Template for the batch invocation function. The two tokens to expand are the list of
      * parameters and the invocation of the actual per-ad function.
@@ -118,7 +115,8 @@ public class AdSelectionScriptEngine {
                     + " }\n"
                     + " return true;\n"
                     + "}";
-
+    private static final String TAG = AdSelectionScriptEngine.class.getName();
+    private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
@@ -136,11 +134,11 @@ public class AdSelectionScriptEngine {
     public ListenableFuture<List<AdWithBid>> generateBids(
             @NonNull String generateBidJS,
             @NonNull List<AdData> ads,
-            @NonNull String auctionSignals,
-            @NonNull String perBuyerSignals,
-            @NonNull String trustedBiddingSignals,
-            @NonNull String contextualSignals,
-            @NonNull String userSignals,
+            @NonNull AdSelectionSignals auctionSignals,
+            @NonNull AdSelectionSignals perBuyerSignals,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull AdSelectionSignals userSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException {
         Objects.requireNonNull(generateBidJS);
@@ -154,14 +152,20 @@ public class AdSelectionScriptEngine {
 
         ImmutableList<JSScriptArgument> signals =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(TRUSTED_BIDDING_SIGNALS_ARG_NAME, trustedBiddingSignals))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
-                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals))
+                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals.getStringForm()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.getStringForm()))
                         .add(
-                                CustomAudienceSignalsArgument.asScriptArgument(
-                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                                jsonArg(
+                                        TRUSTED_BIDDING_SIGNALS_ARG_NAME,
+                                        trustedBiddingSignals.getStringForm()))
+                        .add(
+                                jsonArg(
+                                        CONTEXTUAL_SIGNALS_ARG_NAME,
+                                        contextualSignals.getStringForm()))
+                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals.getStringForm()))
+                        .add(
+                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
@@ -185,10 +189,10 @@ public class AdSelectionScriptEngine {
             @NonNull String scoreAdJS,
             @NonNull List<AdWithBid> adsWithBid,
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull String sellerSignals,
-            @NonNull String trustedScoringSignals,
-            @NonNull String contextualSignals,
-            @NonNull CustomAudienceSignals customAudienceSignals)
+            @NonNull AdSelectionSignals sellerSignals,
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull List<CustomAudienceSignals> customAudienceSignalsList)
             throws JSONException {
         Objects.requireNonNull(scoreAdJS);
         Objects.requireNonNull(adsWithBid);
@@ -196,19 +200,26 @@ public class AdSelectionScriptEngine {
         Objects.requireNonNull(sellerSignals);
         Objects.requireNonNull(trustedScoringSignals);
         Objects.requireNonNull(contextualSignals);
-        Objects.requireNonNull(customAudienceSignals);
+        Objects.requireNonNull(customAudienceSignalsList);
 
         ImmutableList<JSScriptArgument> args =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
                                 AdSelectionConfigArgument.asScriptArgument(
                                         adSelectionConfig, AUCTION_CONFIG_ARG_NAME))
-                        .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals))
-                        .add(jsonArg(TRUSTED_SCORING_SIGNALS_ARG_NAME, trustedScoringSignals))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals.getStringForm()))
                         .add(
-                                CustomAudienceSignalsArgument.asScriptArgument(
-                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                                jsonArg(
+                                        TRUSTED_SCORING_SIGNALS_ARG_NAME,
+                                        trustedScoringSignals.getStringForm()))
+                        .add(
+                                jsonArg(
+                                        CONTEXTUAL_SIGNALS_ARG_NAME,
+                                        contextualSignals.getStringForm()))
+                        .add(
+                                CustomAudienceScoringSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME,
+                                        customAudienceSignalsList))
                         .build();
 
         ImmutableList.Builder<JSScriptArgument> adWithBidArguments = new ImmutableList.Builder<>();
@@ -244,9 +255,9 @@ public class AdSelectionScriptEngine {
                 return result.build();
             } catch (IllegalArgumentException e) {
                 LogUtil.w(
-                        "Invalid ad with bid returned by a generateBid script %s. Returning"
-                                + " empty list of ad with bids.",
-                        e);
+                        e,
+                        "Invalid ad with bid returned by a generateBid script. Returning empty"
+                                + " list of ad with bids.");
                 return ImmutableList.of();
             }
         }

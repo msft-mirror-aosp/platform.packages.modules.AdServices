@@ -15,6 +15,8 @@
  */
 package android.adservices.adselection;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,12 +39,12 @@ import java.util.Objects;
 // TODO(b/233280314): investigate on adSelectionConfig optimization by merging mCustomAudienceBuyers
 //  and mPerBuyerSignals.
 public final class AdSelectionConfig implements Parcelable {
-    @NonNull private final String mSeller;
+    @NonNull private final AdTechIdentifier mSeller;
     @NonNull private final Uri mDecisionLogicUri;
-    @NonNull private final List<String> mCustomAudienceBuyers;
-    @NonNull private final String mAdSelectionSignals;
-    @NonNull private final String mSellerSignals;
-    @NonNull private final Map<String, String> mPerBuyerSignals;
+    @NonNull private final List<AdTechIdentifier> mCustomAudienceBuyers;
+    @NonNull private final AdSelectionSignals mAdSelectionSignals;
+    @NonNull private final AdSelectionSignals mSellerSignals;
+    @NonNull private final Map<AdTechIdentifier, AdSelectionSignals> mPerBuyerSignals;
     @NonNull private final List<AdWithBid> mContextualAds;
     @NonNull private final Uri mTrustedScoringSignalsUri;
 
@@ -62,12 +64,12 @@ public final class AdSelectionConfig implements Parcelable {
             };
 
     private AdSelectionConfig(
-            @NonNull String seller,
+            @NonNull AdTechIdentifier seller,
             @NonNull Uri decisionLogicUri,
-            @NonNull List<String> customAudienceBuyers,
-            @NonNull String adSelectionSignals,
-            @NonNull String sellerSignals,
-            @NonNull Map<String, String> perBuyerSignals,
+            @NonNull List<AdTechIdentifier> customAudienceBuyers,
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull AdSelectionSignals sellerSignals,
+            @NonNull Map<AdTechIdentifier, AdSelectionSignals> perBuyerSignals,
             @NonNull List<AdWithBid> contextualAds,
             @NonNull Uri trustedScoringSignalsUri) {
         this.mSeller = seller;
@@ -82,37 +84,14 @@ public final class AdSelectionConfig implements Parcelable {
 
     private AdSelectionConfig(@NonNull Parcel in) {
         Objects.requireNonNull(in);
-
-        mSeller = in.readString();
+        mSeller = AdTechIdentifier.CREATOR.createFromParcel(in);
         mDecisionLogicUri = Uri.CREATOR.createFromParcel(in);
-        mCustomAudienceBuyers = in.createStringArrayList();
-        mAdSelectionSignals = in.readString();
-        mSellerSignals = in.readString();
-        mPerBuyerSignals = bundleToMap(Bundle.CREATOR.createFromParcel(in));
+        mCustomAudienceBuyers = in.createTypedArrayList(AdTechIdentifier.CREATOR);
+        mAdSelectionSignals = AdSelectionSignals.CREATOR.createFromParcel(in);
+        mSellerSignals = AdSelectionSignals.CREATOR.createFromParcel(in);
+        mPerBuyerSignals = bundleToAdTechSignalMap(Bundle.CREATOR.createFromParcel(in));
         mContextualAds = in.createTypedArrayList(AdWithBid.CREATOR);
         mTrustedScoringSignalsUri = Uri.CREATOR.createFromParcel(in);
-    }
-
-    /** Converts {@link Map} to {@link Bundle} for {@link #writeToParcel(Parcel, int)}. */
-    private static Bundle mapToBundle(@NonNull Map<String, String> stringMap) {
-        Objects.requireNonNull(stringMap);
-        Bundle result = new Bundle();
-        stringMap.forEach(result::putString);
-        return result;
-    }
-
-    /**
-     * Converts {@link Bundle} to {@link Map} for constructing an {@link AdSelectionConfig} object
-     * from a {@link Parcel}.
-     */
-    private static Map<String, String> bundleToMap(@NonNull Bundle bundle) {
-        Objects.requireNonNull(bundle);
-
-        Map<String, String> result = new HashMap<>();
-        for (String key : bundle.keySet()) {
-            result.put(key, bundle.getString(key));
-        }
-        return result;
     }
 
     @Override
@@ -124,14 +103,45 @@ public final class AdSelectionConfig implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeString(mSeller);
+        mSeller.writeToParcel(dest, flags);
         mDecisionLogicUri.writeToParcel(dest, flags);
-        dest.writeStringList(mCustomAudienceBuyers);
-        dest.writeString(mAdSelectionSignals);
-        dest.writeString(mSellerSignals);
-        dest.writeBundle(mapToBundle(mPerBuyerSignals));
+        dest.writeTypedList(mCustomAudienceBuyers);
+        mAdSelectionSignals.writeToParcel(dest, flags);
+        mSellerSignals.writeToParcel(dest, flags);
+        dest.writeBundle(adTechSignalMapToBundle(mPerBuyerSignals));
         dest.writeTypedList(mContextualAds);
         mTrustedScoringSignalsUri.writeToParcel(dest, flags);
+    }
+
+    /**
+     * Converts {@code Map<AdTechIdentifier, AdSelectionSignals>} to {@link Bundle} for {@link
+     * #writeToParcel(Parcel, int)}.
+     */
+    private static Bundle adTechSignalMapToBundle(
+            @NonNull Map<AdTechIdentifier, AdSelectionSignals> map) {
+        Objects.requireNonNull(map);
+        Bundle result = new Bundle();
+        for (Map.Entry<AdTechIdentifier, AdSelectionSignals> entry : map.entrySet()) {
+            result.putParcelable(entry.getKey().getStringForm(), entry.getValue());
+        }
+        return result;
+    }
+
+    /**
+     * Converts {@link Bundle} to {@code Map<AdTechIdentifier, AdSelectionSignals>} for constructing
+     * an {@link AdSelectionConfig} object from a {@link Parcel}.
+     */
+    private static Map<AdTechIdentifier, AdSelectionSignals> bundleToAdTechSignalMap(
+            @NonNull Bundle bundle) {
+        Objects.requireNonNull(bundle);
+
+        Map<AdTechIdentifier, AdSelectionSignals> result = new HashMap<>();
+        for (String key : bundle.keySet()) {
+            result.put(
+                    AdTechIdentifier.fromString(key),
+                    bundle.getParcelable(key, AdSelectionSignals.class));
+        }
+        return result;
     }
 
     @Override
@@ -162,11 +172,9 @@ public final class AdSelectionConfig implements Parcelable {
                 mTrustedScoringSignalsUri);
     }
 
-    /**
-     * @return a String identifier of the seller, for example "www.example-ssp.com"
-     */
+    /** @return a AdTechIdentifier of the seller, for example "www.example-ssp.com" */
     @NonNull
-    public String getSeller() {
+    public AdTechIdentifier getSeller() {
         return mSeller;
     }
 
@@ -184,39 +192,39 @@ public final class AdSelectionConfig implements Parcelable {
      *     selection process
      */
     @NonNull
-    public List<String> getCustomAudienceBuyers() {
+    public List<AdTechIdentifier> getCustomAudienceBuyers() {
         return mCustomAudienceBuyers;
     }
 
     /**
-     * @return a valid JSON object serialized as a String, fetched from the AdSelectionConfig and
-     *     consumed by the JS logic fetched from the DSP, represents signals given to the
-     *     participating buyers in the ad selection and reporting processes.
+     * @return JSON in an AdSelectionSignals object, fetched from the AdSelectionConfig and consumed
+     *     by the JS logic fetched from the DSP, represents signals given to the participating
+     *     buyers in the ad selection and reporting processes.
      */
     @NonNull
-    public String getAdSelectionSignals() {
+    public AdSelectionSignals getAdSelectionSignals() {
         return mAdSelectionSignals;
     }
 
     /**
-     * @return a valid JSON object serialized as a String, provided by the SSP and consumed by the
-     *     JS logic fetched from the SSP, represents any information that the SSP used in the ad
+     * @return JSON in an AdSelectionSignals object, provided by the SSP and consumed by the JS
+     *     logic fetched from the SSP, represents any information that the SSP used in the ad
      *     scoring process to tweak the results of the ad selection process (e.g. brand safety
      *     checks, excluded contextual ads).
      */
     @NonNull
-    public String getSellerSignals() {
+    public AdSelectionSignals getSellerSignals() {
         return mSellerSignals;
     }
 
     /**
-     * @return a Map of buyers and JSON object serialized strings, fetched from the
-     *     AdSelectionConfig and consumed by the JS logic fetched from the DSP, representing any
-     *     information that each buyer would provide during ad selection to participants (such as
-     *     bid floor, ad selection type, etc.)
+     * @return a Map of buyers and AdSelectionSignals, fetched from the AdSelectionConfig and
+     *     consumed by the JS logic fetched from the DSP, representing any information that each
+     *     buyer would provide during ad selection to participants (such as bid floor, ad selection
+     *     type, etc.)
      */
     @NonNull
-    public Map<String, String> getPerBuyerSignals() {
+    public Map<AdTechIdentifier, AdSelectionSignals> getPerBuyerSignals() {
         return mPerBuyerSignals;
     }
 
@@ -245,12 +253,12 @@ public final class AdSelectionConfig implements Parcelable {
 
     /** Builder for {@link AdSelectionConfig} object. */
     public static final class Builder {
-        private String mSeller;
+        private AdTechIdentifier mSeller;
         private Uri mDecisionLogicUri;
-        private List<String> mCustomAudienceBuyers;
-        private String mAdSelectionSignals = "{}";
-        private String mSellerSignals = "{}";
-        private Map<String, String> mPerBuyerSignals = Collections.emptyMap();
+        private List<AdTechIdentifier> mCustomAudienceBuyers;
+        private AdSelectionSignals mAdSelectionSignals = AdSelectionSignals.EMPTY;
+        private AdSelectionSignals mSellerSignals = AdSelectionSignals.EMPTY;
+        private Map<AdTechIdentifier, AdSelectionSignals> mPerBuyerSignals = Collections.emptyMap();
         private List<AdWithBid> mContextualAds = Collections.emptyList();
         private Uri mTrustedScoringSignalsUri;
 
@@ -262,7 +270,7 @@ public final class AdSelectionConfig implements Parcelable {
          * <p>See {@link #getSeller()} for more details.
          */
         @NonNull
-        public AdSelectionConfig.Builder setSeller(@NonNull String seller) {
+        public AdSelectionConfig.Builder setSeller(@NonNull AdTechIdentifier seller) {
             Objects.requireNonNull(seller);
 
             this.mSeller = seller;
@@ -289,7 +297,7 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setCustomAudienceBuyers(
-                @NonNull List<String> customAudienceBuyers) {
+                @NonNull List<AdTechIdentifier> customAudienceBuyers) {
             Objects.requireNonNull(customAudienceBuyers);
 
             this.mCustomAudienceBuyers = customAudienceBuyers;
@@ -299,12 +307,13 @@ public final class AdSelectionConfig implements Parcelable {
         /**
          * Sets the signals provided to buyers during ad selection bid generation.
          *
-         * <p>If not set, defaults to an empty JSON object serialized as a String.
+         * <p>If not set, defaults to the empty JSON.
          *
          * <p>See {@link #getAdSelectionSignals()} for more details.
          */
         @NonNull
-        public AdSelectionConfig.Builder setAdSelectionSignals(@NonNull String adSelectionSignals) {
+        public AdSelectionConfig.Builder setAdSelectionSignals(
+                @NonNull AdSelectionSignals adSelectionSignals) {
             Objects.requireNonNull(adSelectionSignals);
 
             this.mAdSelectionSignals = adSelectionSignals;
@@ -314,12 +323,13 @@ public final class AdSelectionConfig implements Parcelable {
         /**
          * Set the signals used to modify ad selection results.
          *
-         * <p>If not set, defaults to an empty JSON object serialized as a String.
+         * <p>If not set, defaults to the empty JSON.
          *
          * <p>See {@link #getSellerSignals()} for more details.
          */
         @NonNull
-        public AdSelectionConfig.Builder setSellerSignals(@NonNull String sellerSignals) {
+        public AdSelectionConfig.Builder setSellerSignals(
+                @NonNull AdSelectionSignals sellerSignals) {
             Objects.requireNonNull(sellerSignals);
 
             this.mSellerSignals = sellerSignals;
@@ -335,7 +345,7 @@ public final class AdSelectionConfig implements Parcelable {
          */
         @NonNull
         public AdSelectionConfig.Builder setPerBuyerSignals(
-                @NonNull Map<String, String> perBuyerSignals) {
+                @NonNull Map<AdTechIdentifier, AdSelectionSignals> perBuyerSignals) {
             Objects.requireNonNull(perBuyerSignals);
 
             this.mPerBuyerSignals = perBuyerSignals;

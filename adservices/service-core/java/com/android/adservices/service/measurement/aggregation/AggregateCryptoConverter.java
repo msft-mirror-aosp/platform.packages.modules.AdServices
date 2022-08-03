@@ -102,7 +102,7 @@ public class AggregateCryptoConverter {
             // Encode with Base 64
             return encodeWithBase64(payloadEncrypted);
         } catch (Exception e) {
-            LogUtil.e("Encryption error", e);
+            LogUtil.e(e, "Encryption error");
             throw new CryptoException("Encryption error", e);
         }
     }
@@ -127,7 +127,7 @@ public class AggregateCryptoConverter {
             // Encode with Base 64
             return encodeWithBase64(payloadCborEncoded);
         } catch (Exception e) {
-            LogUtil.e("Encoding error", e);
+            LogUtil.e(e, "Encoding error");
             throw new CryptoException("Encoding error", e);
         }
     }
@@ -155,7 +155,7 @@ public class AggregateCryptoConverter {
             }
             return contributions;
         } catch (NumberFormatException | JSONException e) {
-            LogUtil.d("Malformed histogram payload", e);
+            LogUtil.d(e, "Malformed histogram payload");
             return contributions;
         }
     }

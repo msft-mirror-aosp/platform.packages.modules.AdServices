@@ -70,19 +70,13 @@ public final class MeasurementServiceImplTest {
 
     private static final Uri REGISTRATION_URI = Uri.parse("https://registration-uri.com");
     private static final Uri WEB_DESTINATION = Uri.parse("https://web-destination-uri.com");
-    private static final Uri OS_DESTINATION = Uri.parse("https://os-destination-uri.com");
+    private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app-destination");
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final int TIMEOUT = 5_000;
     private static final WebSourceParams SOURCE_REGISTRATION =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     private static final WebTriggerParams TRIGGER_REGISTRATION =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     @Mock private MeasurementImpl mMockMeasurementImpl;
 
     @Before
@@ -417,34 +411,33 @@ public final class MeasurementServiceImplTest {
         return new RegistrationRequest.Builder()
                 .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
-                .setTopOriginUri(Uri.parse("android-app//com.example"))
+                .setTopOriginUri(Uri.parse("android-app://com.example"))
                 .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
                 .build();
     }
 
     private WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest() {
         WebSourceRegistrationRequest sourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(Collections.singletonList(SOURCE_REGISTRATION))
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(SOURCE_REGISTRATION),
+                                Uri.parse("android-app//com.example"))
                         .setWebDestination(WEB_DESTINATION)
-                        .setOsDestination(OS_DESTINATION)
-                        .setTopOriginUri(Uri.parse("android-app//com.example"))
+                        .setAppDestination(APP_DESTINATION)
                         .build();
-        return new WebSourceRegistrationRequestInternal.Builder()
-                .setSourceRegistrationRequest(sourceRegistrationRequest)
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return new WebSourceRegistrationRequestInternal.Builder(
+                        sourceRegistrationRequest, sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
     private WebTriggerRegistrationRequestInternal createWebTriggerRegistrationRequest() {
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(Collections.singletonList(TRIGGER_REGISTRATION))
-                        .setDestination(Uri.parse("android-app//com.example"))
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(TRIGGER_REGISTRATION),
+                                Uri.parse("android-app://com.example"))
                         .build();
-        return new WebTriggerRegistrationRequestInternal.Builder()
-                .setTriggerRegistrationRequest(webTriggerRegistrationRequest)
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return new WebTriggerRegistrationRequestInternal.Builder(
+                        webTriggerRegistrationRequest,
+                        sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
