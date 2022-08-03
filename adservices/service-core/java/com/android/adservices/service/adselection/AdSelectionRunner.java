@@ -168,9 +168,12 @@ public final class AdSelectionRunner {
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
                     FluentFuture.from(getBuyersCustomAudience(adSelectionConfig))
                             .transformAsync(
-                                    buyersCustomAudiences ->
-                                            orchestrateAdSelection(
-                                                    adSelectionConfig, buyersCustomAudiences),
+                                    buyersCustomAudiences -> {
+                                        // PH flags need to be read outside the Binder thread
+                                        long timeouts = mFlags.getAdSelectionOverallTimeoutMs();
+                                        return orchestrateAdSelection(
+                                                adSelectionConfig, buyersCustomAudiences, timeouts);
+                                    },
                                     mExecutorService);
 
             Futures.addCallback(
@@ -247,7 +250,8 @@ public final class AdSelectionRunner {
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig,
-            @NonNull List<DBCustomAudience> buyerCustomAudience)
+            @NonNull List<DBCustomAudience> buyerCustomAudience,
+            @NonNull long timeout)
             throws ExecutionException, InterruptedException {
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
@@ -285,7 +289,7 @@ public final class AdSelectionRunner {
         return FluentFuture.from(dbAdSelectionBuilder)
                 .transformAsync(saveResultToPersistence, mExecutorService)
                 .withTimeout(
-                        mFlags.getAdSelectionOverallTimeoutMs(),
+                        timeout,
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
