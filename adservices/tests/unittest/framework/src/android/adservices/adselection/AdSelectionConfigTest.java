@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.CommonFixture;
+import android.net.Uri;
 import android.os.Parcel;
 
 import org.junit.Test;
@@ -134,5 +136,32 @@ public class AdSelectionConfigTest {
                             .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                             .build();
                 });
+    }
+
+    @Test
+    public void testAdSelectionConfigDescribeContents() {
+        AdSelectionConfig obj = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        assertEquals(obj.describeContents(), 0);
+    }
+
+    @Test
+    public void testEqualConfigsHaveSameHashCode() {
+        AdSelectionConfig obj1 = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig obj2 = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualConfigsHaveDifferentHashCode() {
+        AdSelectionConfig obj1 = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig obj2 =
+                AdSelectionConfigFixture.anAdSelectionConfig(AdSelectionConfigFixture.SELLER_1);
+        AdSelectionConfig obj3 =
+                AdSelectionConfigFixture.anAdSelectionConfig(
+                        Uri.parse("https://different.uri.com"));
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
 }
