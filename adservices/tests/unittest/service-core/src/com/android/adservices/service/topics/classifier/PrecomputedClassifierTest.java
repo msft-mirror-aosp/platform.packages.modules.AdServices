@@ -47,18 +47,13 @@ public class PrecomputedClassifierTest {
             "classifier/classifier_test_assets_metadata.json";
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final PrecomputedLoader sPrecomputedLoader =
-            new PrecomputedLoader(
-                    sContext,
-                    TEST_LABELS_FILE_PATH,
-                    TEST_APPS_FILE_PATH,
-                    TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
     private PrecomputedClassifier sPrecomputedClassifier;
+    private ModelManager mModelManager;
 
     @Before
     public void setUp() throws IOException {
-        sPrecomputedClassifier = new PrecomputedClassifier(sPrecomputedLoader);
-
+        mModelManager = ModelManager.getInstance(sContext);
+        sPrecomputedClassifier = new PrecomputedClassifier(mModelManager);
     }
 
     @Test
