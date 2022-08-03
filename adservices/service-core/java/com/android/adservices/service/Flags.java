@@ -464,12 +464,13 @@ public interface Flags extends Dumpable {
      * There must be not any empty space between comma.
      */
     String PPAPI_APP_ALLOW_LIST =
-            "com.android.tests.sandbox.topics,"
+            "android.platform.test.scenario,"
+                    + "android.adservices.crystalball,"
+                    + "com.android.tests.sandbox.topics,"
                     + "com.android.adservices.tests.cts.endtoendtest,"
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
                     + "com.android.adservices.tests.permissions.valid,"
-                    + "android.adservices.crystalball,"
                     + "com.example.adservices.samples.topics.sampleapp1,"
                     + "com.example.adservices.samples.topics.sampleapp2,"
                     + "com.example.adservices.samples.topics.sampleapp3,"
