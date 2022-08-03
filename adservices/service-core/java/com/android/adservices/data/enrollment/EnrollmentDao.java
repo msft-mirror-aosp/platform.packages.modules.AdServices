@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.enrollment;
 
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.content.Context;
@@ -111,6 +112,37 @@ public class EnrollmentDao implements IEnrollmentDao {
                         /*orderBy=*/ null,
                         /*limit=*/ null)) {
             if (cursor == null || cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToNext();
+            return SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+        }
+    }
+
+    @Override
+    @Nullable
+    public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
+            AdTechIdentifier adTechIdentifier) {
+        String adTechIdentifierString = adTechIdentifier.getStringForm();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        if (db == null) {
+            return null;
+        }
+        try (Cursor cursor =
+                db.query(
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /*columns=*/ null,
+                        EnrollmentTables.EnrollmentDataContract
+                                        .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                                + " LIKE '%"
+                                + adTechIdentifierString
+                                + "%'",
+                        null,
+                        /*groupBy=*/ null,
+                        /*having=*/ null,
+                        /*orderBy=*/ null,
+                        /*limit=*/ null)) {
+            if (cursor == null || cursor.getCount() != 1) {
                 return null;
             }
             cursor.moveToNext();
