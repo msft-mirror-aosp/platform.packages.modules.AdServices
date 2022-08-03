@@ -21,6 +21,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -107,7 +108,9 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(customAudience);
         Instant currentTime = mClock.instant();
 
+        LogUtil.v("Validating CA limits");
         mCustomAudienceQuantityChecker.check(customAudience);
+        LogUtil.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
         Duration customAudienceDefaultExpireIn =
@@ -117,6 +120,7 @@ public class CustomAudienceImpl {
                 DBCustomAudience.fromServiceObject(
                         customAudience, currentTime, customAudienceDefaultExpireIn);
 
+        LogUtil.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUrl());
     }
