@@ -16,9 +16,8 @@
 
 package android.adservices.appsetid;
 
-import static android.adservices.appsetid.AppsetIdManager.RESULT_OK;
-
-import android.adservices.appsetid.AppsetIdManager.ResultCode;
+import android.adservices.common.AdServicesResponse;
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -34,9 +33,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class GetAppsetIdResult implements Parcelable {
-    private final @ResultCode int mResultCode;
-    @Nullable private final String mErrorMessage;
+public final class GetAppsetIdResult extends AdServicesResponse {
     @NonNull private final String mAppsetId;
 
     /** @hide */
@@ -58,21 +55,19 @@ public final class GetAppsetIdResult implements Parcelable {
     private final @AppsetIdScope int mAppsetIdScope;
 
     private GetAppsetIdResult(
-            @ResultCode int resultCode,
+            @AdServicesStatusUtils.StatusCode int resultCode,
             @Nullable String errorMessage,
             @NonNull String appsetId,
             @AppsetIdScope int appsetIdScope) {
-        mResultCode = resultCode;
-        mErrorMessage = errorMessage;
+        super(resultCode, errorMessage);
         mAppsetId = appsetId;
         mAppsetIdScope = appsetIdScope;
     }
 
     private GetAppsetIdResult(@NonNull Parcel in) {
+        super(in);
         Objects.requireNonNull(in);
 
-        mResultCode = in.readInt();
-        mErrorMessage = in.readString();
         mAppsetId = in.readString();
         mAppsetIdScope = in.readInt();
     }
@@ -100,20 +95,10 @@ public final class GetAppsetIdResult implements Parcelable {
     /** @hide */
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
-        out.writeInt(mResultCode);
+        out.writeInt(mStatusCode);
         out.writeString(mErrorMessage);
         out.writeString(mAppsetId);
         out.writeInt(mAppsetIdScope);
-    }
-
-    /** Returns {@code true} if {@link #getResultCode} is {@link GetAppsetIdResult#RESULT_OK}. */
-    public boolean isSuccess() {
-        return getResultCode() == RESULT_OK;
-    }
-
-    /** Returns one of the {@code RESULT} constants defined in {@link GetAppsetIdResult}. */
-    public @ResultCode int getResultCode() {
-        return mResultCode;
     }
 
     /**
@@ -142,7 +127,7 @@ public final class GetAppsetIdResult implements Parcelable {
     public String toString() {
         return "GetAppsetIdResult{"
                 + "mResultCode="
-                + mResultCode
+                + mStatusCode
                 + ", mErrorMessage='"
                 + mErrorMessage
                 + '\''
@@ -165,7 +150,7 @@ public final class GetAppsetIdResult implements Parcelable {
 
         GetAppsetIdResult that = (GetAppsetIdResult) o;
 
-        return mResultCode == that.mResultCode
+        return mStatusCode == that.mStatusCode
                 && Objects.equals(mErrorMessage, that.mErrorMessage)
                 && Objects.equals(mAppsetId, that.mAppsetId)
                 && (mAppsetIdScope == that.mAppsetIdScope);
@@ -173,7 +158,7 @@ public final class GetAppsetIdResult implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mResultCode, mErrorMessage, mAppsetId, mAppsetIdScope);
+        return Objects.hash(mStatusCode, mErrorMessage, mAppsetId, mAppsetIdScope);
     }
 
     /**
@@ -182,7 +167,7 @@ public final class GetAppsetIdResult implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private @ResultCode int mResultCode;
+        private @AdServicesStatusUtils.StatusCode int mStatusCode;
         @Nullable private String mErrorMessage;
         @NonNull private String mAppsetId;
         private @AppsetIdScope int mAppsetIdScope;
@@ -190,8 +175,8 @@ public final class GetAppsetIdResult implements Parcelable {
         public Builder() {}
 
         /** Set the Result Code. */
-        public @NonNull Builder setResultCode(@ResultCode int resultCode) {
-            mResultCode = resultCode;
+        public @NonNull Builder setStatusCode(@AdServicesStatusUtils.StatusCode int statusCode) {
+            mStatusCode = statusCode;
             return this;
         }
 
@@ -216,7 +201,7 @@ public final class GetAppsetIdResult implements Parcelable {
         /** Builds a {@link GetAppsetIdResult} instance. */
         public @NonNull GetAppsetIdResult build() {
 
-            return new GetAppsetIdResult(mResultCode, mErrorMessage, mAppsetId, mAppsetIdScope);
+            return new GetAppsetIdResult(mStatusCode, mErrorMessage, mAppsetId, mAppsetIdScope);
         }
     }
 }
