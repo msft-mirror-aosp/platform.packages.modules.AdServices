@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.enrollment;
 
-import android.adservices.common.AdTechIdentifier;
-
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 /** Interface for enrollment related data access operations. */
@@ -38,14 +36,6 @@ public interface IEnrollmentDao {
      * @return the EnrollmentData; Null in case of SQL failure.
      */
     EnrollmentData getEnrollmentDataGivenUrl(String url);
-
-    /**
-     * Returns the {@link EnrollmentData} by given {@link AdTechIdentifier}.
-     *
-     * @param adTechIdentifier the ad tech identifier to be search against.
-     * @return the enrollment data or null if not exist.
-     */
-    EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(AdTechIdentifier adTechIdentifier);
 
     /**
      * Returns the {@link EnrollmentData} given AdTech SDK Name.
