@@ -132,6 +132,13 @@ public class AdServicesStatusUtils {
     public static final String ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE =
             "Background thread is not allowed to call this service.";
 
+    /**
+     * The error message to be returned along with {@link SecurityException} when caller not allowed
+     * to perform this operation on behalf of the given package.
+     */
+    public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE =
+            "Caller not allowed to perform this operation on behalf of the given package.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
