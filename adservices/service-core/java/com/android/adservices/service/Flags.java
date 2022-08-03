@@ -503,6 +503,7 @@ public interface Flags extends Dumpable {
     String PPAPI_APP_ALLOW_LIST =
             "com.android.tests.sandbox.topics,"
                     + "com.android.adservices.tests.cts.endtoendtest,"
+                    + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
                     + "com.android.adservices.tests.permissions.valid,"
