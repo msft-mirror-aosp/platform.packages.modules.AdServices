@@ -35,14 +35,14 @@ public class AddCustomAudienceOverrideRequestTest {
     public void testBuildAddCustomAudienceOverrideRequest() {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        assertEquals(request.getOwner(), OWNER);
+        assertEquals(request.getOwnerPackageName(), OWNER);
         assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
         assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
