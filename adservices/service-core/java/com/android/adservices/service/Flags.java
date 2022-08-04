@@ -487,6 +487,12 @@ public interface Flags extends Dumpable {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
+    boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
+
+    default boolean getConsentNotificationDebugMode() {
+        return CONSENT_NOTIFICATION_DEBUG_MODE;
+    }
+
     // Group of All Killswitches
 
     /**

@@ -73,7 +73,8 @@ public class AdServicesCommonServiceImpl extends
 
     /**
      * Set the adservices entry point Status from UI side, and also check adid zero-out status, and
-     * Set it to disable if adid is zero-out
+     * Schedule notification if both adservices entry point enabled and adid not opt-out and
+     * Adservice Is enabled
      */
     public void setAdServicesNotificationConditions(
             boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
@@ -92,8 +93,18 @@ public class AdServicesCommonServiceImpl extends
                         editor.putInt(
                                 KEY_ADSERVICES_ENTRY_POINT_STATUS, adserviceEntryPointStatusInt);
                         editor.apply();
+                        LogUtil.i(
+                                "adid status is "
+                                        + adIdEnabled
+                                        + ", adservice status is "
+                                        + mFlags.getAdservicesEnableStatus());
+                        if (mFlags.getAdservicesEnableStatus()) {
+                            ConsentNotificationJobService.schedule(mContext, adIdEnabled);
+                        }
                     } catch (Exception e) {
-                        LogUtil.e("unable to save the adservices entry point status");
+                        LogUtil.e(
+                                "unable to save the adservices entry point status of "
+                                        + e.getMessage());
                     }
                 });
     }
