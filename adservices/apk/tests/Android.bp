@@ -35,6 +35,8 @@ android_test {
         "androidx.test.ext.junit",
         "androidx.test.rules",
         "mockito-target-extended-minus-junit4",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
         "truth-prebuilt",
         "SettingsLibActionBarShadow",
         "SettingsLibSettingsTheme",

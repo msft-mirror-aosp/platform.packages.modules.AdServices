@@ -96,7 +96,7 @@ public class AppsViewModel extends AndroidViewModel {
      * @param app the app to be blocked.
      */
     public void revokeAppConsent(App app) throws IOException {
-        mConsentManager.revokeConsentForApp(app);
+        mConsentManager.revokeConsentForAppAndClearAppData(app);
         mApps.postValue(getAppsFromConsentManager());
         mBlockedApps.postValue(getBlockedAppsFromConsentManager());
     }
