@@ -103,7 +103,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A1",
         "sourceSite": "android-app://com.site.toBeDeleted",
@@ -185,7 +185,7 @@
         "sourceType": "navigation"
       }
     ],
-    "attribution_rate_limits": [
+    "attributions": [
       {
         "id": "A3",
         "sourceSite": "android-app://com.site1.doNotDelete",
