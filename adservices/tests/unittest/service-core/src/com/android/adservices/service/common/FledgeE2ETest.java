@@ -687,7 +687,7 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -701,7 +701,7 @@ public class FledgeE2ETest {
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -828,7 +828,7 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -842,7 +842,7 @@ public class FledgeE2ETest {
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -961,7 +961,7 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -971,7 +971,7 @@ public class FledgeE2ETest {
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });

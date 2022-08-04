@@ -116,7 +116,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
 
     // TODO(b/238658332) fold this validation into the AdTechIdentifier class
     private ImmutableList<String> validateSeller(@NonNull AdTechIdentifier sellerId) {
-        String seller = sellerId.getStringForm();
+        String seller = sellerId.toString();
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
         String sellerHost = Uri.parse("https://" + seller).getHost();
         if (isStringNullOrEmpty(seller)) {
@@ -132,7 +132,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
 
     private ImmutableList<String> validateUriAndSellerHost(
             @NonNull String uriType, @NonNull Uri uri, @NonNull AdTechIdentifier sellerId) {
-        String seller = sellerId.getStringForm();
+        String seller = sellerId.toString();
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
         if (!uri.isAbsolute()) {
             violations.add(String.format(URI_IS_NOT_ABSOLUTE, uriType));
