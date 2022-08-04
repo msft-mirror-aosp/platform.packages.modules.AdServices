@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -299,22 +300,37 @@ public class DbState {
 
     private Attribution getAttributionFrom(Cursor cursor) {
         return new Attribution.Builder()
-                .setId(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.ID)))
-                .setSourceSite(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.SOURCE_SITE)))
-                .setSourceOrigin(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.SOURCE_ORIGIN)))
-                .setDestinationSite(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.DESTINATION_SITE)))
-                .setDestinationOrigin(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
-                .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.AD_TECH_DOMAIN)))
-                .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.TRIGGER_TIME)))
-                .setRegistrant(cursor.getString(cursor.getColumnIndex(
-                        MeasurementTables.AttributionContract.REGISTRANT)))
+                .setId(
+                        cursor.getString(
+                                cursor.getColumnIndex(MeasurementTables.AttributionContract.ID)))
+                .setSourceSite(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_SITE)))
+                .setSourceOrigin(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.SOURCE_ORIGIN)))
+                .setDestinationSite(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.DESTINATION_SITE)))
+                .setDestinationOrigin(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.DESTINATION_ORIGIN)))
+                .setAdTechDomain(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.AD_TECH_DOMAIN)))
+                .setTriggerTime(
+                        cursor.getLong(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.TRIGGER_TIME)))
+                .setRegistrant(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.AttributionContract.REGISTRANT)))
                 .build();
     }
 
