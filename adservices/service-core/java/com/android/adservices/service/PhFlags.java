@@ -86,6 +86,8 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_max_ads_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS =
             "fledge_custom_audience_max_num_ads";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS =
+            "fledge_custom_audience_active_time_window_ms";
 
     // FLEDGE Background Fetch keys
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED = "fledge_background_fetch_enabled";
@@ -403,6 +405,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS);
+    }
+
+    @Override
+    public long getFledgeCustomAudienceActiveTimeWindowInMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS);
     }
 
     @Override
@@ -749,6 +759,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B
                         + " = "
                         + getFledgeCustomAudienceMaxAdsSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS
+                        + " = "
+                        + getFledgeCustomAudienceActiveTimeWindowInMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
