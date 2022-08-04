@@ -275,8 +275,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse()
                         .setAttemptedUpdateTime(attemptedUpdateTime)
                         .setInitialUpdateResult(
-                                BackgroundFetchRunner.UpdateResultType
-                                        .NETWORK_CONNECT_TIMEOUT_FAILURE)
+                                BackgroundFetchRunner.UpdateResultType.NETWORK_FAILURE)
                         .build();
 
         DBCustomAudienceBackgroundFetchData updatedFetchData =
