@@ -147,6 +147,9 @@ public final class PhFlags implements Flags {
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
+    // Consent Notification debug mode keys.
+    static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -663,6 +666,14 @@ public final class PhFlags implements Flags {
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
+    }
+
+    @Override
+    public boolean getConsentNotificationDebugMode() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                /* defaultValue */ CONSENT_NOTIFICATION_DEBUG_MODE);
     }
 
     @Override
