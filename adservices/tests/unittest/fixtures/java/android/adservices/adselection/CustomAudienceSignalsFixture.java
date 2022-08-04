@@ -31,11 +31,10 @@ public class CustomAudienceSignalsFixture {
     public static CustomAudienceSignals.Builder aCustomAudienceSignalsBuilder() {
         return new CustomAudienceSignals.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(BUYER.getStringForm())
+                .setBuyer(BUYER.toString())
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
     }
 }

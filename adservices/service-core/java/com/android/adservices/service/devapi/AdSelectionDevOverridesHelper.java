@@ -64,13 +64,13 @@ public class AdSelectionDevOverridesHelper {
             @NonNull AdSelectionConfig adSelectionConfig) {
         // See go/hashing#java
         Hasher hasher = sHashFunction.newHasher();
-        hasher.putUnencodedChars(adSelectionConfig.getSeller().getStringForm())
+        hasher.putUnencodedChars(adSelectionConfig.getSeller().toString())
                 .putUnencodedChars(adSelectionConfig.getDecisionLogicUri().toString())
-                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals().getStringForm())
-                .putUnencodedChars(adSelectionConfig.getSellerSignals().getStringForm());
+                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals().toString())
+                .putUnencodedChars(adSelectionConfig.getSellerSignals().toString());
 
         adSelectionConfig.getCustomAudienceBuyers().stream()
-                .map(AdTechIdentifier::getStringForm)
+                .map(AdTechIdentifier::toString)
                 .forEach(hasher::putUnencodedChars);
         adSelectionConfig.getContextualAds().stream()
                 .forEach(
@@ -83,8 +83,8 @@ public class AdSelectionDevOverridesHelper {
         adSelectionConfig.getPerBuyerSignals().entrySet().stream()
                 .forEach(
                         buyerAndSignals -> {
-                            hasher.putUnencodedChars(buyerAndSignals.getKey().getStringForm())
-                                    .putUnencodedChars(buyerAndSignals.getValue().getStringForm());
+                            hasher.putUnencodedChars(buyerAndSignals.getKey().toString())
+                                    .putUnencodedChars(buyerAndSignals.getValue().toString());
                         });
         return hasher.hash().toString();
     }
@@ -150,7 +150,7 @@ public class AdSelectionDevOverridesHelper {
                         .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
                         .setAppPackageName(mDevContext.getCallingAppPackageName())
                         .setDecisionLogicJS(decisionLogicJS)
-                        .setTrustedScoringSignals(trustedScoringSignals.getStringForm())
+                        .setTrustedScoringSignals(trustedScoringSignals.toString())
                         .build());
     }
 

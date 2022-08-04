@@ -63,8 +63,8 @@ public abstract class JSScriptArgument {
     public static JSScriptJsonArgument jsonArg(String name, AdSelectionSignals value)
             throws JSONException {
         // TODO(b/238849930) Merge this validation with AdSelectionSignals validation
-        new JSONObject(value.getStringForm());
-        return new JSScriptJsonArgument(name, value.getStringForm());
+        new JSONObject(value.toString());
+        return new JSScriptJsonArgument(name, value.toString());
     }
 
     /**

@@ -38,7 +38,7 @@ public class AdSelectionConfigFixture {
     public static final String TRUSTED_SCORING_SIGNAL_FRAGMENT = "trustedScoringSignalsFragment";
 
     public static final Uri DECISION_LOGIC_URI =
-            Uri.fromParts("https", SELLER.getStringForm(), DECISION_LOGIC_FRAGMENT);
+            Uri.fromParts("https", SELLER.toString(), DECISION_LOGIC_FRAGMENT);
 
     public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     public static final AdTechIdentifier BUYER_1 =
@@ -81,7 +81,7 @@ public class AdSelectionConfigFixture {
             Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
 
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
-            Uri.fromParts("https", SELLER.getStringForm(), TRUSTED_SCORING_SIGNAL_FRAGMENT);
+            Uri.fromParts("https", SELLER.toString(), TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
     private static AdWithBid createAdsWithBid(Uri renderUri, String metaData, double bid) {
         AdData asData = new AdData(renderUri, metaData);

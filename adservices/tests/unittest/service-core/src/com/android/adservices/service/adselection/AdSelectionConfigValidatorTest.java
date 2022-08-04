@@ -73,7 +73,7 @@ public class AdSelectionConfigValidatorTest {
             String uriType, AdTechIdentifier seller, Uri decisionLogicUrl) {
         return String.format(
                 AdSelectionConfigValidator.SELLER_AND_URI_HOST_ARE_INCONSISTENT,
-                Uri.parse("https://" + seller.getStringForm()).getHost(),
+                Uri.parse("https://" + seller.toString()).getHost(),
                 decisionLogicUrl.getHost(),
                 uriType);
     }

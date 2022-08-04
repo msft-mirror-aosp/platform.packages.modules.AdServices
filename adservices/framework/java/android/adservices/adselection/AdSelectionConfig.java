@@ -122,7 +122,7 @@ public final class AdSelectionConfig implements Parcelable {
         Objects.requireNonNull(map);
         Bundle result = new Bundle();
         for (Map.Entry<AdTechIdentifier, AdSelectionSignals> entry : map.entrySet()) {
-            result.putParcelable(entry.getKey().getStringForm(), entry.getValue());
+            result.putParcelable(entry.getKey().toString(), entry.getValue());
         }
         return result;
     }

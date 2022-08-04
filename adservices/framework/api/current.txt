@@ -162,11 +162,7 @@ package android.adservices.common {
 
   public final class AdSelectionSignals implements android.os.Parcelable {
     method public int describeContents();
-    method @NonNull public static android.adservices.common.AdSelectionSignals fromJson(@NonNull org.json.JSONObject);
     method @NonNull public static android.adservices.common.AdSelectionSignals fromString(@NonNull String);
-    method @NonNull public static android.adservices.common.AdSelectionSignals fromString(@NonNull String, boolean);
-    method @NonNull public org.json.JSONObject getJsonForm() throws org.json.JSONException;
-    method @NonNull public String getStringForm();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdSelectionSignals> CREATOR;
     field public static final android.adservices.common.AdSelectionSignals EMPTY;
@@ -175,8 +171,6 @@ package android.adservices.common {
   public final class AdTechIdentifier implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String);
-    method @NonNull public static android.adservices.common.AdTechIdentifier fromString(@NonNull String, boolean);
-    method @NonNull public String getStringForm();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdTechIdentifier> CREATOR;
   }
