@@ -274,9 +274,9 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testRequestSurfacePackageSdkNotLoaded() {
         // Trying to request package with not exist SDK packageName
         String sdkName = "invalid";
-        SecurityException thrown =
+        IllegalArgumentException thrown =
                 assertThrows(
-                        SecurityException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 mService.requestSurfacePackage(
                                         TEST_PACKAGE,
@@ -338,9 +338,9 @@ public class SdkSandboxManagerServiceUnitTest {
         deathRecipient.getValue().binderDied();
 
         // After App Died
-        SecurityException thrown =
+        IllegalArgumentException thrown =
                 assertThrows(
-                        SecurityException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 mService.requestSurfacePackage(
                                         TEST_PACKAGE,
@@ -375,9 +375,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSendData_SdkNotLoaded() throws Exception {
-        SecurityException thrown =
+        IllegalArgumentException thrown =
                 assertThrows(
-                        SecurityException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 mService.sendData(
                                         TEST_PACKAGE,
@@ -386,14 +386,11 @@ public class SdkSandboxManagerServiceUnitTest {
                                         new ISendDataCallback.Stub() {
                                             @Override
                                             public void onSendDataSuccess(Bundle params)
-                                                    throws RemoteException {
+                                                    throws RemoteException {}
 
-                                            }
                                             @Override
                                             public void onSendDataError(int i, String s)
-                                                    throws RemoteException {
-
-                                            }
+                                                    throws RemoteException {}
                                         }));
         assertThat(thrown).hasMessageThat().contains("Sdk " + SDK_NAME + " is not loaded");
     }
@@ -616,7 +613,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testUnloadSdkThatIsNotLoaded() {
-        assertThrows(SecurityException.class, () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME));
+        assertThrows(
+                IllegalArgumentException.class, () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME));
     }
 
     @Test
@@ -750,7 +748,7 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         @Override
-        public void unloadSdk(IBinder sdkToken, String sdkName) {}
+        public void unloadSdk(IBinder sdkToken) {}
 
         @Override
         public void syncDataFromClient(Bundle data) {
