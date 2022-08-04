@@ -75,13 +75,8 @@ public final class PermissionHelper {
     }
 
     /** @return {@code true} if the caller has the permission to invoke Custom Audiences APIs. */
-    public static boolean hasCustomAudiencesPermission(
-            @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
-        // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
-        // purposes and should not be used as a security measure.
-        if (useSandboxCheck) {
-            // TODO(b/236268316): Add check for SDK permission.
-        }
+    public static boolean hasCustomAudiencesPermission(@NonNull Context context) {
+        // TODO(b/236268316): Add check for SDK permission.
         int status =
                 context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION);
         return status == PackageManager.PERMISSION_GRANTED;
