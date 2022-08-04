@@ -272,7 +272,12 @@ public final class SdkSandboxManager {
             @NonNull OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver) {
         final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
         try {
-            mService.loadSdk(mContext.getPackageName(), sdkName, params, callbackProxy);
+            mService.loadSdk(
+                    mContext.getPackageName(),
+                    sdkName,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    params,
+                    callbackProxy);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

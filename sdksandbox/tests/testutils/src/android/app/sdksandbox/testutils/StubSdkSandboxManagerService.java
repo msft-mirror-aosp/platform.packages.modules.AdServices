@@ -38,7 +38,11 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void loadSdk(
-            String callingPackageName, String sdkName, Bundle params, ILoadSdkCallback callback) {}
+            String callingPackageName,
+            String sdkName,
+            long timeAppCalledSystemServer,
+            Bundle params,
+            ILoadSdkCallback callback) {}
 
     @Override
     public void unloadSdk(String callingPackageName, String sdkName) {}
