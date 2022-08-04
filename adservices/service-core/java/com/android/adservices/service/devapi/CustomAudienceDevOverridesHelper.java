@@ -61,7 +61,7 @@ public class CustomAudienceDevOverridesHelper {
      */
     @Nullable
     public String getBiddingLogicOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
@@ -97,7 +97,7 @@ public class CustomAudienceDevOverridesHelper {
 
         String biddingSignal =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
-                        owner, buyer.toString(), name, appPackageName);
+                        owner, buyer, name, appPackageName);
         return biddingSignal == null ? null : AdSelectionSignals.fromString(biddingSignal);
     }
 
@@ -131,7 +131,7 @@ public class CustomAudienceDevOverridesHelper {
             mCustomAudienceDao.persistCustomAudienceOverride(
                     DBCustomAudienceOverride.builder()
                             .setOwner(owner)
-                            .setBuyer(buyer.toString())
+                            .setBuyer(buyer)
                             .setName(name)
                             .setBiddingLogicJS(biddingLogicJS)
                             .setTrustedBiddingData(trustedBiddingSignals.toString())
@@ -160,7 +160,7 @@ public class CustomAudienceDevOverridesHelper {
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         mCustomAudienceDao.removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
-                owner, buyer.toString(), name, appPackageName);
+                owner, buyer, name, appPackageName);
     }
 
     /**

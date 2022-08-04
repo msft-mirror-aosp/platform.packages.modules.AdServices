@@ -167,8 +167,7 @@ public class DBCustomAudienceTest {
         DBCustomAudience originalCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
-                        .setUserBiddingSignals(
-                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString())
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                                 CommonFixture.VALID_BUYER)
@@ -196,8 +195,7 @@ public class DBCustomAudienceTest {
         DBCustomAudience originalCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
-                        .setUserBiddingSignals(
-                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString())
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                                 CommonFixture.VALID_BUYER)
@@ -230,8 +228,7 @@ public class DBCustomAudienceTest {
         DBCustomAudience originalCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .setLastAdsAndBiddingDataUpdatedTime(originalUpdateTime)
-                        .setUserBiddingSignals(
-                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString())
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                         .setTrustedBiddingData(
                                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                                 CommonFixture.VALID_BUYER)
@@ -259,7 +256,7 @@ public class DBCustomAudienceTest {
         DBCustomAudience expectedCustomAudience =
                 new DBCustomAudience.Builder(originalCustomAudience)
                         .setLastAdsAndBiddingDataUpdatedTime(attemptedUpdateTime)
-                        .setUserBiddingSignals(updatedUserBiddingSignals.toString())
+                        .setUserBiddingSignals(updatedUserBiddingSignals)
                         .setTrustedBiddingData(updatedTrustedBiddingData)
                         .setAds(updatedAds)
                         .build();

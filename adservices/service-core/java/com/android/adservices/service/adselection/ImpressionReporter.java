@@ -23,7 +23,6 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -345,9 +344,7 @@ public class ImpressionReporter {
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
                                     ctx.mAdSelectionConfig
                                             .getPerBuyerSignals()
-                                            .get(
-                                                    AdTechIdentifier.fromString(
-                                                            customAudienceSignals.getBuyer())),
+                                            .get(customAudienceSignals.getBuyer()),
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
