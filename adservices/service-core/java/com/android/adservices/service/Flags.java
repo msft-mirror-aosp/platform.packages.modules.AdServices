@@ -39,8 +39,8 @@ public interface Flags extends Dumpable {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. */
-    long TOPICS_EPOCH_JOB_FLEX_MS = 5 * 60 * 60 * 1000; // 5 hours.
+    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
+    long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
