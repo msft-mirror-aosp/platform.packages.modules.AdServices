@@ -24,6 +24,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
@@ -91,6 +92,7 @@ public class FledgeCtsTest {
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
+    private TestAdSelectionClient mTestAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
     private DevContext mDevContext;
     private boolean mIsDebugMode;
@@ -99,6 +101,11 @@ public class FledgeCtsTest {
     public void setup() {
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+        mTestAdSelectionClient =
+                new TestAdSelectionClient.Builder()
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
@@ -166,7 +173,7 @@ public class FledgeCtsTest {
                         AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> adSelectionOverrideResult =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
+                mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(
                         addAdSelectionOverrideRequest);
 
         Exception adSelectionOverrideException =
