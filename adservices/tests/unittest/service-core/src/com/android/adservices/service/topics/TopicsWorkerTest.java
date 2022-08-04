@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -125,7 +125,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
                         .setTopics(Arrays.asList(1, 2, 3))
@@ -159,7 +159,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -206,7 +206,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -245,7 +245,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -293,7 +293,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
                         .setTopics(Arrays.asList(1, 2, 3))
@@ -529,7 +529,7 @@ public class TopicsWorkerTest {
         // Verify topics are persisted in the database
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Arrays.asList(2L, 3L))
                         .setModelVersions(Arrays.asList(5L, 6L))
                         .setTopics(Arrays.asList(2, 3))
@@ -568,7 +568,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -709,7 +709,7 @@ public class TopicsWorkerTest {
         // App1 should get topics 1, 2, 3
         GetTopicsResult expectedGetTopicsResult1 =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(
                                 Arrays.asList(taxonomyVersion, taxonomyVersion, taxonomyVersion))
                         .setModelVersions(Arrays.asList(modelVersion, modelVersion, modelVersion))
@@ -729,7 +729,7 @@ public class TopicsWorkerTest {
         // App2 is uninstalled so should return empty topics.
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -747,7 +747,7 @@ public class TopicsWorkerTest {
         // App3 is newly installed and should topics 1, 2, 6
         GetTopicsResult expectedGetTopicsResult3 =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(
                                 Arrays.asList(taxonomyVersion, taxonomyVersion, taxonomyVersion))
                         .setModelVersions(Arrays.asList(modelVersion, modelVersion, modelVersion))
@@ -815,7 +815,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Arrays.asList(1L, 2L, 3L))
                         .setModelVersions(Arrays.asList(4L, 5L, 6L))
                         .setTopics(Arrays.asList(1, 2, 3))
@@ -837,7 +837,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -914,7 +914,7 @@ public class TopicsWorkerTest {
         // Verify getTopics() returns nothing before calling assignTopicsToNewlyInstalledApps()
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -926,7 +926,7 @@ public class TopicsWorkerTest {
 
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(
                                 Arrays.asList(taxonomyVersion, taxonomyVersion, taxonomyVersion))
                         .setModelVersions(Arrays.asList(modelVersion, modelVersion, modelVersion))

@@ -45,4 +45,8 @@ public class CommonFixture {
     public static Uri getUri(String authority, String path) {
         return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + authority + path);
     }
+
+    public static Uri getUri(AdTechIdentifier authority, String path) {
+        return getUri(authority.getStringForm(), path);
+    }
 }

@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -74,7 +75,7 @@ public class AdSelectionDevOverridesHelperTest {
                 .isNotEqualTo(
                         calculateAdSelectionConfigId(
                                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                                        .setSeller("another seller")
+                                        .setSeller(AdTechIdentifier.fromString("another seller"))
                                         .build()));
     }
 

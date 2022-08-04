@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.topics;
 
-import static android.adservices.topics.TopicsManager.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -41,7 +45,6 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.ResultCode;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
@@ -144,27 +147,62 @@ public class TopicsServiceImplTest {
         when(mMockFlags.getPpapiAppAllowList()).thenReturn(TOPICS_API_ALLOW_LIST);
 
         // Rate Limit is not reached.
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API), anyString()))
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
+                .thenReturn(true);
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
     }
 
     @Test
-    public void checkAllowList_emptyList() {
+    public void checkNoUserConsent() throws InterruptedException {
+        when(mConsentManager.getConsent(any(PackageManager.class)))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+        invokeGetTopicsAndVerifyError(mContext, STATUS_USER_CONSENT_REVOKED);
+    }
+
+    @Test
+    public void checkAllowList_emptyList() throws InterruptedException {
         // Empty allow list, don't allow any app.
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
-        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_UNAUTHORIZED_CALL);
+        invokeGetTopicsAndVerifyError(mContext, STATUS_CALLER_NOT_ALLOWED);
     }
 
     @Test
-    public void checkThrottler_rateLimitReached() {
+    public void checkThrottler_rateLimitReached_forSdkName() throws InterruptedException {
+        // A SDK calls Topics API.
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName(SOME_SDK_NAME)
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
         // Rate Limit Reached.
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API), anyString()))
+        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.TOPICS_API_SDK_NAME), anyString()))
                 .thenReturn(false);
-        invokeGetTopicsAndVerifyError(mContext, ResultCode.RESULT_RATE_LIMIT_REACHED);
+        invokeGetTopicsAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED);
     }
 
     @Test
-    public void checkNoPermission() {
+    public void checkThrottler_rateLimitReached_forAppPackageName() throws InterruptedException {
+        // App calls Topics API directly, not via a SDK.
+        GetTopicsParam request =
+                new GetTopicsParam.Builder()
+                        .setAppPackageName(TEST_APP_PACKAGE_NAME)
+                        .setSdkName("") // Empty SdkName implies the app calls Topic API directly.
+                        .setSdkPackageName(SDK_PACKAGE_NAME)
+                        .build();
+
+        // Rate Limit Reached.
+        when(mMockThrottler.tryAcquire(
+                        eq(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME), anyString()))
+                .thenReturn(false);
+        invokeGetTopicsAndVerifyError(mContext, STATUS_RATE_LIMIT_REACHED, request);
+    }
+
+    @Test
+    public void checkNoPermission() throws InterruptedException {
         MockContext context =
                 new MockContext() {
                     @Override
@@ -177,62 +215,15 @@ public class TopicsServiceImplTest {
                         return mPackageManager;
                     }
                 };
-        invokeGetTopicsAndVerifyError(context, ResultCode.RESULT_UNAUTHORIZED_CALL);
+        invokeGetTopicsAndVerifyError(context, STATUS_PERMISSION_NOT_REQUESTED);
     }
 
     @Test
-    public void checkSdkNoPermission() {
+    public void checkSdkNoPermission() throws InterruptedException {
         when(mPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
-        invokeGetTopicsAndVerifyError(mMockSdkContext, ResultCode.RESULT_UNAUTHORIZED_CALL);
-    }
-
-    @Test
-    public void checkNoUserConsent() {
-        MockContext context =
-                new MockContext() {
-                    @Override
-                    public int checkCallingOrSelfPermission(String permission) {
-                        return PackageManager.PERMISSION_GRANTED;
-                    }
-
-                    @Override
-                    public PackageManager getPackageManager() {
-                        return mPackageManager;
-                    }
-                };
-        when(mConsentManager.getConsent(any(PackageManager.class)))
-                .thenReturn(AdServicesApiConsent.REVOKED);
-
-        TopicsServiceImpl topicsService =
-                new TopicsServiceImpl(
-                        context,
-                        mTopicsWorker,
-                        mConsentManager,
-                        mAdServicesLogger,
-                        mClock,
-                        mMockFlags,
-                        mMockThrottler);
-        topicsService.getTopics(
-                mRequest,
-                mCallerMetadata,
-                new IGetTopicsCallback() {
-                    @Override
-                    public void onResult(GetTopicsResult responseParcel) throws RemoteException {
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
-                    }
-
-                    @Override
-                    public IBinder asBinder() {
-                        return null;
-                    }
-                });
+        invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_PERMISSION_NOT_REQUESTED);
     }
 
     @Test
@@ -357,7 +348,7 @@ public class TopicsServiceImplTest {
         // No topics (empty list) were returned because all topics are blocked
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -408,7 +399,7 @@ public class TopicsServiceImplTest {
         // No topics (empty list) were returned.
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -465,7 +456,7 @@ public class TopicsServiceImplTest {
         // No topics (empty list) were returned.
         GetTopicsResult expectedGetTopicsResult =
                 new GetTopicsResult.Builder()
-                        .setResultCode(RESULT_OK)
+                        .setResultCode(STATUS_SUCCESS)
                         .setTaxonomyVersions(Collections.emptyList())
                         .setModelVersions(Collections.emptyList())
                         .setTopics(Collections.emptyList())
@@ -558,7 +549,7 @@ public class TopicsServiceImplTest {
                 .isTrue();
 
         verify(mAdServicesLogger).logApiCallStats(argument.capture());
-        assertThat(argument.getValue().getResultCode()).isEqualTo(ResultCode.RESULT_OK);
+        assertThat(argument.getValue().getResultCode()).isEqualTo(STATUS_SUCCESS);
         assertThat(argument.getValue().getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(argument.getValue().getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
         // The latency calculate result (200 - 150) + (150 - 100) * 2 = 150
@@ -623,7 +614,7 @@ public class TopicsServiceImplTest {
 
                     @Override
                     public void onFailure(int resultCode) {
-                        assertThat(resultCode).isEqualTo(ResultCode.RESULT_UNAUTHORIZED_CALL);
+                        assertThat(resultCode).isEqualTo(STATUS_PERMISSION_NOT_REQUESTED);
                         mGetTopicsCallbackLatch.countDown();
                     }
 
@@ -641,7 +632,16 @@ public class TopicsServiceImplTest {
     }
 
     @NonNull
-    private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode) {
+    private void invokeGetTopicsAndVerifyError(Context context, int expectedResultCode)
+            throws InterruptedException {
+        invokeGetTopicsAndVerifyError(context, expectedResultCode, mRequest);
+    }
+
+    @NonNull
+    private void invokeGetTopicsAndVerifyError(
+            Context context, int expectedResultCode, GetTopicsParam request)
+            throws InterruptedException {
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
         TopicsServiceImpl topicsService =
                 new TopicsServiceImpl(
                         context,
@@ -652,17 +652,19 @@ public class TopicsServiceImplTest {
                         mMockFlags,
                         mMockThrottler);
         topicsService.getTopics(
-                mRequest,
+                request,
                 mCallerMetadata,
                 new IGetTopicsCallback() {
                     @Override
                     public void onResult(GetTopicsResult responseParcel) throws RemoteException {
                         Assert.fail();
+                        jobFinishedCountDown.countDown();
                     }
 
                     @Override
                     public void onFailure(int resultCode) {
                         assertThat(resultCode).isEqualTo(expectedResultCode);
+                        jobFinishedCountDown.countDown();
                     }
 
                     @Override
@@ -670,6 +672,7 @@ public class TopicsServiceImplTest {
                         return null;
                     }
                 });
+        jobFinishedCountDown.await();
     }
 
     @NonNull

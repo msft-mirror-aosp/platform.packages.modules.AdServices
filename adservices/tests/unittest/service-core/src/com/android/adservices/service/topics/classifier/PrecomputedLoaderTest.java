@@ -63,7 +63,7 @@ public class PrecomputedLoaderTest {
         // Check size of map
         // The app topics file contains 1000 apps + 11 sample apps + 2 test valid topics' apps
         // + 1 end2end test app.
-        assertThat(appTopic.size()).isEqualTo(1014);
+        assertThat(appTopic.size()).isEqualTo(1015);
 
         // Check whatsApp, chrome and a sample app topics in map
         // The topicId of "com.whatsapp" in assets/precomputed_test_app_list.csv
@@ -106,5 +106,17 @@ public class PrecomputedLoaderTest {
         // assets/precomputed_test_app_list.csv are 143, 15
         List<Integer> validTestApp2Topics = Arrays.asList(143, 15);
         assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
+    }
+
+    @Test
+    public void testAppsWithOnlyEmptyTopics() {
+        // This app has all topics as `None` in `assets/precomputed_test_app_list.csv`
+        String appWithEmptyTopics = "com.emptytopics";
+
+        // Load precomputed labels from the test source `assets/precomputed_test_app_list.csv`
+        Map<String, List<Integer>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
+
+        // Verify this entry is not present in the map.
+        assertThat(appTopic).doesNotContainKey(appWithEmptyTopics);
     }
 }

@@ -110,4 +110,9 @@ public final class RegistrationRequestTest {
                 RegistrationRequest.CREATOR.createFromParcel(p));
         p.recycle();
     }
+
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleAttribution().describeContents());
+    }
 }

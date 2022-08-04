@@ -48,6 +48,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.devapi.DevContext;
@@ -144,7 +145,9 @@ public class CustomAudienceServiceEndToEndTest {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 CommonFixture.FLAGS_FOR_TEST),
                         new FledgeAuthorizationFilter(
-                                CONTEXT.getPackageManager(), mAdServicesLogger),
+                                CONTEXT.getPackageManager(),
+                                EnrollmentDao.getInstance(CONTEXT),
+                                mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
                         mAdServicesLogger);
@@ -245,7 +248,7 @@ public class CustomAudienceServiceEndToEndTest {
                 () -> {
                     mService.leaveCustomAudience(
                             CustomAudienceFixture.VALID_OWNER,
-                            CommonFixture.VALID_BUYER.getStringForm(),
+                            CommonFixture.VALID_BUYER,
                             CustomAudienceFixture.VALID_NAME,
                             callback);
                 });
@@ -261,7 +264,7 @@ public class CustomAudienceServiceEndToEndTest {
                 () -> {
                     mService.leaveCustomAudience(
                             "other_owner",
-                            CommonFixture.VALID_BUYER.getStringForm(),
+                            CommonFixture.VALID_BUYER,
                             CustomAudienceFixture.VALID_NAME,
                             callback);
                 });
@@ -285,7 +288,7 @@ public class CustomAudienceServiceEndToEndTest {
         callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 callback);
         assertTrue(callback.isSuccess());
@@ -302,7 +305,7 @@ public class CustomAudienceServiceEndToEndTest {
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 "Not exist name",
                 callback);
         assertTrue(callback.isSuccess());
@@ -646,12 +649,7 @@ public class CustomAudienceServiceEndToEndTest {
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
-                owner,
-                buyer.getStringForm(),
-                name,
-                biddingLogicJs,
-                trustedBiddingData.getStringForm(),
-                callback);
+                owner, buyer, name, biddingLogicJs, trustedBiddingData, callback);
         resultLatch.await();
         return callback;
     }
@@ -666,8 +664,7 @@ public class CustomAudienceServiceEndToEndTest {
         CustomAudienceOverrideTestCallback callback =
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
-        customAudienceService.removeCustomAudienceRemoteInfoOverride(
-                owner, buyer.getStringForm(), name, callback);
+        customAudienceService.removeCustomAudienceRemoteInfoOverride(owner, buyer, name, callback);
 
         resultLatch.await();
         return callback;

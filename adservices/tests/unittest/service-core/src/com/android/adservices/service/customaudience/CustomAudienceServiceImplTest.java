@@ -302,7 +302,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -343,7 +343,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER.getStringForm(),
+                                CommonFixture.VALID_BUYER,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
 
@@ -379,7 +379,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER.getStringForm(),
+                                CommonFixture.VALID_BUYER,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
 
@@ -403,7 +403,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 null,
-                                CommonFixture.VALID_BUYER.getStringForm(),
+                                CommonFixture.VALID_BUYER,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallback));
 
@@ -459,7 +459,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER.getStringForm(),
+                                CommonFixture.VALID_BUYER,
                                 null,
                                 mICustomAudienceCallback));
 
@@ -487,7 +487,7 @@ public class CustomAudienceServiceImplTest {
                 () ->
                         mService.leaveCustomAudience(
                                 CustomAudienceFixture.VALID_OWNER,
-                                CommonFixture.VALID_BUYER.getStringForm(),
+                                CommonFixture.VALID_BUYER,
                                 CustomAudienceFixture.VALID_NAME,
                                 null));
 
@@ -520,7 +520,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 
@@ -559,7 +559,7 @@ public class CustomAudienceServiceImplTest {
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
-                CommonFixture.VALID_BUYER.getStringForm(),
+                CommonFixture.VALID_BUYER,
                 CustomAudienceFixture.VALID_NAME,
                 mICustomAudienceCallback);
 

@@ -133,6 +133,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                             .setErrorMessage(exception.getMessage())
                                             .build());
                         } catch (Exception exception) {
+                            LogUtil.e(exception, "Exception joining CA: ");
                             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
                             callback.onFailure(
                                     new FledgeErrorResponse.Builder()
@@ -157,7 +158,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      */
     public void leaveCustomAudience(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull ICustomAudienceCallback callback) {
         try {
@@ -179,8 +180,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 () -> {
                     int resultCode = AdServicesStatusUtils.STATUS_UNSET;
                     try {
-                        mCustomAudienceImpl.leaveCustomAudience(
-                                owner, AdTechIdentifier.fromString(buyer), name);
+                        mCustomAudienceImpl.leaveCustomAudience(owner, buyer, name);
                     } catch (Exception exception) {
                         LogUtil.e(exception, "Unexpected error leave custom audience.");
                     }
@@ -207,17 +207,17 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      */
     public void overrideCustomAudienceRemoteInfo(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingData,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         try {
             Objects.requireNonNull(owner);
             Objects.requireNonNull(buyer);
             Objects.requireNonNull(name);
             Objects.requireNonNull(biddingLogicJS);
-            Objects.requireNonNull(trustedBiddingData);
+            Objects.requireNonNull(trustedBiddingSignals);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
@@ -242,13 +242,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 new CustomAudienceOverrider(
                         devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
-        overrider.addOverride(
-                owner,
-                AdTechIdentifier.fromString(buyer),
-                name,
-                biddingLogicJS,
-                AdSelectionSignals.fromString(trustedBiddingData),
-                callback);
+        overrider.addOverride(owner, buyer, name, biddingLogicJS, trustedBiddingSignals, callback);
     }
 
     /**
@@ -259,7 +253,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @Override
     public void removeCustomAudienceRemoteInfoOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull CustomAudienceOverrideCallback callback) {
         try {
@@ -290,7 +284,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 new CustomAudienceOverrider(
                         devContext, customAudienceDao, mExecutorService, mAdServicesLogger);
 
-        overrider.removeOverride(owner, AdTechIdentifier.fromString(buyer), name, callback);
+        overrider.removeOverride(owner, buyer, name, callback);
     }
 
     /**

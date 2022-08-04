@@ -67,6 +67,7 @@ public class FledgeCtsDebuggableTest {
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
+    private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
 
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
@@ -93,14 +94,19 @@ public class FledgeCtsDebuggableTest {
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                    .setCustomAudienceBuyers(
-                            Arrays.asList(BUYER_1.getStringForm(), BUYER_2.getStringForm()))
+                    .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
                     .setDecisionLogicUri(
                             Uri.parse(
                                     String.format(
                                             "https://%s%s",
                                             AdSelectionConfigFixture.SELLER,
                                             SELLER_DECISION_LOGIC_URI_PATH)))
+                    .setTrustedScoringSignalsUri(
+                            Uri.parse(
+                                    String.format(
+                                            "https://%s%s",
+                                            AdSelectionConfigFixture.SELLER,
+                                            SELLER_TRUSTED_SIGNAL_URI_PATH)))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -187,9 +193,7 @@ public class FledgeCtsDebuggableTest {
         // exception."
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS.getStringForm());
+                        AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         mAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
@@ -201,7 +205,7 @@ public class FledgeCtsDebuggableTest {
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.getStringForm())
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
@@ -222,8 +226,7 @@ public class FledgeCtsDebuggableTest {
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_2.getStringForm(), AD_URL_PREFIX + "/ad3"),
-                outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_2, AD_URL_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest.Builder()
@@ -252,25 +255,22 @@ public class FledgeCtsDebuggableTest {
             ads.add(
                     new AdData.Builder()
                             .setRenderUri(
-                                    CommonFixture.getUri(
-                                            buyer.getStringForm(), AD_URL_PREFIX + "/ad" + (i + 1)))
+                                    CommonFixture.getUri(buyer, AD_URL_PREFIX + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }
 
         return new CustomAudience.Builder()
                 .setOwner(mDevContext.getCallingAppPackageName())
-                .setBuyer(buyer.getStringForm())
+                .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
-                .setBiddingLogicUrl(
-                        CommonFixture.getUri(buyer.getStringForm(), BUYER_BIDDING_LOGIC_URI_PATH))
+                .setBiddingLogicUrl(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
                 .setAds(ads)
                 .build();
     }

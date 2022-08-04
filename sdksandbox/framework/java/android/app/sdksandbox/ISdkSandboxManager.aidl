@@ -27,7 +27,9 @@ import android.content.pm.SharedLibraryInfo;
 /** @hide */
 interface ISdkSandboxManager {
     void loadSdk(in String callingPackageName, in String sdkName, in Bundle params, in ILoadSdkCallback callback);
+    void unloadSdk(in String callingPackageName, in String sdkName);
     void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, in int width, in int height, in Bundle params, IRequestSurfacePackageCallback callback);
     void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
     List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName);
+    void syncDataFromClient(in String callingPackageName, in Bundle data);
 }

@@ -209,6 +209,25 @@ public final class SdkSandboxManager {
     }
 
     /**
+     * Unloads an SDK that has been previously loaded by the caller.
+     *
+     * <p>It is not guaranteed that the memory allocated for this SDK will be freed immediately. All
+     * subsequent calls to {@link #sendData(String, Bundle, Executor, OutcomeReceiver)} or {@link
+     * #requestSurfacePackage(String, int, int, int, Bundle, Executor, OutcomeReceiver)} for the
+     * given {@code sdkName} will fail.
+     *
+     * @param sdkName name of the SDK to be unloaded.
+     * @throws IllegalArgumentException if the SDK is not loaded.
+     */
+    public void unloadSdk(@NonNull String sdkName) {
+        try {
+            mService.unloadSdk(mContext.getPackageName(), sdkName);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Send a request for a surface package to the sdk.
      *
      * <p>After client application receives a signal about a successful SDK loading, it is then able
@@ -258,7 +277,7 @@ public final class SdkSandboxManager {
      *
      * <p>After the client application receives a signal about a successful SDK load, it is then
      * able to asynchronously request to send any data to the SDK in the sandbox. If the SDK is not
-     * loaded, {@link SecurityException} is thrown.
+     * loaded, {@link IllegalArgumentException} is thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
      *     SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}
@@ -266,6 +285,7 @@ public final class SdkSandboxManager {
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param receiver the {@link OutcomeReceiver} which will receive events from loading and
      *     interacting with SDKs. The SDK may also send a Bundle of data back on a successful run.
+     * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void sendData(
             @NonNull String sdkName,

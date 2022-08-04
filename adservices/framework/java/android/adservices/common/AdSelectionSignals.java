@@ -17,7 +17,6 @@
 package android.adservices.common;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -27,24 +26,30 @@ import org.json.JSONObject;
 import java.util.Objects;
 
 /**
- * This class holds JSON that will be passed into a javascript auction function.
- *
- * @hide
+ * This class holds JSON that will be passed into a javascript auction function. Its contents are
+ * not used by FLEDGE system code, but are merely validated then passed to the appropriate
+ * javascript auction function.
  */
 public final class AdSelectionSignals implements Parcelable {
 
     public static final AdSelectionSignals EMPTY = fromString("{}");
 
-    @NonNull private final String mAdSelectionSignals;
+    @NonNull private final String mSignals;
 
     private AdSelectionSignals(@NonNull Parcel in) {
         this(in.readString());
     }
 
     private AdSelectionSignals(@NonNull String adSelectionSignals) {
+        this(adSelectionSignals, true);
+    }
+
+    private AdSelectionSignals(@NonNull String adSelectionSignals, boolean validate) {
         Objects.requireNonNull(adSelectionSignals);
-        validate(adSelectionSignals);
-        mAdSelectionSignals = adSelectionSignals;
+        if (validate) {
+            validate(adSelectionSignals);
+        }
+        mSignals = adSelectionSignals;
     }
 
     @NonNull
@@ -52,6 +57,7 @@ public final class AdSelectionSignals implements Parcelable {
             new Creator<AdSelectionSignals>() {
                 @Override
                 public AdSelectionSignals createFromParcel(Parcel in) {
+                    Objects.requireNonNull(in);
                     return new AdSelectionSignals(in);
                 }
 
@@ -68,18 +74,37 @@ public final class AdSelectionSignals implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(mAdSelectionSignals);
+        dest.writeString(mSignals);
     }
 
+    /**
+     * Compares this AdSelectionSignals to the specified object. The result is true if and only if
+     * the argument is not null and is a AdSelectionSignals object with the same string form
+     * (obtained by calling {@link #getStringForm()}). Note that this method will not perform any
+     * JSON normalization so two AdSelectionSignals objects with the same JSON could be not equal if
+     * the String representations of the objects was not equal.
+     *
+     * @param o The object to compare this AdSelectionSignals against
+     * @return true if the given object represents an AdSelectionSignals equivalent to this
+     *     AdSelectionSignals, false otherwise
+     */
     @Override
     public boolean equals(Object o) {
         return o instanceof AdSelectionSignals
-                && mAdSelectionSignals.equals(((AdSelectionSignals) o).getStringForm());
+                && mSignals.equals(((AdSelectionSignals) o).getStringForm());
     }
 
+    /**
+     * Returns a hash code corresponding to the string representation of this class obtained by
+     * calling {@link #getStringForm()}. Note that this method will not perform any JSON
+     * normalization so two AdSelectionSignals objects with the same JSON could have different hash
+     * codes if the underlying string representation was different.
+     *
+     * @return a hash code value for this object.
+     */
     @Override
     public int hashCode() {
-        return mAdSelectionSignals.hashCode();
+        return mSignals.hashCode();
     }
 
     @Override
@@ -88,17 +113,27 @@ public final class AdSelectionSignals implements Parcelable {
     }
 
     /**
-     * Creates an AdSelectionSignals from a given JSON string.
+     * Creates an AdSelectionSignals from a given JSON in String form.
      *
      * @param source Any valid JSON string to create the AdSelectionSignals with or null.
      * @return An AdSelectionSignals object wrapping the given String or null if the input was null
      */
     @NonNull
-    public static AdSelectionSignals fromString(@Nullable String source) {
-        if (source == null) {
-            return null;
-        }
-        return new AdSelectionSignals(source);
+    public static AdSelectionSignals fromString(@NonNull String source) {
+        return new AdSelectionSignals(source, true);
+    }
+
+    /**
+     * Creates an AdSelectionSignals from a given JSON in String form.
+     *
+     * @param source Any valid JSON string to create the AdSelectionSignals with or null.
+     * @param validate Construction-time validation is run on the string if and only if this is
+     *     true.
+     * @return An AdSelectionSignals object wrapping the given String or null if the input was null
+     */
+    @NonNull
+    public static AdSelectionSignals fromString(@NonNull String source, boolean validate) {
+        return new AdSelectionSignals(source, validate);
     }
 
     /**
@@ -116,13 +151,13 @@ public final class AdSelectionSignals implements Parcelable {
     /** @return The String form of the JSON wrapped by this class. */
     @NonNull
     public String getStringForm() {
-        return mAdSelectionSignals;
+        return mSignals;
     }
 
-    /** @return The JSON form of the JSON wrapped by this class. */
+    /** @return The JSONObject form of the JSON wrapped by this class. */
     @NonNull
-    public JSONObject getJSONForm() throws JSONException {
-        return new JSONObject(mAdSelectionSignals);
+    public JSONObject getJsonForm() throws JSONException {
+        return new JSONObject(mSignals);
     }
 
     private void validate(String inputString) {

@@ -30,7 +30,12 @@ public class Throttler {
     // Enum for each PP API or entry point that will be throttled.
     public enum ApiKey {
         UNKNOWN,
-        TOPICS_API
+
+        // Key to throttle Topics API based on the App Package Name.
+        TOPICS_API_APP_PACKAGE_NAME,
+
+        // Key to throttle Topics API based on the Sdk Name.
+        TOPICS_API_SDK_NAME,
     }
 
     private static volatile Throttler sSingleton;
@@ -67,7 +72,7 @@ public class Throttler {
      */
     public boolean tryAcquire(ApiKey apiKey, String requester) {
         // Negative Permits Per Second turns off rate limiting.
-        if (mSdkRequestPermitsPerSecond < 0) {
+        if (mSdkRequestPermitsPerSecond <= 0) {
             return true;
         }
 

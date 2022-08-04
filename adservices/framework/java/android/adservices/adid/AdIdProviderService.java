@@ -16,7 +16,7 @@
 
 package android.adservices.adid;
 
-import static android.adservices.adid.AdIdManager.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -62,7 +62,7 @@ public abstract class AdIdProviderService extends Service {
                         AdId adId = onGetAdId(appUID, packageName);
                         GetAdIdResult adIdInternal =
                                 new GetAdIdResult.Builder()
-                                        .setResultCode(RESULT_OK)
+                                        .setStatusCode(STATUS_SUCCESS)
                                         .setErrorMessage("")
                                         .setAdId(adId.getAdId())
                                         .setLatEnabled(adId.isLimitAdTrackingEnabled())

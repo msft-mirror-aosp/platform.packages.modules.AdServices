@@ -16,6 +16,7 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
 
@@ -36,13 +37,13 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final String mDecisionLogicJs;
 
-    @NonNull private final String mTrustedScoringSignals;
+    @NonNull private final AdSelectionSignals mTrustedScoringSignals;
 
     /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
-            @NonNull String trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJs);
         Objects.requireNonNull(trustedScoringSignals);
@@ -76,7 +77,7 @@ public class AddAdSelectionOverrideRequest {
      *     signals would be fed into the scoring logic during Ad Selection.
      */
     @NonNull
-    public String getTrustedScoringSignals() {
+    public AdSelectionSignals getTrustedScoringSignals() {
         return mTrustedScoringSignals;
     }
 }

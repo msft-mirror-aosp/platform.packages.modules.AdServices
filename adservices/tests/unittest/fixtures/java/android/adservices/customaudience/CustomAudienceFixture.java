@@ -64,30 +64,29 @@ public final class CustomAudienceFixture {
             VALID_ACTIVATION_TIME.plus(CUSTOM_AUDIENCE_MAX_EXPIRE_IN.multipliedBy(2));
     public static final Instant VALID_LAST_UPDATE_TIME_24_HRS_BEFORE =
             CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS);
-    public static final Instant INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE =
-            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 3);
+    public static final Instant INVALID_LAST_UPDATE_TIME_72_DAYS_BEFORE =
+            CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(DAY_IN_SECONDS * 72);
 
     public static final AdSelectionSignals VALID_USER_BIDDING_SIGNALS =
             AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
 
     public static Uri getValidDailyUpdateUriByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer.getStringForm(), "/update");
+        return CommonFixture.getUri(buyer, "/update");
     }
 
     public static Uri getValidBiddingLogicUrlByBuyer(AdTechIdentifier buyer) {
-        return CommonFixture.getUri(buyer.getStringForm(), "/bidding/logic/here/");
+        return CommonFixture.getUri(buyer, "/bidding/logic/here/");
     }
 
     public static CustomAudience.Builder getValidBuilderForBuyer(AdTechIdentifier buyer) {
         return new CustomAudience.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer.getStringForm())
+                .setBuyer(buyer)
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))

@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
@@ -149,7 +150,7 @@ public class CustomAudienceManager {
         Objects.requireNonNull(receiver);
 
         final String owner = leaveCustomAudienceRequest.getOwner();
-        final String buyer = leaveCustomAudienceRequest.getBuyer();
+        final AdTechIdentifier buyer = leaveCustomAudienceRequest.getBuyer();
         final String name = leaveCustomAudienceRequest.getName();
 
         try {
@@ -213,7 +214,7 @@ public class CustomAudienceManager {
                     request.getBuyer(),
                     request.getName(),
                     request.getBiddingLogicJs(),
-                    request.getTrustedBiddingData(),
+                    request.getTrustedBiddingSignals(),
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {

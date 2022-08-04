@@ -71,9 +71,7 @@ import com.android.server.pm.PackageManagerLocal;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -102,6 +100,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     // For communication between app<-ManagerService->RemoteCode for each codeToken
     @GuardedBy("mLock")
     private final ArrayMap<IBinder, AppAndRemoteSdkLink> mAppAndRemoteSdkLinks = new ArrayMap<>();
+
+    @GuardedBy("mLock")
+    private final ArraySet<CallingInfo> mCallingInfosWithDeathRecipients = new ArraySet<>();
 
     @GuardedBy("mLock")
     private final Set<CallingInfo> mRunningInstrumentations = new ArraySet<>();
@@ -233,11 +234,41 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         // Register a death recipient to clean up sdkToken and unbind its service after app dies.
         try {
-            callback.asBinder().linkToDeath(
-                    () -> onAppDeath(sdkToken, callingInfo), 0);
+            synchronized (mLock) {
+                if (!mCallingInfosWithDeathRecipients.contains(callingInfo)) {
+                    callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
+                    mCallingInfosWithDeathRecipients.add(callingInfo);
+                }
+            }
         } catch (RemoteException re) {
             // App has already died, cleanup sdk token and link, and unbind its service
-            onAppDeath(sdkToken, callingInfo);
+            onAppDeath(callingInfo);
+        }
+    }
+
+    @Override
+    public void unloadSdk(String callingPackageName, String sdkName) {
+        final CallingInfo callingInfo = new CallingInfo(Binder.getCallingUid(), callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
+            if (sdkToken == null) {
+                throw new IllegalArgumentException(
+                        "SDK " + sdkName + " is not loaded for " + callingInfo);
+            }
+            unloadSdkWithClearIdentity(callingInfo, sdkName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    private void unloadSdkWithClearIdentity(CallingInfo callingInfo, String sdkName) {
+        boolean shouldStopSandbox = removeLinksToSdk(callingInfo, sdkName);
+        if (shouldStopSandbox) {
+            stopSdkSandboxService(
+                    callingInfo, "Caller " + callingInfo + " has no remaining SDKS loaded.");
         }
     }
 
@@ -264,9 +295,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 callingPackage + " does not hold ACCESS_NETWORK_STATE permission");
     }
 
-    private void onAppDeath(IBinder sdkToken, CallingInfo callingInfo) {
-        cleanUp(sdkToken);
-        stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
+    private void onAppDeath(CallingInfo callingInfo) {
+        synchronized (mLock) {
+            mCallingInfosWithDeathRecipients.remove(callingInfo);
+            removeAllSdkTokensAndLinks(callingInfo);
+            stopSdkSandboxService(callingInfo, "Caller " + callingInfo + " has died");
+        }
     }
 
     @Override
@@ -287,7 +321,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
-                throw new SecurityException("Sdk " + sdkName + " is not loaded");
+                throw new IllegalArgumentException("Sdk " + sdkName + " is not loaded");
             }
             requestSurfacePackageWithClearIdentity(
                     sdkToken, hostToken, displayId, width, height, params, callback);
@@ -322,7 +356,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
-                throw new SecurityException("Sdk " + sdkName + " is not loaded");
+                throw new IllegalArgumentException("Sdk " + sdkName + " is not loaded");
             }
             final AppAndRemoteSdkLink link;
             synchronized (mLock) {
@@ -358,6 +392,32 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         writer.println("mServiceProvider:");
         mServiceProvider.dump(writer);
         writer.println();
+    }
+
+    @Override
+    public void syncDataFromClient(String callingPackageName, Bundle data) {
+        final int callingUid = Binder.getCallingUid();
+        final long token = Binder.clearCallingIdentity();
+
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+        try {
+            syncDataFromClientInternal(callingInfo, data);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    private void syncDataFromClientInternal(CallingInfo callingInfo, Bundle data) {
+        // check first if service already bound
+        ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
+        if (service != null) {
+            try {
+                service.syncDataFromClient(data);
+            } catch (RemoteException ignore) {
+                // TODO(b/239403323): Sandbox has died. Register lifecycle callback to retry.
+            }
+        }
     }
 
     static class SandboxServiceConnection implements ServiceConnection {
@@ -441,11 +501,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     @Override
                     public void onBindingSuccessful(ISdkSandboxService service) {
                         try {
-                            service.asBinder().linkToDeath(() -> cleanUp(callingInfo), 0);
+                            service.asBinder()
+                                    .linkToDeath(() -> removeAllSdkTokensAndLinks(callingInfo), 0);
                         } catch (RemoteException re) {
                             // Sandbox had already died, cleanup sdk tokens and links.
-                            cleanUp(callingInfo);
+                            removeAllSdkTokensAndLinks(callingInfo);
                         }
+
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
@@ -511,21 +573,44 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     /** Clean up all internal data structures related to {@code callingInfo} of the app */
-    private void cleanUp(CallingInfo callingInfo) {
-        // Destroy all sdkTokens related to the app
-        mSdkTokenManager.destroy(callingInfo);
+    private void removeAllSdkTokensAndLinks(CallingInfo callingInfo) {
+        removeLinksToSdk(callingInfo, null);
+    }
 
+    /**
+     * Removes {@link AppAndRemoteSdkLink} objects associated with the {@code callingInfo}. If
+     * {@code sdkName} is specified, only the object associated with that SDK name will be removed.
+     * Otherwise, all objects for the caller will be removed.
+     *
+     * <p>Returns {@code true} if there are no more SDKs associated with the caller after cleanup,
+     * {@code false} otherwise.
+     */
+    private boolean removeLinksToSdk(CallingInfo callingInfo, @Nullable String sdkName) {
         synchronized (mLock) {
-            // Now clean up rest of the state which is using obsolete sdkTokens
-            Iterator<Map.Entry<IBinder, AppAndRemoteSdkLink>> it =
-                    mAppAndRemoteSdkLinks.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<IBinder, AppAndRemoteSdkLink> entry = it.next();
-                AppAndRemoteSdkLink link = entry.getValue();
+            ISdkSandboxService boundSandbox = mServiceProvider.getBoundServiceForApp(callingInfo);
+            boolean shouldStopSandbox = true;
+            for (int i = 0; i < mAppAndRemoteSdkLinks.size(); i++) {
+                AppAndRemoteSdkLink link = mAppAndRemoteSdkLinks.valueAt(i);
                 if (link.mCallingInfo.equals(callingInfo)) {
-                    mAppAndRemoteSdkLinks.remove(entry.getKey());
+                    IBinder sdkToken = mAppAndRemoteSdkLinks.keyAt(i);
+                    if (TextUtils.isEmpty(sdkName)
+                            || link.mSdkProviderInfo.getSdkInfo().getName().equals(sdkName)) {
+                        if (boundSandbox != null) {
+                            try {
+                                boundSandbox.unloadSdk(sdkToken);
+                            } catch (RemoteException e) {
+                                Log.w(TAG, "Failed to unload SDK: ", e);
+                            }
+                        }
+                        mSdkTokenManager.destroy(sdkToken);
+                        mAppAndRemoteSdkLinks.remove(sdkToken);
+                    } else {
+                        shouldStopSandbox = false;
+                    }
                 }
             }
+
+            return shouldStopSandbox;
         }
     }
 
@@ -651,17 +736,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             synchronized (mSdkTokens) {
                 mSdkTokens.remove(mReverseSdkTokens.get(sdkToken));
                 mReverseSdkTokens.remove(sdkToken);
-            }
-        }
-
-        public void destroy(CallingInfo callingInfo) {
-            synchronized (mSdkTokens) {
-                for (int i = 0; i < mSdkTokens.size(); i++) {
-                    Pair<CallingInfo, String> pair = mSdkTokens.keyAt(i);
-                    if (pair.first.equals(callingInfo)) {
-                        destroy(mSdkTokens.get(pair));
-                    }
-                }
             }
         }
 

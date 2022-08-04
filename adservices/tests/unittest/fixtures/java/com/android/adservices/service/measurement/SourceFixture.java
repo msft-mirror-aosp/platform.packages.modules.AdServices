@@ -19,13 +19,18 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public final class SourceFixture {
     private SourceFixture() { }
@@ -106,6 +111,20 @@ public final class SourceFixture {
                 LogUtil.e("JSONException when building aggregate filter data.");
             }
             return null;
+        }
+
+        public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
+            return new AggregatableAttributionSource.Builder()
+                    .setAggregatableSource(Map.of("5", new BigInteger("345")))
+                    .setAggregateFilterData(
+                            new AggregateFilterData.Builder()
+                                    .setAttributionFilterMap(
+                                            Map.of(
+                                                    "product", List.of("1234", "4321"),
+                                                    "conversion_subdomain",
+                                                            List.of("electronics.megastore")))
+                                    .build())
+                    .build();
         }
     }
 }

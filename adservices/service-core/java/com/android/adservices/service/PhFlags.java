@@ -16,12 +16,16 @@
 
 package com.android.adservices.service;
 
+import static java.lang.Float.parseFloat;
+
 import android.annotation.NonNull;
 import android.os.SystemProperties;
 import android.provider.DeviceConfig;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.PrintWriter;
@@ -82,6 +86,8 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_max_ads_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS =
             "fledge_custom_audience_max_num_ads";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS =
+            "fledge_custom_audience_active_time_window_ms";
 
     // FLEDGE Background Fetch keys
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED = "fledge_background_fetch_enabled";
@@ -113,6 +119,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_scoring_timeout_ms";
     static final String KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_overall_timeout_ms";
+    static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
+            "fledge_report_impression_overall_timeout_ms";
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
 
@@ -138,6 +146,9 @@ public final class PhFlags implements Flags {
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+
+    // Consent Notification debug mode keys.
+    static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -400,6 +411,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeCustomAudienceActiveTimeWindowInMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS);
+    }
+
+    @Override
     public boolean getFledgeBackgroundFetchEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -521,6 +540,14 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
     }
 
+    @Override
+    public long getReportImpressionOverallTimeoutMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
+                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
+    }
+
     // MDD related flags.
     @Override
     public int getDownloaderConnectionTimeoutMs() {
@@ -586,6 +613,7 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
+
     // TOPICS AllowLists
     @Override
     public String getPpapiAppAllowList() {
@@ -599,7 +627,19 @@ public final class PhFlags implements Flags {
     // Rate Limit Flags.
     @Override
     public float getSdkRequestPermitsPerSecond() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        try {
+            String sdkPermitString =
+                    SystemProperties.get(getSystemPropertyName(KEY_SDK_REQUEST_PERMITS_PER_SECOND));
+            if (!TextUtils.isEmpty(sdkPermitString)) {
+                return parseFloat(sdkPermitString);
+            }
+        } catch (NumberFormatException e) {
+            LogUtil.e(e, "Failed to parse SdkRequestPermitsPerSecond");
+            return SDK_REQUEST_PERMITS_PER_SECOND;
+        }
+
         return DeviceConfig.getFloat(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_SDK_REQUEST_PERMITS_PER_SECOND,
@@ -629,10 +669,23 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentNotificationDebugMode() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                /* defaultValue */ CONSENT_NOTIFICATION_DEBUG_MODE);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_SDK_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getSdkRequestPermitsPerSecond());
 
         writer.println("==== AdServices PH Flags Dump MDD related flags: ====");
         writer.println(
@@ -719,6 +772,11 @@ public final class PhFlags implements Flags {
                         + getFledgeCustomAudienceMaxAdsSizeB());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS
+                        + " = "
+                        + getFledgeCustomAudienceActiveTimeWindowInMs());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS
                         + " = "
                         + getFledgeCustomAudienceMaxNumAds());
@@ -786,7 +844,12 @@ public final class PhFlags implements Flags {
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS
                         + " = "
-                        + getAdSelectionScoringTimeoutMs());
+                        + getAdSelectionOverallTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
+                        + " = "
+                        + getReportImpressionOverallTimeoutMs());
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
     }

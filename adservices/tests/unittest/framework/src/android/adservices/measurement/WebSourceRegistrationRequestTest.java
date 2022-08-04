@@ -17,12 +17,14 @@
 package android.adservices.measurement;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
+
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +33,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebSourceRegistrationRequestTest {
@@ -44,32 +47,32 @@ public class WebSourceRegistrationRequestTest {
             new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1);
 
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
     private static final List<WebSourceParams> SOURCE_REGISTRATIONS =
             Arrays.asList(SOURCE_REGISTRATION_1, SOURCE_REGISTRATION_2);
 
+    private static final WebSourceRegistrationRequest SOURCE_REGISTRATION_REQUEST =
+            new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
+                    .setInputEvent(INPUT_KEY_EVENT)
+                    .setVerifiedDestination(VERIFIED_DESTINATION)
+                    .setAppDestination(OS_DESTINATION_URI)
+                    .setWebDestination(WEB_DESTINATION_URI)
+                    .build();
+
     @Test
     public void testDefaults() throws Exception {
         WebSourceRegistrationRequest request =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(SOURCE_REGISTRATIONS)
-                        .setTopOriginUri(TOP_ORIGIN_URI)
-                        .setOsDestination(OS_DESTINATION_URI)
+                new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
+                        .setAppDestination(OS_DESTINATION_URI)
                         .build();
 
         assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
         assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
-        assertEquals(OS_DESTINATION_URI, request.getOsDestination());
+        assertEquals(OS_DESTINATION_URI, request.getAppDestination());
         assertNull(request.getInputEvent());
         assertNull(request.getWebDestination());
         assertNull(request.getVerifiedDestination());
@@ -77,7 +80,7 @@ public class WebSourceRegistrationRequestTest {
 
     @Test
     public void testCreationAttribution() {
-        verifyExampleRegistration(createExampleRegistrationRequest());
+        verifyExampleRegistration(SOURCE_REGISTRATION_REQUEST);
     }
 
     @Test
@@ -85,18 +88,19 @@ public class WebSourceRegistrationRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new WebSourceRegistrationRequest.Builder()
-                                .setSourceParams(SOURCE_REGISTRATIONS)
+                        new WebSourceRegistrationRequest.Builder(
+                                        SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .setVerifiedDestination(VERIFIED_DESTINATION)
-                                .setTopOriginUri(TOP_ORIGIN_URI)
+                                .setAppDestination(null)
+                                .setWebDestination(null)
                                 .build());
     }
 
     @Test
     public void testParcelingAttribution() {
         Parcel p = Parcel.obtain();
-        createExampleRegistrationRequest().writeToParcel(p, 0);
+        SOURCE_REGISTRATION_REQUEST.writeToParcel(p, 0);
         p.setDataPosition(0);
         verifyExampleRegistration(WebSourceRegistrationRequest.CREATOR.createFromParcel(p));
         p.recycle();
@@ -105,31 +109,66 @@ public class WebSourceRegistrationRequestTest {
     @Test
     public void build_withInvalidParams_fail() {
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () ->
-                        new WebSourceRegistrationRequest.Builder()
-                                .setSourceParams(null)
+                        new WebSourceRegistrationRequest.Builder(null, TOP_ORIGIN_URI)
                                 .setInputEvent(INPUT_KEY_EVENT)
-                                .setTopOriginUri(TOP_ORIGIN_URI)
                                 .build());
 
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new WebSourceRegistrationRequest.Builder()
-                                .setSourceParams(Collections.emptyList())
+                        new WebSourceRegistrationRequest.Builder(
+                                        Collections.emptyList(), TOP_ORIGIN_URI)
                                 .setInputEvent(INPUT_KEY_EVENT)
-                                .setTopOriginUri(TOP_ORIGIN_URI)
+                                .build());
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, null)
+                                .setInputEvent(INPUT_KEY_EVENT)
                                 .build());
     }
 
+    @Test
+    public void testDescribeContents() {
+        assertEquals(0, createExampleRegistrationRequest().describeContents());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        final WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        final WebSourceRegistrationRequest request2 = createExampleRegistrationRequest();
+        final Set<WebSourceRegistrationRequest> requestData1 = Set.of(request1);
+        final Set<WebSourceRegistrationRequest> requestData2 = Set.of(request2);
+        assertEquals(request1.hashCode(), request2.hashCode());
+        assertEquals(request1, request2);
+        assertEquals(requestData1, requestData2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        final WebSourceRegistrationRequest request1 = createExampleRegistrationRequest();
+        final WebSourceRegistrationRequest request2 =
+                new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
+                        .setInputEvent(null)
+                        .setVerifiedDestination(VERIFIED_DESTINATION)
+                        .setAppDestination(OS_DESTINATION_URI)
+                        .setWebDestination(WEB_DESTINATION_URI)
+                        .build();
+        final Set<WebSourceRegistrationRequest> requestData1 = Set.of(request1);
+        final Set<WebSourceRegistrationRequest> requestData2 = Set.of(request2);
+        assertNotEquals(request1.hashCode(), request2.hashCode());
+        assertNotEquals(request1, request2);
+        assertNotEquals(requestData1, requestData2);
+    }
+
     private WebSourceRegistrationRequest createExampleRegistrationRequest() {
-        return new WebSourceRegistrationRequest.Builder()
-                .setSourceParams(SOURCE_REGISTRATIONS)
+        return new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, TOP_ORIGIN_URI)
                 .setInputEvent(INPUT_KEY_EVENT)
                 .setVerifiedDestination(VERIFIED_DESTINATION)
-                .setTopOriginUri(TOP_ORIGIN_URI)
-                .setOsDestination(OS_DESTINATION_URI)
+                .setAppDestination(OS_DESTINATION_URI)
                 .setWebDestination(WEB_DESTINATION_URI)
                 .build();
     }
@@ -137,7 +176,7 @@ public class WebSourceRegistrationRequestTest {
     private void verifyExampleRegistration(WebSourceRegistrationRequest request) {
         assertEquals(SOURCE_REGISTRATIONS, request.getSourceParams());
         assertEquals(TOP_ORIGIN_URI, request.getTopOriginUri());
-        assertEquals(OS_DESTINATION_URI, request.getOsDestination());
+        assertEquals(OS_DESTINATION_URI, request.getAppDestination());
         assertEquals(WEB_DESTINATION_URI, request.getWebDestination());
         assertEquals(INPUT_KEY_EVENT.getAction(), ((KeyEvent) request.getInputEvent()).getAction());
         assertEquals(

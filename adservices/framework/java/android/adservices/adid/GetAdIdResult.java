@@ -16,9 +16,8 @@
 
 package android.adservices.adid;
 
-import static android.adservices.adid.AdIdManager.RESULT_OK;
-
-import android.adservices.adid.AdIdManager.ResultCode;
+import android.adservices.common.AdServicesResponse;
+import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.os.Parcel;
@@ -31,28 +30,24 @@ import java.util.Objects;
  *
  * @hide
  */
-public final class GetAdIdResult implements Parcelable {
-    private final @ResultCode int mResultCode;
-    @Nullable private final String mErrorMessage;
+public final class GetAdIdResult extends AdServicesResponse {
     @NonNull private final String mAdId;
     private final boolean mLimitAdTrackingEnabled;
 
     private GetAdIdResult(
-            @ResultCode int resultCode,
+            @AdServicesStatusUtils.StatusCode int resultCode,
             @Nullable String errorMessage,
             @NonNull String adId,
             boolean isLimitAdTrackingEnabled) {
-        mResultCode = resultCode;
-        mErrorMessage = errorMessage;
+        super(resultCode, errorMessage);
         mAdId = adId;
         mLimitAdTrackingEnabled = isLimitAdTrackingEnabled;
     }
 
     private GetAdIdResult(@NonNull Parcel in) {
+        super(in);
         Objects.requireNonNull(in);
 
-        mResultCode = in.readInt();
-        mErrorMessage = in.readString();
         mAdId = in.readString();
         mLimitAdTrackingEnabled = in.readBoolean();
     }
@@ -80,20 +75,10 @@ public final class GetAdIdResult implements Parcelable {
     /** @hide */
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
-        out.writeInt(mResultCode);
+        out.writeInt(mStatusCode);
         out.writeString(mErrorMessage);
         out.writeString(mAdId);
         out.writeBoolean(mLimitAdTrackingEnabled);
-    }
-
-    /** Returns {@code true} if {@link #getResultCode} is {@link GetAdIdResult#RESULT_OK}. */
-    public boolean isSuccess() {
-        return getResultCode() == RESULT_OK;
-    }
-
-    /** Returns one of the {@code RESULT} constants defined in {@link GetAdIdResult}. */
-    public @ResultCode int getResultCode() {
-        return mResultCode;
     }
 
     /**
@@ -122,7 +107,7 @@ public final class GetAdIdResult implements Parcelable {
     public String toString() {
         return "GetAdIdResult{"
                 + "mResultCode="
-                + mResultCode
+                + mStatusCode
                 + ", mErrorMessage='"
                 + mErrorMessage
                 + '\''
@@ -145,7 +130,7 @@ public final class GetAdIdResult implements Parcelable {
 
         GetAdIdResult that = (GetAdIdResult) o;
 
-        return mResultCode == that.mResultCode
+        return mStatusCode == that.mStatusCode
                 && Objects.equals(mErrorMessage, that.mErrorMessage)
                 && Objects.equals(mAdId, that.mAdId)
                 && (mLimitAdTrackingEnabled == that.mLimitAdTrackingEnabled);
@@ -153,7 +138,7 @@ public final class GetAdIdResult implements Parcelable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(mResultCode, mErrorMessage, mAdId, mLimitAdTrackingEnabled);
+        return Objects.hash(mStatusCode, mErrorMessage, mAdId, mLimitAdTrackingEnabled);
     }
 
     /**
@@ -162,7 +147,7 @@ public final class GetAdIdResult implements Parcelable {
      * @hide
      */
     public static final class Builder {
-        private @ResultCode int mResultCode;
+        private @AdServicesStatusUtils.StatusCode int mStatusCode;
         @Nullable private String mErrorMessage;
         @NonNull private String mAdId;
         private boolean mLimitAdTrackingEnabled;
@@ -170,8 +155,8 @@ public final class GetAdIdResult implements Parcelable {
         public Builder() {}
 
         /** Set the Result Code. */
-        public @NonNull Builder setResultCode(@ResultCode int resultCode) {
-            mResultCode = resultCode;
+        public @NonNull Builder setStatusCode(@AdServicesStatusUtils.StatusCode int statusCode) {
+            mStatusCode = statusCode;
             return this;
         }
 
@@ -196,7 +181,7 @@ public final class GetAdIdResult implements Parcelable {
         /** Builds a {@link GetAdIdResult} instance. */
         public @NonNull GetAdIdResult build() {
 
-            return new GetAdIdResult(mResultCode, mErrorMessage, mAdId, mLimitAdTrackingEnabled);
+            return new GetAdIdResult(mStatusCode, mErrorMessage, mAdId, mLimitAdTrackingEnabled);
         }
     }
 }

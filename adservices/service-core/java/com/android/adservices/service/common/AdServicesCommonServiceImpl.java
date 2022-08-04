@@ -71,9 +71,13 @@ public class AdServicesCommonServiceImpl extends
                 });
     }
 
-    /** Set the adservices entry point Status from UI side */
-    @Override
-    public void setAdServicesEntryPointEnabled(boolean adservicesEntryPointStatus) {
+    /**
+     * Set the adservices entry point Status from UI side, and also check adid zero-out status, and
+     * Schedule notification if both adservices entry point enabled and adid not opt-out and
+     * Adservice Is enabled
+     */
+    public void setAdServicesNotificationConditions(
+            boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
@@ -82,15 +86,25 @@ public class AdServicesCommonServiceImpl extends
                                         ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
 
                         int adserviceEntryPointStatusInt =
-                                adservicesEntryPointStatus
+                                adServicesEntryPointEnabled
                                         ? ADSERVICES_ENTRY_POINT_STATUS_ENABLE
                                         : ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putInt(
                                 KEY_ADSERVICES_ENTRY_POINT_STATUS, adserviceEntryPointStatusInt);
                         editor.apply();
+                        LogUtil.i(
+                                "adid status is "
+                                        + adIdEnabled
+                                        + ", adservice status is "
+                                        + mFlags.getAdservicesEnableStatus());
+                        if (mFlags.getAdservicesEnableStatus()) {
+                            ConsentNotificationJobService.schedule(mContext, adIdEnabled);
+                        }
                     } catch (Exception e) {
-                        LogUtil.e("unable to save the adservices entry point status");
+                        LogUtil.e(
+                                "unable to save the adservices entry point status of "
+                                        + e.getMessage());
                     }
                 });
     }

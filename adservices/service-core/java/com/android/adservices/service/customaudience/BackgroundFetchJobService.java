@@ -46,7 +46,7 @@ public class BackgroundFetchJobService extends JobService {
         LogUtil.d("BackgroundFetchJobService.onStartJob");
 
         if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
-            LogUtil.v("FLEDGE background fetch is disabled; skipping and cancelling job");
+            LogUtil.d("FLEDGE background fetch is disabled; skipping and cancelling job");
             this.getSystemService(JobScheduler.class).cancel(FLEDGE_BACKGROUND_FETCH_JOB_ID);
 
             jobFinished(params, false);
@@ -58,7 +58,7 @@ public class BackgroundFetchJobService extends JobService {
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
         //  Java Clock
         Instant jobStartTime = Clock.systemUTC().instant();
-        LogUtil.v("BackgroundFetchJobService.onStartJob at %s", jobStartTime.toString());
+        LogUtil.d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
         AdServicesExecutors.getBackgroundExecutor()
                 .execute(
@@ -90,9 +90,9 @@ public class BackgroundFetchJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        // TODO(b/232722716): Implement graceful cancellation of a job in progress
         LogUtil.d("BackgroundFetchJobService.onStopJob");
-        return false;
+        BackgroundFetchWorker.getInstance(this).stopWork();
+        return true;
     }
 
     /**

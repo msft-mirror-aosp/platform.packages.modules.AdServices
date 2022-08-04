@@ -118,6 +118,7 @@ public class ConsentNotificationFragment extends Fragment {
                         R.id.fragment_container_view,
                         ConsentNotificationConfirmationFragment.class,
                         args)
+                .addToBackStack(null)
                 .commit();
     }
 }
