@@ -361,6 +361,7 @@ public final class SdkSandboxManager {
                     displayId,
                     width,
                     height,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                     params,
                     callbackProxy);
         } catch (RemoteException e) {
