@@ -359,9 +359,13 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
     }
 
-    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 1000;
-    long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 1000;
-    long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 2000;
+    // TODO(b/240647148): Limits are increased temporarily, decrease these numbers after
+    //  implementing a solution for more accurately scoped timeout
+    long FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS = 5000;
+    long FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS = 5000;
+    long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
+
+    long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
     /** Returns the time out constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -379,6 +383,14 @@ public interface Flags extends Dumpable {
      */
     default long getAdSelectionOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the time out constant in milliseconds that limits the overall impression reporting
+     * execution
+     */
+    default long getReportImpressionOverallTimeoutMs() {
+        return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
     }
 
     boolean ADSERVICES_ENABLE_STATUS = false;
@@ -499,12 +511,14 @@ public interface Flags extends Dumpable {
      * There must be not any empty space between comma.
      */
     String PPAPI_APP_ALLOW_LIST =
-            "com.android.tests.sandbox.topics,"
+            "android.platform.test.scenario,"
+                    + "android.adservices.crystalball,"
+                    + "com.android.tests.sandbox.topics,"
                     + "com.android.adservices.tests.cts.endtoendtest,"
+                    + "com.android.adservices.tests.cts.topics.testapp1," // CTS test sample app
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.noperm,"
                     + "com.android.adservices.tests.permissions.valid,"
-                    + "android.adservices.crystalball,"
                     + "com.example.adservices.samples.topics.sampleapp1,"
                     + "com.example.adservices.samples.topics.sampleapp2,"
                     + "com.example.adservices.samples.topics.sampleapp3,"

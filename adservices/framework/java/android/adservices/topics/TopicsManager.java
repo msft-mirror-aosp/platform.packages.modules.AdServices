@@ -24,6 +24,7 @@ import android.annotation.NonNull;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -80,8 +81,9 @@ public final class TopicsManager {
      * @param getTopicsRequest The request for obtaining Topics.
      * @param executor The executor to run callback.
      * @param callback The callback that's called after topics are available or an error occurs.
-     * @throws Exception if caller is not authorized to call this API.
-     * @throws Exception if call results in an internal error.
+     * @throws SecurityException if caller is not authorized to call this API.
+     * @throws IllegalStateException if this API is not available.
+     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
     public void getTopics(

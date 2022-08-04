@@ -114,7 +114,7 @@ public class TopicsManagerTest {
         assertThat(sdk1Result.getTopics()).hasSize(1);
         Topic topic = sdk1Result.getTopics().get(0);
 
-        // topic is one of the 10 classification topics of the Test App.
+        // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(147, 253, 175, 254, 33));
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
