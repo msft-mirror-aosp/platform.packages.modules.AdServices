@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.consent;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -29,6 +33,8 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.topics.TopicsWorker;
 
 import com.google.common.collect.ImmutableList;
@@ -36,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 /**
  * Manager to handle user's consent.
@@ -61,16 +68,20 @@ public class ConsentManager {
     private final BooleanFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
     private final MeasurementImpl mMeasurementImpl;
+    private final AdServicesLoggerImpl mAdServicesLoggerImpl;
+    private int mDeviceLoggingRegion;
 
     ConsentManager(
             @NonNull Context context,
             @NonNull TopicsWorker topicsWorker,
             @NonNull AppConsentDao appConsentDao,
-            @NonNull MeasurementImpl measurementImpl) {
+            @NonNull MeasurementImpl measurementImpl,
+            @NonNull AdServicesLoggerImpl adServicesLoggerImpl) {
         mTopicsWorker = topicsWorker;
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mAppConsentDao = appConsentDao;
         mMeasurementImpl = measurementImpl;
+        mAdServicesLoggerImpl = adServicesLoggerImpl;
     }
 
     /**
@@ -89,7 +100,8 @@ public class ConsentManager {
                                     context,
                                     TopicsWorker.getInstance(context),
                                     AppConsentDao.getInstance(context),
-                                    MeasurementImpl.getInstance(context));
+                                    MeasurementImpl.getInstance(context),
+                                    AdServicesLoggerImpl.getInstance());
                 }
             }
         }
@@ -100,6 +112,12 @@ public class ConsentManager {
      * Enables all PP API services. It gives consent to Topics, Fledge and Measurements services.
      */
     public void enable(@NonNull PackageManager packageManager) {
+        mAdServicesLoggerImpl.logUIStats(
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(mDeviceLoggingRegion)
+                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
+                        .build());
         // Enable all the APIs
         try {
             init(packageManager);
@@ -349,6 +367,7 @@ public class ConsentManager {
 
     void init(PackageManager packageManager) throws IOException {
         initializeStorage();
+        initializeLoggingValues(packageManager);
         if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
                 || mDatastore.get(CONSENT_KEY) == null) {
             boolean initialConsent = getInitialConsent(packageManager);
@@ -366,6 +385,14 @@ public class ConsentManager {
                     mInitialized = true;
                 }
             }
+        }
+    }
+
+    private void initializeLoggingValues(PackageManager packageManager) {
+        if (packageManager.hasSystemFeature(EEA_DEVICE)) {
+            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+        } else {
+            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
         }
     }
 
