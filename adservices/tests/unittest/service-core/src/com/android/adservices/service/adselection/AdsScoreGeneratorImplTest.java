@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URLS;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -503,7 +504,7 @@ public class AdsScoreGeneratorImplTest {
 
         ExecutionException thrown =
                 assertThrows(ExecutionException.class, scoringResultFuture::get);
-        assertTrue(thrown.getMessage().contains("TimeoutFuture$TimeoutFutureException"));
+        assertTrue(thrown.getMessage().contains(SCORING_TIMED_OUT));
     }
 
     private ListenableFuture<List<Double>> getScoresWithDelay(List<Double> scores) {
