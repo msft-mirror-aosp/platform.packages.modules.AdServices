@@ -18,11 +18,13 @@ package android.adservices.customaudience;
 
 import static org.junit.Assert.assertEquals;
 
+import android.adservices.common.AdTechIdentifier;
+
 import org.junit.Test;
 
 public class RemoveCustomAudienceOverrideRequestTest {
     private static final String OWNER = "owner";
-    private static final String BUYER = "buyer";
+    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
 
     @Test

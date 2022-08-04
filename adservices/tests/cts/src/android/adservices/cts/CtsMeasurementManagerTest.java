@@ -19,7 +19,6 @@ package android.adservices.cts;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.measurement.MeasurementClient;
-import android.adservices.exceptions.MeasurementException;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.WebSourceParams;
@@ -96,17 +95,15 @@ public class CtsMeasurementManagerTest {
     @Test
     public void registerWebSource_withCallback_NoErrors() throws Exception {
         WebSourceParams webSourceParams =
-                new WebSourceParams.Builder()
-                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
-                        .setAllowDebugKey(false)
+                new WebSourceParams.Builder(Uri.parse(INVALID_SERVER_ADDRESS))
+                        .setDebugKeyAllowed(false)
                         .build();
 
         WebSourceRegistrationRequest webSourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(Collections.singletonList(webSourceParams))
-                        .setTopOriginUri(SOURCE_ORIGIN)
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(webSourceParams), SOURCE_ORIGIN)
                         .setInputEvent(null)
-                        .setOsDestination(OS_DESTINATION)
+                        .setAppDestination(OS_DESTINATION)
                         .setWebDestination(WEB_DESTINATION)
                         .setVerifiedDestination(null)
                         .build();
@@ -119,14 +116,10 @@ public class CtsMeasurementManagerTest {
     @Test
     public void registerWebTrigger_withCallback_NoErrors() throws Exception {
         WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder()
-                        .setRegistrationUri(Uri.parse(INVALID_SERVER_ADDRESS))
-                        .setAllowDebugKey(false)
-                        .build();
+                new WebTriggerParams.Builder(Uri.parse(INVALID_SERVER_ADDRESS)).build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(Collections.singletonList(webTriggerParams))
-                        .setDestination(DESTINATION)
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(webTriggerParams), DESTINATION)
                         .build();
 
         ListenableFuture<Void> result =
@@ -200,9 +193,7 @@ public class CtsMeasurementManagerTest {
                     @Override
                     public void onError(Exception error) {
                         future.complete(null);
-                        Assert.assertEquals(
-                                ((MeasurementException) error).getResultCode(),
-                                MeasurementManager.RESULT_INVALID_ARGUMENT);
+                        Assert.assertTrue(error.getCause() instanceof IllegalArgumentException);
                     }
                 };
         DeletionRequest request =

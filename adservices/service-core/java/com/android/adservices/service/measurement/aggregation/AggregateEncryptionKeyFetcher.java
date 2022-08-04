@@ -53,13 +53,30 @@ final class AggregateEncryptionKeyFetcher {
 
     private static long getMaxAgeInSeconds(@NonNull Map<String, List<String>> headers) {
         String cacheControl = null;
+        int cachedAge = 0;
+        int remainingHeaders = 2;
         for (String key : headers.keySet()) {
-            if (key != null && key.equalsIgnoreCase("cache-control")) {
-                List<String> field = headers.get(key);
-                if (field != null && field.size() > 0) {
-                    cacheControl = field.get(0).toLowerCase(Locale.ENGLISH);
-                    break;
+            if (key != null) {
+                if (key.equalsIgnoreCase("cache-control")) {
+                    List<String> field = headers.get(key);
+                    if (field != null && field.size() > 0) {
+                        cacheControl = field.get(0).toLowerCase(Locale.ENGLISH);
+                        remainingHeaders -= 1;
+                    }
+                } else if (key.equalsIgnoreCase("age")) {
+                    List<String> field = headers.get(key);
+                    if (field != null && field.size() > 0) {
+                        try {
+                            cachedAge = Integer.parseInt(field.get(0));
+                        } catch (NumberFormatException e) {
+                            LogUtil.e(e, "Error parsing age header");
+                        }
+                        remainingHeaders -= 1;
+                    }
                 }
+            }
+            if (remainingHeaders == 0) {
+                break;
             }
         }
         if (cacheControl == null) {
@@ -74,7 +91,7 @@ final class AggregateEncryptionKeyFetcher {
                 try {
                     maxAge = Long.parseLong(token.substring(8));
                 } catch (NumberFormatException e) {
-                    LogUtil.d("Failed to parse max-age value %s", e);
+                    LogUtil.d(e, "Failed to parse max-age value");
                     return 0;
                 }
             }
@@ -83,7 +100,7 @@ final class AggregateEncryptionKeyFetcher {
             LogUtil.d("max-age directive is missing");
             return 0;
         }
-        return maxAge;
+        return maxAge - cachedAge;
     }
 
     private static Optional<List<AggregateEncryptionKey>> parseResponse(
@@ -91,7 +108,7 @@ final class AggregateEncryptionKeyFetcher {
             @NonNull Map<String, List<String>> headers,
             @NonNull long eventTime) {
         long maxAge = getMaxAgeInSeconds(headers);
-        if (maxAge == 0) {
+        if (maxAge <= 0) {
             return Optional.empty();
         }
         try {
@@ -109,7 +126,7 @@ final class AggregateEncryptionKeyFetcher {
             }
             return Optional.of(aggregateEncryptionKeys);
         } catch (JSONException e) {
-            LogUtil.d("Invalid JSON %s", e);
+            LogUtil.d(e, "Invalid JSON");
             return Optional.empty();
         }
     }
@@ -127,14 +144,14 @@ final class AggregateEncryptionKeyFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed coordinator target URL %s", e);
+            LogUtil.d(e, "Malformed coordinator target URL");
             return Optional.empty();
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.e("Failed to open coordinator target URL %s", e);
+            LogUtil.e(e, "Failed to open coordinator target URL");
             return Optional.empty();
         }
         try {
@@ -159,7 +176,7 @@ final class AggregateEncryptionKeyFetcher {
 
             return parseResponse(responseBody.toString(), headers, eventTime);
         } catch (IOException e) {
-            LogUtil.e("Failed to get coordinator response %s", e);
+            LogUtil.e(e, "Failed to get coordinator response");
             return Optional.empty();
         } finally {
             urlConnection.disconnect();

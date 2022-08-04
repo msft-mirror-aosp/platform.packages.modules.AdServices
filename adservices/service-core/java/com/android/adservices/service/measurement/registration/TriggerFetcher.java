@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -43,13 +44,25 @@ import java.util.concurrent.ExecutorService;
  * @hide
  */
 public class TriggerFetcher {
-    private static final ExecutorService sIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
 
-    private static boolean parseTrigger(
+    public TriggerFetcher() {
+        this(new AdIdPermissionFetcher());
+    }
+
+    @VisibleForTesting
+    TriggerFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
+        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    }
+
+    private boolean parseTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
             @NonNull Map<String, List<String>> headers,
-            @NonNull List<TriggerRegistration> addToResults) {
+            @NonNull List<TriggerRegistration> addToResults,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         boolean additionalResult = false;
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
@@ -97,6 +110,21 @@ public class TriggerFetcher {
             additionalResult = true;
         }
 
+        boolean isWebAllow = isWebSource && isAllowDebugKey;
+        boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+        field = headers.get("Attribution-Reporting-Trigger-Debug-Key");
+        if (field != null && (isWebAllow || isAppAllow)) {
+            if (field.size() != 1) {
+                LogUtil.d("Expected one trigger debug value!");
+                return false;
+            }
+            try {
+                result.setDebugKey(Long.parseLong(field.get(0)));
+            } catch (NumberFormatException e) {
+                LogUtil.e(e, "Parsing debug key failed");
+            }
+        }
+
         if (additionalResult) {
             addToResults.add(result.build());
             return true;
@@ -114,7 +142,9 @@ public class TriggerFetcher {
             @NonNull Uri topOrigin,
             @NonNull Uri target,
             boolean shouldProcessRedirects,
-            @NonNull List<TriggerRegistration> registrationsOut) {
+            @NonNull List<TriggerRegistration> registrationsOut,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         // Require https.
         if (!target.getScheme().equals("https")) {
             return;
@@ -123,14 +153,14 @@ public class TriggerFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open registration target URL %s", e);
+            LogUtil.d(e, "Failed to open registration target URL");
             return;
         }
         try {
@@ -146,7 +176,14 @@ public class TriggerFetcher {
                 return;
             }
 
-            final boolean parsed = parseTrigger(topOrigin, target, headers, registrationsOut);
+            final boolean parsed =
+                    parseTrigger(
+                            topOrigin,
+                            target,
+                            headers,
+                            registrationsOut,
+                            isWebSource,
+                            isAllowDebugKey);
             if (!parsed) {
                 LogUtil.d("Failed to parse.");
                 return;
@@ -155,11 +192,17 @@ public class TriggerFetcher {
             if (shouldProcessRedirects) {
                 List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
                 for (Uri redirect : redirects) {
-                    fetchTrigger(topOrigin, redirect, false, registrationsOut);
+                    fetchTrigger(
+                            topOrigin,
+                            redirect,
+                            false,
+                            registrationsOut,
+                            isWebSource,
+                            isAllowDebugKey);
                 }
             }
         } catch (IOException e) {
-            LogUtil.d("Failed to get registration response %s", e);
+            LogUtil.d(e, "Failed to get registration response");
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -175,7 +218,8 @@ public class TriggerFetcher {
             throw new IllegalArgumentException("Expected trigger registration");
         }
         List<TriggerRegistration> out = new ArrayList<>();
-        fetchTrigger(request.getTopOriginUri(), request.getRegistrationUri(), true, out);
+        fetchTrigger(
+                request.getTopOriginUri(), request.getRegistrationUri(), true, out, false, false);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
@@ -212,7 +256,7 @@ public class TriggerFetcher {
                                     .toArray(CompletableFuture<?>[]::new))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
-            LogUtil.e("Failed to process source redirection", e);
+            LogUtil.e(e, "Failed to process source redirection");
         }
     }
 
@@ -226,7 +270,9 @@ public class TriggerFetcher {
                                 topOrigin,
                                 triggerParams.getRegistrationUri(),
                                 /* should process redirects*/ false,
-                                registrationsOut),
-                sIoExecutor);
+                                registrationsOut,
+                                true,
+                                triggerParams.isDebugKeyAllowed()),
+                mIoExecutor);
     }
 }

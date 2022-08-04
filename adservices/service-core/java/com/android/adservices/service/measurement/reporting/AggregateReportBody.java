@@ -18,6 +18,9 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 
+import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
+import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -43,7 +46,9 @@ public class AggregateReportBody {
         String AGGREGATION_SERVICE_PAYLOADS = "aggregation_service_payloads";
     }
 
-    private interface DebugCleartextPayloadKeys {
+    private interface AggregationServicePayloadKeys {
+        String PAYLOAD = "payload";
+        String KEY_ID = "key_id";
         String DEBUG_CLEARTEXT_PAYLOAD = "debug_cleartext_payload";
     }
 
@@ -69,14 +74,16 @@ public class AggregateReportBody {
         mDebugCleartextPayload = other.mDebugCleartextPayload;
     }
 
-    /**
-     * Generate the JSON serialization of the aggregate report.
-     */
-    public JSONObject toJson() throws JSONException {
+    /** Generate the JSON serialization of the aggregate report. */
+    public JSONObject toJson(AggregateEncryptionKey key) throws JSONException {
         JSONObject aggregateBodyJson = new JSONObject();
-        aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfoToJson().toString());
-        aggregateBodyJson.put(PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
-                aggregationServicePayloadsToJson());
+
+        final String sharedInfo = sharedInfoToJson().toString();
+        aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfo);
+        aggregateBodyJson.put(
+                PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
+                aggregationServicePayloadsToJson(sharedInfo, key));
+
         return aggregateBodyJson;
     }
 
@@ -98,18 +105,25 @@ public class AggregateReportBody {
         return sharedInfoJson;
     }
 
-    /**
-     * Generate the JSON array serialization of the aggregation service payloads field.
-     */
+    /** Generate the JSON array serialization of the aggregation service payloads field. */
     @VisibleForTesting
-    JSONArray aggregationServicePayloadsToJson() throws JSONException {
+    JSONArray aggregationServicePayloadsToJson(String sharedInfo, AggregateEncryptionKey key)
+            throws JSONException {
         JSONArray aggregationServicePayloadsJson = new JSONArray();
 
-        JSONObject debugCleartextPayloadJson = new JSONObject();
-        debugCleartextPayloadJson.put(DebugCleartextPayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                mDebugCleartextPayload);
+        final String encryptedPayload =
+                AggregateCryptoConverter.encrypt(
+                        key.getPublicKey(), mDebugCleartextPayload, sharedInfo);
 
-        aggregationServicePayloadsJson.put(debugCleartextPayloadJson);
+        final JSONObject aggregationServicePayload = new JSONObject();
+        aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
+        aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
+
+        aggregationServicePayload.put(
+                AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
+                AggregateCryptoConverter.encode(mDebugCleartextPayload));
+
+        aggregationServicePayloadsJson.put(aggregationServicePayload);
 
         return aggregationServicePayloadsJson;
     }

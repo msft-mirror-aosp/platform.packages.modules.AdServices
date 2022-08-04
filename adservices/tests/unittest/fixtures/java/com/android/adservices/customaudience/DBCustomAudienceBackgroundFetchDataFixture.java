@@ -16,6 +16,7 @@
 
 package com.android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -26,12 +27,13 @@ public class DBCustomAudienceBackgroundFetchDataFixture {
     public static final int NUM_VALIDATION_FAILURES_POSITIVE = 10;
     public static final int NUM_TIMEOUT_FAILURES_POSITIVE = 20;
 
-    public static DBCustomAudienceBackgroundFetchData.Builder getValidBuilder() {
+    public static DBCustomAudienceBackgroundFetchData.Builder getValidBuilderByBuyer(
+            AdTechIdentifier buyer) {
         return DBCustomAudienceBackgroundFetchData.builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(CustomAudienceFixture.VALID_BUYER)
+                .setBuyer(buyer.getStringForm())
                 .setName(CustomAudienceFixture.VALID_NAME)
-                .setDailyUpdateUrl(CustomAudienceFixture.VALID_DAILY_UPDATE_URL)
+                .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setEligibleUpdateTime(
                         DBCustomAudienceBackgroundFetchData
                                 .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(

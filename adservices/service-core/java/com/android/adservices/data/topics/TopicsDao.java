@@ -464,37 +464,45 @@ public class TopicsDao {
     }
 
     /**
-     * Return the list of distinct apps from the table.
+     * Get a union set of distinct apps among tables.
      *
-     * @param tableName the table name
-     * @param appColumnName app Column name for given table
+     * @param tableNames a {@link List} of table names
+     * @param appColumnNames a {@link List} of app Column names for given tables
      * @return a {@link Set} of unique apps in the table
+     * @throws IllegalArgumentException if {@code tableNames} and {@code appColumnNames} have
+     *     different sizes.
      */
     @NonNull
-    public Set<String> retrieveDistinctAppsFromTable(
-            @NonNull String tableName, @NonNull String appColumnName) {
+    public Set<String> retrieveDistinctAppsFromTables(
+            @NonNull List<String> tableNames, @NonNull List<String> appColumnNames) {
+        Preconditions.checkArgument(tableNames.size() == appColumnNames.size());
+
         Set<String> apps = new HashSet<>();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return apps;
         }
 
-        String[] projection = {appColumnName};
+        for (int index = 0; index < tableNames.size(); index++) {
+            String[] projection = {appColumnNames.get(index)};
 
-        try (Cursor cursor =
-                db.query(
-                        /* distinct */ true,
-                        tableName,
-                        projection,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null)) {
-            while (cursor.moveToNext()) {
-                String app = cursor.getString(cursor.getColumnIndexOrThrow(appColumnName));
-                apps.add(app);
+            try (Cursor cursor =
+                    db.query(
+                            /* distinct */ true,
+                            tableNames.get(index),
+                            projection,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null)) {
+                while (cursor.moveToNext()) {
+                    String app =
+                            cursor.getString(
+                                    cursor.getColumnIndexOrThrow(appColumnNames.get(index)));
+                    apps.add(app);
+                }
             }
         }
 

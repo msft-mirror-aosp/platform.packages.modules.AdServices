@@ -29,6 +29,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockM
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -41,6 +42,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -70,6 +73,9 @@ public class BackgroundFetchJobServiceTest {
 
     private MockitoSession mStaticMockSession = null;
 
+    private final Flags mFlagsWithEnabledBgF = new FlagsWithEnabledBgF();
+    private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
+
     @Before
     public void setup() {
         // The actual scheduling of the job needs to be mocked out because the test application does
@@ -77,6 +83,7 @@ public class BackgroundFetchJobServiceTest {
         // the BackgroundFetchJobService, and adding them is non-trivial.
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
                         .spyStatic(BackgroundFetchJobService.class)
                         .spyStatic(BackgroundFetchWorker.class)
                         .initMocks(this)
@@ -95,10 +102,36 @@ public class BackgroundFetchJobServiceTest {
     }
 
     @Test
+    public void testOnStartJobFlagDisabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
+        doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+
+        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
     public void testOnStartJobUpdateSuccess()
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -123,6 +156,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doThrow(TimeoutException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -147,6 +181,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doThrow(InterruptedException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -171,6 +206,7 @@ public class BackgroundFetchJobServiceTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
         doThrow(ExecutionException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
         doAnswer(
@@ -191,7 +227,30 @@ public class BackgroundFetchJobServiceTest {
     }
 
     @Test
+    public void testOnStopJobCallsStopWork() {
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doNothing().when(mBgFWorkerMock).stopWork();
+
+        assertTrue(mBgFJobServiceSpy.onStopJob(mJobParametersMock));
+
+        verify(mBgFWorkerMock).stopWork();
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testScheduleIfNeededFlagDisabled() {
+        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
+        doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
+
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
+
+        verify(() -> BackgroundFetchJobService.schedule(any()), never());
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
     public void testScheduleIfNeededSuccess() {
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
         doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
         doNothing().when(() -> BackgroundFetchJobService.schedule(any()));
 
@@ -202,7 +261,9 @@ public class BackgroundFetchJobServiceTest {
     }
 
     @Test
-    public void testScheduleIfNeededSkipped() {
+    public void testScheduleIfNeededSkippedAlreadyScheduled() {
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -222,6 +283,8 @@ public class BackgroundFetchJobServiceTest {
 
     @Test
     public void testScheduleIfNeededForceSuccess() {
+        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
+
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -238,5 +301,38 @@ public class BackgroundFetchJobServiceTest {
 
         verify(() -> BackgroundFetchJobService.schedule(any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testScheduleFlagDisabled() {
+        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
+
+        BackgroundFetchJobService.schedule(CONTEXT);
+
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    private static class FlagsWithEnabledBgF implements Flags {
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return true;
+        }
+    }
+
+    private static class FlagsWithDisabledBgF implements Flags {
+        @Override
+        public boolean getFledgeBackgroundFetchEnabled() {
+            return false;
+        }
+
+        @Override
+        public long getFledgeBackgroundFetchJobPeriodMs() {
+            throw new IllegalStateException("This configured value should not be called");
+        }
+
+        @Override
+        public long getFledgeBackgroundFetchJobFlexMs() {
+            throw new IllegalStateException("This configured value should not be called");
+        }
     }
 }

@@ -23,6 +23,7 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.google.common.util.concurrent.Futures.transform;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
@@ -97,7 +98,7 @@ public class ReportImpressionScriptEngine {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull Uri renderUrl,
             @NonNull double bid,
-            @NonNull String contextualSignals)
+            @NonNull AdSelectionSignals contextualSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(decisionLogicJS);
         Objects.requireNonNull(adSelectionConfig);
@@ -111,7 +112,10 @@ public class ReportImpressionScriptEngine {
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
                         .add(stringArg(RENDER_URL_ARG_NAME, renderUrl.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .add(
+                                jsonArg(
+                                        CONTEXTUAL_SIGNALS_ARG_NAME,
+                                        contextualSignals.getStringForm()))
                         .build();
 
         return transform(
@@ -138,10 +142,10 @@ public class ReportImpressionScriptEngine {
      */
     public ListenableFuture<Uri> reportWin(
             @NonNull String biddingLogicJS,
-            @NonNull String adSelectionSignals,
-            @NonNull String perBuyerSignals,
-            @NonNull String signalsForBuyer,
-            @NonNull String contextualSignals,
+            @NonNull AdSelectionSignals adSelectionSignals,
+            @NonNull AdSelectionSignals perBuyerSignals,
+            @NonNull AdSelectionSignals signalsForBuyer,
+            @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(biddingLogicJS);
@@ -153,13 +157,19 @@ public class ReportImpressionScriptEngine {
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AD_SELECTION_SIGNALS_ARG_NAME, adSelectionSignals))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
-                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer))
-                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
                         .add(
-                                CustomAudienceSignalsArgument.asScriptArgument(
-                                        customAudienceSignals, CUSTOM_AUDIENCE_SIGNALS_ARG_NAME))
+                                jsonArg(
+                                        AD_SELECTION_SIGNALS_ARG_NAME,
+                                        adSelectionSignals.getStringForm()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.getStringForm()))
+                        .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.getStringForm()))
+                        .add(
+                                jsonArg(
+                                        CONTEXTUAL_SIGNALS_ARG_NAME,
+                                        contextualSignals.getStringForm()))
+                        .add(
+                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                        CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
                         .build();
 
         return transform(
@@ -220,7 +230,8 @@ public class ReportImpressionScriptEngine {
                 reportResult.results.length() == 2, "Result does not match expected structure!");
         try {
             return new SellerReportingResult(
-                    reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME),
+                    AdSelectionSignals.fromString(
+                            reportResult.results.getString(SIGNALS_FOR_BUYER_RESPONSE_NAME)),
                     Uri.parse(reportResult.results.getString(REPORTING_URL_RESPONSE_NAME)));
         } catch (Exception e) {
             throw new IllegalStateException("Result does not match expected structure!");
@@ -284,10 +295,11 @@ public class ReportImpressionScriptEngine {
     }
 
     static class SellerReportingResult {
-        @NonNull private final String mSignalsForBuyer;
+        @NonNull private final AdSelectionSignals mSignalsForBuyer;
         @NonNull private final Uri mReportingUrl;
 
-        SellerReportingResult(@NonNull String signalsForBuyer, @NonNull Uri reportingUrl) {
+        SellerReportingResult(
+                @NonNull AdSelectionSignals signalsForBuyer, @NonNull Uri reportingUrl) {
             Objects.requireNonNull(signalsForBuyer);
             Objects.requireNonNull(reportingUrl);
 
@@ -295,7 +307,7 @@ public class ReportImpressionScriptEngine {
             this.mReportingUrl = reportingUrl;
         }
 
-        public String getSignalsForBuyer() {
+        public AdSelectionSignals getSignalsForBuyer() {
             return mSignalsForBuyer;
         }
 

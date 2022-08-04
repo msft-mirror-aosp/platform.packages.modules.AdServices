@@ -353,48 +353,50 @@ public final class TopicsDaoTest {
     }
 
     @Test
-    public void testRetrieveDistinctAppsFromTable() {
-        // Persist usages of different apps in different epochs
+    public void testRetrieveDistinctAppsFromTables() {
+        // App Usages table has app1 and app2 as unique apps
         mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app1");
-        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
         mTopicsDao.recordAppUsageHistory(/* epochId = */ 2L, "app1");
-        mTopicsDao.recordAppUsageHistory(/* epochId = */ 2L, "app3");
-
-        assertThat(
-                        mTopicsDao.retrieveDistinctAppsFromTable(
-                                TopicsTables.AppUsageHistoryContract.TABLE,
-                                TopicsTables.AppUsageHistoryContract.APP))
-                .isEqualTo(Set.of("app1", "app2", "app3"));
+        mTopicsDao.recordAppUsageHistory(/* epochId = */ 1L, "app2");
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
 
-        // Persist entries into ReturnedTopic Table
+        // ReturnedTopic tables have app2 and app3 as unique apps
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch1 = new HashMap<>();
-        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", ""), topic1);
-        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", "sdk1"), topic1);
-        returnedAppSdkTopicsForEpoch1.put(Pair.create("app1", "sdk2"), topic2);
-
         returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", ""), topic1);
-        returnedAppSdkTopicsForEpoch1.put(Pair.create("app3", ""), topic2);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", "sdk1"), topic1);
+        returnedAppSdkTopicsForEpoch1.put(Pair.create("app2", "sdk2"), topic2);
 
         // Setup for EpochId 2
         Map<Pair<String, String>, Topic> returnedAppSdkTopicsForEpoch2 = new HashMap<>();
-        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", ""), topic1);
-        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", "sdk1"), topic1);
-        returnedAppSdkTopicsForEpoch2.put(Pair.create("app1", "sdk2"), topic2);
-
-        returnedAppSdkTopicsForEpoch2.put(Pair.create("app2", ""), topic1);
-        returnedAppSdkTopicsForEpoch2.put(Pair.create("app3", ""), topic2);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app3", ""), topic1);
+        returnedAppSdkTopicsForEpoch2.put(Pair.create("app3", "sdk1"), topic2);
 
         mTopicsDao.persistReturnedAppTopicsMap(/* epoch Id */ 1L, returnedAppSdkTopicsForEpoch1);
         mTopicsDao.persistReturnedAppTopicsMap(/* epoch Id */ 2L, returnedAppSdkTopicsForEpoch2);
 
         assertThat(
-                        (mTopicsDao.retrieveDistinctAppsFromTable(
-                                TopicsTables.ReturnedTopicContract.TABLE,
-                                TopicsTables.ReturnedTopicContract.APP)))
+                        (mTopicsDao.retrieveDistinctAppsFromTables(
+                                List.of(
+                                        TopicsTables.AppUsageHistoryContract.TABLE,
+                                        TopicsTables.ReturnedTopicContract.TABLE),
+                                List.of(
+                                        TopicsTables.AppUsageHistoryContract.APP,
+                                        TopicsTables.ReturnedTopicContract.APP))))
                 .isEqualTo(Set.of("app1", "app2", "app3"));
+    }
+
+    @Test
+    public void testRetrieveDistinctAppsFromTables_unequalListSizes() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        mTopicsDao.retrieveDistinctAppsFromTables(
+                                List.of(
+                                        TopicsTables.AppUsageHistoryContract.TABLE,
+                                        TopicsTables.ReturnedTopicContract.TABLE),
+                                List.of(TopicsTables.AppUsageHistoryContract.APP)));
     }
 
     @Test

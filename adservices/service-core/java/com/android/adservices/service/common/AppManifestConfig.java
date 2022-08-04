@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
 
+
 /** The object representing the AdServices manifest config. */
 public class AppManifestConfig {
     private final AppManifestAttributionConfig mAttributionConfig;
@@ -51,7 +52,7 @@ public class AppManifestConfig {
      */
     public boolean isAllowedAttributionAccess(@NonNull String sdk) {
         return mAttributionConfig.getAllowAllToAccess()
-                || mAttributionConfig.getAllowSdksToAccess().contains(sdk);
+                || mAttributionConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 
     /** Getter for CustomAudiencesConfig. */
@@ -61,13 +62,13 @@ public class AppManifestConfig {
     }
 
     /**
-     * Returns if sdk is permitted to access Custom Audiences API for config represented by this
-     * object.
+     * Returns if ad tech has corresponding enrollment which is permitted to access Custom Audiences
+     * API for config represented by this object.
      */
     @NonNull
-    public boolean isAllowedCustomAudiencesAccess(@NonNull String sdk) {
+    public boolean isAllowedCustomAudiencesAccess(@NonNull String enrollmentId) {
         return mCustomAudiencesConfig.getAllowAllToAccess()
-                || mCustomAudiencesConfig.getAllowSdksToAccess().contains(sdk);
+                || mCustomAudiencesConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
     }
 
     /** Getter for TopicsConfig. */
@@ -79,6 +80,6 @@ public class AppManifestConfig {
     /** Returns if sdk is permitted to access Topics API for config represented by this object. */
     public boolean isAllowedTopicsAccess(@NonNull String sdk) {
         return mTopicsConfig.getAllowAllToAccess()
-                || mTopicsConfig.getAllowSdksToAccess().contains(sdk);
+                || mTopicsConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 }

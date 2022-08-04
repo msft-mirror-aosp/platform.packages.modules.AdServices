@@ -26,7 +26,13 @@ java_defaults {
     ],
     static_libs: [
         "androidx.test.runner",
+        "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
+    ],
+    jni_libs: [
+        // Required for ExtendedMockito
+        "libdexmakerjvmtiagent",
+        "libstaticjvmtiagent",
     ],
     libs: [
         "android.test.base",
@@ -68,14 +74,8 @@ android_test {
     test_config: "SdkSandboxManagerServiceTest.xml",
     static_libs: [
         "service-sdksandbox.impl",
-        "mockito-target-extended-minus-junit4",
         "SdkSandboxTestUtils",
         "services.core",
-    ],
-    jni_libs: [
-        // Required for ExtendedMockito
-        "libdexmakerjvmtiagent",
-        "libstaticjvmtiagent",
     ],
     data: [
       ":SampleCodeProviderApp",
