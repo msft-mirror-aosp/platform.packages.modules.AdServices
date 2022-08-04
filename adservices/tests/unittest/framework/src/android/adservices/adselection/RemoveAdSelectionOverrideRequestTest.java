@@ -26,9 +26,8 @@ public class RemoveAdSelectionOverrideRequestTest {
 
     @Test
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
-        RemoveAdSelectionOverrideRequest request = new RemoveAdSelectionOverrideRequest.Builder()
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+        RemoveAdSelectionOverrideRequest request =
+                new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
     }

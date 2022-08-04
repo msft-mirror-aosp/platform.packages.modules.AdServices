@@ -1,0 +1,53 @@
+[
+  {
+    "property": "version_info",
+    "taxonomy_type": "chrome",
+    "taxonomy_version": "12",
+    "updated_date": "2022-06-15"
+  },
+  {
+    "asset_name": "labels_topics",
+    "asset_version": "34",
+    "path": "assets/classifier/labels_test_topics.txt",
+    "checksum": "efeef4f38968915ee3073e37800a6eea05e42da09309109a4a3516bd63a09d9d",
+    "updated_date": "2022-06-15"
+  },
+  {
+    "asset_name": "precomputed_app_list",
+    "asset_version": "56",
+    "path": "assets/classifier/precomputed_test_app_list.csv",
+    "checksum": "5849fbee8a41ac7a5a5a02edc7544d6d19df2a9d067719da1e1b7f4da6e9cef8",
+    "updated_date": "2022-08-02"
+  },
+  {
+    "asset_name": "topic_id_to_name",
+    "asset_version": "78",
+    "path": "assets/classifier/topic_id_to_name.csv",
+    "checksum": "561ac8b8f69560e6b3cf47165c64edfd21061db7c2c3f982ef209bd88f447427",
+    "updated_date": "2022-06-15"
+  },
+  {
+    "asset_name": "tflite_model",
+    "asset_version": "910",
+    "path": "assets/classifier/model.tflite",
+    "checksum": "de6cdf0136ce9a55077d2d07cef7502a6e7d441400c14364140eb8de85a6076d",
+    "updated_date": "2022-06-15"
+  },
+  {
+    "asset_name": "test_asset1",
+    "path": "assets/classifier/test1"
+  },
+  {
+    "asset_name": "test_asset2",
+    "asset_version": "1112",
+    "path": "assets/classifier/test2",
+    "checksum": "de6cdf0136ce9a55077d2d07cef7502a6e7d441400c14364140eb8de85a6076d",
+    "updated_date": "2022-06-15",
+    "redundant_field1": "test",
+    "redundant_field2": "test"
+  },
+  {
+    "path": "test/element/without/asset_name",
+    "updated_date": "2022-06-15"
+  }
+]

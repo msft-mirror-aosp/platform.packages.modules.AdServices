@@ -23,6 +23,8 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -57,13 +59,17 @@ public class ReportImpressionScriptEngineTest {
     private final ReportImpressionScriptEngine mReportImpressionScriptEngine =
             new ReportImpressionScriptEngine(sContext);
 
+    private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
+
     private final String mResultField = "result";
 
     private final String mDummyDomain = "http://www.domain.com/adverts/123";
 
-    private final String mContextualSignals = "{\"test_contextual_signals\":1}";
+    private final AdSelectionSignals mContextualSignals =
+            AdSelectionSignals.fromString("{\"test_contextual_signals\":1}");
 
-    private final String mSignalsForBuyer = "{\"test_signals_for_buyer\":1}";
+    private final AdSelectionSignals mSignalsForBuyer =
+            AdSelectionSignals.fromString("{\"test_signals_for_buyer\":1}");
 
     private final CustomAudienceSignals mCustomAudienceSignals =
             new CustomAudienceSignals.Builder()
@@ -74,7 +80,6 @@ public class ReportImpressionScriptEngineTest {
                     .setExpirationTime(Instant.now())
                     .setUserBiddingSignals("{\"user_bidding_signals\":1}")
                     .build();
-
 
     @Test
     public void testCanCallScript() throws Exception {
@@ -136,7 +141,8 @@ public class ReportImpressionScriptEngineTest {
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " ad_selection_config.seller, 'reporting_url': render_url } };\n"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_url': render_url } };\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         Uri renderUrl = Uri.parse(mDummyDomain);
@@ -145,7 +151,10 @@ public class ReportImpressionScriptEngineTest {
         final SellerReportingResult result =
                 reportResult(jsScript, adSelectionConfig, renderUrl, bid, mContextualSignals);
 
-        assertThat(result.getSignalsForBuyer()).isEqualTo(adSelectionConfig.getSeller());
+        assertThat(result.getSignalsForBuyer())
+                .isEqualTo(
+                        AdSelectionSignals.fromString(
+                                "{\"seller\":\"" + adSelectionConfig.getSeller() + "\"}"));
         assertThat(result.getReportingUrl()).isEqualTo(renderUrl);
     }
 
@@ -155,7 +164,8 @@ public class ReportImpressionScriptEngineTest {
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': -1, 'results': {'signals_for_buyer':"
-                        + " ad_selection_config.seller, 'reporting_url': render_url } };\n"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_url': render_url } };\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         Uri renderUrl = Uri.parse(mDummyDomain);
@@ -181,7 +191,7 @@ public class ReportImpressionScriptEngineTest {
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
                         + " \n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " ad_selection_config.seller } };\n"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}' } };\n"
                         + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         Uri renderUrl = Uri.parse(mDummyDomain);
@@ -205,11 +215,12 @@ public class ReportImpressionScriptEngineTest {
     public void testReportResultFailedResultNamesCase() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_url, bid, contextual_signals) {"
-                    + " \n"
-                    + " return {'status': 0, 'results': {'signals_for_buyer':"
-                    + " ad_selection_config.seller, 'incorrect_name_reporting_url': render_url }"
-                    + " };\n"
-                    + "}";
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'incorrect_name_reporting_url': render_url }"
+                        + " };\n"
+                        + "}";
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
         Uri renderUrl = Uri.parse(mDummyDomain);
         double bid = 5;
@@ -241,11 +252,12 @@ public class ReportImpressionScriptEngineTest {
                 reportWin(
                         jsScript,
                         adSelectionConfig.getAdSelectionSignals(),
-                        adSelectionConfig.getPerBuyerSignals().get("buyer1"),
+                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
                         mSignalsForBuyer,
                         adSelectionConfig.getSellerSignals(),
                         mCustomAudienceSignals);
-        assertThat(result.toString()).isEqualTo(mSignalsForBuyer);
+        // TODO: Quit comparing a URI to a JSON object (b/239497492)
+        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.getStringForm());
     }
 
     @Test
@@ -263,7 +275,7 @@ public class ReportImpressionScriptEngineTest {
                     reportWin(
                             jsScript,
                             adSelectionConfig.getAdSelectionSignals(),
-                            adSelectionConfig.getPerBuyerSignals().get("buyer1"),
+                            adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
                             mSignalsForBuyer,
                             adSelectionConfig.getSellerSignals(),
                             mCustomAudienceSignals);
@@ -286,7 +298,7 @@ public class ReportImpressionScriptEngineTest {
                     reportWin(
                             jsScript,
                             adSelectionConfig.getAdSelectionSignals(),
-                            adSelectionConfig.getPerBuyerSignals().get("buyer1"),
+                            adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
                             mSignalsForBuyer,
                             adSelectionConfig.getSellerSignals(),
                             mCustomAudienceSignals);
@@ -308,7 +320,7 @@ public class ReportImpressionScriptEngineTest {
             AdSelectionConfig adSelectionConfig,
             Uri renderUrl,
             double bid,
-            String contextualSignals)
+            AdSelectionSignals contextualSignals)
             throws Exception {
 
         return waitForFuture(
@@ -321,10 +333,10 @@ public class ReportImpressionScriptEngineTest {
 
     private Uri reportWin(
             String jsScript,
-            String adSelectionSignals,
-            String perBuyerSignals,
-            String signalsForBuyer,
-            String contextualSignals,
+            AdSelectionSignals adSelectionSignals,
+            AdSelectionSignals perBuyerSignals,
+            AdSelectionSignals signalsForBuyer,
+            AdSelectionSignals contextualSignals,
             CustomAudienceSignals customAudienceSignals)
             throws Exception {
         return waitForFuture(

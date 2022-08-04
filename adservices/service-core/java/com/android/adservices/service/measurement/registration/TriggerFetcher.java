@@ -16,10 +16,14 @@
 package com.android.adservices.service.measurement.registration;
 
 import android.adservices.measurement.RegistrationRequest;
+import android.adservices.measurement.WebTriggerParams;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -30,6 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Download and decode Trigger registration.
@@ -37,18 +44,25 @@ import java.util.Optional;
  * @hide
  */
 public class TriggerFetcher {
-    /**
-     * Provided a testing hook.
-     */
-    public @NonNull URLConnection openUrl(@NonNull URL url) throws IOException {
-        return url.openConnection();
+    private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
+    private final AdIdPermissionFetcher mAdIdPermissionFetcher;
+
+    public TriggerFetcher() {
+        this(new AdIdPermissionFetcher());
     }
 
-    private static boolean parseTrigger(
+    @VisibleForTesting
+    TriggerFetcher(AdIdPermissionFetcher adIdPermissionFetcher) {
+        this.mAdIdPermissionFetcher = adIdPermissionFetcher;
+    }
+
+    private boolean parseTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri reportingOrigin,
             @NonNull Map<String, List<String>> headers,
-            @NonNull List<TriggerRegistration> addToResults) {
+            @NonNull List<TriggerRegistration> addToResults,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         boolean additionalResult = false;
         TriggerRegistration.Builder result = new TriggerRegistration.Builder();
         result.setTopOrigin(topOrigin);
@@ -96,6 +110,21 @@ public class TriggerFetcher {
             additionalResult = true;
         }
 
+        boolean isWebAllow = isWebSource && isAllowDebugKey;
+        boolean isAppAllow = !isWebSource && mAdIdPermissionFetcher.isAdIdPermissionEnabled();
+        field = headers.get("Attribution-Reporting-Trigger-Debug-Key");
+        if (field != null && (isWebAllow || isAppAllow)) {
+            if (field.size() != 1) {
+                LogUtil.d("Expected one trigger debug value!");
+                return false;
+            }
+            try {
+                result.setDebugKey(Long.parseLong(field.get(0)));
+            } catch (NumberFormatException e) {
+                LogUtil.e(e, "Parsing debug key failed");
+            }
+        }
+
         if (additionalResult) {
             addToResults.add(result.build());
             return true;
@@ -103,11 +132,19 @@ public class TriggerFetcher {
         return false;
     }
 
+    /** Provided a testing hook. */
+    @NonNull
+    public URLConnection openUrl(@NonNull URL url) throws IOException {
+        return url.openConnection();
+    }
+
     private void fetchTrigger(
             @NonNull Uri topOrigin,
             @NonNull Uri target,
-            boolean initialFetch,
-            @NonNull List<TriggerRegistration> registrationsOut) {
+            boolean shouldProcessRedirects,
+            @NonNull List<TriggerRegistration> registrationsOut,
+            boolean isWebSource,
+            boolean isAllowDebugKey) {
         // Require https.
         if (!target.getScheme().equals("https")) {
             return;
@@ -116,14 +153,14 @@ public class TriggerFetcher {
         try {
             url = new URL(target.toString());
         } catch (MalformedURLException e) {
-            LogUtil.d("Malformed registration target URL %s", e);
+            LogUtil.d(e, "Malformed registration target URL");
             return;
         }
         HttpURLConnection urlConnection;
         try {
             urlConnection = (HttpURLConnection) openUrl(url);
         } catch (IOException e) {
-            LogUtil.d("Failed to open registration target URL %s", e);
+            LogUtil.d(e, "Failed to open registration target URL");
             return;
         }
         try {
@@ -139,20 +176,33 @@ public class TriggerFetcher {
                 return;
             }
 
-            final boolean parsed = parseTrigger(topOrigin, target, headers, registrationsOut);
-            if (!parsed && initialFetch) {
-                LogUtil.d("Failed to parse initial fetch");
+            final boolean parsed =
+                    parseTrigger(
+                            topOrigin,
+                            target,
+                            headers,
+                            registrationsOut,
+                            isWebSource,
+                            isAllowDebugKey);
+            if (!parsed) {
+                LogUtil.d("Failed to parse.");
                 return;
             }
 
-            ArrayList<Uri> redirects = new ArrayList();
-            ResponseBasedFetcher.parseRedirects(initialFetch, headers, redirects);
-            for (Uri redirect : redirects) {
-                fetchTrigger(topOrigin, redirect, false, registrationsOut);
+            if (shouldProcessRedirects) {
+                List<Uri> redirects = ResponseBasedFetcher.parseRedirects(headers);
+                for (Uri redirect : redirects) {
+                    fetchTrigger(
+                            topOrigin,
+                            redirect,
+                            false,
+                            registrationsOut,
+                            isWebSource,
+                            isAllowDebugKey);
+                }
             }
         } catch (IOException e) {
-            LogUtil.d("Failed to get registration response %s", e);
-            return;
+            LogUtil.d(e, "Failed to get registration response");
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -164,19 +214,65 @@ public class TriggerFetcher {
      * Fetch a trigger type registration.
      */
     public Optional<List<TriggerRegistration>> fetchTrigger(@NonNull RegistrationRequest request) {
-        if (request.getRegistrationType()
-                != RegistrationRequest.REGISTER_TRIGGER) {
+        if (request.getRegistrationType() != RegistrationRequest.REGISTER_TRIGGER) {
             throw new IllegalArgumentException("Expected trigger registration");
         }
         List<TriggerRegistration> out = new ArrayList<>();
         fetchTrigger(
-                request.getTopOriginUri(),
-                request.getRegistrationUri(),
-                true, out);
+                request.getTopOriginUri(), request.getRegistrationUri(), true, out, false, false);
         if (out.isEmpty()) {
             return Optional.empty();
         } else {
             return Optional.of(out);
         }
+    }
+
+    /** Fetch a trigger type registration without redirects. */
+    public Optional<List<TriggerRegistration>> fetchWebTriggers(
+            WebTriggerRegistrationRequest request) {
+        List<TriggerRegistration> out = new ArrayList<>();
+        processWebTriggersFetch(request.getDestination(), request.getTriggerParams(), out);
+
+        if (out.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(out);
+        }
+    }
+
+    private void processWebTriggersFetch(
+            Uri topOrigin,
+            List<WebTriggerParams> triggerParamsList,
+            List<TriggerRegistration> registrationsOut) {
+        try {
+            CompletableFuture.allOf(
+                            triggerParamsList.stream()
+                                    .map(
+                                            triggerParams ->
+                                                    createFutureToFetchWebTrigger(
+                                                            topOrigin,
+                                                            registrationsOut,
+                                                            triggerParams))
+                                    .toArray(CompletableFuture<?>[]::new))
+                    .get();
+        } catch (InterruptedException | ExecutionException e) {
+            LogUtil.e(e, "Failed to process source redirection");
+        }
+    }
+
+    private CompletableFuture<Void> createFutureToFetchWebTrigger(
+            Uri topOrigin,
+            List<TriggerRegistration> registrationsOut,
+            WebTriggerParams triggerParams) {
+        return CompletableFuture.runAsync(
+                () ->
+                        fetchTrigger(
+                                topOrigin,
+                                triggerParams.getRegistrationUri(),
+                                /* should process redirects*/ false,
+                                registrationsOut,
+                                true,
+                                triggerParams.isDebugKeyAllowed()),
+                mIoExecutor);
     }
 }

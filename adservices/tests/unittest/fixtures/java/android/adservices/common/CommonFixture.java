@@ -16,15 +16,37 @@
 
 package android.adservices.common;
 
+import android.net.Uri;
+import android.os.Process;
+
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.ValidatorUtil;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 public class CommonFixture {
+    public static final String TEST_PACKAGE_NAME = Process.myProcessName();
+
+    public static final Flags FLAGS_FOR_TEST = FlagsFactory.getFlagsForTest();
+
     public static final Instant FIXED_NOW = Instant.now();
     public static final Instant FIXED_NOW_TRUNCATED_TO_MILLI =
             FIXED_NOW.truncatedTo(ChronoUnit.MILLIS);
     public static final Clock FIXED_CLOCK_TRUNCATED_TO_MILLI =
             Clock.fixed(FIXED_NOW.truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC);
+
+    public static final AdTechIdentifier VALID_BUYER =
+            AdTechIdentifier.fromString("validbuyer.example.com");
+
+    public static Uri getUri(String authority, String path) {
+        return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + authority + path);
+    }
+
+    public static Uri getUri(AdTechIdentifier authority, String path) {
+        return getUri(authority.getStringForm(), path);
+    }
 }

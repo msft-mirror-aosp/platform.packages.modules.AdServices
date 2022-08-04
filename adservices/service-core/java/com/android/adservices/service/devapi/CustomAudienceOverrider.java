@@ -20,10 +20,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
@@ -69,22 +70,22 @@ public class CustomAudienceOverrider {
 
     /**
      * Configures our fetching logic relating to the combination of {@code owner}, {@code buyer},
-     * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingData} instead of
+     * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingSignals} instead of
      * fetching from remote servers
      *
      * @param callback callback function to be called in case of success or failure
      */
     public void addOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingData,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 
-        callAddOverride(owner, buyer, name, biddingLogicJS, trustedBiddingData)
+        callAddOverride(owner, buyer, name, biddingLogicJS, trustedBiddingSignals)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -110,7 +111,7 @@ public class CustomAudienceOverrider {
      */
     public void removeOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull CustomAudienceOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
@@ -164,10 +165,10 @@ public class CustomAudienceOverrider {
 
     private FluentFuture<Void> callAddOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingData) {
+            @NonNull AdSelectionSignals trustedBiddingData) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
@@ -178,7 +179,7 @@ public class CustomAudienceOverrider {
     }
 
     private FluentFuture<Void> callRemoveOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
@@ -210,7 +211,7 @@ public class CustomAudienceOverrider {
                             .setErrorMessage(errorMessage)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send failed result to the callback", e);
+            LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -224,7 +225,7 @@ public class CustomAudienceOverrider {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send successful result to the callback", e);
+            LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -240,7 +241,7 @@ public class CustomAudienceOverrider {
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                     t.getMessage(),
                     apiName);
-        } else if (t instanceof ApiNotAuthorizedException) {
+        } else if (t instanceof SecurityException) {
             invokeFailure(
                     callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
         } else {

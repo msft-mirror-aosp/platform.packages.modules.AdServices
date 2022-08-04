@@ -17,16 +17,14 @@
 package com.android.adservices.service.measurement.attribution;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.AdtechUrl;
+import com.android.adservices.service.measurement.DestinationType;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventTrigger;
-import com.android.adservices.service.measurement.FilterUtil;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -37,12 +35,12 @@ import com.android.adservices.service.measurement.aggregation.AggregateAttributi
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.Filter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -54,43 +52,13 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
+    private static final String API_VERSION = "0.1";
     private static final long MIN_TIME_MS = TimeUnit.MINUTES.toMillis(10L);
     private static final long MAX_TIME_MS = TimeUnit.MINUTES.toMillis(60L);
     private final DatastoreManager mDatastoreManager;
 
     AttributionJobHandler(DatastoreManager datastoreManager) {
         mDatastoreManager = datastoreManager;
-    }
-
-    /**
-     * Finds the {@link AdtechUrl} when given a postback url.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return the requested AdtechUrl; Null in case of SQL failure
-     */
-    @Nullable
-    synchronized AdtechUrl findAdtechUrl(String postbackUrl) {
-        if (postbackUrl == null) {
-            return null;
-        }
-        return mDatastoreManager
-                .runInTransactionWithResult((dao) -> dao.getAdtechEnrollmentData(postbackUrl))
-                .orElse(null);
-    }
-
-    /**
-     * Queries and returns all the postback urls with the same adtech id as the given postback url.
-     *
-     * @param postbackUrl the postback url of the request AdtechUrl
-     * @return all the postback urls with the same adtech id; Null in case of SQL failure
-     */
-    public List<String> getAllAdtechUrls(String postbackUrl) {
-        if (postbackUrl == null) {
-            return new ArrayList<>();
-        }
-        return mDatastoreManager
-                .runInTransactionWithResult((dao) -> dao.getAllAdtechUrls(postbackUrl))
-                .orElse(null);
     }
 
     /**
@@ -192,20 +160,23 @@ class AttributionJobHandler {
 
                     long randomTime = (long) ((Math.random() * (MAX_TIME_MS - MIN_TIME_MS))
                             + MIN_TIME_MS);
-                    CleartextAggregatePayload aggregateReport =
-                            new CleartextAggregatePayload.Builder()
+                    AggregateReport aggregateReport =
+                            new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
-                                    .setAttributionDestination(source.getAttributionDestination())
+                                    .setAttributionDestination(source.getAppDestination())
                                     .setSourceRegistrationTime(source.getEventTime())
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
-                                            CleartextAggregatePayload.generateDebugPayload(
+                                            AggregateReport.generateDebugPayload(
                                                     contributions.get()))
                                     .setAggregateAttributionData(
                                             new AggregateAttributionData.Builder()
-                                                    .setContributions(contributions.get()).build())
-                                    .setStatus(CleartextAggregatePayload.Status.PENDING).build();
+                                                    .setContributions(contributions.get())
+                                                    .build())
+                                    .setStatus(AggregateReport.Status.PENDING)
+                                    .setApiVersion(API_VERSION)
+                                    .build();
 
                     measurementDao.updateSourceAggregateContributions(source);
                     measurementDao.insertAggregateReport(aggregateReport);
@@ -284,12 +255,15 @@ class AttributionJobHandler {
         return true;
     }
 
-    private boolean provisionEventReportQuota(Source source,
-            EventReport newEventReport, IMeasurementDao measurementDao) throws DatastoreException {
-        List<EventReport> sourceEventReports =
-                measurementDao.getSourceEventReports(source);
+    private boolean provisionEventReportQuota(
+            Source source, EventReport newEventReport, IMeasurementDao measurementDao)
+            throws DatastoreException {
+        List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
-        if (isWithinReportLimit(source, sourceEventReports.size())) {
+        if (isWithinReportLimit(
+                source,
+                sourceEventReports.size(),
+                DestinationType.getDestinationType(newEventReport.getAttributionDestination()))) {
             return true;
         }
 
@@ -352,8 +326,9 @@ class AttributionJobHandler {
         return attributionCount < PrivacyParams.MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
-    private boolean isWithinReportLimit(Source source, int existingReportCount) {
-        return source.getMaxReportCount() > existingReportCount;
+    private boolean isWithinReportLimit(
+            Source source, int existingReportCount, DestinationType destinationType) {
+        return source.getMaxReportCount(destinationType) > existingReportCount;
     }
 
     private boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
@@ -383,10 +358,10 @@ class AttributionJobHandler {
         try {
             AggregateFilterData sourceFiltersData = extractFilterMap(sourceFilters);
             AggregateFilterData triggerFiltersData = extractFilterMap(triggerFilters);
-            return FilterUtil.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
+            return Filter.isFilterMatch(sourceFiltersData, triggerFiltersData, true);
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e("Malformed JSON string.", e);
+            LogUtil.e(e, "Malformed JSON string.");
             return false;
         }
     }
@@ -417,7 +392,7 @@ class AttributionJobHandler {
                     .findFirst();
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
-            LogUtil.e("Malformed JSON string.", e);
+            LogUtil.e(e, "Malformed JSON string.");
             return Optional.empty();
         }
     }
@@ -425,13 +400,13 @@ class AttributionJobHandler {
     private boolean doEventLevelFiltersMatch(
             AggregateFilterData sourceFiltersData, EventTrigger eventTrigger) {
         if (eventTrigger.getFilterData().isPresent()
-                && !FilterUtil.isFilterMatch(
+                && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getFilterData().get(), true)) {
             return false;
         }
 
         if (eventTrigger.getNotFilterData().isPresent()
-                && !FilterUtil.isFilterMatch(
+                && !Filter.isFilterMatch(
                         sourceFiltersData, eventTrigger.getNotFilterData().get(), false)) {
             return false;
         }
@@ -464,7 +439,7 @@ class AttributionJobHandler {
                     return OptionalInt.empty();
                 }
             } catch (ArithmeticException e) {
-                LogUtil.e("Error adding aggregate contribution values.", e);
+                LogUtil.e(e, "Error adding aggregate contribution values.");
                 return OptionalInt.empty();
             }
         }

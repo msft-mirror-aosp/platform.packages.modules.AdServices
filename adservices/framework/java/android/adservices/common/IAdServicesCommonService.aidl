@@ -17,12 +17,20 @@
 package android.adservices.common;
 
 import android.net.Uri;
-
+import android.adservices.common.IAdServicesCommonCallback;
 /**
-  * Common AdServices service for updating data based on received Package Manager broadcasts.
+  * Common AdServices service.
   * {@hide}
   */
 interface IAdServicesCommonService {
-    oneway void onPackageFullyRemoved(in Uri packageUri);
-    oneway void onPackageAdded(in Uri packageUri);
+     /**
+     * get adservice status service.
+     */
+    void isAdServicesEnabled(
+            in IAdServicesCommonCallback callback
+    );
+
+    void setAdServicesNotificationConditions(
+            in boolean adServicesEntryPointEnabled,
+            in boolean adIdEnabled);
 }
