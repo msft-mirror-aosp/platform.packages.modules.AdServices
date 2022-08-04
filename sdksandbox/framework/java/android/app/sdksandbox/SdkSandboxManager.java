@@ -217,7 +217,7 @@ public final class SdkSandboxManager {
      * given {@code sdkName} will fail.
      *
      * @param sdkName name of the SDK to be unloaded.
-     * @throws SecurityException if the SDK is not loaded.
+     * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
         try {
@@ -277,7 +277,7 @@ public final class SdkSandboxManager {
      *
      * <p>After the client application receives a signal about a successful SDK load, it is then
      * able to asynchronously request to send any data to the SDK in the sandbox. If the SDK is not
-     * loaded, {@link SecurityException} is thrown.
+     * loaded, {@link IllegalArgumentException} is thrown.
      *
      * @param sdkName name of the SDK loaded into sdk sandbox, the same name used in {@link
      *     SdkSandboxManager#loadSdk(String, Bundle, Executor, OutcomeReceiver)}
@@ -285,6 +285,7 @@ public final class SdkSandboxManager {
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param receiver the {@link OutcomeReceiver} which will receive events from loading and
      *     interacting with SDKs. The SDK may also send a Bundle of data back on a successful run.
+     * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void sendData(
             @NonNull String sdkName,
