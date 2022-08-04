@@ -257,7 +257,7 @@ public class ReportImpressionScriptEngineTest {
                         adSelectionConfig.getSellerSignals(),
                         mCustomAudienceSignals);
         // TODO: Quit comparing a URI to a JSON object (b/239497492)
-        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.getStringForm());
+        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.toString());
     }
 
     @Test

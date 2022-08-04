@@ -215,7 +215,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_1)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.toString())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -230,7 +230,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_2)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.toString())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -287,7 +287,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_MINUS_ONE_DAY)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.toString())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();

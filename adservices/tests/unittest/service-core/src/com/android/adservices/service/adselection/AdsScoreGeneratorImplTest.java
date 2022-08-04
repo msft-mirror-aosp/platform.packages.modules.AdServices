@@ -183,8 +183,7 @@ public class AdsScoreGeneratorImplTest {
                         } else if (mTrustedScoringSignalsPath
                                 .concat(mTrustedScoringParams)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(mTrustedScoringSignals.getStringForm());
+                            return new MockResponse().setBody(mTrustedScoringSignals.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -347,7 +346,7 @@ public class AdsScoreGeneratorImplTest {
                                         mAdSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(differentSellerDecisionLogicJs)
-                        .setTrustedScoringSignals(mTrustedScoringSignals.getStringForm())
+                        .setTrustedScoringSignals(mTrustedScoringSignals.toString())
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 

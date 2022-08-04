@@ -65,9 +65,7 @@ public class AdSelectionConfigArgument {
         for (Map.Entry<AdTechIdentifier, AdSelectionSignals> buyerSignal :
                 adSelectionConfig.getPerBuyerSignals().entrySet()) {
             perBuyerSignalsArg.add(
-                    jsonArg(
-                            buyerSignal.getKey().getStringForm(),
-                            buyerSignal.getValue().getStringForm()));
+                    jsonArg(buyerSignal.getKey().toString(), buyerSignal.getValue().toString()));
         }
 
         final ImmutableList.Builder<JSScriptArgument> contextualAdsArgsBuilder =
@@ -77,21 +75,19 @@ public class AdSelectionConfigArgument {
         }
         return recordArg(
                 name,
-                stringArg(SELLER_FIELD_NAME, adSelectionConfig.getSeller().getStringForm()),
+                stringArg(SELLER_FIELD_NAME, adSelectionConfig.getSeller().toString()),
                 stringArg(
                         DECISION_LOGIC_URI_FIELD_NAME,
                         adSelectionConfig.getDecisionLogicUri().toString()),
                 stringArrayArg(
                         CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                         adSelectionConfig.getCustomAudienceBuyers().stream()
-                                .map(AdTechIdentifier::getStringForm)
+                                .map(AdTechIdentifier::toString)
                                 .collect(Collectors.toList())),
                 jsonArg(
                         AUCTION_SIGNALS_FIELD_NAME,
-                        adSelectionConfig.getAdSelectionSignals().getStringForm()),
-                jsonArg(
-                        SELLER_SIGNALS_FIELD_NAME,
-                        adSelectionConfig.getSellerSignals().getStringForm()),
+                        adSelectionConfig.getAdSelectionSignals().toString()),
+                jsonArg(SELLER_SIGNALS_FIELD_NAME, adSelectionConfig.getSellerSignals().toString()),
                 recordArg(PER_BUYER_SIGNALS_FIELD_NAME, perBuyerSignalsArg.build()),
                 arrayArg(CONTEXTUAL_ADS_FIELD_NAME, contextualAdsArgsBuilder.build()),
                 stringArg(
