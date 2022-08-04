@@ -16,11 +16,10 @@
 
 package android.adservices.clients.customaudience;
 
-import android.adservices.common.AdTechIdentifier;
-import android.adservices.customaudience.CustomAudience;
+import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudienceManager;
-import android.adservices.customaudience.JoinCustomAudienceRequest;
-import android.adservices.customaudience.LeaveCustomAudienceRequest;
+import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
+import android.adservices.customaudience.TestCustomAudienceManager;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -34,45 +33,33 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * AdvertisingCustomAudienceClient. Currently, this is for test purpose only, not exposing to the
- * client.
+ * TestAdvertisingCustomAudienceClient. Currently, this is for test purpose only, not exposing to
+ * the client.
  */
-// TODO: This should be in JetPack code.
-public class AdvertisingCustomAudienceClient {
-    private final CustomAudienceManager mCustomAudienceManager;
-
+public class TestAdvertisingCustomAudienceClient {
+    private final TestCustomAudienceManager mTestCustomAudienceManager;
     private final Context mContext;
     private final Executor mExecutor;
 
-    private AdvertisingCustomAudienceClient(@NonNull Context context, @NonNull Executor executor) {
+    private TestAdvertisingCustomAudienceClient(
+            @NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mCustomAudienceManager = mContext.getSystemService(CustomAudienceManager.class);
-
+        mTestCustomAudienceManager =
+                mContext.getSystemService(CustomAudienceManager.class)
+                        .getTestCustomAudienceManager();
     }
 
-    /** Gets the context. */
+    /**
+     * Invokes the {@code overrideCustomAudienceRemoteInfo} method of {@link CustomAudienceManager},
+     * and returns a Void future
+     */
     @NonNull
-    public Context getContext() {
-        return mContext;
-    }
-
-    /** Gets the worker executor. */
-    @NonNull
-    public Executor getExecutor() {
-        return mExecutor;
-    }
-
-    /** Join custom audience. */
-    @NonNull
-    public ListenableFuture<Void> joinCustomAudience(CustomAudience customAudience) {
+    public ListenableFuture<Void> overrideCustomAudienceRemoteInfo(
+            @NonNull AddCustomAudienceOverrideRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    JoinCustomAudienceRequest request =
-                            new JoinCustomAudienceRequest.Builder()
-                                    .setCustomAudience(customAudience)
-                                    .build();
-                    mCustomAudienceManager.joinCustomAudience(
+                    mTestCustomAudienceManager.overrideCustomAudienceRemoteInfo(
                             request,
                             mExecutor,
                             new OutcomeReceiver<Object, AdServicesException>() {
@@ -88,23 +75,20 @@ public class AdvertisingCustomAudienceClient {
                             });
                     // This value is used only for debug purposes: it will be used in toString()
                     // of returned future or error cases.
-                    return "joinCustomAudience";
+                    return "overrideCustomAudienceRemoteInfo";
                 });
     }
 
-    /** Leave custom audience. */
+    /**
+     * Invokes the {@code removeCustomAudienceRemoteInfoOverride} method of {@link
+     * CustomAudienceManager}, and returns a Void future
+     */
     @NonNull
-    public ListenableFuture<Void> leaveCustomAudience(
-            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
+    public ListenableFuture<Void> removeCustomAudienceRemoteInfoOverride(
+            @NonNull RemoveCustomAudienceOverrideRequest request) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    LeaveCustomAudienceRequest request =
-                            new LeaveCustomAudienceRequest.Builder()
-                                    .setOwnerPackageName(owner)
-                                    .setBuyer(buyer)
-                                    .setName(name)
-                                    .build();
-                    mCustomAudienceManager.leaveCustomAudience(
+                    mTestCustomAudienceManager.removeCustomAudienceRemoteInfoOverride(
                             request,
                             mExecutor,
                             new OutcomeReceiver<Object, AdServicesException>() {
@@ -120,7 +104,34 @@ public class AdvertisingCustomAudienceClient {
                             });
                     // This value is used only for debug purposes: it will be used in toString()
                     // of returned future or error cases.
-                    return "leaveCustomAudience";
+                    return "removeCustomAudienceRemoteInfoOverride";
+                });
+    }
+
+    /**
+     * Invokes the {@code resetAllCustomAudienceOverrides} method of {@link CustomAudienceManager},
+     * and returns a Void future
+     */
+    @NonNull
+    public ListenableFuture<Void> resetAllCustomAudienceOverrides() {
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mTestCustomAudienceManager.resetAllCustomAudienceOverrides(
+                            mExecutor,
+                            new OutcomeReceiver<Object, AdServicesException>() {
+                                @Override
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(AdServicesException error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    // This value is used only for debug purposes: it will be used in toString()
+                    // of returned future or error cases.
+                    return "resetAllCustomAudienceOverrides";
                 });
     }
 
@@ -130,12 +141,11 @@ public class AdvertisingCustomAudienceClient {
         private Executor mExecutor;
 
         /** Empty-arg constructor with an empty body for Builder */
-        public Builder() {
-        }
+        public Builder() {}
 
         /** Sets the context. */
         @NonNull
-        public Builder setContext(@NonNull Context context) {
+        public TestAdvertisingCustomAudienceClient.Builder setContext(@NonNull Context context) {
             Objects.requireNonNull(context);
             mContext = context;
             return this;
@@ -147,19 +157,19 @@ public class AdvertisingCustomAudienceClient {
          * @param executor the worker executor used to run heavy background tasks.
          */
         @NonNull
-        public Builder setExecutor(@NonNull Executor executor) {
+        public TestAdvertisingCustomAudienceClient.Builder setExecutor(@NonNull Executor executor) {
             Objects.requireNonNull(executor);
             mExecutor = executor;
             return this;
         }
 
-        /** Builds a {@link AdvertisingCustomAudienceClient} instance */
+        /** Builds a {@link TestAdvertisingCustomAudienceClient} instance */
         @NonNull
-        public AdvertisingCustomAudienceClient build() {
+        public TestAdvertisingCustomAudienceClient build() {
             Objects.requireNonNull(mContext);
             Objects.requireNonNull(mExecutor);
 
-            return new AdvertisingCustomAudienceClient(mContext, mExecutor);
+            return new TestAdvertisingCustomAudienceClient(mContext, mExecutor);
         }
     }
 }
