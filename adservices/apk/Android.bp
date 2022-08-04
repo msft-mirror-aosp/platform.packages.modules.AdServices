@@ -56,6 +56,7 @@ android_app {
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
     ],
+    jarjar_rules: "jarjar_rules.txt",
     resource_dirs: ["res"],
     aaptflags: [
         // Don't compress *.tflite files. Compressed models cannot be loaded on device.
