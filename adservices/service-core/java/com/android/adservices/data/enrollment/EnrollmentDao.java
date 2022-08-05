@@ -123,7 +123,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Nullable
     public EnrollmentData getEnrollmentDataForFledgeByAdTechIdentifier(
             AdTechIdentifier adTechIdentifier) {
-        String adTechIdentifierString = adTechIdentifier.getStringForm();
+        String adTechIdentifierString = adTechIdentifier.toString();
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             return null;

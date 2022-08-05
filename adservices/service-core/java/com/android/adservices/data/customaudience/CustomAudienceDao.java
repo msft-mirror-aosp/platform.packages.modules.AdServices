@@ -222,7 +222,6 @@ public abstract class CustomAudienceDao {
             "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
-    @VisibleForTesting
     public abstract String getBiddingLogicUrlOverride(
             @NonNull String owner,
             @NonNull String buyer,
@@ -238,7 +237,6 @@ public abstract class CustomAudienceDao {
             "SELECT trusted_bidding_data FROM custom_audience_overrides WHERE owner = :owner "
                     + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
     @Nullable
-    @VisibleForTesting
     public abstract String getTrustedBiddingDataOverride(
             @NonNull String owner,
             @NonNull String buyer,

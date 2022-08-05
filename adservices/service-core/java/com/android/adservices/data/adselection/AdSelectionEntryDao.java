@@ -22,8 +22,6 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.android.internal.annotations.VisibleForTesting;
-
 import java.time.Instant;
 import java.util.List;
 
@@ -152,7 +150,6 @@ public interface AdSelectionEntryDao {
             "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
                     + " :adSelectionConfigId AND app_package_name = :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
 
     /**
@@ -166,7 +163,6 @@ public interface AdSelectionEntryDao {
                     + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
                     + " :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
 
     /**

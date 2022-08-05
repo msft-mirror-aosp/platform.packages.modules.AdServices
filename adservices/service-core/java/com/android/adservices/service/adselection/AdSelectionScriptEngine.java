@@ -152,17 +152,14 @@ public class AdSelectionScriptEngine {
 
         ImmutableList<JSScriptArgument> signals =
                 ImmutableList.<JSScriptArgument>builder()
-                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals.getStringForm()))
-                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.getStringForm()))
+                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals.toString()))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals.toString()))
                         .add(
                                 jsonArg(
                                         TRUSTED_BIDDING_SIGNALS_ARG_NAME,
-                                        trustedBiddingSignals.getStringForm()))
-                        .add(
-                                jsonArg(
-                                        CONTEXTUAL_SIGNALS_ARG_NAME,
-                                        contextualSignals.getStringForm()))
-                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals.getStringForm()))
+                                        trustedBiddingSignals.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
+                        .add(jsonArg(USER_SIGNALS_ARG_NAME, userSignals.toString()))
                         .add(
                                 CustomAudienceBiddingSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_SIGNALS_ARG_NAME, customAudienceSignals))
@@ -207,15 +204,12 @@ public class AdSelectionScriptEngine {
                         .add(
                                 AdSelectionConfigArgument.asScriptArgument(
                                         adSelectionConfig, AUCTION_CONFIG_ARG_NAME))
-                        .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals.getStringForm()))
+                        .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals.toString()))
                         .add(
                                 jsonArg(
                                         TRUSTED_SCORING_SIGNALS_ARG_NAME,
-                                        trustedScoringSignals.getStringForm()))
-                        .add(
-                                jsonArg(
-                                        CONTEXTUAL_SIGNALS_ARG_NAME,
-                                        contextualSignals.getStringForm()))
+                                        trustedScoringSignals.toString()))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
                                 CustomAudienceScoringSignalsArgument.asScriptArgument(
                                         CUSTOM_AUDIENCE_SIGNALS_ARG_NAME,

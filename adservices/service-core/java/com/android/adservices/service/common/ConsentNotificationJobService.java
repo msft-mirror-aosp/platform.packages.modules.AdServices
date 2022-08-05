@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.ui.notifications;
+package com.android.adservices.service.common;
 
 import static com.android.adservices.service.AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID;
 
@@ -24,6 +24,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.PersistableBundle;
 
 import androidx.annotation.NonNull;
 
@@ -43,20 +44,24 @@ import java.util.TimeZone;
 public class ConsentNotificationJobService extends JobService {
     static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     static final long MILLISECONDS_IN_THE_DAY = 86400000L;
-
+    static final String ADID_ENABLE_STATUS = "adid_enable_status";
     private ConsentManager mConsentManager;
 
     /** Schedule the Job. */
-    public static void schedule(Context context) {
+    public static void schedule(Context context, boolean adidEnabled) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         long initialDelay = calculateInitialDelay(Calendar.getInstance(TimeZone.getDefault()));
         long deadline = calculateDeadline(Calendar.getInstance(TimeZone.getDefault()));
+        LogUtil.i("initialdelay is " + initialDelay + ", deadline is " + deadline);
+        PersistableBundle bundle = new PersistableBundle();
+        bundle.putBoolean(ADID_ENABLE_STATUS, adidEnabled);
         final JobInfo job =
                 new JobInfo.Builder(
                                 CONSENT_NOTIFICATION_JOB_ID,
                                 new ComponentName(context, ConsentNotificationJobService.class))
                         .setMinimumLatency(initialDelay)
                         .setOverrideDeadline(deadline)
+                        .setExtras(bundle)
                         .build();
         jobScheduler.schedule(job);
         LogUtil.d("Scheduling Consent notification job ...");
@@ -64,7 +69,10 @@ public class ConsentNotificationJobService extends JobService {
 
     static long calculateInitialDelay(Calendar calendar) {
         Flags flags = FlagsFactory.getFlags();
-
+        if (flags.getConsentNotificationDebugMode()) {
+            LogUtil.i("Debug mode is enabled. Setting initial delay to 0");
+            return 0L;
+        }
         long millisecondsInTheCurrentDay = getMillisecondsInTheCurrentDay(calendar);
 
         // If the current time (millisecondsInTheCurrentDay) is before
@@ -94,6 +102,11 @@ public class ConsentNotificationJobService extends JobService {
 
     static long calculateDeadline(Calendar calendar) {
         Flags flags = FlagsFactory.getFlags();
+        if (flags.getConsentNotificationDebugMode()) {
+            LogUtil.i("Debug mode is enabled. Setting initial delay to 0");
+            return 0L;
+        }
+
         long millisecondsInTheCurrentDay = getMillisecondsInTheCurrentDay(calendar);
 
         // If the current time (millisecondsInTheCurrentDay) is before
@@ -138,17 +151,22 @@ public class ConsentNotificationJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("ConsentNotificationJobService.onStartJob");
-
+        if (mConsentManager == null) {
+            setConsentManager(ConsentManager.getInstance(this));
+        }
+        boolean adIdZeroStatus = params.getExtras().getBoolean(ADID_ENABLE_STATUS, false);
         AdServicesExecutors.getBackgroundExecutor()
                 .execute(
                         () -> {
                             try {
-                                if (mConsentManager.wasNotificationDisplayed(getPackageManager())) {
+                                if (!FlagsFactory.getFlags().getConsentNotificationDebugMode()
+                                        && mConsentManager.wasNotificationDisplayed(
+                                                getPackageManager())) {
+                                    LogUtil.i("already notified, return back");
                                     return;
                                 }
-
-                                ConsentNotificationTrigger.showConsentNotification(
-                                        this, isEuDevice(this));
+                                AdServicesSyncUtil.getInstance()
+                                        .execute(this, adIdZeroStatus || isEuDevice(this));
                             } finally {
                                 jobFinished(params, false);
                             }

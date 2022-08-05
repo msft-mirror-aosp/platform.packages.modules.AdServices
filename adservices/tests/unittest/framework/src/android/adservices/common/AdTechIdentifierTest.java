@@ -57,7 +57,7 @@ public class AdTechIdentifierTest {
     @Test
     public void testBuildValidAdTechIdentifierSuccess() {
         AdTechIdentifier validAdTechId = AdTechIdentifier.fromString(AD_TECH_ID_STRING);
-        assertEquals(AD_TECH_ID_STRING, validAdTechId.getStringForm());
+        assertEquals(AD_TECH_ID_STRING, validAdTechId.toString());
     }
 
     @Test(expected = NullPointerException.class)
@@ -68,7 +68,7 @@ public class AdTechIdentifierTest {
     @Test
     public void testBuildValidAdTechIdentifierSuccessNoValidation() {
         AdTechIdentifier validAdTechId = AdTechIdentifier.fromString(AD_TECH_ID_STRING, false);
-        assertEquals(AD_TECH_ID_STRING, validAdTechId.getStringForm());
+        assertEquals(AD_TECH_ID_STRING, validAdTechId.toString());
     }
 
     @Test

@@ -248,7 +248,7 @@ public class FledgeCtsTest {
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
                 .setBiddingLogicUrl(
                         CommonFixture.getUri(
-                                buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer.getStringForm()))
+                                buyer, BUYER_BIDDING_LOGIC_URI_PREFIX + buyer.toString()))
                 .setAds(ads)
                 .build();
     }

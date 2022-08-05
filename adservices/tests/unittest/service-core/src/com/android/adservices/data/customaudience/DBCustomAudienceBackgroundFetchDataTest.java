@@ -74,7 +74,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.builder()
                         .setOwner(CustomAudienceFixture.VALID_OWNER)
-                        .setBuyer(CommonFixture.VALID_BUYER.getStringForm())
+                        .setBuyer(CommonFixture.VALID_BUYER.toString())
                         .setName(CustomAudienceFixture.VALID_NAME)
                         .setDailyUpdateUrl(
                                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
@@ -116,7 +116,7 @@ public class DBCustomAudienceBackgroundFetchDataTest {
         DBCustomAudienceBackgroundFetchData fetchData =
                 DBCustomAudienceBackgroundFetchData.create(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CommonFixture.VALID_BUYER.toString(),
                         CustomAudienceFixture.VALID_NAME,
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER),

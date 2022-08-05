@@ -46,7 +46,7 @@ public class CustomAudienceUpdatableDataFixture {
 
     public static String getFullSuccessfulJsonResponseString() throws JSONException {
         return toJsonResponseString(
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm(),
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
                 DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
                         .build(),
                 DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER));
@@ -262,7 +262,7 @@ public class CustomAudienceUpdatableDataFixture {
                         AdSelectionSignals.fromString(
                                 formatAsOrgJsonJSONObjectString(
                                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS
-                                                .getStringForm())))
+                                                .toString())))
                 .setTrustedBiddingData(
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
                                         CommonFixture.VALID_BUYER)

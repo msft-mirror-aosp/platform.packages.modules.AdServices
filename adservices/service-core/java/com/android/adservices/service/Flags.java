@@ -180,7 +180,7 @@ public interface Flags extends Dumpable {
     /** Measurement manifest file url, used for MDD download. */
     String MEASUREMENT_MANIFEST_FILE_URL =
             "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1"
-                    + "/manifest_config_1657831410387.binaryproto";
+                    + "/manifest_config_1658790241927.binaryproto";
 
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
@@ -485,6 +485,12 @@ public interface Flags extends Dumpable {
 
     default long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
+    }
+
+    boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
+
+    default boolean getConsentNotificationDebugMode() {
+        return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
     // Group of All Killswitches
