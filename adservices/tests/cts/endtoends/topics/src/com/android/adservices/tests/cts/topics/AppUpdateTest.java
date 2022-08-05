@@ -37,6 +37,7 @@ import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -145,12 +146,13 @@ public class AppUpdateTest {
     public void setup() throws InterruptedException {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
-        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
+        //        Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        registerTopicResponseReceiver();
+        //        registerTopicResponseReceiver();
     }
 
     @Test
+    @Ignore("b/241309845")
     public void testAppUpdate() throws Exception {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
