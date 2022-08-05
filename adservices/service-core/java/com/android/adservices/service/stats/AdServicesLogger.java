@@ -24,6 +24,9 @@ public interface AdServicesLogger {
     /** log ApiCallStats which has stats about the API call such as the status. */
     void logApiCallStats(ApiCallStats apiCallStats);
 
+    /** log UIStats which has stats about UI events. */
+    void logUIStats(UIStats uiStats);
+
     /** Logs API call stats specific to the FLEDGE APIs as an {@link ApiCallStats} object. */
     void logFledgeApiCallStats(int apiName, int resultCode);
 }

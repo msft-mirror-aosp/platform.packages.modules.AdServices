@@ -86,6 +86,8 @@ public final class PhFlags implements Flags {
             "fledge_custom_audience_max_ads_size_b";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS =
             "fledge_custom_audience_max_num_ads";
+    static final String KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS =
+            "fledge_custom_audience_active_time_window_ms";
 
     // FLEDGE Background Fetch keys
     static final String KEY_FLEDGE_BACKGROUND_FETCH_ENABLED = "fledge_background_fetch_enabled";
@@ -144,6 +146,9 @@ public final class PhFlags implements Flags {
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+
+    // Consent Notification debug mode keys.
+    static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
     private static final PhFlags sSingleton = new PhFlags();
 
@@ -406,6 +411,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeCustomAudienceActiveTimeWindowInMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
+                /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS);
+    }
+
+    @Override
     public boolean getFledgeBackgroundFetchEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
@@ -656,6 +669,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getConsentNotificationDebugMode() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
+                /* defaultValue */ CONSENT_NOTIFICATION_DEBUG_MODE);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -749,6 +770,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B
                         + " = "
                         + getFledgeCustomAudienceMaxAdsSizeB());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS
+                        + " = "
+                        + getFledgeCustomAudienceActiveTimeWindowInMs());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS

@@ -32,7 +32,7 @@ public class CustomAudienceSignalsTest {
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER.getStringForm())
+                        .setBuyer(CommonFixture.VALID_BUYER.toString())
                         .build();
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
@@ -48,7 +48,7 @@ public class CustomAudienceSignalsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
     }
 
     @Test
@@ -71,6 +71,6 @@ public class CustomAudienceSignalsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
     }
 }

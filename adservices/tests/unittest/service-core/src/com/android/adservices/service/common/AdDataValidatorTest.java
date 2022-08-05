@@ -28,7 +28,7 @@ public class AdDataValidatorTest {
 
     AdDataValidator mValidator =
             new AdDataValidator(
-                    ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER.getStringForm());
+                    ValidatorUtil.AD_TECH_ROLE_BUYER, CommonFixture.VALID_BUYER.toString());
 
     @Test
     public void testValidAdData() {

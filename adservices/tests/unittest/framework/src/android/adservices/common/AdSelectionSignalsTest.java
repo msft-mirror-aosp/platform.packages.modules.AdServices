@@ -22,8 +22,6 @@ import static org.junit.Assert.assertNotEquals;
 
 import android.os.Parcel;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Test;
 
 public class AdSelectionSignalsTest {
@@ -60,21 +58,13 @@ public class AdSelectionSignalsTest {
     @Test
     public void testBuildValidAdSelectionSignalsSuccess() {
         AdSelectionSignals validSignals = AdSelectionSignals.fromString(SIGNALS_STRING);
-        assertEquals(SIGNALS_STRING, validSignals.getStringForm());
-    }
-
-    @Test
-    public void testBuildValidAdSelectionSignalsFromJsonSuccess() throws JSONException {
-        JSONObject json = new JSONObject(SIGNALS_STRING);
-        AdSelectionSignals validSignals = AdSelectionSignals.fromJson(json);
-        assertEquals(SIGNALS_STRING, validSignals.getStringForm());
-        assertEquals(json.toString(), validSignals.getJsonForm().toString());
+        assertEquals(SIGNALS_STRING, validSignals.toString());
     }
 
     @Test
     public void testBuildValidAdSelectionSignalsSuccessNoValidation() {
         AdSelectionSignals validSignals = AdSelectionSignals.fromString(SIGNALS_STRING, false);
-        assertEquals(SIGNALS_STRING, validSignals.getStringForm());
+        assertEquals(SIGNALS_STRING, validSignals.toString());
     }
 
     @Test(expected = NullPointerException.class)

@@ -42,17 +42,17 @@ public class CustomAudienceBiddingInfoTest {
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
             new CustomAudienceSignals.Builder()
                     .setOwner(OWNER)
-                    .setBuyer(BUYER.getStringForm())
+                    .setBuyer(BUYER.toString())
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
                     .setUserBiddingSignals(
-                            CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                            CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString())
                     .build();
     private static final DBCustomAudience CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER)
                     .setOwner(OWNER)
-                    .setBuyer(BUYER.getStringForm())
+                    .setBuyer(BUYER.toString())
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)

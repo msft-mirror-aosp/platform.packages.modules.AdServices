@@ -28,14 +28,13 @@ public class DBCustomAudienceFixture {
     public static DBCustomAudience.Builder getValidBuilderByBuyer(AdTechIdentifier buyer) {
         return new DBCustomAudience.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer.getStringForm())
+                .setBuyer(buyer.toString())
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString())
                 .setTrustedBiddingData(
                         DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
                 .setBiddingLogicUrl(CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(buyer))

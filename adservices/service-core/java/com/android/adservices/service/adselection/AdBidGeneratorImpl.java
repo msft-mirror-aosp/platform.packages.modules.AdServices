@@ -262,7 +262,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mListeningExecutorService.submit(
                                 () ->
                                         mCustomAudienceDevOverridesHelper.getBiddingLogicOverride(
-                                                owner, buyer.getStringForm(), name)));
+                                                owner, buyer.toString(), name)));
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (jsOverride == null) {
