@@ -45,8 +45,9 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         Log.i(TAG, "SDK unloaded");
     }
 
+    @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
-        return new TestView(windowContext, getBaseContext(), width, height);
+        return new TestView(windowContext, getContext(), width, height);
     }
 
     @Override
