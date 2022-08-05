@@ -36,6 +36,7 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSendDataCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSharedPreferencesSyncCallback;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -1027,45 +1028,71 @@ public class SdkSandboxManagerServiceUnitTest {
                 assertThrows(
                         SecurityException.class,
                         () ->
-                                mService.loadSdk(
+                                mService.syncDataFromClient(
                                         "does.not.exist",
-                                        SDK_NAME,
                                         TIME_APP_CALLED_SYSTEM_SERVER,
-                                        new Bundle(),
-                                        new FakeLoadSdkCallbackBinder()));
+                                        TEST_UPDATE,
+                                        new FakeSharedPreferencesSyncCallback()));
         assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
     }
 
     @Test
     public void test_syncDataFromClient_sandboxServiceIsNotBound() {
         // Sync data from client
+        final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
         mService.syncDataFromClient(
                 TEST_PACKAGE,
                 /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                 TEST_UPDATE,
-                Mockito.mock(ISharedPreferencesSyncCallback.class));
+                callback);
 
         // Verify when sandbox is not bound, manager service does not try to sync
-        assertThat(mSdkSandboxService.getLastUpdate()).isNull();
+        assertThat(mSdkSandboxService.getLastSyncUpdate()).isNull();
+        // Verify on error was called
+        assertThat(callback.hasError()).isTrue();
+        assertThat(callback.getErrorCode())
+                .isEqualTo(ISharedPreferencesSyncCallback.SANDBOX_NOT_AVAILABLE);
+        assertThat(callback.getErrorMsg()).contains("Sandbox not available");
     }
 
     @Test
-    public void test_syncDataFromClient_sandboxServiceIsAlreadyBound() {
+    public void test_syncDataFromClient_sandboxServiceIsNotBound_sandboxStartedLater()
+            throws Exception {
+        // Sync data from client
+        final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
+        mService.syncDataFromClient(
+                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, TEST_UPDATE, callback);
+
+        // Verify on error was called
+        assertThat(callback.hasError()).isTrue();
+        callback.resetLatch();
+
+        // Now loadSdk so that sandbox is created
+        loadSdk();
+
+        // Verify that onSandboxStart was called
+        assertThat(callback.hasSandboxStarted()).isTrue();
+    }
+
+    @Test
+    public void test_syncDataFromClient_sandboxServiceIsAlreadyBound_forwardsToSandbox()
+            throws Exception {
         // Ensure a sandbox service is already bound for the client
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
         mProvider.bindService(callingInfo, Mockito.mock(ServiceConnection.class));
 
         // Sync data from client
         final Bundle data = new Bundle();
+        final FakeSharedPreferencesSyncCallback callback = new FakeSharedPreferencesSyncCallback();
         mService.syncDataFromClient(
                 TEST_PACKAGE,
                 /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                 TEST_UPDATE,
-                Mockito.mock(ISharedPreferencesSyncCallback.class));
+                callback);
 
         // Verify that manager service calls sandbox to sync data
-        final Bundle lastData = mSdkSandboxService.getLastUpdate();
-        assertThat(lastData.getString(TEST_KEY)).isEqualTo(TEST_VALUE);
+        assertThat(mSdkSandboxService.getLastSyncUpdate()).isSameInstanceAs(TEST_UPDATE);
+        assertThat(mSdkSandboxService.getLastSyncCallback()).isSameInstanceAs(callback);
     }
 
     @Test
@@ -1676,8 +1703,10 @@ public class SdkSandboxManagerServiceUnitTest {
         private IRequestSurfacePackageFromSdkCallback mRequestSurfacePackageFromSdkCallback = null;
 
         private boolean mSurfacePackageRequested = false;
-        private Bundle mLastSyncUpdate = null;
         boolean mDataReceived = false;
+
+        private SharedPreferencesUpdate mLastSyncUpdate = null;
+        private ISharedPreferencesSyncCallback mLastSyncCallback = null;
 
         FakeSdkSandboxService() {
             mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -1701,13 +1730,25 @@ public class SdkSandboxManagerServiceUnitTest {
         public void unloadSdk(IBinder sdkToken) {}
 
         @Override
-        public void syncDataFromClient(SharedPreferencesUpdate update) {
-            mLastSyncUpdate = update.getData();
+        public void syncDataFromClient(
+                SharedPreferencesUpdate update, ISharedPreferencesSyncCallback callback) {
+            mLastSyncUpdate = update;
+            mLastSyncCallback = callback;
         }
 
         @Nullable
-        public Bundle getLastUpdate() {
+        public Bundle getLastSyncData() {
+            return mLastSyncUpdate.getData();
+        }
+
+        @Nullable
+        public SharedPreferencesUpdate getLastSyncUpdate() {
             return mLastSyncUpdate;
+        }
+
+        @Nullable
+        public ISharedPreferencesSyncCallback getLastSyncCallback() {
+            return mLastSyncCallback;
         }
 
         void sendLoadCodeSuccessful() throws RemoteException {
