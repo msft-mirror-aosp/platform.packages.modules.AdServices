@@ -43,7 +43,12 @@ import java.util.concurrent.Executor;
  * preserving way.
  */
 public final class TopicsManager {
-
+    /**
+     * Constant that represents the service name for {@link TopicsManager} to be used in {@link
+     * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
+     *
+     * @hide
+     */
     public static final String TOPICS_SERVICE = "topics_service";
 
     // Whent an app calls the Topics API directly, it sets the SDK name to empty string.
