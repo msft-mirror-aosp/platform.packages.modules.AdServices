@@ -311,7 +311,9 @@ public final class AdSelectionRunner {
                     Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
-                                    buyers, mClock.instant());
+                                    buyers,
+                                    mClock.instant(),
+                                    mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
                     if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
                         // TODO(b/233296309) : Remove this exception after adding contextual ads
                         throw new IllegalStateException(ERROR_NO_CA_AVAILABLE);
