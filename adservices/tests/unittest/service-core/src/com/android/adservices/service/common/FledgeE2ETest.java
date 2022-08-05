@@ -299,7 +299,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwner(),
+                        customAudience1.getOwnerPackageName(),
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -310,7 +310,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwner(),
+                        customAudience2.getOwnerPackageName(),
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -431,7 +431,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwner(),
+                        customAudience1.getOwnerPackageName(),
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -442,7 +442,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwner(),
+                        customAudience2.getOwnerPackageName(),
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -568,7 +568,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwner(),
+                        customAudience1.getOwnerPackageName(),
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -579,7 +579,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwner(),
+                        customAudience2.getOwnerPackageName(),
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -1099,7 +1099,7 @@ public class FledgeE2ETest {
         }
 
         return new CustomAudience.Builder()
-                .setOwner(MY_APP_PACKAGE_NAME)
+                .setOwnerPackageName(MY_APP_PACKAGE_NAME)
                 .setBuyer(AdTechIdentifier.fromString(buyerDomain.getHost()))
                 .setName(
                         buyerDomain.getHost()

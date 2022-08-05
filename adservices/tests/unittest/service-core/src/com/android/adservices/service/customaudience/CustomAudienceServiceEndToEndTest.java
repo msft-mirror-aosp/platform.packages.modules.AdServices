@@ -185,7 +185,7 @@ public class CustomAudienceServiceEndToEndTest {
                 () -> {
                     mService.joinCustomAudience(
                             CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                    .setOwner("other_owner")
+                                    .setOwnerPackageName("other_owner")
                                     .build(),
                             callback);
                 });
