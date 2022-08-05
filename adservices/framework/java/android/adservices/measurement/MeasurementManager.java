@@ -129,7 +129,7 @@ public class MeasurementManager {
     private void register(
             @NonNull RegistrationRequest registrationRequest,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Object, AdServicesException> callback) {
         Objects.requireNonNull(registrationRequest);
         final IMeasurementService service = getService();
 
@@ -140,10 +140,7 @@ public class MeasurementManager {
                         @Override
                         public void onResult() {
                             if (callback != null && executor != null) {
-                                executor.execute(
-                                        () -> {
-                                            callback.onResult(null);
-                                        });
+                                executor.execute(() -> callback.onResult(new Object()));
                             }
                         }
 
@@ -153,9 +150,7 @@ public class MeasurementManager {
                                     && executor != null
                                     && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
                                 executor.execute(
-                                        () -> {
-                                            callback.onError(failureParcel.asException());
-                                        });
+                                        () -> callback.onError(failureParcel.asException()));
                             }
                         }
                     });
@@ -172,9 +167,9 @@ public class MeasurementManager {
      * Register an attribution source (click or view).
      *
      * @param attributionSource the platform issues a request to this URI in order to fetch metadata
-     *                         associated with the attribution source.
+     *     associated with the attribution source.
      * @param inputEvent either an {@link InputEvent} object (for a click event) or null (for a view
-     *                  event).
+     *     event).
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */
@@ -182,7 +177,7 @@ public class MeasurementManager {
             @NonNull Uri attributionSource,
             @Nullable InputEvent inputEvent,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Object, AdServicesException> callback) {
         Objects.requireNonNull(attributionSource);
         register(
                 new RegistrationRequest.Builder()
@@ -211,7 +206,7 @@ public class MeasurementManager {
     public void registerWebSource(
             @NonNull WebSourceRegistrationRequest request,
             @Nullable Executor executor,
-            @Nullable OutcomeReceiver<Void, Exception> callback) {
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
@@ -223,7 +218,7 @@ public class MeasurementManager {
                         @Override
                         public void onResult() {
                             if (callback != null && executor != null) {
-                                executor.execute(() -> callback.onResult(null));
+                                executor.execute(() -> callback.onResult(new Object()));
                             }
                         }
 
@@ -233,9 +228,7 @@ public class MeasurementManager {
                                     && executor != null
                                     && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
                                 executor.execute(
-                                        () -> {
-                                            callback.onError(failureParcel.asException());
-                                        });
+                                        () -> callback.onError(failureParcel.asException()));
                             }
                         }
                     });
@@ -263,7 +256,7 @@ public class MeasurementManager {
     public void registerWebTrigger(
             @NonNull WebTriggerRegistrationRequest request,
             @Nullable Executor executor,
-            @Nullable OutcomeReceiver<Void, Exception> callback) {
+            @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(request);
         final IMeasurementService service = getService();
 
@@ -275,7 +268,7 @@ public class MeasurementManager {
                         @Override
                         public void onResult() {
                             if (callback != null && executor != null) {
-                                executor.execute(() -> callback.onResult(null));
+                                executor.execute(() -> callback.onResult(new Object()));
                             }
                         }
 
@@ -285,9 +278,7 @@ public class MeasurementManager {
                                     && executor != null
                                     && failureParcel.getStatusCode() == RESULT_UNAUTHORIZED_CALL) {
                                 executor.execute(
-                                        () -> {
-                                            callback.onError(failureParcel.asException());
-                                        });
+                                        () -> callback.onError(failureParcel.asException()));
                             }
                         }
                     });
@@ -304,14 +295,14 @@ public class MeasurementManager {
      * Register a trigger (conversion).
      *
      * @param trigger the API issues a request to this URI to fetch metadata associated with the
-     *                trigger.
+     *     trigger.
      * @param executor used by callback to dispatch results.
      * @param callback intended to notify asynchronously the API result.
      */
     public void registerTrigger(
             @NonNull Uri trigger,
             @Nullable @CallbackExecutor Executor executor,
-            @Nullable OutcomeReceiver<Void, AdServicesException> callback) {
+            @Nullable OutcomeReceiver<Object, AdServicesException> callback) {
         Objects.requireNonNull(trigger);
         register(
                 new RegistrationRequest.Builder()
@@ -331,7 +322,7 @@ public class MeasurementManager {
     private void deleteRegistrations(
             @NonNull DeletionParam deletionParam,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, Exception> callback) {
+            @NonNull OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(deletionParam);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
@@ -343,15 +334,12 @@ public class MeasurementManager {
                     new IMeasurementCallback.Stub() {
                         @Override
                         public void onResult() {
-                            executor.execute(() -> callback.onResult(null));
+                            executor.execute(() -> callback.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(MeasurementErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        callback.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> callback.onError(failureParcel.asException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -373,7 +361,7 @@ public class MeasurementManager {
     public void deleteRegistrations(
             @NonNull DeletionRequest deletionRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, Exception> callback) {
+            @NonNull OutcomeReceiver<Object, Exception> callback) {
         deleteRegistrations(
                 new DeletionParam.Builder()
                         .setOriginUris(deletionRequest.getOriginUris())
@@ -405,9 +393,7 @@ public class MeasurementManager {
         // TODO (b/241149306): Remove here and apply across the board.
         if (AdServicesApiUtil.getAdServicesApiState()
                 == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
-            executor.execute(() -> {
-                callback.onResult(MEASUREMENT_API_STATE_DISABLED);
-            });
+            executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
             return;
         }
 
