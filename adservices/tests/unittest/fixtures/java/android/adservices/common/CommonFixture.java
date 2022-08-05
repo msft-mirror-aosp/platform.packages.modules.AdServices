@@ -47,6 +47,6 @@ public class CommonFixture {
     }
 
     public static Uri getUri(AdTechIdentifier authority, String path) {
-        return getUri(authority.getStringForm(), path);
+        return getUri(authority.toString(), path);
     }
 }

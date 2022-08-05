@@ -59,6 +59,14 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 apiCallStats.getResultCode());
     }
 
+    /** log method for UI stats. */
+    public void logUIStats(UIStats uiStats) {
+        AdServicesStatsLog.write(
+                uiStats.getCode(),
+                uiStats.getRegion(),
+                uiStats.getAction());
+    }
+
     @Override
     public void logFledgeApiCallStats(int apiName, int resultCode) {
         // TODO(b/233628316): Implement latency measurement

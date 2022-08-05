@@ -17,6 +17,9 @@
 package com.android.adservices.service.consent;
 
 import static com.android.adservices.service.consent.ConsentManager.EEA_DEVICE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -46,6 +49,8 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -74,6 +79,7 @@ public class ConsentManagerTest {
     @Mock private PackageManager mPackageManager;
     @Mock private TopicsWorker mTopicsWorker;
     @Mock private MeasurementImpl mMeasurementImpl;
+    @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
 
     @Mock private AppUpdateManager mAppUpdateManager;
     @Mock private CacheManager mCacheManager;
@@ -90,7 +96,11 @@ public class ConsentManagerTest {
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManager));
 
         mConsentManager = new ConsentManager(
-                mContext, mTopicsWorker, mAppConsentDao, mMeasurementImpl);
+                mContext,
+                mTopicsWorker,
+                mAppConsentDao,
+                mMeasurementImpl,
+                mAdServicesLoggerImpl);
     }
 
     @After
@@ -444,7 +454,8 @@ public class ConsentManagerTest {
                                 mAppUpdateManager,
                                 mMockFlags),
                         mAppConsentDao,
-                        mMeasurementImpl);
+                        mMeasurementImpl,
+                        mAdServicesLoggerImpl);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
         doNothing().when(mCacheManager).clearAllTopicsData(any());
@@ -456,5 +467,21 @@ public class ConsentManagerTest {
         verify(mBlockedTopicsManager).blockTopic(topic);
         verify(mBlockedTopicsManager).unblockTopic(topic);
         verify(mCacheManager).clearAllTopicsData(tablesToBlock);
+    }
+
+    @Test
+    public void testLoggingSettingsUsageReportedOptInSelected() throws IOException {
+        when(mPackageManager.hasSystemFeature(EEA_DEVICE)).thenReturn(true);
+        mConsentManager.init(mPackageManager);
+        mConsentManager.enable(mPackageManager);
+
+        UIStats expectedUIStats = new UIStats.Builder()
+                .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                .setRegion(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU)
+                .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
+                .build();
+
+        verify(mAdServicesLoggerImpl, times(1)).logUIStats(any());
+        verify(mAdServicesLoggerImpl, times(1)).logUIStats(expectedUIStats);
     }
 }

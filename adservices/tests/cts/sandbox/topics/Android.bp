@@ -17,7 +17,7 @@ package {
 }
 
 android_test {
-    name: "SandboxedTopicsManagerTests",
+    name: "CtsSandboxedTopicsManagerTests",
     srcs: [
         "src/**/*.java",
     ],
@@ -43,4 +43,5 @@ android_test {
         "mts-adservices",
         "general-tests",
     ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }

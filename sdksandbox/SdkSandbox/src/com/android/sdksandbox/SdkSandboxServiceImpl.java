@@ -124,11 +124,11 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     /** Unloads SDK. */
-    public void unloadSdk(IBinder sdkToken, String sdkName) {
+    public void unloadSdk(IBinder sdkToken) {
         enforceCallerIsSystemServer();
         final long token = Binder.clearCallingIdentity();
         try {
-            unloadSdkInternal(sdkToken, sdkName);
+            unloadSdkInternal(sdkToken);
         } finally {
             Binder.restoreCallingIdentity(token);
         }
@@ -230,7 +230,7 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
-    private void unloadSdkInternal(@NonNull IBinder sdkToken, @NonNull String sdkName) {
+    private void unloadSdkInternal(@NonNull IBinder sdkToken) {
         synchronized (mHeldSdk) {
             SandboxedSdkHolder sandboxedSdkHolder = mHeldSdk.get(sdkToken);
             if (sandboxedSdkHolder != null) {
@@ -289,10 +289,9 @@ public class SdkSandboxServiceImpl extends Service {
         }
 
         @Override
-        public void unloadSdk(@NonNull IBinder sdkToken, @NonNull String sdkName) {
+        public void unloadSdk(@NonNull IBinder sdkToken) {
             Objects.requireNonNull(sdkToken, "sdkToken should not be null");
-            Objects.requireNonNull(sdkName, "sdkName should not be null");
-            SdkSandboxServiceImpl.this.unloadSdk(sdkToken, sdkName);
+            SdkSandboxServiceImpl.this.unloadSdk(sdkToken);
         }
 
         @Override
