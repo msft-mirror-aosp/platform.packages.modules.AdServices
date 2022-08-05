@@ -16,12 +16,13 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 
 public class CustomAudienceSignalsFixture {
-    public static final String BUYER = "buyer";
+    public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
 
     public static CustomAudienceSignals aCustomAudienceSignals() {
         return aCustomAudienceSignalsBuilder().build();
@@ -30,10 +31,10 @@ public class CustomAudienceSignalsFixture {
     public static CustomAudienceSignals.Builder aCustomAudienceSignalsBuilder() {
         return new CustomAudienceSignals.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(BUYER)
+                .setBuyer(BUYER.toString())
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
     }
 }

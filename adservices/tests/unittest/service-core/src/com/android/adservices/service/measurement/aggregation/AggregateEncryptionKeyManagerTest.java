@@ -50,6 +50,8 @@ import javax.net.ssl.HttpsURLConnection;
 @SmallTest
 public final class AggregateEncryptionKeyManagerTest {
     private static final int NUM_KEYS_REQUESTED = 5;
+    private static final Uri MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            Uri.parse("https://not-going-to-be-visited.com");
 
     @Mock DatastoreManager mDatastoreManager;
     @Spy AggregateEncryptionKeyFetcher mFetcher;
@@ -68,7 +70,8 @@ public final class AggregateEncryptionKeyManagerTest {
                 invocation -> Optional.of(getExpectedKeys()))
                         .when(mDatastoreManager).runInTransactionWithResult(any());
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC());
+                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
+                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
         List<AggregateEncryptionKey> providedKeys =
                 aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
         assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "
@@ -88,7 +91,8 @@ public final class AggregateEncryptionKeyManagerTest {
         doReturn(mUrlConnection).when(mFetcher).openUrl(any());
         when(mUrlConnection.getResponseCode()).thenReturn(400);
         AggregateEncryptionKeyManager aggregateEncryptionKeyManager =
-                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC());
+                new AggregateEncryptionKeyManager(mDatastoreManager, mFetcher, Clock.systemUTC(),
+                        MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
         List<AggregateEncryptionKey> providedKeys =
                 aggregateEncryptionKeyManager.getAggregateEncryptionKeys(NUM_KEYS_REQUESTED);
         assertTrue("aggregationEncryptionKeyManager.getAggregateEncryptionKeys returned "

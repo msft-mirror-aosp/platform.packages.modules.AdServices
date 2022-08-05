@@ -19,13 +19,18 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public final class SourceFixture {
     private SourceFixture() { }
@@ -34,50 +39,54 @@ public final class SourceFixture {
     // {@link ValidSourceParams}
     public static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
-            .setPublisher(ValidSourceParams.sPublisher)
-            .setAttributionDestination(ValidSourceParams.sAttributionDestination)
-            .setAdTechDomain(ValidSourceParams.sAdTechDomain)
-            .setRegistrant(ValidSourceParams.sRegistrant);
+                .setPublisher(ValidSourceParams.PUBLISHER)
+                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
+                .setRegistrant(ValidSourceParams.REGISTRANT);
     }
 
     // Assume the field values in this Source have no relation to the field values in
     // {@link ValidSourceParams}
     public static Source getValidSource() {
         return new Source.Builder()
-                .setEventId(ValidSourceParams.sSourceEventId)
-                .setPublisher(ValidSourceParams.sPublisher)
-                .setAttributionDestination(ValidSourceParams.sAttributionDestination)
-                .setAdTechDomain(ValidSourceParams.sAdTechDomain)
-                .setRegistrant(ValidSourceParams.sRegistrant)
-                .setEventTime(ValidSourceParams.sSourceEventTime)
-                .setExpiryTime(ValidSourceParams.sExpiryTime)
-                .setPriority(ValidSourceParams.sPriority)
-                .setSourceType(ValidSourceParams.sSourceType)
-                .setInstallAttributionWindow(ValidSourceParams.sInstallAttributionWindow)
-                .setInstallCooldownWindow(ValidSourceParams.sInstallCooldownWindow)
-                .setAttributionMode(ValidSourceParams.sAttributionMode)
+                .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
+                .setPublisher(ValidSourceParams.PUBLISHER)
+                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setWebDestination(ValidSourceParams.WEB_DESTINATION)
+                .setAdTechDomain(ValidSourceParams.AD_TECH_DOMAIN)
+                .setRegistrant(ValidSourceParams.REGISTRANT)
+                .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
+                .setExpiryTime(ValidSourceParams.EXPIRY_TIME)
+                .setPriority(ValidSourceParams.PRIORITY)
+                .setSourceType(ValidSourceParams.SOURCE_TYPE)
+                .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
+                .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setAggregateFilterData(ValidSourceParams.buildAggregateFilterData())
                 .build();
     }
 
     public static class ValidSourceParams {
-        public static Long sExpiryTime = 8640000010L;
-        public static Long sPriority = 100L;
-        public static Long sSourceEventId = 1L;
-        public static Long sSourceEventTime = 8640000000L;
-        public static Uri sAttributionDestination = Uri.parse("android-app://com.destination");
-        public static Uri sPublisher = Uri.parse("android-app://com.publisher");
-        public static Uri sRegistrant = Uri.parse("android-app://com.registrant");
-        public static Uri sAdTechDomain = Uri.parse("https://com.example");
-        public static Source.SourceType sSourceType = Source.SourceType.EVENT;
-        public static Long sInstallAttributionWindow = 841839879274L;
-        public static Long sInstallCooldownWindow = 8418398274L;
-        public static @Source.AttributionMode int sAttributionMode =
+        public static final Long EXPIRY_TIME = 8640000010L;
+        public static final Long PRIORITY = 100L;
+        public static final Long SOURCE_EVENT_ID = 1L;
+        public static final Long SOURCE_EVENT_TIME = 8640000000L;
+        public static final Uri ATTRIBUTION_DESTINATION =
+                Uri.parse("android-app://com.destination");
+        public static Uri WEB_DESTINATION = Uri.parse("https://destination.com");
+        public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
+        public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
+        public static final Uri AD_TECH_DOMAIN = Uri.parse("https://com.example");
+        public static final Source.SourceType SOURCE_TYPE = Source.SourceType.EVENT;
+        public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
+        public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
+        public static final Long DEBUG_KEY = 7834690L;
+        public static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
-        public static int sAggregateContributions = 0;
+        public static final int AGGREGATE_CONTRIBUTIONS = 0;
 
-        public static String buildAggregateSource() {
+        public static final String buildAggregateSource() {
             try {
                 JSONArray aggregatableSource = new JSONArray();
                 JSONObject jsonObject = new JSONObject();
@@ -91,7 +100,7 @@ public final class SourceFixture {
             return null;
         }
 
-        public static String buildAggregateFilterData() {
+        public static final String buildAggregateFilterData() {
             try {
                 JSONObject filterData = new JSONObject();
                 filterData.put("conversion_subdomain",
@@ -102,6 +111,20 @@ public final class SourceFixture {
                 LogUtil.e("JSONException when building aggregate filter data.");
             }
             return null;
+        }
+
+        public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
+            return new AggregatableAttributionSource.Builder()
+                    .setAggregatableSource(Map.of("5", new BigInteger("345")))
+                    .setAggregateFilterData(
+                            new AggregateFilterData.Builder()
+                                    .setAttributionFilterMap(
+                                            Map.of(
+                                                    "product", List.of("1234", "4321"),
+                                                    "conversion_subdomain",
+                                                            List.of("electronics.megastore")))
+                                    .build())
+                    .build();
         }
     }
 }

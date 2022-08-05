@@ -1,0 +1,95 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.adservices.service.customaudience;
+
+import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.CustomAudienceFixture;
+
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.ValidatorTestUtil;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+public class CustomAudienceTimestampValidatorTest {
+    private static final Flags FLAGS = FlagsFactory.getFlagsForTest();
+    private final CustomAudienceTimestampValidator mValidator =
+            new CustomAudienceTimestampValidator(
+                    CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, FLAGS);
+
+    @Test
+    public void testAllValidTimes() {
+        Assert.assertTrue(
+                mValidator
+                        .getValidationViolations(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER)
+                                        .build())
+                        .isEmpty());
+    }
+
+    @Test
+    public void testActivationTimeBeyondMaxAndExpireBeforeActivation() {
+
+        ValidatorTestUtil.assertViolationContainsOnly(
+                mValidator.getValidationViolations(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .setActivationTime(
+                                        CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME)
+                                .build()),
+                String.format(
+                        CustomAudienceTimestampValidator.VIOLATION_ACTIVATE_AFTER_MAX_ACTIVATE,
+                        CustomAudienceFixture.CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN,
+                        CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                        CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME),
+                String.format(
+                        CustomAudienceTimestampValidator.VIOLATION_EXPIRE_BEFORE_ACTIVATION,
+                        CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME,
+                        CustomAudienceFixture.VALID_EXPIRATION_TIME));
+    }
+
+    @Test
+    public void testExpirationTimeBeforeNow() {
+        ValidatorTestUtil.assertViolationContainsOnly(
+                mValidator.getValidationViolations(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .setExpirationTime(
+                                        CustomAudienceFixture.INVALID_BEFORE_NOW_EXPIRATION_TIME)
+                                .build()),
+                String.format(
+                        CustomAudienceTimestampValidator.VIOLATION_EXPIRE_BEFORE_CURRENT_TIME,
+                        CustomAudienceFixture.INVALID_BEFORE_NOW_EXPIRATION_TIME));
+    }
+
+    @Test
+    public void testExpirationTimeBeforeActivation() {
+        ValidatorTestUtil.assertViolationContainsOnly(
+                mValidator.getValidationViolations(
+                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
+                                .setExpirationTime(
+                                        CustomAudienceFixture
+                                                .INVALID_BEFORE_DELAYED_EXPIRATION_TIME)
+                                .setActivationTime(
+                                        CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
+                                .build()),
+                String.format(
+                        CustomAudienceTimestampValidator.VIOLATION_EXPIRE_BEFORE_ACTIVATION,
+                        CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME,
+                        CustomAudienceFixture.INVALID_BEFORE_DELAYED_EXPIRATION_TIME));
+    }
+}

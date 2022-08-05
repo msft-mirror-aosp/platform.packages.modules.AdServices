@@ -30,31 +30,53 @@ public final class PermissionHelper {
     private PermissionHelper() {}
 
     /** This permission needs to be declared by the caller of Topics APIs. */
-    private static final String ACCESS_ADSERVICES_TOPICS_PERMISSION =
+    public static final String ACCESS_ADSERVICES_TOPICS_PERMISSION =
             "android.permission.ACCESS_ADSERVICES_TOPICS";
 
     /** This permission needs to be declared by the caller of Attribution APIs. */
-    private static final String ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION =
+    public static final String ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION =
             "android.permission.ACCESS_ADSERVICES_ATTRIBUTION";
 
     /** This permission needs to be declared by the caller of Custom Audiences APIs. */
-    private static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION =
+    public static final String ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION =
             "android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE";
 
+    private static boolean checkSdkPermission(
+            @NonNull Context context, @NonNull String sdkName, @NonNull String perm) {
+        return context.getPackageManager().checkPermission(perm, sdkName)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
     /** @return {@code true} if the caller has the permission to invoke Topics APIs. */
-    public static boolean hasTopicsPermission(@NonNull Context context) {
-        int status = context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_TOPICS_PERMISSION);
-        return status == PackageManager.PERMISSION_GRANTED;
+    public static boolean hasTopicsPermission(
+            @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
+        boolean callerPerm =
+                context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_TOPICS_PERMISSION)
+                        == PackageManager.PERMISSION_GRANTED;
+        // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
+        // purposes and should not be used as a security measure.
+        if (useSandboxCheck) {
+            return callerPerm
+                    && checkSdkPermission(context, sdkName, ACCESS_ADSERVICES_TOPICS_PERMISSION);
+        }
+        return callerPerm;
     }
 
     /** @return {@code true} if the caller has the permission to invoke Attribution APIs. */
-    public static boolean hasAttributionPermission(@NonNull Context context) {
+    public static boolean hasAttributionPermission(
+            @NonNull Context context, boolean useSandboxCheck, @NonNull String sdkName) {
+        // Note: Checking permission declared by Sdk running in Sandbox is only for accounting
+        // purposes and should not be used as a security measure.
+        if (useSandboxCheck) {
+            // TODO(b/236267953): Add check for SDK permission.
+        }
         int status = context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION);
         return status == PackageManager.PERMISSION_GRANTED;
     }
 
     /** @return {@code true} if the caller has the permission to invoke Custom Audiences APIs. */
     public static boolean hasCustomAudiencesPermission(@NonNull Context context) {
+        // TODO(b/236268316): Add check for SDK permission.
         int status =
                 context.checkCallingOrSelfPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE_PERMISSION);
         return status == PackageManager.PERMISSION_GRANTED;

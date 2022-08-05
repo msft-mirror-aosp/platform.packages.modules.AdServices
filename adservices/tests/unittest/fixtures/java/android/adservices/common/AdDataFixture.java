@@ -18,27 +18,35 @@ package android.adservices.common;
 
 import android.net.Uri;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
-
-    // AdData
-    private static final Uri VALID_RENDER_URL_1 =
-            new Uri.Builder().path("valid.example.com/testing/hello1").build();
-    private static final Uri VALID_RENDER_URL_2 =
-            new Uri.Builder().path("valid.example.com/testing/hello2").build();
-    private static final Uri VALID_RENDER_URL_3 =
-            new Uri.Builder().path("valid.example.com/testing/hello3").build();
-    private static final Uri VALID_RENDER_URL_4 =
-            new Uri.Builder().path("valid.example.com/testing/hello4").build();
     private static final String VALID_METADATA = "{'example': 'metadata', 'valid': true}";
 
-    public static final ArrayList<AdData> VALID_ADS =
-            new ArrayList<AdData>(Arrays.asList(
-                    new AdData(VALID_RENDER_URL_1, VALID_METADATA),
-                    new AdData(VALID_RENDER_URL_2, VALID_METADATA),
-                    new AdData(VALID_RENDER_URL_3, VALID_METADATA),
-                    new AdData(VALID_RENDER_URL_4, VALID_METADATA)));
+    public static Uri getValidRenderUrlByBuyer(AdTechIdentifier buyer, int sequence) {
+        return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
+    }
+
+    public static List<AdData> getValidAdsByBuyer(AdTechIdentifier buyer) {
+        return ImmutableList.of(
+                new AdData.Builder()
+                        .setRenderUri(getValidRenderUrlByBuyer(buyer, 1))
+                        .setMetadata(VALID_METADATA)
+                        .build(),
+                new AdData.Builder()
+                        .setRenderUri(getValidRenderUrlByBuyer(buyer, 2))
+                        .setMetadata(VALID_METADATA)
+                        .build(),
+                new AdData.Builder()
+                        .setRenderUri(getValidRenderUrlByBuyer(buyer, 3))
+                        .setMetadata(VALID_METADATA)
+                        .build(),
+                new AdData.Builder()
+                        .setRenderUri(getValidRenderUrlByBuyer(buyer, 4))
+                        .setMetadata(VALID_METADATA)
+                        .build());
+    }
 }

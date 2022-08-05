@@ -83,13 +83,17 @@ public class AdServicesConfig {
     }
 
     /**
+     * Returns the URL for fetching public encryption keys for aggregatable reports.
+     */
+    public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
+        return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
+    }
+
+    /**
      * Job ID for Measurement Aggregate Main Reporting Job ({@link
      * com.android.adservices.service.measurement.AggregateReportingJobService})
      */
     public static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID = 7;
-
-    public static long MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS =
-            TimeUnit.HOURS.toMillis(4);
 
     /** Returns the min time period (in millis) between each aggregate main reporting job run. */
     public static long getMeasurementAggregateMainReportingJobPeriodMs() {
@@ -113,15 +117,27 @@ public class AdServicesConfig {
     }
 
     /**
-     * Returns the URL for fetching public encryption keys for aggregatable reports.
-     */
-    public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
-        return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
-    }
-
-    /**
      * Job ID for FLEDGE Background Fetch Job ({@link
      * com.android.adservices.service.customaudience.BackgroundFetchJobService})
      */
     public static final int FLEDGE_BACKGROUND_FETCH_JOB_ID = 9;
+
+    /** Job ID for Consent Notification Job. */
+    public static final int CONSENT_NOTIFICATION_JOB_ID = 10;
+
+    /** Job ID for Mdd Maintenance Task ({@link com.android.adservices.download.MddJobService}) */
+    public static final int MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID = 11;
+
+    /**
+     * Job ID for Mdd Charging Periodic Task ({@link com.android.adservices.download.MddJobService})
+     */
+    public static final int MDD_CHARGING_PERIODIC_TASK_JOB_ID = 12;
+
+    /**
+     * Job ID for Mdd Cellular Charging Task ({@link com.android.adservices.download.MddJobService})
+     */
+    public static final int MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID = 13;
+
+    /** Job ID for Mdd Wifi Charging Task ({@link com.android.adservices.download.MddJobService}) */
+    public static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
 }

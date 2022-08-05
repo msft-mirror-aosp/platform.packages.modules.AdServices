@@ -24,7 +24,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +45,7 @@ public class DbState {
     List<EventReport> mEventReportList;
     List<AttributionRateLimit> mAttrRateLimitList;
     List<AggregateEncryptionKey> mAggregateEncryptionKeyList;
-    List<CleartextAggregatePayload> mAggregateReportList;
+    List<AggregateReport> mAggregateReportList;
 
     public DbState() {
         mSourceList = new ArrayList<>();
@@ -114,7 +114,7 @@ public class DbState {
             JSONArray aggregateReports = testInput.getJSONArray("aggregate_reports");
             for (int i = 0; i < aggregateReports.length(); i++) {
                 JSONObject rJSON = aggregateReports.getJSONObject(i);
-                CleartextAggregatePayload aggregateReport = getAggregateReportFrom(rJSON);
+                AggregateReport aggregateReport = getAggregateReportFrom(rJSON);
                 mAggregateReportList.add(aggregateReport);
             }
         }
@@ -175,7 +175,7 @@ public class DbState {
                         MeasurementTables.AggregateReport.ID);
         while (aggregateReportCursor.moveToNext()) {
             mAggregateReportList.add(
-                    SqliteObjectMapper.constructCleartextAggregatePayload(aggregateReportCursor));
+                    SqliteObjectMapper.constructAggregateReport(aggregateReportCursor));
         }
         aggregateReportCursor.close();
 
@@ -199,6 +199,7 @@ public class DbState {
         mEventReportList.sort(
                 Comparator.comparing(EventReport::getReportTime)
                         .thenComparing(EventReport::getTriggerTime));
+
         mAttrRateLimitList.sort(
                 Comparator.comparing(AttributionRateLimit::getTriggerTime));
 
@@ -206,8 +207,8 @@ public class DbState {
                 Comparator.comparing(AggregateEncryptionKey::getKeyId));
 
         mAggregateReportList.sort(
-                Comparator.comparing(CleartextAggregatePayload::getScheduledReportTime)
-                        .thenComparing(CleartextAggregatePayload::getSourceRegistrationTime));
+                Comparator.comparing(AggregateReport::getScheduledReportTime)
+                        .thenComparing(AggregateReport::getSourceRegistrationTime));
     }
 
     public List<AggregateEncryptionKey> getAggregateEncryptionKeyList() {
@@ -219,23 +220,23 @@ public class DbState {
                 .setId(sJSON.getString("id"))
                 .setEventId(sJSON.getLong("eventId"))
                 .setSourceType(
-                        Source.SourceType.valueOf(sJSON.getString("sourceType").toUpperCase(
-                                Locale.ENGLISH)))
+                        Source.SourceType.valueOf(
+                                sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
-                .setAttributionDestination(Uri.parse(sJSON.getString("attributionDestination")))
+                .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
-                .setInstallAttributionWindow(sJSON.optLong("installAttributionWindow",
-                        TimeUnit.DAYS.toMillis(30)))
-                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow",
-                        0))
+                .setInstallAttributionWindow(
+                        sJSON.optLong("installAttributionWindow", TimeUnit.DAYS.toMillis(30)))
+                .setInstallCooldownWindow(sJSON.optLong("installCooldownWindow", 0))
                 .setInstallAttributed(sJSON.optBoolean("installAttributed", false))
-                .setAttributionMode(sJSON.optInt("attribution_mode",
-                        Source.AttributionMode.TRUTHFULLY))
+                .setAttributionMode(
+                        sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
+                .setAggregateFilterData(sJSON.optString("aggregateFilterData", null))
                 .build();
     }
 
@@ -248,6 +249,7 @@ public class DbState {
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
+                .setFilters(tJSON.optString("filters", null))
                 .build();
     }
 
@@ -274,7 +276,9 @@ public class DbState {
         return new AttributionRateLimit.Builder()
                 .setId(attrJSON.getString("id"))
                 .setSourceSite(attrJSON.getString("sourceSite"))
+                .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
+                .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
                 .setAdTechDomain(attrJSON.getString("adTechDomain"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
@@ -297,8 +301,12 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.ID)))
                 .setSourceSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.SOURCE_SITE)))
+                .setSourceOrigin(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN)))
                 .setDestinationSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE)))
+                .setDestinationOrigin(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN)))
                 .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN)))
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex(
@@ -308,15 +316,14 @@ public class DbState {
                 .build();
     }
 
-    private CleartextAggregatePayload getAggregateReportFrom(JSONObject rJSON)
+    private AggregateReport getAggregateReportFrom(JSONObject rJSON)
             throws JSONException {
-        return new CleartextAggregatePayload.Builder()
+        return new AggregateReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setPublisher(Uri.parse(rJSON.getString("publisher")))
                 .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
                 .setSourceRegistrationTime(rJSON.getLong("sourceRegistrationTime"))
                 .setScheduledReportTime(rJSON.getLong("scheduledReportTime"))
-                .setPrivacyBudgetKey(rJSON.getString("privacyBudgetKey"))
                 .setReportingOrigin(Uri.parse(rJSON.getString("reportingOrigin")))
                 .setDebugCleartextPayload(rJSON.getString("debugCleartextPayload"))
                 .setStatus(rJSON.getInt("status"))

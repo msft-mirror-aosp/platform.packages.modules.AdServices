@@ -16,13 +16,17 @@
 
 package android.adservices;
 
+import static android.adservices.adid.AdIdManager.ADID_SERVICE;
 import static android.adservices.adselection.AdSelectionManager.AD_SELECTION_SERVICE;
+import static android.adservices.appsetid.AppsetIdManager.APPSETID_SERVICE;
 import static android.adservices.common.AdServicesCommonManager.AD_SERVICES_COMMON_SERVICE;
 import static android.adservices.customaudience.CustomAudienceManager.CUSTOM_AUDIENCE_SERVICE;
 import static android.adservices.measurement.MeasurementManager.MEASUREMENT_SERVICE;
 import static android.adservices.topics.TopicsManager.TOPICS_SERVICE;
 
+import android.adservices.adid.AdIdManager;
 import android.adservices.adselection.AdSelectionManager;
+import android.adservices.appsetid.AppsetIdManager;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.customaudience.CustomAudienceManager;
 import android.adservices.measurement.MeasurementManager;
@@ -71,6 +75,14 @@ public class AdServicesFrameworkInitializer {
         SystemServiceRegistry.registerContextAwareService(
                 MEASUREMENT_SERVICE, MeasurementManager.class,
                 (c) -> new MeasurementManager(c));
+
+        LogUtil.d("Registering AdServices's AdIdManager.");
+        SystemServiceRegistry.registerContextAwareService(
+                ADID_SERVICE, AdIdManager.class, (c) -> new AdIdManager(c));
+
+        LogUtil.d("Registering AdServices's AppsetIdManager.");
+        SystemServiceRegistry.registerContextAwareService(
+                APPSETID_SERVICE, AppsetIdManager.class, (c) -> new AppsetIdManager(c));
 
         LogUtil.d("Registering AdServices's AdServicesCommonManager.");
         SystemServiceRegistry.registerContextAwareService(AD_SERVICES_COMMON_SERVICE,

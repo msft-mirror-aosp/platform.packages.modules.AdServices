@@ -28,7 +28,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
-import com.android.adservices.service.measurement.aggregation.CleartextAggregatePayload;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -152,6 +152,34 @@ public abstract class AbstractDbIntegrationTest {
         return testCases;
     }
 
+    public static Collection<Object[]> getTestCasesFromMultipleStreams(
+            List<InputStream> inputStreams, CheckedJsonFunction prepareAdditionalData)
+            throws IOException, JSONException {
+        List<Object[]> testCases = new ArrayList<>();
+        for (InputStream inputStream : inputStreams) {
+            int size = inputStream.available();
+            byte[] buffer = new byte[size];
+            inputStream.read(buffer);
+            inputStream.close();
+            String json = new String(buffer, StandardCharsets.UTF_8);
+            JSONObject testObj = new JSONObject(json);
+            String name = testObj.getString("name");
+            JSONObject input = testObj.getJSONObject("input");
+            JSONObject output = testObj.getJSONObject("output");
+            DbState inputState = new DbState(input);
+            DbState outputState = new DbState(output);
+            if (prepareAdditionalData != null) {
+                testCases.add(
+                        new Object[] {
+                            inputState, outputState, prepareAdditionalData.apply(testObj), name
+                        });
+            } else {
+                testCases.add(new Object[] {inputState, outputState, name});
+            }
+        }
+        return testCases;
+    }
+
     /**
      * Compares two lists of the same measurement record type.
      * (Caller enforces the element types.)
@@ -189,7 +217,7 @@ public abstract class AbstractDbIntegrationTest {
         for (AttributionRateLimit attr : input.mAttrRateLimitList) {
             insertToDb(attr, db);
         }
-        for (CleartextAggregatePayload aggregateReport : input.mAggregateReportList) {
+        for (AggregateReport aggregateReport : input.mAggregateReportList) {
             insertToDb(aggregateReport, db);
         }
         for (AggregateEncryptionKey key : input.mAggregateEncryptionKeyList) {
@@ -207,8 +235,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER,
                 source.getPublisher().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                source.getAttributionDestination().toString());
+        values.put(
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                source.getAppDestination().toString());
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -223,6 +252,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.IS_INSTALL_ATTRIBUTED,
                 source.isInstallAttributed() ? 1 : 0);
         values.put(MeasurementTables.SourceContract.ATTRIBUTION_MODE, source.getAttributionMode());
+        values.put(MeasurementTables.SourceContract.FILTER_DATA, source.getAggregateFilterData());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -245,6 +275,7 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS, trigger.getEventTriggers());
         values.put(MeasurementTables.TriggerContract.REGISTRANT,
                 trigger.getRegistrant().toString());
+        values.put(MeasurementTables.TriggerContract.FILTERS, trigger.getFilters());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
@@ -290,8 +321,12 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.AttributionRateLimitContract.ID, attrRateLimit.getId());
         values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
                 attrRateLimit.getSourceSite());
+        values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN,
+                attrRateLimit.getSourceOrigin());
         values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
                 attrRateLimit.getDestinationSite());
+        values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN,
+                attrRateLimit.getDestinationOrigin());
         values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
                 attrRateLimit.getAdTechDomain());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,
@@ -304,8 +339,8 @@ public abstract class AbstractDbIntegrationTest {
         }
     }
 
-    /** Inserts an CleartextAggregatePayload record into the given database. */
-    private static void insertToDb(CleartextAggregatePayload aggregateReport, SQLiteDatabase db)
+    /** Inserts an AggregateReport record into the given database. */
+    private static void insertToDb(AggregateReport aggregateReport, SQLiteDatabase db)
             throws SQLiteException {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
@@ -321,9 +356,6 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
                 aggregateReport.getScheduledReportTime());
-        values.put(
-                MeasurementTables.AggregateReport.PRIVACY_BUDGET_KEY,
-                aggregateReport.getPrivacyBudgetKey());
         values.put(
                 MeasurementTables.AggregateReport.REPORTING_ORIGIN,
                 aggregateReport.getReportingOrigin().toString());

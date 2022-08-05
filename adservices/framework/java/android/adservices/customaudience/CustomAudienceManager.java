@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
@@ -37,12 +38,6 @@ import java.util.concurrent.Executor;
 public class CustomAudienceManager {
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
 
-    // TODO(b/221861041): Remove warning suppression; context needed later for
-    //  authorization/authentication
-    @NonNull
-    @SuppressWarnings("unused")
-    private final Context mContext;
-
     @NonNull
     private final ServiceBinder<ICustomAudienceService> mServiceBinder;
 
@@ -52,8 +47,6 @@ public class CustomAudienceManager {
      * @hide
      */
     public CustomAudienceManager(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
@@ -69,10 +62,34 @@ public class CustomAudienceManager {
     }
 
     /**
-     * Adds the current user to a custom audience serving targeted ads during the ad selection
-     * process.
+     * Adds the user to the given {@link CustomAudience}.
+     *
+     * <p>An attempt to register the user for a custom audience with the same combination of owner,
+     * buyer, and name will cause the existing custom audience's information to be overwritten,
+     * including the list of ads data.
+     *
+     * <p>Note that the ads list can be completely overwritten by the daily background fetch job.
+     *
+     * <p>This call fails with an {@link SecurityException} if
+     *
+     * <ol>
+     *   <li>the owner is not calling app's package name and/or
+     *   <li>the buyer is not authorized to use the API.
+     * </ol>
+     *
+     * <p>This call fails with an {@link IllegalArgumentException} if
+     *
+     * <ol>
+     *   <li>the storage limit has been exceeded by the calling application and/or
+     *   <li>any URL parameters in the {@link CustomAudience} given are not authenticated with the
+     *       {@link CustomAudience} buyer.
+     * </ol>
+     *
+     * <p>This call fails with an {@link IllegalStateException} if an internal service error is
+     * encountered.
      */
-    public void joinCustomAudience(@NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
+    public void joinCustomAudience(
+            @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
         Objects.requireNonNull(joinCustomAudienceRequest);
@@ -104,18 +121,28 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
 
     /**
      * Attempts to remove a user from a custom audience by deleting any existing {@link
-     * CustomAudience} data.
+     * CustomAudience} data, identified by {@code owner}, {@code buyer}, and {@code name}.
      *
-     * <p>In case of a non-existent or mis-identified {@link CustomAudience}, no actions are taken.
+     * <p>This call fails with an {@link SecurityException} if
+     *
+     * <ol>
+     *   <li>the owner is not calling app's package name; and/or
+     *   <li>the buyer is not authorized to use the API.
+     * </ol>
+     *
+     * <p>This call does not inform the caller whether the custom audience specified existed in
+     * on-device storage. In another word, it will fail silently when try to leave a not joined
+     * custom audience.
      */
-    public void leaveCustomAudience(@NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
+    public void leaveCustomAudience(
+            @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
         Objects.requireNonNull(leaveCustomAudienceRequest);
@@ -123,7 +150,7 @@ public class CustomAudienceManager {
         Objects.requireNonNull(receiver);
 
         final String owner = leaveCustomAudienceRequest.getOwner();
-        final String buyer = leaveCustomAudienceRequest.getBuyer();
+        final AdTechIdentifier buyer = leaveCustomAudienceRequest.getBuyer();
         final String name = leaveCustomAudienceRequest.getName();
 
         try {
@@ -154,7 +181,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -187,7 +214,7 @@ public class CustomAudienceManager {
                     request.getBuyer(),
                     request.getName(),
                     request.getBiddingLogicJs(),
-                    request.getTrustedBiddingData(),
+                    request.getTrustedBiddingSignals(),
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
@@ -206,7 +233,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -256,7 +283,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
@@ -299,7 +326,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("Exception", e);
+            LogUtil.e(e, "Exception");
             receiver.onError(new AdServicesException("Internal Error!"));
         }
     }
