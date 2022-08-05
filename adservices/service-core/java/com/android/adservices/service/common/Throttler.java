@@ -36,6 +36,21 @@ public class Throttler {
 
         // Key to throttle Topics API based on the Sdk Name.
         TOPICS_API_SDK_NAME,
+
+        // Key to throttle Measurement Register Source API
+        MEASUREMENT_API_REGISTER_SOURCE,
+
+        // Key to throttle Measurement Register Web Source API
+        MEASUREMENT_API_REGISTER_WEB_SOURCE,
+
+        // Key to throttle Measurement Register Trigger API
+        MEASUREMENT_API_REGISTER_TRIGGER,
+
+        // Key to throttle Measurement Register Web Trigger API
+        MEASUREMENT_API_REGISTER_WEB_TRIGGER,
+
+        // Key to throttle Measurement Deletion Registration API
+        MEASUREMENT_API_DELETION_REGISTRATION,
     }
 
     private static volatile Throttler sSingleton;
