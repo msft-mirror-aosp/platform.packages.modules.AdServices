@@ -71,7 +71,7 @@ class SandboxedSdkHolder {
         try {
             Class<?> clz = Class.forName(sdkProviderClassName, true, loader);
             mSdk = (SandboxedSdkProvider) clz.getConstructor().newInstance();
-            mSdk.attachBaseContext(sandboxedSdkContext);
+            mSdk.attachContext(sandboxedSdkContext);
             mSdk.onLoadSdk(
                     params,
                     mContext.getMainExecutor(),
