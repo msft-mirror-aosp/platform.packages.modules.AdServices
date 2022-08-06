@@ -179,7 +179,7 @@ public class FledgeCtsTest {
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(customAudience2.getOwner())
+                        .setOwnerPackageName(customAudience2.getOwnerPackageName())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
@@ -237,7 +237,7 @@ public class FledgeCtsTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setOwnerPackageName(CustomAudienceFixture.VALID_OWNER)
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

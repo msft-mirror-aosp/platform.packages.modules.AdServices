@@ -171,7 +171,7 @@ public class DBCustomAudience {
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
                 .setBuyer(parcelable.getBuyer().toString())
-                .setOwner(parcelable.getOwner())
+                .setOwner(parcelable.getOwnerPackageName())
                 .setActivationTime(activationTime)
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
