@@ -24,5 +24,5 @@ import android.adservices.adid.GetAdIdResult;
   */
 oneway interface IGetAdIdCallback {
   void onResult(in GetAdIdResult responseParcel);
-  void onFailure(int resultCode);
+  void onError(int resultCode);
 }
