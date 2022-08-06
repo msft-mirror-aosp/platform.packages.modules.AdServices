@@ -182,7 +182,8 @@ public class AppUpdateTest {
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
         // Install test app1.
-        ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        assertThat(installMessage).contains("Success");
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Invoke test app1. The test app1 should be assigned with topics as there are usages
@@ -200,7 +201,8 @@ public class AppUpdateTest {
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
         // Install the test app1 again. It should not be assigned with new topics.
-        ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        assertThat(installMessage).contains("Success");
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Invoke test app1. It should get empty returned topics because its derived data was wiped
