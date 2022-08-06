@@ -23,23 +23,23 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-/** Unit tests for {@link GetAppsetIdResult} */
+/** Unit tests for {@link GetAppSetIdResult} */
 @SmallTest
-public final class GetAppsetIdResultTest {
+public final class GetAppSetIdResultTest {
     @Test
     public void testWriteToParcel() throws Exception {
-        GetAppsetIdResult response =
-                new GetAppsetIdResult.Builder()
-                        .setAppsetId("UNITTEST_ID")
-                        .setAppsetIdScope(GetAppsetIdResult.SCOPE_APP)
+        GetAppSetIdResult response =
+                new GetAppSetIdResult.Builder()
+                        .setAppSetId("UNITTEST_ID")
+                        .setAppSetIdScope(GetAppSetIdResult.SCOPE_APP)
                         .build();
         Parcel p = Parcel.obtain();
         response.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        GetAppsetIdResult fromParcel = GetAppsetIdResult.CREATOR.createFromParcel(p);
+        GetAppSetIdResult fromParcel = GetAppSetIdResult.CREATOR.createFromParcel(p);
 
-        assertEquals(fromParcel.getAppsetId(), "UNITTEST_ID");
-        assertEquals(fromParcel.getAppsetIdScope(), GetAppsetIdResult.SCOPE_APP);
+        assertEquals(fromParcel.getAppSetId(), "UNITTEST_ID");
+        assertEquals(fromParcel.getAppSetIdScope(), GetAppSetIdResult.SCOPE_APP);
     }
 }
