@@ -184,7 +184,7 @@ package android.adservices.customaudience {
     method @NonNull public String getBiddingLogicJs();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
-    method @NonNull public String getOwner();
+    method @NonNull public String getOwnerPackageName();
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedBiddingSignals();
   }
 
@@ -194,7 +194,7 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBiddingLogicJs(@NonNull String);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setName(@NonNull String);
-    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setOwner(@NonNull String);
+    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setOwnerPackageName(@NonNull String);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setTrustedBiddingSignals(@NonNull android.adservices.common.AdSelectionSignals);
   }
 
@@ -207,7 +207,7 @@ package android.adservices.customaudience {
     method @NonNull public android.net.Uri getDailyUpdateUrl();
     method @Nullable public java.time.Instant getExpirationTime();
     method @NonNull public String getName();
-    method @NonNull public String getOwner();
+    method @NonNull public String getOwnerPackageName();
     method @Nullable public android.adservices.customaudience.TrustedBiddingData getTrustedBiddingData();
     method @Nullable public android.adservices.common.AdSelectionSignals getUserBiddingSignals();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
@@ -224,7 +224,7 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUrl(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setName(@NonNull String);
-    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setOwner(@NonNull String);
+    method @NonNull public android.adservices.customaudience.CustomAudience.Builder setOwnerPackageName(@NonNull String);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setTrustedBiddingData(@Nullable android.adservices.customaudience.TrustedBiddingData);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setUserBiddingSignals(@Nullable android.adservices.common.AdSelectionSignals);
   }
@@ -232,9 +232,9 @@ package android.adservices.customaudience {
   public class CustomAudienceManager {
     method public void joinCustomAudience(@NonNull android.adservices.customaudience.JoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
     method public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
-    method @NonNull public void overrideCustomAudienceRemoteInfo(@NonNull android.adservices.customaudience.AddCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
-    method @NonNull public void removeCustomAudienceRemoteInfoOverride(@NonNull android.adservices.customaudience.RemoveCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
-    method @NonNull public void resetAllCustomAudienceOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
+    method public void overrideCustomAudienceRemoteInfo(@NonNull android.adservices.customaudience.AddCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
+    method public void removeCustomAudienceRemoteInfoOverride(@NonNull android.adservices.customaudience.RemoveCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
+    method public void resetAllCustomAudienceOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Void,android.adservices.exceptions.AdServicesException>);
     field public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
   }
 
@@ -251,7 +251,7 @@ package android.adservices.customaudience {
   public final class LeaveCustomAudienceRequest {
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
-    method @NonNull public String getOwner();
+    method @NonNull public String getOwnerPackageName();
   }
 
   public static final class LeaveCustomAudienceRequest.Builder {
@@ -259,14 +259,14 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest build();
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setName(@NonNull String);
-    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setOwner(@NonNull String);
+    method @NonNull public android.adservices.customaudience.LeaveCustomAudienceRequest.Builder setOwnerPackageName(@NonNull String);
   }
 
   public class RemoveCustomAudienceOverrideRequest {
     ctor public RemoveCustomAudienceOverrideRequest(@NonNull String, @NonNull android.adservices.common.AdTechIdentifier, @NonNull String);
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
-    method @NonNull public String getOwner();
+    method @NonNull public String getOwnerPackageName();
   }
 
   public static final class RemoveCustomAudienceOverrideRequest.Builder {
@@ -274,7 +274,7 @@ package android.adservices.customaudience {
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest build();
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setName(@NonNull String);
-    method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setOwner(@NonNull String);
+    method @NonNull public android.adservices.customaudience.RemoveCustomAudienceOverrideRequest.Builder setOwnerPackageName(@NonNull String);
   }
 
   public final class TrustedBiddingData implements android.os.Parcelable {
