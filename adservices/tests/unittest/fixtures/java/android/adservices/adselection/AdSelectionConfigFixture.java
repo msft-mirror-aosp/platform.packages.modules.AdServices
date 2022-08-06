@@ -31,6 +31,7 @@ import java.util.Map;
 public class AdSelectionConfigFixture {
 
     public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("store.google.com");
+    public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("play.google.com");
 
     // Uri Constants
     public static final String SCHEME = "testScheme";
@@ -118,6 +119,23 @@ public class AdSelectionConfigFixture {
         return new AdSelectionConfig.Builder()
                 .setSeller(SELLER)
                 .setDecisionLogicUri(decisionLogicUri)
+                .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
+                .setAdSelectionSignals(AD_SELECTION_SIGNALS)
+                .setSellerSignals(SELLER_SIGNALS)
+                .setPerBuyerSignals(PER_BUYER_SIGNALS)
+                .setContextualAds(CONTEXTUAL_ADS)
+                .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
+                .build();
+    }
+
+    /**
+     * Creates an AdSelectionConfig object to be used in unit and integration tests Accepts a Uri
+     * decisionLogicUri to be used instead of the default
+     */
+    public static AdSelectionConfig anAdSelectionConfig(@NonNull AdTechIdentifier seller) {
+        return new AdSelectionConfig.Builder()
+                .setSeller(seller)
+                .setDecisionLogicUri(DECISION_LOGIC_URI)
                 .setCustomAudienceBuyers(CUSTOM_AUDIENCE_BUYERS)
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)

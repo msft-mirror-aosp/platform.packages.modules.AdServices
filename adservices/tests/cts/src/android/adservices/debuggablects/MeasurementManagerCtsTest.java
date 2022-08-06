@@ -211,10 +211,10 @@ public class MeasurementManagerCtsTest {
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
-        OutcomeReceiver<Void, Exception> callback =
-                new OutcomeReceiver<Void, Exception>() {
+        OutcomeReceiver<Object, Exception> callback =
+                new OutcomeReceiver<Object, Exception>() {
                     @Override
-                    public void onResult(@NonNull Void result) {
+                    public void onResult(@NonNull Object ignoredResult) {
                         Assert.fail();
                     }
 

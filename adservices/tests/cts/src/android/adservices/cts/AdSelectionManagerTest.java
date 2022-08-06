@@ -197,7 +197,7 @@ public class AdSelectionManagerTest {
                         .build();
 
         ListenableFuture<AdSelectionOutcome> result =
-                adSelectionClient.runAdSelection(adSelectionConfigNoBuyers);
+                adSelectionClient.selectAds(adSelectionConfigNoBuyers);
 
         Exception exception =
                 assertThrows(

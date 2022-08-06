@@ -27,7 +27,7 @@ import java.util.Objects;
 
 /**
  * This class represents the response returned by the {@link AdSelectionManager} as the result of a
- * successful {@code runAdSelection} call.
+ * successful {@code selectAds} call.
  *
  * @hide
  */

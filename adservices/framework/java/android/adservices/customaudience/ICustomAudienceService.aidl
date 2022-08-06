@@ -30,13 +30,13 @@ import android.net.Uri;
   */
 interface ICustomAudienceService {
     void joinCustomAudience(in CustomAudience customAudience, in ICustomAudienceCallback callback);
-    void leaveCustomAudience(in String owner, in AdTechIdentifier buyer, in String name,
+    void leaveCustomAudience(in String ownerPackageName, in AdTechIdentifier buyer, in String name,
             in ICustomAudienceCallback callback);
 
     /**
      * Configures PP api to avoid fetching the biddingLogicJS and trustedBiddingData from a server and instead
      * use the content provided in {@code biddingLogicJS} and {@code trustedBiddingData} for the CA
-     * identified by {@code owner}, {@code buyer}, {@code name}
+     * identified by {@code ownerPackageName}, {@code buyer}, {@code name}
      *
      * The call will throw a SecurityException if:
      * the API hasn't been enabled by developer options or by an adb command
@@ -46,7 +46,7 @@ interface ICustomAudienceService {
      * The call will fail silently if the CustomAudience has been created by a different app.
      */
     void overrideCustomAudienceRemoteInfo(
-        in String owner,
+        in String ownerPackageName,
         in AdTechIdentifier buyer,
         in String name,
         in String biddingLogicJS,
@@ -56,7 +56,7 @@ interface ICustomAudienceService {
     /**
      * Deletes any override created by calling
      * {@code overrideCustomAudienceRemoteInfo} for the CA identified by
-     * {@code owner} {@code buyer}, {@code name}.
+     * {@code ownerPackageName} {@code buyer}, {@code name}.
      *
      * The call will throw a SecurityException if:
      * the API hasn't been enabled by developer options or by an adb command
@@ -65,7 +65,7 @@ interface ICustomAudienceService {
      * The call will fail silently if the CustomAudience has been created by a different app.
      */
     void removeCustomAudienceRemoteInfoOverride(
-        in String owner,
+        in String ownerPackageName,
         in AdTechIdentifier buyer,
         in String name,
         in CustomAudienceOverrideCallback callback);

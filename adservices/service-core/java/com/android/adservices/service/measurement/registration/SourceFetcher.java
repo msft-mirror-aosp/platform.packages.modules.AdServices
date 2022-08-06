@@ -31,6 +31,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -62,6 +63,7 @@ public class SourceFetcher {
     private final AdIdPermissionFetcher mAdIdPermissionFetcher;
     private final String mDefaultAndroidAppScheme = "android-app";
     private final String mDefaultAndroidAppUriPrefix = mDefaultAndroidAppScheme + "://";
+    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
 
     public SourceFetcher() {
         this(new AdIdPermissionFetcher());
@@ -270,7 +272,7 @@ public class SourceFetcher {
     /** Provided a testing hook. */
     @NonNull
     public URLConnection openUrl(@NonNull URL url) throws IOException {
-        return url.openConnection();
+        return mNetworkConnection.setup(url);
     }
 
     private void fetchSource(

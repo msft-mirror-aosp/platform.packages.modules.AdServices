@@ -33,40 +33,43 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * AppsetId Manager provides APIs for app and ad-SDKs to access advertising ID. The appsetId is a
+ * AppSetId Manager provides APIs for app and ad-SDKs to access advertising ID. The appsetId is a
  * unique, user-resettable ID for non-monetizing advertising usecases. The scope of the ID can be
- * per app or per deveoper account on play store. AppsetId is used for analytics or fraud prevention
+ * per app or per deveoper account on play store. AppSetId is used for analytics or fraud prevention
  * use cases, on a given device that one may need to correlate usage or actions across a set of apps
  * owned by an organization.
  */
-public class AppsetIdManager {
+public class AppSetIdManager {
     /**
-     * Service used for registering AppsetIdManager in the system service registry.
+     * Service used for registering AppSetIdManager in the system service registry.
      *
      * @hide
      */
     public static final String APPSETID_SERVICE = "appsetid_service";
 
+    /* When an app calls the AppSetId API directly, it sets the SDK name to empty string. */
+    static final String EMPTY_SDK = "";
+
     private final Context mContext;
-    private final ServiceBinder<IAppsetIdService> mServiceBinder;
+    private final ServiceBinder<IAppSetIdService> mServiceBinder;
 
     /**
-     * Create AppsetIdManager
+     * Create AppSetIdManager
      *
      * @hide
      */
-    public AppsetIdManager(Context context) {
+    public AppSetIdManager(Context context) {
         mContext = context;
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
                         context,
                         AdServicesCommon.ACTION_APPSETID_SERVICE,
-                        IAppsetIdService.Stub::asInterface);
+                        IAppSetIdService.Stub::asInterface);
     }
 
     @NonNull
-    private IAppsetIdService getService() {
-        IAppsetIdService service = mServiceBinder.getService();
+    private IAppSetIdService getService() {
+        IAppSetIdService service = mServiceBinder.getService();
         if (service == null) {
             throw new IllegalStateException("Unable to find the service");
         }
@@ -79,7 +82,7 @@ public class AppsetIdManager {
     }
 
     /**
-     * Retrieve the AppsetId.
+     * Retrieve the AppSetId.
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after appsetid are available or an error occurs.
@@ -88,29 +91,29 @@ public class AppsetIdManager {
      * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
-    public void getAppsetId(
+    public void getAppSetId(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<AppsetId, Exception> callback) {
+            @NonNull OutcomeReceiver<AppSetId, Exception> callback) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
         CallerMetadata callerMetadata =
                 new CallerMetadata.Builder()
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                         .build();
-        final IAppsetIdService service = getService();
+        final IAppSetIdService service = getService();
         try {
-            service.getAppsetId(
+            service.getAppSetId(
                     callerMetadata,
-                    new IGetAppsetIdCallback.Stub() {
+                    new IGetAppSetIdCallback.Stub() {
                         @Override
-                        public void onResult(GetAppsetIdResult resultParcel) {
+                        public void onResult(GetAppSetIdResult resultParcel) {
                             executor.execute(
                                     () -> {
                                         if (resultParcel.isSuccess()) {
                                             callback.onResult(
-                                                    new AppsetId(
-                                                            resultParcel.getAppsetId(),
-                                                            resultParcel.getAppsetIdScope()));
+                                                    new AppSetId(
+                                                            resultParcel.getAppSetId(),
+                                                            resultParcel.getAppSetIdScope()));
                                         } else {
                                             callback.onError(
                                                     AdServicesStatusUtils.asException(

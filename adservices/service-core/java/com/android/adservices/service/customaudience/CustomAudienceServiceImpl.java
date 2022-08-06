@@ -112,7 +112,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         assertCallingPackageName(
-                customAudience.getOwner(), AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                customAudience.getOwnerPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
         mExecutorService.execute(
                 () -> {

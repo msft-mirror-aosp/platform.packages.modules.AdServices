@@ -68,15 +68,16 @@ public class AdvertisingCustomAudienceClient {
     public ListenableFuture<Void> joinCustomAudience(CustomAudience customAudience) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    JoinCustomAudienceRequest request = new JoinCustomAudienceRequest.Builder()
-                            .setCustomAudience(customAudience)
-                            .build();
+                    JoinCustomAudienceRequest request =
+                            new JoinCustomAudienceRequest.Builder()
+                                    .setCustomAudience(customAudience)
+                                    .build();
                     mCustomAudienceManager.joinCustomAudience(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(Void result) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
@@ -97,17 +98,18 @@ public class AdvertisingCustomAudienceClient {
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    LeaveCustomAudienceRequest request = new LeaveCustomAudienceRequest.Builder()
-                            .setOwner(owner)
-                            .setBuyer(buyer)
-                            .setName(name)
-                            .build();
+                    LeaveCustomAudienceRequest request =
+                            new LeaveCustomAudienceRequest.Builder()
+                                    .setOwnerPackageName(owner)
+                                    .setBuyer(buyer)
+                                    .setName(name)
+                                    .build();
                     mCustomAudienceManager.leaveCustomAudience(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(Void result) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
@@ -134,9 +136,9 @@ public class AdvertisingCustomAudienceClient {
                     mCustomAudienceManager.overrideCustomAudienceRemoteInfo(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(Void result) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
@@ -163,9 +165,9 @@ public class AdvertisingCustomAudienceClient {
                     mCustomAudienceManager.removeCustomAudienceRemoteInfoOverride(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(Void result) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
@@ -190,9 +192,9 @@ public class AdvertisingCustomAudienceClient {
                 completer -> {
                     mCustomAudienceManager.resetAllCustomAudienceOverrides(
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(Void result) {
+                                public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
