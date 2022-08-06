@@ -115,6 +115,9 @@ public class TopicsManagerTest {
         // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(147, 253, 175, 254, 33));
 
+        assertThat(topic.getModelVersion()).isAtLeast(1L);
+        assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
+
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
         AdvertisingTopicsClient advertisingTopicsClient2 =
                 new AdvertisingTopicsClient.Builder()
