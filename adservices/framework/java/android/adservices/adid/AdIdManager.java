@@ -19,6 +19,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
@@ -45,6 +46,9 @@ public class AdIdManager {
      * @hide
      */
     public static final String ADID_SERVICE = "adid_service";
+
+    // When an app calls the AdId API directly, it sets the SDK name to empty string.
+    static final String EMPTY_SDK = "";
 
     private final Context mContext;
     private final ServiceBinder<IAdIdService> mServiceBinder;
@@ -97,8 +101,24 @@ public class AdIdManager {
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                         .build();
         final IAdIdService service = getService();
+        String appPackageName = "";
+        String sdkPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        Context getAdIdRequestContext = getContext();
+        if (getAdIdRequestContext instanceof SandboxedSdkContext) {
+            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getAdIdRequestContext);
+            sdkPackageName = requestContext.getSdkPackageName();
+            appPackageName = requestContext.getClientPackageName();
+        } else { // This is the case without the Sandbox.
+            appPackageName = getAdIdRequestContext.getPackageName();
+        }
+
         try {
             service.getAdId(
+                    new GetAdIdParam.Builder()
+                            .setAppPackageName(appPackageName)
+                            .setSdkPackageName(sdkPackageName)
+                            .build(),
                     callerMetadata,
                     new IGetAdIdCallback.Stub() {
                         @Override
@@ -119,7 +139,7 @@ public class AdIdManager {
                         }
 
                         @Override
-                        public void onFailure(int resultCode) {
+                        public void onError(int resultCode) {
                             executor.execute(
                                     () ->
                                             callback.onError(
@@ -136,8 +156,7 @@ public class AdIdManager {
      * If the service is in an APK (as opposed to the system service), unbind it from the service to
      * allow the APK process to die.
      *
-     * @hide Not sure if we'll need this functionality in the final API. For now, we need it for
-     *     performance testing to simulate "cold-start" situations.
+     * @hide
      */
     // TODO: change to @VisibleForTesting
     public void unbindFromService() {

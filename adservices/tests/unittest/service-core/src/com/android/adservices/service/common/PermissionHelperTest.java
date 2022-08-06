@@ -73,6 +73,11 @@ public class PermissionHelperTest {
                                 mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isTrue();
         assertThat(
+                        PermissionHelper.hasAdIdPermission(
+                                mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isTrue();
+
+        assertThat(
                         PermissionHelper.hasAttributionPermission(
                                 mMockContextGrant, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isTrue();
@@ -83,6 +88,10 @@ public class PermissionHelperTest {
     public void testNotHasPermission() {
         assertThat(
                         PermissionHelper.hasTopicsPermission(
+                                mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
+                .isFalse();
+        assertThat(
+                        PermissionHelper.hasAdIdPermission(
                                 mMockContextDeny, /*useSandboxCheck =*/ false, SDK_PACKAGE_NAME))
                 .isFalse();
         assertThat(
@@ -98,6 +107,9 @@ public class PermissionHelperTest {
                         PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
         when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_ADID_PERMISSION, SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_GRANTED);
+        when(mMockPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
                         SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_GRANTED);
@@ -110,6 +122,11 @@ public class PermissionHelperTest {
                         PermissionHelper.hasTopicsPermission(
                                 mMockContextGrant, /*useSandboxCheck =*/ true, SDK_PACKAGE_NAME))
                 .isTrue();
+
+        // TODO(b/240718367): Check Sdk permission for adid.
+        // assertThat(PermissionHelper.hasAdIdPermission(mMockContextGrant, /*useSandboxCheck
+        // =*/ true,
+
         // TODO(b/236267953): Check Sdk permission for Attribution.
         // assertThat(PermissionHelper.hasAttributionPermission(mMockContextGrant, /*useSandboxCheck
         // =*/ true,
@@ -127,6 +144,9 @@ public class PermissionHelperTest {
                         PermissionHelper.ACCESS_ADSERVICES_TOPICS_PERMISSION, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(mMockPackageManager.checkPermission(
+                        PermissionHelper.ACCESS_ADSERVICES_ADID_PERMISSION, SDK_PACKAGE_NAME))
+                .thenReturn(PackageManager.PERMISSION_DENIED);
+        when(mMockPackageManager.checkPermission(
                         PermissionHelper.ACCESS_ADSERVICES_ATTRIBUTION_PERMISSION,
                         SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
@@ -139,6 +159,12 @@ public class PermissionHelperTest {
                         PermissionHelper.hasTopicsPermission(
                                 mMockContextDeny, /*useSandboxCheck =*/ true, SDK_PACKAGE_NAME))
                 .isFalse();
+
+        // TODO(b/240718367): Check Sdk permission for Adid.
+        // assertThat(PermissionHelper.hasAdIdPermission(mMockContextDeny, /*useSandboxCheck
+        // =*/ true,
+        // SDK_PACKAGE_NAME)).isFalse();
+
         // TODO(b/236267953): Check Sdk permission for Attribution.
         // assertThat(PermissionHelper.hasAttributionPermission(mMockContextDeny, /*useSandboxCheck
         // =*/ true,
