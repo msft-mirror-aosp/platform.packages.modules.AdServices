@@ -33,8 +33,8 @@ import java.util.Objects;
  * Contains the configuration of the ad selection process.
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
- * AdSelectionManager#runAdSelection} and {@link AdSelectionManager#reportImpression} methods in
- * {@link AdSelectionManager}.
+ * AdSelectionManager#selectAds} and {@link AdSelectionManager#reportImpression} methods in {@link
+ * AdSelectionManager}.
  */
 // TODO(b/233280314): investigate on adSelectionConfig optimization by merging mCustomAudienceBuyers
 //  and mPerBuyerSignals.
