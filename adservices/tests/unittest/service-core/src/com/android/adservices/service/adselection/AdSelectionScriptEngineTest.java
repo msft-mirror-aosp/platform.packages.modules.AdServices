@@ -308,7 +308,6 @@ public class AdSelectionScriptEngineTest {
         return new AdSelectionConfig.Builder()
                 .setSeller(AdTechIdentifier.fromString("www.mydomain.com"))
                 .setPerBuyerSignals(ImmutableMap.of())
-                .setContextualAds(ImmutableList.of())
                 .setDecisionLogicUri(Uri.parse("http://www.mydomain.com/updateAds"))
                 .setSellerSignals(AdSelectionSignals.EMPTY)
                 .setCustomAudienceBuyers(
