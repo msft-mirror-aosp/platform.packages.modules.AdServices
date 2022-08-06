@@ -816,6 +816,33 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
     }
 
+    // FLEDGE Kill switches
+
+    /**
+     * Fledge Ad Selection API kill switch. The default value is false which means that Select Ads
+     * API is enabled by default. This flag should be should as emergency andon cord.
+     */
+    boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
+
+    /** @return value of Fledge Ad Selection API kill switch */
+    default boolean getFledgeSelectAdsKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || FLEDGE_SELECT_ADS_KILL_SWITCH;
+    }
+
+    /**
+     * Fledge Join Custom Audience API kill switch. The default value is false which means that Join
+     * Custom Audience API is enabled by default. This flag should be should as emergency andon
+     * cord.
+     */
+    boolean FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH = false;
+
+    /** @return value of Fledge Join Custom Audience API kill switch */
+    default boolean getFledgeCustomAudienceServiceKillSwitch() {
+        // Check for global kill switch first, as it should override all other kill switches
+        return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
     /*
      * The Allow List for PP APIs. This list has the list of app package names that we allow
      * to use PP APIs.
