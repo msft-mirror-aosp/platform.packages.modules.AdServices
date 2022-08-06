@@ -202,15 +202,15 @@ public class FledgeCtsTest {
 
         // Running ad selection and asserting that a failure is returned since the fetch calls
         // should fail.
-        Exception runAdSelectionException =
+        Exception selectAdsException =
                 assertThrows(
                         ExecutionException.class,
                         () -> {
                             mAdSelectionClient
-                                    .runAdSelection(AD_SELECTION_CONFIG)
+                                    .selectAds(AD_SELECTION_CONFIG)
                                     .get(30, TimeUnit.SECONDS);
                         });
-        assertThat(runAdSelectionException.getCause().getCause())
+        assertThat(selectAdsException.getCause().getCause())
                 .isInstanceOf(IllegalStateException.class);
         // Cannot perform reporting since no ad selection id is returned.
     }
