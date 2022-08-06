@@ -23,11 +23,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represents the response from the {@link AppsetIdManager#getAppsetId(Executor, OutcomeReceiver)}
+ * Represents the response from the {@link AppSetIdManager#getAppSetId(Executor, OutcomeReceiver)}
  * API.
  */
-public class AppsetId {
-    @NonNull private final String mAppsetId;
+public class AppSetId {
+    @NonNull private final String mAppSetId;
 
     /** @hide */
     @Retention(RetentionPolicy.SOURCE)
@@ -35,7 +35,7 @@ public class AppsetId {
         SCOPE_APP,
         SCOPE_DEVELOPER,
     })
-    public @interface AppsetIdScope {}
+    public @interface AppSetIdScope {}
     /** The appsetId is scoped to an app. All apps on a device will have a different appsetId. */
     public static final int SCOPE_APP = 1;
 
@@ -45,21 +45,21 @@ public class AppsetId {
      */
     public static final int SCOPE_DEVELOPER = 2;
 
-    private final @AppsetIdScope int mAppsetIdScope;
+    private final @AppSetIdScope int mAppSetIdScope;
 
-    public AppsetId(@NonNull String appsetId, @AppsetIdScope int appsetIdScope) {
-        mAppsetId = appsetId;
-        mAppsetIdScope = appsetIdScope;
+    public AppSetId(@NonNull String appSetId, @AppSetIdScope int appSetIdScope) {
+        mAppSetId = appSetId;
+        mAppSetIdScope = appSetIdScope;
     }
 
     /** Retrieves the appsetId. The api always returns a non-null appsetId. */
-    public @NonNull String getAppsetId() {
-        return mAppsetId;
+    public @NonNull String getAppSetId() {
+        return mAppSetId;
     }
 
     /** Retrieves the scope of the appsetId. */
-    public @AppsetIdScope int getAppsetIdScope() {
-        return mAppsetIdScope;
+    public @AppSetIdScope int getAppSetIdScope() {
+        return mAppSetIdScope;
     }
 
     @Override
@@ -67,15 +67,15 @@ public class AppsetId {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof AppsetId)) {
+        if (!(o instanceof AppSetId)) {
             return false;
         }
-        AppsetId that = (AppsetId) o;
-        return mAppsetId.equals(that.mAppsetId) && (mAppsetIdScope == that.mAppsetIdScope);
+        AppSetId that = (AppSetId) o;
+        return mAppSetId.equals(that.mAppSetId) && (mAppSetIdScope == that.mAppSetIdScope);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAppsetId, mAppsetIdScope);
+        return Objects.hash(mAppSetId, mAppSetIdScope);
     }
 }

@@ -91,7 +91,7 @@ public class CustomAudienceCtsTest {
                                 mClient.joinCustomAudience(
                                                 CustomAudienceFixture.getValidBuilderForBuyer(
                                                                 CommonFixture.VALID_BUYER)
-                                                        .setOwner("Invalid_owner")
+                                                        .setOwnerPackageName("Invalid_owner")
                                                         .build())
                                         .get());
         assertTrue(exception.getCause() instanceof SecurityException);
@@ -155,7 +155,7 @@ public class CustomAudienceCtsTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
@@ -179,7 +179,7 @@ public class CustomAudienceCtsTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
+                        .setOwnerPackageName(OWNER)
                         .setBuyer(BUYER)
                         .setName(NAME)
                         .build();

@@ -19,6 +19,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.MeasurementHttpClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,11 +45,13 @@ import java.util.concurrent.TimeUnit;
  * @hide
  */
 final class AggregateEncryptionKeyFetcher {
+    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
+
     /**
      * Provides a testing hook.
      */
     public @NonNull URLConnection openUrl(@NonNull URL url) throws IOException {
-        return url.openConnection();
+        return mNetworkConnection.setup(url);
     }
 
     private static long getMaxAgeInSeconds(@NonNull Map<String, List<String>> headers) {

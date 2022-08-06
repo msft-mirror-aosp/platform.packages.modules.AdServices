@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
@@ -169,8 +170,26 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to open its initial
+     * connection during Measurement API calls.
+     */
+    default int getMeasurementNetworkConnectTimeoutMs() {
+        return MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to read a response from a
+     * target server during Measurement API calls.
+     */
+    default int getMeasurementNetworkReadTimeoutMs() {
+        return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
+    }
+
     /* The default measurement app name. */
     String MEASUREMENT_APP_NAME = "";
+    int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
+    int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
     /** Returns the app name. */
     default String getMeasurementAppName() {
@@ -506,6 +525,239 @@ public interface Flags extends Dumpable {
         return GLOBAL_KILL_SWITCH;
     }
 
+    // MEASUREMENT Killswitches
+
+    /**
+     * Measurement API Delete Registrations Kill Switch. The default value is false which means
+     * Delete Registrations API is enabled. This flag is used for emergency turning off the Delete
+     * Registrations API.
+     */
+    boolean MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Delete Registrations. The API will be
+     * disabled if either the Global Kill Switch or the Measurement API Delete Registration Kill
+     * Switch value is true.
+     */
+    default boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement API Status Kill Switch. The default value is false which means Status API is
+     * enabled. This flag is used for emergency turning off the Status API.
+     */
+    boolean MEASUREMENT_API_STATUS_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Status. The API will be disabled if either
+     * the Global Kill Switch or the Measurement API Status Kill Switch value is true.
+     */
+    default boolean getMeasurementApiStatusKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_API_STATUS_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement API Register Source Kill Switch. The default value is false which means Register
+     * Source API is enabled. This flag is used for emergency turning off the Register Source API.
+     */
+    boolean MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Register Source. The API will be disabled
+     * if either the Global Kill Switch or the Measurement API Register Source Kill Switch value is
+     * true.
+     */
+    default boolean getMeasurementApiRegisterSourceKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement API Register Trigger Kill Switch. The default value is false which means Register
+     * Trigger API is enabled. This flag is used for emergency turning off the Register Trigger API.
+     */
+    boolean MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Register Trigger. The API will be disabled
+     * if either the Global Kill Switch or the Measurement API Register Trigger Kill Switch value is
+     * true.
+     */
+    default boolean getMeasurementApiRegisterTriggerKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement API Register Web Source Kill Switch. The default value is false which means
+     * Register Web Source API is enabled. This flag is used for emergency turning off the Register
+     * Web Source API.
+     */
+    boolean MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Register Web Source. The API will be
+     * disabled if either the Global Kill Switch or the Measurement API Register Web Source Kill
+     * Switch value is true.
+     */
+    default boolean getMeasurementApiRegisterWebSourceKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement API Register Web Trigger Kill Switch. The default value is false which means
+     * Register Web Trigger API is enabled. This flag is used for emergency turning off the Register
+     * Web Trigger API.
+     */
+    boolean MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement API Register Web Trigger. The API will be
+     * disabled if either the Global Kill Switch or the Measurement API Register Web Trigger Kill
+     * Switch value is true.
+     */
+    default boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Job Aggregate Fallback Reporting Kill Switch. The default value is false which
+     * means Aggregate Fallback Reporting Job is enabled. This flag is used for emergency turning
+     * off the Aggregate Fallback Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Aggregate Fallback Reporting. The API will
+     * be disabled if either the Global Kill Switch or the Measurement Job Aggregate Fallback
+     * Reporting Kill Switch value is true.
+     */
+    default boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Job Aggregate Reporting Kill Switch. The default value is false which means
+     * Aggregate Reporting Job is enabled. This flag is used for emergency turning off the Aggregate
+     * Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Aggregate Reporting. The API will be
+     * disabled if either the Global Kill Switch or the Measurement Job Aggregate Reporting Kill
+     * Switch value is true.
+     */
+    default boolean getMeasurementJobAggregateReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Job Attribution Kill Switch. The default value is false which means Attribution
+     * Job is enabled. This flag is used for emergency turning off the Attribution Job.
+     */
+    boolean MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Attribution. The API will be disabled if
+     * either the Global Kill Switch or the Measurement Job Attribution Kill Switch value is true.
+     */
+    default boolean getMeasurementJobAttributionKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Job Delete Expired Kill Switch. The default value is false which means Delete
+     * Expired Job is enabled. This flag is used for emergency turning off the Delete Expired Job.
+     */
+    boolean MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Delete Expired. The API will be disabled if
+     * either the Global Kill Switch or the Measurement Job Delete Expired Kill Switch value is
+     * true.
+     */
+    default boolean getMeasurementJobDeleteExpiredKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Job Event Fallback Reporting Kill Switch. The default value is false which means
+     * Event Fallback Reporting Job is enabled. This flag is used for emergency turning off the
+     * Event Fallback Reporting Job.
+     */
+    boolean MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Event Fallback Reporting. The API will be
+     * disabled if either the Global Kill Switch or the Measurement Job Event Fallback Reporting
+     * Kill Switch value is true.
+     */
+    default boolean getMeasurementJobEventFallbackReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Job Event Reporting Kill Switch. The default value is false which means Event
+     * Reporting Job is enabled. This flag is used for emergency turning off the Event Reporting
+     * Job.
+     */
+    boolean MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Job Event Reporting. The API will be disabled
+     * if either the Global Kill Switch or the Measurement Job Event Reporting Kill Switch value is
+     * true.
+     */
+    default boolean getMeasurementJobEventReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Broadcast Receiver Install Attribution Kill Switch. The default value is false
+     * which means Install Attribution is enabled. This flag is used for emergency turning off
+     * Install Attribution Broadcast Receiver.
+     */
+    boolean MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Broadcast Receiver Install Attribution. The
+     * Broadcast Receiver will be disabled if either the Global Kill Switch or the Measurement Kill
+     * Switch value is true.
+     */
+    default boolean getMeasurementReceiverInstallAttributionKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+    }
+
+    /**
+     * Measurement Broadcast Receiver Delete Packages Kill Switch. The default value is false which
+     * means Delete Packages is enabled. This flag is used for emergency turning off Delete Packages
+     * Broadcast Receiver.
+     */
+    boolean MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement Broadcast Receiver Delete Packages. The
+     * Broadcast Receiver will be disabled if either the Global Kill Switch or the Measurement Kill
+     * Switch value is true.
+     */
+    default boolean getMeasurementReceiverDeletePackagesKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+    }
+
     // TOPICS Killswitches
 
     /**
@@ -561,5 +813,19 @@ public interface Flags extends Dumpable {
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    // TODO(b/238924460): Remove after MDD download service is available and can be invoked from CTS
+    // tests.
+    /**
+     * Disable enrollment check for Topics API. This is done only to allow CTS test to pass since
+     * there is currently no way to write the enrollment data from test in the same db that can be
+     * read from the service. Note: This should not be enabled in production, unless there's a
+     * problem with enrollment.
+     */
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
+
+    default boolean isDisableTopicsEnrollmentCheck() {
+        return DISABLE_TOPICS_ENROLLMENT_CHECK;
     }
 }

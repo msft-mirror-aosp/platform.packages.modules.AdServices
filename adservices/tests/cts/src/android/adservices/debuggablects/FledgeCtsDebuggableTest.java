@@ -201,7 +201,7 @@ public class FledgeCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(customAudience2.getOwner())
+                        .setOwnerPackageName(customAudience2.getOwnerPackageName())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
@@ -222,7 +222,7 @@ public class FledgeCtsDebuggableTest {
 
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
-                mAdSelectionClient.runAdSelection(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
+                mAdSelectionClient.selectAds(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
         Assert.assertEquals(
@@ -261,7 +261,7 @@ public class FledgeCtsDebuggableTest {
         }
 
         return new CustomAudience.Builder()
-                .setOwner(mDevContext.getCallingAppPackageName())
+                .setOwnerPackageName(mDevContext.getCallingAppPackageName())
                 .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)

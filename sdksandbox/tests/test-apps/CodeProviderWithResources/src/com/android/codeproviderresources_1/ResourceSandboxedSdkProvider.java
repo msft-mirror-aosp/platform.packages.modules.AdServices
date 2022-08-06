@@ -37,7 +37,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
 
     @Override
     public void onLoadSdk(Bundle params, Executor executor, OnLoadSdkCallback callback) {
-        Resources resources = getBaseContext().getResources();
+        Resources resources = getContext().getResources();
         String stringRes = resources.getString(R.string.test_string);
         int integerRes = resources.getInteger(R.integer.test_integer);
         if (!stringRes.equals(STRING_RESOURCE)) {
@@ -47,7 +47,7 @@ public class ResourceSandboxedSdkProvider extends SandboxedSdkProvider {
             sendError(callback, String.valueOf(INTEGER_RESOURCE), String.valueOf(integerRes));
         }
 
-        AssetManager assets = getBaseContext().getAssets();
+        AssetManager assets = getContext().getAssets();
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(assets.open(ASSET_FILE)))) {
             String readAsset = reader.readLine();
