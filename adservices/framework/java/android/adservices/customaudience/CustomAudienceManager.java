@@ -195,6 +195,9 @@ public class CustomAudienceManager {
      * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
      * apps in debug mode with developer options enabled.
      *
+     * <p>This call will fail silently if the {@code owner} in the {@code request} is not the
+     * calling app's package name.
+     *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
      *     AdServicesException} indicates the error.
