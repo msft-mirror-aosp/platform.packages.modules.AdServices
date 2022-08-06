@@ -73,23 +73,21 @@ public class AdSelectionConfigArgumentTest {
                                 "name",
                                 stringArg(
                                         AdSelectionConfigArgument.SELLER_FIELD_NAME,
-                                        AD_SELECTION_CONFIG.getSeller().getStringForm()),
+                                        AD_SELECTION_CONFIG.getSeller().toString()),
                                 stringArg(
                                         AdSelectionConfigArgument.DECISION_LOGIC_URI_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getDecisionLogicUri().toString()),
                                 stringArrayArg(
                                         AdSelectionConfigArgument.CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getCustomAudienceBuyers().stream()
-                                                .map(AdTechIdentifier::getStringForm)
+                                                .map(AdTechIdentifier::toString)
                                                 .collect(Collectors.toList())),
                                 jsonArg(
                                         AdSelectionConfigArgument.AUCTION_SIGNALS_FIELD_NAME,
-                                        AD_SELECTION_CONFIG
-                                                .getAdSelectionSignals()
-                                                .getStringForm()),
+                                        AD_SELECTION_CONFIG.getAdSelectionSignals().toString()),
                                 jsonArg(
                                         AdSelectionConfigArgument.SELLER_SIGNALS_FIELD_NAME,
-                                        AD_SELECTION_CONFIG.getSellerSignals().getStringForm()),
+                                        AD_SELECTION_CONFIG.getSellerSignals().toString()),
                                 recordArg(
                                         AdSelectionConfigArgument.PER_BUYER_SIGNALS_FIELD_NAME,
                                         ImmutableList.of(

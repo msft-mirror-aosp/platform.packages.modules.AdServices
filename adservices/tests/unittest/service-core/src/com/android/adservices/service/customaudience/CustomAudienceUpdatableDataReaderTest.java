@@ -51,7 +51,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -76,7 +76,7 @@ public class CustomAudienceUpdatableDataReaderTest {
             throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(
@@ -148,7 +148,7 @@ public class CustomAudienceUpdatableDataReaderTest {
     public void testGetUserBiddingSignalsFromJsonObjectInvalidSize() throws JSONException {
         String validUserBiddingSignalsAsJsonObjectString =
                 CustomAudienceUpdatableDataFixture.formatAsOrgJsonJSONObjectString(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
 
         JSONObject responseObject =
                 CustomAudienceUpdatableDataFixture.addToJsonObject(

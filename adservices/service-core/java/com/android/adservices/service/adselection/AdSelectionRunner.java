@@ -306,7 +306,7 @@ public final class AdSelectionRunner {
                 () -> {
                     List<String> buyers =
                             adSelectionConfig.getCustomAudienceBuyers().stream()
-                                    .map(AdTechIdentifier::getStringForm)
+                                    .map(AdTechIdentifier::toString)
                                     .collect(Collectors.toList());
                     Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
                     List<DBCustomAudience> buyerCustomAudience =
