@@ -111,22 +111,19 @@ public class AdSelectionManager {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
                             executor.execute(
-                                    () -> {
-                                        receiver.onResult(
-                                                new AdSelectionOutcome.Builder()
-                                                        .setAdSelectionId(
-                                                                resultParcel.getAdSelectionId())
-                                                        .setRenderUri(resultParcel.getRenderUri())
-                                                        .build());
-                                    });
+                                    () ->
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getRenderUri())
+                                                            .build()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -147,7 +144,7 @@ public class AdSelectionManager {
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -162,18 +159,12 @@ public class AdSelectionManager {
                     new ReportImpressionCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -201,7 +192,7 @@ public class AdSelectionManager {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AddAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -215,18 +206,12 @@ public class AdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -254,7 +239,7 @@ public class AdSelectionManager {
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull RemoveAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -266,18 +251,12 @@ public class AdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -302,7 +281,7 @@ public class AdSelectionManager {
     @NonNull
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -312,18 +291,12 @@ public class AdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
