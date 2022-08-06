@@ -29,12 +29,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represent the result from the getAppsetId API.
+ * Represent the result from the getAppSetId API.
  *
  * @hide
  */
-public final class GetAppsetIdResult extends AdServicesResponse {
-    @NonNull private final String mAppsetId;
+public final class GetAppSetIdResult extends AdServicesResponse {
+    @NonNull private final String mAppSetId;
 
     /** @hide */
     @Retention(RetentionPolicy.SOURCE)
@@ -42,47 +42,47 @@ public final class GetAppsetIdResult extends AdServicesResponse {
         SCOPE_APP,
         SCOPE_DEVELOPER,
     })
-    public @interface AppsetIdScope {}
-    /** The appsetId is scoped to an app. All apps on a device will have a different appsetId. */
+    public @interface AppSetIdScope {}
+    /** The appSetId is scoped to an app. All apps on a device will have a different appSetId. */
     public static final int SCOPE_APP = 1;
 
     /**
-     * The appsetId is scoped to a developer account on an app store. All apps from the same
-     * developer on a device will have the same developer scoped appsetId.
+     * The appSetId is scoped to a developer account on an app store. All apps from the same
+     * developer on a device will have the same developer scoped appSetId.
      */
     public static final int SCOPE_DEVELOPER = 2;
 
-    private final @AppsetIdScope int mAppsetIdScope;
+    private final @AppSetIdScope int mAppSetIdScope;
 
-    private GetAppsetIdResult(
+    private GetAppSetIdResult(
             @AdServicesStatusUtils.StatusCode int resultCode,
             @Nullable String errorMessage,
-            @NonNull String appsetId,
-            @AppsetIdScope int appsetIdScope) {
+            @NonNull String appSetId,
+            @AppSetIdScope int appSetIdScope) {
         super(resultCode, errorMessage);
-        mAppsetId = appsetId;
-        mAppsetIdScope = appsetIdScope;
+        mAppSetId = appSetId;
+        mAppSetIdScope = appSetIdScope;
     }
 
-    private GetAppsetIdResult(@NonNull Parcel in) {
+    private GetAppSetIdResult(@NonNull Parcel in) {
         super(in);
         Objects.requireNonNull(in);
 
-        mAppsetId = in.readString();
-        mAppsetIdScope = in.readInt();
+        mAppSetId = in.readString();
+        mAppSetIdScope = in.readInt();
     }
 
-    public static final @NonNull Creator<GetAppsetIdResult> CREATOR =
-            new Parcelable.Creator<GetAppsetIdResult>() {
+    public static final @NonNull Creator<GetAppSetIdResult> CREATOR =
+            new Parcelable.Creator<GetAppSetIdResult>() {
                 @Override
-                public GetAppsetIdResult createFromParcel(@NonNull Parcel in) {
+                public GetAppSetIdResult createFromParcel(@NonNull Parcel in) {
                     Objects.requireNonNull(in);
-                    return new GetAppsetIdResult(in);
+                    return new GetAppSetIdResult(in);
                 }
 
                 @Override
-                public GetAppsetIdResult[] newArray(int size) {
-                    return new GetAppsetIdResult[size];
+                public GetAppSetIdResult[] newArray(int size) {
+                    return new GetAppSetIdResult[size];
                 }
             };
 
@@ -97,8 +97,8 @@ public final class GetAppsetIdResult extends AdServicesResponse {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         out.writeInt(mStatusCode);
         out.writeString(mErrorMessage);
-        out.writeString(mAppsetId);
-        out.writeInt(mAppsetIdScope);
+        out.writeString(mAppSetId);
+        out.writeInt(mAppSetIdScope);
     }
 
     /**
@@ -112,29 +112,29 @@ public final class GetAppsetIdResult extends AdServicesResponse {
         return mErrorMessage;
     }
 
-    /** Returns the AppsetId associated with this result. */
+    /** Returns the AppSetId associated with this result. */
     @NonNull
-    public String getAppsetId() {
-        return mAppsetId;
+    public String getAppSetId() {
+        return mAppSetId;
     }
 
-    /** Returns the appsetId scope associated with this result. */
-    public @AppsetIdScope int getAppsetIdScope() {
-        return mAppsetIdScope;
+    /** Returns the AppSetId scope associated with this result. */
+    public @AppSetIdScope int getAppSetIdScope() {
+        return mAppSetIdScope;
     }
 
     @Override
     public String toString() {
-        return "GetAppsetIdResult{"
+        return "GetAppSetIdResult{"
                 + "mResultCode="
                 + mStatusCode
                 + ", mErrorMessage='"
                 + mErrorMessage
                 + '\''
-                + ", mAppsetId="
-                + mAppsetId
-                + ", mAppsetIdScope="
-                + mAppsetIdScope
+                + ", mAppSetId="
+                + mAppSetId
+                + ", mAppSetIdScope="
+                + mAppSetIdScope
                 + '}';
     }
 
@@ -144,33 +144,33 @@ public final class GetAppsetIdResult extends AdServicesResponse {
             return true;
         }
 
-        if (!(o instanceof GetAppsetIdResult)) {
+        if (!(o instanceof GetAppSetIdResult)) {
             return false;
         }
 
-        GetAppsetIdResult that = (GetAppsetIdResult) o;
+        GetAppSetIdResult that = (GetAppSetIdResult) o;
 
         return mStatusCode == that.mStatusCode
                 && Objects.equals(mErrorMessage, that.mErrorMessage)
-                && Objects.equals(mAppsetId, that.mAppsetId)
-                && (mAppsetIdScope == that.mAppsetIdScope);
+                && Objects.equals(mAppSetId, that.mAppSetId)
+                && (mAppSetIdScope == that.mAppSetIdScope);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mStatusCode, mErrorMessage, mAppsetId, mAppsetIdScope);
+        return Objects.hash(mStatusCode, mErrorMessage, mAppSetId, mAppSetIdScope);
     }
 
     /**
-     * Builder for {@link GetAppsetIdResult} objects.
+     * Builder for {@link GetAppSetIdResult} objects.
      *
      * @hide
      */
     public static final class Builder {
         private @AdServicesStatusUtils.StatusCode int mStatusCode;
         @Nullable private String mErrorMessage;
-        @NonNull private String mAppsetId;
-        private @AppsetIdScope int mAppsetIdScope;
+        @NonNull private String mAppSetId;
+        private @AppSetIdScope int mAppSetIdScope;
 
         public Builder() {}
 
@@ -186,22 +186,22 @@ public final class GetAppsetIdResult extends AdServicesResponse {
             return this;
         }
 
-        /** Set the appsetId. */
-        public @NonNull Builder setAppsetId(@NonNull String appsetId) {
-            mAppsetId = appsetId;
+        /** Set the appSetId. */
+        public @NonNull Builder setAppSetId(@NonNull String appSetId) {
+            mAppSetId = appSetId;
             return this;
         }
 
-        /** Set the appsetId scope field. */
-        public @NonNull Builder setAppsetIdScope(@AppsetIdScope int scope) {
-            mAppsetIdScope = scope;
+        /** Set the appSetId scope field. */
+        public @NonNull Builder setAppSetIdScope(@AppSetIdScope int scope) {
+            mAppSetIdScope = scope;
             return this;
         }
 
-        /** Builds a {@link GetAppsetIdResult} instance. */
-        public @NonNull GetAppsetIdResult build() {
+        /** Builds a {@link GetAppSetIdResult} instance. */
+        public @NonNull GetAppSetIdResult build() {
 
-            return new GetAppsetIdResult(mStatusCode, mErrorMessage, mAppsetId, mAppsetIdScope);
+            return new GetAppSetIdResult(mStatusCode, mErrorMessage, mAppSetId, mAppSetIdScope);
         }
     }
 }

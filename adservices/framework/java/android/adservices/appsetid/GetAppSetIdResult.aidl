@@ -16,4 +16,4 @@
 
  package android.adservices.appsetid;
 
- parcelable GetAppsetIdResult;
+ parcelable GetAppSetIdResult;

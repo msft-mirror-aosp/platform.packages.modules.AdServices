@@ -16,19 +16,13 @@
 
 package android.adservices.appsetid;
 
-import android.adservices.appsetid.IGetAppsetIdCallback;
-import android.adservices.common.CallerMetadata;
+import android.adservices.appsetid.GetAppSetIdResult;
 
 /**
-  * AppsetId Service.
-  *
+  * Callback from  get appsetid request from provider.
   * {@hide}
   */
-interface IAppsetIdService {
-    /**
-     * Get AppsetId.
-     */
-    void getAppsetId(
-        in CallerMetadata callerMetadata,
-        in IGetAppsetIdCallback callback);
+oneway interface IGetAppSetIdProviderCallback {
+  void onResult(in GetAppSetIdResult responseParcel);
+  void onError(String errorMessage);
 }
