@@ -133,6 +133,34 @@ public final class PhFlags implements Flags {
 
     // Killswitch keys
     static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
+    static final String KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH =
+            "measurement_api_delete_registrations_kill_switch";
+    static final String KEY_MEASUREMENT_API_STATUS_KILL_SWITCH =
+            "measurement_api_status_kill_switch";
+    static final String KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH =
+            "measurement_api_register_source_kill_switch";
+    static final String KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH =
+            "measurement_api_register_trigger_kill_switch";
+    static final String KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH =
+            "measurement_api_register_web_source_kill_switch";
+    static final String KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH =
+            "measurement_api_register_web_trigger_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH =
+            "measurement_job_aggregate_fallback_reporting_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH =
+            "measurement_job_aggregate_reporting_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH =
+            "measurement_job_attribution_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH =
+            "measurement_job_delete_expired_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH =
+            "measurement_job_event_fallback_reporting_kill_switch";
+    static final String KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH =
+            "measurement_job_event_reporting_kill_switch";
+    static final String KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH =
+            "measurement_receiver_install_attribution_kill_switch";
+    static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
+            "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
 
     // App/SDK AllowList/DenyList keys
@@ -596,6 +624,208 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_GLOBAL_KILL_SWITCH,
                         /* defaultValue */ GLOBAL_KILL_SWITCH));
+    }
+
+    // MEASUREMENT Killswitches
+    @Override
+    public boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final boolean defaultValue = MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
+                                defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementApiStatusKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_API_STATUS_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementApiRegisterSourceKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementApiRegisterTriggerKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementApiRegisterWebSourceKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                                defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                                defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+        final boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementJobAggregateReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                                defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementJobAttributionKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementJobDeleteExpiredKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementJobEventFallbackReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+        final boolean defaultValue = MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementJobEventReportingKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                                /* defaultValue */ MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH));
+    }
+
+    @Override
+    public boolean getMeasurementReceiverInstallAttributionKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+        final boolean defaultValue = MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementReceiverDeletePackagesKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final boolean defaultValue = MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                                defaultValue));
     }
 
     // TOPICS Killswitches
