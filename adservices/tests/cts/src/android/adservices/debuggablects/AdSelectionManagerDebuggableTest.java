@@ -21,6 +21,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.content.Context;
 import android.os.Process;
@@ -55,6 +56,7 @@ public class AdSelectionManagerDebuggableTest {
             AdSelectionConfigFixture.anAdSelectionConfig();
 
     private AdSelectionClient mAdSelectionClient;
+    private TestAdSelectionClient mTestAdSelectionClient;
 
     private boolean mHasAccessToDevOverrides;
 
@@ -64,6 +66,11 @@ public class AdSelectionManagerDebuggableTest {
     public void setup() {
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+        mTestAdSelectionClient =
+                new TestAdSelectionClient.Builder()
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
@@ -86,7 +93,7 @@ public class AdSelectionManagerDebuggableTest {
                         AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> result =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
+                mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
@@ -100,7 +107,7 @@ public class AdSelectionManagerDebuggableTest {
                 new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> result =
-                mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
+                mTestAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
@@ -115,7 +122,7 @@ public class AdSelectionManagerDebuggableTest {
                         AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> addResult =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(addRequest);
+                mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(addRequest);
 
         // Asserting no exception since there is no returned value
         addResult.get(10, TimeUnit.SECONDS);
@@ -124,7 +131,7 @@ public class AdSelectionManagerDebuggableTest {
                 new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> removeResult =
-                mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(removeRequest);
+                mTestAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(removeRequest);
 
         // Asserting no exception since there is no returned value
         removeResult.get(10, TimeUnit.SECONDS);
@@ -141,7 +148,7 @@ public class AdSelectionManagerDebuggableTest {
                         .build();
 
         ListenableFuture<Void> result =
-                adSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
+                mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
 
         // Asserting no exception since there is no returned value
         result.get(10, TimeUnit.SECONDS);
