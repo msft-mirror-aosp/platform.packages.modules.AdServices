@@ -18,6 +18,7 @@ package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
@@ -67,5 +68,19 @@ public final class AdDataTest {
         assertThrows(NullPointerException.class, () -> {
             new AdData(VALID_RENDER_URL, null);
         });
+    }
+
+    @Test
+    public void testAdDataToString() {
+        AdData obj =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URL)
+                        .setMetadata(VALID_METADATA)
+                        .build();
+
+        assertEquals(
+                String.format(
+                        "AdData{mRenderUri=%s, mMetadata='%s'}", VALID_RENDER_URL, VALID_METADATA),
+                obj.toString());
     }
 }

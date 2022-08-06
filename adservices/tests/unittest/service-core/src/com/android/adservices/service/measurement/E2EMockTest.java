@@ -83,7 +83,7 @@ public abstract class E2EMockTest extends E2ETest {
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            when(mSourceFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+            Mockito.doReturn(urlConnection).when(mSourceFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -97,7 +97,7 @@ public abstract class E2EMockTest extends E2ETest {
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            when(mTriggerFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+            Mockito.doReturn(urlConnection).when(mTriggerFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -109,7 +109,7 @@ public abstract class E2EMockTest extends E2ETest {
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            when(mSourceFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+            Mockito.doReturn(urlConnection).when(mSourceFetcher).openUrl(new URL(uri));
         }
     }
 
@@ -122,7 +122,7 @@ public abstract class E2EMockTest extends E2ETest {
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
-            when(mTriggerFetcher.openUrl(new URL(uri))).thenReturn(urlConnection);
+            Mockito.doReturn(urlConnection).when(mTriggerFetcher).openUrl(new URL(uri));
         }
     }
 

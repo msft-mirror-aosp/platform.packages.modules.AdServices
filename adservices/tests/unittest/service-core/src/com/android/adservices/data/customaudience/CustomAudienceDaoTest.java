@@ -90,8 +90,8 @@ public class CustomAudienceDaoTest {
     private static final Instant LAST_UPDATED_TIME_1 = CURRENT_TIME.truncatedTo(ChronoUnit.MILLIS);
     private static final Instant LAST_UPDATED_TIME_36_HRS =
             CURRENT_TIME.minus(Duration.ofHours(36)).truncatedTo(ChronoUnit.MILLIS);
-    private static final Instant LAST_UPDATED_TIME_72_HRS =
-            CURRENT_TIME.minus(Duration.ofHours(72)).truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant LAST_UPDATED_TIME_72_DAYS =
+            CURRENT_TIME.minus(Duration.ofDays(72)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant CREATION_TIME_2 =
             CURRENT_TIME.plus(Duration.ofMinutes(1)).truncatedTo(ChronoUnit.MILLIS);
     private static final Instant ACTIVATION_TIME_2 =
@@ -215,7 +215,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_1)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.toString())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -230,7 +230,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_2)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.toString())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -287,7 +287,7 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(EXPIRATION_TIME_MINUS_ONE_DAY)
                     .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_2)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_2)
-                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.getStringForm())
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_2.toString())
                     .setAds(List.of(ADS_2))
                     .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
                     .build();
@@ -339,7 +339,7 @@ public class CustomAudienceDaoTest {
                     .setActivationTime(ACTIVATION_TIME_MINUS_ONE_HOUR)
                     .setCreationTime(CREATION_TIME_MINUS_THREE_DAYS)
                     .setExpirationTime(EXPIRATION_TIME_1)
-                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_72_HRS)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_72_DAYS)
                     .setBiddingLogicUrl(BIDDING_LOGIC_URL_1)
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
                     .setAds(List.of(ADS_1))
@@ -863,7 +863,12 @@ public class CustomAudienceDaoTest {
                         OWNER_1, BUYER_1, NAME_1));
 
         assertTrue(
-                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME).isEmpty());
+                mCustomAudienceDao
+                        .getActiveCustomAudienceByBuyers(
+                                buyers,
+                                CURRENT_TIME,
+                                TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs())
+                        .isEmpty());
     }
 
     @Test
@@ -877,7 +882,10 @@ public class CustomAudienceDaoTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URL_2);
         List<DBCustomAudience> result =
-                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        buyers,
+                        CURRENT_TIME,
+                        TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs());
         assertThat(result).containsExactlyElementsIn(expectedCAs);
     }
 
@@ -892,7 +900,10 @@ public class CustomAudienceDaoTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_OUTDATED, DAILY_UPDATE_URL_2);
         List<DBCustomAudience> result =
-                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        buyers,
+                        CURRENT_TIME,
+                        TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs());
         assertThat(result).containsExactlyElementsIn(expectedCAs);
     }
 
@@ -908,7 +919,10 @@ public class CustomAudienceDaoTest {
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_NO_ADS, DAILY_UPDATE_URL_1);
         List<DBCustomAudience> result =
-                mCustomAudienceDao.getActiveCustomAudienceByBuyers(buyers, CURRENT_TIME);
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        buyers,
+                        CURRENT_TIME,
+                        TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs());
         assertTrue(result.isEmpty());
     }
 

@@ -17,29 +17,30 @@
 package android.adservices.common;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.Objects;
 
-/**
- * An Identifier representing an ad buyer or seller.
- *
- * @hide
- */
+/** An Identifier representing an ad buyer or seller. */
 public final class AdTechIdentifier implements Parcelable {
 
-    @NonNull private final String mAdTechIdentifier;
+    @NonNull private final String mIdentifier;
 
     private AdTechIdentifier(@NonNull Parcel in) {
         this(in.readString());
     }
 
     private AdTechIdentifier(@NonNull String adTechIdentifier) {
+        this(adTechIdentifier, true);
+    }
+
+    private AdTechIdentifier(@NonNull String adTechIdentifier, boolean validate) {
         Objects.requireNonNull(adTechIdentifier);
-        validate(adTechIdentifier);
-        mAdTechIdentifier = adTechIdentifier;
+        if (validate) {
+            validate(adTechIdentifier);
+        }
+        mIdentifier = adTechIdentifier;
     }
 
     @NonNull
@@ -47,6 +48,7 @@ public final class AdTechIdentifier implements Parcelable {
             new Creator<AdTechIdentifier>() {
                 @Override
                 public AdTechIdentifier createFromParcel(Parcel in) {
+                    Objects.requireNonNull(in);
                     return new AdTechIdentifier(in);
                 }
 
@@ -63,23 +65,45 @@ public final class AdTechIdentifier implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(mAdTechIdentifier);
+        Objects.requireNonNull(dest);
+        dest.writeString(mIdentifier);
     }
 
+    /**
+     * Compares this AdTechIdentifier to the specified object. The result is true if and only if the
+     * argument is not null and is a AdTechIdentifier object with the same string form (obtained by
+     * calling {@link #toString()}). Note that this method will not perform any eTLD+1 normalization
+     * so two AdTechIdentifier objects with the same eTLD+1 could be not equal if the String
+     * representations of the objects was not equal.
+     *
+     * @param o The object to compare this AdTechIdentifier against
+     * @return true if the given object represents an AdTechIdentifier equivalent to this
+     *     AdTechIdentifier, false otherwise
+     */
     @Override
     public boolean equals(Object o) {
         return o instanceof AdTechIdentifier
-                && mAdTechIdentifier.equals(((AdTechIdentifier) o).getStringForm());
+                && mIdentifier.equals(((AdTechIdentifier) o).toString());
     }
 
+    /**
+     * Returns a hash code corresponding to the string representation of this class obtained by
+     * calling {@link #toString()}. Note that this method will not perform any eTLD+1 normalization
+     * so two AdTechIdentifier objects with the same eTLD+1 could have different hash codes if the
+     * underlying string representation was different.
+     *
+     * @return a hash code value for this object.
+     */
     @Override
     public int hashCode() {
-        return mAdTechIdentifier.hashCode();
+        return mIdentifier.hashCode();
     }
 
+    /** @return The identifier in String form. */
     @Override
+    @NonNull
     public String toString() {
-        return getStringForm();
+        return mIdentifier;
     }
 
     /**
@@ -90,17 +114,23 @@ public final class AdTechIdentifier implements Parcelable {
      *     null.
      */
     @NonNull
-    public static AdTechIdentifier fromString(@Nullable String source) {
-        if (source == null) {
-            return null;
-        }
-        return new AdTechIdentifier(source);
+    public static AdTechIdentifier fromString(@NonNull String source) {
+        return AdTechIdentifier.fromString(source, true);
     }
 
-    /** @return The identifier in String form. */
+    /**
+     * Construct an instance of this class from a String.
+     *
+     * @param source A valid eTLD+1 domain of an ad buyer or seller or null.
+     * @param validate Construction-time validation is run on the string if and only if this is
+     *     true.
+     * @return An {@link AdTechIdentifier} class wrapping the given domain or null if the input was
+     *     null.
+     * @hide
+     */
     @NonNull
-    public String getStringForm() {
-        return mAdTechIdentifier;
+    public static AdTechIdentifier fromString(@NonNull String source, boolean validate) {
+        return new AdTechIdentifier(source, validate);
     }
 
     private void validate(String inputString) {

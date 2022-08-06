@@ -104,17 +104,10 @@ public final class TriggerFetcherTest {
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.com");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo2.com");
     private static final WebTriggerParams TRIGGER_REGISTRATION_1 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_1)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebTriggerParams TRIGGER_REGISTRATION_2 =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI_2)
-                    .setAllowDebugKey(false)
-                    .build();
-
-    private static final Context sContext =
+            new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
+    private static final Context CONTEXT =
             InstrumentationRegistry.getInstrumentation().getContext();
 
     TriggerFetcher mFetcher;
@@ -525,15 +518,13 @@ public final class TriggerFetcherTest {
                 .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
                 .setRegistrationUri(Uri.parse(triggerUri))
                 .setTopOriginUri(Uri.parse(topOriginUri))
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+                .setPackageName(CONTEXT.getAttributionSource().getPackageName())
                 .build();
     }
 
     private WebTriggerRegistrationRequest buildWebTriggerRegistrationRequest(
             List<WebTriggerParams> triggerParams, String topOrigin) {
-        return new WebTriggerRegistrationRequest.Builder()
-                .setTriggerParams(triggerParams)
-                .setDestination(Uri.parse(topOrigin))
+        return new WebTriggerRegistrationRequest.Builder(triggerParams, Uri.parse(topOrigin))
                 .build();
     }
 }

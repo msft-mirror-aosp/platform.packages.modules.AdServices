@@ -37,13 +37,10 @@ public class AddAdSelectionOverrideRequestTest {
     public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG,
-                        DECISION_LOGIC_JS,
-                        TRUSTED_SCORING_SIGNALS.getStringForm());
+                        AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         assertThat(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
         assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
-        assertThat(request.getTrustedScoringSignals())
-                .isEqualTo(TRUSTED_SCORING_SIGNALS.getStringForm());
+        assertThat(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
     }
 }

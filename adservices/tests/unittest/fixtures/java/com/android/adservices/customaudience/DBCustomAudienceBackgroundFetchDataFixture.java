@@ -31,7 +31,7 @@ public class DBCustomAudienceBackgroundFetchDataFixture {
             AdTechIdentifier buyer) {
         return DBCustomAudienceBackgroundFetchData.builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer.getStringForm())
+                .setBuyer(buyer.toString())
                 .setName(CustomAudienceFixture.VALID_NAME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
                 .setEligibleUpdateTime(

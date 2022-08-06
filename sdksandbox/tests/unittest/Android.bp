@@ -26,12 +26,20 @@ java_defaults {
     ],
     static_libs: [
         "androidx.test.runner",
+        "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
+        "SdkSandboxTestUtils",
+    ],
+    jni_libs: [
+        // Required for ExtendedMockito
+        "libdexmakerjvmtiagent",
+        "libstaticjvmtiagent",
     ],
     libs: [
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
+        "framework-sdksandbox.impl",
     ],
 }
 
@@ -39,7 +47,6 @@ android_test {
     name: "SdkSandboxUnitTests",
     srcs: [
         "src/com/android/sdksandbox/*.java",
-        ":framework-sdksandbox-sources",
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
@@ -61,21 +68,13 @@ android_test {
     name: "SdkSandboxManagerServiceUnitTests",
     srcs: [
         "src/com/android/server/sdksandbox/*.java",
-        ":framework-sdksandbox-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
     manifest: "SdkSandboxManagerServiceManifest.xml",
     test_config: "SdkSandboxManagerServiceTest.xml",
     static_libs: [
         "service-sdksandbox.impl",
-        "mockito-target-extended-minus-junit4",
-        "SdkSandboxTestUtils",
         "services.core",
-    ],
-    jni_libs: [
-        // Required for ExtendedMockito
-        "libdexmakerjvmtiagent",
-        "libstaticjvmtiagent",
     ],
     data: [
       ":SampleCodeProviderApp",
@@ -91,14 +90,10 @@ android_test {
     name: "SdkSandboxFrameworkUnitTests",
     srcs: [
         "src/android/app/sdksandbox/*.java",
-        ":framework-sdksandbox-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
     manifest: "SdkSandboxFrameworkManifest.xml",
     test_config: "SdkSandboxFrameworkTest.xml",
-    static_libs: [
-        "framework-sdksandbox.impl",
-    ],
     data: [
       ":CodeProviderWithResources",
     ],

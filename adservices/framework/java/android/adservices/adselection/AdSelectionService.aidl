@@ -18,6 +18,7 @@ package android.adservices.adselection;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.AdSelectionOverrideCallback;
@@ -99,7 +100,7 @@ interface AdSelectionService {
     void overrideAdSelectionConfigRemoteInfo(
         in AdSelectionConfig adSelectionConfig,
         in String decisionLogicJS,
-        in String trustedScoringSignals,
+        in AdSelectionSignals trustedScoringSignals,
         in AdSelectionOverrideCallback callback);
 
    /**

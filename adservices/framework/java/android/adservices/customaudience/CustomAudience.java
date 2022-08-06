@@ -17,6 +17,8 @@
 package android.adservices.customaudience;
 
 import android.adservices.common.AdData;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -38,25 +40,16 @@ import java.util.concurrent.Executor;
  */
 public final class CustomAudience implements Parcelable {
 
-    @NonNull private final String mOwner;
-    @NonNull
-    private final String mBuyer;
-    @NonNull
-    private final String mName;
-    @Nullable
-    private final Instant mActivationTime;
-    @Nullable
-    private final Instant mExpirationTime;
-    @NonNull
-    private final Uri mDailyUpdateUrl;
-    @Nullable
-    private final String mUserBiddingSignals;
-    @Nullable
-    private final TrustedBiddingData mTrustedBiddingData;
-    @NonNull
-    private final Uri mBiddingLogicUrl;
-    @NonNull
-    private final List<AdData> mAds;
+    @NonNull private final String mOwnerPackageName;
+    @NonNull private final AdTechIdentifier mBuyer;
+    @NonNull private final String mName;
+    @Nullable private final Instant mActivationTime;
+    @Nullable private final Instant mExpirationTime;
+    @NonNull private final Uri mDailyUpdateUrl;
+    @Nullable private final AdSelectionSignals mUserBiddingSignals;
+    @Nullable private final TrustedBiddingData mTrustedBiddingData;
+    @NonNull private final Uri mBiddingLogicUrl;
+    @NonNull private final List<AdData> mAds;
 
     @NonNull
     public static final Creator<CustomAudience> CREATOR = new Creator<CustomAudience>() {
@@ -74,7 +67,9 @@ public final class CustomAudience implements Parcelable {
     };
 
     private CustomAudience(@NonNull CustomAudience.Builder builder) {
-        mOwner = builder.mOwner;
+        Objects.requireNonNull(builder);
+
+        mOwnerPackageName = builder.mOwnerPackageName;
         mBuyer = builder.mBuyer;
         mName = builder.mName;
         mActivationTime = builder.mActivationTime;
@@ -89,13 +84,14 @@ public final class CustomAudience implements Parcelable {
     private CustomAudience(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mOwner = in.readString();
-        mBuyer = in.readString();
+        mOwnerPackageName = in.readString();
+        mBuyer = AdTechIdentifier.CREATOR.createFromParcel(in);
         mName = in.readString();
         mActivationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
         mExpirationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
         mDailyUpdateUrl = Uri.CREATOR.createFromParcel(in);
-        mUserBiddingSignals = in.readBoolean() ? in.readString() : null;
+        mUserBiddingSignals =
+                in.readBoolean() ? AdSelectionSignals.CREATOR.createFromParcel(in) : null;
         mTrustedBiddingData = in.readBoolean()
                 ? TrustedBiddingData.CREATOR.createFromParcel(in) : null;
         mBiddingLogicUrl = Uri.CREATOR.createFromParcel(in);
@@ -106,15 +102,16 @@ public final class CustomAudience implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
 
-        dest.writeString(mOwner);
-        dest.writeString(mBuyer);
+        dest.writeString(mOwnerPackageName);
+        mBuyer.writeToParcel(dest, flags);
         dest.writeString(mName);
         writeNullable(dest, mActivationTime,
                 () -> dest.writeLong(mActivationTime.toEpochMilli()));
         writeNullable(dest, mExpirationTime,
                 () -> dest.writeLong(mExpirationTime.toEpochMilli()));
         mDailyUpdateUrl.writeToParcel(dest, flags);
-        writeNullable(dest, mUserBiddingSignals, () -> dest.writeString(mUserBiddingSignals));
+        writeNullable(
+                dest, mUserBiddingSignals, () -> mUserBiddingSignals.writeToParcel(dest, flags));
         writeNullable(dest, mTrustedBiddingData,
                 () -> mTrustedBiddingData.writeToParcel(dest, flags));
         mBiddingLogicUrl.writeToParcel(dest, flags);
@@ -144,23 +141,23 @@ public final class CustomAudience implements Parcelable {
      * OutcomeReceiver)}.
      */
     @NonNull
-    public String getOwner() {
-        return mOwner;
+    public String getOwnerPackageName() {
+        return mOwnerPackageName;
     }
 
     /**
      * A buyer is identified by a domain in the form "buyerexample.com".
      *
-     * @return a String containing the custom audience's buyer's domain
+     * @return an {@link AdTechIdentifier} containing the custom audience's buyer's domain
      */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
     /**
-     * This name of a custom audience is an opaque string provided by the owner and buyer on
-     * creation of the {@link CustomAudience} object.
+     * The custom audience's name is an arbitrary string provided by the owner and buyer on creation
+     * of the {@link CustomAudience} object.
      *
      * @return the String name of the custom audience
      */
@@ -182,7 +179,8 @@ public final class CustomAudience implements Parcelable {
      *
      * <p>If specified, the activation time must be an earlier instant than the expiration time.
      *
-     * @return the timestamp, truncated to milliseconds, after which the custom audience is active;
+     * @return the timestamp {@link Instant}, truncated to milliseconds, after which the custom
+     *     audience is active
      */
     @Nullable
     public Instant getActivationTime() {
@@ -199,8 +197,8 @@ public final class CustomAudience implements Parcelable {
      *
      * <p>The maximum expiry is 60 days from initial activation.
      *
-     * @return the timestamp, truncated to milliseconds, after which the custom audience should be
-     *     removed;
+     * @return the timestamp {@link Instant}, truncated to milliseconds, after which the custom
+     *     audience should be removed
      */
     @Nullable
     public Instant getExpirationTime() {
@@ -220,8 +218,7 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * User bidding signals are optionally provided by buyers to be consumed by buyer-provided
-     * JavaScript during ad selection in an isolated execution environment. These signals should be
-     * represented as a valid JSON object serialized into a string.
+     * JavaScript during ad selection in an isolated execution environment.
      *
      * <p>If the user bidding signals are not a valid JSON object that can be consumed by the
      * buyer's JS, the custom audience will not be eligible for ad selection.
@@ -229,10 +226,11 @@ public final class CustomAudience implements Parcelable {
      * <p>If not specified, the {@link CustomAudience} will not participate in ad selection until
      * user bidding signals are provided via the daily update for the custom audience.
      *
-     * @return a JSON String representing the user bidding signals for the custom audience
+     * @return an {@link AdSelectionSignals} object representing the user bidding signals for the
+     *     custom audience
      */
     @Nullable
-    public String getUserBiddingSignals() {
+    public AdSelectionSignals getUserBiddingSignals() {
         return mUserBiddingSignals;
     }
 
@@ -256,6 +254,8 @@ public final class CustomAudience implements Parcelable {
     /**
      * Returns the target URL used to fetch bidding logic when a custom audience participates in the
      * ad selection process. The URL must use HTTPS.
+     *
+     * @return the URL for fetching buyer bidding logic
      */
     @NonNull
     public Uri getBiddingLogicUrl() {
@@ -286,7 +286,7 @@ public final class CustomAudience implements Parcelable {
         if (this == o) return true;
         if (!(o instanceof CustomAudience)) return false;
         CustomAudience that = (CustomAudience) o;
-        return mOwner.equals(that.mOwner)
+        return mOwnerPackageName.equals(that.mOwnerPackageName)
                 && mBuyer.equals(that.mBuyer)
                 && mName.equals(that.mName)
                 && Objects.equals(mActivationTime, that.mActivationTime)
@@ -303,31 +303,31 @@ public final class CustomAudience implements Parcelable {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(mOwner, mBuyer, mName, mActivationTime, mExpirationTime,
-                mDailyUpdateUrl, mUserBiddingSignals, mTrustedBiddingData, mBiddingLogicUrl, mAds);
+        return Objects.hash(
+                mOwnerPackageName,
+                mBuyer,
+                mName,
+                mActivationTime,
+                mExpirationTime,
+                mDailyUpdateUrl,
+                mUserBiddingSignals,
+                mTrustedBiddingData,
+                mBiddingLogicUrl,
+                mAds);
     }
 
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
-        @NonNull private String mOwner;
-        @NonNull
-        private String mBuyer;
-        @NonNull
-        private String mName;
-        @Nullable
-        private Instant mActivationTime;
-        @Nullable
-        private Instant mExpirationTime;
-        @NonNull
-        private Uri mDailyUpdateUrl;
-        @Nullable
-        private String mUserBiddingSignals;
-        @Nullable
-        private TrustedBiddingData mTrustedBiddingData;
-        @NonNull
-        private Uri mBiddingLogicUrl;
-        @NonNull
-        private List<AdData> mAds;
+        @NonNull private String mOwnerPackageName;
+        @NonNull private AdTechIdentifier mBuyer;
+        @NonNull private String mName;
+        @Nullable private Instant mActivationTime;
+        @Nullable private Instant mExpirationTime;
+        @NonNull private Uri mDailyUpdateUrl;
+        @Nullable private AdSelectionSignals mUserBiddingSignals;
+        @Nullable private TrustedBiddingData mTrustedBiddingData;
+        @NonNull private Uri mBiddingLogicUrl;
+        @NonNull private List<AdData> mAds;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
@@ -341,22 +341,22 @@ public final class CustomAudience implements Parcelable {
          * CustomAudienceManager#joinCustomAudience(JoinCustomAudienceRequest, Executor,
          * OutcomeReceiver)}.
          *
-         * <p>See {@link #getOwner()} for more information.
+         * <p>See {@link #getOwnerPackageName()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setOwner(@NonNull String owner) {
-            Objects.requireNonNull(owner);
-            mOwner = owner;
+        public CustomAudience.Builder setOwnerPackageName(@NonNull String ownerPackageName) {
+            Objects.requireNonNull(ownerPackageName);
+            mOwnerPackageName = ownerPackageName;
             return this;
         }
 
         /**
-         * Sets the buyer domain URL.
-         * <p>
-         * See {@link #getBuyer()} for more information.
+         * Sets the buyer {@link AdTechIdentifier}.
+         *
+         * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setBuyer(@NonNull String buyer) {
+        public CustomAudience.Builder setBuyer(@NonNull AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
             mBuyer = buyer;
             return this;
@@ -415,11 +415,12 @@ public final class CustomAudience implements Parcelable {
 
         /**
          * Sets the user bidding signals used in the ad selection process.
-         * <p>
-         * See {@link #getUserBiddingSignals()} for more information.
+         *
+         * <p>See {@link #getUserBiddingSignals()} for more information.
          */
         @NonNull
-        public CustomAudience.Builder setUserBiddingSignals(@Nullable String userBiddingSignals) {
+        public CustomAudience.Builder setUserBiddingSignals(
+                @Nullable AdSelectionSignals userBiddingSignals) {
             mUserBiddingSignals = userBiddingSignals;
             return this;
         }
@@ -470,7 +471,7 @@ public final class CustomAudience implements Parcelable {
          */
         @NonNull
         public CustomAudience build() {
-            Objects.requireNonNull(mOwner);
+            Objects.requireNonNull(mOwnerPackageName);
             Objects.requireNonNull(mBuyer);
             Objects.requireNonNull(mName);
             Objects.requireNonNull(mDailyUpdateUrl);

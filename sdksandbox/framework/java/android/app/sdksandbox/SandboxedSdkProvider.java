@@ -17,8 +17,8 @@
 package android.app.sdksandbox;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.os.Bundle;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.View;
@@ -33,22 +33,29 @@ import java.util.concurrent.Executor;
  *
  * <p>Note: All APIs defined in this class are not stable and subject to change.
  */
-public abstract class SandboxedSdkProvider extends ContextWrapper {
+public abstract class SandboxedSdkProvider {
+    private Context mContext;
 
-    public SandboxedSdkProvider() {
-        super(null);
+    /**
+     * Sets the SDK {@link Context} which can then be received using {@link
+     * SandboxedSdkProvider#getContext()}. This is called by the platform before {@link
+     * SandboxedSdkProvider#onLoadSdk}. No operations requiring a {@link Context} should be
+     * performed before then, as {@link SandboxedSdkProvider#getContext} will return null until this
+     * method has been called.
+     *
+     * @param context The new base context.
+     */
+    public final void attachContext(@NonNull Context context) {
+        mContext = context;
     }
 
     /**
-     * Set the base context. All calls will then be delegated to the base context. Throws
-     * IllegalStateException if a base context has already been set. This must be called before
-     * {@link SandboxedSdkProvider#onLoadSdk}.
-     *
-     * @param newBase The new base context.
+     * Return the {@link Context} previously set through {@link SandboxedSdkProvider#attachContext}.
+     * This will return null if no context has been previously set.
      */
-    @Override
-    public final void attachBaseContext(@NonNull Context newBase) {
-        super.attachBaseContext(newBase);
+    @Nullable
+    public Context getContext() {
+        return mContext;
     }
 
     /**
@@ -59,7 +66,8 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
      * <p>SDK should do any work to be ready to handle upcoming requests. It should not include the
      * initialization logic that depends on other SDKs being loaded into the SDK sandbox. Any
      * further initialization can be triggered by the client using {@link
-     * SdkSandboxManager#sendData}.
+     * SdkSandboxManager#sendData}. The SDK should not do any operations requiring a {@link Context}
+     * object before this method has been called.
      *
      * @param params list of params passed from App when it loads the SDK.
      * @param executor the {@link Executor} on which to invoke the {@code callback}
@@ -85,10 +93,13 @@ public abstract class SandboxedSdkProvider extends ContextWrapper {
      *
      * @param windowContext the {@link Context} of the display which meant to show the view
      * @param params list of params passed from the client application requesting the view
+     * @param width The view returned will be laid as if in a window of this width, in pixels.
+     * @param height The view returned will be laid as if in a window of this height, in pixels.
      * @return a {@link View} which SDK sandbox pass to the client application requesting the view
      */
     @NonNull
-    public abstract View getView(@NonNull Context windowContext, @NonNull Bundle params);
+    public abstract View getView(
+            @NonNull Context windowContext, @NonNull Bundle params, int width, int height);
 
     /**
      * Called when data sent from the app is received by an SDK.

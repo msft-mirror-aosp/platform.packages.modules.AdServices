@@ -86,6 +86,7 @@ java_sdk_library {
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices/sdksandbox/tests/unittest",
+        "//packages/modules/AdServices/sdksandbox/tests/testutils",
         "//frameworks/base/services/tests/mockingservicestests",
         "//frameworks/base/services/tests/wmtests",
     ],

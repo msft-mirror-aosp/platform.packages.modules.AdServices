@@ -30,7 +30,6 @@ import java.util.Objects;
  */
 public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Creator for Paracelable (via reflection). */
-    @NonNull
     public static final Parcelable.Creator<WebSourceRegistrationRequestInternal> CREATOR =
             new Parcelable.Creator<WebSourceRegistrationRequestInternal>() {
                 @Override
@@ -98,41 +97,28 @@ public class WebSourceRegistrationRequestInternal implements Parcelable {
     /** Builder for {@link WebSourceRegistrationRequestInternal}. */
     public static final class Builder {
         /** External source registration request from client app SDK. */
-        @NonNull private WebSourceRegistrationRequest mSourceRegistrationRequest;
+        @NonNull private final WebSourceRegistrationRequest mSourceRegistrationRequest;
         /** Client's package name used for the registration. Used to determine the registrant. */
-        @NonNull private String mPackageName;
+        @NonNull private final String mPackageName;
 
         /**
-         * Setter for {@link #mSourceRegistrationRequest}.
+         * Builder constructor for {@link WebSourceRegistrationRequestInternal}.
          *
-         * @param sourceRegistrationRequest source registration request
-         * @return builder
-         */
-        @NonNull
-        public Builder setSourceRegistrationRequest(
-                @NonNull WebSourceRegistrationRequest sourceRegistrationRequest) {
-            mSourceRegistrationRequest = sourceRegistrationRequest;
-            return this;
-        }
-
-        /**
-         * Setter for {@link #mPackageName}.
-         *
+         * @param sourceRegistrationRequest external source registration request
          * @param packageName that is calling PP API
-         * @return builder
          */
-        @NonNull
-        public Builder setPackageName(@NonNull String packageName) {
+        public Builder(
+                @NonNull WebSourceRegistrationRequest sourceRegistrationRequest,
+                @NonNull String packageName) {
+            Objects.requireNonNull(sourceRegistrationRequest);
+            Objects.requireNonNull(packageName);
+            mSourceRegistrationRequest = sourceRegistrationRequest;
             mPackageName = packageName;
-            return this;
         }
 
         /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequestInternal}. */
         @NonNull
         public WebSourceRegistrationRequestInternal build() {
-            Objects.requireNonNull(mSourceRegistrationRequest);
-            Objects.requireNonNull(mPackageName);
-
             return new WebSourceRegistrationRequestInternal(this);
         }
     }

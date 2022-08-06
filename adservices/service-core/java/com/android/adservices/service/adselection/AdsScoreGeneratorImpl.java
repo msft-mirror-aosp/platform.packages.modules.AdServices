@@ -156,8 +156,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull String scoringLogic,
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig) {
-        final AdSelectionSignals sellerSignals =
-                AdSelectionSignals.fromString(adSelectionConfig.getSellerSignals());
+        final AdSelectionSignals sellerSignals = adSelectionConfig.getSellerSignals();
         final FluentFuture<AdSelectionSignals> trustedScoringSignals =
                 getTrustedScoringSignals(adSelectionConfig, adBiddingOutcomes);
         final AdSelectionSignals contextualSignals = getContextualSignals();
@@ -221,7 +220,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedScoringSignalsUri),
-                                        AdSelectionSignals::fromString,
+                                        s -> s == null ? null : AdSelectionSignals.fromString(s),
                                         mListeningExecutorService);
                             } else {
                                 LogUtil.d(

@@ -46,8 +46,8 @@ public class CustomAudienceCtsDebuggableTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
-    private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
-            AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
+    private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
+            AdSelectionSignals.fromString("{\"trusted_bidding_signal\":1}");
 
     private boolean mHasAccessToDevOverrides;
 
@@ -77,11 +77,11 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
@@ -96,8 +96,8 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
@@ -113,11 +113,11 @@ public class CustomAudienceCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         ListenableFuture<Void> addResult = mClient.overrideCustomAudienceRemoteInfo(addRequest);
@@ -127,8 +127,8 @@ public class CustomAudienceCtsDebuggableTest {
 
         RemoveCustomAudienceOverrideRequest removeRequest =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 

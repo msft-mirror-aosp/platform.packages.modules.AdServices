@@ -83,9 +83,7 @@ public class AdSelectionManagerDebuggableTest {
 
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG,
-                        DECISION_LOGIC_JS,
-                        TRUSTED_SCORING_SIGNALS.getStringForm());
+                        AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
@@ -114,9 +112,7 @@ public class AdSelectionManagerDebuggableTest {
 
         AddAdSelectionOverrideRequest addRequest =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG,
-                        DECISION_LOGIC_JS,
-                        TRUSTED_SCORING_SIGNALS.getStringForm());
+                        AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> addResult =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(addRequest);

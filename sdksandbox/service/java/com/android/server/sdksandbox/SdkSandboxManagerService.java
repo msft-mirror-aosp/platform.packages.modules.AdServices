@@ -255,7 +255,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
-                throw new SecurityException("SDK " + sdkName + " is not loaded for " + callingInfo);
+                throw new IllegalArgumentException(
+                        "SDK " + sdkName + " is not loaded for " + callingInfo);
             }
             unloadSdkWithClearIdentity(callingInfo, sdkName);
         } finally {
@@ -320,7 +321,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
-                throw new SecurityException("Sdk " + sdkName + " is not loaded");
+                throw new IllegalArgumentException("Sdk " + sdkName + " is not loaded");
             }
             requestSurfacePackageWithClearIdentity(
                     sdkToken, hostToken, displayId, width, height, params, callback);
@@ -355,7 +356,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         try {
             final IBinder sdkToken = mSdkTokenManager.getSdkToken(callingInfo, sdkName);
             if (sdkToken == null) {
-                throw new SecurityException("Sdk " + sdkName + " is not loaded");
+                throw new IllegalArgumentException("Sdk " + sdkName + " is not loaded");
             }
             final AppAndRemoteSdkLink link;
             synchronized (mLock) {
@@ -391,6 +392,32 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         writer.println("mServiceProvider:");
         mServiceProvider.dump(writer);
         writer.println();
+    }
+
+    @Override
+    public void syncDataFromClient(String callingPackageName, Bundle data) {
+        final int callingUid = Binder.getCallingUid();
+        final long token = Binder.clearCallingIdentity();
+
+        final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
+        enforceCallingPackageBelongsToUid(callingInfo);
+        try {
+            syncDataFromClientInternal(callingInfo, data);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    private void syncDataFromClientInternal(CallingInfo callingInfo, Bundle data) {
+        // check first if service already bound
+        ISdkSandboxService service = mServiceProvider.getBoundServiceForApp(callingInfo);
+        if (service != null) {
+            try {
+                service.syncDataFromClient(data);
+            } catch (RemoteException ignore) {
+                // TODO(b/239403323): Sandbox has died. Register lifecycle callback to retry.
+            }
+        }
     }
 
     static class SandboxServiceConnection implements ServiceConnection {
@@ -480,6 +507,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             // Sandbox had already died, cleanup sdk tokens and links.
                             removeAllSdkTokensAndLinks(callingInfo);
                         }
+
                         loadSdkForService(callingInfo, sdkToken, info, params, link, service);
                     }
 
@@ -569,7 +597,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                             || link.mSdkProviderInfo.getSdkInfo().getName().equals(sdkName)) {
                         if (boundSandbox != null) {
                             try {
-                                boundSandbox.unloadSdk(sdkToken, sdkName);
+                                boundSandbox.unloadSdk(sdkToken);
                             } catch (RemoteException e) {
                                 Log.w(TAG, "Failed to unload SDK: ", e);
                             }
@@ -581,6 +609,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     }
                 }
             }
+
             return shouldStopSandbox;
         }
     }

@@ -22,10 +22,15 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.LogUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -33,14 +38,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @RunWith(AndroidJUnit4.class)
 public class TopicsManagerTest {
-    private static final String TAG = "TopicsManagerTest";
-    private static final String SERVICE_APK_NAME = "com.google.android.adservices.api";
-
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
 
@@ -57,11 +60,12 @@ public class TopicsManagerTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    @Before
-    public void setup() throws InterruptedException {
-        // TODO(b/238236775): Uncomment below line after root access is granted in tests
-        // killPpApiProcess();
+    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
+    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
+    private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
 
+    @Before
+    public void setup() throws Exception {
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -69,6 +73,7 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManager() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("1");
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
 
         // We need to turn off random topic so that we can verify the returned topic.
@@ -107,8 +112,11 @@ public class TopicsManagerTest {
         assertThat(sdk1Result.getTopics()).hasSize(1);
         Topic topic = sdk1Result.getTopics().get(0);
 
-        // topic is one of the 10 classification topics of the Test App.
+        // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(147, 253, 175, 254, 33));
+
+        assertThat(topic.getModelVersion()).isAtLeast(1L);
+        assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
         AdvertisingTopicsClient advertisingTopicsClient2 =
@@ -122,8 +130,16 @@ public class TopicsManagerTest {
         assertThat(sdk2Result2.getTopics()).isEmpty();
 
         // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -139,13 +155,39 @@ public class TopicsManagerTest {
                         + overridePercentage);
     }
 
-    private void killPpApiProcess() {
-        ShellUtils.runShellCommand("su 0 killall -9 " + SERVICE_APK_NAME);
+    /** Forces JobScheduler to run the Epoch Computation job */
+    private void forceEpochComputationJob() {
+        ShellUtils.runShellCommand(
+                "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
 
-    /** Forces JobScheduler to run the Epoch Computation job */
-    private void forceEpochComputationJob() throws Exception {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + SERVICE_APK_NAME + " " + EPOCH_JOB_ID);
+    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
+    private static String getAdServicesPackageName() {
+        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
+        final List<ResolveInfo> resolveInfos =
+                sContext.getPackageManager()
+                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
+
+        if (resolveInfos == null || resolveInfos.isEmpty()) {
+            LogUtil.e(
+                    "Failed to find resolveInfo for adServices service. Intent action: "
+                            + TOPICS_SERVICE_NAME);
+            return null;
+        }
+
+        if (resolveInfos.size() > 1) {
+            LogUtil.e(
+                    "Found multiple services (%1$s) for the same intent action (%2$s)",
+                    TOPICS_SERVICE_NAME, resolveInfos.toString());
+            return null;
+        }
+
+        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
+        if (serviceInfo == null) {
+            LogUtil.e("Failed to find serviceInfo for adServices service");
+            return null;
+        }
+
+        return serviceInfo.packageName;
     }
 }

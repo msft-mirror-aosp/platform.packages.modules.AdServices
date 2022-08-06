@@ -51,15 +51,15 @@ public class AdSelectionClient {
     }
 
     /**
-     * Invokes the {@code runAdSelection} method of {@link AdSelectionManager}, and returns a future
-     * with {@link AdSelectionOutcome} if succeeds, or an {@link AdServicesException} if fails.
+     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
+     * {@link AdSelectionOutcome} if succeeds, or an {@link AdServicesException} if fails.
      */
     @NonNull
-    public ListenableFuture<AdSelectionOutcome> runAdSelection(
+    public ListenableFuture<AdSelectionOutcome> selectAds(
             @NonNull AdSelectionConfig adSelectionConfig) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.runAdSelection(
+                    mAdSelectionManager.selectAds(
                             adSelectionConfig,
                             mExecutor,
                             new OutcomeReceiver<AdSelectionOutcome, AdServicesException>() {

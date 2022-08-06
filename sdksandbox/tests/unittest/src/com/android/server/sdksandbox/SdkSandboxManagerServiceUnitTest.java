@@ -274,9 +274,9 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testRequestSurfacePackageSdkNotLoaded() {
         // Trying to request package with not exist SDK packageName
         String sdkName = "invalid";
-        SecurityException thrown =
+        IllegalArgumentException thrown =
                 assertThrows(
-                        SecurityException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 mService.requestSurfacePackage(
                                         TEST_PACKAGE,
@@ -338,9 +338,9 @@ public class SdkSandboxManagerServiceUnitTest {
         deathRecipient.getValue().binderDied();
 
         // After App Died
-        SecurityException thrown =
+        IllegalArgumentException thrown =
                 assertThrows(
-                        SecurityException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 mService.requestSurfacePackage(
                                         TEST_PACKAGE,
@@ -375,9 +375,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testSendData_SdkNotLoaded() throws Exception {
-        SecurityException thrown =
+        IllegalArgumentException thrown =
                 assertThrows(
-                        SecurityException.class,
+                        IllegalArgumentException.class,
                         () ->
                                 mService.sendData(
                                         TEST_PACKAGE,
@@ -386,14 +386,11 @@ public class SdkSandboxManagerServiceUnitTest {
                                         new ISendDataCallback.Stub() {
                                             @Override
                                             public void onSendDataSuccess(Bundle params)
-                                                    throws RemoteException {
+                                                    throws RemoteException {}
 
-                                            }
                                             @Override
                                             public void onSendDataError(int i, String s)
-                                                    throws RemoteException {
-
-                                            }
+                                                    throws RemoteException {}
                                         }));
         assertThat(thrown).hasMessageThat().contains("Sdk " + SDK_NAME + " is not loaded");
     }
@@ -616,7 +613,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testUnloadSdkThatIsNotLoaded() {
-        assertThrows(SecurityException.class, () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME));
+        assertThrows(
+                IllegalArgumentException.class, () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME));
     }
 
     @Test
@@ -646,6 +644,43 @@ public class SdkSandboxManagerServiceUnitTest {
         Mockito.verify(mAmSpy, Mockito.only())
                 .killUid(Mockito.eq(Process.toSdkSandboxUid(Process.myUid())), Mockito.anyString());
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
+    }
+
+    @Test
+    public void test_syncDataFromClient_verifiesCallingPackageName() {
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        "does.not.exist",
+                                        SDK_NAME,
+                                        new Bundle(),
+                                        new FakeLoadSdkCallbackBinder()));
+        assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
+    }
+
+    @Test
+    public void test_syncDataFromClient_sandboxServiceIsNotBound() {
+        // Sync data from client
+        mService.syncDataFromClient(TEST_PACKAGE, new Bundle());
+
+        // Verify when sandbox is not bound, manager service does not try to sync
+        assertThat(mSdkSandboxService.getLastUpdate()).isNull();
+    }
+
+    @Test
+    public void test_syncDataFromClient_sandboxServiceIsAlreadyBound() {
+        // Ensure a sandbox service is already bound for the client
+        final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+        mProvider.bindService(callingInfo, Mockito.mock(ServiceConnection.class));
+
+        // Sync data from client
+        final Bundle data = new Bundle();
+        mService.syncDataFromClient(TEST_PACKAGE, data);
+
+        // Verify that manager service calls sandbox to sync data
+        assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
     }
 
     /**
@@ -691,7 +726,8 @@ public class SdkSandboxManagerServiceUnitTest {
         private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
         private final ISdkSandboxManagerToSdkSandboxCallback mManagerToSdkCallback;
 
-        boolean mSurfacePackageRequested = false;
+        private boolean mSurfacePackageRequested = false;
+        private Bundle mLastSyncUpdate = null;
 
         FakeSdkSandboxService() {
             mManagerToSdkCallback = new FakeManagerToSdkCallback();
@@ -712,7 +748,17 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         @Override
-        public void unloadSdk(IBinder sdkToken, String sdkName) {}
+        public void unloadSdk(IBinder sdkToken) {}
+
+        @Override
+        public void syncDataFromClient(Bundle data) {
+            mLastSyncUpdate = data;
+        }
+
+        @Nullable
+        public Bundle getLastUpdate() {
+            return mLastSyncUpdate;
+        }
 
         void sendLoadCodeSuccessful() throws RemoteException {
             mLoadSdkInSandboxCallback.onLoadSdkSuccess(new Bundle(), mManagerToSdkCallback);
