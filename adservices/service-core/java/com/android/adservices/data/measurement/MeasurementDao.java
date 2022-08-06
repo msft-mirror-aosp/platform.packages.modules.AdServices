@@ -578,7 +578,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AttributionContract.SOURCE_SITE,
                 MeasurementTables.AttributionContract.DESTINATION_SITE,
                 MeasurementTables.AttributionContract.TRIGGER_TIME);
-        return (int) DatabaseUtils.longForQuery(
+        return Integer.valueOf((int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
                 new String[] {
@@ -586,7 +586,7 @@ class MeasurementDao implements IMeasurementDao {
                         destinationSite.toString(),
                         excludedAdTech.toString(),
                         String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) });
+                        String.valueOf(windowStartTime) }));
     }
 
     @Override
@@ -632,7 +632,7 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.SourceContract.APP_DESTINATION,
                 MeasurementTables.SourceContract.WEB_DESTINATION,
                 MeasurementTables.SourceContract.EVENT_TIME);
-        return (int) DatabaseUtils.longForQuery(
+        return Integer.valueOf((int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
                 new String[] {
@@ -640,7 +640,7 @@ class MeasurementDao implements IMeasurementDao {
                         destination.toString(),
                         excludedAdTech.toString(),
                         String.valueOf(windowEndTime),
-                        String.valueOf(windowStartTime) });
+                        String.valueOf(windowStartTime) }));
     }
 
     @Override
