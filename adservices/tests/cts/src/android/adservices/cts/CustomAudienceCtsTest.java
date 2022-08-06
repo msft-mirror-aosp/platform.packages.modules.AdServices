@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -51,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 public class CustomAudienceCtsTest {
 
     private AdvertisingCustomAudienceClient mClient;
+    private TestAdvertisingCustomAudienceClient mTestClient;
 
     private static final String OWNER = "owner";
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
@@ -66,6 +68,11 @@ public class CustomAudienceCtsTest {
         Context context = ApplicationProvider.getApplicationContext();
         mClient =
                 new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(context)
+                        .setExecutor(MoreExecutors.directExecutor())
+                        .build();
+        mTestClient =
+                new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(context)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
@@ -162,7 +169,7 @@ public class CustomAudienceCtsTest {
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
+        ListenableFuture<Void> result = mTestClient.overrideCustomAudienceRemoteInfo(request);
 
         Exception exception =
                 assertThrows(
@@ -184,7 +191,7 @@ public class CustomAudienceCtsTest {
                         .setName(NAME)
                         .build();
 
-        ListenableFuture<Void> result = mClient.removeCustomAudienceRemoteInfoOverride(request);
+        ListenableFuture<Void> result = mTestClient.removeCustomAudienceRemoteInfoOverride(request);
 
         Exception exception =
                 assertThrows(
@@ -199,7 +206,7 @@ public class CustomAudienceCtsTest {
     public void testResetAllOverridesFailsWithDebugModeDisabled() throws Exception {
         Assume.assumeFalse(mIsDebugMode);
 
-        ListenableFuture<Void> result = mClient.resetAllCustomAudienceOverrides();
+        ListenableFuture<Void> result = mTestClient.resetAllCustomAudienceOverrides();
 
         Exception exception =
                 assertThrows(
