@@ -178,7 +178,7 @@ public abstract class DBCustomAudienceBackgroundFetchData {
                 case RESPONSE_VALIDATION_FAILURE:
                     fetchDataBuilder.setNumValidationFailures(getNumValidationFailures() + 1);
                     break;
-                case NETWORK_CONNECT_TIMEOUT_FAILURE:
+                case NETWORK_FAILURE:
                     // TODO(b/221861706): Consider differentiating timeout failures for fairness
                     // TODO(b/237342352): Consolidate timeout failures if they don't need to be
                     //  distinguished
