@@ -94,10 +94,10 @@ public class AdSelectionClient {
                     mAdSelectionManager.reportImpression(
                             input,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -125,11 +125,11 @@ public class AdSelectionClient {
                     mAdSelectionManager.overrideAdSelectionConfigRemoteInfo(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
 
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -157,11 +157,11 @@ public class AdSelectionClient {
                     mAdSelectionManager.removeAdSelectionConfigRemoteInfoOverride(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
 
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -187,11 +187,11 @@ public class AdSelectionClient {
                 completer -> {
                     mAdSelectionManager.resetAllAdSelectionConfigRemoteOverrides(
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
 
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override

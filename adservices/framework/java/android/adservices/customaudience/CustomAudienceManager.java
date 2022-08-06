@@ -91,7 +91,7 @@ public class CustomAudienceManager {
     public void joinCustomAudience(
             @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(joinCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -106,18 +106,12 @@ public class CustomAudienceManager {
                     new ICustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -145,7 +139,7 @@ public class CustomAudienceManager {
     public void leaveCustomAudience(
             @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(leaveCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -164,21 +158,14 @@ public class CustomAudienceManager {
                     new ICustomAudienceCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        // leaveCustomAudience() does not throw errors or exceptions
-                                        // in the
-                                        // course of expected operation
-                                        receiver.onResult(null);
-                                    });
+                            // leaveCustomAudience() does not throw errors or exceptions in the
+                            // course of expected operation
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
                     });
         } catch (RemoteException e) {
@@ -205,7 +192,7 @@ public class CustomAudienceManager {
     public void overrideCustomAudienceRemoteInfo(
             @NonNull AddCustomAudienceOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -221,18 +208,12 @@ public class CustomAudienceManager {
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -256,7 +237,7 @@ public class CustomAudienceManager {
     public void removeCustomAudienceRemoteInfoOverride(
             @NonNull RemoveCustomAudienceOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -270,18 +251,12 @@ public class CustomAudienceManager {
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (RemoteException e) {
@@ -302,7 +277,7 @@ public class CustomAudienceManager {
      */
     public void resetAllCustomAudienceOverrides(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -312,18 +287,12 @@ public class CustomAudienceManager {
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (RemoteException e) {
