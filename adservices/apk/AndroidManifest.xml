@@ -143,10 +143,17 @@
             </intent-filter>
         </service>
 
+        <service android:name="com.android.adservices.appsetid.AppSetIdService"
+                 android:exported="true"
+                 android:visibleToInstantApps="false">
+            <intent-filter android:priority="1">
+                <action android:name="android.adservices.APPSETID_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <service android:name="com.android.adservices.measurement.MeasurementService"
             android:exported="true"
-            android:visibleToInstantApps="false"
-            >
+            android:visibleToInstantApps="false">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.MEASUREMENT_SERVICE" />
             </intent-filter>
