@@ -36,6 +36,12 @@ import java.util.concurrent.Executor;
  * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
  */
 public class CustomAudienceManager {
+    /**
+     * Constant that represents the service name for {@link CustomAudienceManager} to be used in
+     * {@link android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
+     *
+     * @hide
+     */
     public static final String CUSTOM_AUDIENCE_SERVICE = "custom_audience_service";
 
     @NonNull

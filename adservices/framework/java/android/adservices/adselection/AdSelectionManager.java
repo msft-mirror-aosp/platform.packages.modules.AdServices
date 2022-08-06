@@ -40,6 +40,8 @@ public class AdSelectionManager {
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
+     *
+     * @hide
      */
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
