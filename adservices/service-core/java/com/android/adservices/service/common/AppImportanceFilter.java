@@ -41,6 +41,14 @@ import java.util.function.Supplier;
  * Utility class to be used by PPAPI services to impose that the caller is running in foreground.
  */
 public class AppImportanceFilter {
+    /** Represents failures when checking the foreground status of the calling application. */
+    public static class WrongCallingApplicationStateException extends IllegalStateException {
+        /** Creates an instance of {@link WrongCallingApplicationStateException}. */
+        public WrongCallingApplicationStateException() {
+            super(AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+        }
+    }
+
     @VisibleForTesting public static final String UNKNOWN_APP_PACKAGE_NAME = "unknown";
 
     @NonNull private final ActivityManager mActivityManager;
@@ -108,10 +116,11 @@ public class AppImportanceFilter {
     /**
      * Utility method to use to assert that the given application package name corresponds to an
      * application currently running in foreground. If the requirement is not satisfied this method
-     * will throw a {@link IllegalStateException} after generating a telemetry event with code
-     * {@link com.android.adservices.service.stats.AdServicesStatsLog#AD_SERVICES_API_CALLED},
-     * result code {@link AdServicesStatusUtils#STATUS_BACKGROUND_CALLER}, specifying the given
-     * package name and the identifiers of the API class and name.
+     * will throw a {@link WrongCallingApplicationStateException} after generating a telemetry event
+     * with code {@link
+     * com.android.adservices.service.stats.AdServicesStatsLog#AD_SERVICES_API_CALLED}, result code
+     * {@link AdServicesStatusUtils#STATUS_BACKGROUND_CALLER}, specifying the given package name and
+     * the identifiers of the API class and name.
      *
      * @param appPackageName the package name of the application to check
      * @param apiNameIdForLogging the value to be used as API name identifier when building the
@@ -121,23 +130,22 @@ public class AppImportanceFilter {
      */
     public void assertCallerIsInForeground(
             @NonNull String appPackageName, int apiNameIdForLogging, @Nullable String sdkName)
-            throws IllegalStateException {
+            throws WrongCallingApplicationStateException {
         if (!isForegroundApp(appPackageName)) {
             logForegroundViolation(appPackageName, apiNameIdForLogging, sdkName);
 
-            throw new IllegalStateException(
-                    "This API can be called only from foreground services or apps");
+            throw new WrongCallingApplicationStateException();
         }
     }
 
     /**
      * Utility method to use to assert that the given application UID corresponds to one application
      * currently running in foreground. If the requirement is not satisfied this method will throw a
-     * {@link IllegalStateException} after generating a telemetry event with code {@link
-     * com.android.adservices.service.stats.AdServicesStatsLog#AD_SERVICES_API_CALLED}, result code
-     * {@link AdServicesStatusUtils#STATUS_BACKGROUND_CALLER}, specifying the given package name
-     * if there is only one package name corresponding to the given uid or "unknown" otherwise and
-     * the identifiers of the API class and name.
+     * {@link WrongCallingApplicationStateException} after generating a telemetry event with code
+     * {@link com.android.adservices.service.stats.AdServicesStatsLog#AD_SERVICES_API_CALLED},
+     * result code {@link AdServicesStatusUtils#STATUS_BACKGROUND_CALLER}, specifying the given
+     * package name if there is only one package name corresponding to the given uid or "unknown"
+     * otherwise and the identifiers of the API class and name.
      *
      * @param appUid the package name of the application to check
      * @param apiNameLoggingId the value to be used as API name identifier when building the {@link
@@ -147,7 +155,7 @@ public class AppImportanceFilter {
      */
     public void assertCallerIsInForeground(
             int appUid, int apiNameLoggingId, @Nullable String sdkName)
-            throws IllegalStateException {
+            throws WrongCallingApplicationStateException {
         String[] possiblePackageNames = mPackageManager.getPackagesForUid(appUid);
         boolean canBeForegroundApp =
                 Arrays.stream(possiblePackageNames).anyMatch(this::isForegroundApp);
@@ -159,8 +167,7 @@ public class AppImportanceFilter {
                     apiNameLoggingId,
                     sdkName);
 
-            throw new IllegalStateException(
-                    "This API can be called only from foreground services or apps");
+            throw new WrongCallingApplicationStateException();
         }
     }
 
