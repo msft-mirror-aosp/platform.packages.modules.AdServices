@@ -53,7 +53,7 @@ public class AppManifestConfigParserTest {
         assertEquals(
                 appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess().size(), 1);
         assertThat(appManifestConfig.getAttributionConfig().getAllowAdPartnersToAccess())
-                .contains("com.xyz");
+                .contains("1234");
 
         // Verify Custom Audience tags.
         assertEquals(appManifestConfig.getCustomAudiencesConfig().getAllowAllToAccess(), false);
@@ -61,14 +61,14 @@ public class AppManifestConfigParserTest {
                 appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess().size(),
                 2);
         assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
-                .contains("com.abc");
+                .contains("1234");
         assertThat(appManifestConfig.getCustomAudiencesConfig().getAllowAdPartnersToAccess())
-                .contains("com.xyz");
+                .contains("4567");
 
         // Verify Topics tags.
-        assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), true);
-        assertThat(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess()).isNotNull();
-        assertEquals(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess().size(), 0);
+        assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), false);
+        assertThat(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess())
+                .contains("1234567");
     }
 
     @Test
