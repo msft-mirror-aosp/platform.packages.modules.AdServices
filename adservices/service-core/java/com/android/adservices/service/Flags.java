@@ -814,4 +814,18 @@ public interface Flags extends Dumpable {
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
     }
+
+    // TODO(b/238924460): Remove after MDD download service is available and can be invoked from CTS
+    // tests.
+    /**
+     * Disable enrollment check for Topics API. This is done only to allow CTS test to pass since
+     * there is currently no way to write the enrollment data from test in the same db that can be
+     * read from the service. Note: This should not be enabled in production, unless there's a
+     * problem with enrollment.
+     */
+    boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false; // By default, enrollment check is enabled.
+
+    default boolean isDisableTopicsEnrollmentCheck() {
+        return DISABLE_TOPICS_ENROLLMENT_CHECK;
+    }
 }

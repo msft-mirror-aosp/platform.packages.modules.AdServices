@@ -176,6 +176,9 @@ public final class PhFlags implements Flags {
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLE_STATUS = "adservice_enable_status";
 
+    // Disable Topics enrollment check.
+    static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -915,6 +918,16 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
     }
 
+    @Override
+    public boolean isDisableTopicsEnrollmentCheck() {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
+                        /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -930,6 +943,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println("==== AdServices PH Flags Dump Enrollment ====");
+        writer.println(
+                "\t" + DISABLE_TOPICS_ENROLLMENT_CHECK + " = " + isDisableTopicsEnrollmentCheck());
+
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
