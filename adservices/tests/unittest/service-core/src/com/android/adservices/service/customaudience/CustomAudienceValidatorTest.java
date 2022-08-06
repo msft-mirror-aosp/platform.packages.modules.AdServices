@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -70,7 +71,7 @@ public class CustomAudienceValidatorTest {
     @Test
     public void testInvalidBuyer() {
         AdTechIdentifier buyerWithPath =
-                AdTechIdentifier.fromString(CommonFixture.VALID_BUYER.getStringForm() + "/path");
+                AdTechIdentifier.fromString(CommonFixture.VALID_BUYER.toString() + "/path");
         List<AdData> adDataList = AdDataFixture.getValidAdsByBuyer(buyerWithPath);
 
         ValidatorTestUtil.assertViolationContainsOnly(
@@ -107,7 +108,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 CommonFixture.VALID_BUYER)),
@@ -117,7 +118,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 CommonFixture.VALID_BUYER)),
@@ -127,7 +128,7 @@ public class CustomAudienceValidatorTest {
                         String.format(
                                 AdTechUriValidator.IDENTIFIER_AND_URL_ARE_INCONSISTENT,
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
-                                buyerWithPath.getStringForm(),
+                                buyerWithPath.toString(),
                                 ValidatorUtil.AD_TECH_ROLE_BUYER,
                                 AdDataValidator.RENDER_URI_FIELD_NAME,
                                 CommonFixture.VALID_BUYER)),
@@ -194,7 +195,8 @@ public class CustomAudienceValidatorTest {
         ValidatorTestUtil.assertViolationContainsOnly(
                 mValidator.getValidationViolations(
                         CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER)
-                                .setUserBiddingSignals("Not[A]VALID[JSON]")
+                                .setUserBiddingSignals(
+                                        AdSelectionSignals.fromString("Not[A]VALID[JSON]"))
                                 .build()),
                 String.format(
                         JsonValidator.SHOULD_BE_A_VALID_JSON,

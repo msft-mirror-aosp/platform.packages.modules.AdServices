@@ -112,12 +112,12 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback requestSurfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         assertThrows(
-                SecurityException.class,
+                IllegalArgumentException.class,
                 () ->
                         mSdkSandboxManager.sendData(
                                 sdkName, new Bundle(), Runnable::run, sendDataCallback));
         assertThrows(
-                SecurityException.class,
+                IllegalArgumentException.class,
                 () ->
                         mSdkSandboxManager.requestSurfacePackage(
                                 sdkName,
@@ -137,7 +137,7 @@ public class SdkSandboxManagerTest {
     @Test
     public void unloadingNonexistentSdkThrowsException() {
         final String sdkName = "com.android.nonexistent";
-        assertThrows(SecurityException.class, () -> mSdkSandboxManager.unloadSdk(sdkName));
+        assertThrows(IllegalArgumentException.class, () -> mSdkSandboxManager.unloadSdk(sdkName));
     }
 
     @Test

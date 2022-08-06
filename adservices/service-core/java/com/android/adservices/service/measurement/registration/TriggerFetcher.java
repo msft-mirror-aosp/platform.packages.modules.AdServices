@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ import java.util.concurrent.ExecutorService;
 public class TriggerFetcher {
     private final ExecutorService mIoExecutor = AdServicesExecutors.getBlockingExecutor();
     private final AdIdPermissionFetcher mAdIdPermissionFetcher;
+    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
 
     public TriggerFetcher() {
         this(new AdIdPermissionFetcher());
@@ -135,7 +137,7 @@ public class TriggerFetcher {
     /** Provided a testing hook. */
     @NonNull
     public URLConnection openUrl(@NonNull URL url) throws IOException {
-        return url.openConnection();
+        return mNetworkConnection.setup(url);
     }
 
     private void fetchTrigger(
@@ -272,7 +274,7 @@ public class TriggerFetcher {
                                 /* should process redirects*/ false,
                                 registrationsOut,
                                 true,
-                                triggerParams.isAllowDebugKey()),
+                                triggerParams.isDebugKeyAllowed()),
                 mIoExecutor);
     }
 }

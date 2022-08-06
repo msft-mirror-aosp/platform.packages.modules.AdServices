@@ -43,7 +43,7 @@ public class AdBiddingOutcomeFixture {
                                         CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
                                 .setCustomAudienceSignals(
                                         CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                                                .setBuyer(buyerName.getStringForm())
+                                                .setBuyer(buyerName.toString())
                                                 .build())
                                 .build());
     }

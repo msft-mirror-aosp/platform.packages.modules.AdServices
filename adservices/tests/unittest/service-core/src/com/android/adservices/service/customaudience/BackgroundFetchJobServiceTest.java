@@ -227,6 +227,17 @@ public class BackgroundFetchJobServiceTest {
     }
 
     @Test
+    public void testOnStopJobCallsStopWork() {
+        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doNothing().when(mBgFWorkerMock).stopWork();
+
+        assertTrue(mBgFJobServiceSpy.onStopJob(mJobParametersMock));
+
+        verify(mBgFWorkerMock).stopWork();
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
     public void testScheduleIfNeededFlagDisabled() {
         doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
         doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));

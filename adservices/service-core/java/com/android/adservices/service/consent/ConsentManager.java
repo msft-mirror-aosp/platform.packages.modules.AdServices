@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.consent;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -28,6 +32,9 @@ import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.topics.TopicsWorker;
 
 import com.google.common.collect.ImmutableList;
@@ -35,6 +42,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 /**
  * Manager to handle user's consent.
@@ -59,14 +67,21 @@ public class ConsentManager {
     private final TopicsWorker mTopicsWorker;
     private final BooleanFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
+    private final MeasurementImpl mMeasurementImpl;
+    private final AdServicesLoggerImpl mAdServicesLoggerImpl;
+    private int mDeviceLoggingRegion;
 
     ConsentManager(
             @NonNull Context context,
             @NonNull TopicsWorker topicsWorker,
-            @NonNull AppConsentDao appConsentDao) {
+            @NonNull AppConsentDao appConsentDao,
+            @NonNull MeasurementImpl measurementImpl,
+            @NonNull AdServicesLoggerImpl adServicesLoggerImpl) {
         mTopicsWorker = topicsWorker;
         mDatastore = new BooleanFileDatastore(context, STORAGE_XML_IDENTIFIER, STORAGE_VERSION);
         mAppConsentDao = appConsentDao;
+        mMeasurementImpl = measurementImpl;
+        mAdServicesLoggerImpl = adServicesLoggerImpl;
     }
 
     /**
@@ -84,7 +99,9 @@ public class ConsentManager {
                             new ConsentManager(
                                     context,
                                     TopicsWorker.getInstance(context),
-                                    AppConsentDao.getInstance(context));
+                                    AppConsentDao.getInstance(context),
+                                    MeasurementImpl.getInstance(context),
+                                    AdServicesLoggerImpl.getInstance());
                 }
             }
         }
@@ -95,6 +112,12 @@ public class ConsentManager {
      * Enables all PP API services. It gives consent to Topics, Fledge and Measurements services.
      */
     public void enable(@NonNull PackageManager packageManager) {
+        mAdServicesLoggerImpl.logUIStats(
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(mDeviceLoggingRegion)
+                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_IN_SELECTED)
+                        .build());
         // Enable all the APIs
         try {
             init(packageManager);
@@ -112,6 +135,10 @@ public class ConsentManager {
         // Disable all the APIs
         try {
             init(packageManager);
+            // reset all data
+            resetTopicsAndBlockedTopics();
+            resetApps();
+            resetMeasurement();
             setConsent(AdServicesApiConsent.REVOKED);
         } catch (IOException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_IO_EXCEPTION_WHILE_SET_CONTENT);
@@ -179,6 +206,11 @@ public class ConsentManager {
         mTopicsWorker.clearAllTopicsData(List.of(TopicsTables.BlockedTopicsContract.TABLE));
     }
 
+    /** Wipes out all the data gathered by Topics API. */
+    public void resetTopicsAndBlockedTopics() {
+        mTopicsWorker.clearAllTopicsData(List.of());
+    }
+
     /**
      * @return an {@link ImmutableList} of all known apps in the database that have not had user
      *     consent revoked
@@ -229,6 +261,11 @@ public class ConsentManager {
     @NonNull
     public void restoreConsentForApp(@NonNull App app) throws IOException {
         mAppConsentDao.setConsentForApp(app.getPackageName(), false);
+    }
+
+    /** Wipes out all the data gathered by Fledge API but blocked apps. */
+    public void resetApps() throws IOException {
+        mAppConsentDao.clearAllConsentData();
     }
 
     /**
@@ -289,6 +326,11 @@ public class ConsentManager {
         return mAppConsentDao.setConsentForAppIfNew(packageName, false);
     }
 
+    /** Wipes out all the data gathered by Measurement API. */
+    public void resetMeasurement() {
+        mMeasurementImpl.deleteAllMeasurementData(List.of());
+    }
+
     /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
@@ -325,6 +367,7 @@ public class ConsentManager {
 
     void init(PackageManager packageManager) throws IOException {
         initializeStorage();
+        initializeLoggingValues(packageManager);
         if (mDatastore.get(CONSENT_ALREADY_INITIALIZED_KEY) == null
                 || mDatastore.get(CONSENT_KEY) == null) {
             boolean initialConsent = getInitialConsent(packageManager);
@@ -342,6 +385,14 @@ public class ConsentManager {
                     mInitialized = true;
                 }
             }
+        }
+    }
+
+    private void initializeLoggingValues(PackageManager packageManager) {
+        if (packageManager.hasSystemFeature(EEA_DEVICE)) {
+            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+        } else {
+            mDeviceLoggingRegion = AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
         }
     }
 

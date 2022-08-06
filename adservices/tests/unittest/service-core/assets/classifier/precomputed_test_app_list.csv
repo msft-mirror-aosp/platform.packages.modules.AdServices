@@ -1,4 +1,5 @@
 app_id	category1	category2	category3	category4	category5
+com.emptytopics None    None	None	None	None
 com.whatsapp	222	None	None	None	None
 com.google.android.youtube	43	None	None	None	None
 com.instagram.android	253	None	None	None	None
@@ -1013,3 +1014,4 @@ com.example.adservices.samples.topics.sampleapp10	188	192	33	254	150
 com.android.adservices.tests.cts.endtoendtest	147	253	175	254	33
 com.example.adservices.valid.topics.testapp1	211	78	100003	16	100004
 com.example.adservices.valid.topics.testapp2	100005	143	100002	15	100001
+com.android.adservices.tests.cts.topics.testapp1    147	253	175	254	33

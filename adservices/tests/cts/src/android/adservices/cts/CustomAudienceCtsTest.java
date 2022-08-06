@@ -91,7 +91,7 @@ public class CustomAudienceCtsTest {
                                 mClient.joinCustomAudience(
                                                 CustomAudienceFixture.getValidBuilderForBuyer(
                                                                 CommonFixture.VALID_BUYER)
-                                                        .setOwner("Invalid_owner")
+                                                        .setOwnerPackageName("Invalid_owner")
                                                         .build())
                                         .get());
         assertTrue(exception.getCause() instanceof SecurityException);
@@ -120,7 +120,7 @@ public class CustomAudienceCtsTest {
                 .get();
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME)
                 .get();
     }
@@ -130,7 +130,7 @@ public class CustomAudienceCtsTest {
             throws ExecutionException, InterruptedException {
         mClient.leaveCustomAudience(
                         CustomAudienceFixture.VALID_OWNER,
-                        CommonFixture.VALID_BUYER.getStringForm(),
+                        CommonFixture.VALID_BUYER,
                         "not_exist_name")
                 .get();
     }
@@ -143,7 +143,7 @@ public class CustomAudienceCtsTest {
                         () ->
                                 mClient.leaveCustomAudience(
                                                 "Invalid_owner",
-                                                CommonFixture.VALID_BUYER.getStringForm(),
+                                                CommonFixture.VALID_BUYER,
                                                 CustomAudienceFixture.VALID_NAME)
                                         .get());
         assertTrue(exception.getCause() instanceof SecurityException);
@@ -155,11 +155,11 @@ public class CustomAudienceCtsTest {
 
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
         ListenableFuture<Void> result = mClient.overrideCustomAudienceRemoteInfo(request);
@@ -179,8 +179,8 @@ public class CustomAudienceCtsTest {
 
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 

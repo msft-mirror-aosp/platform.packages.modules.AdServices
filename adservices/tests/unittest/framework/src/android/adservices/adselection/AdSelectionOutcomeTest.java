@@ -18,11 +18,13 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
+
 
 @SmallTest
 public class AdSelectionOutcomeTest {
@@ -40,5 +42,77 @@ public class AdSelectionOutcomeTest {
 
         assertThat(adSelectionOutcome.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
         assertThat(adSelectionOutcome.getRenderUri()).isEqualTo(VALID_RENDER_URL);
+    }
+
+    @Test
+    public void testAdSelectionOutcomeWithSameValuesAreEqual() {
+        AdSelectionOutcome obj1 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+
+        AdSelectionOutcome obj2 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+
+        assertThat(obj1).isEqualTo(obj2);
+    }
+
+    @Test
+    public void testAdSelectionOutcomeWithDifferentValuesAreNotEqual() {
+        AdSelectionOutcome obj1 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+
+        AdSelectionOutcome obj2 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(
+                                new Uri.Builder().path("different.url.com/testing/hello").build())
+                        .build();
+        assertThat(obj1).isNotEqualTo(obj2);
+    }
+
+    @Test
+    public void testEqualAdSelectionOutcomesHaveSameHashCode() {
+        AdSelectionOutcome obj1 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+        AdSelectionOutcome obj2 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualAdSelectionOutcomesHaveDifferentHashCodes() {
+        AdSelectionOutcome obj1 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+        AdSelectionOutcome obj2 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(
+                                new Uri.Builder().path("different.url.com/testing/hello").build())
+                        .build();
+        AdSelectionOutcome obj3 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(13579)
+                        .setRenderUri(VALID_RENDER_URL)
+                        .build();
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
 }

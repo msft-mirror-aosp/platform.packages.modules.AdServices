@@ -479,21 +479,22 @@ public final class MeasurementImpl {
                     : Web.topPrivateDomainAndScheme(webDestination).isPresent();
         }
 
-        return isVerifiedDestination(verifiedDestination, webDestination,
-                sourceRegistrationRequest.getOsDestination());
+        return isVerifiedDestination(
+                verifiedDestination, webDestination, sourceRegistrationRequest.getAppDestination());
     }
 
-    private boolean isVerifiedDestination(Uri verifiedDestination, Uri webDestination,
-            Uri osDestination) {
+    private boolean isVerifiedDestination(
+            Uri verifiedDestination, Uri webDestination, Uri appDestination) {
         String destinationPackage = null;
-        if (osDestination != null) {
-            destinationPackage = osDestination.getHost();
+        if (appDestination != null) {
+            destinationPackage = appDestination.getHost();
         }
         String verifiedScheme = verifiedDestination.getScheme();
         String verifiedHost = verifiedDestination.getHost();
 
-        // Verified destination matches osDestination value
-        if (destinationPackage != null && verifiedHost != null
+        // Verified destination matches appDestination value
+        if (destinationPackage != null
+                && verifiedHost != null
                 && (verifiedScheme == null || verifiedScheme.equals(ANDROID_APP_SCHEME))
                 && verifiedHost.equals(destinationPackage)) {
             return true;

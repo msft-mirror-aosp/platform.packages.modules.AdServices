@@ -172,7 +172,7 @@ public class CustomAudienceUpdatableDataReader {
             AdTechUriValidator uriValidator =
                     new AdTechUriValidator(
                             ValidatorUtil.AD_TECH_ROLE_BUYER,
-                            mBuyer.getStringForm(),
+                            mBuyer.toString(),
                             this.getClass().getSimpleName(),
                             TrustedBiddingDataValidator.TRUSTED_BIDDING_URI_FIELD_NAME);
             uriValidator.validate(parsedUri);

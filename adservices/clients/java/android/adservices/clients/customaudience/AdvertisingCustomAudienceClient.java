@@ -16,6 +16,7 @@
 
 package android.adservices.clients.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceManager;
@@ -93,14 +94,15 @@ public class AdvertisingCustomAudienceClient {
     /** Leave custom audience. */
     @NonNull
     public ListenableFuture<Void> leaveCustomAudience(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    LeaveCustomAudienceRequest request = new LeaveCustomAudienceRequest.Builder()
-                            .setOwner(owner)
-                            .setBuyer(buyer)
-                            .setName(name)
-                            .build();
+                    LeaveCustomAudienceRequest request =
+                            new LeaveCustomAudienceRequest.Builder()
+                                    .setOwnerPackageName(owner)
+                                    .setBuyer(buyer)
+                                    .setName(name)
+                                    .build();
                     mCustomAudienceManager.leaveCustomAudience(
                             request,
                             mExecutor,

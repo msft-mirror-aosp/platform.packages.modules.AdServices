@@ -232,7 +232,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedBiddingUriWithKeys),
-                                        AdSelectionSignals::fromString,
+                                        s -> s == null ? null : AdSelectionSignals.fromString(s),
                                         mListeningExecutorService);
                             } else {
                                 LogUtil.d(
@@ -262,7 +262,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mListeningExecutorService.submit(
                                 () ->
                                         mCustomAudienceDevOverridesHelper.getBiddingLogicOverride(
-                                                owner, buyer.getStringForm(), name)));
+                                                owner, buyer.toString(), name)));
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (jsOverride == null) {

@@ -170,8 +170,8 @@ public class DBCustomAudience {
 
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
-                .setBuyer(parcelable.getBuyer())
-                .setOwner(parcelable.getOwner())
+                .setBuyer(parcelable.getBuyer().toString())
+                .setOwner(parcelable.getOwnerPackageName())
                 .setActivationTime(activationTime)
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
@@ -185,7 +185,7 @@ public class DBCustomAudience {
                                 : parcelable.getAds().stream()
                                         .map(DBAdData::fromServiceObject)
                                         .collect(Collectors.toList()))
-                .setUserBiddingSignals(parcelable.getUserBiddingSignals())
+                .setUserBiddingSignals(parcelable.getUserBiddingSignals().toString())
                 .build();
     }
 
@@ -209,7 +209,7 @@ public class DBCustomAudience {
 
         if (updatableData.getUserBiddingSignals() != null) {
             customAudienceBuilder.setUserBiddingSignals(
-                    updatableData.getUserBiddingSignals().getStringForm());
+                    updatableData.getUserBiddingSignals().toString());
         }
 
         if (updatableData.getTrustedBiddingData() != null) {

@@ -30,7 +30,27 @@ public class Throttler {
     // Enum for each PP API or entry point that will be throttled.
     public enum ApiKey {
         UNKNOWN,
-        TOPICS_API
+
+        // Key to throttle Topics API based on the App Package Name.
+        TOPICS_API_APP_PACKAGE_NAME,
+
+        // Key to throttle Topics API based on the Sdk Name.
+        TOPICS_API_SDK_NAME,
+
+        // Key to throttle Measurement Register Source API
+        MEASUREMENT_API_REGISTER_SOURCE,
+
+        // Key to throttle Measurement Register Web Source API
+        MEASUREMENT_API_REGISTER_WEB_SOURCE,
+
+        // Key to throttle Measurement Register Trigger API
+        MEASUREMENT_API_REGISTER_TRIGGER,
+
+        // Key to throttle Measurement Register Web Trigger API
+        MEASUREMENT_API_REGISTER_WEB_TRIGGER,
+
+        // Key to throttle Measurement Deletion Registration API
+        MEASUREMENT_API_DELETION_REGISTRATION,
     }
 
     private static volatile Throttler sSingleton;
@@ -67,7 +87,7 @@ public class Throttler {
      */
     public boolean tryAcquire(ApiKey apiKey, String requester) {
         // Negative Permits Per Second turns off rate limiting.
-        if (mSdkRequestPermitsPerSecond < 0) {
+        if (mSdkRequestPermitsPerSecond <= 0) {
             return true;
         }
 
