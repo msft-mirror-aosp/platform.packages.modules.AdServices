@@ -18,6 +18,7 @@ package android.adservices.adselection;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
@@ -62,5 +63,12 @@ public final class AdWithBidTest {
         assertThrows(NullPointerException.class, () -> {
             new AdWithBid(null, TEST_BID);
         });
+    }
+
+    @Test
+    public void testAdWithBidDescribeContents() {
+        AdWithBid obj = new AdWithBid(VALID_AD_DATA, TEST_BID);
+
+        assertEquals(0, obj.describeContents());
     }
 }
