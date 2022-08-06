@@ -39,6 +39,7 @@ import android.content.pm.PackageManager;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 
@@ -108,7 +109,7 @@ public class AppImportanceFilterTest {
                 .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
-                IllegalStateException.class,
+                WrongCallingApplicationStateException.class,
                 () ->
                         mAppImportanceFilter.assertCallerIsInForeground(
                                 APP_PACKAGE_NAME, API_NAME, SDK_NAME));
@@ -122,7 +123,7 @@ public class AppImportanceFilterTest {
                 .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
-                IllegalStateException.class,
+                WrongCallingApplicationStateException.class,
                 () ->
                         mAppImportanceFilter.assertCallerIsInForeground(
                                 APP_PACKAGE_NAME, API_NAME, SDK_NAME));
@@ -191,7 +192,7 @@ public class AppImportanceFilterTest {
                 .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
-                IllegalStateException.class,
+                WrongCallingApplicationStateException.class,
                 () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, SDK_NAME));
     }
 
@@ -226,7 +227,7 @@ public class AppImportanceFilterTest {
                 .thenReturn(IMPORTANCE_VISIBLE);
 
         assertThrows(
-                IllegalStateException.class,
+                WrongCallingApplicationStateException.class,
                 () -> mAppImportanceFilter.assertCallerIsInForeground(APP_UID, API_NAME, null));
 
         verify(mAdServiceLogger).logApiCallStats(mApiCallStatsArgumentCaptor.capture());
