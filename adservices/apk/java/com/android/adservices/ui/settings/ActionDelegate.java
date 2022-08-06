@@ -15,6 +15,18 @@
  */
 package com.android.adservices.ui.settings;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+
 import android.view.View;
 import android.widget.Toast;
 
@@ -23,6 +35,8 @@ import androidx.fragment.app.FragmentManager;
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.consent.App;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
@@ -40,12 +54,14 @@ import java.io.IOException;
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
 public class ActionDelegate {
+    private static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
 
     private final AdServicesSettingsActivity mAdServicesSettingsActivity;
     private final FragmentManager mFragmentManager;
     private final MainViewModel mMainViewModel;
     private final TopicsViewModel mTopicsViewModel;
     private final AppsViewModel mAppsViewModel;
+    private final boolean mIsEUDevice;
 
     public ActionDelegate(
             AdServicesSettingsActivity adServicesSettingsActivity,
@@ -58,6 +74,7 @@ public class ActionDelegate {
         mMainViewModel = mainViewModel;
         mTopicsViewModel = topicsViewModel;
         mAppsViewModel = appsViewModel;
+        mIsEUDevice = adServicesSettingsActivity.getPackageManager().hasSystemFeature(EEA_DEVICE);
 
         listenToMainViewModelUiEvents();
         listenToTopicsViewModelUiEvents();
@@ -88,6 +105,7 @@ public class ActionDelegate {
                                         mMainViewModel.setConsent(false);
                                         break;
                                     case DISPLAY_APPS_FRAGMENT:
+                                        logManageAppsSelected();
                                         mFragmentManager
                                                 .beginTransaction()
                                                 .replace(
@@ -100,6 +118,7 @@ public class ActionDelegate {
                                         mAppsViewModel.refresh();
                                         break;
                                     case DISPLAY_TOPICS_FRAGMENT:
+                                        logManageTopicsSelected();
                                         mFragmentManager
                                                 .beginTransaction()
                                                 .replace(
@@ -135,16 +154,19 @@ public class ActionDelegate {
                             try {
                                 switch (event) {
                                     case BLOCK_TOPIC:
+                                        logBlockTopicSelected();
                                         // TODO(b/229721429): show confirmation for blocking a
                                         // topic.
                                         mTopicsViewModel.revokeTopicConsent(topic);
                                         break;
                                     case RESTORE_TOPIC:
+                                        logUnblockTopicSelected();
                                         // TODO(b/229721429): show confirmation for restoring a
                                         // topic.
                                         mTopicsViewModel.restoreTopicConsent(topic);
                                         break;
                                     case RESET_TOPICS:
+                                        logResetTopicSelected();
                                         // TODO(b/229721429): show confirmation for resetting
                                         // topics.
                                         mTopicsViewModel.resetTopics();
@@ -181,7 +203,9 @@ public class ActionDelegate {
                                 return;
                             }
                             switch (event) {
+                                    // TODO(b/241605477): add RESET_APP with logging
                                 case BLOCK_APP:
+                                    logBlockAppSelected();
                                     try {
                                         mAppsViewModel.revokeAppConsent(app);
                                     } catch (IOException e) {
@@ -192,6 +216,7 @@ public class ActionDelegate {
                                     }
                                     break;
                                 case RESTORE_APP:
+                                    logUnblockAppSelected();
                                     try {
                                         mAppsViewModel.restoreAppConsent(app);
                                     } catch (IOException e) {
@@ -335,4 +360,117 @@ public class ActionDelegate {
         mAdServicesSettingsActivity.setTitle(R.string.settingsUI_blocked_apps_title);
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Logging
+    // ---------------------------------------------------------------------------------------------
+
+    private void logManageTopicsSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logManageAppsSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logResetTopicSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logResetAppSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logBlockTopicSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logUnblockTopicSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logBlockAppSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
+
+    private void logUnblockAppSelected() {
+        UIStats uiStats =
+                new UIStats.Builder()
+                        .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                        .setRegion(
+                                mIsEUDevice
+                                        ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                        : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                        .setAction(
+                                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED)
+                        .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
+    }
 }
