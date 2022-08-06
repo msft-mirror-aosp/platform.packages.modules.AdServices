@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
@@ -169,8 +170,26 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to open its initial
+     * connection during Measurement API calls.
+     */
+    default int getMeasurementNetworkConnectTimeoutMs() {
+        return MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum time in milliseconds allowed for a network call to read a response from a
+     * target server during Measurement API calls.
+     */
+    default int getMeasurementNetworkReadTimeoutMs() {
+        return MEASUREMENT_NETWORK_READ_TIMEOUT_MS;
+    }
+
     /* The default measurement app name. */
     String MEASUREMENT_APP_NAME = "";
+    int MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5);
+    int MEASUREMENT_NETWORK_READ_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(30);
 
     /** Returns the app name. */
     default String getMeasurementAppName() {

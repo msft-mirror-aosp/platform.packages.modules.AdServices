@@ -63,6 +63,10 @@ public final class PhFlags implements Flags {
             "measurement_aggregate_main_reporting_job_period_ms";
     static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
+    static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
+            "measurement_network_connect_timeout_ms";
+    static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
+            "measurement_network_read_timeout_ms";
     static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
     static final String KEY_MEASUREMENT_MANIFEST_FILE_URL = "mdd_measurement_manifest_file_url";
 
@@ -328,6 +332,24 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public int getMeasurementNetworkConnectTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS,
+                /* defaultValue */ MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS);
+    }
+
+    @Override
+    public int getMeasurementNetworkReadTimeoutMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS,
+                /* defaultValue */ MEASUREMENT_NETWORK_READ_TIMEOUT_MS);
     }
 
     @Override
@@ -952,6 +974,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS
+                        + " = "
+                        + getMeasurementNetworkConnectTimeoutMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS
+                        + " = "
+                        + getMeasurementNetworkReadTimeoutMs());
         writer.println("\t" + KEY_MEASUREMENT_APP_NAME + " = " + getMeasurementAppName());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
