@@ -35,7 +35,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Worker for implementation of {@link CustomAudienceServiceImpl}.
@@ -129,8 +128,7 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(buyer);
         Preconditions.checkStringNotEmpty(name);
 
-        mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(
-                Optional.ofNullable(owner).orElse("not.implemented.yet"), buyer.toString(), name);
+        mCustomAudienceDao.deleteAllCustomAudienceDataByPrimaryKey(owner, buyer, name);
     }
 
     /** Returns DAO to be used in {@link CustomAudienceServiceImpl} */

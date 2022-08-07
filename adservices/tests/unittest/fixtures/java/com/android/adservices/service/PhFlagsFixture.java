@@ -16,6 +16,9 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
+import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 
 import static org.junit.Assert.assertEquals;
@@ -43,5 +46,53 @@ public class PhFlagsFixture {
                 "Failed to configure P/H flag",
                 phOverridingValue,
                 phFlags.getFledgeBackgroundFetchEligibleUpdateBaseIntervalS());
+    }
+
+    /**
+     * Enables test to override the flag enabling the foreground status check for callers of the
+     * Fledge Run Ad Selection API.
+     */
+    public static void overrideForegroundStatusForFledgeRunAdSelection(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION,
+                Boolean.toString(value),
+                false);
+    }
+
+    /**
+     * Enables test to override the flag enabling the foreground status check for callers of the
+     * Fledge Report Impression API.
+     */
+    public static void overrideForegroundStatusForFledgeReportImpression(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION,
+                Boolean.toString(value),
+                false);
+    }
+
+    /**
+     * Enables test to override the flag enabling the foreground status check for callers of the
+     * Fledge Override API.
+     */
+    public static void overrideForegroundStatusForFledgeOverrides(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE,
+                Boolean.toString(value),
+                false);
+    }
+
+    /**
+     * Enables test to override the flag enabling the foreground status check for callers of the
+     * Custom Audience API.
+     */
+    public static void overrideForegroundStatusForFledgeCustomAudience(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE,
+                Boolean.toString(value),
+                false);
     }
 }
