@@ -1469,13 +1469,13 @@ public class AdSelectionE2ETest {
 
         return new DBCustomAudience.Builder()
                 .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer.toString())
-                .setName(buyer + CustomAudienceFixture.VALID_NAME)
+                .setBuyer(buyer)
+                .setName(buyer.toString() + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(activationTime)
                 .setExpirationTime(expirationTime)
                 .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setLastAdsAndBiddingDataUpdatedTime(lastUpdateTime)
-                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
                                 .setUrl(
