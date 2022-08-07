@@ -27,7 +27,9 @@ import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import android.graphics.Rect;
 import android.util.Log;
@@ -65,13 +67,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Tests for {@link AdServicesSettingsActivity}. */
 public class SettingsActivityTest {
     static ViewModelProvider sViewModelProvider = Mockito.mock(ViewModelProvider.class);
-    static ConsentManager sConsentManager = Mockito.mock(ConsentManager.class);
+    static ConsentManager sConsentManager;
 
     private static final class NestedScrollToAction implements ViewAction {
         private static final String TAG =
@@ -142,6 +145,8 @@ public class SettingsActivityTest {
      * @return the mocked {@link ViewModelProvider}
      */
     public static ViewModelProvider generateMockedViewModelProvider() {
+        sConsentManager =
+                spy(ConsentManager.getInstance(ApplicationProvider.getApplicationContext()));
         List<Topic> tempList = new ArrayList<>();
         tempList.add(Topic.create(10001, 1, 1));
         tempList.add(Topic.create(10002, 1, 1));
@@ -166,12 +171,20 @@ public class SettingsActivityTest {
         ImmutableList<App> blockedAppsList = ImmutableList.copyOf(appTempList);
         doReturn(blockedAppsList).when(sConsentManager).getAppsWithRevokedConsent();
 
+        doNothing().when(sConsentManager).resetTopicsAndBlockedTopics();
+        try {
+            doNothing().when(sConsentManager).resetApps();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        doNothing().when(sConsentManager).resetMeasurement();
+
         TopicsViewModel topicsViewModel =
                 new TopicsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         AppsViewModel appsViewModel =
                 new AppsViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         MainViewModel mainViewModel =
-                new MainViewModel(ApplicationProvider.getApplicationContext());
+                new MainViewModel(ApplicationProvider.getApplicationContext(), sConsentManager);
         doReturn(topicsViewModel).when(sViewModelProvider).get(TopicsViewModel.class);
         doReturn(mainViewModel).when(sViewModelProvider).get(MainViewModel.class);
         doReturn(appsViewModel).when(sViewModelProvider).get(AppsViewModel.class);

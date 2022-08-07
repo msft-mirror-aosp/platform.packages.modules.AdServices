@@ -19,16 +19,19 @@ package com.android.sdksandbox;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
+import android.preference.PreferenceManager;
 import android.view.SurfaceControlViewHost;
 
 import androidx.test.InstrumentationRegistry;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,6 +41,7 @@ import org.junit.runners.JUnit4;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +54,10 @@ public class SdkSandboxTest {
     private static final String SDK_NAME = "com.android.testprovider";
     private static final String SDK_PACKAGE = "com.android.testprovider";
     private static final String SDK_PROVIDER_CLASS = "com.android.testprovider.TestProvider";
+
+    private static final Map<String, String> TEST_DATA =
+            Map.of("hello1", "world1", "hello2", "world2", "empty", "");
+
     private Context mContext;
 
     static class InjectorForTest extends SdkSandboxServiceImpl.Injector {
@@ -69,12 +77,18 @@ public class SdkSandboxTest {
         // Required to create a SurfaceControlViewHost
         Looper.prepare();
     }
+
     @Before
     public void setup() throws Exception {
         mContext = InstrumentationRegistry.getContext();
         InjectorForTest injector = new InjectorForTest(mContext);
         mService = new SdkSandboxServiceImpl(injector);
         mApplicationInfo = mContext.getPackageManager().getApplicationInfo(SDK_PACKAGE, 0);
+    }
+
+    @After
+    public void teardown() throws Exception {
+        getClientSharedPreference().edit().clear().commit();
     }
 
     @Test
@@ -218,6 +232,29 @@ public class SdkSandboxTest {
     @Test(expected = SecurityException.class)
     public void testDumpWithoutPermission() {
         mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
+    }
+
+    @Test
+    public void testSyncDataFromClient_StoresInClientSharedPreference() throws Exception {
+        mService.syncDataFromClient(getBundleFromMap(TEST_DATA));
+
+        // Verify that ClientSharedPreference contains the synced data
+        SharedPreferences pref = getClientSharedPreference();
+        assertThat(pref.getAll().keySet()).containsExactlyElementsIn(TEST_DATA.keySet());
+        assertThat(pref.getAll().values()).containsExactlyElementsIn(TEST_DATA.values());
+    }
+
+    private Bundle getBundleFromMap(Map<String, String> data) {
+        Bundle bundle = new Bundle();
+        for (String key : data.keySet()) {
+            // TODO(b/239403323): add support for non-string values
+            bundle.putString(key, data.get(key));
+        }
+        return bundle;
+    }
+
+    private SharedPreferences getClientSharedPreference() {
+        return PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
     private static class RemoteCode extends ILoadSdkInSandboxCallback.Stub {

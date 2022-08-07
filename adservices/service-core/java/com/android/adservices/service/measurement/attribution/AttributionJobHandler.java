@@ -164,7 +164,8 @@ class AttributionJobHandler {
                             new AggregateReport.Builder()
                                     .setPublisher(source.getRegistrant())
                                     .setAttributionDestination(source.getAppDestination())
-                                    .setSourceRegistrationTime(source.getEventTime())
+                                    .setSourceRegistrationTime(
+                                            roundDownToDay(source.getEventTime()))
                                     .setScheduledReportTime(trigger.getTriggerTime() + randomTime)
                                     .setReportingOrigin(source.getAdTechDomain())
                                     .setDebugCleartextPayload(
@@ -444,5 +445,9 @@ class AttributionJobHandler {
             }
         }
         return OptionalInt.of(newAggregateContributions);
+    }
+
+    private static long roundDownToDay(long timestamp) {
+        return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 }

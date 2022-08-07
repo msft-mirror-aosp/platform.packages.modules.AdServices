@@ -21,9 +21,11 @@ import static org.junit.Assert.assertEquals;
 import android.net.Uri;
 
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -31,8 +33,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class AggregateReportSenderTest {
+
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private static final String ATTRIBUTION_DESTINATION = "https://attribution.destination";
     private static final String SOURCE_REGISTRATION_TIME = "1246174152155";
@@ -83,5 +90,16 @@ public class AggregateReportSenderTest {
 
         assertEquals(outputStream.toString(), aggregateReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testCreateHttpUrlConnection() throws Exception {
+        HttpURLConnection mockConnection = Mockito.mock(HttpURLConnection.class);
+        URL spyUrl = Mockito.spy(new URL("https://foo"));
+        Mockito.doReturn(mockConnection).when(spyUrl).openConnection();
+
+        AggregateReportSender aggregateReportSender = new AggregateReportSender();
+        HttpURLConnection connection = aggregateReportSender.createHttpUrlConnection(spyUrl);
+        assertEquals(mockConnection, connection);
     }
 }

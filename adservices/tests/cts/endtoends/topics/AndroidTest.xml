@@ -24,6 +24,7 @@
 
 <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
     <option name="cleanup-apks" value="true"/>
+    <!-- The test apps to be installed and uninstalled -->
     <option name="test-file-name" value="CtsAdServicesEndToEndTests.apk"/>
 </target_preparer>
 
@@ -31,6 +32,22 @@
     <option name="hidden-api-checks" value="false" /> <!-- Allow hidden API uses -->
     <option name="package" value="com.android.adservices.tests.cts.endtoendtest"/>
 </test>
+
+<!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
+<target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+    <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
+    <option name="run-command" value="adb shell setprop log.tag.adservices VERBOSE" />
+    <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
+    <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
+    <option name="teardown-command"
+            value="pm uninstall --user 0 com.android.adservices.tests.cts.topics.testapp1" />
+</target_preparer>
+
+<!-- Push compiled APK file of test apps to a local place for installation -->
+<target_preparer class="com.android.compatibility.common.tradefed.targetprep.FilePusher">
+    <option name="push"
+            value="CtsSampleTopicsApp1.apk->/data/local/tmp/cts/install/CtsSampleTopicsApp1.apk" />
+</target_preparer>
 
 <object type="module_controller"
         class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">

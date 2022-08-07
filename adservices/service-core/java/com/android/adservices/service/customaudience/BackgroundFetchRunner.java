@@ -87,10 +87,7 @@ public class BackgroundFetchRunner {
 
         CustomAudienceUpdatableData updatableData =
                 fetchAndValidateCustomAudienceUpdatableData(
-                        jobStartTime,
-                        // TODO(b/240302866): Implement AdTechIdentifier conversion in Room DB
-                        AdTechIdentifier.fromString(fetchData.getBuyer()),
-                        fetchData.getDailyUpdateUrl());
+                        jobStartTime, fetchData.getBuyer(), fetchData.getDailyUpdateUrl());
         fetchData = fetchData.copyWithUpdatableData(updatableData);
 
         if (updatableData.getContainsSuccessfulUpdate()) {

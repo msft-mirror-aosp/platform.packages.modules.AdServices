@@ -35,17 +35,17 @@ public class AddCustomAudienceOverrideRequestTest {
     public void testBuildAddCustomAudienceOverrideRequest() {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .setBiddingLogicJs(BIDDING_LOGIC_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA.getStringForm())
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        assertEquals(request.getOwner(), OWNER);
-        assertEquals(request.getBuyer(), BUYER.getStringForm());
+        assertEquals(request.getOwnerPackageName(), OWNER);
+        assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
         assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
-        assertEquals(request.getTrustedBiddingData(), TRUSTED_BIDDING_DATA.getStringForm());
+        assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
     }
 }

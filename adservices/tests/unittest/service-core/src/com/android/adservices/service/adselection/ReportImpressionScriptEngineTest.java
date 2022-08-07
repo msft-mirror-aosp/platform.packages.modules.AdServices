@@ -74,11 +74,12 @@ public class ReportImpressionScriptEngineTest {
     private final CustomAudienceSignals mCustomAudienceSignals =
             new CustomAudienceSignals.Builder()
                     .setOwner("test_owner")
-                    .setBuyer("test_buyer")
+                    .setBuyer(AdTechIdentifier.fromString("test_buyer"))
                     .setName("test_name")
                     .setActivationTime(Instant.now())
                     .setExpirationTime(Instant.now())
-                    .setUserBiddingSignals("{\"user_bidding_signals\":1}")
+                    .setUserBiddingSignals(
+                            AdSelectionSignals.fromString("{\"user_bidding_signals\":1}"))
                     .build();
 
     @Test
@@ -251,16 +252,13 @@ public class ReportImpressionScriptEngineTest {
         final Uri result =
                 reportWin(
                         jsScript,
-                        AdSelectionSignals.fromString(adSelectionConfig.getAdSelectionSignals()),
-                        AdSelectionSignals.fromString(
-                                adSelectionConfig
-                                        .getPerBuyerSignals()
-                                        .get(BUYER_1.getStringForm())),
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
                         mSignalsForBuyer,
-                        AdSelectionSignals.fromString(adSelectionConfig.getSellerSignals()),
+                        adSelectionConfig.getSellerSignals(),
                         mCustomAudienceSignals);
         // TODO: Quit comparing a URI to a JSON object (b/239497492)
-        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.getStringForm());
+        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.toString());
     }
 
     @Test
@@ -277,14 +275,10 @@ public class ReportImpressionScriptEngineTest {
                 () -> {
                     reportWin(
                             jsScript,
-                            AdSelectionSignals.fromString(
-                                    adSelectionConfig.getAdSelectionSignals()),
-                            AdSelectionSignals.fromString(
-                                    adSelectionConfig
-                                            .getPerBuyerSignals()
-                                            .get(BUYER_1.getStringForm())),
+                            adSelectionConfig.getAdSelectionSignals(),
+                            adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
                             mSignalsForBuyer,
-                            AdSelectionSignals.fromString(adSelectionConfig.getSellerSignals()),
+                            adSelectionConfig.getSellerSignals(),
                             mCustomAudienceSignals);
                 });
     }
@@ -304,14 +298,10 @@ public class ReportImpressionScriptEngineTest {
                 () -> {
                     reportWin(
                             jsScript,
-                            AdSelectionSignals.fromString(
-                                    adSelectionConfig.getAdSelectionSignals()),
-                            AdSelectionSignals.fromString(
-                                    adSelectionConfig
-                                            .getPerBuyerSignals()
-                                            .get(BUYER_1.getStringForm())),
+                            adSelectionConfig.getAdSelectionSignals(),
+                            adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
                             mSignalsForBuyer,
-                            AdSelectionSignals.fromString(adSelectionConfig.getSellerSignals()),
+                            adSelectionConfig.getSellerSignals(),
                             mCustomAudienceSignals);
                 });
     }

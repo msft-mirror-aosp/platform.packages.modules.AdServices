@@ -36,7 +36,7 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
 
         handlePhase(params);
         return new View(windowContext);
@@ -58,7 +58,7 @@ public class RestrictionsTestSandboxedSdkProvider extends SandboxedSdkProvider {
     // Tries to register a broadcast receiver. An exception will be thrown if broadcast restrictions
     // are being enforced.
     void testSdkSandboxBroadcastRestrictions() {
-        getBaseContext()
+        getContext()
                 .registerReceiver(
                         new BroadcastReceiver() {
                             @Override

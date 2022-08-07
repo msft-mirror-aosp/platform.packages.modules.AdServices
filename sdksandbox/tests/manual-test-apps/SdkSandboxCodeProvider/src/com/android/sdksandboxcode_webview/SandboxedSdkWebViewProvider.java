@@ -34,7 +34,7 @@ public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
         final CountDownLatch latch = new CountDownLatch(1);
         final TestWebView webview = new TestWebView();
         try {

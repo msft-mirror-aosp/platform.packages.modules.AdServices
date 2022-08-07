@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
@@ -30,6 +31,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Binder;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -40,6 +42,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -65,6 +69,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final ExecutorService mExecutor;
     @NonNull private final Context mContext;
     @NonNull private final DevContextFilter mDevContextFilter;
+    @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
 
@@ -78,16 +83,26 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
+            @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull ExecutorService executorService,
             @NonNull Context context,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags) {
         Objects.requireNonNull(context, "Context must be provided.");
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(devContextFilter);
+        Objects.requireNonNull(appImportanceFilter);
+        Objects.requireNonNull(executorService);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(flags);
+
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCustomAudienceDao = customAudienceDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
+        mAppImportanceFilter = appImportanceFilter;
         mExecutor = executorService;
         mContext = context;
         mAdServicesLogger = adServicesLogger;
@@ -101,6 +116,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
                 new AdServicesHttpsClient(AdServicesExecutors.getBackgroundExecutor()),
                 DevContextFilter.create(context),
+                AppImportanceFilter.create(
+                        context,
+                        AD_SERVICES_API_CALLED__API_CLASS__FLEDGE,
+                        () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 AdServicesExecutors.getBackgroundExecutor(),
                 context,
                 AdServicesLoggerImpl.getInstance(),
@@ -120,7 +139,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             adSelectionConfigValidator.validate(adSelectionConfig);
         } catch (NullPointerException | IllegalArgumentException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                    AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
@@ -136,7 +155,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mExecutor,
                         mAdServicesLogger,
                         devContext,
-                        mFlags);
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingAppUid());
 
         adSelectionRunner.runAdSelection(adSelectionConfig, callback);
     }
@@ -169,7 +190,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         devContext,
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingAppUid());
         reporter.reportImpression(requestParams, callback);
     }
 
@@ -177,7 +201,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull String trustedScoringSignals,
+            @NonNull AdSelectionSignals trustedScoringSignals,
             @NonNull AdSelectionOverrideCallback callback) {
         try {
             Objects.requireNonNull(adSelectionConfig);
@@ -202,13 +226,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
-                        devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mExecutor,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingAppUid());
 
-        overrider.addOverride(
-                adSelectionConfig,
-                decisionLogicJS,
-                AdSelectionSignals.fromString(trustedScoringSignals),
-                callback);
+        overrider.addOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
+    }
+
+    private int getCallingAppUid() {
+        return SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
     }
 
     @Override
@@ -239,7 +269,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
-                        devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mExecutor,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingAppUid());
 
         overrider.removeOverride(adSelectionConfig, callback);
     }
@@ -270,7 +306,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         AdSelectionOverrider overrider =
                 new AdSelectionOverrider(
-                        devContext, mAdSelectionEntryDao, mExecutor, mAdServicesLogger);
+                        devContext,
+                        mAdSelectionEntryDao,
+                        mExecutor,
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags,
+                        getCallingAppUid());
 
         overrider.removeAllOverrides(callback);
     }

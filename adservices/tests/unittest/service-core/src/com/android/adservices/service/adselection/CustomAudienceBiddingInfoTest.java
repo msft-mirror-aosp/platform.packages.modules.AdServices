@@ -18,7 +18,6 @@ package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertEquals;
 
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -33,26 +32,23 @@ import java.time.Instant;
 
 public class CustomAudienceBiddingInfoTest {
     private static final String BUYER_DECISION_LOGIC_JS = "buyer_decision_logic_javascript";
-    private static final String OWNER = "owner";
-    private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final Instant NOW = Instant.now();
     private static final Instant ACTIVATION_TIME = NOW;
     private static final Instant EXPIRATION_TIME = NOW.plus(Duration.ofDays(1));
     private static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
             new CustomAudienceSignals.Builder()
-                    .setOwner(OWNER)
-                    .setBuyer(BUYER.getStringForm())
+                    .setOwner(CustomAudienceFixture.VALID_OWNER)
+                    .setBuyer(CommonFixture.VALID_BUYER)
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
-                    .setUserBiddingSignals(
-                            CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                    .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                     .build();
     private static final DBCustomAudience CUSTOM_AUDIENCE =
-            DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER)
-                    .setOwner(OWNER)
-                    .setBuyer(BUYER.getStringForm())
+            DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER)
+                    .setOwner(CustomAudienceFixture.VALID_OWNER)
+                    .setBuyer(CommonFixture.VALID_BUYER)
                     .setName(NAME)
                     .setActivationTime(ACTIVATION_TIME)
                     .setExpirationTime(EXPIRATION_TIME)
@@ -64,12 +60,13 @@ public class CustomAudienceBiddingInfoTest {
     public void testCustomAudienceBiddingInfo() {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
                 CustomAudienceBiddingInfo.create(
-                        CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(BUYER),
+                        CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                                CommonFixture.VALID_BUYER),
                         BUYER_DECISION_LOGIC_JS,
                         CUSTOM_AUDIENCE_SIGNALS);
         assertEquals(
                 customAudienceBiddingInfo.getBiddingLogicUrl(),
-                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(BUYER));
+                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER));
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
     }
@@ -80,7 +77,7 @@ public class CustomAudienceBiddingInfoTest {
                 CustomAudienceBiddingInfo.create(CUSTOM_AUDIENCE, BUYER_DECISION_LOGIC_JS);
         assertEquals(
                 customAudienceBiddingInfo.getBiddingLogicUrl(),
-                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(BUYER));
+                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER));
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
     }
@@ -90,13 +87,14 @@ public class CustomAudienceBiddingInfoTest {
         CustomAudienceBiddingInfo customAudienceBiddingInfo =
                 CustomAudienceBiddingInfo.builder()
                         .setBiddingLogicUrl(
-                                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(BUYER))
+                                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(
+                                        CommonFixture.VALID_BUYER))
                         .setBuyerDecisionLogicJs(BUYER_DECISION_LOGIC_JS)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
                         .build();
         assertEquals(
                 customAudienceBiddingInfo.getBiddingLogicUrl(),
-                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(BUYER));
+                CustomAudienceFixture.getValidBiddingLogicUrlByBuyer(CommonFixture.VALID_BUYER));
         assertEquals(customAudienceBiddingInfo.getBuyerDecisionLogicJs(), BUYER_DECISION_LOGIC_JS);
         assertEquals(customAudienceBiddingInfo.getCustomAudienceSignals(), CUSTOM_AUDIENCE_SIGNALS);
     }

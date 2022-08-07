@@ -36,8 +36,10 @@ import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -57,6 +59,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class FledgeCtsDebuggableTest {
+    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
+            "android.permission.WRITE_DEVICE_CONFIG";
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -67,6 +72,7 @@ public class FledgeCtsDebuggableTest {
 
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
+    private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
 
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
@@ -93,14 +99,19 @@ public class FledgeCtsDebuggableTest {
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                    .setCustomAudienceBuyers(
-                            Arrays.asList(BUYER_1.getStringForm(), BUYER_2.getStringForm()))
+                    .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
                     .setDecisionLogicUri(
                             Uri.parse(
                                     String.format(
                                             "https://%s%s",
                                             AdSelectionConfigFixture.SELLER,
                                             SELLER_DECISION_LOGIC_URI_PATH)))
+                    .setTrustedScoringSignalsUri(
+                            Uri.parse(
+                                    String.format(
+                                            "https://%s%s",
+                                            AdSelectionConfigFixture.SELLER,
+                                            SELLER_TRUSTED_SIGNAL_URI_PATH)))
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
@@ -132,6 +143,15 @@ public class FledgeCtsDebuggableTest {
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
     }
 
     @Test
@@ -168,15 +188,9 @@ public class FledgeCtsDebuggableTest {
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
-        CustomAudience customAudience1 =
-                createCustomAudience(
-                        BUYER_1,
-                        bidsForBuyer1);
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
 
-        CustomAudience customAudience2 =
-                createCustomAudience(
-                        BUYER_2,
-                        bidsForBuyer2);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
@@ -187,9 +201,7 @@ public class FledgeCtsDebuggableTest {
         // exception."
         AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS.getStringForm());
+                        AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
         mAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
@@ -197,11 +209,11 @@ public class FledgeCtsDebuggableTest {
 
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest =
                 new AddCustomAudienceOverrideRequest.Builder()
-                        .setOwner(customAudience2.getOwner())
+                        .setOwnerPackageName(customAudience2.getOwnerPackageName())
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
                         .setBiddingLogicJs(biddingLogicJs)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.getStringForm())
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
@@ -218,12 +230,11 @@ public class FledgeCtsDebuggableTest {
 
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
         AdSelectionOutcome outcome =
-                mAdSelectionClient.runAdSelection(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
+                mAdSelectionClient.selectAds(AD_SELECTION_CONFIG).get(10, TimeUnit.SECONDS);
 
         // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
         Assert.assertEquals(
-                CommonFixture.getUri(BUYER_2.getStringForm(), AD_URL_PREFIX + "/ad3"),
-                outcome.getRenderUri());
+                CommonFixture.getUri(BUYER_2, AD_URL_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest.Builder()
@@ -252,25 +263,22 @@ public class FledgeCtsDebuggableTest {
             ads.add(
                     new AdData.Builder()
                             .setRenderUri(
-                                    CommonFixture.getUri(
-                                            buyer.getStringForm(), AD_URL_PREFIX + "/ad" + (i + 1)))
+                                    CommonFixture.getUri(buyer, AD_URL_PREFIX + "/ad" + (i + 1)))
                             .setMetadata("{\"result\":" + bids.get(i) + "}")
                             .build());
         }
 
         return new CustomAudience.Builder()
-                .setOwner(mDevContext.getCallingAppPackageName())
-                .setBuyer(buyer.getStringForm())
+                .setOwnerPackageName(mDevContext.getCallingAppPackageName())
+                .setBuyer(buyer)
                 .setName(buyer + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
                 .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
                 .setDailyUpdateUrl(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
-                .setBiddingLogicUrl(
-                        CommonFixture.getUri(buyer.getStringForm(), BUYER_BIDDING_LOGIC_URI_PATH))
+                .setBiddingLogicUrl(CommonFixture.getUri(buyer, BUYER_BIDDING_LOGIC_URI_PATH))
                 .setAds(ads)
                 .build();
     }

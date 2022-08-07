@@ -51,15 +51,15 @@ public class AdSelectionClient {
     }
 
     /**
-     * Invokes the {@code runAdSelection} method of {@link AdSelectionManager}, and returns a future
-     * with {@link AdSelectionOutcome} if succeeds, or an {@link AdServicesException} if fails.
+     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
+     * {@link AdSelectionOutcome} if succeeds, or an {@link AdServicesException} if fails.
      */
     @NonNull
-    public ListenableFuture<AdSelectionOutcome> runAdSelection(
+    public ListenableFuture<AdSelectionOutcome> selectAds(
             @NonNull AdSelectionConfig adSelectionConfig) {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
-                    mAdSelectionManager.runAdSelection(
+                    mAdSelectionManager.selectAds(
                             adSelectionConfig,
                             mExecutor,
                             new OutcomeReceiver<AdSelectionOutcome, AdServicesException>() {
@@ -94,10 +94,10 @@ public class AdSelectionClient {
                     mAdSelectionManager.reportImpression(
                             input,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -125,11 +125,11 @@ public class AdSelectionClient {
                     mAdSelectionManager.overrideAdSelectionConfigRemoteInfo(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
 
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -157,11 +157,11 @@ public class AdSelectionClient {
                     mAdSelectionManager.removeAdSelectionConfigRemoteInfoOverride(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
 
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -187,11 +187,11 @@ public class AdSelectionClient {
                 completer -> {
                     mAdSelectionManager.resetAllAdSelectionConfigRemoteOverrides(
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
 
                                 @Override
-                                public void onResult(Void result) {
-                                    completer.set(result);
+                                public void onResult(Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override

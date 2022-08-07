@@ -80,7 +80,6 @@ public class ClassifierManager implements Classifier {
             // PRECOMPUTED_THEN_ON_DEVICE
             // Default if classifierTypeFlag value is not set/invalid.
             // precomputedClassifications expects non-empty values.
-            // TODO(b/240478588): Add test to verify Precomputed List has non-empty classifications.
             Map<String, List<Topic>> precomputedClassifications =
                     mPrecomputedClassifier.classify(apps);
             // Collect package names that do not have any topics in the precomputed list.

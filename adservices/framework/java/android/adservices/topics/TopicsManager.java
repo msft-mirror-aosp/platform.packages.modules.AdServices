@@ -15,22 +15,16 @@
  */
 package android.adservices.topics;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
-
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
-import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -39,8 +33,6 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -51,25 +43,12 @@ import java.util.concurrent.Executor;
  * preserving way.
  */
 public final class TopicsManager {
-
     /**
-     * Result codes from {@link TopicsManager#getTopics(GetTopicsRequest, Executor,
-     * OutcomeReceiver)} methods.
+     * Constant that represents the service name for {@link TopicsManager} to be used in {@link
+     * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
      *
      * @hide
      */
-    @IntDef(
-            value = {
-                RESULT_OK,
-                RESULT_INTERNAL_ERROR,
-                RESULT_INVALID_ARGUMENT,
-                RESULT_IO_ERROR,
-                RESULT_RATE_LIMIT_REACHED,
-            })
-
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ResultCode {}
-
     public static final String TOPICS_SERVICE = "topics_service";
 
     // Whent an app calls the Topics API directly, it sets the SDK name to empty string.
@@ -96,7 +75,7 @@ public final class TopicsManager {
     private ITopicsService getService() {
         ITopicsService service = mServiceBinder.getService();
         if (service == null) {
-            throw new IllegalStateException("Unable to find the service");
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
         }
         return service;
     }
@@ -107,8 +86,9 @@ public final class TopicsManager {
      * @param getTopicsRequest The request for obtaining Topics.
      * @param executor The executor to run callback.
      * @param callback The callback that's called after topics are available or an error occurs.
-     * @throws Exception if caller is not authorized to call this API.
-     * @throws Exception if call results in an internal error.
+     * @throws SecurityException if caller is not authorized to call this API.
+     * @throws IllegalStateException if this API is not available.
+     * @throws LimitExceededException if rate limit was reached.
      */
     @NonNull
     public void getTopics(
@@ -155,9 +135,8 @@ public final class TopicsManager {
                                         } else {
                                             // TODO: Errors should be returned in onFailure method.
                                             callback.onError(
-                                                    new AdServicesException(
-                                                            "Encountered failure during "
-                                                                    + "getTopics call."));
+                                                    AdServicesStatusUtils.asException(
+                                                            resultParcel));
                                         }
                                     });
                         }
@@ -165,22 +144,14 @@ public final class TopicsManager {
                         @Override
                         public void onFailure(int resultCode) {
                             executor.execute(
-                                    () -> {
-                                        if (resultCode == RESULT_UNAUTHORIZED_CALL) {
-                                            String errorMessage =
-                                                    "Got SecurityException, Caller is not"
-                                                            + " authorized to call this API.";
+                                    () ->
                                             callback.onError(
-                                                    new AdServicesException(
-                                                            errorMessage,
-                                                            new SecurityException(errorMessage)));
-                                        }
-                                    });
+                                                    AdServicesStatusUtils.asException(resultCode)));
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-            callback.onError(new AdServicesException("Internal Error", e));
+            LogUtil.e(e, "RemoteException");
+            callback.onError(e);
         }
     }
 

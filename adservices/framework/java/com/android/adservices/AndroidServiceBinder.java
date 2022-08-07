@@ -15,6 +15,9 @@
  */
 package com.android.adservices;
 
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
+
+import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SELECTION_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE;
@@ -130,7 +133,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
 
         synchronized (mLock) {
             if (mService == null) {
-                throw new RuntimeException("Failed to connect to the service");
+                throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
             }
             return mService;
         }
@@ -183,6 +186,7 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_CUSTOM_AUDIENCE_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SELECTION_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_ADID_SERVICE)
+                && !mServiceIntentAction.equals(ACTION_ADID_PROVIDER_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_APPSETID_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
@@ -212,7 +216,9 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             LogUtil.e("Failed to find serviceInfo for adServices service");
             return null;
         }
-
+        // TODO Bug:240679755
+        // If the action == ACTION_ADID_PROVIDER_SERVICE, add permissions
+        // check on returned serviceInfo for signature permissions.
         return new ComponentName(serviceInfo.packageName, serviceInfo.name);
     }
 

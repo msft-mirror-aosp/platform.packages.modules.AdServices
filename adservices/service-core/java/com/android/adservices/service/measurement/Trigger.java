@@ -355,10 +355,6 @@ public class Trigger {
             mBuilding = new Trigger();
         }
 
-        public Builder(Trigger trigger) {
-            mBuilding = trigger;
-        }
-
         /** See {@link Trigger#getId()}. */
         @NonNull
         public Builder setId(String id) {

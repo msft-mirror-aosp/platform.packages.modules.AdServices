@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
 import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -46,11 +47,14 @@ import android.test.mock.MockContext;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -64,6 +68,10 @@ import java.util.concurrent.TimeUnit;
 /** Unit tests for {@link MeasurementServiceImpl} */
 @SmallTest
 public final class MeasurementServiceImplTest {
+    // This rule is used for configuring P/H flags
+    @Rule
+    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
+            new TestableDeviceConfig.TestableDeviceConfigRule();
 
     @Mock private ConsentManager mConsentManager;
     @Mock private PackageManager mPackageManager;
@@ -74,16 +82,11 @@ public final class MeasurementServiceImplTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final int TIMEOUT = 5_000;
     private static final WebSourceParams SOURCE_REGISTRATION =
-            new WebSourceParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebSourceParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     private static final WebTriggerParams TRIGGER_REGISTRATION =
-            new WebTriggerParams.Builder()
-                    .setRegistrationUri(REGISTRATION_URI)
-                    .setAllowDebugKey(true)
-                    .build();
+            new WebTriggerParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
     @Mock private MeasurementImpl mMockMeasurementImpl;
+    @Mock private Throttler mMockThrottler;
 
     @Before
     public void setUp() {
@@ -98,6 +101,7 @@ public final class MeasurementServiceImplTest {
                 .thenReturn(RESULT_OK);
         when(mConsentManager.getConsent(any(PackageManager.class)))
                 .thenReturn(AdServicesApiConsent.GIVEN);
+        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -105,9 +109,9 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .register(
-                        getDefaultRegistrationRequest(),
+                        getDefaultRegistrationSourceRequest(),
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
@@ -121,11 +125,82 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void testRegisterSource_successfulThrottled() throws Exception {
+        final CountDownLatch countDownLatchSuccess = new CountDownLatch(1);
+        final CountDownLatch countDownLatchFailed = new CountDownLatch(1);
+        final List<Integer> resultCodes = new ArrayList<>();
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        final IMeasurementCallback callback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        resultCodes.add(RESULT_OK);
+                        countDownLatchSuccess.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse responseParcel) {
+                        errors.add(responseParcel);
+                        countDownLatchFailed.countDown();
+                    }
+                };
+
+        final Throttler throttler = Throttler.getInstance(1);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .register(getDefaultRegistrationSourceRequest(), callback);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .register(getDefaultRegistrationSourceRequest(), callback);
+
+        assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.size()).isEqualTo(1);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void testRegisterTrigger_successfulThrottled() throws Exception {
+        final CountDownLatch countDownLatchSuccess = new CountDownLatch(1);
+        final CountDownLatch countDownLatchFailed = new CountDownLatch(1);
+        final List<Integer> resultCodes = new ArrayList<>();
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        final IMeasurementCallback callback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        resultCodes.add(RESULT_OK);
+                        countDownLatchSuccess.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse responseParcel) {
+                        errors.add(responseParcel);
+                        countDownLatchFailed.countDown();
+                    }
+                };
+
+        final Throttler throttler = Throttler.getInstance(1);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .register(getDefaultRegistrationTriggerRequest(), callback);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .register(getDefaultRegistrationTriggerRequest(), callback);
+
+        assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.size()).isEqualTo(1);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.size()).isEqualTo(1);
     }
 
     @Test(expected = NullPointerException.class)
     public void testRegister_invalidRequest() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .register(
                         null,
                         new IMeasurementCallback.Stub() {
@@ -139,8 +214,8 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void testRegister_invalidCallback() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
-                .register(getDefaultRegistrationRequest(), null);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
+                .register(getDefaultRegistrationSourceRequest(), null);
     }
 
     @Test
@@ -148,7 +223,7 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .deleteRegistrations(
                         getDefaultDeletionRequest(),
                         new IMeasurementCallback.Stub() {
@@ -164,11 +239,47 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDeleteRegistrations_successfulThrottled() throws Exception {
+        final CountDownLatch countDownLatchSuccess = new CountDownLatch(1);
+        final CountDownLatch countDownLatchFailed = new CountDownLatch(1);
+        final List<Integer> resultCodes = new ArrayList<>();
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        final IMeasurementCallback callback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        resultCodes.add(RESULT_OK);
+                        countDownLatchSuccess.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse responseParcel) {
+                        errors.add(responseParcel);
+                        countDownLatchFailed.countDown();
+                    }
+                };
+
+        final Throttler throttler = Throttler.getInstance(1);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .deleteRegistrations(getDefaultDeletionRequest(), callback);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .deleteRegistrations(getDefaultDeletionRequest(), callback);
+
+        assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.size()).isEqualTo(1);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.size()).isEqualTo(1);
     }
 
     @Test(expected = NullPointerException.class)
     public void testDeleteRegistrations_invalidRequest() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .deleteRegistrations(
                         null,
                         new IMeasurementCallback.Stub() {
@@ -182,7 +293,7 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void testDeleteRegistrations_invalidCallback() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .deleteRegistrations(getDefaultDeletionRequest(), null);
     }
 
@@ -192,7 +303,7 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(measurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(measurementImpl, sContext, mConsentManager, mMockThrottler)
                 .getMeasurementApiStatus(
                         new IMeasurementApiStatusCallback.Stub() {
                             @Override
@@ -208,7 +319,7 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetMeasurementApiStatus_invalidCallback() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .getMeasurementApiStatus(null);
     }
 
@@ -217,7 +328,7 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .registerWebSource(
                         createWebSourceRegistrationRequest(),
                         new IMeasurementCallback.Stub() {
@@ -234,11 +345,47 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void registerWebSource_successfulThrottled() throws Exception {
+        final CountDownLatch countDownLatchSuccess = new CountDownLatch(1);
+        final CountDownLatch countDownLatchFailed = new CountDownLatch(1);
+        final List<Integer> resultCodes = new ArrayList<>();
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        final IMeasurementCallback callback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        resultCodes.add(RESULT_OK);
+                        countDownLatchSuccess.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse responseParcel) {
+                        errors.add(responseParcel);
+                        countDownLatchFailed.countDown();
+                    }
+                };
+
+        final Throttler throttler = Throttler.getInstance(1);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .registerWebSource(createWebSourceRegistrationRequest(), callback);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .registerWebSource(createWebSourceRegistrationRequest(), callback);
+
+        assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.size()).isEqualTo(1);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.size()).isEqualTo(1);
     }
 
     @Test(expected = NullPointerException.class)
     public void registerWebSource_invalidRequest() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .registerWebSource(
                         null,
                         new IMeasurementCallback.Stub() {
@@ -253,7 +400,7 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void registerWebSource_invalidCallback() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .registerWebSource(createWebSourceRegistrationRequest(), null);
     }
 
@@ -262,7 +409,7 @@ public final class MeasurementServiceImplTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final List<Integer> list = new ArrayList<>();
 
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .registerWebTrigger(
                         createWebTriggerRegistrationRequest(),
                         new IMeasurementCallback.Stub() {
@@ -279,11 +426,47 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.size()).isEqualTo(1);
+    }
+
+    @Test
+    public void registerWebTrigger_successfulThrottled() throws Exception {
+        final CountDownLatch countDownLatchSuccess = new CountDownLatch(1);
+        final CountDownLatch countDownLatchFailed = new CountDownLatch(1);
+        final List<Integer> resultCodes = new ArrayList<>();
+        final List<MeasurementErrorResponse> errors = new ArrayList<>();
+        final IMeasurementCallback callback =
+                new IMeasurementCallback.Stub() {
+                    @Override
+                    public void onResult() {
+                        resultCodes.add(RESULT_OK);
+                        countDownLatchSuccess.countDown();
+                    }
+
+                    @Override
+                    public void onFailure(MeasurementErrorResponse responseParcel) {
+                        errors.add(responseParcel);
+                        countDownLatchFailed.countDown();
+                    }
+                };
+
+        final Throttler throttler = Throttler.getInstance(1);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .registerWebTrigger(createWebTriggerRegistrationRequest(), callback);
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, throttler)
+                .registerWebTrigger(createWebTriggerRegistrationRequest(), callback);
+
+        assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.size()).isEqualTo(1);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.size()).isEqualTo(1);
     }
 
     @Test(expected = NullPointerException.class)
     public void registerWebTrigger_invalidRequest() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .registerWebSource(
                         null,
                         new IMeasurementCallback.Stub() {
@@ -298,7 +481,7 @@ public final class MeasurementServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void registerWebTrigger_invalidCallback() {
-        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager)
+        new MeasurementServiceImpl(mMockMeasurementImpl, sContext, mConsentManager, mMockThrottler)
                 .registerWebTrigger(createWebTriggerRegistrationRequest(), null);
     }
 
@@ -321,10 +504,11 @@ public final class MeasurementServiceImplTest {
                 .thenReturn(AdServicesApiConsent.REVOKED);
 
         MeasurementServiceImpl measurementService =
-                new MeasurementServiceImpl(mMockMeasurementImpl, context, mConsentManager);
+                new MeasurementServiceImpl(
+                        mMockMeasurementImpl, context, mConsentManager, mMockThrottler);
 
         measurementService.register(
-                getDefaultRegistrationRequest(),
+                getDefaultRegistrationSourceRequest(),
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
@@ -358,7 +542,8 @@ public final class MeasurementServiceImplTest {
                 .thenReturn(AdServicesApiConsent.REVOKED);
 
         MeasurementServiceImpl measurementService =
-                new MeasurementServiceImpl(mMockMeasurementImpl, context, mConsentManager);
+                new MeasurementServiceImpl(
+                        mMockMeasurementImpl, context, mConsentManager, mMockThrottler);
 
         measurementService.registerWebSource(
                 createWebSourceRegistrationRequest(),
@@ -395,7 +580,8 @@ public final class MeasurementServiceImplTest {
                 .thenReturn(AdServicesApiConsent.REVOKED);
 
         MeasurementServiceImpl measurementService =
-                new MeasurementServiceImpl(mMockMeasurementImpl, context, mConsentManager);
+                new MeasurementServiceImpl(
+                        mMockMeasurementImpl, context, mConsentManager, mMockThrottler);
 
         measurementService.registerWebTrigger(
                 createWebTriggerRegistrationRequest(),
@@ -413,7 +599,7 @@ public final class MeasurementServiceImplTest {
                 });
     }
 
-    private RegistrationRequest getDefaultRegistrationRequest() {
+    private RegistrationRequest getDefaultRegistrationSourceRequest() {
         return new RegistrationRequest.Builder()
                 .setPackageName(sContext.getAttributionSource().getPackageName())
                 .setRegistrationUri(Uri.parse("https://registration-uri.com"))
@@ -422,29 +608,37 @@ public final class MeasurementServiceImplTest {
                 .build();
     }
 
+    private RegistrationRequest getDefaultRegistrationTriggerRequest() {
+        return new RegistrationRequest.Builder()
+                .setPackageName(sContext.getAttributionSource().getPackageName())
+                .setRegistrationUri(Uri.parse("https://registration-uri.com"))
+                .setTopOriginUri(Uri.parse("android-app://com.example"))
+                .setRegistrationType(RegistrationRequest.REGISTER_TRIGGER)
+                .build();
+    }
+
     private WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest() {
         WebSourceRegistrationRequest sourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder()
-                        .setSourceParams(Collections.singletonList(SOURCE_REGISTRATION))
+                new WebSourceRegistrationRequest.Builder(
+                                Collections.singletonList(SOURCE_REGISTRATION),
+                                Uri.parse("android-app//com.example"))
                         .setWebDestination(WEB_DESTINATION)
-                        .setOsDestination(APP_DESTINATION)
-                        .setTopOriginUri(Uri.parse("android-app://com.example"))
+                        .setAppDestination(APP_DESTINATION)
                         .build();
-        return new WebSourceRegistrationRequestInternal.Builder()
-                .setSourceRegistrationRequest(sourceRegistrationRequest)
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return new WebSourceRegistrationRequestInternal.Builder(
+                        sourceRegistrationRequest, sContext.getAttributionSource().getPackageName())
                 .build();
     }
 
     private WebTriggerRegistrationRequestInternal createWebTriggerRegistrationRequest() {
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder()
-                        .setTriggerParams(Collections.singletonList(TRIGGER_REGISTRATION))
-                        .setDestination(Uri.parse("android-app://com.example"))
+                new WebTriggerRegistrationRequest.Builder(
+                                Collections.singletonList(TRIGGER_REGISTRATION),
+                                Uri.parse("android-app://com.example"))
                         .build();
-        return new WebTriggerRegistrationRequestInternal.Builder()
-                .setTriggerRegistrationRequest(webTriggerRegistrationRequest)
-                .setPackageName(sContext.getAttributionSource().getPackageName())
+        return new WebTriggerRegistrationRequestInternal.Builder(
+                        webTriggerRegistrationRequest,
+                        sContext.getAttributionSource().getPackageName())
                 .build();
     }
 

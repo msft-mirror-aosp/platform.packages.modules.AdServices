@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.net.Uri;
 
@@ -28,6 +30,7 @@ import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.util.Preconditions;
 
@@ -61,7 +64,7 @@ public class DBCustomAudience {
 
     @ColumnInfo(name = "buyer", index = true)
     @NonNull
-    private final String mBuyer;
+    private final AdTechIdentifier mBuyer;
 
     @ColumnInfo(name = "name")
     @NonNull
@@ -86,7 +89,7 @@ public class DBCustomAudience {
 
     @ColumnInfo(name = "user_bidding_signals")
     @Nullable
-    private final String mUserBiddingSignals;
+    private final AdSelectionSignals mUserBiddingSignals;
 
     @Embedded(prefix = "trusted_bidding_data_")
     @Nullable
@@ -102,18 +105,18 @@ public class DBCustomAudience {
 
     public DBCustomAudience(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull Instant expirationTime,
             @NonNull Instant activationTime,
             @NonNull Instant creationTime,
             @NonNull Instant lastAdsAndBiddingDataUpdatedTime,
-            @Nullable String userBiddingSignals,
+            @Nullable AdSelectionSignals userBiddingSignals,
             @Nullable DBTrustedBiddingData trustedBiddingData,
             @NonNull Uri biddingLogicUrl,
             @Nullable List<DBAdData> ads) {
         Preconditions.checkStringNotEmpty(owner, "Owner must be provided");
-        Preconditions.checkStringNotEmpty(buyer, "Buyer must be provided.");
+        Objects.requireNonNull(buyer, "Buyer must be provided.");
         Preconditions.checkStringNotEmpty(name, "Name must be provided");
         Objects.requireNonNull(expirationTime, "Expiration time must be provided.");
         Objects.requireNonNull(creationTime, "Creation time must be provided.");
@@ -171,7 +174,7 @@ public class DBCustomAudience {
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
                 .setBuyer(parcelable.getBuyer())
-                .setOwner(parcelable.getOwner())
+                .setOwner(parcelable.getOwnerPackageName())
                 .setActivationTime(activationTime)
                 .setCreationTime(currentTime)
                 .setLastAdsAndBiddingDataUpdatedTime(lastAdsAndBiddingDataUpdatedTime)
@@ -208,8 +211,7 @@ public class DBCustomAudience {
                                 updatableData.getAttemptedUpdateTime());
 
         if (updatableData.getUserBiddingSignals() != null) {
-            customAudienceBuilder.setUserBiddingSignals(
-                    updatableData.getUserBiddingSignals().getStringForm());
+            customAudienceBuilder.setUserBiddingSignals(updatableData.getUserBiddingSignals());
         }
 
         if (updatableData.getTrustedBiddingData() != null) {
@@ -233,10 +235,11 @@ public class DBCustomAudience {
      * The ad-tech who can read this custom audience information and return back relevant ad
      * information. This is expected to be the domain’s name used in biddingLogicUrl and
      * dailyUpdateUrl.
+     *
      * <p>Max length: 200 bytes
      */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
@@ -294,7 +297,7 @@ public class DBCustomAudience {
      * audience.
      */
     @Nullable
-    public String getUserBiddingSignals() {
+    public AdSelectionSignals getUserBiddingSignals() {
         return mUserBiddingSignals;
     }
 
@@ -379,13 +382,13 @@ public class DBCustomAudience {
      */
     public static final class Builder {
         private String mOwner;
-        private String mBuyer;
+        private AdTechIdentifier mBuyer;
         private String mName;
         private Instant mExpirationTime;
         private Instant mActivationTime;
         private Instant mCreationTime;
         private Instant mLastAdsAndBiddingDataUpdatedTime;
-        private String mUserBiddingSignals;
+        private AdSelectionSignals mUserBiddingSignals;
         private DBTrustedBiddingData mTrustedBiddingData;
         private Uri mBiddingLogicUrl;
         private List<DBAdData> mAds;
@@ -410,18 +413,14 @@ public class DBCustomAudience {
             mAds = customAudience.getAds();
         }
 
-        /**
-         * See {@link #getOwner()} for detail.
-         */
+        /** See {@link #getOwner()} for detail. */
         public Builder setOwner(String owner) {
             mOwner = owner;
             return this;
         }
 
-        /**
-         * See {@link #getBuyer()} for detail.
-         */
-        public Builder setBuyer(String buyer) {
+        /** See {@link #getBuyer()} for detail. */
+        public Builder setBuyer(AdTechIdentifier buyer) {
             mBuyer = buyer;
             return this;
         }
@@ -467,10 +466,8 @@ public class DBCustomAudience {
             return this;
         }
 
-        /**
-         * See {@link #getUserBiddingSignals()} for detail.
-         */
-        public Builder setUserBiddingSignals(String userBiddingSignals) {
+        /** See {@link #getUserBiddingSignals()} for detail. */
+        public Builder setUserBiddingSignals(AdSelectionSignals userBiddingSignals) {
             mUserBiddingSignals = userBiddingSignals;
             return this;
         }
@@ -581,7 +578,9 @@ public class DBCustomAudience {
          */
         private static JSONObject toJson(DBAdData adData) throws JSONException {
             return new org.json.JSONObject()
-                    .put(RENDER_URL_FIELD_NAME, serializeUrl(adData.getRenderUri()))
+                    .put(
+                            RENDER_URL_FIELD_NAME,
+                            FledgeRoomConverters.serializeUrl(adData.getRenderUri()))
                     .put(METADATA_FIELD_NAME, adData.getMetadata());
         }
 
@@ -591,28 +590,8 @@ public class DBCustomAudience {
         private static DBAdData fromJson(JSONObject json) throws JSONException {
             String renderUrlString = json.getString(RENDER_URL_FIELD_NAME);
             String metadata = json.getString(METADATA_FIELD_NAME);
-            Uri renderUrl = deserializeUrl(renderUrlString);
+            Uri renderUrl = FledgeRoomConverters.deserializeUrl(renderUrlString);
             return new DBAdData(renderUrl, metadata);
-        }
-
-        /**
-         * Deserialize {@link Uri} from String.
-         */
-        @Nullable
-        private static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::parse)
-                    .orElse(null);
-        }
-
-        /**
-         * Serialize {@link Uri} to String.
-         */
-        @Nullable
-        private static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri)
-                    .map(Uri::toString)
-                    .orElse(null);
         }
     }
 }

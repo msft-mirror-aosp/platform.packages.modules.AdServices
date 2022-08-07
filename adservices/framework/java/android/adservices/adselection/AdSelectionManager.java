@@ -40,6 +40,8 @@ public class AdSelectionManager {
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
+     *
+     * @hide
      */
     public static final String AD_SELECTION_SERVICE = "ad_selection_service";
 
@@ -77,25 +79,25 @@ public class AdSelectionManager {
     /**
      * Runs the ad selection process on device to select a remarketing ad for the caller
      * application.
-     * <p>
-     * The input {@code adSelectionConfig} is provided by the Ads SDK and the
-     * {@link AdSelectionConfig} object is transferred via a Binder call. For this reason, the
-     * total size of these objects is bound to the Android IPC limitations. Failures to transfer the
-     * {@link AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
-     * <p>
-     * The output is passed by the receiver, which either returns an {@link AdSelectionOutcome} for
-     * a successful run, or an {@link AdServicesException} includes the type of the exception thrown
-     * and the corresponding error message.
-     * <p>
-     * If the result of the {@link AdServicesException#getCause} is an {@link
+     *
+     * <p>The input {@code adSelectionConfig} is provided by the Ads SDK and the {@link
+     * AdSelectionConfig} object is transferred via a Binder call. For this reason, the total size
+     * of these objects is bound to the Android IPC limitations. Failures to transfer the {@link
+     * AdSelectionConfig} will throws an {@link TransactionTooLargeException}.
+     *
+     * <p>The output is passed by the receiver, which either returns an {@link AdSelectionOutcome}
+     * for a successful run, or an {@link AdServicesException} includes the type of the exception
+     * thrown and the corresponding error message.
+     *
+     * <p>If the result of the {@link AdServicesException#getCause} is an {@link
      * IllegalArgumentException}, it is caused by invalid input argument the API received to run the
      * ad selection.
-     * <p>
-     * If the result of the {@link AdServicesException#getCause} is an {@link RemoteException} with
-     * error message "Failure of AdSelection services.", it is caused by an internal failure of the
-     * ad selection service.
+     *
+     * <p>If the result of the {@link AdServicesException#getCause} is an {@link RemoteException}
+     * with error message "Failure of AdSelection services.", it is caused by an internal failure of
+     * the ad selection service.
      */
-    public void runAdSelection(
+    public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull Executor executor,
             @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
@@ -111,22 +113,19 @@ public class AdSelectionManager {
                         @Override
                         public void onSuccess(AdSelectionResponse resultParcel) {
                             executor.execute(
-                                    () -> {
-                                        receiver.onResult(
-                                                new AdSelectionOutcome.Builder()
-                                                        .setAdSelectionId(
-                                                                resultParcel.getAdSelectionId())
-                                                        .setRenderUri(resultParcel.getRenderUri())
-                                                        .build());
-                                    });
+                                    () ->
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getRenderUri())
+                                                            .build()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -147,7 +146,7 @@ public class AdSelectionManager {
     public void reportImpression(
             @NonNull ReportImpressionRequest request,
             @NonNull Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -162,18 +161,12 @@ public class AdSelectionManager {
                     new ReportImpressionCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -201,7 +194,7 @@ public class AdSelectionManager {
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AddAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -215,18 +208,12 @@ public class AdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -254,7 +241,7 @@ public class AdSelectionManager {
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull RemoveAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -266,18 +253,12 @@ public class AdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
@@ -302,7 +283,7 @@ public class AdSelectionManager {
     @NonNull
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Void, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -312,18 +293,12 @@ public class AdSelectionManager {
                     new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onResult(null);
-                                    });
+                            executor.execute(() -> receiver.onResult(new Object()));
                         }
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(
-                                    () -> {
-                                        receiver.onError(failureParcel.asException());
-                                    });
+                            executor.execute(() -> receiver.onError(failureParcel.asException()));
                         }
                     });
         } catch (NullPointerException e) {
