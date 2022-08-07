@@ -26,6 +26,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.RemoteException;
 import android.util.Pair;
@@ -38,6 +39,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -53,7 +56,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,6 +64,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -98,6 +101,8 @@ public final class AdSelectionRunner {
     @NonNull private final Clock mClock;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final AppImportanceFilter mAppImportanceFilter;
+    private final int mCallerUid;
 
     public AdSelectionRunner(
             @NonNull final Context context,
@@ -106,7 +111,15 @@ public final class AdSelectionRunner {
             @NonNull final ExecutorService executorService,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final DevContext devContext,
-            @NonNull final Flags flags) {
+            @NonNull AppImportanceFilter appImportanceFilter,
+            @NonNull final Flags flags,
+            int callerUid) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(flags);
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -126,6 +139,8 @@ public final class AdSelectionRunner {
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;
+        mAppImportanceFilter = appImportanceFilter;
+        mCallerUid = callerUid;
     }
 
     @VisibleForTesting
@@ -139,7 +154,21 @@ public final class AdSelectionRunner {
             @NonNull final AdSelectionIdGenerator adSelectionIdGenerator,
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
-            @NonNull final Flags flags) {
+            @NonNull AppImportanceFilter appImportanceFilter,
+            @NonNull final Flags flags,
+            int callerUid) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(executorService);
+        Objects.requireNonNull(adsScoreGenerator);
+        Objects.requireNonNull(adBidGenerator);
+        Objects.requireNonNull(adSelectionIdGenerator);
+        Objects.requireNonNull(clock);
+        Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(appImportanceFilter);
+        Objects.requireNonNull(flags);
+
         mContext = context;
         mCustomAudienceDao = customAudienceDao;
         mAdSelectionEntryDao = adSelectionEntryDao;
@@ -150,6 +179,8 @@ public final class AdSelectionRunner {
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mAppImportanceFilter = appImportanceFilter;
+        mCallerUid = callerUid;
     }
 
     /**
@@ -164,15 +195,24 @@ public final class AdSelectionRunner {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(callback);
         try {
+            // Need to extract this function to avoid formatting issues
+            Runnable maybeEnforceForegroundcCaller =
+                    () -> {
+                        if (mFlags.getEnforceForegroundStatusForFledgeRunAdSelection()) {
+                            mAppImportanceFilter.assertCallerIsInForeground(
+                                    mCallerUid,
+                                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                    null);
+                        }
+                    };
+            // Need to avoid checking pH flags in a Binder thread.
+            ListenableFuture<?> checkCallerIsInForeground =
+                    MoreExecutors.listeningDecorator(mExecutorService)
+                            .submit(maybeEnforceForegroundcCaller);
             ListenableFuture<DBAdSelection> dbAdSelectionFuture =
-                    FluentFuture.from(getBuyersCustomAudience(adSelectionConfig))
+                    FluentFuture.from(checkCallerIsInForeground)
                             .transformAsync(
-                                    buyersCustomAudiences -> {
-                                        // PH flags need to be read outside the Binder thread
-                                        long timeouts = mFlags.getAdSelectionOverallTimeoutMs();
-                                        return orchestrateAdSelection(
-                                                adSelectionConfig, buyersCustomAudiences, timeouts);
-                                    },
+                                    ignoredVoid -> orchestrateAdSelection(adSelectionConfig),
                                     mExecutorService);
 
             Futures.addCallback(
@@ -219,7 +259,11 @@ public final class AdSelectionRunner {
             @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            if (t instanceof WrongCallingApplicationStateException) {
+                resultCode = AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+            } else {
+                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+            }
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
                             .setErrorMessage(
@@ -248,13 +292,18 @@ public final class AdSelectionRunner {
      * @return {@link AdSelectionResponse}
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
-            @NonNull final AdSelectionConfig adSelectionConfig,
-            @NonNull List<DBCustomAudience> buyerCustomAudience,
-            @NonNull long timeout)
-            throws ExecutionException, InterruptedException {
+            @NonNull final AdSelectionConfig adSelectionConfig) {
+
+        ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
+                getBuyersCustomAudience(adSelectionConfig);
+
+        AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
+                buyerCAs -> {
+                    return runAdBidding(buyerCAs, adSelectionConfig);
+                };
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                runAdBidding(buyerCustomAudience, adSelectionConfig);
+                Futures.transformAsync(buyerCustomAudience, bidAds, mExecutorService);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> {
@@ -288,7 +337,7 @@ public final class AdSelectionRunner {
         return FluentFuture.from(dbAdSelectionBuilder)
                 .transformAsync(saveResultToPersistence, mExecutorService)
                 .withTimeout(
-                        timeout,
+                        mFlags.getAdSelectionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
@@ -329,14 +378,15 @@ public final class AdSelectionRunner {
 
         // TODO(b/237004875) : Use common thread pool for parallel execution if possible
         ForkJoinPool customThreadPool = new ForkJoinPool(getParallelBiddingCount());
-        final List<ListenableFuture<AdBiddingOutcome>>[] bidWinningAds =
-                new List[] {new ArrayList<>()};
+        final AtomicReference<List<ListenableFuture<AdBiddingOutcome>>> bidWinningAds =
+                new AtomicReference<>();
 
         try {
+            LogUtil.d("Triggering bidding for all %d custom audiences", customAudiences.size());
             customThreadPool
                     .submit(
                             () -> {
-                                bidWinningAds[0] =
+                                bidWinningAds.set(
                                         customAudiences.parallelStream()
                                                 .map(
                                                         customAudience -> {
@@ -344,7 +394,7 @@ public final class AdSelectionRunner {
                                                                     customAudience,
                                                                     adSelectionConfig);
                                                         })
-                                                .collect(Collectors.toList());
+                                                .collect(Collectors.toList()));
                             })
                     .get();
         } catch (InterruptedException e) {
@@ -358,7 +408,7 @@ public final class AdSelectionRunner {
         } finally {
             customThreadPool.shutdownNow();
         }
-        return Futures.successfulAsList(bidWinningAds[0]);
+        return Futures.successfulAsList(bidWinningAds.get());
     }
 
     private int getParallelBiddingCount() {
@@ -388,14 +438,17 @@ public final class AdSelectionRunner {
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
     }
 
+    @SuppressLint("DefaultLocale")
     private ListenableFuture<List<AdScoringOutcome>> runAdScoring(
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
+        LogUtil.v("Got %d bidding outcomes", adBiddingOutcomes.size());
         List<AdBiddingOutcome> validBiddingOutcomes =
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
         if (validBiddingOutcomes.isEmpty()) {
+            LogUtil.d("No valid bidding outcomes");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);

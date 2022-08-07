@@ -21,11 +21,18 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.adselection.AdSelectionConfigValidator.DECISION_LOGIC_URI_TYPE;
+import static com.android.adservices.service.adselection.ImpressionReporter.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -33,11 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -46,11 +48,14 @@ import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
@@ -67,6 +72,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -74,9 +81,11 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
@@ -88,8 +97,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.time.Clock;
@@ -143,6 +151,21 @@ public class AdSelectionServiceImplTest {
     private final Flags mFlags =
             new Flags() {
                 @Override
+                public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
+                    return true;
+                }
+
+                @Override
+                public boolean getEnforceForegroundStatusForFledgeReportImpression() {
+                    return true;
+                }
+
+                @Override
+                public boolean getEnforceForegroundStatusForFledgeOverrides() {
+                    return true;
+                }
+
+                @Override
                 public long getReportImpressionOverallTimeoutMs() {
                     return 500;
                 }
@@ -150,15 +173,23 @@ public class AdSelectionServiceImplTest {
     private MockitoSession mStaticMockSession = null;
     @Spy private final AdServicesLogger mAdServicesLoggerSpy = AdServicesLoggerImpl.getInstance();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilter;
+    @Mock public AppImportanceFilter mAppImportanceFilter;
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdSelectionConfig.Builder mAdSelectionConfigBuilder;
 
     @Before
     public void setUp() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(Binder.class)
+                        .spyStatic(JSScriptEngine.class)
+                        // mAdServicesLoggerSpy is not referenced in many tests
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .build()
@@ -181,6 +212,15 @@ public class AdSelectionServiceImplTest {
                         .setDecisionLogicUri(mMockWebServerRule.uriForPath(mFetchJavaScriptPath))
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(mFetchTrustedScoringSignalsPath));
+
+        ExtendedMockito.doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+    }
+
+    @After
+    public void tearDown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
@@ -246,6 +286,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -343,6 +384,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -435,6 +477,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -533,6 +576,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -626,6 +670,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -714,6 +759,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -804,6 +850,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -893,6 +940,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -960,6 +1008,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1072,6 +1121,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1116,6 +1166,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1157,6 +1208,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1204,6 +1256,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1258,6 +1311,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1316,6 +1370,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1375,6 +1430,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1476,6 +1532,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1574,6 +1631,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1658,8 +1716,6 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession().spyStatic(JSScriptEngine.class).startMocking();
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
         when(JSScriptEngine.getInstance(any())).thenReturn(jsScriptEngineMock);
 
@@ -1669,6 +1725,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1676,6 +1733,349 @@ public class AdSelectionServiceImplTest {
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
+    }
+
+    @Test
+    public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(
+                        Process.myUid(),
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        null);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+
+        // The call fails because there is no ad selection with the given ID
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
+                callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(
+                AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
+                callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void testReportImpressionForegroundCheckDisabled_acceptBackgroundApp() throws Exception {
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(
+                        Process.myUid(),
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        null);
+
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilder
+                        .setCustomAudienceBuyers(ImmutableList.of())
+                        .setPerBuyerSignals(ImmutableMap.of())
+                        .build();
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        FlagsWithOverriddenAppImportanceCheck
+                                .createFlagsWithAppImportanceCheckDisabled());
+
+        ReportImpressionInput request =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .build();
+
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, request);
+
+        // The call fails because there is no ad selection with the given ID
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID,
+                callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void testOverrideAdSelectionForegroundCheckEnabledFails_throwsException()
+            throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(
+                        Process.myUid(),
+                        AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
+                        null);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        AdSelectionOverrideTestCallback callback =
+                callAddOverride(
+                        adSelectionService,
+                        adSelectionConfig,
+                        DUMMY_DECISION_LOGIC_JS,
+                        DUMMY_TRUSTED_SCORING_SIGNALS);
+
+        // The call fails because there is no ad selection with the given ID
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
+                callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(
+                AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
+                callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void testOverrideAdSelectionForegroundCheckDisabled_acceptBackgroundApp()
+            throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(
+                        Process.myUid(),
+                        AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO,
+                        null);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        FlagsWithOverriddenAppImportanceCheck
+                                .createFlagsWithAppImportanceCheckDisabled());
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        AdSelectionOverrideTestCallback callback =
+                callAddOverride(
+                        adSelectionService,
+                        adSelectionConfig,
+                        DUMMY_DECISION_LOGIC_JS,
+                        DUMMY_TRUSTED_SCORING_SIGNALS);
+
+        assertTrue(callback.mIsSuccess);
+    }
+
+    @Test
+    public void testRemoveOverrideForegroundCheckEnabledFails_throwsException() throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        int apiName =
+                AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(Process.myUid(), apiName, null);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        AdSelectionOverrideTestCallback callback =
+                callRemoveOverride(adSelectionService, adSelectionConfig);
+
+        // The call fails because there is no ad selection with the given ID
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
+                callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(
+                AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
+                callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void testRemoveOverrideForegroundCheckDisabled_acceptBackgroundApp() throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        int apiName =
+                AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(Process.myUid(), apiName, null);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        FlagsWithOverriddenAppImportanceCheck
+                                .createFlagsWithAppImportanceCheckDisabled());
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        AdSelectionOverrideTestCallback callback =
+                callRemoveOverride(adSelectionService, adSelectionConfig);
+
+        assertTrue(callback.mIsSuccess);
+    }
+
+    @Test
+    public void testResetAllOverridesForegroundCheckEnabledFails_throwsException()
+            throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        int apiName =
+                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(Process.myUid(), apiName, null);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        mFlags);
+
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
+
+        // The call fails because there is no ad selection with the given ID
+        assertFalse(callback.mIsSuccess);
+        assertEquals(
+                AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
+                callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(
+                AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
+                callback.mFledgeErrorResponse.getErrorMessage());
+    }
+
+    @Test
+    public void testResetAllOverridesForegroundCheckDisabled_acceptBackgroundApp()
+            throws Exception {
+        String myAppPackageName = "com.google.ppapi.test";
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(myAppPackageName)
+                                .build());
+
+        int apiName =
+                AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+        doThrow(new WrongCallingApplicationStateException())
+                .when(mAppImportanceFilter)
+                .assertCallerIsInForeground(Process.myUid(), apiName, null);
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        CONTEXT,
+                        mAdServicesLoggerSpy,
+                        FlagsWithOverriddenAppImportanceCheck
+                                .createFlagsWithAppImportanceCheckDisabled());
+
+        AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
+
+        assertTrue(callback.mIsSuccess);
     }
 
     private AdSelectionOverrideTestCallback callAddOverride(
@@ -1780,6 +2180,7 @@ public class AdSelectionServiceImplTest {
                         mCustomAudienceDao,
                         mClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLoggerSpy,
@@ -1865,13 +2266,6 @@ public class AdSelectionServiceImplTest {
                 + "      }\n"
                 + "    }\n"
                 + String.format("    wait(\"%d\");\n", waitTime);
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
