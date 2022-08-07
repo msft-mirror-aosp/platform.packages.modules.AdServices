@@ -114,8 +114,8 @@ public final class AdSelectionSignals implements Parcelable {
     /**
      * Creates an AdSelectionSignals from a given JSON in String form.
      *
-     * @param source Any valid JSON string to create the AdSelectionSignals with or null.
-     * @return An AdSelectionSignals object wrapping the given String or null if the input was null
+     * @param source Any valid JSON string to create the AdSelectionSignals with.
+     * @return An AdSelectionSignals object wrapping the given String.
      */
     @NonNull
     public static AdSelectionSignals fromString(@NonNull String source) {
@@ -125,10 +125,10 @@ public final class AdSelectionSignals implements Parcelable {
     /**
      * Creates an AdSelectionSignals from a given JSON in String form.
      *
-     * @param source Any valid JSON string to create the AdSelectionSignals with or null.
+     * @param source Any valid JSON string to create the AdSelectionSignals with.
      * @param validate Construction-time validation is run on the string if and only if this is
      *     true.
-     * @return An AdSelectionSignals object wrapping the given String or null if the input was null
+     * @return An AdSelectionSignals object wrapping the given String.
      * @hide
      */
     @NonNull
