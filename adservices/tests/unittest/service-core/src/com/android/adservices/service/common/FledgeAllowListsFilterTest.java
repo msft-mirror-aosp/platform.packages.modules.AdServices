@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
-import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -67,10 +66,10 @@ public class FledgeAllowListsFilterTest {
     public void testIsAllowed() {
         ExtendedMockito.when(
                         AllowLists.appCanUsePpapi(
-                                CommonFixture.FLAGS_FOR_TEST, CustomAudienceFixture.VALID_OWNER))
+                                CommonFixture.FLAGS_FOR_TEST, CommonFixture.TEST_PACKAGE_NAME))
                 .thenReturn(true);
         mFledgeAllowListsFilter.assertAppCanUsePpapi(
-                CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID);
+                CommonFixture.TEST_PACKAGE_NAME, API_NAME_LOGGING_ID);
 
         verifyZeroInteractions(mAdServicesLoggerSpy);
     }
@@ -79,14 +78,14 @@ public class FledgeAllowListsFilterTest {
     public void testNotAllowed() {
         ExtendedMockito.when(
                         AllowLists.appCanUsePpapi(
-                                CommonFixture.FLAGS_FOR_TEST, CustomAudienceFixture.VALID_OWNER))
+                                CommonFixture.FLAGS_FOR_TEST, CommonFixture.TEST_PACKAGE_NAME))
                 .thenReturn(false);
         SecurityException exception =
                 assertThrows(
                         SecurityException.class,
                         () ->
                                 mFledgeAllowListsFilter.assertAppCanUsePpapi(
-                                        CustomAudienceFixture.VALID_OWNER, API_NAME_LOGGING_ID));
+                                        CommonFixture.TEST_PACKAGE_NAME, API_NAME_LOGGING_ID));
 
         assertEquals(
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
