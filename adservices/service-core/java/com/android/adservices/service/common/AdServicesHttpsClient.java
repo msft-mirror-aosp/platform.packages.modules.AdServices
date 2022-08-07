@@ -260,6 +260,8 @@ public class AdServicesHttpsClient {
         if (urlConnection instanceof HttpURLConnection) {
             HttpURLConnection httpUrlConnection = (HttpURLConnection) urlConnection;
             httpUrlConnection.disconnect();
+        } else {
+            LogUtil.d("Not closing URLConnection of type %s", urlConnection.getClass());
         }
     }
 

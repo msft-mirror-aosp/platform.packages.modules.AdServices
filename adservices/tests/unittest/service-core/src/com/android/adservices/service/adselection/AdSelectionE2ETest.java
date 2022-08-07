@@ -49,11 +49,14 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -67,6 +70,7 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -89,6 +93,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -159,6 +164,7 @@ public class AdSelectionE2ETest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
+    @Mock AppImportanceFilter mAppImportanceFilter;
     private MockitoSession mStaticMockSession = null;
     private Context mContext;
     private ExecutorService mExecutorService;
@@ -168,7 +174,8 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private Flags mFlags;
+    private Flags mFlags =
+            FlagsWithOverriddenAppImportanceCheck.createFlagsWithAppImportanceCheckEnabled();
 
     @Before
     public void setUp() throws Exception {
@@ -177,8 +184,13 @@ public class AdSelectionE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(Binder.class)
+                        // Tests for invalid inputs will not refer Binder::getCallingUidOrThrow
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
+        ExtendedMockito.doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
 
         // Initialize dependencies for the AdSelectionService
         mContext = ApplicationProvider.getApplicationContext();
@@ -207,6 +219,7 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         mContext,
                         mAdServicesLogger,
@@ -237,6 +250,7 @@ public class AdSelectionE2ETest {
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                             return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
+                        LogUtil.w("Unexpected call to MockWebServer " + request.getPath());
                         return new MockResponse().setResponseCode(404);
                     }
                 };
@@ -436,6 +450,7 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         mContext,
                         mAdServicesLogger,
@@ -1035,6 +1050,7 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         mContext,
                         mAdServicesLogger,
@@ -1133,6 +1149,7 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         mContext,
                         mAdServicesLogger,

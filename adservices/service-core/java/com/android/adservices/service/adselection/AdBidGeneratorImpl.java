@@ -128,6 +128,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(adSelectionConfig);
 
         if (customAudience.getAds().isEmpty()) {
+            LogUtil.d("No ads to bid for, returning null");
             return FluentFuture.from(Futures.immediateFuture(null));
         }
 
@@ -163,6 +164,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                             if (Objects.isNull(candidate)
                                     || Objects.isNull(candidate.first)
                                     || candidate.first.getBid() <= 0.0) {
+                                LogUtil.v(
+                                        "Bidding for CA completed but result %s is filtered out",
+                                        candidate);
                                 return null;
                             }
                             CustomAudienceBiddingInfo customAudienceInfo =
@@ -173,6 +177,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                             .setAdWithBid(candidate.first)
                                             .setCustomAudienceBiddingInfo(customAudienceInfo)
                                             .build();
+                            LogUtil.d("Bidding for CA %s transformed", customAudience.getName());
                             return result;
                         },
                         mListeningExecutorService)
@@ -343,13 +348,17 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
     @Nullable
     private AdWithBid getBestAdWithBidPerCA(@NonNull List<AdWithBid> adWithBids) {
-        if (adWithBids.size() == 0) return null;
+        if (adWithBids.size() == 0) {
+            LogUtil.v("No ad with bids for current CA");
+            return null;
+        }
         AdWithBid maxBidCandidate =
                 adWithBids.stream().max(Comparator.comparingDouble(AdWithBid::getBid)).get();
         if (maxBidCandidate.getBid() <= 0.0) {
             LogUtil.d("The max bid candidate should have positive bid.");
             return null;
         }
+        LogUtil.v("Max bid candidate is %s", maxBidCandidate);
         return maxBidCandidate;
     }
 }
