@@ -834,6 +834,7 @@ public interface Flags extends Dumpable {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
 
     /**
      * @return true if FLEDGE runAdSelection API should require that the calling API is running in
@@ -857,6 +858,14 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForFledgeOverrides() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
+    }
+
+    /**
+     * @return true if FLEDGE Custom Audience API methods should require that the calling API is
+     *     running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
     }
 
     int FOREGROUND_STATUS_LEVEL = IMPORTANCE_FOREGROUND_SERVICE;

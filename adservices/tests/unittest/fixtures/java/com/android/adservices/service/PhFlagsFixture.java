@@ -83,4 +83,16 @@ public class PhFlagsFixture {
                 Boolean.toString(value),
                 false);
     }
+
+    /**
+     * Enables test to override the flag enabling the foreground status check for callers of the
+     * Custom Audience API.
+     */
+    public static void overrideForegroundStatusForFledgeCustomAudience(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE,
+                Boolean.toString(value),
+                false);
+    }
 }
