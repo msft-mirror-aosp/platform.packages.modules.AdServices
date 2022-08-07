@@ -20,7 +20,7 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -328,12 +328,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -448,12 +448,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -493,12 +493,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -701,12 +701,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -795,12 +795,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -891,12 +891,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -994,12 +994,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
@@ -1129,12 +1129,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_SUCCESS);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_SUCCESS));
     }
 
@@ -1226,12 +1226,12 @@ public class AdSelectionRunnerTest {
 
         verify(mAdServicesLoggerSpy)
                 .logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(mAdServicesLoggerSpy)
                 .logApiCallStats(
                         aCallStatForFledgeApiWithStatus(
-                                AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR));
     }
 
