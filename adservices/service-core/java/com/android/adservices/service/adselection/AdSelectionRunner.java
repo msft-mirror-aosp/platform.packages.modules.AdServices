@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -211,7 +211,7 @@ public final class AdSelectionRunner {
             // TODO(b/233681870): Investigate implementation of actual failures in
             //  logs/metrics
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
         }
     }
 
@@ -236,7 +236,7 @@ public final class AdSelectionRunner {
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, resultCode);
         }
     }
 
