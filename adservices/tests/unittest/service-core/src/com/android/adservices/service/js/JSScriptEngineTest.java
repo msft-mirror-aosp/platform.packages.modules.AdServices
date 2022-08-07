@@ -313,7 +313,7 @@ public class JSScriptEngineTest {
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
-    // Troubles between google-java-format and checkstile
+    // Troubles between google-java-format and checkstyle
     // CHECKSTYLE:OFF IndentationCheck
     @Test
     public void testIsolateIsClosedWhenEvaluationCompletes() throws Exception {

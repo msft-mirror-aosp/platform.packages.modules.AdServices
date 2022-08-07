@@ -383,6 +383,7 @@ public class JSScriptEngine {
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
+                            LogUtil.v("WebView result is " + result);
                             return result;
                         },
                         mExecutorService)

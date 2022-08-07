@@ -128,6 +128,14 @@ public final class PhFlags implements Flags {
     static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
 
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
+            "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION =
+            "fledge_ad_selection_enforce_foreground_status_report_impression";
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE =
+            "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
+    static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
+
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
     static final String KEY_DOWNLOADER_READ_TIMEOUT_MS = "downloader_read_timeout_ms";
@@ -868,7 +876,6 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
-
     // TOPICS AllowLists
     @Override
     public String getPpapiAppAllowList() {
@@ -926,6 +933,38 @@ public final class PhFlags implements Flags {
                         DeviceConfig.NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForFledgeReportImpression() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION);
+    }
+
+    @Override
+    public int getForegroundStatuslLevelForValidation() {
+        return DeviceConfig.getInt(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FOREGROUND_STATUS_LEVEL,
+                /* defaultValue */ FOREGROUND_STATUS_LEVEL);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForFledgeOverrides() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES);
     }
 
     @VisibleForTesting
@@ -1129,6 +1168,31 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getReportImpressionOverallTimeoutMs());
+
+        writer.println(
+                "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeOverrides());
+
+        writer.println(
+                "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeReportImpression());
+
+        writer.println(
+                "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeRunAdSelection());
+
+        writer.println(
+                "\t"
+                        + KEY_FOREGROUND_STATUS_LEVEL
+                        + " = "
+                        + getForegroundStatuslLevelForValidation());
+
         writer.println("==== AdServices PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ADSERVICES_ENABLE_STATUS + " = " + getAdservicesEnableStatus());
     }

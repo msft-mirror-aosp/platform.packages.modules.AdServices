@@ -83,6 +83,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -135,6 +136,7 @@ public class FledgeE2ETest {
     private MockitoSession mStaticMockSession = null;
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
+    @Mock private AppImportanceFilter mAppImportanceFilter;
     private AdSelectionConfig mAdSelectionConfig;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
@@ -153,7 +155,8 @@ public class FledgeE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(Binder.class)
+                        .spyStatic(Binder.class)
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -200,6 +203,7 @@ public class FledgeE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLogger,
