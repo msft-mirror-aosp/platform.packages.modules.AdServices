@@ -61,7 +61,7 @@ public class FledgeAuthorizationFilter {
     /**
      * Check if the package name provided by the caller is one of the package of the calling uid.
      *
-     * @param callingPackageName the caller supplied package name
+     * @param callingPackageName the caller-supplied package name
      * @param callingUid the uid get from the Binder
      * @param apiNameLoggingId the id of the api being called
      * @throws SecurityException if the package name provided does not associate with the uid.

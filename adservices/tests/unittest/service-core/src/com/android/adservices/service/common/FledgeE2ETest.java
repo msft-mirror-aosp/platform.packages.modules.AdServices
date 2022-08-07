@@ -83,6 +83,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,7 +111,6 @@ public class FledgeE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
-    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -136,6 +136,7 @@ public class FledgeE2ETest {
     private MockitoSession mStaticMockSession = null;
     // This object access some system APIs
     @Mock private DevContextFilter mDevContextFilter;
+    @Mock private AppImportanceFilter mAppImportanceFilter;
     private AdSelectionConfig mAdSelectionConfig;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private CustomAudienceDao mCustomAudienceDao;
@@ -154,7 +155,8 @@ public class FledgeE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(Binder.class)
+                        .spyStatic(Binder.class)
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
@@ -189,7 +191,9 @@ public class FledgeE2ETest {
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
-                        mAdServicesLogger);
+                        mAdServicesLogger,
+                        mAppImportanceFilter,
+                        mFlags);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -201,6 +205,7 @@ public class FledgeE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         CONTEXT,
                         mAdServicesLogger,
@@ -269,7 +274,7 @@ public class FledgeE2ETest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -401,7 +406,7 @@ public class FledgeE2ETest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -538,7 +543,7 @@ public class FledgeE2ETest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, INVALID_BIDS);
@@ -1099,7 +1104,7 @@ public class FledgeE2ETest {
         }
 
         return new CustomAudience.Builder()
-                .setOwnerPackageName(MY_APP_PACKAGE_NAME)
+                .setOwnerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .setBuyer(AdTechIdentifier.fromString(buyerDomain.getHost()))
                 .setName(
                         buyerDomain.getHost()

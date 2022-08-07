@@ -23,7 +23,6 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -38,6 +37,8 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -61,6 +62,8 @@ import java.util.concurrent.TimeUnit;
 /** Encapsulates the Impression Reporting logic */
 public class ImpressionReporter {
 
+    public static final String UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID =
+            "Unable to find ad selection with given ID";
     @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -69,6 +72,8 @@ public class ImpressionReporter {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final AppImportanceFilter mAppImportanceFilter;
+    private final int mCallerUid;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -77,13 +82,17 @@ public class ImpressionReporter {
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull Flags flags) {
+            @NonNull AppImportanceFilter appImportanceFilter,
+            @NonNull final Flags flags,
+            int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
+        Objects.requireNonNull(appImportanceFilter);
+        Objects.requireNonNull(flags);
 
         mContext = context;
         mListeningExecutorService = MoreExecutors.listeningDecorator(executor);
@@ -94,6 +103,8 @@ public class ImpressionReporter {
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mAppImportanceFilter = appImportanceFilter;
+        mCallerUid = callerUid;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -161,7 +172,7 @@ public class ImpressionReporter {
                 new FutureCallback<Long>() {
                     @Override
                     public void onSuccess(Long timeout) {
-                        invokeReporting(requestParams, callback, timeout);
+                        invokeReporting(requestParams, callback);
                     }
 
                     @Override
@@ -175,19 +186,31 @@ public class ImpressionReporter {
 
     private void invokeReporting(
             @NonNull ReportImpressionInput requestParams,
-            @NonNull ReportImpressionCallback callback,
-            @NonNull Long timeout) {
+            @NonNull ReportImpressionCallback callback) {
         long adSelectionId = requestParams.getAdSelectionId();
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
 
-        FluentFuture<ReportingUrls> reportingUrlFuture =
-                computeReportingUrls(adSelectionId, adSelectionConfig);
-        reportingUrlFuture
+        FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () -> {
+                                    if (mFlags
+                                            .getEnforceForegroundStatusForFledgeRunAdSelection()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                mCallerUid,
+                                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                                null);
+                                    }
+
+                                    return null;
+                                }))
+                .transformAsync(
+                        ignoredVoid -> computeReportingUrls(adSelectionId, adSelectionConfig),
+                        mListeningExecutorService)
                 .transform(
                         reportingUrls -> notifySuccessToCaller(callback, reportingUrls),
                         mListeningExecutorService)
                 .withTimeout(
-                        timeout,
+                        mFlags.getReportImpressionOverallTimeoutMs(),
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
@@ -219,6 +242,8 @@ public class ImpressionReporter {
             @NonNull ReportImpressionCallback callback, @NonNull Throwable t) {
         if (t instanceof IllegalArgumentException) {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
+        } else if (t instanceof WrongCallingApplicationStateException) {
+            invokeFailure(callback, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, t.getMessage());
         } else {
             invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
         }
@@ -269,7 +294,7 @@ public class ImpressionReporter {
                         () -> {
                             Preconditions.checkArgument(
                                     mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId),
-                                    "Unable to find ad selection with given ID");
+                                    UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID);
                             return mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionId);
                         }));
     }
@@ -345,9 +370,7 @@ public class ImpressionReporter {
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
                                     ctx.mAdSelectionConfig
                                             .getPerBuyerSignals()
-                                            .get(
-                                                    AdTechIdentifier.fromString(
-                                                            customAudienceSignals.getBuyer())),
+                                            .get(customAudienceSignals.getBuyer()),
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),

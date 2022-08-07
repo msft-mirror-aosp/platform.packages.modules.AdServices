@@ -39,7 +39,6 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -191,9 +190,13 @@ public class AdsScoreGeneratorImplTest {
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
-
-        mFlags = FlagsFactory.getFlagsForTest();
-
+        mFlags =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionScoringTimeoutMs() {
+                        return 300;
+                    }
+                };
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
 import androidx.room.ColumnInfo;
@@ -37,7 +39,7 @@ public class CustomAudienceSignals {
 
     @ColumnInfo(name = "buyer")
     @NonNull
-    private final String mBuyer;
+    private final AdTechIdentifier mBuyer;
 
     @ColumnInfo(name = "name")
     @NonNull
@@ -53,15 +55,15 @@ public class CustomAudienceSignals {
 
     @ColumnInfo(name = "user_bidding_signals")
     @NonNull
-    private final String mUserBiddingSignals;
+    private final AdSelectionSignals mUserBiddingSignals;
 
     public CustomAudienceSignals(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull Instant activationTime,
             @NonNull Instant expirationTime,
-            @NonNull String userBiddingSignals) {
+            @NonNull AdSelectionSignals userBiddingSignals) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
@@ -77,19 +79,15 @@ public class CustomAudienceSignals {
         mUserBiddingSignals = userBiddingSignals;
     }
 
-    /**
-     * @return a String representing the custom audience's owner application.
-     */
+    /** @return a String package name for the custom audience's owner application. */
     @NonNull
     public String getOwner() {
         return mOwner;
     }
 
-    /**
-     * @return a String representing the custom audience's buyer's domain.
-     */
+    /** @return an {@link AdTechIdentifier} representing the custom audience's buyer's domain. */
     @NonNull
-    public String getBuyer() {
+    public AdTechIdentifier getBuyer() {
         return mBuyer;
     }
 
@@ -123,7 +121,7 @@ public class CustomAudienceSignals {
      * @return a JSON String representing the opaque user bidding signals for the custom audience.
      */
     @NonNull
-    public String getUserBiddingSignals() {
+    public AdSelectionSignals getUserBiddingSignals() {
         return mUserBiddingSignals;
     }
 
@@ -169,16 +167,16 @@ public class CustomAudienceSignals {
     /** Builder for @link CustomAudienceSignals} object. */
     public static final class Builder {
         @NonNull private String mOwner;
-        @NonNull private String mBuyer;
+        @NonNull private AdTechIdentifier mBuyer;
         @NonNull private String mName;
         @NonNull private Instant mActivationTime;
         @NonNull private Instant mExpirationTime;
-        @NonNull private String mUserBiddingSignals;
+        @NonNull private AdSelectionSignals mUserBiddingSignals;
 
         public Builder() {}
 
         /**
-         * Sets the owner application.
+         * Sets the package name for the owner application.
          *
          * <p>See {@link #getOwner()} for more information.
          */
@@ -195,7 +193,7 @@ public class CustomAudienceSignals {
          * <p>See {@link #getBuyer()} for more information.
          */
         @NonNull
-        public CustomAudienceSignals.Builder setBuyer(String buyer) {
+        public CustomAudienceSignals.Builder setBuyer(AdTechIdentifier buyer) {
             Objects.requireNonNull(buyer);
             mBuyer = buyer;
             return this;
@@ -243,7 +241,8 @@ public class CustomAudienceSignals {
          * <p>See {@link #getUserBiddingSignals()} for more information.
          */
         @NonNull
-        public CustomAudienceSignals.Builder setUserBiddingSignals(String userBiddingSignals) {
+        public CustomAudienceSignals.Builder setUserBiddingSignals(
+                AdSelectionSignals userBiddingSignals) {
             Objects.requireNonNull(userBiddingSignals);
             mUserBiddingSignals = userBiddingSignals;
             return this;

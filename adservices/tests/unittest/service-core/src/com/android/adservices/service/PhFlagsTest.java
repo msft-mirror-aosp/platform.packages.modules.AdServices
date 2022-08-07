@@ -21,6 +21,10 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
@@ -46,6 +50,7 @@ import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_TR
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
@@ -114,6 +119,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.PhFlags.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.PhFlags.KEY_MAINTENANCE_JOB_PERIOD_MS;
@@ -1033,6 +1039,66 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetEnforceForegroundStatusForFledgeRunAdSelection() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnforceForegroundStatusForFledgeRunAdSelection())
+                .isEqualTo(ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION);
+
+        final boolean phOverridingValue = !ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+
+        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(phOverridingValue);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnforceForegroundStatusForFledgeRunAdSelection())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForFledgeReportImpression() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnforceForegroundStatusForFledgeReportImpression())
+                .isEqualTo(ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION);
+
+        final boolean phOverridingValue = !ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+
+        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(phOverridingValue);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnforceForegroundStatusForFledgeReportImpression())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnforceForegroundStatusForFledgeOverrides() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnforceForegroundStatusForFledgeOverrides())
+                .isEqualTo(ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES);
+
+        final boolean phOverridingValue = !ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
+
+        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(phOverridingValue);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnforceForegroundStatusForFledgeOverrides())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnforceForegroundStatusForFledgeCustomAudience() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnforceForegroundStatusForFledgeCustomAudience())
+                .isEqualTo(ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE);
+
+        final boolean phOverridingValue = !ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
+
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(phOverridingValue);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnforceForegroundStatusForFledgeCustomAudience())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetGlobalKillSwitch() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getGlobalKillSwitch()).isEqualTo(GLOBAL_KILL_SWITCH);
@@ -1691,6 +1757,25 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetForegroundStatuslLevelForValidation() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getForegroundStatuslLevelForValidation())
+                .isEqualTo(FOREGROUND_STATUS_LEVEL);
+
+        final int phOverridingValue = 6;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FOREGROUND_STATUS_LEVEL,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getForegroundStatuslLevelForValidation()).isEqualTo(phOverridingValue);
+    }
+
+    // Troubles between google-java-format and checkstyle
+    // CHECKSTYLE:OFF IndentationCheck
+    @Test
     public void testGetReportImpressionOverallTimeoutMs() {
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getReportImpressionOverallTimeoutMs())
@@ -1727,24 +1812,21 @@ public class PhFlagsTest {
     @Test
     public void testDump() throws FileNotFoundException {
         // Trigger the dump to verify no crash
-        PrintWriter printWriter = new PrintWriter(new Writer() {
-            @Override
-            public void write(char[] cbuf, int off, int len) throws IOException {
+        PrintWriter printWriter =
+                new PrintWriter(
+                        new Writer() {
+                            @Override
+                            public void write(char[] cbuf, int off, int len) throws IOException {}
 
-            }
+                            @Override
+                            public void flush() throws IOException {}
 
-            @Override
-            public void flush() throws IOException {
-
-            }
-
-            @Override
-            public void close() throws IOException {
-
-            }
-        });
+                            @Override
+                            public void close() throws IOException {}
+                        });
         String[] args = new String[] {};
         Flags phFlags = FlagsFactory.getFlags();
         phFlags.dump(printWriter, args);
     }
+    // CHECKSTYLE:ON IndentationCheck
 }

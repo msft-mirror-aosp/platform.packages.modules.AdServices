@@ -375,7 +375,7 @@ public class JSScriptEngine {
         String entryPointCall = callEntryPoint(args, entryFunctionName, hasWasmModule);
 
         String fullScript = jsScript + "\n" + entryPointCall;
-        LogUtil.d("Calling WebView for script %s", fullScript);
+        LogUtil.v("Calling WebView for script %s", fullScript);
 
         StopWatch jsExecutionStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME);
@@ -383,6 +383,7 @@ public class JSScriptEngine {
                 .transform(
                         (ignoredCloser, result) -> {
                             jsExecutionStopWatch.stop();
+                            LogUtil.v("WebView result is " + result);
                             return result;
                         },
                         mExecutorService)
