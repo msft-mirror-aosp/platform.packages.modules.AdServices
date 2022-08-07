@@ -34,7 +34,9 @@ import android.content.Context;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -49,6 +51,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class CustomAudienceCtsTest {
+
+    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
+            "android.permission.WRITE_DEVICE_CONFIG";
 
     private AdvertisingCustomAudienceClient mClient;
 
@@ -71,6 +76,12 @@ public class CustomAudienceCtsTest {
                         .build();
         DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDevOptionsEnabled();
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
     }
 
     @Test

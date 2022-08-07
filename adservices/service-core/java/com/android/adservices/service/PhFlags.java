@@ -136,6 +136,9 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_enforce_foreground_status_ad_selection_override";
     static final String KEY_FOREGROUND_STATUS_LEVEL = "foreground_validation_status_level";
 
+    static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
+            "fledge_ad_selection_enforce_foreground_status_custom_audience";
+
     // MDD keys.
     static final String KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS = "downloader_connection_timeout_ms";
     static final String KEY_DOWNLOADER_READ_TIMEOUT_MS = "downloader_read_timeout_ms";
@@ -967,6 +970,14 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES);
     }
 
+    @Override
+    public boolean getEnforceForegroundStatusForFledgeCustomAudience() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE,
+                /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE);
+    }
+
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_PREFIX + key;
@@ -1186,6 +1197,12 @@ public final class PhFlags implements Flags {
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION
                         + " = "
                         + getEnforceForegroundStatusForFledgeRunAdSelection());
+
+        writer.println(
+                "\t"
+                        + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE
+                        + " = "
+                        + getEnforceForegroundStatusForFledgeCustomAudience());
 
         writer.println(
                 "\t"
