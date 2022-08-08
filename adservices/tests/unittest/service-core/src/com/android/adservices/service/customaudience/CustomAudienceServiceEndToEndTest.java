@@ -16,14 +16,20 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -122,6 +128,7 @@ public class CustomAudienceServiceEndToEndTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
                         .mockStatic(Binder.class)
+                        .mockStatic(BackgroundFetchJobService.class)
                         .initMocks(this)
                         .startMocking();
 
@@ -204,6 +211,8 @@ public class CustomAudienceServiceEndToEndTest {
     public void testJoinCustomAudience_joinTwice_secondJoinOverrideValues() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
         doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
@@ -224,6 +233,8 @@ public class CustomAudienceServiceEndToEndTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
     }
 
     @Test
@@ -278,6 +289,8 @@ public class CustomAudienceServiceEndToEndTest {
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         ResultCapturingCallback callback = new ResultCapturingCallback();
         mService.joinCustomAudience(CUSTOM_AUDIENCE_PK1_1, callback);
@@ -301,6 +314,8 @@ public class CustomAudienceServiceEndToEndTest {
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER,
                         CustomAudienceFixture.VALID_NAME));
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
     }
 
     @Test
