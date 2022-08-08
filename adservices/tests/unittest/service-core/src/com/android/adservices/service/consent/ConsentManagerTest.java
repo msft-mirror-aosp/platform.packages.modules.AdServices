@@ -45,6 +45,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
@@ -67,6 +68,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SmallTest
 public class ConsentManagerTest {
@@ -80,6 +82,7 @@ public class ConsentManagerTest {
     @Mock private TopicsWorker mTopicsWorker;
     @Mock private MeasurementImpl mMeasurementImpl;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
 
     @Mock private AppUpdateManager mAppUpdateManager;
     @Mock private CacheManager mCacheManager;
@@ -95,12 +98,14 @@ public class ConsentManagerTest {
                 new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mPackageManager));
 
-        mConsentManager = new ConsentManager(
-                mContext,
-                mTopicsWorker,
-                mAppConsentDao,
-                mMeasurementImpl,
-                mAdServicesLoggerImpl);
+        mConsentManager =
+                new ConsentManager(
+                        mContext,
+                        mTopicsWorker,
+                        mAppConsentDao,
+                        mMeasurementImpl,
+                        mAdServicesLoggerImpl,
+                        mCustomAudienceDaoMock);
     }
 
     @After
@@ -133,6 +138,7 @@ public class ConsentManagerTest {
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDao, times(1)).clearAllConsentData();
         verify(mMeasurementImpl, times(1)).deleteAllMeasurementData(any());
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
     }
 
     @Test
@@ -322,6 +328,8 @@ public class ConsentManagerTest {
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked()
             throws IOException, PackageManager.NameNotFoundException {
         doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+
         mConsentManager.enable(mPackageManager);
         assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
@@ -339,7 +347,7 @@ public class ConsentManagerTest {
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
 
         // revoke consent for first app
-        mConsentManager.revokeConsentForApp(app);
+        mConsentManager.revokeConsentForAppAndClearAppData(app);
         ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
 
@@ -348,12 +356,16 @@ public class ConsentManagerTest {
         assertThat(appsWithRevokedConsent).hasSize(1);
         App appWithRevokedConsent = appsWithRevokedConsent.get(0);
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
+
+        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
     }
 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored()
             throws IOException, PackageManager.NameNotFoundException {
         doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+
         mConsentManager.enable(mPackageManager);
         assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
         doReturn(AppConsentDaoFixture.APP10_UID)
@@ -371,7 +383,7 @@ public class ConsentManagerTest {
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
 
         // revoke consent for first app
-        mConsentManager.revokeConsentForApp(app);
+        mConsentManager.revokeConsentForAppAndClearAppData(app);
         ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
         ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
 
@@ -380,6 +392,8 @@ public class ConsentManagerTest {
         assertThat(appsWithRevokedConsent).hasSize(1);
         App appWithRevokedConsent = appsWithRevokedConsent.get(0);
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
+
+        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
 
         // restore consent for first app
         mConsentManager.restoreConsentForApp(app);
@@ -427,6 +441,103 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void testResetApps() throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+
+        // Prepopulate with consent data for some apps
+        mConsentManager.enable(mPackageManager);
+        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        // Verify population was successful
+        ImmutableList<App> knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsent).hasSize(2);
+        assertThat(appsWithRevokedConsent).hasSize(1);
+
+        mConsentManager.resetAllAppConsentAndAppData();
+
+        // All app consent data was deleted
+        knownAppsWithConsent = mConsentManager.getKnownAppsWithConsent();
+        appsWithRevokedConsent = mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsent).isEmpty();
+        assertThat(appsWithRevokedConsent).isEmpty();
+
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+    }
+
+    @Test
+    public void testResetAllFledgeCustomAudienceData()
+            throws IOException, PackageManager.NameNotFoundException {
+        doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
+        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+
+        // Prepopulate with consent data for some apps
+        mConsentManager.enable(mPackageManager);
+        assertTrue(mConsentManager.getConsent(mPackageManager).isGiven());
+        doReturn(AppConsentDaoFixture.APP10_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP10_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP20_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP20_PACKAGE_NAME), any());
+        doReturn(AppConsentDaoFixture.APP30_UID)
+                .when(mPackageManager)
+                .getPackageUid(eq(AppConsentDaoFixture.APP30_PACKAGE_NAME), any());
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        // Verify population was successful
+        ImmutableList<App> knownAppsWithConsentBeforeReset =
+                mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsentBeforeReset =
+                mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsentBeforeReset).hasSize(2);
+        assertThat(appsWithRevokedConsentBeforeReset).hasSize(1);
+
+        mConsentManager.resetAllAppData();
+
+        // No app consent data was deleted
+        ImmutableList<App> knownAppsWithConsentAfterReset =
+                mConsentManager.getKnownAppsWithConsent();
+        ImmutableList<App> appsWithRevokedConsentAfterReset =
+                mConsentManager.getAppsWithRevokedConsent();
+        assertThat(knownAppsWithConsentAfterReset).hasSize(2);
+        assertThat(appsWithRevokedConsentAfterReset).hasSize(1);
+        assertThat(
+                        knownAppsWithConsentAfterReset.stream()
+                                .map(App::getPackageName)
+                                .collect(Collectors.toList()))
+                .containsExactlyElementsIn(
+                        knownAppsWithConsentBeforeReset.stream()
+                                .map(App::getPackageName)
+                                .collect(Collectors.toList()));
+        assertThat(
+                        appsWithRevokedConsentAfterReset.stream()
+                                .map(App::getPackageName)
+                                .collect(Collectors.toList()))
+                .containsExactlyElementsIn(
+                        appsWithRevokedConsentBeforeReset.stream()
+                                .map(App::getPackageName)
+                                .collect(Collectors.toList()));
+
+        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+    }
+
+    @Test
     public void testNotificationDisplayedRecorded() {
         doReturn(false).when(mPackageManager).hasSystemFeature(eq(EEA_DEVICE));
         Boolean wasNotificationDisplayed =
@@ -441,7 +552,7 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testProxyCalls() {
+    public void testTopicsProxyCalls() {
         Topic topic = Topic.create(1, 1, 1);
         List<String> tablesToBlock = List.of(TopicsTables.BlockedTopicsContract.TABLE);
         ConsentManager consentManager =
@@ -455,7 +566,8 @@ public class ConsentManagerTest {
                                 mMockFlags),
                         mAppConsentDao,
                         mMeasurementImpl,
-                        mAdServicesLoggerImpl);
+                        mAdServicesLoggerImpl,
+                        mCustomAudienceDaoMock);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
         doNothing().when(mBlockedTopicsManager).unblockTopic(any());
         doNothing().when(mCacheManager).clearAllTopicsData(any());
