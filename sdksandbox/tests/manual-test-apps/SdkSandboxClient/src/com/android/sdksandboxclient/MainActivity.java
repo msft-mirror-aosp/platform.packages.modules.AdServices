@@ -120,7 +120,6 @@ public class MainActivity extends Activity {
                                                         getDisplay().getDisplayId(),
                                                         mRenderedView.getWidth(),
                                                         mRenderedView.getHeight(),
-                                                        mRenderedView.getHostToken(),
                                                         new Bundle(),
                                                         Runnable::run,
                                                         receiver));
