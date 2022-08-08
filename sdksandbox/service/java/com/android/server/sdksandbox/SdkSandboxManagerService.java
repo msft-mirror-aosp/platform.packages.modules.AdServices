@@ -18,6 +18,9 @@ package com.android.server.sdksandbox;
 
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
 
 import android.annotation.NonNull;
@@ -66,6 +69,7 @@ import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.pm.PackageManagerLocal;
@@ -119,9 +123,24 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final String mAdServicesPackageName;
 
+    private Injector mInjector;
+
+    static class Injector {
+        long getCurrentTime() {
+            return System.currentTimeMillis();
+        }
+    }
+
+    @VisibleForTesting
     SdkSandboxManagerService(Context context, SdkSandboxServiceProvider provider) {
+        this(context, provider, new Injector());
+    }
+
+    SdkSandboxManagerService(
+            Context context, SdkSandboxServiceProvider provider, Injector injector) {
         mContext = context;
         mServiceProvider = provider;
+        mInjector = injector;
         mActivityManager = mContext.getSystemService(ActivityManager.class);
         mLocalManager = new LocalImpl();
 
@@ -214,7 +233,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void loadSdk(
-            String callingPackageName, String sdkName, Bundle params, ILoadSdkCallback callback) {
+            String callingPackageName,
+            String sdkName,
+            long timeAppCalledSystemServer,
+            Bundle params,
+            ILoadSdkCallback callback) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        SdkSandboxStatsLog.write(
+                SANDBOX_API_CALLED,
+                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
+
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = new CallingInfo(callingUid, callingPackageName);
         synchronized (mLock) {
