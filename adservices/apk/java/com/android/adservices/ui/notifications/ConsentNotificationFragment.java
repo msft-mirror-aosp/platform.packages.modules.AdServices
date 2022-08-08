@@ -67,11 +67,15 @@ public class ConsentNotificationFragment extends Fragment {
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
         howItWorksExpander.setOnClickListener(
                 view -> {
-                    TextView text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
+                    View text = requireActivity().findViewById(R.id.how_it_works_expanded_text);
                     if (text.getVisibility() == View.VISIBLE) {
                         text.setVisibility(View.GONE);
+                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                0, 0, R.drawable.ic_expand, 0);
                     } else {
                         text.setVisibility(View.VISIBLE);
+                        howItWorksExpander.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                0, 0, R.drawable.ic_minimize, 0);
                     }
                 });
 
@@ -114,6 +118,7 @@ public class ConsentNotificationFragment extends Fragment {
                         R.id.fragment_container_view,
                         ConsentNotificationConfirmationFragment.class,
                         args)
+                .addToBackStack(null)
                 .commit();
     }
 }

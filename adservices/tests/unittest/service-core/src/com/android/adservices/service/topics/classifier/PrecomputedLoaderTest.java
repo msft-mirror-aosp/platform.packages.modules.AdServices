@@ -36,9 +36,15 @@ public class PrecomputedLoaderTest {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_APPS_FILE_PATH =
             "classifier/precomputed_test_app_list.csv";
+    private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
+            "classifier/classifier_test_assets_metadata.json";
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final PrecomputedLoader sPrecomputedLoader =
-            new PrecomputedLoader(sContext, TEST_LABELS_FILE_PATH, TEST_APPS_FILE_PATH);
+            new PrecomputedLoader(
+                    sContext,
+                    TEST_LABELS_FILE_PATH,
+                    TEST_APPS_FILE_PATH,
+                    TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH);
 
     @Test
     public void testRetrieveLabels_successfulRead() {
@@ -57,7 +63,7 @@ public class PrecomputedLoaderTest {
         // Check size of map
         // The app topics file contains 1000 apps + 11 sample apps + 2 test valid topics' apps
         // + 1 end2end test app.
-        assertThat(appTopic.size()).isEqualTo(1014);
+        assertThat(appTopic.size()).isEqualTo(1015);
 
         // Check whatsApp, chrome and a sample app topics in map
         // The topicId of "com.whatsapp" in assets/precomputed_test_app_list.csv
@@ -100,5 +106,17 @@ public class PrecomputedLoaderTest {
         // assets/precomputed_test_app_list.csv are 143, 15
         List<Integer> validTestApp2Topics = Arrays.asList(143, 15);
         assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
+    }
+
+    @Test
+    public void testAppsWithOnlyEmptyTopics() {
+        // This app has all topics as `None` in `assets/precomputed_test_app_list.csv`
+        String appWithEmptyTopics = "com.emptytopics";
+
+        // Load precomputed labels from the test source `assets/precomputed_test_app_list.csv`
+        Map<String, List<Integer>> appTopic = sPrecomputedLoader.retrieveAppClassificationTopics();
+
+        // Verify this entry is not present in the map.
+        assertThat(appTopic).doesNotContainKey(appWithEmptyTopics);
     }
 }

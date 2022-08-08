@@ -19,8 +19,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#F2F2F2">
+        android:layout_height="match_parent">
     <ScrollView
             android:id="@+id/consent_notification_decline_confirmation_view"
             android:layout_width="match_parent"
@@ -32,8 +31,6 @@
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
                 android:orientation="vertical">
             <LinearLayout
                     android:layout_width="match_parent"
@@ -43,69 +40,52 @@
                     android:orientation="vertical">
 
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
                         android:text="@string/notificationUI_confirmation_decline_title"
-                        android:textSize="36sp" />
+                        style="@style/MainStyle.H1" />
 
                 <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
                         android:text="@string/notificationUI_confirmation_decline_subtitle"
-                        android:textSize="18sp" />
+                        style="@style/MainStyle.H6" />
+                <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:src="@drawable/ic_confirmation_decline_image" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/nav_buttons"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="96dp"
-            android:gravity="center"
             android:orientation="horizontal"
-            android:paddingBottom="24dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
-
         <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#E2E2E2"
+                android:background="@color/divider_color"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         <Button
                 android:id="@+id/leftControlButtonConfirmation"
+                style="@style/MainStyle.NotificationPrimaryButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:lineHeight="20sp"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"
                 android:text="@string/notificationUI_confirmation_left_control_button_text"
                 android:textAllCaps="false"
-                android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
         <Button
                 android:id="@+id/rightControlButtonConfirmation"
+                style="@style/MainStyle.NotificationPrimaryButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="24dp"
-                android:layout_weight="1"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"
                 android:text="@string/notificationUI_confirmation_right_control_button_text"
                 android:textAllCaps="false"
-                android:textSize="14sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>

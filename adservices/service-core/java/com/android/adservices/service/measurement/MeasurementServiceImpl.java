@@ -16,6 +16,8 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
+import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.IMeasurementApiStatusCallback;
@@ -32,10 +34,15 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 /**
  * Implementation of {@link IMeasurementService}.
@@ -45,14 +52,30 @@ import java.util.concurrent.Executor;
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final MeasurementImpl mMeasurementImpl;
+    private final ConsentManager mConsentManager;
+    private final Context mContext;
+    private final Throttler mThrottler;
+    private static final String UNAUTHORIZED_ERROR_MESSAGE =
+            "Caller is not authorized to call this API.";
+    private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
 
-    public MeasurementServiceImpl(Context context) {
+    public MeasurementServiceImpl(Context context, ConsentManager consentManager) {
+        mContext = context;
         mMeasurementImpl = MeasurementImpl.getInstance(context);
+        mConsentManager = consentManager;
+        mThrottler = Throttler.getInstance(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond());
     }
 
     @VisibleForTesting
-    MeasurementServiceImpl(MeasurementImpl measurementImpl) {
+    MeasurementServiceImpl(
+            MeasurementImpl measurementImpl,
+            Context context,
+            ConsentManager consentManager,
+            Throttler throttler) {
+        mContext = context;
         mMeasurementImpl = measurementImpl;
+        mConsentManager = consentManager;
+        mThrottler = throttler;
     }
 
     @Override
@@ -61,15 +84,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
+        final Throttler.ApiKey apiKey =
+                RegistrationRequest.REGISTER_SOURCE == request.getRegistrationType()
+                        ? Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE
+                        : Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
+
+        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+            return;
+        }
+
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        LogUtil.d("MeasurementServiceImpl: register: ");
-                        mMeasurementImpl.register(request, System.currentTimeMillis());
-                        callback.onResult();
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
+                    performWorkIfAllowed(
+                            (mMeasurementImpl) ->
+                                    mMeasurementImpl.register(request, System.currentTimeMillis()),
+                            callback);
                 });
     }
 
@@ -79,15 +108,19 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
+
+        final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
+        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+            return;
+        }
+
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        LogUtil.d("MeasurementServiceImpl: registerWebSource: ");
-                        mMeasurementImpl.registerWebSource(request, System.currentTimeMillis());
-                        callback.onResult();
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
+                    performWorkIfAllowed(
+                            (mMeasurementImpl) ->
+                                    mMeasurementImpl.registerWebSource(
+                                            request, System.currentTimeMillis()),
+                            callback);
                 });
     }
 
@@ -97,15 +130,19 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull IMeasurementCallback callback) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
+
+        final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
+        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+            return;
+        }
+
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        LogUtil.d("MeasurementServiceImpl: registerWebTrigger: ");
-                        mMeasurementImpl.registerWebTrigger(request, System.currentTimeMillis());
-                        callback.onResult();
-                    } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
-                    }
+                    performWorkIfAllowed(
+                            (measurementImpl) ->
+                                    measurementImpl.registerWebTrigger(
+                                            request, System.currentTimeMillis()),
+                            callback);
                 });
     }
 
@@ -115,10 +152,14 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callback);
 
+        final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_DELETION_REGISTRATION;
+        if (isThrottled(request.getPackageName(), apiKey, callback)) {
+            return;
+        }
+
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-
                         @ResultCode int resultCode = mMeasurementImpl.deleteRegistrations(request);
                         if (resultCode == RESULT_OK) {
                             callback.onResult();
@@ -132,7 +173,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             .build());
                         }
                     } catch (RemoteException e) {
-                        LogUtil.e("Unable to send result to the callback", e);
+                        LogUtil.e(e, "Unable to send result to the callback");
                     }
                 });
     }
@@ -144,7 +185,49 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         try {
             callback.onResult(Integer.valueOf(mMeasurementImpl.getMeasurementApiStatus()));
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send result to the callback", e);
+            LogUtil.e(e, "Unable to send result to the callback");
         }
+    }
+
+    private void performWorkIfAllowed(
+            Consumer<MeasurementImpl> execute, IMeasurementCallback callback) {
+        try {
+            AdServicesApiConsent userConsent =
+                    mConsentManager.getConsent(mContext.getPackageManager());
+
+            if (!userConsent.isGiven()) {
+                callback.onFailure(
+                        new MeasurementErrorResponse.Builder()
+                                .setResultCode(RESULT_UNAUTHORIZED_CALL)
+                                .setErrorMessage(UNAUTHORIZED_ERROR_MESSAGE)
+                                .build());
+            } else {
+                execute.accept(mMeasurementImpl);
+                callback.onResult();
+            }
+        } catch (RemoteException e) {
+            LogUtil.e(e, "Unable to send result to the callback");
+        }
+    }
+
+    // Return true if we should throttle (don't allow the API call).
+    private boolean isThrottled(
+            String appPackageName, Throttler.ApiKey apiKey, IMeasurementCallback callback) {
+
+        final boolean throttled = !mThrottler.tryAcquire(apiKey, appPackageName);
+        if (throttled) {
+            LogUtil.e("Rate Limit Reached for Measurement API");
+            try {
+                callback.onFailure(
+                        new MeasurementErrorResponse.Builder()
+                                .setResultCode(RESULT_RATE_LIMIT_REACHED)
+                                .setErrorMessage(RATE_LIMIT_REACHED)
+                                .build());
+            } catch (RemoteException e) {
+                LogUtil.e(e, "Failed to call the callback while performing rate limits.");
+            }
+            return true;
+        }
+        return false;
     }
 }

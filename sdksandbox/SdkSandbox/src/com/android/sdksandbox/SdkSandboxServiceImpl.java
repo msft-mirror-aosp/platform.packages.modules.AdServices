@@ -24,12 +24,14 @@ import android.app.Service;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -121,6 +123,30 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
+    /** Unloads SDK. */
+    public void unloadSdk(IBinder sdkToken) {
+        enforceCallerIsSystemServer();
+        final long token = Binder.clearCallingIdentity();
+        try {
+            unloadSdkInternal(sdkToken);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    /** Sync data from client. */
+    public void syncDataFromClient(Bundle data) {
+        SharedPreferences pref =
+                PreferenceManager.getDefaultSharedPreferences(mInjector.getContext());
+        SharedPreferences.Editor editor = pref.edit();
+        for (String key : data.keySet()) {
+            // TODO(b/239403323): Add support for non-string keys
+            editor.putString(key, data.getString(key));
+        }
+        // TODO(b/239403323): What if writing to persistent storage fails?
+        editor.apply();
+    }
+
     @Override
     @RequiresPermission(android.Manifest.permission.DUMP)
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
@@ -205,6 +231,16 @@ public class SdkSandboxServiceImpl extends Service {
         }
     }
 
+    private void unloadSdkInternal(@NonNull IBinder sdkToken) {
+        synchronized (mHeldSdk) {
+            SandboxedSdkHolder sandboxedSdkHolder = mHeldSdk.get(sdkToken);
+            if (sandboxedSdkHolder != null) {
+                sandboxedSdkHolder.unloadSdk();
+                mHeldSdk.remove(sdkToken);
+            }
+        }
+    }
+
     private void sendLoadError(ILoadSdkInSandboxCallback callback, int errorCode, String message) {
         try {
             callback.onLoadSdkError(errorCode, message);
@@ -251,6 +287,18 @@ public class SdkSandboxServiceImpl extends Service {
                     sdkDeDataDir,
                     params,
                     callback);
+        }
+
+        @Override
+        public void unloadSdk(@NonNull IBinder sdkToken) {
+            Objects.requireNonNull(sdkToken, "sdkToken should not be null");
+            SdkSandboxServiceImpl.this.unloadSdk(sdkToken);
+        }
+
+        @Override
+        public void syncDataFromClient(@NonNull Bundle data) {
+            Objects.requireNonNull(data, "data should not be null");
+            SdkSandboxServiceImpl.this.syncDataFromClient(data);
         }
     }
 }

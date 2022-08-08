@@ -25,7 +25,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregateFilterData;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
 import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
-import com.android.adservices.service.measurement.validation.Validation;
+import com.android.adservices.service.measurement.util.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -58,7 +58,7 @@ public class Source {
     private String mId;
     private long mEventId;
     private Uri mPublisher;
-    private Uri mAttributionDestination;
+    private Uri mAppDestination;
     private Uri mWebDestination;
     private Uri mAdTechDomain;
     private Uri mRegistrant;
@@ -71,6 +71,7 @@ public class Source {
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
+    private @Nullable Long mDebugKey;
     private boolean mIsInstallAttributed;
     private String mAggregateFilterData;
     private String mAggregateSource;
@@ -146,14 +147,14 @@ public class Source {
 
     ImpressionNoiseParams getImpressionNoiseParams() {
         return new ImpressionNoiseParams(
-                getMaxReportCountInternal(/* considerAttrState= */ false),
+                getMaxReportCountInternal(isInstallDetectionEnabled()),
                 getTriggerDataCardinality(),
                 getReportingWindowCountForNoising());
     }
 
-    private ImmutableList<Long> getEarlyReportingWindows(boolean considerAttrState) {
+    private ImmutableList<Long> getEarlyReportingWindows(boolean installState) {
         long[] earlyWindows;
-        if (useInstallAttrParams(considerAttrState)) {
+        if (installState) {
             earlyWindows = mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
                     : PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
@@ -183,7 +184,8 @@ public class Source {
      */
     @VisibleForTesting
     public long getReportingTimeForNoising(int windowIndex) {
-        List<Long> windowList = getEarlyReportingWindows(/* considerAttrState= */ false);
+        // TODO: b/238362250: Needs revisit once web destination noising PrivacyParams are finalized
+        List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
                 mExpiryTime + ONE_HOUR_IN_MILLIS;
@@ -191,8 +193,9 @@ public class Source {
 
     @VisibleForTesting
     int getReportingWindowCountForNoising() {
+        // TODO: b/238362250: Needs revisit once web destination noising PrivacyParams are finalized
         // Early Count + expiry
-        return getEarlyReportingWindows(/* considerAttrState= */ false).size() + 1;
+        return getEarlyReportingWindows(isInstallDetectionEnabled()).size() + 1;
     }
 
     /**
@@ -206,14 +209,18 @@ public class Source {
     }
 
     /**
-     * @return Maximum number of reports allowed
+     * Max reports count based on conversion destination type and installation state.
+     *
+     * @param destinationType conversion destination type
+     * @return maximum number of reports allowed
      */
-    public int getMaxReportCount() {
-        return getMaxReportCountInternal(/* considerAttrState= */ true);
+    public int getMaxReportCount(@NonNull DestinationType destinationType) {
+        boolean isInstallCase = DestinationType.APP.equals(destinationType) && mIsInstallAttributed;
+        return getMaxReportCountInternal(isInstallCase);
     }
 
-    private int getMaxReportCountInternal(boolean considerAttrState) {
-        if (useInstallAttrParams(considerAttrState)) {
+    private int getMaxReportCountInternal(boolean isInstallCase) {
+        if (isInstallCase) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
                     : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
@@ -237,15 +244,8 @@ public class Source {
                 PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
     }
 
-    private boolean useInstallAttrParams(boolean considerAttrState) {
-        if (considerAttrState) {
-            return mIsInstallAttributed;
-        }
-        return isInstallDetectionEnabled();
-    }
-
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0;
+        return mInstallCooldownWindow > 0 && mAppDestination != null;
     }
 
     @Override
@@ -256,7 +256,7 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mId, source.mId)
                 && Objects.equals(mPublisher, source.mPublisher)
-                && Objects.equals(mAttributionDestination, source.mAttributionDestination)
+                && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
                 && Objects.equals(mAdTechDomain, source.mAdTechDomain)
                 && mPriority == source.mPriority
@@ -264,6 +264,7 @@ public class Source {
                 && mExpiryTime == source.mExpiryTime
                 && mEventTime == source.mEventTime
                 && mEventId == source.mEventId
+                && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
                 && Objects.equals(mDedupKeys, source.mDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
@@ -280,7 +281,7 @@ public class Source {
         return Objects.hash(
                 mId,
                 mPublisher,
-                mAttributionDestination,
+                mAppDestination,
                 mWebDestination,
                 mAdTechDomain,
                 mPriority,
@@ -293,20 +294,26 @@ public class Source {
                 mAggregateFilterData,
                 mAggregateSource,
                 mAggregateContributions,
-                mAggregatableAttributionSource);
+                mAggregatableAttributionSource,
+                mDebugKey);
     }
 
     /**
-     * Calculates the reporting time based on the {@link Trigger} Time and
-     * {@link Source}'s expiry.
+     * Calculates the reporting time based on the {@link Trigger} time, {@link Source}'s expiry and
+     * trigger destination type.
      *
-     * @return the report time
+     * @return the reporting time
      */
-    public long getReportingTime(long triggerTime) {
+    public long getReportingTime(long triggerTime, @NonNull DestinationType destinationType) {
         if (triggerTime < mEventTime) {
             return -1;
         }
-        List<Long> reportingWindows = getEarlyReportingWindows(/* considerAttrState= */ true);
+
+        // Cases where source could have both web and app destinations, there if the trigger
+        // destination is an app and it was installed, then installState should be considered true.
+        boolean isAppInstalled =
+                DestinationType.APP.equals(destinationType) && mIsInstallAttributed;
+        List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
         for (Long window: reportingWindows) {
             if (triggerTime < window) {
                 return window + ONE_HOUR_IN_MILLIS;
@@ -370,17 +377,15 @@ public class Source {
         return mAdTechDomain;
     }
 
-    /**
-     * Uri which registered the {@link Source}.
-     */
+    /** Uri which registered the {@link Source}. */
     public Uri getPublisher() {
         return mPublisher;
     }
 
     /** Uri for the {@link Trigger}'s app destination. */
     @Nullable
-    public Uri getAttributionDestination() {
-        return mAttributionDestination;
+    public Uri getAppDestination() {
+        return mAppDestination;
     }
 
     /** Uri for the {@link Trigger}'s web destination. */
@@ -396,11 +401,14 @@ public class Source {
         return mSourceType;
     }
 
-    /**
-     * Time when {@link Source} will expiry.
-     */
+    /** Time when {@link Source} will expiry. */
     public long getExpiryTime() {
         return mExpiryTime;
+    }
+
+    /** Debug key of {@link Source}. */
+    public @Nullable Long getDebugKey() {
+        return mDebugKey;
     }
 
     /**
@@ -510,9 +518,7 @@ public class Source {
         return mAggregatableAttributionSource;
     }
 
-    /**
-     * Set app install attribution to the {@link Source}.
-     */
+    /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
     }
@@ -592,11 +598,10 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAttributionDestination()}. */
-        @NonNull
-        public Builder setAttributionDestination(@Nullable Uri attributionDestination) {
-            Optional.ofNullable(attributionDestination).ifPresent(Validation::validateUri);
-            mBuilding.mAttributionDestination = attributionDestination;
+        /** See {@link Source#getAppDestination()}. */
+        public Builder setAppDestination(Uri appDestination) {
+            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
+            mBuilding.mAppDestination = appDestination;
             return this;
         }
 
@@ -635,6 +640,12 @@ public class Source {
         @NonNull
         public Builder setPriority(long priority) {
             mBuilding.mPriority = priority;
+            return this;
+        }
+
+        /** See {@link Source#getDebugKey()} ()}. */
+        public Builder setDebugKey(@Nullable Long debugKey) {
+            mBuilding.mDebugKey = debugKey;
             return this;
         }
 
@@ -733,7 +744,7 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 
-            if (mBuilding.mAttributionDestination == null && mBuilding.mWebDestination == null) {
+            if (mBuilding.mAppDestination == null && mBuilding.mWebDestination == null) {
                 throw new IllegalArgumentException("At least one destination is required");
             }
 

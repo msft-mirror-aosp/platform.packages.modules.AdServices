@@ -50,31 +50,35 @@ public final class TriggerRegistrationTest {
                     + "}"
                     + "]\n";
 
+    private static final Long DEBUG_KEY = 23478951L;
+
+    private static final String AGGREGATE_TRIGGER_DATA =
+            "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
+                    + "\"not_filters\":{\"product\":[\"1\"]}},"
+                    + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
+
     private TriggerRegistration createExampleResponse() {
         return new TriggerRegistration.Builder()
                 .setTopOrigin(TOP_ORIGIN)
                 .setReportingOrigin(REPORTING_ORIGIN)
                 .setEventTriggers(EVENT_TRIGGERS)
-                .setAggregateTriggerData(
-                        "[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
-                                + "\"not_filters\":{\"product\":[\"1\"]}},"
-                                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]")
+                .setAggregateTriggerData(AGGREGATE_TRIGGER_DATA)
                 .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
                 .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
+                .setDebugKey(DEBUG_KEY)
                 .build();
     }
 
-    void verifyExampleResponse(TriggerRegistration response) {
-        assertEquals("https://foo.com", response.getTopOrigin().toString());
-        assertEquals("https://bar.com", response.getReportingOrigin().toString());
-        assertEquals(EVENT_TRIGGERS, response.getEventTriggers());
-        assertEquals("[{\"key_piece\":\"0x400\",\"source_keys\":[\"campaignCounts\"],"
-                + "\"not_filters\":{\"product\":[\"1\"]}},"
-                + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]",
-                response.getAggregateTriggerData());
-        assertEquals("{\"campaignCounts\":32768,\"geoValue\":1644}",
-                response.getAggregateValues());
-        assertEquals(TOP_LEVEL_FILTERS_JSON_STRING, response.getFilters());
+    void verifyExampleResponse(TriggerRegistration triggerRegistration) {
+        assertEquals("https://foo.com", triggerRegistration.getTopOrigin().toString());
+        assertEquals("https://bar.com", triggerRegistration.getReportingOrigin().toString());
+        assertEquals(EVENT_TRIGGERS, triggerRegistration.getEventTriggers());
+        assertEquals(AGGREGATE_TRIGGER_DATA, triggerRegistration.getAggregateTriggerData());
+        assertEquals(
+                "{\"campaignCounts\":32768,\"geoValue\":1644}",
+                triggerRegistration.getAggregateValues());
+        assertEquals(TOP_LEVEL_FILTERS_JSON_STRING, triggerRegistration.getFilters());
+        assertEquals(DEBUG_KEY, triggerRegistration.getDebugKey());
     }
 
     @Test

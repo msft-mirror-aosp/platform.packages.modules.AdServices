@@ -22,6 +22,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" />
+
+    <!-- Needed to resolve Intent to ComponentName for measurement verifiedDestination -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+
     <!-- android:debuggable="true is needed. See b/228384531 -->
     <application
         android:debuggable="true"

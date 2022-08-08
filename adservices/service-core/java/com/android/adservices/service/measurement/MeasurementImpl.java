@@ -16,13 +16,12 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.measurement.MeasurementManager.RESULT_INTERNAL_ERROR;
-import static android.adservices.measurement.MeasurementManager.RESULT_INVALID_ARGUMENT;
-import static android.adservices.measurement.MeasurementManager.RESULT_IO_ERROR;
-import static android.adservices.measurement.MeasurementManager.RESULT_OK;
-
-import static com.android.adservices.service.measurement.attribution.BaseUriExtractor.getBaseUri;
+import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
+import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
+import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
+import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.MeasurementManager;
@@ -34,10 +33,11 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
-import android.content.AttributionSource;
+import android.content.ComponentName;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.view.InputEvent;
@@ -51,8 +51,10 @@ import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
 import com.android.adservices.service.measurement.registration.TriggerRegistration;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -70,11 +72,10 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {
-    private static final String ANDROID_APP_SCHEME = "android-app://";
+    private static final String ANDROID_APP_SCHEME = "android-app";
     private static volatile MeasurementImpl sMeasurementImpl;
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
-    private final ConsentManager mConsentManager;
     private final DatastoreManager mDatastoreManager;
     private final SourceFetcher mSourceFetcher;
     private final TriggerFetcher mTriggerFetcher;
@@ -82,7 +83,6 @@ public final class MeasurementImpl {
 
     private MeasurementImpl(Context context) {
         mContext = context;
-        mConsentManager = ConsentManager.getInstance(context);
         mContentResolver = context.getContentResolver();
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mSourceFetcher = new SourceFetcher();
@@ -90,11 +90,13 @@ public final class MeasurementImpl {
     }
 
     @VisibleForTesting
-    MeasurementImpl(Context context, ConsentManager consentManager, ContentResolver contentResolver,
-            DatastoreManager datastoreManager, SourceFetcher sourceFetcher,
+    MeasurementImpl(
+            Context context,
+            ContentResolver contentResolver,
+            DatastoreManager datastoreManager,
+            SourceFetcher sourceFetcher,
             TriggerFetcher triggerFetcher) {
         mContext = context;
-        mConsentManager = consentManager;
         mContentResolver = contentResolver;
         mDatastoreManager = datastoreManager;
         mSourceFetcher = sourceFetcher;
@@ -150,7 +152,7 @@ public final class MeasurementImpl {
                     return fetchAndInsertTriggers(request, requestTime);
 
                 default:
-                    return MeasurementManager.RESULT_INVALID_ARGUMENT;
+                    return RESULT_INVALID_ARGUMENT;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -164,6 +166,10 @@ public final class MeasurementImpl {
     int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
+        if (!isValid(sourceRegistrationRequest)) {
+            LogUtil.e("registerWebSource received invalid parameters");
+            return RESULT_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<SourceRegistration>> fetch =
@@ -174,7 +180,7 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         sourceRegistrationRequest.getTopOriginUri(),
-                        getRegistrant(request.getAttributionSource()),
+                        getRegistrant(request.getPackageName()),
                         getSourceType(sourceRegistrationRequest.getInputEvent()));
                 return RESULT_OK;
             } else {
@@ -193,6 +199,10 @@ public final class MeasurementImpl {
             @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
+        if (!isValid(triggerRegistrationRequest)) {
+            LogUtil.e("registerWebTrigger received invalid parameters");
+            return RESULT_INVALID_ARGUMENT;
+        }
         mReadWriteLock.readLock().lock();
         try {
             Optional<List<TriggerRegistration>> fetch =
@@ -203,10 +213,10 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
-                        getRegistrant(request.getAttributionSource()));
-                return MeasurementManager.RESULT_OK;
+                        getRegistrant(request.getPackageName()));
+                return RESULT_OK;
             } else {
-                return MeasurementManager.RESULT_IO_ERROR;
+                return RESULT_IO_ERROR;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -224,7 +234,7 @@ public final class MeasurementImpl {
                     mDatastoreManager.runInTransaction(
                             (dao) ->
                                     dao.deleteMeasurementData(
-                                            getRegistrant(request.getAttributionSource()),
+                                            getRegistrant(request.getPackageName()),
                                             request.getStart(),
                                             request.getEnd(),
                                             request.getOriginUris(),
@@ -244,7 +254,8 @@ public final class MeasurementImpl {
      * Implement a getMeasurementApiStatus request, returning a result code.
      */
     @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent = mConsentManager.getConsent(mContext.getPackageManager());
+        AdServicesApiConsent consent =
+                ConsentManager.getInstance(mContext).getConsent(mContext.getPackageManager());
         if (consent.isGiven()) {
             return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
         } else {
@@ -297,10 +308,10 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getAttributionSource()));
-            return MeasurementManager.RESULT_OK;
+                    getRegistrant(request.getPackageName()));
+            return RESULT_OK;
         } else {
-            return MeasurementManager.RESULT_IO_ERROR;
+            return RESULT_IO_ERROR;
         }
     }
 
@@ -312,11 +323,11 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getAttributionSource()),
+                    getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent()));
-            return MeasurementManager.RESULT_OK;
+            return RESULT_OK;
         } else {
-            return MeasurementManager.RESULT_IO_ERROR;
+            return RESULT_IO_ERROR;
         }
     }
 
@@ -335,7 +346,7 @@ public final class MeasurementImpl {
                             registrant,
                             sourceType,
                             // Only first destination to avoid AdTechs change this
-                            sourceRegistrations.get(0).getDestination(),
+                            sourceRegistrations.get(0).getAppDestination(),
                             sourceRegistrations.get(0).getWebDestination());
             insertSource(source);
         }
@@ -351,8 +362,8 @@ public final class MeasurementImpl {
             Uri webDestination) {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
-                .setPublisher(topOriginUri)
-                .setAttributionDestination(destination)
+                .setPublisher(getBaseUri(topOriginUri))
+                .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
@@ -370,6 +381,7 @@ public final class MeasurementImpl {
                 .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
                 .setAggregateSource(registration.getAggregateSource())
                 .setAggregateFilterData(registration.getAggregateFilterData())
+                .setDebugKey(registration.getDebugKey())
                 .build();
     }
 
@@ -394,8 +406,7 @@ public final class MeasurementImpl {
                                         .setSourceId(source.getEventId())
                                         .setReportTime(fakeReport.getReportingTime())
                                         .setTriggerData(fakeReport.getTriggerData())
-                                        .setAttributionDestination(
-                                                source.getAttributionDestination())
+                                        .setAttributionDestination(source.getAppDestination())
                                         .setAdTechDomain(source.getAdTechDomain())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)
@@ -446,14 +457,96 @@ public final class MeasurementImpl {
                 .setAggregateTriggerData(registration.getAggregateTriggerData())
                 .setAggregateValues(registration.getAggregateValues())
                 .setFilters(registration.getFilters())
+                .setDebugKey(registration.getDebugKey())
                 .build();
     }
 
-    private Uri getRegistrant(AttributionSource attributionSource) {
-        return Uri.parse(ANDROID_APP_SCHEME + attributionSource.getPackageName());
+    private Uri getRegistrant(String packageName) {
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageName);
     }
 
     private Uri getAppUri(Uri packageUri) {
-        return Uri.parse(ANDROID_APP_SCHEME + packageUri.getEncodedSchemeSpecificPart());
+        return Uri.parse(ANDROID_APP_SCHEME + "://" + packageUri.getEncodedSchemeSpecificPart());
+    }
+
+    private boolean isValid(WebSourceRegistrationRequest sourceRegistrationRequest) {
+        Uri verifiedDestination = sourceRegistrationRequest.getVerifiedDestination();
+        Uri webDestination = sourceRegistrationRequest.getWebDestination();
+
+        if (verifiedDestination == null) {
+            return webDestination == null
+                    ? true
+                    : Web.topPrivateDomainAndScheme(webDestination).isPresent();
+        }
+
+        return isVerifiedDestination(
+                verifiedDestination, webDestination, sourceRegistrationRequest.getAppDestination());
+    }
+
+    private boolean isVerifiedDestination(
+            Uri verifiedDestination, Uri webDestination, Uri appDestination) {
+        String destinationPackage = null;
+        if (appDestination != null) {
+            destinationPackage = appDestination.getHost();
+        }
+        String verifiedScheme = verifiedDestination.getScheme();
+        String verifiedHost = verifiedDestination.getHost();
+
+        // Verified destination matches appDestination value
+        if (destinationPackage != null
+                && verifiedHost != null
+                && (verifiedScheme == null || verifiedScheme.equals(ANDROID_APP_SCHEME))
+                && verifiedHost.equals(destinationPackage)) {
+            return true;
+        }
+
+        try {
+            Intent intent = Intent.parseUri(verifiedDestination.toString(), 0);
+            ComponentName componentName = intent.resolveActivity(mContext.getPackageManager());
+            if (componentName == null) {
+                return false;
+            }
+
+            // (ComponentName::getPackageName cannot be null)
+            String verifiedPackage = componentName.getPackageName();
+
+            // Try to match an app vendor store and extract a target package
+            if (destinationPackage != null
+                    && verifiedPackage.equals(AppVendorPackages.PLAY_STORE)) {
+                String targetPackage = getTargetPackageFromPlayStoreUri(verifiedDestination);
+                return targetPackage != null && targetPackage.equals(destinationPackage);
+
+            // Try to match web destination
+            } else if (webDestination == null) {
+                return false;
+            } else {
+                Optional<Uri> webDestinationTopPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(webDestination);
+                Optional<Uri> verifiedDestinationTopPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(verifiedDestination);
+                return webDestinationTopPrivateDomainAndScheme.isPresent()
+                        && verifiedDestinationTopPrivateDomainAndScheme.isPresent()
+                        && webDestinationTopPrivateDomainAndScheme.get().equals(
+                                verifiedDestinationTopPrivateDomainAndScheme.get());
+            }
+        } catch (URISyntaxException e) {
+            LogUtil.e(e,
+                    "MeasurementImpl::handleVerifiedDestination: failed to parse intent URI: %s",
+                    verifiedDestination.toString());
+            return false;
+        }
+    }
+
+    private static boolean isValid(WebTriggerRegistrationRequest triggerRegistrationRequest) {
+        Uri destination = triggerRegistrationRequest.getDestination();
+        return Web.topPrivateDomainAndScheme(destination).isPresent();
+    }
+
+    private static String getTargetPackageFromPlayStoreUri(Uri uri) {
+        return uri.getQueryParameter("id");
+    }
+
+    private interface AppVendorPackages {
+        String PLAY_STORE = "com.android.vending";
     }
 }

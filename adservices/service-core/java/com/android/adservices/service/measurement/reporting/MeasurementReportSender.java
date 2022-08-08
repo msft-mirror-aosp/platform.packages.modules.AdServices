@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONObject;
@@ -34,6 +35,7 @@ import java.net.URL;
  * origin.
  */
 public abstract class MeasurementReportSender {
+    private final MeasurementHttpClient mNetworkConnection = new MeasurementHttpClient();
 
     /**
      * Sends an event report to the reporting origin.
@@ -59,7 +61,7 @@ public abstract class MeasurementReportSender {
      */
     @VisibleForTesting
     public HttpURLConnection createHttpUrlConnection(URL reportingOriginURL) throws IOException {
-        return (HttpURLConnection) reportingOriginURL.openConnection();
+        return (HttpURLConnection) mNetworkConnection.setup(reportingOriginURL);
     }
 
     /**

@@ -21,7 +21,6 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.AdtechUrl;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -82,8 +81,10 @@ public class SqliteObjectMapper {
                 builder::setAdTechDomain);
         setUriColumn(cursor, MeasurementTables.SourceContract.PUBLISHER,
                 builder::setPublisher);
-        setUriColumn(cursor, MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                builder::setAttributionDestination);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                builder::setAppDestination);
         setUriColumn(
                 cursor,
                 MeasurementTables.SourceContract.WEB_DESTINATION,
@@ -145,18 +146,6 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
                 builder::setAggregateValues);
         setTextColumn(cursor, MeasurementTables.TriggerContract.FILTERS, builder::setFilters);
-        return builder.build();
-    }
-
-    /**
-     * Create {@link AdtechUrl} object from SQLite datastore.
-     */
-    static AdtechUrl constructAdtechUrlFromCursor(Cursor cursor) {
-        AdtechUrl.Builder builder = new AdtechUrl.Builder();
-        setTextColumn(cursor, MeasurementTables.AdTechUrlsContract.POSTBACK_URL,
-                builder::setPostbackUrl);
-        setTextColumn(cursor, MeasurementTables.AdTechUrlsContract.AD_TECH_ID,
-                builder::setAdtechId);
         return builder.build();
     }
 

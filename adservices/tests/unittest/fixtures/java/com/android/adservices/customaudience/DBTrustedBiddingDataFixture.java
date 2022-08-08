@@ -16,16 +16,15 @@
 
 package com.android.adservices.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 
 public class DBTrustedBiddingDataFixture {
-    public static DBTrustedBiddingData VALID_DB_TRUSTED_BIDDING_DATA = getValidBuilder().build();
-
-    public static DBTrustedBiddingData.Builder getValidBuilder() {
+    public static DBTrustedBiddingData.Builder getValidBuilderByBuyer(AdTechIdentifier buyer) {
         return new DBTrustedBiddingData.Builder()
-                .setUrl(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_URL)
+                .setUrl(TrustedBiddingDataFixture.getValidTrustedBiddingUrlByBuyer(buyer))
                 .setKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS);
     }
 }

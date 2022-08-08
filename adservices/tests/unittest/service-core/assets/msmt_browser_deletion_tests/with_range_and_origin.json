@@ -7,7 +7,7 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
-        "attributionDestination": "android-app://com.site2",
+        "appDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -20,7 +20,7 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
-        "attributionDestination": "android-app://com.site2",
+        "appDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
@@ -33,7 +33,7 @@
         "eventId": 3,
         "sourceType": "navigation",
         "publisher": "android-app://com.site3.siteNotMatch",
-        "attributionDestination": "android-app://com.site2",
+        "appDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -167,7 +167,9 @@
       {
         "id": "A1",
         "sourceSite": "android-app://com.site.deleteCandidate",
+        "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -175,7 +177,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site.deleteCandidate",
+        "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -183,7 +187,9 @@
       {
         "id": "A3",
         "sourceSite": "android-app://com.site3",
+        "sourceOrigin": "android-app://com.site3",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -197,7 +203,7 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.deleteCandidate",
-        "attributionDestination": "android-app://com.site2",
+        "appDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
@@ -210,7 +216,7 @@
         "eventId": 3,
         "sourceType": "navigation",
         "publisher": "android-app://com.site3.siteNotMatch",
-        "attributionDestination": "android-app://com.site2",
+        "appDestination": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -289,7 +295,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site.deleteCandidate",
+        "sourceOrigin": "android-app://com.site.deleteCandidate",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733605,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -297,7 +305,9 @@
       {
         "id": "A3",
         "sourceSite": "android-app://com.site3",
+        "sourceOrigin": "android-app://com.site3",
         "destinationSite": "android-app://com.site2",
+        "destinationOrigin": "android-app://com.site2",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 1648665733601,
         "registrant": "android-app://com.registrant.deleteCandidate"

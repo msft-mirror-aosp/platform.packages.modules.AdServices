@@ -235,8 +235,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER,
                 source.getPublisher().toString());
-        values.put(MeasurementTables.SourceContract.ATTRIBUTION_DESTINATION,
-                source.getAttributionDestination().toString());
+        values.put(
+                MeasurementTables.SourceContract.APP_DESTINATION,
+                source.getAppDestination().toString());
         values.put(MeasurementTables.SourceContract.AD_TECH_DOMAIN,
                 source.getAdTechDomain().toString());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -320,8 +321,12 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.AttributionRateLimitContract.ID, attrRateLimit.getId());
         values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_SITE,
                 attrRateLimit.getSourceSite());
+        values.put(MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN,
+                attrRateLimit.getSourceOrigin());
         values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE,
                 attrRateLimit.getDestinationSite());
+        values.put(MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN,
+                attrRateLimit.getDestinationOrigin());
         values.put(MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN,
                 attrRateLimit.getAdTechDomain());
         values.put(MeasurementTables.AttributionRateLimitContract.TRIGGER_TIME,

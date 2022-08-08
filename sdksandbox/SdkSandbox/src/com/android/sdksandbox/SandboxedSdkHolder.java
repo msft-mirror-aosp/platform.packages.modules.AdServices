@@ -71,8 +71,8 @@ class SandboxedSdkHolder {
         try {
             Class<?> clz = Class.forName(sdkProviderClassName, true, loader);
             mSdk = (SandboxedSdkProvider) clz.getConstructor().newInstance();
+            mSdk.attachContext(sandboxedSdkContext);
             mSdk.onLoadSdk(
-                    sandboxedSdkContext,
                     params,
                     mContext.getMainExecutor(),
                     new SandboxedSdkProvider.OnLoadSdkCallback() {
@@ -93,6 +93,10 @@ class SandboxedSdkHolder {
         } catch (Throwable e) {
             sendLoadSdkError("Error thrown during init: " + e, callback);
         }
+    }
+
+    void unloadSdk() {
+        mSdk.beforeUnloadSdk();
     }
 
     void dump(PrintWriter writer) {
@@ -180,7 +184,8 @@ class SandboxedSdkHolder {
                 mHandler.post(
                         () -> {
                             try {
-                                final View view = mSdk.getView(windowContext, params);
+                                final View view =
+                                        mSdk.getView(windowContext, params, width, height);
                                 SurfaceControlViewHost host =
                                         new SurfaceControlViewHost(
                                                 windowContext,

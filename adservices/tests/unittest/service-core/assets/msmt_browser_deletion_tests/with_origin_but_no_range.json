@@ -7,7 +7,7 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.toBeDeleted",
-        "attributionDestination": "android-app://com.site3",
+        "appDestination": "android-app://com.site3",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -20,7 +20,7 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.doNotDelete",
-        "attributionDestination": "android-app://com.site1",
+        "appDestination": "android-app://com.site1",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -107,7 +107,9 @@
       {
         "id": "A1",
         "sourceSite": "android-app://com.site.toBeDeleted",
+        "sourceOrigin": "android-app://com.site.toBeDeleted",
         "destinationSite": "android-app://com.site3",
+        "destinationOrigin": "android-app://com.site3",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -115,7 +117,9 @@
       {
         "id": "A2",
         "sourceSite": "android-app://com.site2",
+        "sourceOrigin": "android-app://com.site2",
         "destinationSite": "android-app://com.site.toBeDeleted",
+        "destinationOrigin": "android-app://com.site.toBeDeleted",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -123,7 +127,9 @@
       {
         "id": "A3",
         "sourceSite": "android-app://com.site1.doNotDelete",
+        "sourceOrigin": "android-app://com.site1.doNotDelete",
         "destinationSite": "android-app://com.site2.doNotDelete",
+        "destinationOrigin": "android-app://com.site2.doNotDelete",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant.deleteCandidate"
@@ -137,7 +143,7 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site.doNotDelete",
-        "attributionDestination": "android-app://com.site1",
+        "appDestination": "android-app://com.site1",
         "adTechDomain": "https://ad-tech.example.com",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -183,7 +189,9 @@
       {
         "id": "A3",
         "sourceSite": "android-app://com.site1.doNotDelete",
+        "sourceOrigin": "android-app://com.site1.doNotDelete",
         "destinationSite": "android-app://com.site2.doNotDelete",
+        "destinationOrigin": "android-app://com.site2.doNotDelete",
         "adTechDomain": "https://ad-tech.example.com",
         "triggerTime": 10,
         "registrant": "android-app://com.registrant.deleteCandidate"
