@@ -18,11 +18,13 @@ package android.app.sdksandbox.testutils;
 
 import android.app.sdksandbox.ILoadSdkCallback;
 import android.app.sdksandbox.IRequestSurfacePackageCallback;
+import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,5 +64,16 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
+    public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
+
+    @Override
     public void syncDataFromClient(String callingPackageName, Bundle data) {}
+
+    @Override
+    public void addSdkSandboxLifecycleCallback(
+            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
+
+    @Override
+    public void removeSdkSandboxLifecycleCallback(
+            String callingPackageName, ISdkSandboxLifecycleCallback callback) {}
 }

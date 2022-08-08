@@ -17,9 +17,6 @@
       "name": "SdkSandboxManagerTests[com.google.android.adservices.apex]"
     },
     {
-      "name": "SdkSandboxHostTest[com.google.android.adservices.apex]"
-    },
-    {
       "name": "SdkSandboxLifecycleHostTest[com.google.android.adservices.apex]"
     },
     {
@@ -58,9 +55,6 @@
     },
     {
       "name": "SdkSandboxManagerTests"
-    },
-    {
-      "name": "SdkSandboxHostTest"
     },
     {
       "name": "SdkSandboxLifecycleHostTest"

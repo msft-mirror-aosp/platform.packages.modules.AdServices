@@ -28,6 +28,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -108,7 +109,7 @@ public class SdkSandboxManagerServiceUnitTest {
         // Required to access <sdk-library> information.
         InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
                 Manifest.permission.ACCESS_SHARED_LIBRARIES, Manifest.permission.INSTALL_PACKAGES);
-        mSdkSandboxService = new FakeSdkSandboxService();
+        mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
@@ -393,6 +394,129 @@ public class SdkSandboxManagerServiceUnitTest {
                                                     throws RemoteException {}
                                         }));
         assertThat(thrown).hasMessageThat().contains("Sdk " + SDK_NAME + " is not loaded");
+    }
+
+    @Test
+    public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testAddSdkSandboxLifecycleCallback_AfterStartingSandbox() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testMultipleAddSdkSandboxLifecycleCallbacks() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Register for sandbox death event again
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testRemoveSdkSandboxLifecycleCallback() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+
+        // Register for sandbox death event again
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+
+        // Unregister one of the lifecycle callbacks
+        mService.removeSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
     }
 
     @Test(expected = SecurityException.class)
@@ -681,6 +805,33 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Verify that manager service calls sandbox to sync data
         assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
+    }
+
+    @Test
+    public void testStopSdkSandbox() throws Exception {
+        disableKillUid();
+        disableNetworkPermissionChecks();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        // Assume sandbox loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        Mockito.doNothing()
+                .when(mSpyContext)
+                .enforceCallingPermission(
+                        Mockito.eq("com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX"),
+                        Mockito.anyString());
+        mService.stopSdkSandbox(TEST_PACKAGE);
+        int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
+        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+    }
+
+    @Test(expected = SecurityException.class)
+    public void testStopSdkSandbox_WithoutPermission() {
+        mService.stopSdkSandbox(TEST_PACKAGE);
     }
 
     /**
