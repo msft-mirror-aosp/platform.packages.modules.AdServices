@@ -72,7 +72,7 @@ public class AdSelectionManagerTest {
                             + "}");
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                    .setSeller(SELLER.getStringForm())
+                    .setSeller(SELLER)
                     .setDecisionLogicUri(DECISION_LOGIC_URI)
                     .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                     .build();
@@ -125,9 +125,7 @@ public class AdSelectionManagerTest {
 
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest(
-                        AD_SELECTION_CONFIG,
-                        DECISION_LOGIC_JS,
-                        TRUSTED_SCORING_SIGNALS.getStringForm());
+                        AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> result =
                 mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
@@ -187,9 +185,9 @@ public class AdSelectionManagerTest {
         LogUtil.i("Calling Ad Selection");
         AdSelectionConfig adSelectionConfigNoBuyers =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setSeller(SELLER.getStringForm())
+                        .setSeller(SELLER)
                         .setDecisionLogicUri(DECISION_LOGIC_URI)
-                        .setCustomAudienceBuyers(new ArrayList<String>())
+                        .setCustomAudienceBuyers(new ArrayList<>())
                         .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                         .build();
         AdSelectionClient adSelectionClient =
@@ -199,7 +197,7 @@ public class AdSelectionManagerTest {
                         .build();
 
         ListenableFuture<AdSelectionOutcome> result =
-                adSelectionClient.runAdSelection(adSelectionConfigNoBuyers);
+                adSelectionClient.selectAds(adSelectionConfigNoBuyers);
 
         Exception exception =
                 assertThrows(

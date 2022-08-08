@@ -122,7 +122,12 @@ public class PrecomputedLoader {
                     appTopics.add(Integer.parseInt(topic));
                 }
 
-                appTopicsMap.put(app, ImmutableList.copyOf(appTopics));
+                // Do not add empty topics in the precomputed list.
+                if (appTopics.isEmpty()) {
+                    LogUtil.e("Topics for " + app + " cannot be empty.");
+                } else {
+                    appTopicsMap.put(app, ImmutableList.copyOf(appTopics));
+                }
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed app topics list");

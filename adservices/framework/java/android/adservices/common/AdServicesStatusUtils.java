@@ -98,7 +98,7 @@ public class AdServicesStatusUtils {
     /**
      * The caller is not authorized to make this call. Call was executed from background thread.
      *
-     * <p>This error may be considered similar to {@link SecurityException}.
+     * <p>This error may be considered similar to {@link IllegalStateException}.
      */
     public static final int STATUS_BACKGROUND_CALLER = 11;
     /**
@@ -107,6 +107,8 @@ public class AdServicesStatusUtils {
      * <p>This error may be considered similar to {@link SecurityException}.
      */
     public static final int STATUS_UNAUTHORIZED = 12;
+
+
     /** The error message to be returned along with {@link IllegalStateException}. */
     public static final String ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE = "Service is not available.";
     /** The error message to be returned along with {@link LimitExceededException}. */
@@ -129,6 +131,13 @@ public class AdServicesStatusUtils {
      */
     public static final String ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE =
             "Background thread is not allowed to call this service.";
+
+    /**
+     * The error message to be returned along with {@link SecurityException} when caller not allowed
+     * to perform this operation on behalf of the given package.
+     */
+    public static final String SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE =
+            "Caller not allowed to perform this operation on behalf of the given package.";
 
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {

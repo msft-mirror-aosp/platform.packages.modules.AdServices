@@ -15,14 +15,18 @@
  */
 package com.android.adservices.service.topics;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.adservices.topics.GetTopicsParam;
 import android.adservices.topics.IGetTopicsCallback;
@@ -37,6 +41,7 @@ import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppManifestConfigHelper;
@@ -45,6 +50,7 @@ import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -58,14 +64,15 @@ import java.util.concurrent.Executor;
  * @hide
  */
 public class TopicsServiceImpl extends ITopicsService.Stub {
+    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final Context mContext;
     private final TopicsWorker mTopicsWorker;
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
     private final Clock mClock;
     private final Flags mFlags;
     private final Throttler mThrottler;
+    private final EnrollmentDao mEnrollmentDao;
 
     public TopicsServiceImpl(
             Context context,
@@ -74,7 +81,8 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             AdServicesLogger adServicesLogger,
             Clock clock,
             Flags flags,
-            Throttler throttler) {
+            Throttler throttler,
+            EnrollmentDao enrollmentDao) {
         mContext = context;
         mTopicsWorker = topicsWorker;
         mConsentManager = consentManager;
@@ -82,6 +90,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         mClock = clock;
         mFlags = flags;
         mThrottler = throttler;
+        mEnrollmentDao = enrollmentDao;
     }
 
     @Override
@@ -101,43 +110,22 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // We need to save the Calling Uid before offloading to the background executor. Otherwise
         // the Binder.getCallingUid will return the PPAPI process Uid. This also needs to be final
         // since it's used in the lambda.
-        final int callingUid = Binder.getCallingUid();
+        final int callingUid = Binder.getCallingUidOrThrow();
 
         // Check the permission in the same thread since we're looking for caller's permissions.
         // Note: The permission check uses sdk package name since PackageManager checks if the
         // permission is declared in the manifest of that package name.
-        boolean permitted =
+        boolean hasTopicsPermission =
                 PermissionHelper.hasTopicsPermission(
-                                mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName)
-                        && AppManifestConfigHelper.isAllowedTopicsAccess(
-                                mContext, packageName, sdkName);
+                        mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName);
 
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = STATUS_SUCCESS;
 
                     try {
-
-                        AdServicesApiConsent userConsent =
-                                mConsentManager.getConsent(mContext.getPackageManager());
-
-                        // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
-                        // is not granted for binder thread. So we have to check it here with one
-                        // of non-binder thread of the PPAPI.
-                        boolean appCanUsePpapi = AllowLists.appCanUsePpapi(mFlags, packageName);
-
-                        // Check if caller has permission to invoke this API and user has given
-                        // a consent
-                        if (!appCanUsePpapi || !permitted || !userConsent.isGiven()) {
-                            resultCode = STATUS_UNAUTHORIZED;
-                            LogUtil.e("Unauthorized caller " + sdkName);
-                            callback.onFailure(resultCode);
-                            return;
-                        }
-
-                        resultCode = enforceCallingPackageBelongsToUid(packageName, callingUid);
-                        if (resultCode != STATUS_SUCCESS) {
-                            callback.onFailure(resultCode);
+                        if (!canCallerInvokeTopicsService(
+                                hasTopicsPermission, topicsParam, callingUid, callback)) {
                             return;
                         }
 
@@ -194,6 +182,95 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Check whether caller can invoke the Topics API. The caller is not allowed to do it when one
+     * of the following occurs:
+     *
+     * <ul>
+     *   <li>Permission was not requested.
+     *   <li>Caller is not allowed - not present in the allowed list.
+     *   <li>User consent was revoked.
+     * </ul>
+     *
+     * @param sufficientPermission boolean which tells whether caller has sufficient permissions.
+     * @param topicsParam {@link GetTopicsParam} to get information about the request.
+     * @param callback {@link IGetTopicsCallback} to invoke when caller is not allowed.
+     * @return true if caller is allowed to invoke Topics API, false otherwise.
+     */
+    private boolean canCallerInvokeTopicsService(
+            boolean sufficientPermission,
+            GetTopicsParam topicsParam,
+            int callingUid,
+            IGetTopicsCallback callback) {
+        if (!sufficientPermission) {
+            invokeCallbackWithStatus(
+                    callback,
+                    STATUS_PERMISSION_NOT_REQUESTED,
+                    "Unauthorized caller. Permission not requested.");
+            return false;
+        }
+
+        // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
+        // is not granted for binder thread. So we have to check it with one
+        // of non-binder thread of the PPAPI.
+        boolean appCanUsePpapi = AllowLists.appCanUsePpapi(mFlags, topicsParam.getAppPackageName());
+        if (!appCanUsePpapi) {
+            invokeCallbackWithStatus(
+                    callback,
+                    STATUS_CALLER_NOT_ALLOWED,
+                    "Unauthorized caller. Caller is not allowed.");
+            return false;
+        }
+
+        // Check whether calling package belongs to the callingUid
+        int resultCode =
+                enforceCallingPackageBelongsToUid(topicsParam.getAppPackageName(), callingUid);
+        if (resultCode != STATUS_SUCCESS) {
+            invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
+            return false;
+        }
+
+        AdServicesApiConsent userConsent = mConsentManager.getConsent(mContext.getPackageManager());
+        if (!userConsent.isGiven()) {
+            invokeCallbackWithStatus(
+                    callback, STATUS_USER_CONSENT_REVOKED, "User consent revoked.");
+            return false;
+        }
+
+        // The app developer declares which SDKs they would like to allow Topics
+        // access to using the enrollment ID. Get the enrollment ID for this SDK and
+        // check that against the app's manifest.
+        if (!mFlags.isDisableTopicsEnrollmentCheck() && !topicsParam.getSdkName().isEmpty()) {
+            EnrollmentData enrollmentData =
+                    mEnrollmentDao.getEnrollmentDataGivenSdkName(topicsParam.getSdkName());
+            boolean permitted =
+                    (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
+                            && AppManifestConfigHelper.isAllowedTopicsAccess(
+                                    mContext,
+                                    topicsParam.getAppPackageName(),
+                                    enrollmentData.getEnrollmentId());
+            if (!permitted) {
+                invokeCallbackWithStatus(
+                        callback, STATUS_CALLER_NOT_ALLOWED, "Caller is not authorized.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void invokeCallbackWithStatus(
+            IGetTopicsCallback callback,
+            @AdServicesStatusUtils.StatusCode int statusCode,
+            String message) {
+        LogUtil.e(message);
+        try {
+            callback.onFailure(statusCode);
+        } catch (RemoteException e) {
+            LogUtil.e(e, String.format("Fail to call the callback. %s", message));
+        }
     }
 
     // Enforce that the callingPackage has the callingUid.

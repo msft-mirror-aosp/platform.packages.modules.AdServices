@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -74,7 +75,7 @@ public class AdSelectionDevOverridesHelperTest {
                 .isNotEqualTo(
                         calculateAdSelectionConfigId(
                                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                                        .setSeller("another seller")
+                                        .setSeller(AdTechIdentifier.fromString("another seller"))
                                         .build()));
     }
 
@@ -85,7 +86,7 @@ public class AdSelectionDevOverridesHelperTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.getStringForm())
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.toString())
                         .build());
 
         DevContext devContext =
@@ -110,7 +111,7 @@ public class AdSelectionDevOverridesHelperTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.getStringForm())
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.toString())
                         .build());
 
         DevContext devContext = DevContext.createForDevOptionsDisabled();
@@ -129,7 +130,7 @@ public class AdSelectionDevOverridesHelperTest {
                         .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setDecisionLogicJS(DECISION_LOGIC_JS)
-                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.getStringForm())
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.toString())
                         .build());
 
         DevContext devContext =

@@ -118,7 +118,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     }
 
     @Override
-    public View getView(Context windowContext, Bundle params) {
+    public View getView(Context windowContext, Bundle params, int width, int height) {
         return null;
     }
 
@@ -128,7 +128,7 @@ public class Sdk1 extends SandboxedSdkProvider {
     private GetTopicsResponse callTopicsApi() throws Exception {
         AdvertisingTopicsClient advertisingTopicsClient =
                 new AdvertisingTopicsClient.Builder()
-                        .setContext(getBaseContext())
+                        .setContext(getContext())
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 

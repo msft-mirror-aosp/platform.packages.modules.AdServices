@@ -187,7 +187,7 @@ public class AdBidGeneratorImplTest {
                                 return new MockResponse().setBody(mBuyerDecisionLogicJs);
                             case mTrustedBiddingPath + mTrustedBiddingParams:
                                 return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -290,7 +290,7 @@ public class AdBidGeneratorImplTest {
                         .setName(mCustomAudienceWithAds.getName())
                         .setAppPackageName(myAppPackageName)
                         .setBiddingLogicJS(mBuyerDecisionLogicJs)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.getStringForm())
+                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.toString())
                         .build();
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
@@ -419,6 +419,14 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionBiddingTimeoutPerCaMs() {
+                        return 100;
+                    }
+                };
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -426,7 +434,7 @@ public class AdBidGeneratorImplTest {
                         mAdSelectionScriptEngine,
                         mAdServicesHttpsClient,
                         customAudienceDevOverridesHelper,
-                        mFlags);
+                        flagsWithSmallerLimits);
         Mockito.when(
                         mAdSelectionScriptEngine.generateBids(
                                 mBuyerDecisionLogicJs,
@@ -528,7 +536,7 @@ public class AdBidGeneratorImplTest {
                                 return new MockResponse().setBody(mBuyerDecisionLogicJs);
                             case mTrustedBiddingPath + emptyRequestParams:
                                 return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }

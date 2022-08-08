@@ -61,7 +61,7 @@ public class CustomAudienceDevOverridesHelper {
      */
     @Nullable
     public String getBiddingLogicOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
@@ -95,9 +95,10 @@ public class CustomAudienceDevOverridesHelper {
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 
-        return AdSelectionSignals.fromString(
+        String biddingSignal =
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
-                        owner, buyer.getStringForm(), name, appPackageName));
+                        owner, buyer, name, appPackageName);
+        return biddingSignal == null ? null : AdSelectionSignals.fromString(biddingSignal);
     }
 
     /**
@@ -130,10 +131,10 @@ public class CustomAudienceDevOverridesHelper {
             mCustomAudienceDao.persistCustomAudienceOverride(
                     DBCustomAudienceOverride.builder()
                             .setOwner(owner)
-                            .setBuyer(buyer.getStringForm())
+                            .setBuyer(buyer)
                             .setName(name)
                             .setBiddingLogicJS(biddingLogicJS)
-                            .setTrustedBiddingData(trustedBiddingSignals.getStringForm())
+                            .setTrustedBiddingData(trustedBiddingSignals.toString())
                             .setAppPackageName(appPackageName)
                             .build());
         }
@@ -159,7 +160,7 @@ public class CustomAudienceDevOverridesHelper {
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         mCustomAudienceDao.removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
-                owner, buyer.getStringForm(), name, appPackageName);
+                owner, buyer, name, appPackageName);
     }
 
     /**

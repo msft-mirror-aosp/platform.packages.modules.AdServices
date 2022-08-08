@@ -31,13 +31,13 @@ public class RemoveCustomAudienceOverrideRequestTest {
     public void testBuildAddCustomAudienceOverrideRequest() {
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest.Builder()
-                        .setOwner(OWNER)
-                        .setBuyer(BUYER.getStringForm())
+                        .setOwnerPackageName(OWNER)
+                        .setBuyer(BUYER)
                         .setName(NAME)
                         .build();
 
-        assertEquals(request.getOwner(), OWNER);
-        assertEquals(request.getBuyer(), BUYER.getStringForm());
+        assertEquals(request.getOwnerPackageName(), OWNER);
+        assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
     }
 }

@@ -61,10 +61,10 @@ public class MeasurementClient {
                             attributionSource,
                             inputEvent,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -89,10 +89,10 @@ public class MeasurementClient {
                     mMeasurementManager.registerTrigger(
                             trigger,
                             mExecutor,
-                            new OutcomeReceiver<Void, AdServicesException>() {
+                            new OutcomeReceiver<Object, AdServicesException>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -116,10 +116,10 @@ public class MeasurementClient {
                     mMeasurementManager.registerWebSource(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, Exception>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -145,10 +145,10 @@ public class MeasurementClient {
                     mMeasurementManager.registerWebTrigger(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, Exception>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override
@@ -173,10 +173,10 @@ public class MeasurementClient {
                     mMeasurementManager.deleteRegistrations(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Void, Exception>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
-                                public void onResult(@NonNull Void result) {
-                                    completer.set(result);
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
                                 }
 
                                 @Override

@@ -49,11 +49,14 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Binder;
+import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -67,6 +70,7 @@ import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -89,6 +93,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -97,7 +102,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 /**
  * This test the actual flow of Ad Selection internal flow without any mocking. The dependencies in
@@ -160,6 +164,7 @@ public class AdSelectionE2ETest {
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock DevContextFilter mDevContextFilter;
+    @Mock AppImportanceFilter mAppImportanceFilter;
     private MockitoSession mStaticMockSession = null;
     private Context mContext;
     private ExecutorService mExecutorService;
@@ -169,7 +174,8 @@ public class AdSelectionE2ETest {
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private Flags mFlags;
+    private Flags mFlags =
+            FlagsWithOverriddenAppImportanceCheck.createFlagsWithAppImportanceCheckEnabled();
 
     @Before
     public void setUp() throws Exception {
@@ -178,8 +184,13 @@ public class AdSelectionE2ETest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(Binder.class)
+                        // Tests for invalid inputs will not refer Binder::getCallingUidOrThrow
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
+        ExtendedMockito.doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
 
         // Initialize dependencies for the AdSelectionService
         mContext = ApplicationProvider.getApplicationContext();
@@ -208,6 +219,7 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         mContext,
                         mAdServicesLogger,
@@ -220,15 +232,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -237,9 +248,9 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
+                        LogUtil.w("Unexpected call to MockWebServer " + request.getPath());
                         return new MockResponse().setResponseCode(404);
                     }
                 };
@@ -248,15 +259,12 @@ public class AdSelectionE2ETest {
         // the url points to a JS with score generation logic
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        BUYER_1.getStringForm(),
-                                        BUYER_2.getStringForm(),
-                                        BUYER_3.getStringForm()))
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
                         .setSeller(
-                                mMockWebServerRule
-                                        .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                        .getHost())
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
@@ -359,14 +367,12 @@ public class AdSelectionE2ETest {
 
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                participatingBuyers.stream()
-                                        .map(AdTechIdentifier::getStringForm)
-                                        .collect(Collectors.toList()))
+                        .setCustomAudienceBuyers(participatingBuyers)
                         .setSeller(
-                                mMockWebServerRule
-                                        .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                        .getHost())
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
@@ -414,7 +420,7 @@ public class AdSelectionE2ETest {
                                         mAdSelectionConfig))
                         .setAppPackageName(myAppPackageName)
                         .setDecisionLogicJS(USE_BID_AS_SCORE_JS)
-                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.getStringForm())
+                        .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS.toString())
                         .build();
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
@@ -426,7 +432,7 @@ public class AdSelectionE2ETest {
                         .setName(dBCustomAudienceForBuyer2.getName())
                         .setAppPackageName(myAppPackageName)
                         .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.getStringForm())
+                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.toString())
                         .build();
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
@@ -444,6 +450,7 @@ public class AdSelectionE2ETest {
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
+                        mAppImportanceFilter,
                         mExecutorService,
                         mContext,
                         mAdServicesLogger,
@@ -551,7 +558,7 @@ public class AdSelectionE2ETest {
                         bidsForBuyer3,
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
                         CustomAudienceFixture.VALID_EXPIRATION_TIME,
-                        CustomAudienceFixture.INVALID_LAST_UPDATE_TIME_72_HRS_BEFORE);
+                        CustomAudienceFixture.INVALID_LAST_UPDATE_TIME_72_DAYS_BEFORE);
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceInactive,
@@ -596,9 +603,10 @@ public class AdSelectionE2ETest {
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(
-                                mMockWebServerRule
-                                        .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                        .getHost())
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
                         .setTrustedScoringSignalsUri(
@@ -685,15 +693,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody("");
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -702,8 +709,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -754,15 +760,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody("");
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -771,8 +776,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -823,16 +827,15 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody("");
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -841,8 +844,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -902,15 +904,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(makeOddBidsNegativeScoreJs);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -919,8 +920,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -980,15 +980,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(makeOddBidsNegativeScoreJs);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -997,8 +996,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1037,6 +1035,27 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionBiddingTimesOut() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionBiddingTimeoutPerCaMs() {
+                        return 100;
+                    }
+                };
+
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        mContext,
+                        mAdServicesLogger,
+                        flagsWithSmallerLimits);
+
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
         String readBidFromAdMetadataWithDelayJs =
@@ -1054,16 +1073,15 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody(readBidFromAdMetadataWithDelayJs);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                 .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1072,8 +1090,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1117,6 +1134,27 @@ public class AdSelectionE2ETest {
     public void testRunAdSelectionScoringTimesOut() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
+        Flags flagsWithSmallerLimits =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionScoringTimeoutMs() {
+                        return 100;
+                    }
+                };
+
+        // Create an instance of AdSelection Service with real dependencies
+        mAdSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mAppImportanceFilter,
+                        mExecutorService,
+                        mContext,
+                        mAdServicesLogger,
+                        flagsWithSmallerLimits);
+
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
         String useBidAsScoringWithDelayJs =
@@ -1134,15 +1172,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(useBidAsScoringWithDelayJs);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1151,8 +1188,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1194,7 +1230,7 @@ public class AdSelectionE2ETest {
     public void testAdSelectionConfigInvalidInput() throws Exception {
         AdSelectionConfig invalidAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setSeller(SELLER_VALID.getStringForm())
+                        .setSeller(SELLER_VALID)
                         .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
 
@@ -1240,9 +1276,9 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         }
@@ -1253,8 +1289,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1303,15 +1338,14 @@ public class AdSelectionE2ETest {
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1361,15 +1395,14 @@ public class AdSelectionE2ETest {
 
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
                             return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
-                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.getStringForm())
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
-                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.getStringForm())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
                             return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                         } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
                                 .equals(request.getPath())) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
 
                         // The seller params vary based on runtime, so we are returning trusted
@@ -1378,8 +1411,7 @@ public class AdSelectionE2ETest {
                                 .startsWith(
                                         SELLER_TRUSTED_SIGNAL_URI_PATH
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                            return new MockResponse()
-                                    .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -1454,14 +1486,13 @@ public class AdSelectionE2ETest {
 
         return new DBCustomAudience.Builder()
                 .setOwner(buyer + CustomAudienceFixture.VALID_OWNER)
-                .setBuyer(buyer.getStringForm())
-                .setName(buyer + CustomAudienceFixture.VALID_NAME)
+                .setBuyer(buyer)
+                .setName(buyer.toString() + CustomAudienceFixture.VALID_NAME)
                 .setActivationTime(activationTime)
                 .setExpirationTime(expirationTime)
                 .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setLastAdsAndBiddingDataUpdatedTime(lastUpdateTime)
-                .setUserBiddingSignals(
-                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm())
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
                 .setTrustedBiddingData(
                         new DBTrustedBiddingData.Builder()
                                 .setUrl(

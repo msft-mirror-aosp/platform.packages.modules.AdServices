@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -96,7 +97,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
      * @return a list of strings of messages from each violation.
      */
     private ImmutableList<String> validateSellerDecisionUrls(
-            @NonNull String seller, @NonNull Uri decisionLogicUri) {
+            @NonNull AdTechIdentifier seller, @NonNull Uri decisionLogicUri) {
         return validateUriAndSellerHost(DECISION_LOGIC_URI_TYPE, decisionLogicUri, seller);
     }
 
@@ -108,12 +109,14 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
      * @return a list of strings of messages from each violation.
      */
     private ImmutableList<String> validateTrustedSignalsUri(
-            @NonNull String seller, @NonNull Uri trustedSignalsUri) {
+            @NonNull AdTechIdentifier seller, @NonNull Uri trustedSignalsUri) {
         return validateUriAndSellerHost(
                 TRUSTED_SCORING_SIGNALS_URI_TYPE, trustedSignalsUri, seller);
     }
 
-    private ImmutableList<String> validateSeller(@NonNull String seller) {
+    // TODO(b/238658332) fold this validation into the AdTechIdentifier class
+    private ImmutableList<String> validateSeller(@NonNull AdTechIdentifier sellerId) {
+        String seller = sellerId.toString();
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
         String sellerHost = Uri.parse("https://" + seller).getHost();
         if (isStringNullOrEmpty(seller)) {
@@ -128,7 +131,8 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     }
 
     private ImmutableList<String> validateUriAndSellerHost(
-            @NonNull String uriType, @NonNull Uri uri, @NonNull String seller) {
+            @NonNull String uriType, @NonNull Uri uri, @NonNull AdTechIdentifier sellerId) {
+        String seller = sellerId.toString();
         ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
         if (!uri.isAbsolute()) {
             violations.add(String.format(URI_IS_NOT_ABSOLUTE, uriType));

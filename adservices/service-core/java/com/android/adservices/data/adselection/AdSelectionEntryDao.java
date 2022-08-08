@@ -22,18 +22,14 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.android.internal.annotations.VisibleForTesting;
-
 import java.time.Instant;
 import java.util.List;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
  *
- * <p>Annotation will generate Room based SQLite Dao implementation. TODO(b/228114258) Add unit
- * tests
+ * <p>Annotation will generate Room based SQLite Dao implementation.
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Dao
 public interface AdSelectionEntryDao {
     /**
@@ -152,7 +148,6 @@ public interface AdSelectionEntryDao {
             "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
                     + " :adSelectionConfigId AND app_package_name = :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
 
     /**
@@ -166,7 +161,6 @@ public interface AdSelectionEntryDao {
                     + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
                     + " :appPackageName")
     @Nullable
-    @VisibleForTesting
     String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
 
     /**

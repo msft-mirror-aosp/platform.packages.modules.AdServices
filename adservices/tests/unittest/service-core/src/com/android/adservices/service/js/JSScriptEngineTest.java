@@ -58,6 +58,7 @@ import org.chromium.android_webview.js_sandbox.client.JsIsolate;
 import org.chromium.android_webview.js_sandbox.client.JsSandbox;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -312,7 +313,7 @@ public class JSScriptEngineTest {
         verify(sMockProfiler).start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
     }
 
-    // Troubles between google-java-format and checkstile
+    // Troubles between google-java-format and checkstyle
     // CHECKSTYLE:OFF IndentationCheck
     @Test
     public void testIsolateIsClosedWhenEvaluationCompletes() throws Exception {
@@ -340,7 +341,7 @@ public class JSScriptEngineTest {
                 ImmutableList.of(),
                 "test");
 
-        isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
+        isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
         // Using Mockito.verify made the test unstable (mockito call registration was in a
         // race condition with the verify call)
         assertTrue(isolateHasBeenClosed.get());
@@ -376,12 +377,14 @@ public class JSScriptEngineTest {
                                 ImmutableList.of(),
                                 "test"));
 
-        isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
+        isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
         // Using Mockito.verify made the test unstable (mockito call registration was in a
         // race condition with the verify call)
         assertTrue(isolateHasBeenClosed.get());
     }
 
+    // TODO(240857630) Solve flakyness in this test
+    @Ignore
     @Test
     public void testIsolateIsClosedWhenEvaluationIsCancelled() throws Exception {
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
@@ -425,11 +428,11 @@ public class JSScriptEngineTest {
                         "function test() { return \"hello world\"; }", ImmutableList.of(), "test");
 
         // cancelling only after the processing started and the sandbox has been created
-        jsEvaluationStartedLatch.await(4, TimeUnit.SECONDS);
+        jsEvaluationStartedLatch.await(1, TimeUnit.SECONDS);
         LogUtil.i("Cancelling JS future");
         jsExecutionFuture.cancel(true);
         LogUtil.i("Waiting for isolate to close");
-        isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
+        isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
         LogUtil.i("Checking");
         // Using Mockito.verify made the test unstable (mockito call registration was in a
         // race condition with the verify call)
@@ -492,8 +495,8 @@ public class JSScriptEngineTest {
                                         .get());
 
         // cancelling only after the processing started and the sandbox has been created
-        jsEvaluationStartedLatch.await(4, TimeUnit.SECONDS);
-        isolateIsClosedLatch.await(4, TimeUnit.SECONDS);
+        jsEvaluationStartedLatch.await(1, TimeUnit.SECONDS);
+        isolateIsClosedLatch.await(1, TimeUnit.SECONDS);
         // Using Mockito.verify made the test unstable (mockito call registration was in a
         // race condition with the verify call)
         assertTrue(isolateHasBeenClosed.get());
