@@ -26,8 +26,8 @@ import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.content.Context;
 import android.content.pm.SharedLibraryInfo;
+import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.view.SurfaceControlViewHost.SurfacePackage;
@@ -301,8 +301,8 @@ public final class SdkSandboxManager {
      *
      * <p>It is not guaranteed that the memory allocated for this SDK will be freed immediately. All
      * subsequent calls to {@link #sendData(String, Bundle, Executor, OutcomeReceiver)} or {@link
-     * #requestSurfacePackage(String, int, int, int, IBinder, Bundle, Executor, OutcomeReceiver)}
-     * for the given {@code sdkName} will fail.
+     * #requestSurfacePackage(String, int, int, int, Bundle, Executor, OutcomeReceiver)} for the
+     * given {@code sdkName} will fail.
      *
      * @param sdkName name of the SDK to be unloaded.
      * @throws IllegalArgumentException if the SDK is not loaded.
@@ -318,9 +318,8 @@ public final class SdkSandboxManager {
     /**
      * Send a request for a surface package to the sdk.
      *
-     * <p>After client application receives a signal about a successful SDK loading, and has added a
-     * {@link android.view.SurfaceView} to the view hierarchy, it may asynchronously request a
-     * {@link SurfacePackage} to render a view from the SDK.
+     * <p>After client application receives a signal about a successful SDK loading, it is then able
+     * to asynchronously request a {@link SurfacePackage} to render view from SDK.
      *
      * <p>The requested {@link SurfacePackage} is returned to client application through {@code
      * receiver}
@@ -329,9 +328,6 @@ public final class SdkSandboxManager {
      * @param displayId the id of the logical display to display the surface package
      * @param width the width of the surface package
      * @param height the height of the surface package
-     * @param hostToken the token returned by {@link android.view.SurfaceView#getHostToken()} once
-     *     the {@link android.view.SurfaceView} has been added to the view hierarchy. Only a
-     *     non-null hostToken is accepted to enable ANR reporting.
      * @param params the parameters which client application passes to SDK
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param receiver This either returns a {@link RequestSurfacePackageResponse} on success, or
@@ -342,7 +338,6 @@ public final class SdkSandboxManager {
             int displayId,
             int width,
             int height,
-            @NonNull IBinder hostToken,
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor callbackExecutor,
             @NonNull
@@ -354,7 +349,7 @@ public final class SdkSandboxManager {
             mService.requestSurfacePackage(
                     mContext.getPackageName(),
                     sdkName,
-                    hostToken,
+                    new Binder(),
                     displayId,
                     width,
                     height,
