@@ -28,8 +28,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
@@ -90,8 +94,10 @@ public class CustomAudienceServiceImplTest {
     @Mock private CustomAudienceOverrideCallback mCustomAudienceOverrideCallback;
     @Mock private AppImportanceFilter mAppImportanceFilter;
     @Mock private CustomAudienceDao mCustomAudienceDao;
-    private Flags mFlagsWithForegroundCheckEnabled = new FlagsWithForegroundCheckOverride(true);
-    private Flags mFlagsWithForegroundCheckDisabled = new FlagsWithForegroundCheckOverride(false);
+    private final Flags mFlagsWithForegroundCheckEnabled =
+            new FlagsWithForegroundCheckOverride(true);
+    private final Flags mFlagsWithForegroundCheckDisabled =
+            new FlagsWithForegroundCheckOverride(false);
 
     private CustomAudienceServiceImpl mService;
 
@@ -106,6 +112,7 @@ public class CustomAudienceServiceImplTest {
                 ExtendedMockito.mockitoSession()
                         .initMocks(this)
                         .mockStatic(Binder.class)
+                        .mockStatic(BackgroundFetchJobService.class)
                         .startMocking();
 
         mService =
@@ -128,9 +135,12 @@ public class CustomAudienceServiceImplTest {
     @Test
     public void testJoinCustomAudience_runNormally() throws RemoteException {
         doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
         verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallback).onSuccess();
         verify(mFledgeAuthorizationFilter)
                 .assertCallingPackageName(
@@ -150,6 +160,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -175,6 +186,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -201,6 +213,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -224,6 +237,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -247,6 +261,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -281,6 +296,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -289,10 +305,13 @@ public class CustomAudienceServiceImplTest {
     public void testJoinCustomAudience_errorReturnCallback() throws RemoteException {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         doThrow(RemoteException.class).when(mICustomAudienceCallback).onSuccess();
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         mService.joinCustomAudience(VALID_CUSTOM_AUDIENCE, mICustomAudienceCallback);
 
         verify(mCustomAudienceImpl).joinCustomAudience(VALID_CUSTOM_AUDIENCE);
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
         verify(mICustomAudienceCallback).onSuccess();
         verify(mICustomAudienceCallback).onFailure(any(FledgeErrorResponse.class));
         verify(mFledgeAuthorizationFilter)
@@ -314,6 +333,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -352,6 +372,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -382,6 +403,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -414,6 +436,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -442,6 +465,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -470,6 +494,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -498,6 +523,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -526,6 +552,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -571,6 +598,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
@@ -611,6 +639,7 @@ public class CustomAudienceServiceImplTest {
         verifyNoMoreInteractions(
                 mCustomAudienceImpl,
                 mFledgeAuthorizationFilter,
+                staticMockMarker(BackgroundFetchJobService.class),
                 mICustomAudienceCallback,
                 mAdServicesLoggerSpy);
     }
