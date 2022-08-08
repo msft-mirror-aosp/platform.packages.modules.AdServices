@@ -19,7 +19,7 @@ package com.android.sdksandbox;
 import android.os.Bundle;
 
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.LoadSdkException;
 
 /** @hide */
@@ -30,6 +30,6 @@ oneway interface ILoadSdkInSandboxCallback {
     const int LOAD_SDK_INSTANTIATION_ERROR = 4;
     const int LOAD_SDK_SDK_DEFINED_ERROR = 5;
 
-    void onLoadSdkSuccess(in LoadSdkResponse response, in ISdkSandboxManagerToSdkSandboxCallback callback);
+    void onLoadSdkSuccess(in SandboxedSdk sandboxedSdk, in ISdkSandboxManagerToSdkSandboxCallback callback);
     void onLoadSdkError(in LoadSdkException exception);
 }

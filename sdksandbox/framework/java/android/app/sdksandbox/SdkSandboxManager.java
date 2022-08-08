@@ -327,14 +327,14 @@ public final class SdkSandboxManager {
      * @param params additional parameters to be passed to the SDK in the form of a {@link Bundle}
      *     as agreed between the client and the SDK.
      * @param executor the {@link Executor} on which to invoke the receiver.
-     * @param receiver This either returns a {@link LoadSdkResponse} on a successful run, or a
-     *     {@link LoadSdkException}.
+     * @param receiver This either returns a {@link SandboxedSdk} on a successful run, or {@link
+     *     LoadSdkException}.
      */
     public void loadSdk(
             @NonNull String sdkName,
             @NonNull Bundle params,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<LoadSdkResponse, LoadSdkException> receiver) {
+            @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
         final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
         try {
             mService.loadSdk(
@@ -550,17 +550,17 @@ public final class SdkSandboxManager {
     /** @hide */
     private static class LoadSdkReceiverProxy extends ILoadSdkCallback.Stub {
         private final Executor mExecutor;
-        private final OutcomeReceiver<LoadSdkResponse, LoadSdkException> mCallback;
+        private final OutcomeReceiver<SandboxedSdk, LoadSdkException> mCallback;
 
         LoadSdkReceiverProxy(
-                Executor executor, OutcomeReceiver<LoadSdkResponse, LoadSdkException> callback) {
+                Executor executor, OutcomeReceiver<SandboxedSdk, LoadSdkException> callback) {
             mExecutor = executor;
             mCallback = callback;
         }
 
         @Override
-        public void onLoadSdkSuccess(LoadSdkResponse response) {
-            mExecutor.execute(() -> mCallback.onResult(response));
+        public void onLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
+            mExecutor.execute(() -> mCallback.onResult(sandboxedSdk));
         }
 
         @Override

@@ -32,7 +32,7 @@ import android.app.sdksandbox.ISdkSandboxLifecycleCallback;
 import android.app.sdksandbox.ISdkSandboxManager;
 import android.app.sdksandbox.ISendDataCallback;
 import android.app.sdksandbox.LoadSdkException;
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
 import android.content.BroadcastReceiver;
@@ -1271,13 +1271,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         @Override
         public void onLoadSdkSuccess(
-                LoadSdkResponse response, ISdkSandboxManagerToSdkSandboxCallback callback) {
+                SandboxedSdk sandboxedSdk, ISdkSandboxManagerToSdkSandboxCallback callback) {
             // Keep reference to callback so that manager service can
             // callback to remote code loaded.
             synchronized (this) {
                 mManagerToCodeCallback = callback;
             }
-            handleLoadSdkSuccess(response);
+            handleLoadSdkSuccess(sandboxedSdk);
         }
 
         @Override
@@ -1290,10 +1290,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     /*stage*/ SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__STAGE_UNSPECIFIED);
         }
 
-        private void handleLoadSdkSuccess(LoadSdkResponse response) {
+        private void handleLoadSdkSuccess(SandboxedSdk sandboxedSdk) {
             removePendingCallback(mCallingInfo, this.asBinder());
             try {
-                mManagerToAppCallback.onLoadSdkSuccess(response);
+                mManagerToAppCallback.onLoadSdkSuccess(sandboxedSdk);
             } catch (RemoteException e) {
                 Log.w(TAG, "Failed to send onLoadCodeSuccess", e);
             }

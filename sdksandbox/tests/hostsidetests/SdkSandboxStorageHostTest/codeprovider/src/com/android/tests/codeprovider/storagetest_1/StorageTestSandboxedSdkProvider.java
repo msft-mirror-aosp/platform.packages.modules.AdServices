@@ -16,9 +16,10 @@
 
 package com.android.tests.codeprovider.storagetest_1;
 
-import android.app.sdksandbox.LoadSdkResponse;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,13 +28,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+
 public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String TAG = "StorageTestSandboxedSdkProvider";
     private static final String BUNDLE_KEY_PHASE_NAME = "phase-name";
 
     @Override
-    public LoadSdkResponse onLoadSdk(Bundle params) {
-        return new LoadSdkResponse(new Bundle());
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        return new SandboxedSdk(new Binder());
     }
 
     @Override
