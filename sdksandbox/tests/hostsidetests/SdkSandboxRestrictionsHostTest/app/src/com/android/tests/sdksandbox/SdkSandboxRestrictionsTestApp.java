@@ -23,9 +23,9 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 import android.provider.DeviceConfig;
-
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -60,7 +60,7 @@ public class SdkSandboxRestrictionsTestApp {
         Bundle bundle = new Bundle();
         bundle.putString(BUNDLE_KEY_PHASE_NAME, phaseName);
         mSdkSandboxManager.requestSurfacePackage(
-                SDK_PACKAGE, 0, 500, 500, bundle, Runnable::run, callback);
+                SDK_PACKAGE, 0, 500, 500, new Binder(), bundle, Runnable::run, callback);
     }
 
     /**
