@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -95,7 +96,7 @@ public final class ReportImpressionInput implements Parcelable {
         // Initializing mAdSelectionId to start as -1, to differentiate it from the default
         // initialization of 0.
         private long mAdSelectionId = UNSET;
-        private AdSelectionConfig mAdSelectionConfig;
+        @Nullable private AdSelectionConfig mAdSelectionConfig;
 
         public Builder() {}
 

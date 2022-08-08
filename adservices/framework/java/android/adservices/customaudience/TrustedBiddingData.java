@@ -17,6 +17,7 @@
 package android.adservices.customaudience;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -112,10 +113,8 @@ public final class TrustedBiddingData implements Parcelable {
 
     /** Builder for {@link TrustedBiddingData} objects. */
     public static final class Builder {
-        @NonNull
-        private Uri mTrustedBiddingUrl;
-        @NonNull
-        private List<String> mTrustedBiddingKeys;
+        @Nullable private Uri mTrustedBiddingUrl;
+        @Nullable private List<String> mTrustedBiddingKeys;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
