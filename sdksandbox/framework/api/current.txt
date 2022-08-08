@@ -54,7 +54,7 @@ package android.app.sdksandbox {
     method public static int getSdkSandboxState();
     method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.LoadSdkResponse,android.app.sdksandbox.LoadSdkException>);
     method public void removeSdkSandboxLifecycleCallback(@NonNull android.app.sdksandbox.SdkSandboxManager.SdkSandboxLifecycleCallback);
-    method public void requestSurfacePackage(@NonNull String, int, int, int, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.RequestSurfacePackageResponse,android.app.sdksandbox.RequestSurfacePackageException>);
+    method public void requestSurfacePackage(@NonNull String, int, int, int, @NonNull android.os.IBinder, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.RequestSurfacePackageResponse,android.app.sdksandbox.RequestSurfacePackageException>);
     method public void sendData(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.SendDataResponse,android.app.sdksandbox.SendDataException>);
     method public void unloadSdk(@NonNull String);
     field public static final int LOAD_SDK_ALREADY_LOADED = 101; // 0x65
