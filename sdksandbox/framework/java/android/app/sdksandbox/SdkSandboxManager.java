@@ -21,7 +21,9 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
+import android.annotation.TestApi;
 import android.content.Context;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Binder;
@@ -160,6 +162,21 @@ public final class SdkSandboxManager {
     @SdkSandboxState
     public static int getSdkSandboxState() {
         return SDK_SANDBOX_STATE_ENABLED_PROCESS_ISOLATION;
+    }
+
+    /**
+     * Stop the SDK sandbox process corresponding to the app.
+     *
+     * @hide
+     */
+    @TestApi
+    @RequiresPermission("com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX")
+    public void stopSdkSandbox() {
+        try {
+            mService.stopSdkSandbox(mContext.getPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
     }
 
     /**

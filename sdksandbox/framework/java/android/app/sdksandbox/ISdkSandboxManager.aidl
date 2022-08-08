@@ -32,4 +32,5 @@ interface ISdkSandboxManager {
     void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
     List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName);
     void syncDataFromClient(in String callingPackageName, in Bundle data);
+    void stopSdkSandbox(in String callingPackageName);
 }
