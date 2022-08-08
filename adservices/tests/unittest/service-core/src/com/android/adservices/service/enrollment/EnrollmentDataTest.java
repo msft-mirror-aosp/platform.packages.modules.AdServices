@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+
 import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
@@ -78,5 +79,40 @@ public final class EnrollmentDataTest {
         assertEquals(enrollmentData.getAttributionReportingUrl().size(), 0);
         assertEquals(enrollmentData.getRemarketingResponseBasedRegistrationUrl().size(), 0);
         assertEquals(enrollmentData.getEncryptionKeyUrl().size(), 0);
+    }
+
+    @Test
+    public void testEquals() {
+        EnrollmentData e1 =
+                new EnrollmentData.Builder()
+                        .setEnrollmentId("2")
+                        .setCompanyId("1002")
+                        .setSdkNames("2sdk")
+                        .setAttributionSourceRegistrationUrl(
+                                Arrays.asList(
+                                        "https://2test.com/source", "https://2test2.com/source"))
+                        .setAttributionTriggerRegistrationUrl(
+                                Arrays.asList("https://2test.com/trigger"))
+                        .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
+                        .setRemarketingResponseBasedRegistrationUrl(
+                                Arrays.asList("https://2test.com"))
+                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                        .build();
+        EnrollmentData e2 =
+                new EnrollmentData.Builder()
+                        .setEnrollmentId("2")
+                        .setCompanyId("1002")
+                        .setSdkNames("2sdk")
+                        .setAttributionSourceRegistrationUrl(
+                                Arrays.asList(
+                                        "https://2test.com/source", "https://2test2.com/source"))
+                        .setAttributionTriggerRegistrationUrl(
+                                Arrays.asList("https://2test.com/trigger"))
+                        .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
+                        .setRemarketingResponseBasedRegistrationUrl(
+                                Arrays.asList("https://2test.com"))
+                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                        .build();
+        assertEquals(e1, e2);
     }
 }
