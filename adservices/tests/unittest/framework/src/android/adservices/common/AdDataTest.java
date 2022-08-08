@@ -83,4 +83,15 @@ public final class AdDataTest {
                         "AdData{mRenderUri=%s, mMetadata='%s'}", VALID_RENDER_URL, VALID_METADATA),
                 obj.toString());
     }
+
+    @Test
+    public void testAdDataDescribeContent() {
+        AdData obj =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URL)
+                        .setMetadata(VALID_METADATA)
+                        .build();
+
+        assertEquals(0, obj.describeContents());
+    }
 }
