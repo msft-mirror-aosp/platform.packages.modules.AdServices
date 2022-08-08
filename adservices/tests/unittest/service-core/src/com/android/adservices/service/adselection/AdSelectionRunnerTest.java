@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
@@ -1315,7 +1316,7 @@ public class AdSelectionRunnerTest {
 
         assertFalse(resultsCallback.mIsSuccess);
         verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), "Timed out");
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), AD_SELECTION_TIMED_OUT);
     }
 
     private void verifyErrorMessageIsCorrect(

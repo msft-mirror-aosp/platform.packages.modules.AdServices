@@ -24,7 +24,9 @@ import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_SCORING_LOGIC;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION;
 import static com.android.adservices.stats.FledgeApiCallStatsMatcher.aCallStatForFledgeApiWithStatus;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -813,6 +815,72 @@ public class AdSelectionE2ETest {
     }
 
     @Test
+    public void testRunAdSelectionErrorFetchingScoringLogicFailure() throws Exception {
+        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
+        // Setting bids->scores
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        // In this case the web server returns failure for scoring
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
+                            return new MockResponse().setResponseCode(404);
+                        } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
+                                        .equals(request.getPath())
+                                || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
+                                        .equals(request.getPath())) {
+                            return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
+                        } else if ((BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS)
+                                .equals(request.getPath())) {
+                            return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                        }
+
+                        // The seller params vary based on runtime, so we are returning trusted
+                        // signals based on correct path prefix
+                        if (request.getPath()
+                                .startsWith(
+                                        SELLER_TRUSTED_SIGNAL_URI_PATH
+                                                + SELLER_TRUSTED_SIGNAL_PARAMS)) {
+                            return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+
+        mMockWebServerRule.startMockWebServer(dispatcher);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionService, mAdSelectionConfig);
+
+        assertCallbackFailed(resultsCallback);
+        verifyErrorMessageIsCorrect(
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), MISSING_SCORING_LOGIC);
+    }
+
+    @Test
     public void testRunAdSelectionPartialMissingBiddingLogic() throws Exception {
         doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
@@ -1223,7 +1291,7 @@ public class AdSelectionE2ETest {
         Assert.assertFalse(resultsCallback.mIsSuccess);
 
         verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), "Timed out");
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(), SCORING_TIMED_OUT);
     }
 
     @Test

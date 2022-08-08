@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
+import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_BIDDING_LOGIC;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
 
 import static org.junit.Assert.assertEquals;
@@ -456,7 +458,7 @@ public class AdBidGeneratorImplTest {
                         AdSelectionConfigFixture.anAdSelectionConfig());
         // Then we can test the result by assertion
         ExecutionException thrown = assertThrows(ExecutionException.class, result::get);
-        assertTrue(thrown.getMessage().contains("TimeoutFuture$TimeoutFutureException"));
+        assertTrue(thrown.getMessage().contains(BIDDING_TIMED_OUT));
         Mockito.verify(mAdSelectionScriptEngine)
                 .generateBids(
                         mBuyerDecisionLogicJs,
@@ -614,6 +616,52 @@ public class AdBidGeneratorImplTest {
                 2,
                 ImmutableList.of(mFetchJavaScriptPath, mTrustedBiddingPath + emptyRequestParams),
                 mRequestMatcherExactMatch);
+    }
+
+    @Test
+    public void testMissingBiddingLogicException() throws Exception {
+        // Given we are using a direct executor and mock the returned result from the
+        // AdSelectionScriptEngine.generateBids for preparing the test,
+
+        // Send error response for JS logic fetch
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        switch (request.getPath()) {
+                            case mFetchJavaScriptPath:
+                                return new MockResponse().setResponseCode(404);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+        mServer = mMockWebServerRule.startMockWebServer(dispatcher);
+        IllegalStateException missingJSLogicException =
+                new IllegalStateException(MISSING_BIDDING_LOGIC);
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mListeningExecutorService,
+                        mAdSelectionScriptEngine,
+                        mAdServicesHttpsClient,
+                        customAudienceDevOverridesHelper,
+                        mFlags);
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        mCustomAudienceWithAds,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        AdSelectionConfigFixture.anAdSelectionConfig());
+        ExecutionException outException = assertThrows(ExecutionException.class, result::get);
+        assertEquals(outException.getCause().getMessage(), missingJSLogicException.getMessage());
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(mFetchJavaScriptPath), mRequestMatcherExactMatch);
     }
 
     @Test
