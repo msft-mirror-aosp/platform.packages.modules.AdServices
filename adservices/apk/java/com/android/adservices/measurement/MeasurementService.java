@@ -19,6 +19,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
@@ -39,7 +40,8 @@ public class MeasurementService extends Service {
     public void onCreate() {
         super.onCreate();
         if (mMeasurementService == null) {
-            mMeasurementService = new MeasurementServiceImpl(this);
+            mMeasurementService =
+                    new MeasurementServiceImpl(this, ConsentManager.getInstance(this));
         }
         schedulePeriodicJobs();
     }

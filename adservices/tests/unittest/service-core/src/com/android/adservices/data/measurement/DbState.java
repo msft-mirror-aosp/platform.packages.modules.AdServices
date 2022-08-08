@@ -199,6 +199,7 @@ public class DbState {
         mEventReportList.sort(
                 Comparator.comparing(EventReport::getReportTime)
                         .thenComparing(EventReport::getTriggerTime));
+
         mAttrRateLimitList.sort(
                 Comparator.comparing(AttributionRateLimit::getTriggerTime));
 
@@ -222,7 +223,7 @@ public class DbState {
                         Source.SourceType.valueOf(
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
-                .setAttributionDestination(Uri.parse(sJSON.getString("attributionDestination")))
+                .setAppDestination(Uri.parse(sJSON.getString("appDestination")))
                 .setAdTechDomain(Uri.parse(sJSON.getString("adTechDomain")))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
@@ -275,7 +276,9 @@ public class DbState {
         return new AttributionRateLimit.Builder()
                 .setId(attrJSON.getString("id"))
                 .setSourceSite(attrJSON.getString("sourceSite"))
+                .setSourceOrigin(attrJSON.getString("sourceOrigin"))
                 .setDestinationSite(attrJSON.getString("destinationSite"))
+                .setDestinationOrigin(attrJSON.getString("destinationOrigin"))
                 .setAdTechDomain(attrJSON.getString("adTechDomain"))
                 .setTriggerTime(attrJSON.getLong("triggerTime"))
                 .setRegistrant(attrJSON.getString("registrant"))
@@ -298,8 +301,12 @@ public class DbState {
                         MeasurementTables.AttributionRateLimitContract.ID)))
                 .setSourceSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.SOURCE_SITE)))
+                .setSourceOrigin(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.SOURCE_ORIGIN)))
                 .setDestinationSite(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.DESTINATION_SITE)))
+                .setDestinationOrigin(cursor.getString(cursor.getColumnIndex(
+                        MeasurementTables.AttributionRateLimitContract.DESTINATION_ORIGIN)))
                 .setAdTechDomain(cursor.getString(cursor.getColumnIndex(
                         MeasurementTables.AttributionRateLimitContract.AD_TECH_DOMAIN)))
                 .setTriggerTime(cursor.getLong(cursor.getColumnIndex(

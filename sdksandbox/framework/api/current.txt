@@ -1,14 +1,41 @@
 // Signature format: 2.0
 package android.app.sdksandbox {
 
-  public final class SandboxedSdkContext extends android.content.ContextWrapper {
+  public final class LoadSdkException extends java.lang.Exception {
+    ctor public LoadSdkException(int, @Nullable String);
+    ctor public LoadSdkException(int, @Nullable String, @Nullable Throwable);
+    ctor public LoadSdkException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
+    method @NonNull public android.os.Bundle getExtraErrorInformation();
+    method public int getLoadSdkErrorCode();
+  }
+
+  public final class LoadSdkResponse {
+    ctor public LoadSdkResponse(@NonNull android.os.Bundle);
+    method @NonNull public android.os.Bundle getExtraInformation();
+  }
+
+  public final class RequestSurfacePackageException extends java.lang.Exception {
+    ctor public RequestSurfacePackageException(int, @Nullable String);
+    ctor public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable);
+    ctor public RequestSurfacePackageException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
+    method @NonNull public android.os.Bundle getExtraErrorInformation();
+    method public int getRequestSurfacePackageErrorCode();
+  }
+
+  public final class RequestSurfacePackageResponse {
+    ctor public RequestSurfacePackageResponse(@NonNull android.view.SurfaceControlViewHost.SurfacePackage, @NonNull android.os.Bundle);
+    method @NonNull public android.os.Bundle getExtraInformation();
+    method @NonNull public android.view.SurfaceControlViewHost.SurfacePackage getSurfacePackage();
   }
 
   public abstract class SandboxedSdkProvider {
     ctor public SandboxedSdkProvider();
-    method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle);
+    method public final void attachContext(@NonNull android.content.Context);
+    method public void beforeUnloadSdk();
+    method @Nullable public android.content.Context getContext();
+    method @NonNull public abstract android.view.View getView(@NonNull android.content.Context, @NonNull android.os.Bundle, int, int);
     method public abstract void onDataReceived(@NonNull android.os.Bundle, @NonNull android.app.sdksandbox.SandboxedSdkProvider.DataReceivedCallback);
-    method public abstract void onLoadSdk(@NonNull android.app.sdksandbox.SandboxedSdkContext, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.InitSdkCallback);
+    method public abstract void onLoadSdk(@NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SandboxedSdkProvider.OnLoadSdkCallback);
   }
 
   public static interface SandboxedSdkProvider.DataReceivedCallback {
@@ -16,16 +43,18 @@ package android.app.sdksandbox {
     method public void onDataReceivedSuccess(@NonNull android.os.Bundle);
   }
 
-  public static interface SandboxedSdkProvider.InitSdkCallback {
-    method public void onInitSdkError(@NonNull String);
-    method public void onInitSdkFinished(@NonNull android.os.Bundle);
+  public static interface SandboxedSdkProvider.OnLoadSdkCallback {
+    method public void onLoadSdkError(@NonNull String);
+    method public void onLoadSdkFinished(@NonNull android.os.Bundle);
   }
 
   public final class SdkSandboxManager {
+    method @NonNull public java.util.List<android.content.pm.SharedLibraryInfo> getLoadedSdkLibrariesInfo();
     method public static int getSdkSandboxState();
-    method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.LoadSdkCallback);
-    method public void requestSurfacePackage(@NonNull String, int, int, int, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.RequestSurfacePackageCallback);
-    method public void sendData(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.app.sdksandbox.SdkSandboxManager.SendDataCallback);
+    method public void loadSdk(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.LoadSdkResponse,android.app.sdksandbox.LoadSdkException>);
+    method public void requestSurfacePackage(@NonNull String, int, int, int, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.RequestSurfacePackageResponse,android.app.sdksandbox.RequestSurfacePackageException>);
+    method public void sendData(@NonNull String, @NonNull android.os.Bundle, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.app.sdksandbox.SendDataResponse,android.app.sdksandbox.SendDataException>);
+    method public void unloadSdk(@NonNull String);
     field public static final int LOAD_SDK_ALREADY_LOADED = 101; // 0x65
     field public static final int LOAD_SDK_INTERNAL_ERROR = 500; // 0x1f4
     field public static final int LOAD_SDK_NOT_FOUND = 100; // 0x64
@@ -36,19 +65,17 @@ package android.app.sdksandbox {
     field public static final int SEND_DATA_INTERNAL_ERROR = 800; // 0x320
   }
 
-  public static interface SdkSandboxManager.LoadSdkCallback {
-    method public void onLoadSdkFailure(int, @NonNull String);
-    method public void onLoadSdkSuccess(@NonNull android.os.Bundle);
+  public final class SendDataException extends java.lang.Exception {
+    ctor public SendDataException(int, @Nullable String);
+    ctor public SendDataException(int, @Nullable String, @Nullable Throwable);
+    ctor public SendDataException(int, @Nullable String, @Nullable Throwable, @NonNull android.os.Bundle);
+    method @NonNull public android.os.Bundle getExtraErrorInformation();
+    method public int getSendDataErrorCode();
   }
 
-  public static interface SdkSandboxManager.RequestSurfacePackageCallback {
-    method public void onSurfacePackageError(int, @NonNull String);
-    method public void onSurfacePackageReady(@NonNull android.view.SurfaceControlViewHost.SurfacePackage, int, @NonNull android.os.Bundle);
-  }
-
-  public static interface SdkSandboxManager.SendDataCallback {
-    method public void onSendDataError(int, @NonNull String);
-    method public void onSendDataSuccess(@NonNull android.os.Bundle);
+  public final class SendDataResponse {
+    ctor public SendDataResponse(@NonNull android.os.Bundle);
+    method @NonNull public android.os.Bundle getExtraInformation();
   }
 
 }

@@ -29,6 +29,8 @@ import java.util.Objects;
 
 /** Class to hold input to measurement source registration calls from web context. */
 public final class WebSourceRegistrationRequest implements Parcelable {
+    private static final String ANDROID_APP_SCHEME = "android-app";
+
     /** Creator for Paracelable (via reflection). */
     @NonNull
     public static final Parcelable.Creator<WebSourceRegistrationRequest> CREATOR =
@@ -46,35 +48,37 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     /** Registration info to fetch sources. */
     @NonNull private final List<WebSourceParams> mWebSourceParams;
 
-    /** User interaction input event. */
-    @Nullable private final InputEvent mInputEvent;
-
     /** Top level origin of publisher. */
     @NonNull private final Uri mTopOriginUri;
 
-    /** App destination of the source. */
-    @Nullable private final Uri mOsDestination;
+    /**
+     * User Interaction {@link InputEvent} used by the AttributionReporting API to distinguish
+     * clicks from views.
+     */
+    @Nullable private final InputEvent mInputEvent;
 
-    /** Web destination of the source. */
+    /**
+     * App destination of the source. It is the android app {@link Uri} where corresponding
+     * conversion is expected. At least one of app destination or web destination is required.
+     */
+    @Nullable private final Uri mAppDestination;
+
+    /**
+     * Web destination of the source. It is the website {@link Uri} where corresponding conversion
+     * is expected. At least one of app destination or web destination is required.
+     */
     @Nullable private final Uri mWebDestination;
 
     /** Verified destination by the caller. This is where the user actually landed. */
     @Nullable private final Uri mVerifiedDestination;
 
-    /** Constructor for {@link WebSourceRegistrationRequest}. */
-    private WebSourceRegistrationRequest(
-            @NonNull List<WebSourceParams> webSourceParams,
-            @Nullable InputEvent inputEvent,
-            @NonNull Uri topOriginUri,
-            @Nullable Uri osDestination,
-            @Nullable Uri webDestination,
-            @Nullable Uri verifiedDestination) {
-        mWebSourceParams = webSourceParams;
-        mInputEvent = inputEvent;
-        mTopOriginUri = topOriginUri;
-        mOsDestination = osDestination;
-        mWebDestination = webDestination;
-        mVerifiedDestination = verifiedDestination;
+    private WebSourceRegistrationRequest(@NonNull Builder builder) {
+        mWebSourceParams = builder.mWebSourceParams;
+        mInputEvent = builder.mInputEvent;
+        mTopOriginUri = builder.mTopOriginUri;
+        mAppDestination = builder.mAppDestination;
+        mWebDestination = builder.mWebDestination;
+        mVerifiedDestination = builder.mVerifiedDestination;
     }
 
     private WebSourceRegistrationRequest(@NonNull Parcel in) {
@@ -83,16 +87,16 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         in.readList(
                 sourceRegistrations, WebSourceParams.class.getClassLoader(), WebSourceParams.class);
         mWebSourceParams = sourceRegistrations;
+        mTopOriginUri = Uri.CREATOR.createFromParcel(in);
         if (in.readBoolean()) {
             mInputEvent = InputEvent.CREATOR.createFromParcel(in);
         } else {
             mInputEvent = null;
         }
-        mTopOriginUri = Uri.CREATOR.createFromParcel(in);
         if (in.readBoolean()) {
-            mOsDestination = Uri.CREATOR.createFromParcel(in);
+            mAppDestination = Uri.CREATOR.createFromParcel(in);
         } else {
-            mOsDestination = null;
+            mAppDestination = null;
         }
         if (in.readBoolean()) {
             mWebDestination = Uri.CREATOR.createFromParcel(in);
@@ -112,9 +116,9 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         if (!(o instanceof WebSourceRegistrationRequest)) return false;
         WebSourceRegistrationRequest that = (WebSourceRegistrationRequest) o;
         return Objects.equals(mWebSourceParams, that.mWebSourceParams)
-                && Objects.equals(mInputEvent, that.mInputEvent)
                 && Objects.equals(mTopOriginUri, that.mTopOriginUri)
-                && Objects.equals(mOsDestination, that.mOsDestination)
+                && Objects.equals(mInputEvent, that.mInputEvent)
+                && Objects.equals(mAppDestination, that.mAppDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mVerifiedDestination, that.mVerifiedDestination);
     }
@@ -123,9 +127,9 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     public int hashCode() {
         return Objects.hash(
                 mWebSourceParams,
-                mInputEvent,
                 mTopOriginUri,
-                mOsDestination,
+                mInputEvent,
+                mAppDestination,
                 mWebDestination,
                 mVerifiedDestination);
     }
@@ -136,25 +140,31 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         return mWebSourceParams;
     }
 
-    /** Getter for input event. */
-    @Nullable
-    public InputEvent getInputEvent() {
-        return mInputEvent;
-    }
-
     /** Getter for top origin Uri. */
     @NonNull
     public Uri getTopOriginUri() {
         return mTopOriginUri;
     }
 
-    /** Getter for OS destination. */
+    /** Getter for input event. */
     @Nullable
-    public Uri getOsDestination() {
-        return mOsDestination;
+    public InputEvent getInputEvent() {
+        return mInputEvent;
     }
 
-    /** Getter for web destination. */
+    /**
+     * Getter for the app destination. It is the android app {@link Uri} where corresponding
+     * conversion is expected. At least one of app destination or web destination is required.
+     */
+    @Nullable
+    public Uri getAppDestination() {
+        return mAppDestination;
+    }
+
+    /**
+     * Getter for web destination. It is the website {@link Uri} where corresponding conversion is
+     * expected. At least one of app destination or web destination is required.
+     */
     @Nullable
     public Uri getWebDestination() {
         return mWebDestination;
@@ -175,16 +185,17 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
         out.writeList(mWebSourceParams);
+        mTopOriginUri.writeToParcel(out, flags);
+
         if (mInputEvent != null) {
             out.writeBoolean(true);
             mInputEvent.writeToParcel(out, flags);
         } else {
             out.writeBoolean(false);
         }
-        mTopOriginUri.writeToParcel(out, flags);
-        if (mOsDestination != null) {
+        if (mAppDestination != null) {
             out.writeBoolean(true);
-            mOsDestination.writeToParcel(out, flags);
+            mAppDestination.writeToParcel(out, flags);
         } else {
             out.writeBoolean(false);
         }
@@ -205,14 +216,23 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     /** Builder for {@link WebSourceRegistrationRequest}. */
     public static final class Builder {
         /** Registration info to fetch sources. */
-        @NonNull private List<WebSourceParams> mWebSourceParams;
-        /** User interaction input event. */
+        @NonNull private final List<WebSourceParams> mWebSourceParams;
+        /** Top origin {@link Uri} of publisher. */
+        @NonNull private final Uri mTopOriginUri;
+        /**
+         * User Interaction InputEvent used by the AttributionReporting API to distinguish clicks
+         * from views.
+         */
         @Nullable private InputEvent mInputEvent;
-        /** Top level origin of publisher. */
-        @NonNull private Uri mTopOriginUri;
-        /** App destination of the source. */
-        @Nullable private Uri mOsDestination;
-        /** Web destination of the source. */
+        /**
+         * App destination of the source. It is the android app {@link Uri} where corresponding
+         * conversion is expected.
+         */
+        @Nullable private Uri mAppDestination;
+        /**
+         * Web destination of the source. It is the website {@link Uri} where corresponding
+         * conversion is expected.
+         */
         @Nullable private Uri mWebDestination;
         /**
          * Verified destination by the caller. If available, sources should be checked against it.
@@ -220,22 +240,27 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         @Nullable private Uri mVerifiedDestination;
 
         /**
-         * Setter for source params. It is a required parameter and the provided list should not be
-         * empty.
+         * Builder constructor for {@link WebSourceRegistrationRequest}.
          *
-         * @param webSourceParams source sourceParams
-         * @return builder
+         * @param webSourceParams source parameters containing source registration parameters, the
+         *     list should not be empty
+         * @param topOriginUri source publisher {@link Uri}
          */
-        @NonNull
-        public Builder setSourceParams(@NonNull List<WebSourceParams> webSourceParams) {
+        public Builder(@NonNull List<WebSourceParams> webSourceParams, @NonNull Uri topOriginUri) {
+            Objects.requireNonNull(webSourceParams);
+            Objects.requireNonNull(topOriginUri);
+            if (webSourceParams.isEmpty()) {
+                throw new IllegalArgumentException("web source params list is empty");
+            }
             mWebSourceParams = webSourceParams;
-            return this;
+            mTopOriginUri = topOriginUri;
         }
 
         /**
          * Setter for input event.
          *
-         * @param inputEvent user input event
+         * @param inputEvent User Interaction InputEvent used by the AttributionReporting API to
+         *     distinguish clicks from views.
          * @return builder
          */
         @NonNull
@@ -245,39 +270,45 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         }
 
         /**
-         * Setter for top origin Uri. It is a required parameter.
+         * Setter for app destination. It is the android app {@link Uri} where corresponding
+         * conversion is expected. At least one of app destination or web destination is required.
          *
-         * @param topOriginUri publisher top origin {@link Uri}
+         * @param appDestination app destination {@link Uri}
          * @return builder
          */
         @NonNull
-        public Builder setTopOriginUri(@NonNull Uri topOriginUri) {
-            mTopOriginUri = topOriginUri;
+        public Builder setAppDestination(@Nullable Uri appDestination) {
+            if (appDestination != null) {
+                String scheme = appDestination.getScheme();
+                Uri destination;
+                if (scheme == null) {
+                    destination = Uri.parse(ANDROID_APP_SCHEME + "://" + appDestination);
+                } else if (!scheme.equals(ANDROID_APP_SCHEME)) {
+                    throw new IllegalArgumentException(
+                            String.format(
+                                    "appDestination scheme must be %s " + "or null. Received: %s",
+                                    ANDROID_APP_SCHEME, scheme));
+                } else {
+                    destination = appDestination;
+                }
+                mAppDestination = destination;
+            }
             return this;
         }
 
         /**
-         * Setter for OS destination. At least one of OS destination or web destination is required.
-         *
-         * @param osDestination app destination {@link Uri}
-         * @return builder
-         */
-        @NonNull
-        public Builder setOsDestination(@NonNull Uri osDestination) {
-            mOsDestination = osDestination;
-            return this;
-        }
-
-        /**
-         * Setter for web destination. At least one of OS destination or web destination is
-         * required.
+         * Setter for web destination. It is the website {@link Uri} where corresponding conversion
+         * is expected. At least one of app destination or web destination is required.
          *
          * @param webDestination web destination {@link Uri}
          * @return builder
          */
         @NonNull
-        public Builder setWebDestination(@NonNull Uri webDestination) {
-            mWebDestination = webDestination;
+        public Builder setWebDestination(@Nullable Uri webDestination) {
+            if (webDestination != null) {
+                validateScheme("Web destination", webDestination);
+                mWebDestination = webDestination;
+            }
             return this;
         }
 
@@ -293,27 +324,20 @@ public final class WebSourceRegistrationRequest implements Parcelable {
             return this;
         }
 
-        /** Pre-validates paramerters and builds {@link WebSourceRegistrationRequest}. */
+        /** Pre-validates parameters and builds {@link WebSourceRegistrationRequest}. */
         @NonNull
         public WebSourceRegistrationRequest build() {
-            if (mWebSourceParams == null || mWebSourceParams.isEmpty()) {
-                throw new IllegalArgumentException("source params not provided");
-            }
-
-            if (mOsDestination == null && mWebDestination == null) {
+            if (mAppDestination == null && mWebDestination == null) {
                 throw new IllegalArgumentException(
-                        "At least one of osDestination or webDestination needs to be provided");
+                        "At least one of appDestination or webDestination needs to be provided");
             }
+            return new WebSourceRegistrationRequest(this);
+        }
+    }
 
-            Objects.requireNonNull(mTopOriginUri);
-
-            return new WebSourceRegistrationRequest(
-                    mWebSourceParams,
-                    mInputEvent,
-                    mTopOriginUri,
-                    mOsDestination,
-                    mWebDestination,
-                    mVerifiedDestination);
+    private static void validateScheme(String name, Uri uri) throws IllegalArgumentException {
+        if (uri.getScheme() == null) {
+            throw new IllegalArgumentException(name + " must have a scheme.");
         }
     }
 }

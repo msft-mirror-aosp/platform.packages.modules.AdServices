@@ -154,6 +154,12 @@ public final class PrivacyParams {
      */
     public static final int MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE = 65536;
 
+    /** Amount of bytes allocated for aggregate histogram bucket */
+    public static final int AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE = 16;
+
+    /** Amount of bytes allocated for aggregate histogram value */
+    public static final int AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE = 4;
+
     private PrivacyParams() {
     }
 }

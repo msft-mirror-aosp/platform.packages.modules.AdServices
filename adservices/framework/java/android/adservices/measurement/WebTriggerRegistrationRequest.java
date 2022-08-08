@@ -47,11 +47,9 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
     /** Destination {@link Uri}. */
     @NonNull private final Uri mDestination;
 
-    /** Constructor for {@link WebTriggerRegistrationRequest}. */
-    private WebTriggerRegistrationRequest(
-            @NonNull List<WebTriggerParams> webTriggerParams, @NonNull Uri destination) {
-        mWebTriggerParams = webTriggerParams;
-        mDestination = destination;
+    private WebTriggerRegistrationRequest(@NonNull Builder builder) {
+        mWebTriggerParams = builder.mWebTriggerParams;
+        mDestination = builder.mDestination;
     }
 
     private WebTriggerRegistrationRequest(Parcel in) {
@@ -109,43 +107,33 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
          */
         @NonNull private List<WebTriggerParams> mWebTriggerParams;
         /** Top level origin of publisher app. */
-        @NonNull private Uri mDestination;
+        @NonNull private final Uri mDestination;
 
         /**
-         * Setter for trigger params. It is a required parameter and the provided list should not be
-         * empty.
+         * Builder constructor for {@link WebTriggerRegistrationRequest}.
          *
-         * @param webTriggerParams source registrations
-         * @return builder
+         * @param webTriggerParams contains trigger registration parameters, the list should not be
+         *     empty
+         * @param destination trigger destination {@link Uri}
          */
-        @NonNull
-        public Builder setTriggerParams(@NonNull List<WebTriggerParams> webTriggerParams) {
+        public Builder(@NonNull List<WebTriggerParams> webTriggerParams, @NonNull Uri destination) {
+            Objects.requireNonNull(webTriggerParams);
+            if (webTriggerParams.isEmpty()) {
+                throw new IllegalArgumentException("web trigger params list is empty");
+            }
+
+            Objects.requireNonNull(destination);
+            if (destination.getScheme() == null) {
+                throw new IllegalArgumentException("Destination origin must have a scheme.");
+            }
             mWebTriggerParams = webTriggerParams;
-            return this;
-        }
-
-        /**
-         * Setter for destination. It is a required parameter.
-         *
-         * @param destination destination top origin {@link Uri}
-         * @return builder
-         */
-        @NonNull
-        public Builder setDestination(@NonNull Uri destination) {
             mDestination = destination;
-            return this;
         }
 
         /** Pre-validates parameters and builds {@link WebTriggerRegistrationRequest}. */
         @NonNull
         public WebTriggerRegistrationRequest build() {
-            if (mWebTriggerParams == null || mWebTriggerParams.isEmpty()) {
-                throw new IllegalArgumentException("registration URI unset");
-            }
-
-            Objects.requireNonNull(mDestination);
-
-            return new WebTriggerRegistrationRequest(mWebTriggerParams, mDestination);
+            return new WebTriggerRegistrationRequest(this);
         }
     }
 }
