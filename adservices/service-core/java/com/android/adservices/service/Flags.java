@@ -758,6 +758,19 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
+    // ADID Killswitch.
+    /**
+     * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
+     * flag is used for emergency turning off the AdId API.
+     */
+    boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
+
+    /** Gets the state of the global and adId kill switch. */
+    default boolean getAdIdKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || ADID_KILL_SWITCH;
+    }
+
     // TOPICS Killswitches
 
     /**
