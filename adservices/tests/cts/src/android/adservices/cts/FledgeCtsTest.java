@@ -26,6 +26,7 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -99,6 +100,7 @@ public class FledgeCtsTest {
     private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
+    private TestAdvertisingCustomAudienceClient mTestCustomAudienceClient;
     private DevContext mDevContext;
     private boolean mIsDebugMode;
 
@@ -116,6 +118,11 @@ public class FledgeCtsTest {
                         .build();
         mCustomAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(MoreExecutors.directExecutor())
+                        .build();
+        mTestCustomAudienceClient =
+                new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
@@ -203,7 +210,7 @@ public class FledgeCtsTest {
 
         // Adding Custom audience override, asserting a failure since app is not debuggable.
         ListenableFuture<Void> customAudienceOverrideResult =
-                mCustomAudienceClient.overrideCustomAudienceRemoteInfo(
+                mTestCustomAudienceClient.overrideCustomAudienceRemoteInfo(
                         addCustomAudienceOverrideRequest);
 
         Exception customAudienceOverrideException =
