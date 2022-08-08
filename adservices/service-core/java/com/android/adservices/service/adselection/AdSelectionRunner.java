@@ -23,7 +23,6 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -304,14 +303,12 @@ public final class AdSelectionRunner {
 
         return listeningExecutorService.submit(
                 () -> {
-                    List<String> buyers =
-                            adSelectionConfig.getCustomAudienceBuyers().stream()
-                                    .map(AdTechIdentifier::getStringForm)
-                                    .collect(Collectors.toList());
-                    Preconditions.checkArgument(!buyers.isEmpty(), ERROR_NO_BUYERS_AVAILABLE);
+                    Preconditions.checkArgument(
+                            !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
+                            ERROR_NO_BUYERS_AVAILABLE);
                     List<DBCustomAudience> buyerCustomAudience =
                             mCustomAudienceDao.getActiveCustomAudienceByBuyers(
-                                    buyers,
+                                    adSelectionConfig.getCustomAudienceBuyers(),
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
                     if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
@@ -380,9 +377,7 @@ public final class AdSelectionRunner {
                 Optional.ofNullable(
                                 adSelectionConfig
                                         .getPerBuyerSignals()
-                                        .get(
-                                                AdTechIdentifier.fromString(
-                                                        customAudience.getBuyer())))
+                                        .get(customAudience.getBuyer()))
                         .orElse(AdSelectionSignals.EMPTY);
         return mAdBidGenerator.runAdBiddingPerCA(
                 customAudience,

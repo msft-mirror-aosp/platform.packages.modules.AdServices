@@ -22,6 +22,9 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -102,11 +105,13 @@ public class CustomAudienceScoringSignalsArgumentTest {
     private CustomAudienceSignals createCustomAudience(final String uniqueCASignalsPostfix) {
         return new CustomAudienceSignals.Builder()
                 .setOwner("test_owner" + uniqueCASignalsPostfix)
-                .setBuyer("test_buyer" + uniqueCASignalsPostfix)
+                .setBuyer(AdTechIdentifier.fromString("test_buyer" + uniqueCASignalsPostfix))
                 .setName("test_name" + uniqueCASignalsPostfix)
                 .setActivationTime(Instant.now())
                 .setExpirationTime(Instant.now())
-                .setUserBiddingSignals("{\"user_bidding_signals\":" + uniqueCASignalsPostfix + "}")
+                .setUserBiddingSignals(
+                        AdSelectionSignals.fromString(
+                                "{\"user_bidding_signals\":" + uniqueCASignalsPostfix + "}"))
                 .build();
     }
 
@@ -121,7 +126,7 @@ public class CustomAudienceScoringSignalsArgumentTest {
                                 argName,
                                 stringArg(
                                         CustomAudienceScoringSignalsArgument.BUYER_FIELD_NAME,
-                                        actualSignals.getBuyer()),
+                                        actualSignals.getBuyer().toString()),
                                 stringArg(
                                         CustomAudienceScoringSignalsArgument.NAME_FIELD_NAME,
                                         actualSignals.getName())));

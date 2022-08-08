@@ -21,15 +21,15 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-/** Unit tests for {@link android.adservices.appsetid.AppsetId} */
+/** Unit tests for {@link android.adservices.appsetid.AppSetId} */
 @SmallTest
-public final class AppsetIdTest {
+public final class AppSetIdTest {
     @Test
-    public void testAppsetId() throws Exception {
-        AppsetId response = new AppsetId("TEST_APPSETID", GetAppsetIdResult.SCOPE_APP);
+    public void testAppSetId() throws Exception {
+        AppSetId response = new AppSetId("TEST_APPSETID", GetAppSetIdResult.SCOPE_APP);
 
         // Validate the returned response is same to what we created
-        assertEquals("TEST_APPSETID", response.getAppsetId());
-        assertEquals(GetAppsetIdResult.SCOPE_APP, response.getAppsetIdScope());
+        assertEquals("TEST_APPSETID", response.getAppSetId());
+        assertEquals(GetAppSetIdResult.SCOPE_APP, response.getAppSetIdScope());
     }
 }

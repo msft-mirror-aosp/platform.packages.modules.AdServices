@@ -83,7 +83,7 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     private void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
-        String sdkDataPath = getBaseContext().getDataDir().toString();
+        String sdkDataPath = getContext().getDataDir().toString();
         // Read the file
         String input = Files.readAllLines(Paths.get(sdkDataPath, "readme.txt")).get(0);
 
@@ -112,10 +112,10 @@ public class StorageTestSandboxedSdkProvider extends SandboxedSdkProvider {
     }
 
     private String getSharedStoragePath() {
-        return getBaseContext().getApplicationContext().getDataDir().toString();
+        return getContext().getApplicationContext().getDataDir().toString();
     }
 
     private String getSharedStorageCachePath() {
-        return getBaseContext().getApplicationContext().getCacheDir().toString();
+        return getContext().getApplicationContext().getCacheDir().toString();
     }
 }

@@ -25,10 +25,9 @@ import com.android.internal.util.Preconditions;
 import java.util.Objects;
 
 /**
- * This class represents a field in the {@code OutcomeReceiver}, which is an input to the
- * {@link AdSelectionManager#runAdSelection} in the {@link AdSelectionManager}.
- * This field is populated in the case of a successful {@link AdSelectionManager#runAdSelection}
- * call.
+ * This class represents a field in the {@code OutcomeReceiver}, which is an input to the {@link
+ * AdSelectionManager#selectAds} in the {@link AdSelectionManager}. This field is populated in the
+ * case of a successful {@link AdSelectionManager#selectAds} call.
  */
 public class AdSelectionOutcome {
     private static final int UNSET = 0;

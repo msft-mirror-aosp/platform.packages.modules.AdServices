@@ -141,7 +141,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 getBuyerDecisionLogic(
                         customAudience.getBiddingLogicUrl(),
                         customAudience.getOwner(),
-                        AdTechIdentifier.fromString(customAudience.getBuyer()),
+                        customAudience.getBuyer(),
                         customAudience.getName());
 
         FluentFuture<Pair<AdWithBid, String>> adWithBidPair =
@@ -262,7 +262,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         mListeningExecutorService.submit(
                                 () ->
                                         mCustomAudienceDevOverridesHelper.getBiddingLogicOverride(
-                                                owner, buyer.getStringForm(), name)));
+                                                owner, buyer, name)));
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (jsOverride == null) {
@@ -306,7 +306,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 getTrustedBiddingSignals(
                         customAudience.getTrustedBiddingData(),
                         customAudience.getOwner(),
-                        AdTechIdentifier.fromString(customAudience.getBuyer()),
+                        customAudience.getBuyer(),
                         customAudience.getName());
 
         // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData

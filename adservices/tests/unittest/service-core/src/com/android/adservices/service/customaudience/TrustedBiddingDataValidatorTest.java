@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class TrustedBiddingDataValidatorTest {
     private final TrustedBiddingDataValidator mValidator =
-            new TrustedBiddingDataValidator(CommonFixture.VALID_BUYER.getStringForm());
+            new TrustedBiddingDataValidator(CommonFixture.VALID_BUYER.toString());
 
     @Test
     public void testValidTrustedBiddingData() {

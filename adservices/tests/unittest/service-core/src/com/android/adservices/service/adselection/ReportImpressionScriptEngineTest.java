@@ -74,11 +74,12 @@ public class ReportImpressionScriptEngineTest {
     private final CustomAudienceSignals mCustomAudienceSignals =
             new CustomAudienceSignals.Builder()
                     .setOwner("test_owner")
-                    .setBuyer("test_buyer")
+                    .setBuyer(AdTechIdentifier.fromString("test_buyer"))
                     .setName("test_name")
                     .setActivationTime(Instant.now())
                     .setExpirationTime(Instant.now())
-                    .setUserBiddingSignals("{\"user_bidding_signals\":1}")
+                    .setUserBiddingSignals(
+                            AdSelectionSignals.fromString("{\"user_bidding_signals\":1}"))
                     .build();
 
     @Test
@@ -257,7 +258,7 @@ public class ReportImpressionScriptEngineTest {
                         adSelectionConfig.getSellerSignals(),
                         mCustomAudienceSignals);
         // TODO: Quit comparing a URI to a JSON object (b/239497492)
-        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.getStringForm());
+        assertThat(result.toString()).isEqualTo(mSignalsForBuyer.toString());
     }
 
     @Test

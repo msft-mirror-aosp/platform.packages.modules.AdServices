@@ -19,7 +19,6 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -32,13 +31,11 @@ public class CustomAudienceSignalsTest {
     public void testBuildCustomAudienceSignals() {
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                        .setBuyer(CommonFixture.VALID_BUYER.getStringForm())
+                        .setBuyer(CommonFixture.VALID_BUYER)
                         .build();
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(
-                AdTechIdentifier.fromString(customAudienceSignals.getBuyer()),
-                CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -48,7 +45,7 @@ public class CustomAudienceSignalsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
 
     @Test
@@ -59,9 +56,7 @@ public class CustomAudienceSignalsTest {
                                 .build());
 
         assertEquals(customAudienceSignals.getOwner(), CustomAudienceFixture.VALID_OWNER);
-        assertEquals(
-                AdTechIdentifier.fromString(customAudienceSignals.getBuyer()),
-                CommonFixture.VALID_BUYER);
+        assertEquals(customAudienceSignals.getBuyer(), CommonFixture.VALID_BUYER);
         assertEquals(customAudienceSignals.getName(), CustomAudienceFixture.VALID_NAME);
         assertEquals(
                 customAudienceSignals.getActivationTime(),
@@ -71,6 +66,6 @@ public class CustomAudienceSignalsTest {
                 CustomAudienceFixture.VALID_EXPIRATION_TIME);
         assertEquals(
                 customAudienceSignals.getUserBiddingSignals(),
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.getStringForm());
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
 }

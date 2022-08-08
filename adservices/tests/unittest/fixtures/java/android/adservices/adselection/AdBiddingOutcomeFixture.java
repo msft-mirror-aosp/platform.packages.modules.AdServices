@@ -26,11 +26,14 @@ import com.android.adservices.service.adselection.CustomAudienceBiddingInfo;
 public class AdBiddingOutcomeFixture {
 
     public static AdBiddingOutcome.Builder anAdBiddingOutcomeBuilder(
-            AdTechIdentifier buyerName, Double bid) {
+            AdTechIdentifier buyer, Double bid) {
 
-        final AdData adData = new AdData(
-                new Uri.Builder().path("valid.example.com/testing/hello/" + buyerName).build(),
-                "{'example': 'metadata', 'valid': true}");
+        final AdData adData =
+                new AdData(
+                        new Uri.Builder()
+                                .path("valid.example.com/testing/hello/" + buyer.toString())
+                                .build(),
+                        "{'example': 'metadata', 'valid': true}");
         final double testBid = bid;
 
         return AdBiddingOutcome.builder()
@@ -43,7 +46,7 @@ public class AdBiddingOutcomeFixture {
                                         CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
                                 .setCustomAudienceSignals(
                                         CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
-                                                .setBuyer(buyerName.getStringForm())
+                                                .setBuyer(buyer)
                                                 .build())
                                 .build());
     }

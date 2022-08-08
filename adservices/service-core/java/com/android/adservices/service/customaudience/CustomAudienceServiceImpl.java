@@ -112,7 +112,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         assertCallingPackageName(
-                customAudience.getOwner(), AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+                customAudience.getOwnerPackageName(),
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
 
         mExecutorService.execute(
                 () -> {
@@ -156,6 +157,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      *
      * @hide
      */
+    @Override
     public void leaveCustomAudience(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
@@ -205,6 +207,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
      *
      * @hide
      */
+    @Override
     public void overrideCustomAudienceRemoteInfo(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,

@@ -20,9 +20,6 @@ import android.annotation.NonNull;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Objects;
 
 /**
@@ -80,9 +77,9 @@ public final class AdSelectionSignals implements Parcelable {
     /**
      * Compares this AdSelectionSignals to the specified object. The result is true if and only if
      * the argument is not null and is a AdSelectionSignals object with the same string form
-     * (obtained by calling {@link #getStringForm()}). Note that this method will not perform any
-     * JSON normalization so two AdSelectionSignals objects with the same JSON could be not equal if
-     * the String representations of the objects was not equal.
+     * (obtained by calling {@link #toString()}). Note that this method will not perform any JSON
+     * normalization so two AdSelectionSignals objects with the same JSON could be not equal if the
+     * String representations of the objects was not equal.
      *
      * @param o The object to compare this AdSelectionSignals against
      * @return true if the given object represents an AdSelectionSignals equivalent to this
@@ -91,14 +88,14 @@ public final class AdSelectionSignals implements Parcelable {
     @Override
     public boolean equals(Object o) {
         return o instanceof AdSelectionSignals
-                && mSignals.equals(((AdSelectionSignals) o).getStringForm());
+                && mSignals.equals(((AdSelectionSignals) o).toString());
     }
 
     /**
      * Returns a hash code corresponding to the string representation of this class obtained by
-     * calling {@link #getStringForm()}. Note that this method will not perform any JSON
-     * normalization so two AdSelectionSignals objects with the same JSON could have different hash
-     * codes if the underlying string representation was different.
+     * calling {@link #toString()}. Note that this method will not perform any JSON normalization so
+     * two AdSelectionSignals objects with the same JSON could have different hash codes if the
+     * underlying string representation was different.
      *
      * @return a hash code value for this object.
      */
@@ -107,16 +104,18 @@ public final class AdSelectionSignals implements Parcelable {
         return mSignals.hashCode();
     }
 
+    /** @return The String form of the JSON wrapped by this class. */
     @Override
+    @NonNull
     public String toString() {
-        return getStringForm();
+        return mSignals;
     }
 
     /**
      * Creates an AdSelectionSignals from a given JSON in String form.
      *
-     * @param source Any valid JSON string to create the AdSelectionSignals with or null.
-     * @return An AdSelectionSignals object wrapping the given String or null if the input was null
+     * @param source Any valid JSON string to create the AdSelectionSignals with.
+     * @return An AdSelectionSignals object wrapping the given String.
      */
     @NonNull
     public static AdSelectionSignals fromString(@NonNull String source) {
@@ -126,38 +125,15 @@ public final class AdSelectionSignals implements Parcelable {
     /**
      * Creates an AdSelectionSignals from a given JSON in String form.
      *
-     * @param source Any valid JSON string to create the AdSelectionSignals with or null.
+     * @param source Any valid JSON string to create the AdSelectionSignals with.
      * @param validate Construction-time validation is run on the string if and only if this is
      *     true.
-     * @return An AdSelectionSignals object wrapping the given String or null if the input was null
+     * @return An AdSelectionSignals object wrapping the given String.
+     * @hide
      */
     @NonNull
     public static AdSelectionSignals fromString(@NonNull String source, boolean validate) {
         return new AdSelectionSignals(source, validate);
-    }
-
-    /**
-     * Creates an AdSelectionSignals from a given {@link JSONObject}.
-     *
-     * @param source Any valid {@link JSONObject} to create the {@link AdSelectionSignals} with.
-     * @return An {@link AdSelectionSignals} object wrapping the given JSON
-     */
-    @NonNull
-    public static AdSelectionSignals fromJson(@NonNull JSONObject source) {
-        Objects.requireNonNull(source);
-        return new AdSelectionSignals(source.toString());
-    }
-
-    /** @return The String form of the JSON wrapped by this class. */
-    @NonNull
-    public String getStringForm() {
-        return mSignals;
-    }
-
-    /** @return The JSONObject form of the JSON wrapped by this class. */
-    @NonNull
-    public JSONObject getJsonForm() throws JSONException {
-        return new JSONObject(mSignals);
     }
 
     private void validate(String inputString) {

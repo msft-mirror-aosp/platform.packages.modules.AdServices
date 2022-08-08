@@ -24,6 +24,9 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.JSScriptArgument;
 
@@ -47,11 +50,13 @@ public class CustomAudienceBiddingSignalsArgumentTest {
     private CustomAudienceSignals createCustomAudience(final String uniqueCASignalsPostfix) {
         return new CustomAudienceSignals.Builder()
                 .setOwner("test_owner" + uniqueCASignalsPostfix)
-                .setBuyer("test_buyer" + uniqueCASignalsPostfix)
+                .setBuyer(AdTechIdentifier.fromString("test_buyer" + uniqueCASignalsPostfix))
                 .setName("test_name" + uniqueCASignalsPostfix)
                 .setActivationTime(Instant.now())
                 .setExpirationTime(Instant.now())
-                .setUserBiddingSignals("{\"user_bidding_signals\":" + uniqueCASignalsPostfix + "}")
+                .setUserBiddingSignals(
+                        AdSelectionSignals.fromString(
+                                "{\"user_bidding_signals\":" + uniqueCASignalsPostfix + "}"))
                 .build();
     }
 
@@ -69,7 +74,7 @@ public class CustomAudienceBiddingSignalsArgumentTest {
                                         actualSignals.getOwner()),
                                 stringArg(
                                         CustomAudienceBiddingSignalsArgument.BUYER_FIELD_NAME,
-                                        actualSignals.getBuyer()),
+                                        actualSignals.getBuyer().toString()),
                                 stringArg(
                                         CustomAudienceBiddingSignalsArgument.NAME_FIELD_NAME,
                                         actualSignals.getName()),
@@ -86,7 +91,7 @@ public class CustomAudienceBiddingSignalsArgumentTest {
                                 jsonArg(
                                         CustomAudienceBiddingSignalsArgument
                                                 .USER_BIDDING_SIGNALS_FIELD_NAME,
-                                        actualSignals.getUserBiddingSignals())));
+                                        actualSignals.getUserBiddingSignals().toString())));
     }
 
     @Test

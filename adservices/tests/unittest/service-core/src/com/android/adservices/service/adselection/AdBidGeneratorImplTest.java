@@ -187,7 +187,7 @@ public class AdBidGeneratorImplTest {
                                 return new MockResponse().setBody(mBuyerDecisionLogicJs);
                             case mTrustedBiddingPath + mTrustedBiddingParams:
                                 return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }
@@ -290,7 +290,7 @@ public class AdBidGeneratorImplTest {
                         .setName(mCustomAudienceWithAds.getName())
                         .setAppPackageName(myAppPackageName)
                         .setBiddingLogicJS(mBuyerDecisionLogicJs)
-                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.getStringForm())
+                        .setTrustedBiddingData(TRUSTED_BIDDING_SIGNALS.toString())
                         .build();
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
@@ -536,7 +536,7 @@ public class AdBidGeneratorImplTest {
                                 return new MockResponse().setBody(mBuyerDecisionLogicJs);
                             case mTrustedBiddingPath + emptyRequestParams:
                                 return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                         }
                         return new MockResponse().setResponseCode(404);
                     }

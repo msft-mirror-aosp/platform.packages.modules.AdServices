@@ -72,9 +72,9 @@ public final class AdTechIdentifier implements Parcelable {
     /**
      * Compares this AdTechIdentifier to the specified object. The result is true if and only if the
      * argument is not null and is a AdTechIdentifier object with the same string form (obtained by
-     * calling {@link #getStringForm()}). Note that this method will not perform any eTLD+1
-     * normalization so two AdTechIdentifier objects with the same eTLD+1 could be not equal if the
-     * String representations of the objects was not equal.
+     * calling {@link #toString()}). Note that this method will not perform any eTLD+1 normalization
+     * so two AdTechIdentifier objects with the same eTLD+1 could be not equal if the String
+     * representations of the objects was not equal.
      *
      * @param o The object to compare this AdTechIdentifier against
      * @return true if the given object represents an AdTechIdentifier equivalent to this
@@ -83,14 +83,14 @@ public final class AdTechIdentifier implements Parcelable {
     @Override
     public boolean equals(Object o) {
         return o instanceof AdTechIdentifier
-                && mIdentifier.equals(((AdTechIdentifier) o).getStringForm());
+                && mIdentifier.equals(((AdTechIdentifier) o).toString());
     }
 
     /**
      * Returns a hash code corresponding to the string representation of this class obtained by
-     * calling {@link #getStringForm()}. Note that this method will not perform any eTLD+1
-     * normalization so two AdTechIdentifier objects with the same eTLD+1 could have different hash
-     * codes if the underlying string representation was different.
+     * calling {@link #toString()}. Note that this method will not perform any eTLD+1 normalization
+     * so two AdTechIdentifier objects with the same eTLD+1 could have different hash codes if the
+     * underlying string representation was different.
      *
      * @return a hash code value for this object.
      */
@@ -99,9 +99,11 @@ public final class AdTechIdentifier implements Parcelable {
         return mIdentifier.hashCode();
     }
 
+    /** @return The identifier in String form. */
     @Override
+    @NonNull
     public String toString() {
-        return getStringForm();
+        return mIdentifier;
     }
 
     /**
@@ -119,21 +121,15 @@ public final class AdTechIdentifier implements Parcelable {
     /**
      * Construct an instance of this class from a String.
      *
-     * @param source A valid eTLD+1 domain of an ad buyer or seller or null.
+     * @param source A valid eTLD+1 domain of an ad buyer or seller.
      * @param validate Construction-time validation is run on the string if and only if this is
      *     true.
-     * @return An {@link AdTechIdentifier} class wrapping the given domain or null if the input was
-     *     null.
+     * @return An {@link AdTechIdentifier} class wrapping the given domain.
+     * @hide
      */
     @NonNull
     public static AdTechIdentifier fromString(@NonNull String source, boolean validate) {
         return new AdTechIdentifier(source, validate);
-    }
-
-    /** @return The identifier in String form. */
-    @NonNull
-    public String getStringForm() {
-        return mIdentifier;
     }
 
     private void validate(String inputString) {

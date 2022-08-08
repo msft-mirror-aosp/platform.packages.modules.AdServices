@@ -66,6 +66,7 @@ public class SandboxedTopicsManagerTest {
 
     @Test
     public void loadSdkAndRunTopicsApi() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("1");
         // The setup for this test:
         // SandboxedTopicsManagerTest is the test app. It will load the Sdk1 into the Sandbox.
         // The Sdk1 (running within the Sandbox) will query Topics API and verify that the correct
@@ -101,8 +102,16 @@ public class SandboxedTopicsManagerTest {
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         // Reset back the original values.
+        overrideDisableTopicsEnrollmentCheck("0");
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.

@@ -110,7 +110,6 @@ public class FledgeE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderurls=";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
-    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -269,7 +268,7 @@ public class FledgeE2ETest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -299,7 +298,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwner(),
+                        customAudience1.getOwnerPackageName(),
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -310,7 +309,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwner(),
+                        customAudience2.getOwnerPackageName(),
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -401,7 +400,7 @@ public class FledgeE2ETest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -431,7 +430,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwner(),
+                        customAudience1.getOwnerPackageName(),
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -442,7 +441,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwner(),
+                        customAudience2.getOwnerPackageName(),
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -538,7 +537,7 @@ public class FledgeE2ETest {
                 .thenReturn(
                         DevContext.builder()
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(MY_APP_PACKAGE_NAME)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, INVALID_BIDS);
@@ -568,7 +567,7 @@ public class FledgeE2ETest {
         // Add Custom Audience Overrides
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
                 callAddCustomAudienceOverride(
-                        customAudience1.getOwner(),
+                        customAudience1.getOwnerPackageName(),
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
@@ -579,7 +578,7 @@ public class FledgeE2ETest {
 
         CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
                 callAddCustomAudienceOverride(
-                        customAudience2.getOwner(),
+                        customAudience2.getOwnerPackageName(),
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
@@ -687,7 +686,7 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -701,7 +700,7 @@ public class FledgeE2ETest {
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -828,7 +827,7 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -842,7 +841,7 @@ public class FledgeE2ETest {
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -961,7 +960,7 @@ public class FledgeE2ETest {
                                     return new MockResponse().setBody(biddingLogicJs);
                                 case BUYER_TRUSTED_SIGNAL_URI_PATH + BUYER_TRUSTED_SIGNAL_PARAMS:
                                     return new MockResponse()
-                                            .setBody(TRUSTED_BIDDING_SIGNALS.getStringForm());
+                                            .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                             }
 
                             // The seller params vary based on runtime, so we are returning trusted
@@ -971,7 +970,7 @@ public class FledgeE2ETest {
                                             SELLER_TRUSTED_SIGNAL_URI_PATH
                                                     + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                                 return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.getStringForm());
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
                             }
                             return new MockResponse().setResponseCode(404);
                         });
@@ -1099,7 +1098,7 @@ public class FledgeE2ETest {
         }
 
         return new CustomAudience.Builder()
-                .setOwner(MY_APP_PACKAGE_NAME)
+                .setOwnerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .setBuyer(AdTechIdentifier.fromString(buyerDomain.getHost()))
                 .setName(
                         buyerDomain.getHost()

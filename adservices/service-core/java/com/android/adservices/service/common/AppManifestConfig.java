@@ -24,21 +24,26 @@ public class AppManifestConfig {
     private final AppManifestAttributionConfig mAttributionConfig;
     private final AppManifestCustomAudiencesConfig mCustomAudiencesConfig;
     private final AppManifestTopicsConfig mTopicsConfig;
+    private final AppManifestAdIdConfig mAdIdConfig;
 
     /**
-     * AdServices manifest config must contain configs for Attribution, Custom Audiences and Topics.
+     * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId and
+     * Topics.
      *
      * @param attributionConfig the config for Attribution.
      * @param customAudiencesConfig the config for Custom Audiences.
      * @param topicsConfig the config for Topics.
+     * @param adIdConfig the config for adId.
      */
     public AppManifestConfig(
             @NonNull AppManifestAttributionConfig attributionConfig,
             @NonNull AppManifestCustomAudiencesConfig customAudiencesConfig,
-            @NonNull AppManifestTopicsConfig topicsConfig) {
+            @NonNull AppManifestTopicsConfig topicsConfig,
+            @NonNull AppManifestAdIdConfig adIdConfig) {
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
         mTopicsConfig = topicsConfig;
+        mAdIdConfig = adIdConfig;
     }
 
     /** Getter for AttributionConfig. */
@@ -48,11 +53,12 @@ public class AppManifestConfig {
     }
 
     /**
-     * Returns if sdk is permitted to access Attribution API for config represented by this object.
+     * Returns if the ad partner is permitted to access Attribution API for config represented by
+     * this object.
      */
-    public boolean isAllowedAttributionAccess(@NonNull String sdk) {
+    public boolean isAllowedAttributionAccess(@NonNull String enrollmentId) {
         return mAttributionConfig.getAllowAllToAccess()
-                || mAttributionConfig.getAllowAdPartnersToAccess().contains(sdk);
+                || mAttributionConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
     }
 
     /** Getter for CustomAudiencesConfig. */
@@ -77,9 +83,25 @@ public class AppManifestConfig {
         return mTopicsConfig;
     }
 
-    /** Returns if sdk is permitted to access Topics API for config represented by this object. */
-    public boolean isAllowedTopicsAccess(@NonNull String sdk) {
+    /**
+     * Returns if the ad partner is permitted to access Topics API for config represented by this
+     * object.
+     */
+    public boolean isAllowedTopicsAccess(@NonNull String enrollmentId) {
         return mTopicsConfig.getAllowAllToAccess()
-                || mTopicsConfig.getAllowAdPartnersToAccess().contains(sdk);
+                || mTopicsConfig.getAllowAdPartnersToAccess().contains(enrollmentId);
+    }
+
+    /** Getter for AdIdConfig. */
+    @NonNull
+    public AppManifestAdIdConfig getAdIdConfig() {
+        return mAdIdConfig;
+    }
+
+    /** Returns if sdk is permitted to access AdId API for config represented by this object. */
+    @NonNull
+    public boolean isAllowedAdIdAccess(@NonNull String sdk) {
+        return mAdIdConfig.getAllowAllToAccess()
+                || mAdIdConfig.getAllowAdPartnersToAccess().contains(sdk);
     }
 }
