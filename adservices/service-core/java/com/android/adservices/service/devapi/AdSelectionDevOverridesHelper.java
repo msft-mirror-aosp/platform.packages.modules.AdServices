@@ -17,7 +17,8 @@
 package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.exceptions.ApiNotAuthorizedException;
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
@@ -63,25 +64,27 @@ public class AdSelectionDevOverridesHelper {
             @NonNull AdSelectionConfig adSelectionConfig) {
         // See go/hashing#java
         Hasher hasher = sHashFunction.newHasher();
-        hasher.putUnencodedChars(adSelectionConfig.getSeller())
-                .putUnencodedChars(adSelectionConfig.getDecisionLogicUrl().toString())
-                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals())
-                .putUnencodedChars(adSelectionConfig.getSellerSignals());
+        hasher.putUnencodedChars(adSelectionConfig.getSeller().toString())
+                .putUnencodedChars(adSelectionConfig.getDecisionLogicUri().toString())
+                .putUnencodedChars(adSelectionConfig.getAdSelectionSignals().toString())
+                .putUnencodedChars(adSelectionConfig.getSellerSignals().toString());
 
-        adSelectionConfig.getCustomAudienceBuyers().stream().forEach(hasher::putUnencodedChars);
+        adSelectionConfig.getCustomAudienceBuyers().stream()
+                .map(AdTechIdentifier::toString)
+                .forEach(hasher::putUnencodedChars);
         adSelectionConfig.getContextualAds().stream()
                 .forEach(
                         adWithBid -> {
                             hasher.putUnencodedChars(
-                                            adWithBid.getAdData().getRenderUrl().toString())
+                                            adWithBid.getAdData().getRenderUri().toString())
                                     .putUnencodedChars(adWithBid.getAdData().getMetadata())
                                     .putDouble(adWithBid.getBid());
                         });
         adSelectionConfig.getPerBuyerSignals().entrySet().stream()
                 .forEach(
                         buyerAndSignals -> {
-                            hasher.putUnencodedChars(buyerAndSignals.getKey())
-                                    .putUnencodedChars(buyerAndSignals.getValue());
+                            hasher.putUnencodedChars(buyerAndSignals.getKey().toString())
+                                    .putUnencodedChars(buyerAndSignals.getValue().toString());
                         });
         return hasher.hash().toString();
     }
@@ -105,39 +108,63 @@ public class AdSelectionDevOverridesHelper {
     }
 
     /**
+     * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
+     * {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in
+     * the constructor or if there is no override created by the app with package name specified in
+     * {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public AdSelectionSignals getTrustedScoringSignalsOverride(
+            @NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
+        String overrideSignals =
+                mAdSelectionEntryDao.getTrustedScoringSignalsOverride(
+                        calculateAdSelectionConfigId(adSelectionConfig),
+                        mDevContext.getCallingAppPackageName());
+        return overrideSignals == null ? null : AdSelectionSignals.fromString(overrideSignals);
+    }
+
+    /**
      * Adds an override of the {@code decisionLogicJS} along with {@link
      * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
-    public void addDecisionLogicOverride(
-            @NonNull AdSelectionConfig adSelectionConfig, @NonNull String decisionLogicJS) {
+    public void addAdSelectionSellerOverride(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJS,
+            @NonNull AdSelectionSignals trustedScoringSignals) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
         mAdSelectionEntryDao.persistAdSelectionOverride(
                 DBAdSelectionOverride.builder()
                         .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
                         .setAppPackageName(mDevContext.getCallingAppPackageName())
                         .setDecisionLogicJS(decisionLogicJS)
+                        .setTrustedScoringSignals(trustedScoringSignals.toString())
                         .build());
     }
 
     /**
      * Removes an override for the given {@link AdSelectionConfig}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
-    public void removeDecisionLogicOverride(@NonNull AdSelectionConfig adSelectionConfig) {
+    public void removeAdSelectionSellerOverride(@NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         String adSelectionConfigId = calculateAdSelectionConfigId(adSelectionConfig);
@@ -150,12 +177,12 @@ public class AdSelectionDevOverridesHelper {
     /**
      * Removes all ad selection overrides that match {@link DevContext#getCallingAppPackageName()}.
      *
-     * @throws ApiNotAuthorizedException if{@link DevContext#getDevOptionsEnabled()} returns false
-     *     for the {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
+     *     {@link DevContext}
      */
     public void removeAllDecisionLogicOverrides() {
         if (!mDevContext.getDevOptionsEnabled()) {
-            throw new ApiNotAuthorizedException(API_NOT_AUTHORIZED_MSG);
+            throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
         mAdSelectionEntryDao.removeAllAdSelectionOverrides(mDevContext.getCallingAppPackageName());

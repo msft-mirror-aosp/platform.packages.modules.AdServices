@@ -20,7 +20,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 
 import java.util.Objects;
@@ -37,7 +36,6 @@ public class CustomAudienceService extends Service {
         if (mCustomAudienceService == null) {
             mCustomAudienceService = new CustomAudienceServiceImpl(this);
         }
-        BackgroundFetchJobService.scheduleIfNeeded(this, false);
     }
 
     @Override

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background_color">#F2F2F2</color>
+    <color name="divider_color">#E3E3E3</color>
+    <color name="card_background_color">#F9F9F9</color>
+    <color name="primary_text_color">#1B1C17</color>
+    <color name="secondary_text_color">#474747</color>
+
+    <!-- Material inverse ripple color, useful for inverted backgrounds. -->
+    <color name="ripple_material_inverse">@*android:color/ripple_material_dark</color>
+</resources>

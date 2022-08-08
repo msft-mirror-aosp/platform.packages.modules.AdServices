@@ -20,37 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Represent the result from the getTopics API.
- */
-public class GetTopicsResponse {
-    private final List<Long> mTaxonomyVersions;
-    private final List<Long> mModelVersions;
-    private final List<Integer> mTopics;
-    private GetTopicsResponse(
-            @NonNull List<Long> taxonomyVersions,
-            @NonNull List<Long> modelVersions,
-            @NonNull List<Integer> topics) {
-        mTaxonomyVersions = taxonomyVersions;
-        mModelVersions = modelVersions;
+/** Represent the result from the getTopics API. */
+public final class GetTopicsResponse {
+    /** List of Topic objects returned by getTopics API. */
+    private final List<Topic> mTopics;
+
+    private GetTopicsResponse(@NonNull List<Topic> topics) {
         mTopics = topics;
     }
 
-    /** Get the Taxonomy Versions. */
     @NonNull
-    public List<Long> getTaxonomyVersions() {
-        return mTaxonomyVersions;
-    }
-
-    /** Get the Model Versions. */
-    @NonNull
-    public List<Long> getModelVersions() {
-        return mModelVersions;
-    }
-
-    /** Get the Topics. */
-    @NonNull
-    public List<Integer> getTopics() {
+    public List<Topic> getTopics() {
         return mTopics;
     }
 
@@ -63,40 +43,25 @@ public class GetTopicsResponse {
             return false;
         }
         GetTopicsResponse that = (GetTopicsResponse) o;
-        return mTaxonomyVersions.equals(that.mTaxonomyVersions)
-                && mModelVersions.equals(that.mModelVersions)
-                && mTopics.equals(that.mTopics);
+        return mTopics.equals(that.mTopics);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTaxonomyVersions, mModelVersions, mTopics);
+        return Objects.hash(mTopics);
     }
 
     /**
-     * Builder for {@link GetTopicsResponse} objects.
-     * This class is unhidden so that developers can write tests.
+     * Builder for {@link GetTopicsResponse} objects. This class should be used in test
+     * implementation as expected response from Topics API
      */
     public static final class Builder {
-        private List<Long> mTaxonomyVersions = new ArrayList<>();
-        private List<Long> mModelVersions = new ArrayList<>();
-        private List<Integer> mTopics = new ArrayList<>();
+        private List<Topic> mTopics = new ArrayList<>();
+
         public Builder() {}
 
-        /** Set the Taxonomy Version. */
-        public @NonNull Builder setTaxonomyVersions(@NonNull List<Long> taxonomyVersions) {
-            mTaxonomyVersions = taxonomyVersions;
-            return this;
-        }
-
-        /** Set the Model Version. */
-        public @NonNull Builder setModelVersions(@NonNull List<Long> modelVersions) {
-            mModelVersions = modelVersions;
-            return this;
-        }
-
         /** Set the list of the returned Topics */
-        public @NonNull Builder setTopics(@NonNull List<Integer> topics) {
+        public @NonNull Builder setTopics(@NonNull List<Topic> topics) {
             mTopics = topics;
             return this;
         }
@@ -108,15 +73,10 @@ public class GetTopicsResponse {
          * in the size of ModelVersions and TaxonomyVersions.
          */
         public @NonNull GetTopicsResponse build() {
-            if (mTopics == null || mTaxonomyVersions == null || mModelVersions == null) {
-                throw new IllegalArgumentException(
-                        "Topics or TaxonomyVersion or ModelVersion is null");
+            if (mTopics == null) {
+                throw new IllegalArgumentException("Topics is null");
             }
-            if (mTopics.size() != mTaxonomyVersions.size()
-                    || mTopics.size() != mModelVersions.size()) {
-                throw new IllegalArgumentException("Size mismatch in Topics");
-            }
-            return new GetTopicsResponse(mTaxonomyVersions, mModelVersions, mTopics);
+            return new GetTopicsResponse(mTopics);
         }
     }
 }

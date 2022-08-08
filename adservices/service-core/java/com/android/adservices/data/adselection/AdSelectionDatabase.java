@@ -17,29 +17,24 @@
 package com.android.adservices.data.adselection;
 
 import android.content.Context;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
-import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
+import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.internal.annotations.GuardedBy;
 
-import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 /** Room based database for Ad Selection. */
-// TODO (b/229660121): Ad unit tests for this class
 @Database(
         exportSchema = false,
         entities = {DBAdSelection.class, DBBuyerDecisionLogic.class, DBAdSelectionOverride.class},
         version = 1)
-@TypeConverters({AdSelectionDatabase.Converters.class})
+@TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -66,38 +61,4 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
      * @return a Dao to access entities in AdSelection database.
      */
     public abstract AdSelectionEntryDao adSelectionEntryDao();
-
-    /** Room DB type converters. Register custom type converters here. */
-    public static class Converters {
-
-        private Converters() {}
-
-        /** Serialize {@link Instant} to Long. */
-        @TypeConverter
-        @Nullable
-        public static Long serializeInstant(@Nullable Instant instant) {
-            return Optional.ofNullable(instant).map(Instant::toEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Instant} from long. */
-        @TypeConverter
-        @Nullable
-        public static Instant deserializeInstant(@Nullable Long epochMilli) {
-            return Optional.ofNullable(epochMilli).map(Instant::ofEpochMilli).orElse(null);
-        }
-
-        /** Deserialize {@link Uri} from String. */
-        @TypeConverter
-        @Nullable
-        public static Uri deserializeUrl(@Nullable String uri) {
-            return Optional.ofNullable(uri).map(Uri::parse).orElse(null);
-        }
-
-        /** Serialize {@link Uri} to String. */
-        @TypeConverter
-        @Nullable
-        public static String serializeUrl(@Nullable Uri uri) {
-            return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
-        }
-    }
 }

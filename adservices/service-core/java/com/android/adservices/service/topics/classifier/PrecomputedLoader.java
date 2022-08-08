@@ -47,14 +47,17 @@ public class PrecomputedLoader {
     private final AssetManager mAssetManager;
     private final String mLabelsFilePath;
     private final String mTopAppsFilePath;
+    private final String mClassifierAssetsMetadataPath;
 
     public PrecomputedLoader(
             @NonNull Context context,
             @NonNull String labelsFilePath,
-            @NonNull String topAppsFilePath) {
+            @NonNull String topAppsFilePath,
+            @NonNull String classifierAssetsMetadataPath) {
         mAssetManager = context.getAssets();
         mLabelsFilePath = labelsFilePath;
         mTopAppsFilePath = topAppsFilePath;
+        mClassifierAssetsMetadataPath = classifierAssetsMetadataPath;
     }
 
     /**
@@ -119,7 +122,12 @@ public class PrecomputedLoader {
                     appTopics.add(Integer.parseInt(topic));
                 }
 
-                appTopicsMap.put(app, ImmutableList.copyOf(appTopics));
+                // Do not add empty topics in the precomputed list.
+                if (appTopics.isEmpty()) {
+                    LogUtil.e("Topics for " + app + " cannot be empty.");
+                } else {
+                    appTopicsMap.put(app, ImmutableList.copyOf(appTopics));
+                }
             }
         } catch (IOException e) {
             LogUtil.e(e, "Unable to read precomputed app topics list");
@@ -130,5 +138,15 @@ public class PrecomputedLoader {
         }
 
         return appTopicsMap;
+    }
+
+    /**
+     * Retrieve the classifier assets metadata from file name here.
+     *
+     * @return The map of classifier assets metadata.
+     */
+    ImmutableMap<String, ImmutableMap<String, String>> retrieveClassifierAssetsMetadata() {
+        return CommonClassifierHelper.getAssetsMetadata(
+                mAssetManager, mClassifierAssetsMetadataPath);
     }
 }

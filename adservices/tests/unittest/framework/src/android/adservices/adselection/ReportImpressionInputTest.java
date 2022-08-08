@@ -20,6 +20,7 @@ import static android.adservices.adselection.AdSelectionConfigFixture.anAdSelect
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
@@ -78,5 +79,18 @@ public final class ReportImpressionInputTest {
                                 // Not setting AdSelectionConfig making it null.
                                 .build();
                 });
+    }
+
+    @Test
+    public void testReportImpressionInputDescribeContents() {
+        AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
+
+        ReportImpressionInput obj =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AUCTION_ID)
+                        .setAdSelectionConfig(testAdSelectionConfig)
+                        .build();
+
+        assertEquals(obj.describeContents(), 0);
     }
 }

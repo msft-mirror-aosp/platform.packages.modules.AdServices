@@ -20,9 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.CommonFixture;
+import android.net.Uri;
 import android.os.Parcel;
 
 import org.junit.Test;
+
 
 public class AdSelectionConfigTest {
     @Test
@@ -30,22 +33,27 @@ public class AdSelectionConfigTest {
         AdSelectionConfig config =
                 new AdSelectionConfig.Builder()
                         .setSeller(AdSelectionConfigFixture.SELLER)
-                        .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
+                        .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                         .setCustomAudienceBuyers(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
                         .setAdSelectionSignals(AdSelectionConfigFixture.AD_SELECTION_SIGNALS)
                         .setSellerSignals(AdSelectionConfigFixture.SELLER_SIGNALS)
                         .setPerBuyerSignals(AdSelectionConfigFixture.PER_BUYER_SIGNALS)
                         .setContextualAds(AdSelectionConfigFixture.CONTEXTUAL_ADS)
+                        .setTrustedScoringSignalsUri(
+                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
         assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
-        assertEquals(config.getDecisionLogicUrl(), AdSelectionConfigFixture.DECISION_LOGIC_URL);
+        assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
         assertEquals(
                 config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.AD_SELECTION_SIGNALS);
         assertEquals(config.getSellerSignals(), AdSelectionConfigFixture.SELLER_SIGNALS);
         assertEquals(config.getPerBuyerSignals(), AdSelectionConfigFixture.PER_BUYER_SIGNALS);
         assertEquals(config.getContextualAds(), AdSelectionConfigFixture.CONTEXTUAL_ADS);
+        assertEquals(
+                config.getTrustedScoringSignalsUri(),
+                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
     }
 
     @Test
@@ -58,7 +66,7 @@ public class AdSelectionConfigTest {
         AdSelectionConfig fromParcel = AdSelectionConfig.CREATOR.createFromParcel(p);
 
         assertEquals(config.getSeller(), fromParcel.getSeller());
-        assertEquals(config.getDecisionLogicUrl(), fromParcel.getDecisionLogicUrl());
+        assertEquals(config.getDecisionLogicUri(), fromParcel.getDecisionLogicUri());
         assertEquals(config.getCustomAudienceBuyers(), fromParcel.getCustomAudienceBuyers());
         assertEquals(config.getAdSelectionSignals(), fromParcel.getAdSelectionSignals());
         assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
@@ -71,14 +79,19 @@ public class AdSelectionConfigTest {
         AdSelectionConfig config =
                 new AdSelectionConfig.Builder()
                         .setSeller(AdSelectionConfigFixture.SELLER)
-                        .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
+                        .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                         .setCustomAudienceBuyers(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
+                        .setTrustedScoringSignalsUri(
+                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
                         .build();
 
         assertEquals(config.getSeller(), AdSelectionConfigFixture.SELLER);
-        assertEquals(config.getDecisionLogicUrl(), AdSelectionConfigFixture.DECISION_LOGIC_URL);
+        assertEquals(config.getDecisionLogicUri(), AdSelectionConfigFixture.DECISION_LOGIC_URI);
         assertEquals(
                 config.getCustomAudienceBuyers(), AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS);
+        assertEquals(
+                config.getTrustedScoringSignalsUri(),
+                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI);
 
         // Populated by default with empty signals, map, and list
         assertEquals(config.getAdSelectionSignals(), AdSelectionConfigFixture.EMPTY_SIGNALS);
@@ -93,7 +106,7 @@ public class AdSelectionConfigTest {
                 NullPointerException.class,
                 () -> {
                     new AdSelectionConfig.Builder()
-                            .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
+                            .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                             .setCustomAudienceBuyers(
                                     AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
                             .build();
@@ -120,8 +133,35 @@ public class AdSelectionConfigTest {
                 () -> {
                     new AdSelectionConfig.Builder()
                             .setSeller(AdSelectionConfigFixture.SELLER)
-                            .setDecisionLogicUrl(AdSelectionConfigFixture.DECISION_LOGIC_URL)
+                            .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
                             .build();
                 });
+    }
+
+    @Test
+    public void testAdSelectionConfigDescribeContents() {
+        AdSelectionConfig obj = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        assertEquals(obj.describeContents(), 0);
+    }
+
+    @Test
+    public void testEqualConfigsHaveSameHashCode() {
+        AdSelectionConfig obj1 = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig obj2 = AdSelectionConfigFixture.anAdSelectionConfig();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualConfigsHaveDifferentHashCode() {
+        AdSelectionConfig obj1 = AdSelectionConfigFixture.anAdSelectionConfig();
+        AdSelectionConfig obj2 =
+                AdSelectionConfigFixture.anAdSelectionConfig(AdSelectionConfigFixture.SELLER_1);
+        AdSelectionConfig obj3 =
+                AdSelectionConfigFixture.anAdSelectionConfig(
+                        Uri.parse("https://different.uri.com"));
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
 }

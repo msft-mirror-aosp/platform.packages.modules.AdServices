@@ -19,19 +19,31 @@ package com.android.server.sdksandbox;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.FileUtils;
+import android.os.UserHandle;
 
+import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /** Unit tests for {@link SdkSandboxStorageManager}. */
 public class SdkSandboxStorageManagerUnitTest {
@@ -46,12 +58,41 @@ public class SdkSandboxStorageManagerUnitTest {
     private SdkSandboxStorageManager mSdkSandboxStorageManager;
     // Separate location where all of the sdk storage directories will be created for testing
     private String mTestDir;
+    private FakeSdkSandboxManagerLocal mSdkSandboxManagerLocal;
+    private PackageManager mPmMock;
+    private Context mSpyContext;
 
     @Before
     public void setup() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mTestDir = context.getDataDir().getPath();
-        mSdkSandboxStorageManager = new SdkSandboxStorageManager(context, mTestDir);
+        mSpyContext = Mockito.spy(context);
+
+        mPmMock = Mockito.mock(PackageManager.class);
+        Mockito.doReturn(mPmMock).when(mSpyContext).getPackageManager();
+        Mockito.doReturn(mSpyContext)
+                .when(mSpyContext)
+                .createContextAsUser(Mockito.any(UserHandle.class), Mockito.anyInt());
+
+        PackageManagerLocal packageManagerLocal =
+                (volumeUuid,
+                        packageName,
+                        subDirNames,
+                        userId,
+                        appId,
+                        previousAppId,
+                        seInfo,
+                        flags) -> {};
+
+        mSdkSandboxManagerLocal = new FakeSdkSandboxManagerLocal();
+        mSdkSandboxStorageManager =
+                new SdkSandboxStorageManager(
+                        mSpyContext, mSdkSandboxManagerLocal, packageManagerLocal, mTestDir);
+    }
+
+    @After
+    public void teardown() throws Exception {
+        FileUtils.deleteContents(new File(mTestDir));
     }
 
     @Test
@@ -95,6 +136,12 @@ public class SdkSandboxStorageManagerUnitTest {
         createSdkStorageForTest(
                 /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
 
+        final ApplicationInfo info = new ApplicationInfo();
+        info.storageUuid = UUID.fromString("41217664-9172-527a-b3d5-edabb50a7d69");
+        Mockito.doReturn(info)
+                .when(mPmMock)
+                .getApplicationInfo(Mockito.any(String.class), Mockito.anyInt());
+
         // Call getSdkDataDirInfo on SdkStorageManager
         final CallingInfo callingInfo = new CallingInfo(CLIENT_UID, CLIENT_PKG_NAME);
         final SdkDataDirInfo sdkInfo =
@@ -106,6 +153,72 @@ public class SdkSandboxStorageManagerUnitTest {
                 .isEqualTo(mTestDir + "/data/misc_de/0/sdksandbox/client/sdk@sdk");
     }
 
+    @Test
+    public void test_getMountedVolumes_NewVolumeExists() throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+        createSdkStorageForTest(
+                "newVolume", /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+
+        final List<String> mountedVolumes = mSdkSandboxStorageManager.getMountedVolumes();
+
+        assertThat(mountedVolumes).containsExactly(null, "newVolume");
+    }
+
+    @Test
+    public void test_getMountedVolumes_NewVolumeDoesNotExist() throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Arrays.asList(SDK_NAME));
+
+        final List<String> mountedVolumes = mSdkSandboxStorageManager.getMountedVolumes();
+
+        assertThat(mountedVolumes).containsExactly((String) null);
+    }
+
+    @Test
+    public void test_onUserUnlocking_Instrumentation_NoSdk_PackageDirNotRemoved() throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Collections.emptyList());
+
+        // Set instrumentation started, so that isInstrumentationRunning will return true
+        mSdkSandboxManagerLocal.notifyInstrumentationStarted(CLIENT_PKG_NAME, CLIENT_UID);
+
+        mSdkSandboxStorageManager.onUserUnlocking(0);
+
+        final Path ceDataPackageDirectory =
+                Paths.get(
+                        mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                                null, 0, CLIENT_PKG_NAME, true));
+
+        final Path deDataPackageDirectory =
+                Paths.get(
+                        mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                                null, 0, CLIENT_PKG_NAME, false));
+
+        assertThat(Files.exists(ceDataPackageDirectory)).isTrue();
+        assertThat(Files.exists(deDataPackageDirectory)).isTrue();
+    }
+
+    @Test
+    public void test_onUserUnlocking_NoInstrumentation_NoSdk_PackageDirRemoved() throws Exception {
+        createSdkStorageForTest(
+                /*volumeUuid=*/ null, /*userId=*/ 0, CLIENT_PKG_NAME, Collections.emptyList());
+
+        mSdkSandboxStorageManager.onUserUnlocking(0);
+
+        final Path ceDataPackageDirectory =
+                Paths.get(
+                        mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                                null, 0, CLIENT_PKG_NAME, true));
+
+        final Path deDataPackageDirectory =
+                Paths.get(
+                        mSdkSandboxStorageManager.getSdkDataPackageDirectory(
+                                null, 0, CLIENT_PKG_NAME, false));
+
+        assertThat(Files.exists(ceDataPackageDirectory)).isFalse();
+        assertThat(Files.exists(deDataPackageDirectory)).isFalse();
+    }
     /**
      * A helper method for create sdk storage for test purpose.
      *
@@ -121,10 +234,51 @@ public class SdkSandboxStorageManagerUnitTest {
             final String packageDir =
                     mSdkSandboxStorageManager.getSdkDataPackageDirectory(
                             volumeUuid, userId, packageName, isCeData);
+            final Path packagePath = Paths.get(packageDir);
+            Files.createDirectories(packagePath);
             for (String sdkName : sdkNames) {
                 final Path perSdkPath = Paths.get(packageDir, sdkName + "@" + sdkName);
                 Files.createDirectories(perSdkPath);
             }
+        }
+    }
+
+    private static class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
+
+        private boolean mInstrumentationRunning = false;
+
+        @Override
+        public void enforceAllowedToSendBroadcast(@NonNull Intent intent) {}
+
+        @Override
+        public void enforceAllowedToStartActivity(@NonNull Intent intent) {}
+
+        @Override
+        public void enforceAllowedToStartOrBindService(@NonNull Intent intent) {}
+
+        @NonNull
+        @Override
+        public String getSdkSandboxProcessNameForInstrumentation(
+                @NonNull ApplicationInfo clientAppInfo) {
+            return clientAppInfo.processName + "_sdk_sandbox_instr";
+        }
+
+        @Override
+        public void notifyInstrumentationStarted(
+                @NonNull String clientAppPackageName, int clientAppUid) {
+            mInstrumentationRunning = true;
+        }
+
+        @Override
+        public void notifyInstrumentationFinished(
+                @NonNull String clientAppPackageName, int clientAppUid) {
+            mInstrumentationRunning = false;
+        }
+
+        @Override
+        public boolean isInstrumentationRunning(
+                @NonNull String clientAppPackageName, int clientAppUid) {
+            return mInstrumentationRunning;
         }
     }
 }
