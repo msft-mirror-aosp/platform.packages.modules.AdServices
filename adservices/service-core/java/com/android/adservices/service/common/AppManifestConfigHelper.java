@@ -164,4 +164,30 @@ public class AppManifestConfigHelper {
         }
         return false;
     }
+
+    /**
+     * Parses the app's manifest config to determine whether this sdk is permitted to use the
+     * AppSetId API.
+     *
+     * <p>If there is a parse error, it returns false.
+     *
+     * @param context the context for the API call. This needs to be the context where the calling
+     *     UID is that of the API caller.
+     * @param appPackageName the package name of the app whose manifest config will be read.
+     * @param sdk the name of the sdk that will be checked against app's manifest config. // TODO:
+     *     Update for adtech enrollment.
+     */
+    public static boolean isAllowedAppSetIdAccess(
+            @NonNull Context context, @NonNull String appPackageName, @NonNull String sdk) {
+        try {
+            XmlResourceParser in = getXmlParser(context, appPackageName);
+            AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+            return appManifestConfig.isAllowedAppSetIdAccess(sdk);
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e(e, "App manifest parse failed: NameNotFound.");
+        } catch (XmlParseException | XmlPullParserException | IOException e) {
+            LogUtil.e(e, "App manifest parse failed.");
+        }
+        return false;
+    }
 }
