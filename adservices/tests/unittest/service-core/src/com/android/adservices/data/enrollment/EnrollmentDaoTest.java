@@ -17,97 +17,172 @@
 package com.android.adservices.data.enrollment;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import android.database.Cursor;
+import android.adservices.common.AdTechIdentifier;
+import android.content.Context;
+import android.database.DatabaseUtils;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
-import org.junit.Assert;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
 
 public class EnrollmentDaoTest {
 
-    private final DbHelper mDbHelper = DbTestUtil.getDbHelperForTest();
-    private final EnrollmentDao mEnrollmentDao = new EnrollmentDao(mDbHelper);
+    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    private DbHelper mDbHelper;
+    private EnrollmentDao mEnrollmentDao;
+
+    private static final EnrollmentData ENROLLMENT_DATA1 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("1")
+                    .setCompanyId("1001")
+                    .setSdkNames("1sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://1test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://1test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://1test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://1test.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://1test.com/keys"))
+                    .build();
+
+    private static final EnrollmentData ENROLLMENT_DATA2 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("2")
+                    .setCompanyId("1002")
+                    .setSdkNames(Arrays.asList("2sdk", "anotherSdk"))
+                    .setAttributionSourceRegistrationUrl(
+                            Arrays.asList("https://2test.com/source", "https://2test2.com/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://2test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://2test.com"))
+                    .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
+                    .build();
+
+    @Before
+    public void setup() {
+        mDbHelper = DbHelper.getInstance(sContext);
+        mEnrollmentDao = new EnrollmentDao(sContext, mDbHelper);
+    }
+
+    @After
+    public void cleanup() {
+        for (String table : EnrollmentTables.ENROLLMENT_TABLES) {
+            mDbHelper.safeGetWritableDatabase().delete(table, null, null);
+        }
+    }
 
     @Test
-    public void testInsertAndGetAndDeleteEnrollmentData() {
-        List<String> sdkNames = Arrays.asList("Admob", "Firebase");
-        List<String> sourceRegistrationUrls =
-                Arrays.asList("https://source.example1.com", "https://source.example2.com");
-        List<String> triggerRegistrationUrls = Arrays.asList("https://trigger.example1.com");
-        List<String> reportingUrls = Arrays.asList("https://reporting.example1.com");
-        List<String> remarketingRegistrationUrls =
-                Arrays.asList("https://remarketing.example1.com");
-        List<String> encryptionUrls = Arrays.asList("https://encryption.example1.com");
-        EnrollmentData enrollmentData =
-                new EnrollmentData.Builder()
-                        .setEnrollmentId("1")
-                        .setCompanyId("1001")
-                        .setSdkNames(sdkNames)
-                        .setAttributionSourceRegistrationUrl(sourceRegistrationUrls)
-                        .setAttributionTriggerRegistrationUrl(triggerRegistrationUrls)
-                        .setAttributionReportingUrl(reportingUrls)
-                        .setRemarketingResponseBasedRegistrationUrl(remarketingRegistrationUrls)
-                        .setEncryptionKeyUrl(encryptionUrls)
-                        .build();
+    public void testInitialization() {
+        // Check seeded
+        assertTrue(mEnrollmentDao.isSeeded());
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertNotEquals(count, 0);
 
-        EnrollmentData enrollmentData1 =
-                new EnrollmentData.Builder()
-                        .setEnrollmentId("2")
-                        .setCompanyId("1002")
-                        .setSdkNames(sdkNames)
-                        .build();
+        // Check that seeded enrollments are in the table.
+        EnrollmentData e = mEnrollmentDao.getEnrollmentData("E1");
+        assertNotNull(e);
+        assertEquals(e.getSdkNames().get(0), "sdk1");
+        EnrollmentData e2 = mEnrollmentDao.getEnrollmentData("E2");
+        assertNotNull(e2);
+        assertEquals(e2.getSdkNames().get(0), "sdk2");
+        EnrollmentData e3 = mEnrollmentDao.getEnrollmentData("E3");
+        assertNotNull(e3);
+        assertEquals(e3.getSdkNames().get(0), "sdk3");
+    }
 
-        mEnrollmentDao.insertEnrollmentData(enrollmentData);
-        mEnrollmentDao.insertEnrollmentData(enrollmentData1);
+    @Test
+    public void testDelete() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
+        assertNotNull(e);
+        assertEquals(e, ENROLLMENT_DATA1);
 
-        try (Cursor cursor =
-                mDbHelper
-                        .getReadableDatabase()
-                        .query(
-                                EnrollmentTables.EnrollmentDataContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
-            Assert.assertTrue(cursor.moveToNext());
-            EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
-            Assert.assertNotNull(data);
-            assertEquals(data.getEnrollmentId(), "1");
-            assertEquals(data.getCompanyId(), "1001");
-            assertEquals(data.getSdkNames(), sdkNames);
-            assertEquals(data.getAttributionSourceRegistrationUrl(), sourceRegistrationUrls);
-            assertEquals(data.getAttributionTriggerRegistrationUrl(), triggerRegistrationUrls);
-            assertEquals(data.getAttributionReportingUrl(), reportingUrls);
-            assertEquals(
-                    data.getRemarketingResponseBasedRegistrationUrl(), remarketingRegistrationUrls);
-            assertEquals(data.getEncryptionKeyUrl(), encryptionUrls);
-        }
+        mEnrollmentDao.delete("1");
+        EnrollmentData e2 = mEnrollmentDao.getEnrollmentData("1");
+        assertNull(e2);
+    }
 
-        assertNotNull(mEnrollmentDao.getEnrollmentData("1"));
-        assertEquals(
-                Objects.requireNonNull(
-                                mEnrollmentDao.getEnrollmentDataGivenUrl(
-                                        "https://source.example1.com"))
-                        .getEnrollmentId(),
-                "1");
-        assertEquals(
-                Objects.requireNonNull(mEnrollmentDao.getEnrollmentDataGivenSdkName("Admob"))
-                        .getEnrollmentId(),
-                "1");
-        assertNull(mEnrollmentDao.getEnrollmentDataGivenSdkName("null"));
-        mEnrollmentDao.deleteEnrollmentData("1");
-        assertNull(mEnrollmentDao.getEnrollmentData("1"));
+    @Test
+    public void testDeleteAll() {
+        // Insert a record
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertNotEquals(count, 0);
+
+        // Delete the whole table
+        assertTrue(mEnrollmentDao.deleteAll());
+
+        // Check seeded enrollments are deleted.
+        count =
+                DatabaseUtils.queryNumEntries(
+                        mDbHelper.getReadableDatabase(),
+                        EnrollmentTables.EnrollmentDataContract.TABLE,
+                        null);
+        assertEquals(count, 0);
+
+        // Check unseeded.
+        assertFalse(mEnrollmentDao.isSeeded());
+    }
+
+    @Test
+    public void testGetEnrollmentData() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1);
+        EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
+        assertNotNull(e);
+        assertEquals(e, ENROLLMENT_DATA1);
+    }
+
+    @Test
+    public void testGetEnrollmentDataFromMeasurementUrl() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        EnrollmentData e = mEnrollmentDao.getEnrollmentDataFromMeasurementUrl("2test.com/source");
+        assertNotNull(e);
+        assertEquals(e, ENROLLMENT_DATA2);
+        EnrollmentData e2 = mEnrollmentDao.getEnrollmentDataFromMeasurementUrl("2test2.com/source");
+        assertNotNull(e2);
+        assertEquals(e, e2);
+    }
+
+    @Test
+    public void testGetEnrollmentDataForFledgeByAdTechIdentifier() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        AdTechIdentifier adtechIdentifier = AdTechIdentifier.fromString("2test.com", false);
+        EnrollmentData e =
+                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
+        assertNotNull(e);
+        assertEquals(e, ENROLLMENT_DATA2);
+    }
+
+    @Test
+    public void testGetEnrollmentDataFromSdkName() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA2);
+        EnrollmentData e = mEnrollmentDao.getEnrollmentDataFromSdkName("2sdk");
+        assertNotNull(e);
+        assertEquals(e, ENROLLMENT_DATA2);
+
+        EnrollmentData e2 = mEnrollmentDao.getEnrollmentDataFromSdkName("anotherSdk");
+        assertNotNull(e2);
+        assertEquals(e2, ENROLLMENT_DATA2);
     }
 }

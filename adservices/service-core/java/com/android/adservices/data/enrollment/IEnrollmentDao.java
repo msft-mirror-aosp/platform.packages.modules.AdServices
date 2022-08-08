@@ -37,7 +37,7 @@ public interface IEnrollmentDao {
      * @param url could be source registration url or trigger registration url.
      * @return the EnrollmentData; Null in case of SQL failure.
      */
-    EnrollmentData getEnrollmentDataGivenUrl(String url);
+    EnrollmentData getEnrollmentDataFromMeasurementUrl(String url);
 
     /**
      * Returns the {@link EnrollmentData} by given {@link AdTechIdentifier}.
@@ -53,22 +53,28 @@ public interface IEnrollmentDao {
      * @param sdkName List of SDKs belonging to the same enrollment.
      * @return the EnrollmentData; Null in case of SQL failure
      */
-    EnrollmentData getEnrollmentDataGivenSdkName(String sdkName);
+    EnrollmentData getEnrollmentDataFromSdkName(String sdkName);
 
     /**
      * Inserts {@link EnrollmentData} into DB table.
      *
      * @param enrollmentData the EnrollmentData to insert.
+     * @return true if the operation was successful, false, otherwise.
      */
-    void insertEnrollmentData(EnrollmentData enrollmentData);
+    boolean insert(EnrollmentData enrollmentData);
 
     /**
      * Deletes {@link EnrollmentData} from DB table.
      *
      * @param enrollmentId ID provided to the adtech at the end of the enrollment process.
+     * @return true if the operation was successful, false, otherwise.
      */
-    void deleteEnrollmentData(String enrollmentId);
+    boolean delete(String enrollmentId);
 
-    /** Deletes the whole EnrollmentData table. */
-    void deleteEnrollmentDataTable();
+    /**
+     * Deletes the whole EnrollmentData table.
+     *
+     * @return true if the operation was successful, false, otherwise.
+     */
+    boolean deleteAll();
 }
