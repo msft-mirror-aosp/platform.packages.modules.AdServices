@@ -90,7 +90,6 @@ android_test {
     name: "SdkSandboxFrameworkUnitTests",
     srcs: [
         "src/android/app/sdksandbox/*.java",
-        ":framework-sdksandbox-sources",
     ],
     defaults: ["SdkSandboxUnitTestsDefault"],
     manifest: "SdkSandboxFrameworkManifest.xml",
