@@ -17,7 +17,7 @@ package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.AdServicesApiUtil;
+import android.adservices.AdServicesState;
 import android.adservices.AdServicesVersion;
 
 import androidx.test.runner.AndroidJUnit4;
@@ -36,9 +36,9 @@ public class AdServicesJUnit4DeviceTest {
     }
 
     @Test
-    public void testAdServicesApiState() {
-        assertThat(AdServicesApiUtil.getAdServicesApiState())
-            .isEqualTo(AdServicesApiUtil.ADSERVICES_API_STATE_ENABLED);
+    public void testAdServicesState() {
+        assertThat(AdServicesState.getAdServicesState())
+                .isEqualTo(AdServicesState.ADSERVICES_API_STATE_ENABLED);
     }
 }
 
