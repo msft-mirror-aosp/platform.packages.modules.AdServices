@@ -200,7 +200,9 @@ public final class AdSelectionRunner {
                     () -> {
                         if (mFlags.getEnforceForegroundStatusForFledgeRunAdSelection()) {
                             mAppImportanceFilter.assertCallerIsInForeground(
-                                    mCallerUid, AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS, null);
+                                    mCallerUid,
+                                    AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
+                                    null);
                         }
                     };
             // Need to avoid checking pH flags in a Binder thread.

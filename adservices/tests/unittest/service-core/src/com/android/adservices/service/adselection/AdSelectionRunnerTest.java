@@ -513,7 +513,7 @@ public class AdSelectionRunnerTest {
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
                         CALLER_UID,
-                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
                         null);
 
         mAdSelectionRunner =
