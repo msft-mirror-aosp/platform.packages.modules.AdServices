@@ -27,7 +27,6 @@ import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallback;
 import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.content.Context;
 import android.content.pm.SharedLibraryInfo;
-import android.os.Binder;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -126,7 +125,6 @@ public class SdkSandboxManagerTest {
                                 0,
                                 500,
                                 500,
-                                new Binder(),
                                 new Bundle(),
                                 Runnable::run,
                                 requestSurfacePackageCallback));
@@ -161,14 +159,7 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName,
-                0,
-                500,
-                500,
-                new Binder(),
-                new Bundle(),
-                Runnable::run,
-                surfacePackageCallback);
+                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -312,14 +303,7 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName,
-                0,
-                500,
-                500,
-                new Binder(),
-                new Bundle(),
-                Runnable::run,
-                surfacePackageCallback);
+                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -334,14 +318,7 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName,
-                0,
-                500,
-                500,
-                new Binder(),
-                new Bundle(),
-                Runnable::run,
-                surfacePackageCallback);
+                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
