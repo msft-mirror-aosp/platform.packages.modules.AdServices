@@ -773,6 +773,19 @@ public interface Flags extends Dumpable {
         return getGlobalKillSwitch() || ADID_KILL_SWITCH;
     }
 
+    // APPSETID Killswitch.
+    /**
+     * AppSetId API Kill Switch. The default value is false which means the AppSetId API is enabled.
+     * This flag is used for emergency turning off the AppSetId API.
+     */
+    boolean APPSETID_KILL_SWITCH = false; // By default, the AppSetId API is enabled.
+
+    /** Gets the state of the global and appSetId kill switch. */
+    default boolean getAppSetIdKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch() || APPSETID_KILL_SWITCH;
+    }
+
     // TOPICS Killswitches
 
     /**
