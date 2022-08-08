@@ -15,11 +15,12 @@
   ~ limitations under the License.
   -->
 <ad-services-config>
+    <includes-sdk-library name="1" />
     <attribution allowAllToAccess="false" />
     <custom-audiences allowAllToAccess="false" />
     <!-- TODO(b/237444140): After enrollment is feature complete, this can be updated to allow a
          specific ad partner to access Topics API.
-    <topics allowAllToAccess="false" allowAdPartnersToAccess="com.android.tests.providers.sdk1" />
+    <topics allowAllToAccess="false" allowAdPartnersToAccess="1" />
     -->
     <topics allowAllToAccess="true" />
 </ad-services-config>
