@@ -19,7 +19,7 @@ package android.adservices.topics;
 import static android.adservices.topics.TopicsManager.EMPTY_SDK;
 
 import android.annotation.NonNull;
-import android.content.AttributionSource;
+import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -29,17 +29,23 @@ import android.os.Parcelable;
  * @hide
  */
 public final class GetTopicsParam implements Parcelable {
-    private final AttributionSource mAttributionSource;
     private final String mSdkName;
+    private final String mSdkPackageName;
+    private final String mAppPackageName;
 
-    private GetTopicsParam(@NonNull AttributionSource attributionSource, @NonNull String sdkName) {
-        mAttributionSource = attributionSource;
+    private GetTopicsParam(
+            @NonNull String sdkName,
+            @Nullable String sdkPackageName,
+            @NonNull String appPackageName) {
         mSdkName = sdkName;
+        mSdkPackageName = sdkPackageName;
+        mAppPackageName = appPackageName;
     }
 
     private GetTopicsParam(@NonNull Parcel in) {
-        mAttributionSource = AttributionSource.CREATOR.createFromParcel(in);
         mSdkName = in.readString();
+        mSdkPackageName = in.readString();
+        mAppPackageName = in.readString();
     }
 
     public static final @NonNull Creator<GetTopicsParam> CREATOR =
@@ -62,34 +68,36 @@ public final class GetTopicsParam implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel out, int flags) {
-        mAttributionSource.writeToParcel(out, flags);
         out.writeString(mSdkName);
+        out.writeString(mSdkPackageName);
+        out.writeString(mAppPackageName);
     }
 
-    /** Get the AttributionSource. The AttributionSource is used to obtain the calling chain */
-    @NonNull
-    public AttributionSource getAttributionSource() {
-        return mAttributionSource;
-    }
-
-    /** Get the Sdk Name. */
+    /** Get the Sdk Name. This is the name in the <sdk-library> tag of the Manifest. */
     @NonNull
     public String getSdkName() {
         return mSdkName;
     }
 
+    /** Get the Sdk Package Name. This is the package name in the Manifest. */
+    @NonNull
+    public String getSdkPackageName() {
+        return mSdkPackageName;
+    }
+
+    /** Get the App PackageName. */
+    @NonNull
+    public String getAppPackageName() {
+        return mAppPackageName;
+    }
+
     /** Builder for {@link GetTopicsParam} objects. */
     public static final class Builder {
-        private AttributionSource mAttributionSource;
         private String mSdkName;
+        private String mSdkPackageName;
+        private String mAppPackageName;
 
         public Builder() {}
-
-        /** Set the AttributionSource. */
-        public @NonNull Builder setAttributionSource(@NonNull AttributionSource attributionSource) {
-            mAttributionSource = attributionSource;
-            return this;
-        }
 
         /**
          * Set the Sdk Name. When the app calls the Topics API directly without using a SDK, don't
@@ -100,23 +108,41 @@ public final class GetTopicsParam implements Parcelable {
             return this;
         }
 
+        /**
+         * Set the Sdk Package Name. When the app calls the Topics API directly without using an
+         * SDK, don't set this field.
+         */
+        public @NonNull Builder setSdkPackageName(@NonNull String sdkPackageName) {
+            mSdkPackageName = sdkPackageName;
+            return this;
+        }
+
+        /** Set the App PackageName. */
+        public @NonNull Builder setAppPackageName(@NonNull String appPackageName) {
+            mAppPackageName = appPackageName;
+            return this;
+        }
+
         /** Builds a {@link GetTopicsParam} instance. */
         public @NonNull GetTopicsParam build() {
-            if (mAttributionSource == null) {
-                throw new IllegalArgumentException("AttributionSource unset");
-            }
-
-            if (mAttributionSource.getPackageName() == null) {
-                throw new IllegalArgumentException("PackageName is not set in AttributionSource");
-            }
-
             if (mSdkName == null) {
                 // When Sdk name is not set, we assume the App calls the Topics API directly.
                 // We set the Sdk name to empty to mark this.
                 mSdkName = EMPTY_SDK;
             }
 
-            return new GetTopicsParam(mAttributionSource, mSdkName);
+            if (mSdkPackageName == null) {
+                // When Sdk package name is not set, we assume the App calls the Topics API
+                // directly.
+                // We set the Sdk package name to empty to mark this.
+                mSdkPackageName = EMPTY_SDK;
+            }
+
+            if (mAppPackageName == null || mAppPackageName.isEmpty()) {
+                throw new IllegalArgumentException("App PackageName must not be empty or null");
+            }
+
+            return new GetTopicsParam(mSdkName, mSdkPackageName, mAppPackageName);
         }
     }
 }

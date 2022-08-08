@@ -16,7 +16,7 @@
 
 repositories {
     google()
-    jcenter()
+    mavenCentral()
 }
 
 buildscript {
@@ -25,16 +25,16 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.2.1'
     }
 }
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
     defaultConfig {
-        targetSdkVersion 30
-        minSdkVersion 30
+        targetSdkVersion 33
+        minSdkVersion 33
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -46,14 +46,36 @@ android {
                     '../service-core/java',
                     '../framework/java',
                     '../../../../../external/guava/guava/src',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'ActionBarShadow/src',
+                    '../../../../../frameworks/base/core/java',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'CollapsingToolbarBaseActivity/src',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'MainSwitchPreference/src',
             ]
             java.setIncludes(new HashSet([
                     'com/android/adservices/ui/**/*.java',
                     'com/android/adservices/service/consent/*.java',
                     'com/android/adservices/*.java',
+                    'com/android/settingslib/widget/**/*.java',
                     'com/google/common/collect/*.java',
+                    'android/os/*.java',
+                    'com/android/settingslib/collapsingtoolbar/**/*.java',
             ]))
-            res.srcDirs = ['res']
+            res.srcDirs = [
+                    'res',
+                    '../../../../../frameworks/base/packages/SettingsLib/' +
+                            'SettingsTheme/res',
+            ]
+            resources.setIncludes(new HashSet([
+                    'drawable/*',
+                    'drawable24/*',
+                    'layout/*',
+                    'mipmap-*/*',
+                    'values/*',
+                    'xml/*',
+            ]))
         }
 
         androidTest {
@@ -66,15 +88,19 @@ android {
             ]))
         }
     }
-    buildToolsVersion '30.0.2'
+    buildToolsVersion '30.0.3'
 }
 
 dependencies {
-    implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.preference:preference:1.2.0'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+    implementation files('../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/1.0.1/truth-1.0.1.jar')
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
 
     // test dependencies
     testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.3.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.4.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test:runner:1.4.0'
     androidTestImplementation 'androidx.test:rules:1.4.0'

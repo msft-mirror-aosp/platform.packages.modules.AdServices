@@ -16,6 +16,22 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+genrule {
+  name: "statslog-sdksandbox-java-gen",
+  tools: ["stats-log-api-gen"],
+  cmd: "$(location stats-log-api-gen) --java $(out) --module sdksandbox" +
+       " --javaPackage com.android.sdksandbox.service.stats --javaClass SdkSandboxStatsLog" +
+       " --minApiLevel 33",
+  out: ["com/android/sdksandbox/service/stats/SdkSandboxStatsLog.java"],
+}
+
+filegroup {
+    name: "sdksandbox-metrics-logging",
+    srcs: [
+        ":statslog-sdksandbox-java-gen",
+    ],
+}
+
 filegroup {
     name: "service-sdksandbox-sources",
     srcs: [
@@ -23,6 +39,25 @@ filegroup {
     ],
     path: "java",
     visibility: ["//visibility:private"],
+}
+
+java_library {
+    name: "service-sdksandbox-metrics",
+    srcs: [
+        ":sdksandbox-metrics-logging",
+    ],
+    sdk_version: "module_current",
+    permitted_packages: [
+        "com.android.sdksandbox",
+        "com.android.server.sdksandbox",
+    ],
+    libs: [
+        "framework-statsd.stubs.module_lib",
+    ],
+    defaults: [
+        "framework-system-server-module-defaults",
+        "sdksandbox-java-defaults",
+    ],
 }
 
 java_sdk_library {
@@ -51,6 +86,7 @@ java_sdk_library {
     ],
     impl_library_visibility: [
         "//packages/modules/AdServices/sdksandbox/tests/unittest",
+        "//packages/modules/AdServices/sdksandbox/tests/testutils",
         "//frameworks/base/services/tests/mockingservicestests",
         "//frameworks/base/services/tests/wmtests",
     ],

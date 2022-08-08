@@ -22,9 +22,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.provider.Settings;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -73,7 +75,8 @@ public class DevContextFilter {
      *     transaction.
      */
     public DevContext createDevContext() throws IllegalStateException {
-        return createDevContext(Binder.getCallingUidOrThrow());
+        int callingAppUid = SdkRuntimeUtil.getCallingAppUid(Binder.getCallingUidOrThrow());
+        return createDevContext(callingAppUid);
     }
 
     /**
@@ -109,7 +112,13 @@ public class DevContextFilter {
         }
     }
 
-    private boolean isDebuggable(String callingAppPackage) {
+    /**
+     * Returns true if the callingAppPackage is debuggable.
+     *
+     * @param callingAppPackage the calling app package
+     */
+    @VisibleForTesting
+    public boolean isDebuggable(String callingAppPackage) {
         try {
             ApplicationInfo applicationInfo =
                     mPackageManager.getApplicationInfo(
@@ -126,9 +135,12 @@ public class DevContextFilter {
         }
     }
 
-    private boolean isDeveloperMode() {
-        return Settings.Global.getInt(
-                        mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
-                != 0;
+    /** Returns true if developer options are enabled. */
+    @VisibleForTesting
+    public boolean isDeveloperMode() {
+        return Build.isDebuggable()
+                || Settings.Global.getInt(
+                                mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
+                        != 0;
     }
 }

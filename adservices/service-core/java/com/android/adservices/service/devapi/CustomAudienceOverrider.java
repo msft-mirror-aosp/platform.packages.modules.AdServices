@@ -20,15 +20,19 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
+import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
-import android.adservices.exceptions.ApiNotAuthorizedException;
 import android.annotation.NonNull;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -45,6 +49,8 @@ public class CustomAudienceOverrider {
     @NonNull private final ListeningExecutorService mListeningExecutorService;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final AppImportanceFilter mAppImportanceFilter;
+    @NonNull private final Flags mFlags;
 
     /**
      * Creates an instance of {@link CustomAudienceOverrider} with the given {@link DevContext},
@@ -54,7 +60,9 @@ public class CustomAudienceOverrider {
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull ExecutorService executorService,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull AppImportanceFilter appImportanceFilter,
+            @NonNull Flags flags) {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(executorService);
@@ -65,26 +73,49 @@ public class CustomAudienceOverrider {
         this.mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
         this.mAdServicesLogger = adServicesLogger;
+        this.mAppImportanceFilter = appImportanceFilter;
+        this.mFlags = flags;
     }
 
     /**
      * Configures our fetching logic relating to the combination of {@code owner}, {@code buyer},
-     * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingData} instead of
+     * and {@code name} to use {@code biddingLogicJS} and {@code trustedBiddingSignals} instead of
      * fetching from remote servers
      *
      * @param callback callback function to be called in case of success or failure
      */
     public void addOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingData,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
+        Objects.requireNonNull(callback);
+
         // Auto-generated variable name is too long for lint check
         int shortApiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 
-        callAddOverride(owner, buyer, name, biddingLogicJS, trustedBiddingData)
+        FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () -> {
+                                    Objects.requireNonNull(owner);
+                                    Objects.requireNonNull(buyer);
+                                    Objects.requireNonNull(name);
+                                    Objects.requireNonNull(biddingLogicJS);
+                                    Objects.requireNonNull(trustedBiddingSignals);
+
+                                    if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                owner, shortApiName, null);
+                                    }
+                                    return null;
+                                }))
+                .transformAsync(
+                        ignoredVoid ->
+                                callAddOverride(
+                                        owner, buyer, name, biddingLogicJS, trustedBiddingSignals),
+                        mListeningExecutorService)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -110,14 +141,31 @@ public class CustomAudienceOverrider {
      */
     public void removeOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull CustomAudienceOverrideCallback callback) {
+        Objects.requireNonNull(callback);
+
         // Auto-generated variable name is too long for lint check
         int shortApiName =
                 AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 
-        callRemoveOverride(owner, buyer, name)
+        FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () -> {
+                                    Objects.requireNonNull(owner);
+                                    Objects.requireNonNull(buyer);
+                                    Objects.requireNonNull(name);
+
+                                    if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                owner, shortApiName, null);
+                                    }
+                                    return null;
+                                }))
+                .transformAsync(
+                        ignoredVoid -> callRemoveOverride(owner, buyer, name),
+                        mListeningExecutorService)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -140,11 +188,23 @@ public class CustomAudienceOverrider {
      *
      * @param callback callback function to be called in case of success or failure
      */
-    public void removeAllOverrides(@NonNull CustomAudienceOverrideCallback callback) {
+    public void removeAllOverrides(
+            @NonNull CustomAudienceOverrideCallback callback, int callerUid) {
+        Objects.requireNonNull(callback);
+
         // Auto-generated variable name is too long for lint check
         int shortApiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 
-        callRemoveAllOverrides()
+        FluentFuture.from(
+                        mListeningExecutorService.submit(
+                                () -> {
+                                    if (mFlags.getEnforceForegroundStatusForFledgeOverrides()) {
+                                        mAppImportanceFilter.assertCallerIsInForeground(
+                                                callerUid, shortApiName, null);
+                                    }
+                                    return null;
+                                }))
+                .transformAsync(ignoredVoid -> callRemoveAllOverrides(), mListeningExecutorService)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -164,10 +224,10 @@ public class CustomAudienceOverrider {
 
     private FluentFuture<Void> callAddOverride(
             @NonNull String owner,
-            @NonNull String buyer,
+            @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
-            @NonNull String trustedBiddingData) {
+            @NonNull AdSelectionSignals trustedBiddingData) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
@@ -178,7 +238,7 @@ public class CustomAudienceOverrider {
     }
 
     private FluentFuture<Void> callRemoveOverride(
-            @NonNull String owner, @NonNull String buyer, @NonNull String name) {
+            @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
                         () -> {
@@ -210,7 +270,7 @@ public class CustomAudienceOverrider {
                             .setErrorMessage(errorMessage)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send failed result to the callback", e);
+            LogUtil.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -224,7 +284,7 @@ public class CustomAudienceOverrider {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e("Unable to send successful result to the callback", e);
+            LogUtil.e(e, "Unable to send successful result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
         } finally {
@@ -240,7 +300,16 @@ public class CustomAudienceOverrider {
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                     t.getMessage(),
                     apiName);
-        } else if (t instanceof ApiNotAuthorizedException) {
+        } else if (t instanceof WrongCallingApplicationStateException) {
+            invokeFailure(
+                    callback,
+                    AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
+                    t.getMessage(),
+                    apiName);
+        } else if (t instanceof IllegalStateException) {
+            invokeFailure(
+                    callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage(), apiName);
+        } else if (t instanceof SecurityException) {
             invokeFailure(
                     callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage(), apiName);
         } else {

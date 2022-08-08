@@ -16,23 +16,31 @@
 
 package android.adservices.common;
 
+import android.adservices.exceptions.AdServicesException;
+import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.content.Context;
-import android.net.Uri;
+import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 
+import java.util.concurrent.Executor;
+
 /**
- * AdServicesCommonManager class.
- * Ths contains APIs common across the various PPAPIs.
+ * AdServicesCommonManager contains APIs common across the various Adservices. Current we set It to
+ * SystemApi as all two methods, isAdServicesEnabled and setAdServicesEntryPointEnabled, Are all
+ * systemApi.
+ *
  * @hide
  */
+@SystemApi
 public class AdServicesCommonManager {
-    public static final String AD_SERVICES_COMMON_SERVICE =
-            "ad_services_common_service";
+    /** @hide */
+    public static final String AD_SERVICES_COMMON_SERVICE = "ad_services_common_service";
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService>
@@ -61,32 +69,58 @@ public class AdServicesCommonManager {
     }
 
     /**
-     * Delete a package's records.
+     * Get the adservices status.
+     *
      * @hide
      */
-    public void onPackageFullyRemoved(@NonNull Uri packageUri) {
+    @SystemApi
+    public void isAdServicesEnabled(
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<Boolean, AdServicesException> callback) {
         final IAdServicesCommonService service = getService();
         try {
-            service.onPackageFullyRemoved(packageUri);
+            service.isAdServicesEnabled(
+                    new IAdServicesCommonCallback.Stub() {
+                        @Override
+                        public void onResult(IsAdServicesEnabledResult result) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onResult(result.getAdServicesEnabled());
+                                    });
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            executor.execute(
+                                    () -> {
+                                        callback.onError(new AdServicesException(errorMessage));
+                                    });
+                        }
+                    });
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-        } finally {
-            mAdServicesCommonServiceBinder.unbindFromService();
+            LogUtil.e(e, "RemoteException");
+            executor.execute(() -> callback.onError(new AdServicesException("Internal Error!")));
         }
     }
 
     /**
-     * Notify adservices that this app was installed for attribution purposes.
-     * @param packageUri installed package URI.
+     * Send the privacy sandbox UI entry point enable status to AdServices, indicating whether
+     * Privacy sandbox is enabled or not. If this is enabled, and AdServices is enabled, AdServices
+     * Will send out notification to user. Also send adid zero out status, if user opt-out adid, Its
+     * adid will become all 0s.
+     *
+     * @param adServicesEntryPointEnabled indicate entry point enabled or not
+     * @param adIdEnabled indicate user opt-out of adid or not
+     * @hide
      */
-    public void onPackageAdded(@NonNull Uri packageUri) {
+    @SystemApi
+    public void setAdServicesNotificationConditions(
+            boolean adServicesEntryPointEnabled, boolean adIdEnabled) {
         final IAdServicesCommonService service = getService();
         try {
-            service.onPackageAdded(packageUri);
+            service.setAdServicesNotificationConditions(adServicesEntryPointEnabled, adIdEnabled);
         } catch (RemoteException e) {
-            LogUtil.e("RemoteException", e);
-        } finally {
-            mAdServicesCommonServiceBinder.unbindFromService();
+            LogUtil.e(e, "RemoteException");
         }
     }
 }
