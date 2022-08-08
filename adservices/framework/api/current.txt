@@ -1,8 +1,8 @@
 // Signature format: 2.0
 package android.adservices {
 
-  public class AdServicesApiUtil {
-    method public static int getAdServicesApiState();
+  public class AdServicesState {
+    method public static int getAdServicesState();
     field public static final int ADSERVICES_API_STATE_DISABLED = 0; // 0x0
     field public static final int ADSERVICES_API_STATE_ENABLED = 1; // 0x1
   }

@@ -21,7 +21,7 @@ import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
 import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
 
-import android.adservices.AdServicesApiUtil;
+import android.adservices.AdServicesState;
 import android.adservices.exceptions.AdServicesException;
 import android.adservices.exceptions.MeasurementException;
 import android.annotation.CallbackExecutor;
@@ -391,8 +391,7 @@ public class MeasurementManager {
         Objects.requireNonNull(callback);
 
         // TODO (b/241149306): Remove here and apply across the board.
-        if (AdServicesApiUtil.getAdServicesApiState()
-                == AdServicesApiUtil.ADSERVICES_API_STATE_DISABLED) {
+        if (AdServicesState.getAdServicesState() == AdServicesState.ADSERVICES_API_STATE_DISABLED) {
             executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
             return;
         }
