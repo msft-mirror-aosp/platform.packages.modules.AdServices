@@ -83,15 +83,9 @@ package android.adservices.adselection {
   }
 
   public class ReportImpressionRequest {
+    ctor public ReportImpressionRequest(long, @NonNull android.adservices.adselection.AdSelectionConfig);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method public long getAdSelectionId();
-  }
-
-  public static final class ReportImpressionRequest.Builder {
-    ctor public ReportImpressionRequest.Builder();
-    method @NonNull public android.adservices.adselection.ReportImpressionRequest build();
-    method @NonNull public android.adservices.adselection.ReportImpressionRequest.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
-    method @NonNull public android.adservices.adselection.ReportImpressionRequest.Builder setAdSelectionId(long);
   }
 
   public class TestAdSelectionManager {
