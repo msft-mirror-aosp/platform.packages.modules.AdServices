@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -130,6 +131,19 @@ public class AppManifestConfigHelper {
         try {
             XmlResourceParser in = getXmlParser(context, appPackageName);
             AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(in);
+
+            // If the request comes directly from the app, check that the app has declared that it
+            // includes this Sdk library.
+            if (!(context instanceof SandboxedSdkContext)) {
+                return appManifestConfig
+                                .getIncludesSdkLibraryConfig()
+                                .getIncludesSdkLibraries()
+                                .contains(enrollmentId)
+                        && appManifestConfig.isAllowedTopicsAccess(enrollmentId);
+            }
+
+            // If the request comes from the SdkRuntime, then the app had to have declared the Sdk
+            // using <uses-sdk-library>, so no need to check.
             return appManifestConfig.isAllowedTopicsAccess(enrollmentId);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, "App manifest parse failed: NameNotFound.");

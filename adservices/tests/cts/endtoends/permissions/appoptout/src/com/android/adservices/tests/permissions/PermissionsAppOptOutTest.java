@@ -26,6 +26,8 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -39,11 +41,13 @@ public class PermissionsAppOptOutTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_AUTHORIZED =
-            "java.lang.SecurityException: Caller is not authorized to call this API.";
+            "java.lang.SecurityException: Caller is not authorized to call this API. "
+                    + "Caller is not allowed.";
 
     @Test
     // In the ad_services_config.xml file, the topics access is revoked for all, for this test.
     public void testAppOptOut_topics() throws Exception {
+        overrideDisableTopicsEnrollmentCheck("0");
         AdvertisingTopicsClient advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -55,5 +59,13 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        overrideDisableTopicsEnrollmentCheck("1");
+    }
+
+    // Override the flag to disable Topics enrollment check.
+    private void overrideDisableTopicsEnrollmentCheck(String val) {
+        // Setting it to 1 here disables the Topics enrollment check.
+        ShellUtils.runShellCommand(
+                "setprop debug.adservices.disable_topics_enrollment_check " + val);
     }
 }
