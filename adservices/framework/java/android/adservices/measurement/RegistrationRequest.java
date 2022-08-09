@@ -54,6 +54,7 @@ public final class RegistrationRequest implements Parcelable {
     private final Uri mTopOriginUri;
     private final InputEvent mInputEvent;
     private final String mPackageName;
+    private final long mRequestTime;
 
     private RegistrationRequest(@NonNull Builder builder) {
         mRegistrationType = builder.mRegistrationType;
@@ -61,6 +62,7 @@ public final class RegistrationRequest implements Parcelable {
         mTopOriginUri = builder.mTopOriginUri;
         mInputEvent = builder.mInputEvent;
         mPackageName = builder.mPackageName;
+        mRequestTime = builder.mRequestTime;
     }
 
     /**
@@ -77,6 +79,7 @@ public final class RegistrationRequest implements Parcelable {
         } else {
             mInputEvent = null;
         }
+        mRequestTime = in.readLong();
     }
 
     /**
@@ -115,6 +118,7 @@ public final class RegistrationRequest implements Parcelable {
         } else {
             out.writeBoolean(false);
         }
+        out.writeLong(mRequestTime);
     }
 
     /**
@@ -150,6 +154,11 @@ public final class RegistrationRequest implements Parcelable {
         return mPackageName;
     }
 
+    /** Time the request was created, as millis since boot excluding time in deep sleep. */
+    public @NonNull long getRequestTime() {
+        return mRequestTime;
+    }
+
     /**
      * A builder for {@link RegistrationRequest}.
      */
@@ -159,6 +168,7 @@ public final class RegistrationRequest implements Parcelable {
         private Uri mTopOriginUri;
         private InputEvent mInputEvent;
         private String mPackageName;
+        private long mRequestTime;
 
         public Builder() {
             mRegistrationType = INVALID;
@@ -208,6 +218,12 @@ public final class RegistrationRequest implements Parcelable {
         public @NonNull Builder setPackageName(@NonNull String packageName) {
             Objects.requireNonNull(packageName);
             mPackageName = packageName;
+            return this;
+        }
+
+        /** See {@link RegistrationRequest#getRequestTime}. */
+        public @NonNull Builder setRequestTime(long requestTime) {
+            mRequestTime = requestTime;
             return this;
         }
 

@@ -60,8 +60,14 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
             String name) throws DatastoreException {
         super(actions, expectedOutput, name);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
-        mMeasurementImpl = TestObjectProvider.getMeasurementImpl(TestObjectProvider.Type.NOISY,
-                sDatastoreManager, mSourceFetcher, mTriggerFetcher);
+        mMeasurementImpl =
+                TestObjectProvider.getMeasurementImpl(
+                        TestObjectProvider.Type.NOISY,
+                        sDatastoreManager,
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier,
+                        mFlags);
         getExpectedTriggerDataDistributions();
     }
 
