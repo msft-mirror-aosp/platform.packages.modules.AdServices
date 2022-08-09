@@ -84,21 +84,6 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
   }
 
-  public final class ReportImpressionInput implements android.os.Parcelable {
-    method public int describeContents();
-    method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
-    method public long getAdSelectionId();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.ReportImpressionInput> CREATOR;
-  }
-
-  public static final class ReportImpressionInput.Builder {
-    ctor public ReportImpressionInput.Builder();
-    method @NonNull public android.adservices.adselection.ReportImpressionInput build();
-    method @NonNull public android.adservices.adselection.ReportImpressionInput.Builder setAdSelectionConfig(@NonNull android.adservices.adselection.AdSelectionConfig);
-    method @NonNull public android.adservices.adselection.ReportImpressionInput.Builder setAdSelectionId(long);
-  }
-
   public class ReportImpressionRequest {
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
     method public long getAdSelectionId();

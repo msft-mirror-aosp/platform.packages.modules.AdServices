@@ -27,6 +27,8 @@ import java.util.Objects;
 
 /**
  * Represent input params to the reportImpression API.
+ *
+ * @hide
  */
 public final class ReportImpressionInput implements Parcelable {
     private static final long UNSET = 0;
@@ -91,7 +93,11 @@ public final class ReportImpressionInput implements Parcelable {
         return mAdSelectionConfig;
     }
 
-    /** Builder for {@link ReportImpressionInput} objects. */
+    /**
+     * Builder for {@link ReportImpressionInput} objects.
+     *
+     * @hide
+     */
     public static final class Builder {
         // Initializing mAdSelectionId to start as -1, to differentiate it from the default
         // initialization of 0.
