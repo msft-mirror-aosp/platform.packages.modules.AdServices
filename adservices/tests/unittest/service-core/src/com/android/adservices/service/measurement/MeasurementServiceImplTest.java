@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.ResultCode.RESULT_OK;
-import static com.android.adservices.ResultCode.RESULT_RATE_LIMIT_REACHED;
-import static com.android.adservices.ResultCode.RESULT_UNAUTHORIZED_CALL;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -92,13 +92,13 @@ public final class MeasurementServiceImplTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
-                .thenReturn(RESULT_OK);
+                .thenReturn(STATUS_SUCCESS);
         when(mMockMeasurementImpl.registerWebSource(
                         any(WebSourceRegistrationRequestInternal.class), anyLong()))
-                .thenReturn(RESULT_OK);
+                .thenReturn(STATUS_SUCCESS);
         when(mMockMeasurementImpl.registerWebSource(
                         any(WebSourceRegistrationRequestInternal.class), anyLong()))
-                .thenReturn(RESULT_OK);
+                .thenReturn(STATUS_SUCCESS);
         when(mConsentManager.getConsent(any(PackageManager.class)))
                 .thenReturn(AdServicesApiConsent.GIVEN);
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
@@ -115,7 +115,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                list.add(RESULT_OK);
+                                list.add(STATUS_SUCCESS);
                                 countDownLatch.countDown();
                             }
 
@@ -124,7 +124,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
     }
 
@@ -138,7 +138,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        resultCodes.add(RESULT_OK);
+                        resultCodes.add(STATUS_SUCCESS);
                         countDownLatchSuccess.countDown();
                     }
 
@@ -157,9 +157,9 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(resultCodes.size()).isEqualTo(1);
-        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(STATUS_RATE_LIMIT_REACHED);
         assertThat(errors.size()).isEqualTo(1);
     }
 
@@ -173,7 +173,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        resultCodes.add(RESULT_OK);
+                        resultCodes.add(STATUS_SUCCESS);
                         countDownLatchSuccess.countDown();
                     }
 
@@ -192,9 +192,9 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(resultCodes.size()).isEqualTo(1);
-        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(STATUS_RATE_LIMIT_REACHED);
         assertThat(errors.size()).isEqualTo(1);
     }
 
@@ -229,7 +229,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                list.add(RESULT_OK);
+                                list.add(STATUS_SUCCESS);
                                 countDownLatch.countDown();
                             }
 
@@ -238,7 +238,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
     }
 
@@ -252,7 +252,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        resultCodes.add(RESULT_OK);
+                        resultCodes.add(STATUS_SUCCESS);
                         countDownLatchSuccess.countDown();
                     }
 
@@ -271,9 +271,9 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(resultCodes.size()).isEqualTo(1);
-        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(STATUS_RATE_LIMIT_REACHED);
         assertThat(errors.size()).isEqualTo(1);
     }
 
@@ -334,7 +334,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                list.add(RESULT_OK);
+                                list.add(STATUS_SUCCESS);
                                 countDownLatch.countDown();
                             }
 
@@ -344,7 +344,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
     }
 
@@ -358,7 +358,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        resultCodes.add(RESULT_OK);
+                        resultCodes.add(STATUS_SUCCESS);
                         countDownLatchSuccess.countDown();
                     }
 
@@ -377,9 +377,9 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(resultCodes.size()).isEqualTo(1);
-        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(STATUS_RATE_LIMIT_REACHED);
         assertThat(errors.size()).isEqualTo(1);
     }
 
@@ -415,7 +415,7 @@ public final class MeasurementServiceImplTest {
                         new IMeasurementCallback.Stub() {
                             @Override
                             public void onResult() {
-                                list.add(RESULT_OK);
+                                list.add(STATUS_SUCCESS);
                                 countDownLatch.countDown();
                             }
 
@@ -425,7 +425,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(list.get(0)).isEqualTo(RESULT_OK);
+        assertThat(list.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(list.size()).isEqualTo(1);
     }
 
@@ -439,7 +439,7 @@ public final class MeasurementServiceImplTest {
                 new IMeasurementCallback.Stub() {
                     @Override
                     public void onResult() {
-                        resultCodes.add(RESULT_OK);
+                        resultCodes.add(STATUS_SUCCESS);
                         countDownLatchSuccess.countDown();
                     }
 
@@ -458,9 +458,9 @@ public final class MeasurementServiceImplTest {
 
         assertThat(countDownLatchSuccess.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         assertThat(countDownLatchFailed.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        assertThat(resultCodes.get(0)).isEqualTo(RESULT_OK);
+        assertThat(resultCodes.get(0)).isEqualTo(STATUS_SUCCESS);
         assertThat(resultCodes.size()).isEqualTo(1);
-        assertThat(errors.get(0).getStatusCode()).isEqualTo(RESULT_RATE_LIMIT_REACHED);
+        assertThat(errors.get(0).getStatusCode()).isEqualTo(STATUS_RATE_LIMIT_REACHED);
         assertThat(errors.size()).isEqualTo(1);
     }
 
@@ -518,7 +518,7 @@ public final class MeasurementServiceImplTest {
                     @Override
                     public void onFailure(MeasurementErrorResponse measurementErrorResponse) {
                         assertThat(measurementErrorResponse.getStatusCode())
-                                .isEqualTo(RESULT_UNAUTHORIZED_CALL);
+                                .isEqualTo(STATUS_USER_CONSENT_REVOKED);
                     }
                 });
     }
@@ -556,7 +556,7 @@ public final class MeasurementServiceImplTest {
                     @Override
                     public void onFailure(MeasurementErrorResponse measurementErrorResponse) {
                         assertThat(measurementErrorResponse.getStatusCode())
-                                .isEqualTo(RESULT_UNAUTHORIZED_CALL);
+                                .isEqualTo(STATUS_USER_CONSENT_REVOKED);
                     }
                 });
     }
@@ -594,7 +594,7 @@ public final class MeasurementServiceImplTest {
                     @Override
                     public void onFailure(MeasurementErrorResponse measurementErrorResponse) {
                         assertThat(measurementErrorResponse.getStatusCode())
-                                .isEqualTo(RESULT_UNAUTHORIZED_CALL);
+                                .isEqualTo(STATUS_USER_CONSENT_REVOKED);
                     }
                 });
     }
