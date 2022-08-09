@@ -20,6 +20,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -100,6 +101,7 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
     private static final long FAKE_TIME_IN_MILLIS = 10;
+    private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL = 10;
 
     @Before
     public void setup() {
@@ -776,7 +778,8 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testUnloadSdkThatIsNotLoaded() {
         assertThrows(
-                IllegalArgumentException.class, () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME));
+                IllegalArgumentException.class,
+                () -> mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER));
     }
 
     @Test
@@ -795,12 +798,13 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(callback2.isLoadSdkSuccessful()).isTrue();
 
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
-        mService.unloadSdk(TEST_PACKAGE, SDK_NAME);
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
         // One SDK should still be loaded, therefore the sandbox should still be alive.
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
 
-        mService.unloadSdk(TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME);
+        mService.unloadSdk(
+                TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
         // No more SDKs should be loaded at this point. Verify that the sandbox has been killed.
         Mockito.verify(mAmSpy, Mockito.only())
@@ -938,6 +942,24 @@ public class SdkSandboxManagerServiceUnitTest {
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    @Test
+    public void testLatencyMetrics_IpcFromAppToSystemServer_UnloadSdk() throws Exception {
+        disableKillUid();
+        loadSdk();
+
+        mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__UNLOAD_SDK,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
     }
 
     /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
