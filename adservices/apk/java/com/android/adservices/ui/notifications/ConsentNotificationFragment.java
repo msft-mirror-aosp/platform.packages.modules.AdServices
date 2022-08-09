@@ -33,6 +33,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
@@ -102,6 +103,8 @@ public class ConsentNotificationFragment extends Fragment {
                 view -> {
                     if (isEUDevice) {
                         // opt-out confirmation activity
+                        ConsentManager.getInstance(requireContext())
+                                .disable(requireContext());
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
@@ -109,6 +112,8 @@ public class ConsentNotificationFragment extends Fragment {
                         // go to settings activity
                         Intent intent =
                                 new Intent(requireActivity(), AdServicesSettingsActivity.class);
+                        intent.addFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                     }
                 });
@@ -118,6 +123,8 @@ public class ConsentNotificationFragment extends Fragment {
                 view -> {
                     if (isEUDevice) {
                         // opt-in confirmation activity
+                        ConsentManager.getInstance(requireContext())
+                                .enable(requireContext().getPackageManager());
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                         startConfirmationFragment(args);
