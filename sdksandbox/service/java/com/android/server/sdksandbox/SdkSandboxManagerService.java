@@ -22,6 +22,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
@@ -506,7 +507,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {
+    public void syncDataFromClient(
+            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        SdkSandboxStatsLog.write(
+                SANDBOX_API_CALLED,
+                SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
+
         final int callingUid = Binder.getCallingUid();
         final long token = Binder.clearCallingIdentity();
 

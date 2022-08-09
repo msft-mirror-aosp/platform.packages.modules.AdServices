@@ -34,6 +34,6 @@ interface ISdkSandboxManager {
     void requestSurfacePackage(in String callingPackageName, in String sdkName, in IBinder hostToken, int displayId, int width, int height, long timeAppCalledSystemServer, in Bundle params, IRequestSurfacePackageCallback callback);
     void sendData(in String callingPackageName, in String sdkName, in Bundle data, in ISendDataCallback callback);
     List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(in String callingPackageName, long timeAppCalledSystemServer);
-    void syncDataFromClient(in String callingPackageName, in Bundle data);
+    void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in Bundle data);
     void stopSdkSandbox(in String callingPackageName);
 }

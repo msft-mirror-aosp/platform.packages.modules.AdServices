@@ -74,7 +74,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
     public void stopSdkSandbox(String callingPackageName) throws RemoteException {}
 
     @Override
-    public void syncDataFromClient(String callingPackageName, Bundle data) {}
+    public void syncDataFromClient(
+            String callingPackageName, long timeAppCalledSystemServer, Bundle data) {}
 
     @Override
     public void addSdkSandboxLifecycleCallback(

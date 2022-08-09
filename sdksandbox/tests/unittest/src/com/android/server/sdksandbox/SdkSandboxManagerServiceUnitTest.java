@@ -20,6 +20,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_LOADED_SDK_LIBRARIES_INFO;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__UNLOAD_SDK;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 
@@ -374,8 +375,8 @@ public class SdkSandboxManagerServiceUnitTest {
         FakeLoadSdkCallbackBinder callback = Mockito.spy(new FakeLoadSdkCallbackBinder());
         Mockito.doReturn(Mockito.mock(Binder.class)).when(callback).asBinder();
 
-        ArgumentCaptor<IBinder.DeathRecipient> deathRecipient = ArgumentCaptor
-                .forClass(IBinder.DeathRecipient.class);
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipient =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
 
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
@@ -830,7 +831,10 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void test_syncDataFromClient_sandboxServiceIsNotBound() {
         // Sync data from client
-        mService.syncDataFromClient(TEST_PACKAGE, new Bundle());
+        mService.syncDataFromClient(
+                TEST_PACKAGE,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle());
 
         // Verify when sandbox is not bound, manager service does not try to sync
         assertThat(mSdkSandboxService.getLastUpdate()).isNull();
@@ -844,7 +848,8 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Sync data from client
         final Bundle data = new Bundle();
-        mService.syncDataFromClient(TEST_PACKAGE, data);
+        mService.syncDataFromClient(
+                TEST_PACKAGE, /*timeAppCalledSystemServer=*/ System.currentTimeMillis(), data);
 
         // Verify that manager service calls sandbox to sync data
         assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
@@ -923,7 +928,6 @@ public class SdkSandboxManagerServiceUnitTest {
             throws Exception {
         loadSdk();
         mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
-
         ExtendedMockito.verify(
                 () ->
                         SdkSandboxStatsLog.write(
@@ -937,7 +941,6 @@ public class SdkSandboxManagerServiceUnitTest {
     private void loadSdk() throws RemoteException {
         disableNetworkPermissionChecks();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-
         mService.loadSdk(
                 TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
@@ -948,7 +951,6 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testLatencyMetrics_IpcFromAppToSystemServer_UnloadSdk() throws Exception {
         disableKillUid();
         loadSdk();
-
         mService.unloadSdk(TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
         ExtendedMockito.verify(
                 () ->
@@ -958,6 +960,21 @@ public class SdkSandboxManagerServiceUnitTest {
                                 (int)
                                         (TIME_SYSTEM_SERVER_RECEIVED_CALL
                                                 - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
+    }
+
+    @Test
+    public void testLatencyMetrics_IpcFromAppToSystemServer_SyncDataFromClient() {
+        // Sync data from client
+        final Bundle data = new Bundle();
+        mService.syncDataFromClient(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, data);
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__SYNC_DATA_FROM_CLIENT,
+                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
     }
