@@ -17,7 +17,7 @@ package {
 }
 
 android_test_helper_app {
-    name: "RetryLoadSameSdkShouldFailSdkProvider",
+    name: "LoadSdkSuccessfullySdkProviderTwo",
     defaults: ["platform_app_defaults"],
     certificate: ":sdksandbox-test",
     srcs: [

@@ -24,9 +24,8 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the {@link
- * CustomAudienceManager#removeCustomAudienceRemoteInfoOverride(RemoveCustomAudienceOverrideRequest,
- * Executor, OutcomeReceiver)} request
+ * This POJO represents the {@link TestCustomAudienceManager#removeCustomAudienceRemoteInfoOverride(
+ * RemoveCustomAudienceOverrideRequest, Executor, OutcomeReceiver)} request
  *
  * <p>It contains 3 fields {@code ownerPackageName}, {@code buyer}, and {@code name} which will
  * serve as the identifier for the overrides

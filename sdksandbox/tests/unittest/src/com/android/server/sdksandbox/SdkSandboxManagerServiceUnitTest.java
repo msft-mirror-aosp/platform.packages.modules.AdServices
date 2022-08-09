@@ -16,6 +16,10 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -28,6 +32,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
+import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallbackBinder;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -52,6 +57,7 @@ import com.android.sdksandbox.ILoadSdkInSandboxCallback;
 import com.android.sdksandbox.IRequestSurfacePackageFromSdkCallback;
 import com.android.sdksandbox.ISdkSandboxManagerToSdkSandboxCallback;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.pm.PackageManagerLocal;
 
@@ -90,12 +96,16 @@ public class SdkSandboxManagerServiceUnitTest {
     private static final String SDK_PROVIDER_RESOURCES_PACKAGE =
             "com.android.codeproviderresources_1";
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
+    private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
+    private static final long FAKE_TIME_IN_MILLIS = 10;
 
     @Before
     public void setup() {
-        mStaticMockSession = ExtendedMockito.mockitoSession()
-            .mockStatic(LocalManagerRegistry.class)
-            .startMocking();
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(LocalManagerRegistry.class)
+                        .mockStatic(SdkSandboxStatsLog.class)
+                        .startMocking();
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSpyContext = Mockito.spy(context);
@@ -108,14 +118,16 @@ public class SdkSandboxManagerServiceUnitTest {
         // Required to access <sdk-library> information.
         InstrumentationRegistry.getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
                 Manifest.permission.ACCESS_SHARED_LIBRARIES, Manifest.permission.INSTALL_PACKAGES);
-        mSdkSandboxService = new FakeSdkSandboxService();
+        mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
         mProvider = new FakeSdkSandboxProvider(mSdkSandboxService);
 
         // Populate LocalManagerRegistry
         ExtendedMockito.doReturn(Mockito.mock(PackageManagerLocal.class))
             .when(() -> LocalManagerRegistry.getManager(PackageManagerLocal.class));
 
-        mService = new SdkSandboxManagerService(mSpyContext, mProvider);
+        InjectorForTest injector = new InjectorForTest();
+
+        mService = new SdkSandboxManagerService(mSpyContext, mProvider, injector);
     }
 
     @After
@@ -141,8 +153,13 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
-        // Assume SupplementalProcess loads successfully
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        // Assume sdk sandbox loads successfully
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
     }
@@ -150,22 +167,32 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdkNonExistentCallingPackage() {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        SecurityException thrown = assertThrows(
-                SecurityException.class,
-                () -> mService.loadSdk("does.not.exist", SDK_NAME, new Bundle(),
-                        callback)
-        );
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        "does.not.exist",
+                                        SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                        new Bundle(),
+                                        callback));
         assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
     }
 
     @Test
     public void testLoadSdkIncorrectCallingPackage() {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        SecurityException thrown = assertThrows(
-                SecurityException.class,
-                () -> mService.loadSdk(SDK_PROVIDER_PACKAGE, SDK_NAME, new Bundle(),
-                        callback)
-        );
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        SDK_PROVIDER_PACKAGE,
+                                        SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                        new Bundle(),
+                                        callback));
         assertThat(thrown).hasMessageThat().contains("does not belong to uid");
     }
 
@@ -174,7 +201,12 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, "does.not.exist", new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                "does.not.exist",
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
 
         // Verify loading failed
         assertThat(callback.isLoadSdkSuccessful()).isFalse();
@@ -189,7 +221,12 @@ public class SdkSandboxManagerServiceUnitTest {
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeError();
 
         // Verify loading failed
@@ -201,8 +238,16 @@ public class SdkSandboxManagerServiceUnitTest {
     @Test
     public void testLoadSdk_errorNoInternet() throws Exception {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        SecurityException thrown = assertThrows(SecurityException.class,
-                () -> mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback));
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        TEST_PACKAGE,
+                                        SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                        new Bundle(),
+                                        callback));
 
         assertThat(thrown).hasMessageThat().contains(android.Manifest.permission.INTERNET);
     }
@@ -214,8 +259,16 @@ public class SdkSandboxManagerServiceUnitTest {
                 Mockito.eq("android.permission.INTERNET"), Mockito.anyString());
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        SecurityException thrown = assertThrows(SecurityException.class,
-                () -> mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback));
+        SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        TEST_PACKAGE,
+                                        SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                        new Bundle(),
+                                        callback));
 
         assertThat(thrown).hasMessageThat().contains(
                 android.Manifest.permission.ACCESS_NETWORK_STATE);
@@ -229,7 +282,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // Load it once
         {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-            mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+            mService.loadSdk(
+                    TEST_PACKAGE,
+                    SDK_NAME,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    new Bundle(),
+                    callback);
             // Assume SupplementalProcess loads successfully
             mSdkSandboxService.sendLoadCodeSuccessful();
             assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -238,7 +296,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // Load it again
         {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-            mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+            mService.loadSdk(
+                    TEST_PACKAGE,
+                    SDK_NAME,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    new Bundle(),
+                    callback);
             // Verify loading failed
             assertThat(callback.isLoadSdkSuccessful()).isFalse();
             assertThat(callback.getLoadSdkErrorCode()).isEqualTo(
@@ -254,7 +317,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // Load code, but make it fail
         {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-            mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+            mService.loadSdk(
+                    TEST_PACKAGE,
+                    SDK_NAME,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    new Bundle(),
+                    callback);
             // Assume SupplementalProcess load fails
             mSdkSandboxService.sendLoadCodeError();
             assertThat(callback.isLoadSdkSuccessful()).isFalse();
@@ -263,7 +331,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // Caller should be able to retry loading the code
         {
             FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-            mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+            mService.loadSdk(
+                    TEST_PACKAGE,
+                    SDK_NAME,
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                    new Bundle(),
+                    callback);
             // Assume SupplementalProcess loads successfully
             mSdkSandboxService.sendLoadCodeSuccessful();
             assertThat(callback.isLoadSdkSuccessful()).isTrue();
@@ -296,7 +369,12 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // 1. We first need to collect a proper sdkToken by calling loadCode
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
@@ -327,7 +405,12 @@ public class SdkSandboxManagerServiceUnitTest {
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipient = ArgumentCaptor
                 .forClass(IBinder.DeathRecipient.class);
 
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
@@ -360,7 +443,12 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         // Assume SurfacePackage encounters an error.
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
@@ -395,6 +483,149 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(thrown).hasMessageThat().contains("Sdk " + SDK_NAME + " is not loaded");
     }
 
+    @Test
+    public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testAddSdkSandboxLifecycleCallback_AfterStartingSandbox() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback);
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testMultipleAddSdkSandboxLifecycleCallbacks() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Register for sandbox death event again
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testRemoveSdkSandboxLifecycleCallback() throws Exception {
+        disableNetworkPermissionChecks();
+
+        // Load SDK and start the sandbox
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Register for sandbox death event
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback1 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+
+        // Register for sandbox death event again
+        FakeSdkSandboxLifecycleCallbackBinder lifecycleCallback2 =
+                new FakeSdkSandboxLifecycleCallbackBinder();
+        mService.addSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback2);
+
+        // Unregister one of the lifecycle callbacks
+        mService.removeSdkSandboxLifecycleCallback(TEST_PACKAGE, lifecycleCallback1);
+
+        // Kill the sandbox
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipientCaptor =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+        Mockito.verify(mSdkSandboxService.asBinder(), Mockito.atLeastOnce())
+                .linkToDeath(deathRecipientCaptor.capture(), ArgumentMatchers.eq(0));
+        IBinder.DeathRecipient deathRecipient = deathRecipientCaptor.getValue();
+        deathRecipient.binderDied();
+
+        // Check that death is recorded correctly
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+    }
+
     @Test(expected = SecurityException.class)
     public void testDumpWithoutPermission() {
         mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
@@ -410,7 +641,12 @@ public class SdkSandboxManagerServiceUnitTest {
         final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNull();
 
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
 
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipient = ArgumentCaptor
                 .forClass(IBinder.DeathRecipient.class);
@@ -489,7 +725,12 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // First load SDK.
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
@@ -514,7 +755,12 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // First load SDK.
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
@@ -529,11 +775,18 @@ public class SdkSandboxManagerServiceUnitTest {
 
         // Try load again, it should throw SecurityException
         FakeLoadSdkCallbackBinder callback2 = new FakeLoadSdkCallbackBinder();
-        SecurityException e = assertThrows(
-                SecurityException.class,
-                () -> mService.loadSdk(
-                        TEST_PACKAGE, SDK_NAME, new Bundle(), callback2));
-        assertThat(e).hasMessageThat()
+        SecurityException e =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        TEST_PACKAGE,
+                                        SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                        new Bundle(),
+                                        callback2));
+        assertThat(e)
+                .hasMessageThat()
                 .contains("Currently running instrumentation of this sdk sandbox process");
     }
 
@@ -550,18 +803,30 @@ public class SdkSandboxManagerServiceUnitTest {
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         // Try loading, it should throw SecurityException
-        SecurityException e = assertThrows(
-                SecurityException.class,
-                () -> mService.loadSdk(TEST_PACKAGE, SDK_NAME,
-                new Bundle(), callback));
-        assertThat(e).hasMessageThat()
+        SecurityException e =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mService.loadSdk(
+                                        TEST_PACKAGE,
+                                        SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                                        new Bundle(),
+                                        callback));
+        assertThat(e)
+                .hasMessageThat()
                 .contains("Currently running instrumentation of this sdk sandbox process");
 
         localManager.notifyInstrumentationFinished(TEST_PACKAGE, Process.myUid());
 
         FakeLoadSdkCallbackBinder callback2 = new FakeLoadSdkCallbackBinder();
         // Now loading should work
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback2);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback2);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback2.isLoadSdkSuccessful()).isTrue();
         assertThat(mProvider.getBoundServiceForApp(callingInfo)).isNotNull();
@@ -572,7 +837,12 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         // Now loading should work
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
         assertThat(mService.getLoadedSdkLibrariesInfo(TEST_PACKAGE)).hasSize(1);
@@ -586,7 +856,12 @@ public class SdkSandboxManagerServiceUnitTest {
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
 
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeError();
 
         // Verify sdkInfo is missing when loading failed
@@ -623,12 +898,22 @@ public class SdkSandboxManagerServiceUnitTest {
         disableKillUid();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_NAME, new Bundle(), callback);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
 
         FakeLoadSdkCallbackBinder callback2 = new FakeLoadSdkCallbackBinder();
-        mService.loadSdk(TEST_PACKAGE, SDK_PROVIDER_RESOURCES_SDK_NAME, new Bundle(), callback2);
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_PROVIDER_RESOURCES_SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback2);
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(callback2.isLoadSdkSuccessful()).isTrue();
 
@@ -655,6 +940,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                 mService.loadSdk(
                                         "does.not.exist",
                                         SDK_NAME,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                                         new Bundle(),
                                         new FakeLoadSdkCallbackBinder()));
         assertThat(thrown).hasMessageThat().contains("does.not.exist not found");
@@ -683,9 +969,72 @@ public class SdkSandboxManagerServiceUnitTest {
         assertThat(mSdkSandboxService.getLastUpdate()).isSameInstanceAs(data);
     }
 
-    /**
-     * Fake service provider that returns local instance of {@link SdkSandboxServiceProvider}
-     */
+    @Test
+    public void testStopSdkSandbox() throws Exception {
+        disableKillUid();
+        disableNetworkPermissionChecks();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        // Assume sandbox loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        Mockito.doNothing()
+                .when(mSpyContext)
+                .enforceCallingPermission(
+                        Mockito.eq("com.android.app.sdksandbox.permission.STOP_SDK_SANDBOX"),
+                        Mockito.anyString());
+        mService.stopSdkSandbox(TEST_PACKAGE);
+        int callingUid = Binder.getCallingUid();
+        final CallingInfo callingInfo = new CallingInfo(callingUid, TEST_PACKAGE);
+        assertThat(mProvider.getBoundServiceForApp(callingInfo)).isEqualTo(null);
+    }
+
+    @Test(expected = SecurityException.class)
+    public void testStopSdkSandbox_WithoutPermission() {
+        mService.stopSdkSandbox(TEST_PACKAGE);
+    }
+
+    @Test
+    public void testLatencyMetricsLoggedForIPCFromAppToSystemServer() throws Exception {
+        disableNetworkPermissionChecks();
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /**
+                 * Sending a random long value to test the value of latency is calculated correctly
+                 */
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                callback);
+        // Assume sdk sandbox loads successfully
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                /**
+                                 * timeAppCalledSystemServer is sent as 10, and the current time at
+                                 * SdkSandboxManagerService for tests is hard coded in a fake Time
+                                 * class which returns 10.
+                                 */
+                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
+    }
+
+    /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */
     private static class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
         private final ISdkSandboxService mSdkSandboxService;
         private final ArrayMap<CallingInfo, ISdkSandboxService> mService =
@@ -797,6 +1146,14 @@ public class SdkSandboxManagerServiceUnitTest {
 
             @Override
             public void onDataReceived(Bundle data, IDataReceivedCallback callback) {}
+        }
+    }
+
+    public static class InjectorForTest extends SdkSandboxManagerService.Injector {
+
+        @Override
+        public long getCurrentTime() {
+            return FAKE_TIME_IN_MILLIS;
         }
     }
 }

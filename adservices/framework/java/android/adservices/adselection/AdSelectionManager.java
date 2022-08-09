@@ -72,7 +72,12 @@ public class AdSelectionManager {
     }
 
     @NonNull
-    private AdSelectionService getService() {
+    public TestAdSelectionManager getTestAdSelectionManager() {
+        return new TestAdSelectionManager(this);
+    }
+
+    @NonNull
+    AdSelectionService getService() {
         return mServiceBinder.getService();
     }
 
@@ -99,7 +104,7 @@ public class AdSelectionManager {
      */
     public void selectAds(
             @NonNull AdSelectionConfig adSelectionConfig,
-            @NonNull Executor executor,
+            @NonNull @CallbackExecutor Executor executor,
             @NonNull OutcomeReceiver<AdSelectionOutcome, AdServicesException> receiver) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(executor);
@@ -159,138 +164,6 @@ public class AdSelectionManager {
                             .setAdSelectionConfig(request.getAdSelectionConfig())
                             .build(),
                     new ReportImpressionCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
-                        }
-                    });
-        } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
-        }
-    }
-
-    /**
-     * Overrides the AdSelection API to avoid fetching data from remote servers and use the data
-     * provided in {@link AddAdSelectionOverrideRequest} instead. The {@link
-     * AddAdSelectionOverrideRequest} is provided by the Ads SDK.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    @NonNull
-    public void overrideAdSelectionConfigRemoteInfo(
-            @NonNull AddAdSelectionOverrideRequest request,
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
-        Objects.requireNonNull(request);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final AdSelectionService service = getService();
-            service.overrideAdSelectionConfigRemoteInfo(
-                    request.getAdSelectionConfig(),
-                    request.getDecisionLogicJs(),
-                    request.getTrustedScoringSignals(),
-                    new AdSelectionOverrideCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
-                        }
-                    });
-        } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
-        }
-    }
-
-    /**
-     * Removes an override in th Ad Selection API with associated the data in {@link
-     * RemoveAdSelectionOverrideRequest}. The {@link RemoveAdSelectionOverrideRequest} is provided
-     * by the Ads SDK.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    @NonNull
-    public void removeAdSelectionConfigRemoteInfoOverride(
-            @NonNull RemoveAdSelectionOverrideRequest request,
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
-        Objects.requireNonNull(request);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final AdSelectionService service = getService();
-            service.removeAdSelectionConfigRemoteInfoOverride(
-                    request.getAdSelectionConfig(),
-                    new AdSelectionOverrideCallback.Stub() {
-                        @Override
-                        public void onSuccess() {
-                            executor.execute(() -> receiver.onResult(new Object()));
-                        }
-
-                        @Override
-                        public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
-                        }
-                    });
-        } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
-        } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
-        }
-    }
-
-    /**
-     * Removes all override data in the Ad Selection API.
-     *
-     * <p>This method is intended to be used for end-to-end testing. This API is enabled only for
-     * apps in debug mode with developer options enabled.
-     *
-     * @throws IllegalStateException if this API is not enabled for the caller
-     *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
-     */
-    @NonNull
-    public void resetAllAdSelectionConfigRemoteOverrides(
-            @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(receiver);
-
-        try {
-            final AdSelectionService service = getService();
-            service.resetAllAdSelectionConfigRemoteOverrides(
-                    new AdSelectionOverrideCallback.Stub() {
                         @Override
                         public void onSuccess() {
                             executor.execute(() -> receiver.onResult(new Object()));
