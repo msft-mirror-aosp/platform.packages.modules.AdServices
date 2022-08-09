@@ -370,7 +370,7 @@ public class MeasurementManager {
         Objects.requireNonNull(callback);
 
         // TODO (b/241149306): Remove here and apply across the board.
-        if (AdServicesState.getAdServicesState() == AdServicesState.ADSERVICES_API_STATE_DISABLED) {
+        if (!AdServicesState.isAdServicesStateEnabled()) {
             executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
             return;
         }
