@@ -78,9 +78,6 @@ public class AdSelectionConfigFixture {
     public static final AdWithBid ADS_WITH_BID_3 =
             createAdsWithBid(Uri.fromParts("adsScheme", "ssp3", null), "{\"metadata\":3}", 3.0);
 
-    public static final List<AdWithBid> CONTEXTUAL_ADS =
-            Arrays.asList(ADS_WITH_BID_1, ADS_WITH_BID_2, ADS_WITH_BID_3);
-
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
             Uri.fromParts("https", SELLER.toString(), TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
@@ -107,7 +104,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
 
@@ -123,7 +119,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }
@@ -140,7 +135,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setContextualAds(CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }

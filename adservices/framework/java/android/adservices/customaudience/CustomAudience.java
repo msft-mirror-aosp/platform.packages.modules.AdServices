@@ -318,16 +318,16 @@ public final class CustomAudience implements Parcelable {
 
     /** Builder for {@link CustomAudience} objects. */
     public static final class Builder {
-        @NonNull private String mOwnerPackageName;
-        @NonNull private AdTechIdentifier mBuyer;
-        @NonNull private String mName;
+        @Nullable private String mOwnerPackageName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
         @Nullable private Instant mActivationTime;
         @Nullable private Instant mExpirationTime;
-        @NonNull private Uri mDailyUpdateUrl;
+        @Nullable private Uri mDailyUpdateUrl;
         @Nullable private AdSelectionSignals mUserBiddingSignals;
         @Nullable private TrustedBiddingData mTrustedBiddingData;
-        @NonNull private Uri mBiddingLogicUrl;
-        @NonNull private List<AdData> mAds;
+        @Nullable private Uri mBiddingLogicUrl;
+        @Nullable private List<AdData> mAds;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {

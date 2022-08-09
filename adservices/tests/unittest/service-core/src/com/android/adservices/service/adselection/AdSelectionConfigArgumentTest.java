@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
@@ -53,7 +52,6 @@ public class AdSelectionConfigArgumentTest {
                     .setAdSelectionSignals(
                             AdSelectionSignals.fromString("{\"ad_selection_signals\":1}"))
                     .setDecisionLogicUri(Uri.parse("http://seller.com/decision_logic"))
-                    .setContextualAds(ImmutableList.of(AD_WITH_BID))
                     .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2))
                     .setSellerSignals(AdSelectionSignals.fromString("{\"seller_signals\":1}"))
                     .setTrustedScoringSignalsUri(Uri.parse("https://kvtrusted.com/scoring_signals"))
@@ -93,9 +91,6 @@ public class AdSelectionConfigArgumentTest {
                                         ImmutableList.of(
                                                 jsonArg("buyer1", "{\"buyer_signals\":1}"),
                                                 jsonArg("buyer2", "{\"buyer_signals\":2}"))),
-                                arrayArg(
-                                        AdSelectionConfigArgument.CONTEXTUAL_ADS_FIELD_NAME,
-                                        AdWithBidArgument.asScriptArgument("ignored", AD_WITH_BID)),
                                 stringArg(
                                         AdSelectionConfigArgument
                                                 .TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME,
