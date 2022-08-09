@@ -102,8 +102,8 @@ public class BackgroundFetchJobService extends JobService {
      * <p>The background fetch primarily updates custom audiences' ads and bidding data. It also
      * prunes the custom audience database of any expired data.
      */
-    public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
+    public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
+        if (!flags.getFledgeBackgroundFetchEnabled()) {
             LogUtil.v("FLEDGE background fetch is disabled; skipping schedule");
             return;
         }
@@ -114,7 +114,7 @@ public class BackgroundFetchJobService extends JobService {
         // already in progress
         // TODO(b/221837833): Intelligently decide when to overwrite a scheduled job
         if ((jobScheduler.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID) == null) || forceSchedule) {
-            schedule(context);
+            schedule(context, flags);
             LogUtil.d("Scheduled FLEDGE Background Fetch job");
         } else {
             LogUtil.v("FLEDGE Background Fetch job already scheduled, skipping reschedule");
@@ -124,12 +124,11 @@ public class BackgroundFetchJobService extends JobService {
     /**
      * Actually schedules the FLEDGE Background Fetch as a singleton periodic job.
      *
-     * <p>Split out from scheduleIfNeeded() for mockable testing without pesky permissions.
+     * <p>Split out from {@link #scheduleIfNeeded(Context, Flags, boolean)} for mockable testing
+     * without pesky permissions.
      */
     @VisibleForTesting
-    protected static void schedule(Context context) {
-        Flags flags = FlagsFactory.getFlags();
-
+    protected static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeBackgroundFetchEnabled()) {
             LogUtil.v("FLEDGE background fetch is disabled; skipping schedule");
             return;

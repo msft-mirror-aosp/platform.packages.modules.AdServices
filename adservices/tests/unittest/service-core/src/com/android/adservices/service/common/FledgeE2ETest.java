@@ -16,7 +16,13 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
@@ -61,6 +67,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
+import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.customaudience.CustomAudienceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceQuantityChecker;
 import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
@@ -144,7 +151,7 @@ public class FledgeE2ETest {
     private ExecutorService mExecutorService;
     private CustomAudienceServiceImpl mCustomAudienceService;
     private AdSelectionServiceImpl mAdSelectionService;
-    private Flags mFlags;
+    private final Flags mFlags = FlagsFactory.getFlagsForTest();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
 
@@ -156,10 +163,11 @@ public class FledgeE2ETest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(Binder.class)
+                        .mockStatic(BackgroundFetchJobService.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
-        doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(Process.myUid()).when(Binder::getCallingUidOrThrow);
 
         mCustomAudienceDao =
@@ -175,8 +183,6 @@ public class FledgeE2ETest {
         mExecutorService = Executors.newFixedThreadPool(20);
 
         mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService);
-
-        mFlags = FlagsFactory.getFlagsForTest();
 
         mCustomAudienceService =
                 new CustomAudienceServiceImpl(
@@ -277,6 +283,9 @@ public class FledgeE2ETest {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
@@ -290,6 +299,8 @@ public class FledgeE2ETest {
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
@@ -409,6 +420,9 @@ public class FledgeE2ETest {
                                 .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, INVALID_BIDS);
@@ -422,6 +436,8 @@ public class FledgeE2ETest {
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
@@ -711,6 +727,9 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
@@ -720,6 +739,8 @@ public class FledgeE2ETest {
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -852,6 +873,9 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
         // Join first custom audience
         ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(customAudience1, joinCallback1);
@@ -861,6 +885,8 @@ public class FledgeE2ETest {
         ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
         mCustomAudienceService.joinCustomAudience(customAudience2, joinCallback2);
         assertTrue(joinCallback2.isSuccess());
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =

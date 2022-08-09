@@ -25,8 +25,8 @@ import java.util.concurrent.Executor;
 
 /**
  * This POJO represents the {@link
- * AdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest, Executor,
- * OutcomeReceiver)} request
+ * TestAdSelectionManager#overrideAdSelectionConfigRemoteInfo(AddAdSelectionOverrideRequest,
+ * Executor, OutcomeReceiver)} request
  *
  * <p>It contains, a {@link AdSelectionConfig} which will serve as the identifier for the specific
  * override, a {@code String} decisionLogicJs and {@code String} trustedScoringSignals field

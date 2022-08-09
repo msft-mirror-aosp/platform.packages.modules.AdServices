@@ -239,31 +239,29 @@ public class BackgroundFetchJobServiceTest {
 
     @Test
     public void testScheduleIfNeededFlagDisabled() {
-        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
-        doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
+        doCallRealMethod()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithDisabledBgF, false);
 
-        verify(() -> BackgroundFetchJobService.schedule(any()), never());
+        verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
     public void testScheduleIfNeededSuccess() {
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
-        doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
-        doNothing().when(() -> BackgroundFetchJobService.schedule(any()));
+        doCallRealMethod()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgF, false);
 
-        verify(() -> BackgroundFetchJobService.schedule(any()));
+        verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
     public void testScheduleIfNeededSkippedAlreadyScheduled() {
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
-
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -273,18 +271,17 @@ public class BackgroundFetchJobServiceTest {
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
 
-        doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(false)));
+        doCallRealMethod()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, false);
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgF, false);
 
-        verify(() -> BackgroundFetchJobService.schedule(any()), never());
+        verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
     public void testScheduleIfNeededForceSuccess() {
-        doReturn(mFlagsWithEnabledBgF).when(FlagsFactory::getFlags);
-
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -294,20 +291,19 @@ public class BackgroundFetchJobServiceTest {
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
 
-        doCallRealMethod().when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), eq(true)));
-        doNothing().when(() -> BackgroundFetchJobService.schedule(any()));
+        doCallRealMethod()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(true)));
+        doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, true);
+        BackgroundFetchJobService.scheduleIfNeeded(CONTEXT, mFlagsWithEnabledBgF, true);
 
-        verify(() -> BackgroundFetchJobService.schedule(any()));
+        verify(() -> BackgroundFetchJobService.schedule(any(), any()));
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
     public void testScheduleFlagDisabled() {
-        doReturn(mFlagsWithDisabledBgF).when(FlagsFactory::getFlags);
-
-        BackgroundFetchJobService.schedule(CONTEXT);
+        BackgroundFetchJobService.schedule(CONTEXT, mFlagsWithDisabledBgF);
 
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }

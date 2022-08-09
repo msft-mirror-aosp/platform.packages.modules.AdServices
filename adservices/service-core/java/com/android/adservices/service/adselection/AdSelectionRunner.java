@@ -26,6 +26,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.RemoteException;
@@ -64,6 +65,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -75,6 +77,7 @@ import java.util.stream.Collectors;
  * <p>Class takes in an executor on which it runs the AdSelection logic
  */
 public final class AdSelectionRunner {
+
     @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
 
     @VisibleForTesting
@@ -90,6 +93,9 @@ public final class AdSelectionRunner {
     @VisibleForTesting
     static final String ERROR_NO_BUYERS_AVAILABLE =
             "The list of the custom audience buyers should not be empty.";
+
+    @VisibleForTesting
+    static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
 
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
@@ -248,8 +254,9 @@ public final class AdSelectionRunner {
             LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
-            // TODO(b/233681870): Investigate implementation of actual failures in
-            //  logs/metrics
+            LogUtil.v(
+                    "Ad Selection with Id:%d completed, attempted notifying success",
+                    result.getAdSelectionId());
             mAdServicesLogger.logFledgeApiCallStats(
                     AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, resultCode);
         }
@@ -293,6 +300,7 @@ public final class AdSelectionRunner {
      */
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig) {
+        LogUtil.v("Beginning Ad Selection Orchestration");
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
                 getBuyersCustomAudience(adSelectionConfig);
@@ -341,7 +349,17 @@ public final class AdSelectionRunner {
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
-                        new ScheduledThreadPoolExecutor(1));
+                        new ScheduledThreadPoolExecutor(1))
+                .catching(
+                        TimeoutException.class,
+                        this::handleTimeoutError,
+                        MoreExecutors.listeningDecorator(mExecutorService));
+    }
+
+    @Nullable
+    private DBAdSelection handleTimeoutError(TimeoutException e) {
+        LogUtil.e(e, "Ad Selection exceeded time limit");
+        throw new IllegalStateException(AD_SELECTION_TIMED_OUT);
     }
 
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience(
@@ -373,6 +391,7 @@ public final class AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws InterruptedException, ExecutionException {
         if (customAudiences.isEmpty()) {
+            LogUtil.w("Cannot invoke bidding on empty list of CAs");
             return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
         }
 
@@ -386,6 +405,7 @@ public final class AdSelectionRunner {
             customThreadPool
                     .submit(
                             () -> {
+                                LogUtil.v("Invoking bidding for #%d CAs", customAudiences.size());
                                 bidWinningAds.set(
                                         customAudiences.parallelStream()
                                                 .map(
@@ -448,7 +468,7 @@ public final class AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
 
         if (validBiddingOutcomes.isEmpty()) {
-            LogUtil.d("No valid bidding outcomes");
+            LogUtil.w("Received empty list of Bidding outcomes");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
@@ -456,6 +476,7 @@ public final class AdSelectionRunner {
 
     private AdScoringOutcome getWinningOutcome(
             @NonNull List<AdScoringOutcome> overallAdScoringOutcome) {
+        LogUtil.v("Scoring completed, generating winning outcome");
         return overallAdScoringOutcome.stream()
                 .filter(a -> a.getAdWithScore().getScore() > 0)
                 .max(
@@ -479,7 +500,7 @@ public final class AdSelectionRunner {
     Pair<DBAdSelection.Builder, String> createAdSelectionResult(
             @NonNull AdScoringOutcome scoringWinner) {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
-
+        LogUtil.v("Creating Ad Selection result from scoring winner");
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(
@@ -501,12 +522,14 @@ public final class AdSelectionRunner {
         ListeningExecutorService listeningExecutorService =
                 MoreExecutors.listeningDecorator(mExecutorService);
 
+        final long adSelectionId = mAdSelectionIdGenerator.generateId();
+        LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
         return listeningExecutorService.submit(
                 () -> {
                     // TODO : b/230568647 retry ID generation in case of collision
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
-                            .setAdSelectionId(mAdSelectionIdGenerator.generateId())
+                            .setAdSelectionId(adSelectionId)
                             .setCreationTimestamp(mClock.instant());
                     dbAdSelection = dbAdSelectionBuilder.build();
                     mAdSelectionEntryDao.persistAdSelection(dbAdSelection);

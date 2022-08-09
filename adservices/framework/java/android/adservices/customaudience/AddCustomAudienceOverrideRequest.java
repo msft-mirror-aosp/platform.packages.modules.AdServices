@@ -26,7 +26,7 @@ import java.util.concurrent.Executor;
 
 /**
  * This POJO represents the {@link
- * CustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
+ * TestCustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
  * Executor, OutcomeReceiver)} request
  *
  * <p>It contains 3 fields {@code ownerPackageName}, {@code buyer}, and {@code name} which will

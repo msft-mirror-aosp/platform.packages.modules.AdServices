@@ -164,7 +164,7 @@ public class TopicsServiceImplTest {
         // Initialize enrollment data.
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(ALLOWED_SDK_ID).build();
-        when(mEnrollmentDao.getEnrollmentDataGivenSdkName(SOME_SDK_NAME))
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
 
         // Rate Limit is not reached.
@@ -265,7 +265,7 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(null).build();
-        when(mEnrollmentDao.getEnrollmentDataGivenSdkName(SOME_SDK_NAME))
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
     }
@@ -275,7 +275,7 @@ public class TopicsServiceImplTest {
         when(Binder.getCallingUidOrThrow()).thenReturn(Process.myUid());
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(DISALLOWED_SDK_ID).build();
-        when(mEnrollmentDao.getEnrollmentDataGivenSdkName(SOME_SDK_NAME))
+        when(mEnrollmentDao.getEnrollmentDataFromSdkName(SOME_SDK_NAME))
                 .thenReturn(fakeEnrollmentData);
         invokeGetTopicsAndVerifyError(mMockSdkContext, STATUS_CALLER_NOT_ALLOWED);
     }
