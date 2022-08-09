@@ -16,6 +16,7 @@
 
 package android.adservices.appsetid;
 
+import android.adservices.appsetid.GetAppSetIdParam;
 import android.adservices.appsetid.IGetAppSetIdCallback;
 import android.adservices.common.CallerMetadata;
 
@@ -29,6 +30,7 @@ interface IAppSetIdService {
      * Get AppSetId.
      */
     void getAppSetId(
+        in GetAppSetIdParam appSetIdParam,
         in CallerMetadata callerMetadata,
         in IGetAppSetIdCallback callback);
 }

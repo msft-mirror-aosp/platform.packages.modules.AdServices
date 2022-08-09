@@ -15,6 +15,10 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.ui.notifications.ConsentNotificationConfirmationFragment.IS_CONSENT_GIVEN_ARGUMENT_KEY;
 
 import android.content.Intent;
@@ -29,11 +33,12 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.ui.settings.AdServicesSettingsActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
 public class ConsentNotificationFragment extends Fragment {
-    public static final String EEA_DEVICE = "com.google.android.feature.EEA_DEVICE";
     public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
 
     @Override
@@ -44,7 +49,23 @@ public class ConsentNotificationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        setupListeners();
+        boolean isEUDevice =
+                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
+        logLandingPageDisplayed(isEUDevice);
+        setupListeners(isEUDevice);
+    }
+
+    private void logLandingPageDisplayed(boolean isEUDevice) {
+        UIStats uiStats = new UIStats.Builder()
+                .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
+                .setRegion(
+                        isEUDevice
+                                ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
+                                : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW)
+                .setAction(
+                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_DISPLAYED)
+                .build();
+        AdServicesLoggerImpl.getInstance().logUIStats(uiStats);
     }
 
     private View setupActivity(LayoutInflater inflater, ViewGroup container) {
@@ -60,10 +81,7 @@ public class ConsentNotificationFragment extends Fragment {
         return rootView;
     }
 
-    private void setupListeners() {
-        boolean isEUDevice =
-                requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
-
+    private void setupListeners(boolean isEUDevice) {
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
         howItWorksExpander.setOnClickListener(
                 view -> {

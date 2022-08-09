@@ -19,6 +19,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
+import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
@@ -101,8 +102,23 @@ public class AppSetIdManager {
                         .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
                         .build();
         final IAppSetIdService service = getService();
+        String appPackageName = "";
+        String sdkPackageName = "";
+        // First check if context is SandboxedSdkContext or not
+        Context getAppSetIdRequestContext = getContext();
+        if (getAppSetIdRequestContext instanceof SandboxedSdkContext) {
+            SandboxedSdkContext requestContext = ((SandboxedSdkContext) getAppSetIdRequestContext);
+            sdkPackageName = requestContext.getSdkPackageName();
+            appPackageName = requestContext.getClientPackageName();
+        } else { // This is the case without the Sandbox.
+            appPackageName = getAppSetIdRequestContext.getPackageName();
+        }
         try {
             service.getAppSetId(
+                    new GetAppSetIdParam.Builder()
+                            .setAppPackageName(appPackageName)
+                            .setSdkPackageName(sdkPackageName)
+                            .build(),
                     callerMetadata,
                     new IGetAppSetIdCallback.Stub() {
                         @Override
@@ -123,7 +139,7 @@ public class AppSetIdManager {
                         }
 
                         @Override
-                        public void onFailure(int resultCode) {
+                        public void onError(int resultCode) {
                             executor.execute(
                                     () ->
                                             callback.onError(
@@ -140,8 +156,7 @@ public class AppSetIdManager {
      * If the service is in an APK (as opposed to the system service), unbind it from the service to
      * allow the APK process to die.
      *
-     * @hide Not sure if we'll need this functionality in the final API. For now, we need it for
-     *     performance testing to simulate "cold-start" situations.
+     * @hide
      */
     // TODO: change to @VisibleForTesting
     public void unbindFromService() {
