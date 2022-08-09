@@ -221,7 +221,7 @@ public class MeasurementManagerCtsTest {
                     @Override
                     public void onError(Exception error) {
                         future.complete(null);
-                        Assert.assertTrue(error.getCause() instanceof IllegalArgumentException);
+                        Assert.assertTrue(error instanceof IllegalArgumentException);
                     }
                 };
         DeletionRequest request =
