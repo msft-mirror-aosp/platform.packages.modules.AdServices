@@ -19,6 +19,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsetid.AppSetIdServiceImpl;
 import com.android.adservices.service.appsetid.AppSetIdWorker;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -38,6 +40,11 @@ public class AppSetIdService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        if (FlagsFactory.getFlags().getAppSetIdKillSwitch()) {
+            LogUtil.e("AppSetId API is disabled");
+            return;
+        }
+
         if (mAppSetIdService == null) {
             mAppSetIdService =
                     new AppSetIdServiceImpl(
@@ -50,6 +57,12 @@ public class AppSetIdService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getAppSetIdKillSwitch()) {
+            LogUtil.e("AppSetId API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
+
         return Objects.requireNonNull(mAppSetIdService);
     }
 
