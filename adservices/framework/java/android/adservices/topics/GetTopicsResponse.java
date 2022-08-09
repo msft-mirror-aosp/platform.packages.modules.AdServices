@@ -29,6 +29,7 @@ public final class GetTopicsResponse {
         mTopics = topics;
     }
 
+    /** Returns a {@link List} of {@link Topic} objects returned by getTopics API. */
     @NonNull
     public List<Topic> getTopics() {
         return mTopics;
@@ -58,6 +59,7 @@ public final class GetTopicsResponse {
     public static final class Builder {
         private List<Topic> mTopics = new ArrayList<>();
 
+        /** Creates a {@link Builder} for {@link GetTopicsResponse} objects. */
         public Builder() {}
 
         /** Set the list of the returned Topics */
