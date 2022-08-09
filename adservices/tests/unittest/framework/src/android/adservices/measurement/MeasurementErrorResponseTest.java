@@ -16,15 +16,19 @@
 
 package android.adservices.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
-
-import com.android.adservices.ResultCode;
 
 import org.junit.Test;
 
@@ -62,43 +66,39 @@ public class MeasurementErrorResponseTest {
     public void testAdServicesException_invalidArgument_expectIllegalArgumentException() {
         MeasurementErrorResponse response =
                 new MeasurementErrorResponse.Builder()
-                        .setResultCode(ResultCode.RESULT_INVALID_ARGUMENT)
+                        .setStatusCode(STATUS_INVALID_ARGUMENT)
                         .build();
-        assertTrue(response.asException().getCause() instanceof IllegalArgumentException);
+        assertTrue(AdServicesStatusUtils.asException(response) instanceof IllegalArgumentException);
     }
 
     @Test
     public void testAdServicesException_internalError_expectIllegalStateException() {
         MeasurementErrorResponse response =
-                new MeasurementErrorResponse.Builder()
-                        .setResultCode(ResultCode.RESULT_INTERNAL_ERROR)
-                        .build();
-        assertTrue(response.asException().getCause() instanceof IllegalStateException);
+                new MeasurementErrorResponse.Builder().setStatusCode(STATUS_INTERNAL_ERROR).build();
+        assertTrue(AdServicesStatusUtils.asException(response) instanceof IllegalStateException);
     }
 
     @Test
     public void testAdServicesException_ioError_expectIOException() {
         MeasurementErrorResponse response =
-                new MeasurementErrorResponse.Builder()
-                        .setResultCode(ResultCode.RESULT_IO_ERROR)
-                        .build();
-        assertTrue(response.asException().getCause() instanceof IOException);
+                new MeasurementErrorResponse.Builder().setStatusCode(STATUS_IO_ERROR).build();
+        assertTrue(AdServicesStatusUtils.asException(response) instanceof IOException);
     }
 
     @Test
     public void testAdServicesException_unauthorized_expectSecurityException() {
         MeasurementErrorResponse response =
                 new MeasurementErrorResponse.Builder()
-                        .setResultCode(ResultCode.RESULT_UNAUTHORIZED_CALL)
+                        .setStatusCode(STATUS_PERMISSION_NOT_REQUESTED)
                         .build();
-        assertTrue(response.asException().getCause() instanceof SecurityException);
+        assertTrue(AdServicesStatusUtils.asException(response) instanceof SecurityException);
     }
 
     @Test
-    public void testAdServicesException_unrecognized_expectException() {
+    public void testAdServicesException_unrecognized_expectIllegalStateException() {
         MeasurementErrorResponse response =
-                new MeasurementErrorResponse.Builder().setResultCode(Integer.MAX_VALUE).build();
-        assertTrue(response.asException().getCause() instanceof Exception);
+                new MeasurementErrorResponse.Builder().setStatusCode(Integer.MAX_VALUE).build();
+        assertTrue(AdServicesStatusUtils.asException(response) instanceof IllegalStateException);
     }
 
     @Test
@@ -109,7 +109,7 @@ public class MeasurementErrorResponseTest {
     private MeasurementErrorResponse createExample() {
         return new MeasurementErrorResponse.Builder()
                 .setErrorMessage(ERROR_MESSAGE)
-                .setResultCode(RESULT_CODE)
+                .setStatusCode(RESULT_CODE)
                 .build();
     }
 

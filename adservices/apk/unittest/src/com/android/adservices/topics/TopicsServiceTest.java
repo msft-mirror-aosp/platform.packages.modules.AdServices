@@ -38,6 +38,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -58,6 +59,7 @@ public class TopicsServiceTest {
     }
 
     @Test
+    @Ignore("b/241788223")
     public void testBindableTopicsService_killswitchOff() {
         // Start a mockitoSession to mock static method
         MockitoSession session =
