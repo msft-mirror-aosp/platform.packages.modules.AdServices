@@ -17,6 +17,7 @@
 package android.adservices.adselection;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
 
@@ -74,8 +75,7 @@ public class AdSelectionOutcome {
      */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
-        @NonNull private Uri mRenderUri;
-        ;
+        @Nullable private Uri mRenderUri;
 
         public Builder() {}
 
