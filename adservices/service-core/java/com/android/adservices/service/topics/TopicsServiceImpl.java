@@ -244,7 +244,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         // check that against the app's manifest.
         if (!mFlags.isDisableTopicsEnrollmentCheck() && !topicsParam.getSdkName().isEmpty()) {
             EnrollmentData enrollmentData =
-                    mEnrollmentDao.getEnrollmentDataGivenSdkName(topicsParam.getSdkName());
+                    mEnrollmentDao.getEnrollmentDataFromSdkName(topicsParam.getSdkName());
             boolean permitted =
                     (enrollmentData != null && enrollmentData.getEnrollmentId() != null)
                             && AppManifestConfigHelper.isAllowedTopicsAccess(
