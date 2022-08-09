@@ -21,7 +21,6 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceManager;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
@@ -75,14 +74,14 @@ public class AdvertisingCustomAudienceClient {
                     mCustomAudienceManager.joinCustomAudience(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
                                 public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(AdServicesException error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -107,14 +106,14 @@ public class AdvertisingCustomAudienceClient {
                     mCustomAudienceManager.leaveCustomAudience(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
                                 public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(AdServicesException error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });

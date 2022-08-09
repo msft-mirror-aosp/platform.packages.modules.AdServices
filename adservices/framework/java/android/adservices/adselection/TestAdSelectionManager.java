@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
@@ -52,13 +52,13 @@ public class TestAdSelectionManager {
      *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     *     Exception} indicates the error.
      */
     @NonNull
     public void overrideAdSelectionConfigRemoteInfo(
             @NonNull AddAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -77,15 +77,20 @@ public class TestAdSelectionManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (NullPointerException e) {
             LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
@@ -99,13 +104,13 @@ public class TestAdSelectionManager {
      *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     *     Exception} indicates the error.
      */
     @NonNull
     public void removeAdSelectionConfigRemoteInfoOverride(
             @NonNull RemoveAdSelectionOverrideRequest request,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(request);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -122,15 +127,20 @@ public class TestAdSelectionManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (NullPointerException e) {
             LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
@@ -142,12 +152,12 @@ public class TestAdSelectionManager {
      *
      * @throws IllegalStateException if this API is not enabled for the caller
      *     <p>The receiver either returns a {@code void} for a successful run, or an {@link
-     *     AdServicesException} indicates the error.
+     *     Exception} indicates the error.
      */
     @NonNull
     public void resetAllAdSelectionConfigRemoteOverrides(
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
 
@@ -162,15 +172,20 @@ public class TestAdSelectionManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (NullPointerException e) {
             LogUtil.e(e, "Unable to find the AdSelection service.");
-            receiver.onError(new AdServicesException("Unable to find the AdSelection service.", e));
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Failure of AdSelection service.", e));
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 }

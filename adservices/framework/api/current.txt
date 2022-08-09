@@ -58,8 +58,8 @@ package android.adservices.adselection {
 
   public class AdSelectionManager {
     method @NonNull public android.adservices.adselection.TestAdSelectionManager getTestAdSelectionManager();
-    method @NonNull public void reportImpression(@NonNull android.adservices.adselection.ReportImpressionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method public void selectAds(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,android.adservices.exceptions.AdServicesException>);
+    method @NonNull public void reportImpression(@NonNull android.adservices.adselection.ReportImpressionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method public void selectAds(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<android.adservices.adselection.AdSelectionOutcome,java.lang.Exception>);
   }
 
   public class AdSelectionOutcome {
@@ -123,9 +123,9 @@ package android.adservices.adselection {
   }
 
   public class TestAdSelectionManager {
-    method @NonNull public void overrideAdSelectionConfigRemoteInfo(@NonNull android.adservices.adselection.AddAdSelectionOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method @NonNull public void removeAdSelectionConfigRemoteInfoOverride(@NonNull android.adservices.adselection.RemoveAdSelectionOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method @NonNull public void resetAllAdSelectionConfigRemoteOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
+    method @NonNull public void overrideAdSelectionConfigRemoteInfo(@NonNull android.adservices.adselection.AddAdSelectionOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @NonNull public void removeAdSelectionConfigRemoteInfoOverride(@NonNull android.adservices.adselection.RemoveAdSelectionOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method @NonNull public void resetAllAdSelectionConfigRemoteOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
 }
@@ -234,8 +234,8 @@ package android.adservices.customaudience {
 
   public class CustomAudienceManager {
     method @NonNull public android.adservices.customaudience.TestCustomAudienceManager getTestCustomAudienceManager();
-    method public void joinCustomAudience(@NonNull android.adservices.customaudience.JoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
+    method public void joinCustomAudience(@NonNull android.adservices.customaudience.JoinCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method public void leaveCustomAudience(@NonNull android.adservices.customaudience.LeaveCustomAudienceRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
   public class JoinCustomAudienceRequest {
@@ -278,9 +278,9 @@ package android.adservices.customaudience {
   }
 
   public class TestCustomAudienceManager {
-    method public void overrideCustomAudienceRemoteInfo(@NonNull android.adservices.customaudience.AddCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method public void removeCustomAudienceRemoteInfoOverride(@NonNull android.adservices.customaudience.RemoveCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method public void resetAllCustomAudienceOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
+    method public void overrideCustomAudienceRemoteInfo(@NonNull android.adservices.customaudience.AddCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method public void removeCustomAudienceRemoteInfoOverride(@NonNull android.adservices.customaudience.RemoveCustomAudienceOverrideRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method public void resetAllCustomAudienceOverrides(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
   }
 
   public final class TrustedBiddingData implements android.os.Parcelable {

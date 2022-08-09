@@ -16,9 +16,9 @@
 
 package android.adservices.customaudience;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -103,7 +103,7 @@ public class CustomAudienceManager {
     public void joinCustomAudience(
             @NonNull JoinCustomAudienceRequest joinCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(joinCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -123,12 +123,16 @@ public class CustomAudienceManager {
 
                         @Override
                         public void onFailure(FledgeErrorResponse failureParcel) {
-                            executor.execute(() -> receiver.onError(failureParcel.asException()));
+                            executor.execute(
+                                    () ->
+                                            receiver.onError(
+                                                    AdServicesStatusUtils.asException(
+                                                            failureParcel)));
                         }
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
 
@@ -151,7 +155,7 @@ public class CustomAudienceManager {
     public void leaveCustomAudience(
             @NonNull LeaveCustomAudienceRequest leaveCustomAudienceRequest,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull OutcomeReceiver<Object, AdServicesException> receiver) {
+            @NonNull OutcomeReceiver<Object, Exception> receiver) {
         Objects.requireNonNull(leaveCustomAudienceRequest);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(receiver);
@@ -182,7 +186,7 @@ public class CustomAudienceManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "Exception");
-            receiver.onError(new AdServicesException("Internal Error!"));
+            receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
 }
