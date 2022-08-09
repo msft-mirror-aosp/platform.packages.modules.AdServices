@@ -21,13 +21,10 @@ import android.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-/**
- *  This class encapsulates possible states of the APIs exposed by AdServicesApi apk.
- */
-public class AdServicesApiUtil {
+/** This class encapsulates possible states of the APIs exposed by AdServicesApi apk. */
+public class AdServicesState {
 
-    private AdServicesApiUtil() {
-    }
+    private AdServicesState() {}
 
     /**
      * This state indicates that the APIs exposed by AdServicesApi are unavailable.
@@ -49,12 +46,12 @@ public class AdServicesApiUtil {
     public @interface AdServicesApiState {}
 
     /**
-     * Returns current state of the {@code AdServicesApi}.
-     * The state of AdServicesApi may change only upon reboot, so this value can be
-     * cached, but not persisted, i.e., the value should be rechecked after a reboot.
+     * Returns current state of the {@code AdServicesApi}. The state of AdServicesApi may change
+     * only upon reboot, so this value can be cached, but not persisted, i.e., the value should be
+     * rechecked after a reboot.
      */
     @AdServicesApiState
-    public static int getAdServicesApiState() {
+    public static int getAdServicesState() {
         return ADSERVICES_API_STATE_ENABLED;
     }
 }

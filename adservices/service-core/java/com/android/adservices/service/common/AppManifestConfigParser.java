@@ -36,6 +36,7 @@ public class AppManifestConfigParser {
     private static final String TAG_CUSTOM_AUDIENCES = "custom-audiences";
     private static final String TAG_TOPICS = "topics";
     private static final String TAG_ADID = "adid";
+    private static final String TAG_APPSETID = "appsetid";
     private static final String ATTR_ALLOW_ALL_TO_ACCESS = "allowAllToAccess";
     private static final String ATTR_ALLOW_AD_PARTNERS_TO_ACCESS = "allowAdPartnersToAccess";
 
@@ -55,6 +56,7 @@ public class AppManifestConfigParser {
         AppManifestCustomAudiencesConfig customAudiencesConfig = null;
         AppManifestTopicsConfig topicsConfig = null;
         AppManifestAdIdConfig adIdConfig = null;
+        AppManifestAppSetIdConfig appSetIdConfig = null;
 
         // The first next goes to START_DOCUMENT, so we need another next to go to START_TAG.
         parser.next();
@@ -130,6 +132,18 @@ public class AppManifestConfigParser {
                                     getAllowAdPartnersToAccess(parser, allowAllToAccess));
                     break;
 
+                case TAG_APPSETID:
+                    allowAllToAccess = getAllowAllToAccess(parser);
+                    if (appSetIdConfig != null) {
+                        throw new XmlParseException(
+                                "Tag " + parser.getName() + " appears more than once");
+                    }
+                    appSetIdConfig =
+                            new AppManifestAppSetIdConfig(
+                                    allowAllToAccess,
+                                    getAllowAdPartnersToAccess(parser, allowAllToAccess));
+                    break;
+
                 default:
                     throw new XmlParseException(
                             "Unknown tag: "
@@ -140,7 +154,7 @@ public class AppManifestConfigParser {
         }
 
         return new AppManifestConfig(
-                attributionConfig, customAudiencesConfig, topicsConfig, adIdConfig);
+                attributionConfig, customAudiencesConfig, topicsConfig, adIdConfig, appSetIdConfig);
     }
 
     private static boolean getAllowAllToAccess(@NonNull XmlResourceParser parser) {

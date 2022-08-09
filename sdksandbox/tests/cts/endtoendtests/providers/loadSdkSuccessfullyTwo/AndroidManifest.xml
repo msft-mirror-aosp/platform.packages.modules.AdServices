@@ -18,9 +18,9 @@
           package="com.android.retryloadsamesdkshouldfailsdkprovider">
 
     <application>
-        <sdk-library android:name="com.android.retryLoadSameSdkShouldFailSdkProvider"
+        <sdk-library android:name="com.android.loadSdkSuccessfullySdkProviderTwo"
                      android:versionMajor="1" />
         <property android:name="android.sdksandbox.PROPERTY_SDK_PROVIDER_CLASS_NAME"
-                  android:value="com.android.retryloadsamesdkshouldfailsdkprovider.SdkProvider" />
+                  android:value="com.android.loadsdksuccessfullysdkprovidertwo.SdkProvider" />
     </application>
 </manifest>
