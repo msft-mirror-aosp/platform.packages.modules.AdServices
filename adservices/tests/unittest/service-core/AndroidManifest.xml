@@ -46,6 +46,16 @@
                      "com.android.adservices.service.customaudience.BackgroundFetchJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
+        <!-- Topics Epoch/Maintenance Service Job. Must be defined here in order to schedule them in
+        job scheduler. -->
+        <service android:name=
+                     "com.android.adservices.service.topics.EpochJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <service android:name=
+                     "com.android.adservices.service.MaintenanceJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
     </application>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"
