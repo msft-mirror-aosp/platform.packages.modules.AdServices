@@ -18,6 +18,7 @@ package android.adservices.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import java.util.Objects;
@@ -64,9 +65,9 @@ public class RemoveCustomAudienceOverrideRequest {
 
     /** Builder for {@link RemoveCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        private String mOwnerPackageName;
-        private AdTechIdentifier mBuyer;
-        private String mName;
+        @Nullable private String mOwnerPackageName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
 
         public Builder() {}
 
