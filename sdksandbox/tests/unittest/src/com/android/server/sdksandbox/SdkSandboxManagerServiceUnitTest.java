@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -358,6 +359,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                         0,
                                         500,
                                         500,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                                         new Bundle(),
                                         new FakeRequestSurfacePackageCallbackBinder()));
         assertThat(thrown).hasMessageThat().contains("Sdk " + sdkName + " is not loaded");
@@ -388,6 +390,7 @@ public class SdkSandboxManagerServiceUnitTest {
                 0,
                 500,
                 500,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                 new Bundle(),
                 surfacePackageCallback);
         mSdkSandboxService.sendSurfacePackageReady(surfacePackageCallback);
@@ -432,6 +435,7 @@ public class SdkSandboxManagerServiceUnitTest {
                                         0,
                                         500,
                                         500,
+                                        /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
                                         new Bundle(),
                                         new FakeRequestSurfacePackageCallbackBinder()));
         assertThat(thrown).hasMessageThat()
@@ -1002,7 +1006,7 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testLatencyMetricsLoggedForIPCFromAppToSystemServer() throws Exception {
+    public void testLatencyMetrics_IpcFromAppToSystemServer_LoadSdk() throws Exception {
         disableNetworkPermissionChecks();
 
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
@@ -1029,6 +1033,45 @@ public class SdkSandboxManagerServiceUnitTest {
                                  * SdkSandboxManagerService for tests is hard coded in a fake Time
                                  * class which returns 10.
                                  */
+                                (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
+    }
+
+    @Test
+    public void testLatencyMetrics_IpcFromAppToSystemServer_RequestSurfacePackage()
+            throws Exception {
+        disableNetworkPermissionChecks();
+
+        // 1. We first need to collect a proper sdkToken by calling loadCode
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE,
+                SDK_NAME,
+                /*timeAppCalledSystemServer=*/ System.currentTimeMillis(),
+                new Bundle(),
+                callback);
+        mSdkSandboxService.sendLoadCodeSuccessful();
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // 2. Call request package
+        FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
+                new FakeRequestSurfacePackageCallbackBinder();
+        mService.requestSurfacePackage(
+                TEST_PACKAGE,
+                SDK_NAME,
+                new Binder(),
+                0,
+                500,
+                500,
+                TIME_APP_CALLED_SYSTEM_SERVER,
+                new Bundle(),
+                surfacePackageCallback);
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SANDBOX_API_CALLED,
+                                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
                                 (int) (FAKE_TIME_IN_MILLIS - TIME_APP_CALLED_SYSTEM_SERVER),
                                 /*success=*/ true,
                                 SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER));
