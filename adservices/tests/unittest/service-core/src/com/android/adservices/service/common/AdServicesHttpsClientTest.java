@@ -34,6 +34,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -49,11 +50,16 @@ public class AdServicesHttpsClientTest {
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
     private final String mFetchPayloadPath = "/fetchPayload/";
-    private final AdServicesHttpsClient mClient = new AdServicesHttpsClient(mExecutorService);
+    private AdServicesHttpsClient mClient;
     private final int mTimeoutDeltaMs = 1000;
     private final int mBytesPerPeriod = 1;
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Before
+    public void setup() {
+        mClient = new AdServicesHttpsClient(mExecutorService);
+    }
 
     @Test
     public void testReportUrlSuccessfulResponse() throws Exception {
@@ -188,6 +194,25 @@ public class AdServicesHttpsClientTest {
 
         assertThat(wrapperExecutionException.getCause())
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testInputStreamToStringThrowsExceptionWhenExceedingMaxSize() throws Exception {
+        // Creating a client with a max byte size of 5;
+        int defaultTimeoutMs = 5000;
+        mClient =
+                new AdServicesHttpsClient(mExecutorService, defaultTimeoutMs, defaultTimeoutMs, 5);
+
+        // Setting a response of size 6
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody("123456")));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        Exception exception =
+                assertThrows(
+                        ExecutionException.class, () -> fetchPayload(Uri.parse(url.toString())));
+        assertThat(exception.getCause()).isInstanceOf(IOException.class);
     }
 
     private String fetchPayload(Uri uri) throws Exception {

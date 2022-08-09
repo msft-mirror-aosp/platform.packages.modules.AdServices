@@ -177,6 +177,7 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
+    static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
@@ -864,6 +865,21 @@ public final class PhFlags implements Flags {
                                 defaultValue));
     }
 
+    // ADID Killswitches
+    @Override
+    public boolean getAdIdKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_ADID_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_ADID_KILL_SWITCH,
+                                /* defaultValue */ ADID_KILL_SWITCH));
+    }
+
     // TOPICS Killswitches
     @Override
     public boolean getTopicsKillSwitch() {
@@ -1000,6 +1016,7 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
+        writer.println("\t" + KEY_ADID_KILL_SWITCH + " = " + getAdIdKillSwitch());
         writer.println(
                 "\t"
                         + KEY_SDK_REQUEST_PERMITS_PER_SECOND

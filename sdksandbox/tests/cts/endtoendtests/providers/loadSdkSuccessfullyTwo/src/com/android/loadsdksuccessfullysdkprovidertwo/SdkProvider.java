@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.retryloadsamesdkshouldfailsdkprovider;
+package com.android.loadsdksuccessfullysdkprovidertwo;
 
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;

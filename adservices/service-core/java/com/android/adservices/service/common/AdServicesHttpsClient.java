@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -52,7 +53,11 @@ public class AdServicesHttpsClient {
 
     private final int mConnectTimeoutMs;
     private final int mReadTimeoutMs;
+    private final long mMaxBytes;
     private static final int DEFAULT_TIMEOUT_MS = 5000;
+    // Setting default max content size to 1024 * 1024 which is ~ 1MB
+    private static final long DEFAULT_MAX_BYTES = 1048576;
+    private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private final ListeningExecutorService mExecutorService;
 
     /**
@@ -67,24 +72,30 @@ public class AdServicesHttpsClient {
      * @param readTimeoutMs the timeout, in milliseconds, for reading a response from a target
      *     address using this client. If set to 0, this timeout is interpreted as infinite (see
      *     {@link URLConnection#setReadTimeout(int)}).
+     * @param maxBytes The maximum size of an HTTPS response in bytes.
      */
     public AdServicesHttpsClient(
-            ExecutorService executorService, int connectTimeoutMs, int readTimeoutMs) {
+            ExecutorService executorService,
+            int connectTimeoutMs,
+            int readTimeoutMs,
+            long maxBytes) {
         mConnectTimeoutMs = connectTimeoutMs;
         mReadTimeoutMs = readTimeoutMs;
         this.mExecutorService = MoreExecutors.listeningDecorator(executorService);
+        this.mMaxBytes = maxBytes;
     }
 
     /**
      * Create an HTTPS client with the input {@link ExecutorService} and default initial connect and
-     * read timeouts.
+     * read timeouts. This will also contain the default size of an HTTPS response, 1 MB.
      *
      * @param executorService an {@link ExecutorService} that allows connection and fetching to be
      *     executed outside the main calling thread
      */
     public AdServicesHttpsClient(ExecutorService executorService) {
-        this(executorService, DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS);
+        this(executorService, DEFAULT_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, DEFAULT_MAX_BYTES);
     }
+
 
     /** Opens the Url Connection */
     @NonNull
@@ -123,13 +134,6 @@ public class AdServicesHttpsClient {
         return urlConnection;
     }
 
-    @NonNull
-    private String inputStreamToString(@NonNull InputStream in) throws IOException {
-        Objects.requireNonNull(in);
-
-        return new String(ByteStreams.toByteArray(in), Charsets.UTF_8);
-    }
-
     /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
@@ -160,11 +164,14 @@ public class AdServicesHttpsClient {
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             int responseCode = urlConnection.getResponseCode();
             if (isSuccessfulResponse(responseCode)) {
-                return inputStreamToString(in);
+                return fromInputStream(in, urlConnection.getContentLengthLong());
             } else {
                 InputStream errorStream = urlConnection.getErrorStream();
                 if (!Objects.isNull(errorStream)) {
-                    String errorMessage = inputStreamToString(urlConnection.getErrorStream());
+                    String errorMessage =
+                            fromInputStream(
+                                    urlConnection.getErrorStream(),
+                                    urlConnection.getContentLengthLong());
                     String exceptionMessage =
                             String.format(
                                     Locale.US,
@@ -225,7 +232,10 @@ public class AdServicesHttpsClient {
                 LogUtil.w("Failed to report for URL: " + url);
                 InputStream errorStream = urlConnection.getErrorStream();
                 if (!Objects.isNull(errorStream)) {
-                    String errorMessage = inputStreamToString(urlConnection.getErrorStream());
+                    String errorMessage =
+                            fromInputStream(
+                                    urlConnection.getErrorStream(),
+                                    urlConnection.getContentLengthLong());
                     String exceptionMessage =
                             String.format(
                                     Locale.US,
@@ -286,5 +296,53 @@ public class AdServicesHttpsClient {
      */
     public static boolean isSuccessfulResponse(int responseCode) {
         return (responseCode / 100) == 2;
+    }
+
+    /**
+     * Reads a {@link InputStream} and returns a {@code String}. To enforce content size limits, we
+     * employ the following strategy: 1. If {@link URLConnection} cannot determine the content size,
+     * we invoke {@code manualStreamToString(InputStream)} where we manually apply the content
+     * restriction. 2. Otherwise, we invoke {@code streamToString(InputStream, long)}.
+     *
+     * @throws IOException if content size limit of is exceeded
+     */
+    @NonNull
+    private String fromInputStream(@NonNull InputStream in, long size) throws IOException {
+        Objects.requireNonNull(in);
+        if (size == 0) {
+            return "";
+        } else if (size < 0) {
+            return manualStreamToString(in);
+        } else {
+            return streamToString(in, size);
+        }
+    }
+
+    @NonNull
+    private String streamToString(@NonNull InputStream in, long size) throws IOException {
+        Objects.requireNonNull(in);
+        if (size > mMaxBytes) {
+            throw new IOException(CONTENT_SIZE_ERROR);
+        }
+        return new String(ByteStreams.toByteArray(in), Charsets.UTF_8);
+    }
+
+    @NonNull
+    private String manualStreamToString(@NonNull InputStream in) throws IOException {
+        Objects.requireNonNull(in);
+        ByteArrayOutputStream into = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        long total = 0;
+        for (int n; 0 < (n = in.read(buf)); ) {
+            total += n;
+            if (total <= mMaxBytes) {
+                into.write(buf, 0, n);
+            } else {
+                into.close();
+                throw new IOException(CONTENT_SIZE_ERROR);
+            }
+        }
+        into.close();
+        return into.toString(Charsets.UTF_8);
     }
 }

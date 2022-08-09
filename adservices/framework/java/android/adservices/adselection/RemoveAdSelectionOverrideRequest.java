@@ -22,9 +22,8 @@ import android.os.OutcomeReceiver;
 import java.util.concurrent.Executor;
 
 /**
- * This POJO represents the {@link
- * AdSelectionManager#removeAdSelectionConfigRemoteInfoOverride(RemoveAdSelectionOverrideRequest,
- * Executor, OutcomeReceiver)} request
+ * This POJO represents the {@link TestAdSelectionManager#removeAdSelectionConfigRemoteInfoOverride(
+ * RemoveAdSelectionOverrideRequest, Executor, OutcomeReceiver)} request
  *
  * <p>It contains one field, a {@link AdSelectionConfig} which serves as the identifier of the
  * override to be removed
