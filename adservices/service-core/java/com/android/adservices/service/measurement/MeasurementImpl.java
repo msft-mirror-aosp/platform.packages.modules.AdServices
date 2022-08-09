@@ -16,16 +16,17 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.MeasurementManager;
-import android.adservices.measurement.MeasurementManager.ResultCode;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -139,8 +140,8 @@ public final class MeasurementImpl {
         }
     }
 
-    /** Implement a registration request, returning a {@link MeasurementManager.ResultCode}. */
-    @ResultCode
+    /** Implement a registration request, returning a {@link AdServicesStatusUtils.StatusCode}. */
+    @AdServicesStatusUtils.StatusCode
     int register(@NonNull RegistrationRequest request, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
@@ -152,7 +153,7 @@ public final class MeasurementImpl {
                     return fetchAndInsertTriggers(request, requestTime);
 
                 default:
-                    return RESULT_INVALID_ARGUMENT;
+                    return STATUS_INVALID_ARGUMENT;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -161,14 +162,14 @@ public final class MeasurementImpl {
 
     /**
      * Processes a source registration request delegated to OS from the caller, e.g. Chrome,
-     * returning a result code.
+     * returning a status code.
      */
     int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
         if (!isValid(sourceRegistrationRequest)) {
             LogUtil.e("registerWebSource received invalid parameters");
-            return RESULT_INVALID_ARGUMENT;
+            return STATUS_INVALID_ARGUMENT;
         }
         mReadWriteLock.readLock().lock();
         try {
@@ -182,9 +183,9 @@ public final class MeasurementImpl {
                         sourceRegistrationRequest.getTopOriginUri(),
                         getRegistrant(request.getPackageName()),
                         getSourceType(sourceRegistrationRequest.getInputEvent()));
-                return RESULT_OK;
+                return STATUS_SUCCESS;
             } else {
-                return RESULT_IO_ERROR;
+                return STATUS_IO_ERROR;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -193,7 +194,7 @@ public final class MeasurementImpl {
 
     /**
      * Processes a trigger registration request delegated to OS from the caller, e.g. Chrome,
-     * returning a result code.
+     * returning a status code.
      */
     int registerWebTrigger(
             @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
@@ -201,7 +202,7 @@ public final class MeasurementImpl {
                 request.getTriggerRegistrationRequest();
         if (!isValid(triggerRegistrationRequest)) {
             LogUtil.e("registerWebTrigger received invalid parameters");
-            return RESULT_INVALID_ARGUMENT;
+            return STATUS_INVALID_ARGUMENT;
         }
         mReadWriteLock.readLock().lock();
         try {
@@ -214,9 +215,9 @@ public final class MeasurementImpl {
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
                         getRegistrant(request.getPackageName()));
-                return RESULT_OK;
+                return STATUS_SUCCESS;
             } else {
-                return RESULT_IO_ERROR;
+                return STATUS_IO_ERROR;
             }
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -224,9 +225,10 @@ public final class MeasurementImpl {
     }
 
     /**
-     * Implement a deleteRegistrations request, returning a r{@link MeasurementManager.ResultCode}.
+     * Implement a deleteRegistrations request, returning a r{@link
+     * AdServicesStatusUtils.StatusCode}.
      */
-    @ResultCode
+    @AdServicesStatusUtils.StatusCode
     int deleteRegistrations(@NonNull DeletionParam request) {
         mReadWriteLock.readLock().lock();
         try {
@@ -241,10 +243,10 @@ public final class MeasurementImpl {
                                             request.getDomainUris(),
                                             request.getMatchBehavior(),
                                             request.getDeletionMode()));
-            return deleteResult ? RESULT_OK : RESULT_INTERNAL_ERROR;
+            return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");
-            return RESULT_INVALID_ARGUMENT;
+            return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
         }
@@ -309,9 +311,9 @@ public final class MeasurementImpl {
                     requestTime,
                     request.getTopOriginUri(),
                     getRegistrant(request.getPackageName()));
-            return RESULT_OK;
+            return STATUS_SUCCESS;
         } else {
-            return RESULT_IO_ERROR;
+            return STATUS_IO_ERROR;
         }
     }
 
@@ -325,9 +327,9 @@ public final class MeasurementImpl {
                     request.getTopOriginUri(),
                     getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent()));
-            return RESULT_OK;
+            return STATUS_SUCCESS;
         } else {
-            return RESULT_IO_ERROR;
+            return STATUS_IO_ERROR;
         }
     }
 

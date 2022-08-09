@@ -32,7 +32,6 @@ package android.adservices.adselection {
   public final class AdSelectionConfig implements android.os.Parcelable {
     method public int describeContents();
     method @NonNull public android.adservices.common.AdSelectionSignals getAdSelectionSignals();
-    method @NonNull public java.util.List<android.adservices.adselection.AdWithBid> getContextualAds();
     method @NonNull public java.util.List<android.adservices.common.AdTechIdentifier> getCustomAudienceBuyers();
     method @NonNull public android.net.Uri getDecisionLogicUri();
     method @NonNull public java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.common.AdSelectionSignals> getPerBuyerSignals();
@@ -47,7 +46,6 @@ package android.adservices.adselection {
     ctor public AdSelectionConfig.Builder();
     method @NonNull public android.adservices.adselection.AdSelectionConfig build();
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setAdSelectionSignals(@NonNull android.adservices.common.AdSelectionSignals);
-    method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setContextualAds(@NonNull java.util.List<android.adservices.adselection.AdWithBid>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setCustomAudienceBuyers(@NonNull java.util.List<android.adservices.common.AdTechIdentifier>);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setDecisionLogicUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.adselection.AdSelectionConfig.Builder setPerBuyerSignals(@NonNull java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.common.AdSelectionSignals>);
@@ -72,15 +70,6 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.AdSelectionOutcome build();
     method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setAdSelectionId(long);
     method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUri(@NonNull android.net.Uri);
-  }
-
-  public final class AdWithBid implements android.os.Parcelable {
-    ctor public AdWithBid(@NonNull android.adservices.common.AdData, double);
-    method public int describeContents();
-    method @NonNull public android.adservices.common.AdData getAdData();
-    method public double getBid();
-    method public void writeToParcel(@NonNull android.os.Parcel, int);
-    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.AdWithBid> CREATOR;
   }
 
   public class AddAdSelectionOverrideRequest {
@@ -344,8 +333,8 @@ package android.adservices.measurement {
   public class MeasurementManager {
     method public void deleteRegistrations(@NonNull android.adservices.measurement.DeletionRequest, @NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method public void getMeasurementApiStatus(@NonNull java.util.concurrent.Executor, @NonNull android.os.OutcomeReceiver<java.lang.Integer,java.lang.Exception>);
-    method public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
-    method public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,android.adservices.exceptions.AdServicesException>);
+    method public void registerSource(@NonNull android.net.Uri, @Nullable android.view.InputEvent, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
+    method public void registerTrigger(@NonNull android.net.Uri, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method public void registerWebSource(@NonNull android.adservices.measurement.WebSourceRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     method public void registerWebTrigger(@NonNull android.adservices.measurement.WebTriggerRegistrationRequest, @Nullable java.util.concurrent.Executor, @Nullable android.os.OutcomeReceiver<java.lang.Object,java.lang.Exception>);
     field public static final int MEASUREMENT_API_STATE_DISABLED = 0; // 0x0
