@@ -68,4 +68,36 @@ public class CustomAudienceSignalsTest {
                 customAudienceSignals.getUserBiddingSignals(),
                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
     }
+
+    @Test
+    public void testEqualCustomAudienceSignalsHaveSameHashCode() {
+        CustomAudienceSignals obj1 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("the-same-name")
+                        .build();
+        CustomAudienceSignals obj2 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("the-same-name")
+                        .build();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualCustomAudienceSignalsHaveDifferentHashCodes() {
+        CustomAudienceSignals obj1 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("a-name")
+                        .build();
+        CustomAudienceSignals obj2 =
+                CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                        .setBuyer(CommonFixture.VALID_BUYER)
+                        .setName("a-different-name")
+                        .build();
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2);
+    }
 }

@@ -348,6 +348,9 @@ public final class SdkSandboxManager {
             @NonNull
                     OutcomeReceiver<RequestSurfacePackageResponse, RequestSurfacePackageException>
                             receiver) {
+        if (hostToken == null) {
+            throw new IllegalArgumentException("hostToken cannot be null");
+        }
         final RequestSurfacePackageReceiverProxy callbackProxy =
                 new RequestSurfacePackageReceiverProxy(callbackExecutor, receiver);
         try {

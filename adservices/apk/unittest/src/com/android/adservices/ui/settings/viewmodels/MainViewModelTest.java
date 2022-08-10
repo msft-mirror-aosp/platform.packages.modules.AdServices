@@ -24,6 +24,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -85,7 +86,7 @@ public class MainViewModelTest {
     public void testSetConsentFalse() {
         mMainViewModel.setConsent(false);
 
-        verify(mConsentManager, times(1)).disable(any(PackageManager.class));
+        verify(mConsentManager, times(1)).disable(any(Context.class));
     }
 }
 

@@ -27,7 +27,7 @@
         <item name="android:layout_marginStart">24dp</item>
         <item name="android:layout_marginEnd">24dp</item>
         <item name="android:layout_marginTop">16dp</item>
-        <item name="android:backgroundTint">#D4E3FF</item>
+        <item name="android:backgroundTint">@color/settingslib_state_on_color</item>
         <item name="android:colorControlHighlight">@color/ripple_material_inverse</item>
     </style>
 

@@ -79,6 +79,7 @@ public class SdkSandboxManagerUnitTest {
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
                         Mockito.eq(SDK_NAME),
+                        Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
 
@@ -106,6 +107,7 @@ public class SdkSandboxManagerUnitTest {
                 .loadSdk(
                         Mockito.eq(mContext.getPackageName()),
                         Mockito.eq(SDK_NAME),
+                        Mockito.anyLong(),
                         Mockito.eq(params),
                         callbackArgumentCaptor.capture());
 

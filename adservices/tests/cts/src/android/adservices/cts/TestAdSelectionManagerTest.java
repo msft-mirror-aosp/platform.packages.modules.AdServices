@@ -27,9 +27,9 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
@@ -52,7 +52,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class AdSelectionManagerTest {
+public class TestAdSelectionManagerTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -77,13 +77,13 @@ public class AdSelectionManagerTest {
                     .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                     .build();
 
-    private AdSelectionClient mAdSelectionClient;
+    private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
 
     @Before
     public void setup() {
-        mAdSelectionClient =
-                new AdSelectionClient.Builder()
+        mTestAdSelectionClient =
+                new TestAdSelectionClient.Builder()
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
@@ -116,7 +116,7 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(AdServicesException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -128,7 +128,7 @@ public class AdSelectionManagerTest {
                         AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
         ListenableFuture<Void> result =
-                mAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
+                mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
 
         Exception exception =
                 assertThrows(
@@ -147,7 +147,7 @@ public class AdSelectionManagerTest {
                 new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> result =
-                mAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
+                mTestAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
 
         Exception exception =
                 assertThrows(
@@ -162,14 +162,14 @@ public class AdSelectionManagerTest {
     public void testResetAllOverridesFailsWithDebugModeDisabled() throws Exception {
         Assume.assumeFalse(mIsDebugMode);
 
-        AdSelectionClient adSelectionClient =
-                new AdSelectionClient.Builder()
+        TestAdSelectionClient testAdSelectionClient =
+                new TestAdSelectionClient.Builder()
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
         ListenableFuture<Void> result =
-                adSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
+                testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
 
         Exception exception =
                 assertThrows(
@@ -205,6 +205,6 @@ public class AdSelectionManagerTest {
                         () -> {
                             result.get(10, TimeUnit.SECONDS);
                         });
-        assertThat(exception.getCause()).isInstanceOf(AdServicesException.class);
+        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
     }
 }

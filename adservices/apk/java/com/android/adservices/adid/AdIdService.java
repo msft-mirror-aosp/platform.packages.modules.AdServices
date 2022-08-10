@@ -19,6 +19,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdServiceImpl;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -38,6 +40,11 @@ public class AdIdService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        if (FlagsFactory.getFlags().getAdIdKillSwitch()) {
+            LogUtil.e("AdId API is disabled");
+            return;
+        }
+
         if (mAdIdService == null) {
             mAdIdService =
                     new AdIdServiceImpl(
@@ -50,6 +57,12 @@ public class AdIdService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (FlagsFactory.getFlags().getAdIdKillSwitch()) {
+            LogUtil.e("AdId API is disabled");
+            // Return null so that clients can not bind to the service.
+            return null;
+        }
+
         return Objects.requireNonNull(mAdIdService);
     }
 
