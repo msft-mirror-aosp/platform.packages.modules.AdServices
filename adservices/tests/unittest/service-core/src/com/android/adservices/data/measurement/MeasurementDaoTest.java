@@ -30,6 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
@@ -131,6 +132,7 @@ public class MeasurementDaoTest {
             Assert.assertNotNull(trigger.getId());
             assertEquals(
                     validTrigger.getAttributionDestination(), trigger.getAttributionDestination());
+            assertEquals(validTrigger.getDestinationType(), trigger.getDestinationType());
             assertEquals(validTrigger.getAdTechDomain(), trigger.getAdTechDomain());
             assertEquals(validTrigger.getRegistrant(), trigger.getRegistrant());
             assertEquals(validTrigger.getTriggerTime(), trigger.getTriggerTime());
@@ -536,6 +538,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(12)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
         List<Source> result1 = runFunc.apply(trigger1MatchSource1And2);
         Assert.assertEquals(3, result1.size());
@@ -555,6 +558,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(20)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         List<Source> result2 = runFunc.apply(trigger2MatchSource127);
@@ -575,6 +579,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(21)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         List<Source> result3 = runFunc.apply(trigger3MatchSource237);
@@ -594,6 +599,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(31)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
                         .build();
 
         List<Source> result4 = runFunc.apply(trigger4MatchSource1And2And3);
@@ -612,6 +618,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(12)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(webDestination)
+                        .setDestinationType(EventSurfaceType.WEB)
                         .build();
         List<Source> result5 = runFunc.apply(trigger5MatchSource567);
         Assert.assertEquals(3, result1.size());
@@ -629,6 +636,7 @@ public class MeasurementDaoTest {
                         .setTriggerTime(21)
                         .setAdTechDomain(adTechDomain)
                         .setAttributionDestination(webDestinationWithSubdomain)
+                        .setDestinationType(EventSurfaceType.WEB)
                         .build();
 
         List<Source> result6 = runFunc.apply(trigger6MatchSource67);

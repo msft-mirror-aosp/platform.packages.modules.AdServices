@@ -191,6 +191,7 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         sourceRegistrationRequest.getTopOriginUri(),
+                        EventSurfaceType.WEB,
                         getRegistrant(request.getPackageName()),
                         getSourceType(
                                 sourceRegistrationRequest.getInputEvent(),
@@ -226,7 +227,8 @@ public final class MeasurementImpl {
                         fetch.get(),
                         requestTime,
                         triggerRegistrationRequest.getDestination(),
-                        getRegistrant(request.getPackageName()));
+                        getRegistrant(request.getPackageName()),
+                        EventSurfaceType.WEB);
                 return STATUS_SUCCESS;
             } else {
                 return STATUS_IO_ERROR;
@@ -322,7 +324,8 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
-                    getRegistrant(request.getPackageName()));
+                    getRegistrant(request.getPackageName()),
+                    EventSurfaceType.APP);
             return STATUS_SUCCESS;
         } else {
             return STATUS_IO_ERROR;
@@ -337,6 +340,7 @@ public final class MeasurementImpl {
                     fetch.get(),
                     requestTime,
                     request.getTopOriginUri(),
+                    EventSurfaceType.APP,
                     getRegistrant(request.getPackageName()),
                     getSourceType(request.getInputEvent(), request.getRequestTime()));
             return STATUS_SUCCESS;
@@ -349,6 +353,7 @@ public final class MeasurementImpl {
             List<SourceRegistration> sourceRegistrations,
             long sourceEventTime,
             Uri topOriginUri,
+            @EventSurfaceType int publisherType,
             Uri registrant,
             Source.SourceType sourceType) {
         for (SourceRegistration registration : sourceRegistrations) {
@@ -357,6 +362,7 @@ public final class MeasurementImpl {
                             sourceEventTime,
                             registration,
                             topOriginUri,
+                            publisherType,
                             registrant,
                             sourceType,
                             // Only first destination to avoid AdTechs change this
@@ -370,6 +376,7 @@ public final class MeasurementImpl {
             long sourceEventTime,
             SourceRegistration registration,
             Uri topOriginUri,
+            @EventSurfaceType int publisherType,
             Uri registrant,
             Source.SourceType sourceType,
             Uri destination,
@@ -377,6 +384,7 @@ public final class MeasurementImpl {
         return new Source.Builder()
                 .setEventId(registration.getSourceEventId())
                 .setPublisher(getBaseUri(topOriginUri))
+                .setPublisherType(publisherType)
                 .setAppDestination(destination)
                 .setWebDestination(webDestination)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
@@ -450,9 +458,11 @@ public final class MeasurementImpl {
             List<TriggerRegistration> responseBasedRegistrations,
             long triggerTime,
             Uri topOrigin,
-            Uri registrant) {
+            Uri registrant,
+            @EventSurfaceType int destinationType) {
         for (TriggerRegistration registration : responseBasedRegistrations) {
-            Trigger trigger = createTrigger(registration, triggerTime, topOrigin, registrant);
+            Trigger trigger = createTrigger(
+                    registration, triggerTime, topOrigin, registrant, destinationType);
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(trigger));
         }
         notifyTriggerContentProvider();
@@ -470,9 +480,14 @@ public final class MeasurementImpl {
     }
 
     private Trigger createTrigger(
-            TriggerRegistration registration, long triggerTime, Uri topOrigin, Uri registrant) {
+            TriggerRegistration registration,
+            long triggerTime,
+            Uri topOrigin,
+            Uri registrant,
+            @EventSurfaceType int destinationType) {
         return new Trigger.Builder()
                 .setAttributionDestination(topOrigin)
+                .setDestinationType(destinationType)
                 .setAdTechDomain(getBaseUri(registration.getReportingOrigin()))
                 .setRegistrant(registrant)
                 .setTriggerTime(triggerTime)

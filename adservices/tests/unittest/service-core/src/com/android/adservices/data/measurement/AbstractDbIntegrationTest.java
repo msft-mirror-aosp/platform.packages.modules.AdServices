@@ -235,6 +235,8 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.SourceContract.SOURCE_TYPE, source.getSourceType().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER,
                 source.getPublisher().toString());
+        values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE,
+                source.getPublisherType());
         values.put(
                 MeasurementTables.SourceContract.APP_DESTINATION,
                 source.getAppDestination().toString());
@@ -268,6 +270,8 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.TriggerContract.ID, trigger.getId());
         values.put(MeasurementTables.TriggerContract.ATTRIBUTION_DESTINATION,
                 trigger.getAttributionDestination().toString());
+        values.put(MeasurementTables.TriggerContract.DESTINATION_TYPE,
+                trigger.getDestinationType());
         values.put(MeasurementTables.TriggerContract.AD_TECH_DOMAIN,
                 trigger.getAdTechDomain().toString());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
