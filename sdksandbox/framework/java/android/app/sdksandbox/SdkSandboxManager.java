@@ -290,7 +290,9 @@ public final class SdkSandboxManager {
      */
     public @NonNull List<SharedLibraryInfo> getLoadedSdkLibrariesInfo() {
         try {
-            return mService.getLoadedSdkLibrariesInfo(mContext.getPackageName());
+            return mService.getLoadedSdkLibrariesInfo(
+                    mContext.getPackageName(),
+                    /*timeAppCalledSystemServer=*/ System.currentTimeMillis());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

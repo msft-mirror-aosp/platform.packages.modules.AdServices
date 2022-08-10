@@ -64,7 +64,8 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             String callingPackageName, String sdkName, Bundle data, ISendDataCallback callback) {}
 
     @Override
-    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(String callingPackageName) {
+    public List<SharedLibraryInfo> getLoadedSdkLibrariesInfo(
+            String callingPackageName, long timeAppCalledSystemServer) {
         return Collections.emptyList();
     }
 
