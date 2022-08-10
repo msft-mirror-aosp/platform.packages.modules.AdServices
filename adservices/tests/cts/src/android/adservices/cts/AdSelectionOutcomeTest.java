@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
