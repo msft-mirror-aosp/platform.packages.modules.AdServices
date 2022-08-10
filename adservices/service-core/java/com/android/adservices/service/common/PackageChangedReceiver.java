@@ -65,15 +65,15 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
-                        onPackageFullyRemoved(context, packageUri);
+                        measurementOnPackageFullyRemoved(context, packageUri);
                         topicsOnPackageFullyRemoved(context, packageUri);
                         break;
                     case PACKAGE_ADDED:
-                        onPackageAdded(context, packageUri);
+                        measurementOnPackageAdded(context, packageUri);
                         topicsOnPackageAdded(context, packageUri);
                         break;
                     case PACKAGE_DATA_CLEARED:
-                        onPackageDataCleared(context, packageUri);
+                        measurementOnPackageDataCleared(context, packageUri);
                         break;
                 }
                 break;
@@ -81,20 +81,35 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     }
 
     @VisibleForTesting
-    void onPackageFullyRemoved(Context context, Uri packageUri) {
+    void measurementOnPackageFullyRemoved(Context context, Uri packageUri) {
+        if (FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch()) {
+            LogUtil.e("Measurement Delete Packages Receiver is disabled");
+            return;
+        }
+
         LogUtil.i("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
 
-    void onPackageDataCleared(Context context, Uri packageUri) {
+    void measurementOnPackageDataCleared(Context context, Uri packageUri) {
+        if (FlagsFactory.getFlags().getMeasurementReceiverDeletePackagesKillSwitch()) {
+            LogUtil.e("Measurement Delete Packages Receiver is disabled");
+            return;
+        }
+
         LogUtil.i("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
     }
 
     @VisibleForTesting
-    void onPackageAdded(Context context, Uri packageUri) {
+    void measurementOnPackageAdded(Context context, Uri packageUri) {
+        if (FlagsFactory.getFlags().getMeasurementReceiverInstallAttributionKillSwitch()) {
+            LogUtil.e("Measurement Install Attribution Receiver is disabled");
+            return;
+        }
+
         LogUtil.i("Package Added: " + packageUri);
         sBackgroundExecutor.execute(
                 () ->
