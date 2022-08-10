@@ -19,6 +19,7 @@ package android.adservices.customaudience;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import java.util.Objects;
@@ -26,7 +27,7 @@ import java.util.concurrent.Executor;
 
 /**
  * This POJO represents the {@link
- * CustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
+ * TestCustomAudienceManager#overrideCustomAudienceRemoteInfo(AddCustomAudienceOverrideRequest,
  * Executor, OutcomeReceiver)} request
  *
  * <p>It contains 3 fields {@code ownerPackageName}, {@code buyer}, and {@code name} which will
@@ -85,11 +86,11 @@ public class AddCustomAudienceOverrideRequest {
 
     /** Builder for {@link AddCustomAudienceOverrideRequest} objects. */
     public static final class Builder {
-        private String mOwnerPackageName;
-        private AdTechIdentifier mBuyer;
-        private String mName;
-        private String mBiddingLogicJs;
-        private AdSelectionSignals mTrustedBiddingSignals;
+        @Nullable private String mOwnerPackageName;
+        @Nullable private AdTechIdentifier mBuyer;
+        @Nullable private String mName;
+        @Nullable private String mBiddingLogicJs;
+        @Nullable private AdSelectionSignals mTrustedBiddingSignals;
 
         public Builder() {}
 

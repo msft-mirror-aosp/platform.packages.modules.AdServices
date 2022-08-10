@@ -22,7 +22,9 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
+import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -36,8 +38,10 @@ import android.net.Uri;
 import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
@@ -57,6 +61,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class FledgeCtsDebuggableTest {
+    private static final String WRITE_DEVICE_CONFIG_PERMISSION =
+            "android.permission.WRITE_DEVICE_CONFIG";
+
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -110,7 +117,9 @@ public class FledgeCtsDebuggableTest {
                     .build();
 
     private AdSelectionClient mAdSelectionClient;
+    private TestAdSelectionClient mTestAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
+    private TestAdvertisingCustomAudienceClient mTestCustomAudienceClient;
     private DevContext mDevContext;
 
     private boolean mHasAccessToDevOverrides;
@@ -124,8 +133,18 @@ public class FledgeCtsDebuggableTest {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
+        mTestAdSelectionClient =
+                new TestAdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
         mCustomAudienceClient =
                 new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(MoreExecutors.directExecutor())
+                        .build();
+        mTestCustomAudienceClient =
+                new TestAdvertisingCustomAudienceClient.Builder()
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
@@ -138,6 +157,15 @@ public class FledgeCtsDebuggableTest {
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(WRITE_DEVICE_CONFIG_PERMISSION);
+        // This test is running in background
+        PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeOverrides(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeRunAdSelection(false);
+        PhFlagsFixture.overrideForegroundStatusForFledgeReportImpression(false);
     }
 
     @Test
@@ -174,15 +202,9 @@ public class FledgeCtsDebuggableTest {
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
-        CustomAudience customAudience1 =
-                createCustomAudience(
-                        BUYER_1,
-                        bidsForBuyer1);
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
 
-        CustomAudience customAudience2 =
-                createCustomAudience(
-                        BUYER_2,
-                        bidsForBuyer2);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
@@ -195,7 +217,7 @@ public class FledgeCtsDebuggableTest {
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, decisionLogicJs, TRUSTED_SCORING_SIGNALS);
 
-        mAdSelectionClient
+        mTestAdSelectionClient
                 .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
                 .get(10, TimeUnit.SECONDS);
 
@@ -210,7 +232,7 @@ public class FledgeCtsDebuggableTest {
 
         // Adding Custom audience override, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
+        mTestCustomAudienceClient
                 .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest)
                 .get(10, TimeUnit.SECONDS);
 

@@ -240,4 +240,12 @@ public final class CustomAudienceTest {
                                 CommonFixture.VALID_BUYER));
         assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(emptyAds);
     }
+
+    @Test
+    public void testCustomAudienceDescribeContent() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER).build();
+
+        assertThat(validCustomAudience.describeContents()).isEqualTo(0);
+    }
 }

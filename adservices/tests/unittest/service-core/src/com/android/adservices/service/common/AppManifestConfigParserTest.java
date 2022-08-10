@@ -48,6 +48,11 @@ public class AppManifestConfigParserTest {
         AppManifestConfig appManifestConfig = AppManifestConfigParser.getConfig(parser);
         assertThat(appManifestConfig).isNotNull();
 
+        // Verify IncludesSdkLibrary tags.
+        assertThat(appManifestConfig.getIncludesSdkLibraryConfig()).isNotNull();
+        assertThat(appManifestConfig.getIncludesSdkLibraryConfig().getIncludesSdkLibraries())
+                .contains("1234567");
+
         // Verify Attribution tags.
         assertEquals(appManifestConfig.getAttributionConfig().getAllowAllToAccess(), false);
         assertEquals(
@@ -69,6 +74,19 @@ public class AppManifestConfigParserTest {
         assertEquals(appManifestConfig.getTopicsConfig().getAllowAllToAccess(), false);
         assertThat(appManifestConfig.getTopicsConfig().getAllowAdPartnersToAccess())
                 .contains("1234567");
+    }
+
+    @Test
+    public void testInvalidXml_missingSdkLibrary() throws Exception {
+        XmlResourceParser parser =
+                mContext.getPackageManager()
+                        .getResourcesForApplication(mPackageName)
+                        .getXml(R.xml.ad_services_config_missing_sdk_name);
+
+        Exception e =
+                assertThrows(
+                        XmlParseException.class, () -> AppManifestConfigParser.getConfig(parser));
+        assertEquals("Sdk name not mentioned in <includes-sdk-library>", e.getMessage());
     }
 
     @Test

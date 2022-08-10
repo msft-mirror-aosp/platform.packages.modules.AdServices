@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URLS;
+import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORING_TIMED_OUT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -39,7 +40,6 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -191,9 +191,13 @@ public class AdsScoreGeneratorImplTest {
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
-
-        mFlags = FlagsFactory.getFlagsForTest();
-
+        mFlags =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionScoringTimeoutMs() {
+                        return 300;
+                    }
+                };
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         mMockAdSelectionScriptEngine,
@@ -500,7 +504,7 @@ public class AdsScoreGeneratorImplTest {
 
         ExecutionException thrown =
                 assertThrows(ExecutionException.class, scoringResultFuture::get);
-        assertTrue(thrown.getMessage().contains("TimeoutFuture$TimeoutFutureException"));
+        assertTrue(thrown.getMessage().contains(SCORING_TIMED_OUT));
     }
 
     private ListenableFuture<List<Double>> getScoresWithDelay(List<Double> scores) {

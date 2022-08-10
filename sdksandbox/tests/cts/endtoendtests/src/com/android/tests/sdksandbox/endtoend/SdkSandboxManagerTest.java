@@ -23,9 +23,11 @@ import static org.junit.Assert.assertThrows;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.FakeSdkSandboxLifecycleCallback;
 import android.app.sdksandbox.testutils.FakeSendDataCallback;
 import android.content.Context;
 import android.content.pm.SharedLibraryInfo;
+import android.os.Binder;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -64,7 +66,7 @@ public class SdkSandboxManagerTest {
 
     @Test
     public void retryLoadSameSdkShouldFail() {
-        final String sdkName = "com.android.retryLoadSameSdkShouldFailSdkProvider";
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProviderTwo";
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
@@ -89,7 +91,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void loadSdkWithInternalErrorShouldFail() {
+    public void loadSdkWithInternalErrorShouldFail() throws Exception {
         final String sdkName = "com.android.loadSdkWithInternalErrorSdkProvider";
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
@@ -124,6 +126,7 @@ public class SdkSandboxManagerTest {
                                 0,
                                 500,
                                 500,
+                                new Binder(),
                                 new Bundle(),
                                 Runnable::run,
                                 requestSurfacePackageCallback));
@@ -158,8 +161,114 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
+                sdkName,
+                0,
+                500,
+                500,
+                new Binder(),
+                new Bundle(),
+                Runnable::run,
+                surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
+    }
+
+    @Test
+    public void testReloadingSdkAfterKillingSandboxIsSuccessful() throws Exception {
+        // Kill the sandbox if it already exists from previous tests
+        killSandboxIfExists();
+
+        // Killing the sandbox and loading the same SDKs again multiple times should work
+        for (int i = 0; i < 3; ++i) {
+            FakeSdkSandboxLifecycleCallback callback = new FakeSdkSandboxLifecycleCallback();
+            mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, callback);
+
+            // The same SDKs should be able to be loaded again after sandbox death
+            loadMultipleSdks();
+
+            killSandbox();
+            assertThat(callback.isSdkSandboxDeathDetected()).isTrue();
+        }
+    }
+
+    @Test
+    public void testAddSdkSandboxLifecycleCallback_BeforeStartingSandbox() throws Exception {
+        // Kill the sandbox if it already exists from previous tests
+        killSandboxIfExists();
+
+        // Add a sandbox lifecycle callback before starting the sandbox
+        FakeSdkSandboxLifecycleCallback lifecycleCallback = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback);
+
+        // Bring up the sandbox
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        killSandbox();
+        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testAddSdkSandboxLifecycleCallback_AfterStartingSandbox() throws Exception {
+        // Bring up the sandbox
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        // Add a sandbox lifecycle callback before starting the sandbox
+        FakeSdkSandboxLifecycleCallback lifecycleCallback = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback);
+
+        killSandbox();
+        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testRegisterMultipleSdkSandboxLifecycleCallbacks() throws Exception {
+        // Kill the sandbox if it already exists from previous tests
+        killSandboxIfExists();
+
+        // Add a sandbox lifecycle callback before starting the sandbox
+        FakeSdkSandboxLifecycleCallback lifecycleCallback1 = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback1);
+
+        // Bring up the sandbox
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        // Add another sandbox lifecycle callback after starting it
+        FakeSdkSandboxLifecycleCallback lifecycleCallback2 = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback2);
+
+        killSandbox();
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+    }
+
+    @Test
+    public void testRemoveSdkSandboxLifecycleCallback() throws Exception {
+        // Bring up the sandbox
+        final String sdkName = "com.android.loadSdkSuccessfullySdkProvider";
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful(/*ignoreSdkAlreadyLoadedError=*/ true)).isTrue();
+
+        // Add and remove a sandbox lifecycle callback
+        FakeSdkSandboxLifecycleCallback lifecycleCallback1 = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback1);
+        mSdkSandboxManager.removeSdkSandboxLifecycleCallback(lifecycleCallback1);
+
+        // Add a lifecycle callback but don't remove it
+        FakeSdkSandboxLifecycleCallback lifecycleCallback2 = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, lifecycleCallback2);
+
+        killSandbox();
+        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
+        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
     }
 
     @Test
@@ -203,7 +312,14 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
+                sdkName,
+                0,
+                500,
+                500,
+                new Binder(),
+                new Bundle(),
+                Runnable::run,
+                surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isTrue();
     }
 
@@ -218,7 +334,14 @@ public class SdkSandboxManagerTest {
         final FakeRequestSurfacePackageCallback surfacePackageCallback =
                 new FakeRequestSurfacePackageCallback();
         mSdkSandboxManager.requestSurfacePackage(
-                sdkName, 0, 500, 500, new Bundle(), Runnable::run, surfacePackageCallback);
+                sdkName,
+                0,
+                500,
+                500,
+                new Binder(),
+                new Bundle(),
+                Runnable::run,
+                surfacePackageCallback);
         assertThat(surfacePackageCallback.isRequestSurfacePackageSuccessful()).isFalse();
         assertThat(surfacePackageCallback.getSurfacePackageErrorCode())
                 .isEqualTo(SdkSandboxManager.REQUEST_SURFACE_PACKAGE_INTERNAL_ERROR);
@@ -261,6 +384,33 @@ public class SdkSandboxManagerTest {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(sdkName, new Bundle(), Runnable::run, callback);
         assertThat(callback.isLoadSdkSuccessful()).isTrue();
+    }
+
+    private void loadMultipleSdks() {
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        final String sdk1 = "com.android.loadSdkSuccessfullySdkProvider";
+        mSdkSandboxManager.loadSdk(sdk1, new Bundle(), Runnable::run, callback);
+        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+
+        FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
+        final String sdk2 = "com.android.loadSdkSuccessfullySdkProviderTwo";
+        mSdkSandboxManager.loadSdk(sdk2, new Bundle(), Runnable::run, callback2);
+        assertThat(callback2.isLoadSdkSuccessful()).isTrue();
+    }
+
+    // Returns true if the sandbox was already likely existing, false otherwise.
+    private boolean killSandboxIfExists() throws Exception {
+        FakeSdkSandboxLifecycleCallback callback = new FakeSdkSandboxLifecycleCallback();
+        mSdkSandboxManager.addSdkSandboxLifecycleCallback(Runnable::run, callback);
+        killSandbox();
+
+        return callback.isSdkSandboxDeathDetected();
+    }
+
+    private void killSandbox() throws Exception {
+        // TODO(b/241542162): Avoid using reflection as a workaround once test apis can be run
+        //  without issue.
+        mSdkSandboxManager.getClass().getMethod("stopSdkSandbox").invoke(mSdkSandboxManager);
     }
 }
 

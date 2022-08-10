@@ -24,5 +24,5 @@ import android.adservices.appsetid.GetAppSetIdResult;
   */
 oneway interface IGetAppSetIdCallback {
   void onResult(in GetAppSetIdResult responseParcel);
-  void onFailure(int resultCode);
+  void onError(int resultCode);
 }

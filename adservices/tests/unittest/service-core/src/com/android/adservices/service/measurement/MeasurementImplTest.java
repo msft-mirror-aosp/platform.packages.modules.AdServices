@@ -16,18 +16,19 @@
 
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
-import static com.android.adservices.ResultCode.RESULT_INTERNAL_ERROR;
-import static com.android.adservices.ResultCode.RESULT_INVALID_ARGUMENT;
-import static com.android.adservices.ResultCode.RESULT_IO_ERROR;
-import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.data.measurement.DatastoreManager.ThrowingCheckedConsumer;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -68,9 +69,13 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.SourceFetcher;
 import com.android.adservices.service.measurement.registration.SourceRegistration;
 import com.android.adservices.service.measurement.registration.TriggerFetcher;
@@ -82,11 +87,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
@@ -196,8 +202,12 @@ public final class MeasurementImplTest {
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_2 =
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
-    @Mock
-    private DatastoreManager mDatastoreManager;
+    private static final long REQUEST_TIME = 10000L;
+
+    @Spy
+    private DatastoreManager mDatastoreManager =
+            DatastoreManagerFactory.getDatastoreManager(DEFAULT_CONTEXT);
+
     @Mock
     private ContentProviderClient mMockContentProviderClient;
     @Mock
@@ -210,6 +220,8 @@ public final class MeasurementImplTest {
     private IMeasurementDao mMeasurementDao;
     @Mock
     private ConsentManager mConsentManager;
+    @Mock private ClickVerifier mClickVerifier;
+    private MeasurementImpl mMeasurementImpl;
 
     private interface AppVendorPackages {
         String PLAY_STORE = "com.android.vending";
@@ -257,7 +269,8 @@ public final class MeasurementImplTest {
 
         return new WebSourceRegistrationRequestInternal.Builder(
                         sourceRegistrationRequest,
-                        DEFAULT_CONTEXT.getAttributionSource().getPackageName())
+                        DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                        REQUEST_TIME)
                 .build();
     }
 
@@ -267,6 +280,16 @@ public final class MeasurementImplTest {
         when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
                 .thenReturn(mMockContentProviderClient);
         when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
+        mMeasurementImpl =
+                spy(
+                        new MeasurementImpl(
+                                DEFAULT_CONTEXT,
+                                mContentResolver,
+                                mDatastoreManager,
+                                mSourceFetcher,
+                                mTriggerFetcher,
+                                mClickVerifier));
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
     }
 
     @Test
@@ -280,22 +303,13 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        // Test
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
-        final int result = measurement.register(registrationRequest, eventTime);
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        final int result = mMeasurementImpl.register(registrationRequest, eventTime);
 
         // Assert
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mDatastoreManager, times(2))
@@ -326,30 +340,18 @@ public final class MeasurementImplTest {
     @Test
     public void testRegister_registrationTypeSource_sourceFetchFailure() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
+
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
-        final int result = measurement.register(SOURCE_REGISTRATION_REQUEST,
-                System.currentTimeMillis());
-        // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty()
-        assertEquals(RESULT_IO_ERROR, result);
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        final int result =
+                mMeasurementImpl.register(SOURCE_REGISTRATION_REQUEST, System.currentTimeMillis());
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchSource(any());
         verify(mTriggerFetcher, never()).fetchTrigger(any());
     }
 
     @Test
     public void testRegister_registrationTypeTrigger_triggerFetchSuccess() throws Exception {
-        // Setup
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
         final long triggerTime = System.currentTimeMillis();
@@ -364,12 +366,12 @@ public final class MeasurementImplTest {
                 .fetchTrigger(TRIGGER_REGISTRATION_REQUEST);
 
         // Execution
-        final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST, triggerTime);
+        final int result = mMeasurementImpl.register(TRIGGER_REGISTRATION_REQUEST, triggerTime);
         verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
 
         // Assertions
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
@@ -384,12 +386,11 @@ public final class MeasurementImplTest {
     @Test
     public void testRegister_registrationTypeTrigger_triggerFetchFailure() throws RemoteException {
         when(mTriggerFetcher.fetchTrigger(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
-        final int result = measurement.register(TRIGGER_REGISTRATION_REQUEST,
-                System.currentTimeMillis());
-        assertEquals(RESULT_IO_ERROR, result);
+
+        final int result =
+                mMeasurementImpl.register(TRIGGER_REGISTRATION_REQUEST, System.currentTimeMillis());
+        assertEquals(STATUS_IO_ERROR, result);
+
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchTrigger(any());
@@ -397,7 +398,14 @@ public final class MeasurementImplTest {
 
     @Test
     public void testDeleteRegistrations_successfulNoOptionalParameters() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
+        MeasurementImpl measurement =
+                new MeasurementImpl(
+                        DEFAULT_CONTEXT,
+                        mContentResolver,
+                        DatastoreManagerFactory.getDatastoreManager(DEFAULT_CONTEXT),
+                        mSourceFetcher,
+                        mTriggerFetcher,
+                        mClickVerifier);
         final int result =
                 measurement.deleteRegistrations(
                         new DeletionParam.Builder()
@@ -406,14 +414,13 @@ public final class MeasurementImplTest {
                                 .setDomainUris(Collections.emptyList())
                                 .setOriginUris(Collections.emptyList())
                                 .build());
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
     }
 
     @Test
     public void testDeleteRegistrations_successfulWithRange() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
         final int result =
-                measurement.deleteRegistrations(
+                mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
@@ -424,14 +431,13 @@ public final class MeasurementImplTest {
                                 .setStart(Instant.now().minusSeconds(1))
                                 .setEnd(Instant.now())
                                 .build());
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
     }
 
     @Test
     public void testDeleteRegistrations_successfulWithOrigin() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
         final int result =
-                measurement.deleteRegistrations(
+                mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
@@ -440,13 +446,12 @@ public final class MeasurementImplTest {
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
     }
     @Test
     public void testDeleteRegistrations_invalidParameterStartButNoEnd() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
         final int result =
-                measurement.deleteRegistrations(
+                mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
@@ -456,14 +461,13 @@ public final class MeasurementImplTest {
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setStart(Instant.now())
                                 .build());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
     public void testDeleteRegistrations_invalidParameterEndButNoStart() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
         final int result =
-                measurement.deleteRegistrations(
+                mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
@@ -473,22 +477,14 @@ public final class MeasurementImplTest {
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .setEnd(Instant.now())
                                 .build());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
 
     @Test
     public void testDeleteRegistrations_internalError() {
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null,
-                        mContentResolver,
-                        mDatastoreManager,
-                        new SourceFetcher(),
-                        new TriggerFetcher());
-        Mockito.when(mDatastoreManager.runInTransaction(ArgumentMatchers.any()))
-                .thenReturn(false);
+        doReturn(false).when(mDatastoreManager).runInTransaction(any());
         final int result =
-                measurement.deleteRegistrations(
+                mMeasurementImpl.deleteRegistrations(
                         new DeletionParam.Builder()
                                 .setPackageName(
                                         DEFAULT_CONTEXT.getAttributionSource().getPackageName())
@@ -497,7 +493,7 @@ public final class MeasurementImplTest {
                                 .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_DELETE)
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
-        assertEquals(RESULT_INTERNAL_ERROR, result);
+        assertEquals(STATUS_INTERNAL_ERROR, result);
     }
 
     @Test
@@ -526,17 +522,10 @@ public final class MeasurementImplTest {
                                 .setReportingOrigin(sampleSource.getAdTechDomain())
                                 .build());
         doReturn(Optional.of(sourceRegistrations)).when(mSourceFetcher).fetchSource(any());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
+
         InputEvent inputEvent = getInputEvent();
         final int result =
-                measurement.register(
+                mMeasurementImpl.register(
                         new RegistrationRequest.Builder()
                                 .setRegistrationUri(REGISTRATION_URI_1)
                                 .setTopOriginUri(DEFAULT_URI)
@@ -546,9 +535,9 @@ public final class MeasurementImplTest {
                                 .setInputEvent(inputEvent)
                                 .build(),
                         eventTime);
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         ArgumentCaptor<Source> sourceArgs = ArgumentCaptor.forClass(Source.class);
-        verify(measurement).getSourceEventReports(sourceArgs.capture());
+        verify(mMeasurementImpl).getSourceEventReports(sourceArgs.capture());
         Source capturedSource = sourceArgs.getValue();
         assertEquals(sampleSource.getSourceType(), capturedSource.getSourceType());
         assertEquals(sampleSource.getEventId(), capturedSource.getEventId());
@@ -581,14 +570,8 @@ public final class MeasurementImplTest {
         DatastoreManager mockDatastoreManager = Mockito.mock(DatastoreManager.class);
         SourceFetcher mockSourceFetcher = Mockito.mock(SourceFetcher.class);
         TriggerFetcher mockTriggerFetcher = Mockito.mock(TriggerFetcher.class);
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null,
-                        mContentResolver,
-                        mockDatastoreManager,
-                        mockSourceFetcher,
-                        mockTriggerFetcher);
-        List<EventReport> fakeEventReports = measurement.getSourceEventReports(source);
+
+        List<EventReport> fakeEventReports = mMeasurementImpl.getSourceEventReports(source);
 
         // Generate valid report times
         Set<Long> reportingTimes = new HashSet<>();
@@ -623,14 +606,12 @@ public final class MeasurementImplTest {
     public void testInstallAttribution() throws DatastoreException {
         // Setup
         long systemTime = System.currentTimeMillis();
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
         // Execution
-        measurement.doInstallAttribution(URI_WITHOUT_APP_SCHEME, systemTime);
+        mMeasurementImpl.doInstallAttribution(URI_WITHOUT_APP_SCHEME, systemTime);
         verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
 
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
@@ -641,9 +622,21 @@ public final class MeasurementImplTest {
 
     @Test
     public void testGetMeasurementApiStatus_enabled() {
-        MeasurementImpl measurement = MeasurementImpl.getInstance(DEFAULT_CONTEXT);
-        final int result = measurement.getMeasurementApiStatus();
-        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, result);
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ConsentManager.class)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(AdServicesApiConsent.GIVEN)
+                    .when(mConsentManager)
+                    .getConsent(any());
+            ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
+            final int result = mMeasurementImpl.getMeasurementApiStatus();
+            assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, result);
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
@@ -658,10 +651,7 @@ public final class MeasurementImplTest {
                     .when(mConsentManager)
                     .getConsent(any());
             ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any()));
-
-            MeasurementImpl measurement =
-                    new MeasurementImpl(DEFAULT_CONTEXT, null, null, null, null);
-            final int result = measurement.getMeasurementApiStatus();
+            final int result = mMeasurementImpl.getMeasurementApiStatus();
             assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, result);
         } finally {
             session.finishMocking();
@@ -670,14 +660,11 @@ public final class MeasurementImplTest {
 
     @Test
     public void testDeleteAllMeasurementData() throws DatastoreException {
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
         // Execution
-        measurement.deleteAllMeasurementData(Collections.emptyList());
+        mMeasurementImpl.deleteAllMeasurementData(Collections.emptyList());
         verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
 
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
@@ -695,22 +682,13 @@ public final class MeasurementImplTest {
         ArgumentCaptor<ThrowingCheckedConsumer> insertionLogicExecutorCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
 
-        // Test
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
         long eventTime = System.currentTimeMillis();
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
-        final int result = measurement.registerWebSource(registrationRequest, eventTime);
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        final int result = mMeasurementImpl.registerWebSource(registrationRequest, eventTime);
 
         // Assert
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
         verify(mDatastoreManager, times(2))
@@ -741,159 +719,110 @@ public final class MeasurementImplTest {
     @Test
     public void registerWebSource_sourceFetchFailure() {
         when(mSourceFetcher.fetchWebSources(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
+
         // Disable Impression Noise
-        doReturn(Collections.emptyList()).when(measurement).getSourceEventReports(any());
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(APP_DESTINATION, WEB_DESTINATION, null),
-                System.currentTimeMillis());
-        assertEquals(RESULT_IO_ERROR, result);
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(APP_DESTINATION, WEB_DESTINATION, null),
+                        System.currentTimeMillis());
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
     }
 
     @Test
     public void registerWebSource_invalidWebDestination() {
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(null, INVALID_WEB_DESTINATION, null),
-                System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(null, INVALID_WEB_DESTINATION, null),
+                        System.currentTimeMillis());
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, never()).fetchWebSources(any());
     }
 
     @Test
     public void registerWebSource_webDestinationIsValidWhenNull() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                null,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(APP_DESTINATION, null, null),
-                System.currentTimeMillis());
+
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(APP_DESTINATION, null, null),
+                        System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
     @Test
     public void registerWebSource_verifiedDestination_exactWebDestinationMatch() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                DEFAULT_CONTEXT,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(
-                        APP_DESTINATION, WEB_DESTINATION, WEB_DESTINATION),
-                System.currentTimeMillis());
+
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(
+                                APP_DESTINATION, WEB_DESTINATION, WEB_DESTINATION),
+                        System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
     @Test
     public void registerWebSource_verifiedDestination_topPrivateDomainMatch() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                DEFAULT_CONTEXT,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(
-                        APP_DESTINATION, WEB_DESTINATION, WEB_DESTINATION_WITH_SUBDOMAIN),
-                System.currentTimeMillis());
+
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(
+                                APP_DESTINATION, WEB_DESTINATION, WEB_DESTINATION_WITH_SUBDOMAIN),
+                        System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
     @Test
     public void registerWebSource_verifiedDestination_webDestinationMismatch() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                DEFAULT_CONTEXT,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(
-                        APP_DESTINATION, WEB_DESTINATION, OTHER_WEB_DESTINATION),
-                System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(
+                                APP_DESTINATION, WEB_DESTINATION, OTHER_WEB_DESTINATION),
+                        System.currentTimeMillis());
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, times(0)).fetchWebSources(any());
     }
 
     @Test
     public void registerWebSource_verifiedDestination_appDestinationMatch() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                DEFAULT_CONTEXT,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(
-                        APP_DESTINATION, WEB_DESTINATION, APP_DESTINATION),
-                System.currentTimeMillis());
+
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(
+                                APP_DESTINATION, WEB_DESTINATION, APP_DESTINATION),
+                        System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
     @Test
     public void registerWebSource_verifiedDestination_appDestinationMismatch() {
         when(mSourceFetcher.fetchSource(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                spy(
-                        new MeasurementImpl(
-                                DEFAULT_CONTEXT,
-                                mContentResolver,
-                                mDatastoreManager,
-                                mSourceFetcher,
-                                mTriggerFetcher));
-        final int result = measurement.registerWebSource(
-                createWebSourceRegistrationRequest(
-                        APP_DESTINATION, WEB_DESTINATION, OTHER_APP_DESTINATION),
-                System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+
+        final int result =
+                mMeasurementImpl.registerWebSource(
+                        createWebSourceRegistrationRequest(
+                                APP_DESTINATION, WEB_DESTINATION, OTHER_APP_DESTINATION),
+                        System.currentTimeMillis());
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, times(0)).fetchWebSources(any());
     }
 
@@ -908,7 +837,7 @@ public final class MeasurementImplTest {
                 System.currentTimeMillis());
         // RESULT_IO_ERROR is expected when fetchSource returns Optional.empty();
         // it means validation passed and the procedure called the fetcher.
-        assertEquals(RESULT_IO_ERROR, result);
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mSourceFetcher, times(1)).fetchWebSources(any());
     }
 
@@ -921,7 +850,7 @@ public final class MeasurementImplTest {
                 createWebSourceRegistrationRequest(
                         APP_DESTINATION, WEB_DESTINATION, vendingUri),
                 System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mSourceFetcher, times(0)).fetchWebSources(any());
     }
 
@@ -930,21 +859,21 @@ public final class MeasurementImplTest {
         // Setup
         when(mTriggerFetcher.fetchWebTriggers(any()))
                 .thenReturn(Optional.of(Collections.singletonList(VALID_TRIGGER_REGISTRATION)));
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
+
         ArgumentCaptor<ThrowingCheckedConsumer> consumerArgumentCaptor =
                 ArgumentCaptor.forClass(ThrowingCheckedConsumer.class);
         final long triggerTime = System.currentTimeMillis();
 
         // Execution
-        final int result = measurement.registerWebTrigger(
-                createWebTriggerRegistrationRequest(WEB_DESTINATION), triggerTime);
+        final int result =
+                mMeasurementImpl.registerWebTrigger(
+                        createWebTriggerRegistrationRequest(WEB_DESTINATION), triggerTime);
+
         verify(mDatastoreManager).runInTransaction(consumerArgumentCaptor.capture());
         consumerArgumentCaptor.getValue().accept(mMeasurementDao);
 
         // Assertions
-        assertEquals(RESULT_OK, result);
+        assertEquals(STATUS_SUCCESS, result);
         verify(mMockContentProviderClient).insert(any(), any());
         verify(mSourceFetcher, never()).fetchSource(any());
         verify(mTriggerFetcher, times(1)).fetchWebTriggers(any());
@@ -960,26 +889,111 @@ public final class MeasurementImplTest {
     @Test
     public void registerWebTrigger_triggerFetchFailure() throws RemoteException {
         when(mTriggerFetcher.fetchWebTriggers(any())).thenReturn(Optional.empty());
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        null, mContentResolver, mDatastoreManager, mSourceFetcher, mTriggerFetcher);
-        final int result = measurement.registerWebTrigger(
-                createWebTriggerRegistrationRequest(WEB_DESTINATION), System.currentTimeMillis());
-        assertEquals(RESULT_IO_ERROR, result);
+
+        final int result =
+                mMeasurementImpl.registerWebTrigger(
+                        createWebTriggerRegistrationRequest(WEB_DESTINATION),
+                        System.currentTimeMillis());
+
+        assertEquals(STATUS_IO_ERROR, result);
         verify(mMockContentProviderClient, never()).insert(any(), any());
         verify(mSourceFetcher, never()).fetchWebSources(any());
         verify(mTriggerFetcher, times(1)).fetchWebTriggers(any());
     }
 
     @Test
+
     public void registerWebTrigger_invalidDestination() throws RemoteException {
-        MeasurementImpl measurement = new MeasurementImpl(null, mContentResolver, mDatastoreManager,
-                mSourceFetcher, mTriggerFetcher);
-        final int result = measurement.registerWebTrigger(
-                createWebTriggerRegistrationRequest(
-                        INVALID_WEB_DESTINATION), System.currentTimeMillis());
-        assertEquals(RESULT_INVALID_ARGUMENT, result);
+        final int result =
+                mMeasurementImpl.registerWebTrigger(
+                        createWebTriggerRegistrationRequest(INVALID_WEB_DESTINATION),
+                        System.currentTimeMillis());
+        assertEquals(STATUS_INVALID_ARGUMENT, result);
         verify(mTriggerFetcher, never()).fetchWebTriggers(any());
+    }
+
+    @Test
+    public void testRegister_registrationTypeSource_clickNotVerifiedFailure() {
+        // setup
+        List<SourceRegistration> sourceRegistrationsOut =
+                Arrays.asList(VALID_SOURCE_REGISTRATION_1, VALID_SOURCE_REGISTRATION_2);
+        doReturn(Optional.of(sourceRegistrationsOut)).when(mSourceFetcher).fetchSource(any());
+
+        // Disable Impression Noise
+        doReturn(Collections.emptyList()).when(mMeasurementImpl).getSourceEventReports(any());
+
+        doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+
+        RegistrationRequest registrationRequest =
+                new RegistrationRequest.Builder()
+                        .setRegistrationUri(REGISTRATION_URI_1)
+                        .setTopOriginUri(DEFAULT_URI)
+                        .setPackageName(DEFAULT_CONTEXT.getAttributionSource().getPackageName())
+                        .setRegistrationType(RegistrationRequest.REGISTER_SOURCE)
+                        .setInputEvent(getInputEvent())
+                        .build();
+
+        long eventTime = System.currentTimeMillis();
+        final int result = mMeasurementImpl.register(registrationRequest, eventTime);
+
+        // Assert
+        assertEquals(STATUS_SUCCESS, result);
+        verify(mSourceFetcher, times(1)).fetchSource(any());
+    }
+
+    @Test
+    public void testGetSourceType_verifiedInputEvent_returnsNavigationSourceType() {
+        doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        assertEquals(
+                Source.SourceType.NAVIGATION,
+                mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
+    }
+
+    @Test
+    public void testGetSourceType_noInputEventGiven() {
+        assertEquals(Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L));
+    }
+
+    @Test
+    public void testGetSourceType_inputEventNotVerifiable_returnsEventSourceType() {
+        doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
+        assertEquals(
+                Source.SourceType.EVENT, mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
+    }
+
+    @Test
+    public void testGetSourceType_clickVerificationDisabled_returnsNavigationSourceType() {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
+            ClickVerifier mockClickVerifier = Mockito.mock(ClickVerifier.class);
+            doReturn(false).when(mockClickVerifier).isInputEventVerifiable(any(), anyLong());
+            doReturn(false).when(mockFlags).getMeasurementIsClickVerificationEnabled();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlagsForTest());
+            MeasurementImpl measurementImpl =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mContentResolver,
+                            mDatastoreManager,
+                            mSourceFetcher,
+                            mTriggerFetcher,
+                            mockClickVerifier);
+
+            // Because click verification is disabled, the SourceType is NAVIGATION even if the
+            // input event is not verifiable.
+            assertEquals(
+                    Source.SourceType.NAVIGATION,
+                    measurementImpl.getSourceType(getInputEvent(), 1000L));
+        } catch (Exception e) {
+            Assert.fail();
+        } finally {
+            session.finishMocking();
+        }
     }
 
     private void verifyInsertSource(
@@ -1093,6 +1107,7 @@ public final class MeasurementImplTest {
                 mContentResolver,
                 mDatastoreManager,
                 mSourceFetcher,
-                mTriggerFetcher);
+                mTriggerFetcher,
+                mClickVerifier);
     }
 }
