@@ -38,7 +38,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -88,7 +88,7 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -140,7 +140,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -178,7 +178,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -234,7 +234,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -299,7 +299,7 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "https://example1.com",
@@ -364,7 +364,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -427,7 +427,7 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -495,7 +495,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -562,7 +562,7 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -630,7 +630,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "attributionTriggerIds": ["T1"],
       "output": {
@@ -698,7 +698,7 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -767,7 +767,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -834,7 +834,7 @@
             "randomizedTriggerRate":  0.0000125
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -902,7 +902,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -969,7 +969,7 @@
             "randomizedTriggerRate":  0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -1023,7 +1023,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1074,7 +1074,7 @@
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "https://example1.com",
@@ -1127,7 +1127,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1177,7 +1177,7 @@
           "sourceType": "navigation",
           "randomizedTriggerRate":  0.0024263
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused",
             "sourceSite": "android-app://com.example.abc",
@@ -1243,7 +1243,7 @@
           "registrant": "android-app://com.example.xyz"
         }],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [{
@@ -1306,7 +1306,7 @@
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025
         }],
-        "attribution_rate_limits": [{
+        "attributions": [{
           "id": "unused",
           "sourceSite": "https://example1.com",
           "sourceOrigin": "https://www.example1.com",
@@ -1370,7 +1370,7 @@
           "registrant": "android-app://com.example.xyz"
         }],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [{
@@ -1433,7 +1433,7 @@
           "sourceType": "event",
           "randomizedTriggerRate":  0.0000025
         }],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "https://example1.com",
@@ -1546,7 +1546,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1675,7 +1675,7 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "android-app://com.example.abc",
@@ -1810,7 +1810,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -1940,7 +1940,7 @@
             "randomizedTriggerRate":  0.0024263
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "https://example1.com",
@@ -2038,7 +2038,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2091,7 +2091,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -2148,7 +2148,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2201,7 +2201,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -2249,7 +2249,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2307,7 +2307,7 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "https://example1.com",
@@ -2367,7 +2367,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2412,7 +2412,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       }
     },
     {
@@ -2469,7 +2469,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2536,7 +2536,7 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "android-app://com.example.abc",
@@ -2600,7 +2600,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2663,7 +2663,7 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "android-app://com.example.abc",
@@ -2736,7 +2736,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2808,7 +2808,7 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "https://example1.com",
@@ -2883,7 +2883,7 @@
           }
         ],
         "event_reports": [],
-        "attribution_rate_limits": []
+        "attributions": []
       },
       "output": {
         "sources": [
@@ -2957,7 +2957,7 @@
             "randomizedTriggerRate": 0.0000025
           }
         ],
-        "attribution_rate_limits": [
+        "attributions": [
           {
             "id": "unused1",
             "sourceSite": "android-app://com.example.abc",

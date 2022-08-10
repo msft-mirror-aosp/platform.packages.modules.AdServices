@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
@@ -59,17 +60,42 @@ public interface IMeasurementDao {
     /**
      * Gets the number of sources a registrant has registered.
      */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
-    /**
-     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
-     */
-    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
+    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
 
     /**
      * Gets the number of triggers a registrant has registered.
      */
-    long getNumSourcesPerRegistrant(Uri registrant) throws DatastoreException;
+    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of ad-techs in the Attribution table in a time window with
+     * matching publisher and destination, excluding a given ad-tech.
+     */
+    Integer countDistinctAdTechsPerPublisherXDestinationInAttribution(Uri sourceSite,
+            Uri destination, Uri excludedAdTech, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of destinations in the Source table in a time window with
+     * matching publisher and ACTIVE status, excluding a given destination.
+     */
+    Integer countDistinctDestinationsPerPublisherXAdTechInActiveSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri adTechDomain, Uri excludedDestination,
+            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
+
+    /**
+     * Gets the count of distinct Uri's of ad-techs in the Source table in a time window with
+     * matching publisher and destination, excluding a given ad-tech.
+     */
+    Integer countDistinctAdTechsPerPublisherXDestinationInSource(Uri publisher,
+            @EventSurfaceType int publisherType, Uri destination, Uri excludedAdTech,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
+
+     /**
+     * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
+     */
+    void updateTriggerStatus(Trigger trigger) throws DatastoreException;
 
     /**
      * Add an entry to the Source datastore.
@@ -178,10 +204,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Add an entry in AttributionRateLimit datastore for the provided {@link Source} and
+     * Add an entry in Attribution datastore for the provided {@link Source} and
      * {@link Trigger}
      */
-    void insertAttributionRateLimit(Source source, Trigger trigger) throws DatastoreException;
+    void insertAttribution(Source source, Trigger trigger) throws DatastoreException;
 
     /**
      * Deletes all records in measurement tables that correspond with the provided Uri.
