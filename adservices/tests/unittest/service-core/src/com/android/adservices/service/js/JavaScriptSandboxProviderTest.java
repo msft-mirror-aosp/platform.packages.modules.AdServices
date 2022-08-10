@@ -22,6 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import android.content.Context;
 
+import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
@@ -33,7 +34,6 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import com.google.common.util.concurrent.Futures;
 
-import org.chromium.android_webview.js_sandbox.client.JsSandbox;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,32 +45,33 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SmallTest
-public class JsSandboxProviderTest {
+public class JavaScriptSandboxProviderTest {
     private final Context mApplicationContext = ApplicationProvider.getApplicationContext();
     private StaticMockitoSession mStaticMockSession;
     @Mock private StopWatch mSandboxInitWatch;
-    @Mock private JsSandbox mSandbox;
+    @Mock private JavaScriptSandbox mSandbox;
     @Mock private Profiler mProfilerMock;
 
-    private JSScriptEngine.JsSandboxProvider mJsSandboxProvider;
+    private JSScriptEngine.JavaScriptSandboxProvider mJsSandboxProvider;
 
     @Before
     public void setUp() {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(JsSandbox.class)
+                        .mockStatic(JavaScriptSandbox.class)
                         .initMocks(this)
                         .startMocking();
 
         doReturn(Futures.immediateFuture(mSandbox))
                 .when(
                         () -> {
-                            return JsSandbox.newConnectedInstanceAsync(mApplicationContext);
+                            return JavaScriptSandbox.createConnectedInstanceAsync(
+                                    mApplicationContext);
                         });
 
         when(mProfilerMock.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(mSandboxInitWatch);
-        mJsSandboxProvider = new JSScriptEngine.JsSandboxProvider(mProfilerMock);
+        mJsSandboxProvider = new JSScriptEngine.JavaScriptSandboxProvider(mProfilerMock);
     }
 
     @After
@@ -84,7 +85,7 @@ public class JsSandboxProviderTest {
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
 
-        verify(() -> JsSandbox.newConnectedInstanceAsync(mApplicationContext));
+        verify(() -> JavaScriptSandbox.createConnectedInstanceAsync(mApplicationContext));
         verify(mProfilerMock).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
     }
 
@@ -98,7 +99,9 @@ public class JsSandboxProviderTest {
 
         mJsSandboxProvider.getFutureInstance(mApplicationContext).get(5, TimeUnit.SECONDS);
 
-        verify(() -> JsSandbox.newConnectedInstanceAsync(mApplicationContext), Mockito.times(2));
+        verify(
+                () -> JavaScriptSandbox.createConnectedInstanceAsync(mApplicationContext),
+                Mockito.times(2));
 
         verify(mProfilerMock, Mockito.times(2)).start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME);
     }

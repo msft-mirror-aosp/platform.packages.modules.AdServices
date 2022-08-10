@@ -16,7 +16,7 @@
 
 android_library_import {
     name: "js-sandbox-client-nodeps",
-    aars: ["JsSandboxClient.aar"],
+    aars: ["javascriptengine-1.0.0-alpha01.aar"],
     sdk_version: "current",
     apex_available: ["com.android.adservices"],
 }

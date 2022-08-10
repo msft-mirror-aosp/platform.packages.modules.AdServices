@@ -38,6 +38,8 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.javascriptengine.JavaScriptIsolate;
+import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
@@ -54,8 +56,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.chromium.android_webview.js_sandbox.client.JsIsolate;
-import org.chromium.android_webview.js_sandbox.client.JsSandbox;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -84,14 +84,14 @@ public class JSScriptEngineTest {
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
     private static JSScriptEngine sJSScriptEngine;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
-    @Mock JSScriptEngine.JsSandboxProvider mMockSandboxProvider;
+    @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
     @Mock private StopWatch mJavaExecutionWatch;
-    @Mock private JsSandbox mMockedSandbox;
-    @Mock private JsIsolate mMockedIsolate;
+    @Mock private JavaScriptSandbox mMockedSandbox;
+    @Mock private JavaScriptIsolate mMockedIsolate;
 
     @BeforeClass
-    public static void initJsSandbox() {
+    public static void initJavaScriptSandbox() {
         when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(sSandboxInitWatch);
         sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
@@ -107,7 +107,7 @@ public class JSScriptEngineTest {
         when(sMockProfiler.start(JSScriptEngineLogConstants.JAVA_EXECUTION_TIME))
                 .thenReturn(mJavaExecutionWatch);
 
-        FluentFuture<JsSandbox> futureInstance =
+        FluentFuture<JavaScriptSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(mMockedSandbox));
         when(mMockSandboxProvider.getFutureInstance(sContext)).thenReturn(futureInstance);
     }
@@ -291,7 +291,8 @@ public class JSScriptEngineTest {
         when(mMockedSandbox.createIsolate())
                 .thenThrow(
                         new IllegalStateException(
-                                "simulating a failure caused by JsSandbox being disconnected"));
+                                "simulating a failure caused by JavaScriptSandbox being"
+                                        + " disconnected"));
 
         ExecutionException executionException =
                 assertThrows(
@@ -318,7 +319,7 @@ public class JSScriptEngineTest {
     @Test
     public void testIsolateIsClosedWhenEvaluationCompletes() throws Exception {
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
-        when(mMockedIsolate.evaluateJavascriptAsync(anyString()))
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
                 .thenReturn(Futures.immediateFuture("hello world"));
 
         AtomicBoolean isolateHasBeenClosed = new AtomicBoolean(false);
@@ -350,7 +351,7 @@ public class JSScriptEngineTest {
     @Test
     public void testIsolateIsClosedWhenEvaluationFails() throws Exception {
         when(mMockedSandbox.createIsolate()).thenReturn(mMockedIsolate);
-        when(mMockedIsolate.evaluateJavascriptAsync(anyString()))
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
                 .thenReturn(
                         Futures.immediateFailedFuture(new RuntimeException("JS execution failed")));
 
@@ -393,7 +394,7 @@ public class JSScriptEngineTest {
         CountDownLatch completeJsEvaluationLatch = new CountDownLatch(1);
         ListeningExecutorService callbackExecutor =
                 MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        when(mMockedIsolate.evaluateJavascriptAsync(anyString()))
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
                 .thenReturn(
                         callbackExecutor.submit(
                                 () -> {
@@ -446,7 +447,7 @@ public class JSScriptEngineTest {
         CountDownLatch jsEvaluationStartedLatch = new CountDownLatch(1);
         ListeningExecutorService callbackExecutor =
                 MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        when(mMockedIsolate.evaluateJavascriptAsync(anyString()))
+        when(mMockedIsolate.evaluateJavaScriptAsync(anyString()))
                 .thenReturn(
                         callbackExecutor.submit(
                                 () -> {
