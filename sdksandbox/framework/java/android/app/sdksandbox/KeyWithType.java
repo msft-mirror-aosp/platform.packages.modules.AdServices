@@ -18,9 +18,12 @@ package android.app.sdksandbox;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 // TODO(b/237994030): Unhide and update the java doc links to correct public APIs
 // TODO(b/237994030): Rename to SharedPreferencesKey, which sounds more specific
@@ -29,7 +32,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @hide
  */
-public class KeyWithType {
+public final class KeyWithType implements Parcelable {
     /** @hide */
     @IntDef(
             prefix = "KEY_TYPE_",
@@ -95,9 +98,54 @@ public class KeyWithType {
     private final String mKeyName;
     private final @KeyType int mKeyType;
 
+    public static final @NonNull Parcelable.Creator<KeyWithType> CREATOR =
+            new Parcelable.Creator<KeyWithType>() {
+                public KeyWithType createFromParcel(Parcel in) {
+                    return new KeyWithType(in);
+                }
+
+                public KeyWithType[] newArray(int size) {
+                    return new KeyWithType[size];
+                }
+            };
+
     public KeyWithType(@NonNull String keyName, @KeyType int keyType) {
         mKeyName = keyName;
         mKeyType = keyType;
+    }
+
+    private KeyWithType(Parcel in) {
+        mKeyName = in.readString();
+        mKeyType = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel out, int flags) {
+        out.writeString(mKeyName);
+        out.writeInt(mKeyType);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "KeyWithType{" + "mKeyName=" + mKeyName + ", mKeyType='" + mKeyType + "'}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof KeyWithType)) return false;
+        final KeyWithType that = (KeyWithType) o;
+        return mKeyName.equals(that.getName()) && mKeyType == that.getType();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mKeyName, mKeyType);
     }
 
     /** Get name of the key. */
