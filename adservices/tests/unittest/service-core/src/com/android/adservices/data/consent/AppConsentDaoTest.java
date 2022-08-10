@@ -419,6 +419,24 @@ public class AppConsentDaoTest {
     }
 
     @Test
+    public void testClearKnownAppsWithConsent() throws IOException {
+        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+
+        mAppConsentDao.clearKnownAppsWithConsent();
+
+        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+
+        assertTrue(mAppConsentDao.getKnownAppsWithConsent().isEmpty());
+        assertFalse(mAppConsentDao.getAppsWithRevokedConsent().isEmpty());
+
+        verify(mDatastoreSpy).initialize();
+    }
+
+    @Test
     public void testClearConsentForUninstalledApp() throws IOException {
         mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
         mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
