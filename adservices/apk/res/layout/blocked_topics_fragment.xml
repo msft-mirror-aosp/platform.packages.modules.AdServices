@@ -22,31 +22,41 @@
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
     android:orientation="vertical">
-    <LinearLayout
-        android:id="@+id/no_blocked_topics_message"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:layout_marginBottom="36dp"
-        android:gravity="center"
-        android:visibility="gone"
-        android:orientation="vertical">
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_placeholder_icon" />
-        <TextView
+        android:layout_height="match_parent"
+        android:scrollbars="vertical">
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:gravity="center"
-            android:text="@string/settingsUI_topics_view_no_blocked_topics_text"
-            android:textAppearance="@style/TextAppearance.Body2.Bold" />
-    </LinearLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/blocked_topics_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        android:scrollbars="none" />
+            android:orientation="vertical"
+            android:focusableInTouchMode="true" >
+            <LinearLayout
+                android:id="@+id/no_blocked_topics_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="48dp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_placeholder_icon" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:gravity="center"
+                    android:text="@string/settingsUI_topics_view_no_blocked_topics_text"
+                    android:textAppearance="@style/TextAppearance.Body2.Bold" />
+            </LinearLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/blocked_topics_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:scrollbars="none" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

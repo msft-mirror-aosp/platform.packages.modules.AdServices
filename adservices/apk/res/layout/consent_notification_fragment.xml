@@ -25,6 +25,7 @@
     <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:scrollbars="vertical"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/nav_buttons"
             app:layout_constraintEnd_toEndOf="parent"
@@ -120,7 +121,6 @@
                         android:text="@string/notificationUI_container2_control_text"
                         android:textAppearance="@style/TextAppearance.Body1" />
 
-                <!-- TODO(b/230372892): Change to correct text with styles and the correct component or animation to display and hide the text -->
                 <LinearLayout
                         android:id="@+id/how_it_works_expanded_text"
                         android:layout_width="match_parent"

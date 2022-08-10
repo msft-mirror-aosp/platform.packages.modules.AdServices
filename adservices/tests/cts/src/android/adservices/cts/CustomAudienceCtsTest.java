@@ -30,7 +30,6 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
-import android.adservices.exceptions.AdServicesException;
 import android.content.Context;
 import android.os.Process;
 
@@ -125,8 +124,7 @@ public class CustomAudienceCtsTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mClient.joinCustomAudience(customAudience).get());
-        assertTrue(exception.getCause() instanceof AdServicesException);
-        assertTrue(exception.getCause().getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
     }
 
     @Test

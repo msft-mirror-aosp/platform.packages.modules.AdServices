@@ -20,7 +20,6 @@ import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.TestAdSelectionManager;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
@@ -62,7 +61,7 @@ public class TestAdSelectionClient {
                     mTestAdSelectionManager.overrideAdSelectionConfigRemoteInfo(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
 
                                 @Override
                                 public void onResult(Object ignoredResult) {
@@ -70,7 +69,7 @@ public class TestAdSelectionClient {
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -94,7 +93,7 @@ public class TestAdSelectionClient {
                     mTestAdSelectionManager.removeAdSelectionConfigRemoteInfoOverride(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
 
                                 @Override
                                 public void onResult(Object ignoredResult) {
@@ -102,7 +101,7 @@ public class TestAdSelectionClient {
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -124,7 +123,7 @@ public class TestAdSelectionClient {
                 completer -> {
                     mTestAdSelectionManager.resetAllAdSelectionConfigRemoteOverrides(
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
 
                                 @Override
                                 public void onResult(Object ignoredResult) {
@@ -132,7 +131,7 @@ public class TestAdSelectionClient {
                                 }
 
                                 @Override
-                                public void onError(@NonNull AdServicesException error) {
+                                public void onError(@NonNull Exception error) {
                                     completer.setException(error);
                                 }
                             });
