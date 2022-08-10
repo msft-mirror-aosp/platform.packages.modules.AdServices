@@ -102,10 +102,7 @@ public class TestAdSelectionManagerTest {
                         .build();
 
         ReportImpressionRequest input =
-                new ReportImpressionRequest.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setAdSelectionConfig(AD_SELECTION_CONFIG)
-                        .build();
+                new ReportImpressionRequest(AD_SELECTION_ID, AD_SELECTION_CONFIG);
 
         ListenableFuture<Void> result =
                 adSelectionClient.reportImpression(input);
