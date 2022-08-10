@@ -264,7 +264,8 @@ public class SharedPreferencesSyncManagerUnitTest {
         private CountDownLatch mWaitForMoreUpdates = new CountDownLatch(0);
 
         @Override
-        public synchronized void syncDataFromClient(String callingPackageName, Bundle data) {
+        public synchronized void syncDataFromClient(
+                String callingPackageName, long timeAppCalledSystemServer, Bundle data) {
             if (mCallingPackageName == null) {
                 mCallingPackageName = callingPackageName;
             } else {
