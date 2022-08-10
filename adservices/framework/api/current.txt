@@ -286,12 +286,6 @@ package android.adservices.exceptions {
     ctor public AdServicesException(@Nullable String);
   }
 
-  public class MeasurementException extends android.adservices.exceptions.AdServicesException {
-    ctor public MeasurementException();
-    ctor public MeasurementException(@NonNull String);
-    ctor public MeasurementException(@NonNull String, @NonNull Throwable);
-  }
-
 }
 
 package android.adservices.measurement {
