@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static android.adservices.adselection.AdSelectionConfigFixture.anAdSelectionConfig;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+
+import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.ReportImpressionRequest;
 
 import androidx.test.filters.SmallTest;
 
