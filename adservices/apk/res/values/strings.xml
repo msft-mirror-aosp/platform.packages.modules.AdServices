@@ -56,6 +56,17 @@
     <!-- Description of an application permission that lets it access Consent Service API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_adServicesAccessConsentService">Allows an application to access Consent Service API.</string>
 
+    <!-- Title of an application permission that lets it access AdService's enablement state modification API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_modifyAdServicesState">Access to AdService’s enablement state modification API</string>
+    <!-- Description of an application permission that lets it access AdService's enablement state modification API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_modifyAdServicesState">Allows an application to access AdService’s enablement state modification API.</string>
+
+    <!-- Title of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesState">Access to AdService’s enablement state API</string>
+    <!-- Description of an application permission that lets it access AdService's enablement state API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesState">Allows an application to access AdService’s enablement state API.</string>
+
+    <!-- Settings App UI strings -->
 
     <!--*****************************************************************************************-->
     <!--************************************** UI Strings ***************************************-->
