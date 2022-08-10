@@ -69,6 +69,7 @@ public class ConsentNotificationTrigger {
                         ? context.getString(R.string.notificationUI_notification_content_eu)
                         : context.getString(R.string.notificationUI_notification_content)))
                 .setPriority(NOTIFICATION_PRIORITY)
+                .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
     }
 

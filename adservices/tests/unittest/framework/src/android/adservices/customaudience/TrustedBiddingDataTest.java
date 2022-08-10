@@ -110,4 +110,15 @@ public final class TrustedBiddingDataTest {
         assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingKeys())
                 .isEqualTo(emptyTrustedBiddingKeys);
     }
+
+    @Test
+    public void testTrustedBiddingDataSuccessDescribeContent() {
+        TrustedBiddingData validTrustedBiddingData =
+                new TrustedBiddingData.Builder()
+                        .setTrustedBiddingUrl(VALID_TRUSTED_BIDDING_URL)
+                        .setTrustedBiddingKeys(TrustedBiddingDataFixture.VALID_TRUSTED_BIDDING_KEYS)
+                        .build();
+
+        assertThat(validTrustedBiddingData.describeContents()).isEqualTo(0);
+    }
 }

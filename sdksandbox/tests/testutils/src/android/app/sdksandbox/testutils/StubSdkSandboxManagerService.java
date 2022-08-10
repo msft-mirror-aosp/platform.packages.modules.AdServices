@@ -55,6 +55,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
+            long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {}
 

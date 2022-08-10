@@ -22,6 +22,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Tətbiqə AdServices Attribution API\'ə giriş icazəsi verir."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API\'ə giriş"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Tətbiqə AdServices Custom Audience API\'ə giriş icazəsi verir."</string>
+    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
+    <skip />
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API\'ə giriş"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Tətbiqə AdServices Consent API\'ə giriş icazəsi verir."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API\'ə giriş"</string>
@@ -53,10 +57,11 @@
     <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Blok etdiyiniz tətbiqlər"</string>
     <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Tətbiqi idarə edin"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Necə istifadə etdiyinizə əsasən, bəzi tətbiqlər Məxfilik Sendboksu üçün xüsusi reklam maraqlarınız haqqında məlumat yaradır. Android bu tətbiqlər siyahısını güncəlləyir ki, ona baxa və ya redaktə edə biləsiniz.\n\nTətbiqi bloklasanız, o, daha xüsusi maraqlar əlavə etməyəcək. Onu blokdan çıxarmasanız, yenidən bu siyahıya əlavə edilməyəcək. Tətbiq tərəfindən artıq yaradılan maraqlar silinəcək, lakin siz hələ də bəzi əlaqəli reklamları görə bilərsiniz."</string>
-    <string name="settingsUI_apps_view_no_apps_text" msgid="7688904166166288798">"Hələ heç bir tətbiq maraqlarınızı qiymətləndirmir"</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Hazırda göstəriləcək tətbiq yoxdur"</string>
     <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"Tətbiqlər tərəfindən yaradılan məlumatları sıfırlayın"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Xüsusi reklam maraqları"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"İstifadə etdiyiniz bəzi tətbiqlər reklam üçün xüsusi maraqlarınız haqqında məlumat yaradır və onları Məxfilik Sendboksuna əlavə edir.\n\nMəsələn, qaçış ayaqqabısı almaq üçün istifadə etdiyiniz tətbiq idman_qaçış etiketini əlavə edə bilər.\n\nDaha sonra Məxfilik Sendboksunda toplanmış məlumatlar sizi və ya cihazınızı açıqlamadan reklamçılarla paylaşılır. Beləliklə, siz hələ də bəyənə biləcəyiniz reklamları daha çox məxfilik qoruması ilə görürsünüz."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Hazırda göstəriləcək bloklanmış tətbiq yoxdur"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hazırda göstəriləcək maraq yoxdur"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"Ümumi maraqlarınız"</string>
@@ -66,6 +71,7 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Blokdan çıxarın"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Blok etdiyiniz maraqlar"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Bütün maraqları sıfırlayın"</string>
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Hazırda göstəriləcək bloklanmış maraq yoxdur"</string>
     <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Tətbiqlərarası izlənməni məhdudlaşdıran yeni funksiyaları sınaqdan keçirin"</string>
     <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Reklam məxfiliyi betaya qoşulun"</string>
     <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Edə bildikləriniz"</string>

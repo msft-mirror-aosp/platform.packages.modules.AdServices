@@ -16,43 +16,18 @@
 
 package android.adservices;
 
-import android.annotation.IntDef;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-/** This class encapsulates possible states of the APIs exposed by AdServicesApi apk. */
+/** This class specifies the state of the APIs exposed by AdServicesApi apk. */
 public class AdServicesState {
 
     private AdServicesState() {}
-
-    /**
-     * This state indicates that the APIs exposed by AdServicesApi are unavailable.
-     * Invoking them will result in an {@link UnsupportedOperationException}.
-     */
-    public static final int ADSERVICES_API_STATE_DISABLED = 0;
-
-    /**
-     * This state indicates that the APIs exposed by AdServicesApi are enabled.
-     */
-    public static final int ADSERVICES_API_STATE_ENABLED = 1;
-
-    /** @hide */
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef(prefix = "ADSERVICES_API_STATE_", value = {
-            ADSERVICES_API_STATE_DISABLED,
-            ADSERVICES_API_STATE_ENABLED,
-    })
-    public @interface AdServicesApiState {}
 
     /**
      * Returns current state of the {@code AdServicesApi}. The state of AdServicesApi may change
      * only upon reboot, so this value can be cached, but not persisted, i.e., the value should be
      * rechecked after a reboot.
      */
-    @AdServicesApiState
-    public static int getAdServicesState() {
-        return ADSERVICES_API_STATE_ENABLED;
+    public static boolean isAdServicesStateEnabled() {
+        return true;
     }
 }
 
