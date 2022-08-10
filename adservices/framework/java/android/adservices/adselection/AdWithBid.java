@@ -27,8 +27,10 @@ import java.util.Objects;
  * Represents an ad and its corresponding bid value after the bid generation step in the ad
  * selection process.
  *
- * The ads and their bids are fed into an ad scoring process which will inform the final ad
+ * <p>The ads and their bids are fed into an ad scoring process which will inform the final ad
  * selection.
+ *
+ * @hide
  */
 public final class AdWithBid implements Parcelable {
     @NonNull

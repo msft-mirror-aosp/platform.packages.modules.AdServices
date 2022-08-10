@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import org.junit.Test;
@@ -115,5 +116,70 @@ public class DBAdSelectionTest {
                             .setCreationTimestamp(ACTIVATION_TIME)
                             .build();
                 });
+    }
+
+    @Test
+    public void testEqualDBAdSelectionObjectsHaveSameHashCode() {
+        DBAdSelection obj1 =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        DBAdSelection obj2 =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        CommonFixture.assertHaveSameHashCode(obj1, obj2);
+    }
+
+    @Test
+    public void testNotEqualDBAdSelectionObjectsHaveDifferentHashCode() {
+        DBAdSelection obj1 =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        DBAdSelection obj2 =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(2)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        DBAdSelection obj3 =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setContextualSignals(CONTEXTUAL_SIGNALS)
+                        .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(10)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .build();
+
+        CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
 }

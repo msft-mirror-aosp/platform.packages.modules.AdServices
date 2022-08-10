@@ -39,6 +39,7 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
@@ -1179,7 +1180,7 @@ public class FledgeE2ETest {
         @Override
         public void onFailure(FledgeErrorResponse responseParcel) throws RemoteException {
             mIsSuccess = false;
-            mException = responseParcel.asException();
+            mException = AdServicesStatusUtils.asException(responseParcel);
         }
 
         @Override

@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 
 /** The object representing the AdServices manifest config. */
 public class AppManifestConfig {
+    private final AppManifestIncludesSdkLibraryConfig mIncludesSdkLibraryConfig;
     private final AppManifestAttributionConfig mAttributionConfig;
     private final AppManifestCustomAudiencesConfig mCustomAudiencesConfig;
     private final AppManifestTopicsConfig mTopicsConfig;
@@ -31,6 +32,7 @@ public class AppManifestConfig {
      * AdServices manifest config must contain configs for Attribution, Custom Audiences, AdId,
      * AppSetId and Topics.
      *
+     * @param includesSdkLibraryConfig the list of Sdk Libraries included in the app.
      * @param attributionConfig the config for Attribution.
      * @param customAudiencesConfig the config for Custom Audiences.
      * @param topicsConfig the config for Topics.
@@ -38,16 +40,24 @@ public class AppManifestConfig {
      * @param appSetIdConfig the config for appSetId.
      */
     public AppManifestConfig(
+            @NonNull AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig,
             @NonNull AppManifestAttributionConfig attributionConfig,
             @NonNull AppManifestCustomAudiencesConfig customAudiencesConfig,
             @NonNull AppManifestTopicsConfig topicsConfig,
             @NonNull AppManifestAdIdConfig adIdConfig,
             @NonNull AppManifestAppSetIdConfig appSetIdConfig) {
+        mIncludesSdkLibraryConfig = includesSdkLibraryConfig;
         mAttributionConfig = attributionConfig;
         mCustomAudiencesConfig = customAudiencesConfig;
         mTopicsConfig = topicsConfig;
         mAdIdConfig = adIdConfig;
         mAppSetIdConfig = appSetIdConfig;
+    }
+
+    /** Getter for IncludesSdkLibraryConfig. */
+    @NonNull
+    public AppManifestIncludesSdkLibraryConfig getIncludesSdkLibraryConfig() {
+        return mIncludesSdkLibraryConfig;
     }
 
     /** Getter for AttributionConfig. */

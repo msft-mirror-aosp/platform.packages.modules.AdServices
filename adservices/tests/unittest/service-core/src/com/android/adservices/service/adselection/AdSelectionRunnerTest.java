@@ -66,7 +66,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -513,9 +512,7 @@ public class AdSelectionRunnerTest {
         doThrow(new IllegalStateException(validationFailure))
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(
-                        CALLER_UID,
-                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION,
-                        null);
+                        CALLER_UID, AD_SERVICES_API_CALLED__API_NAME__RUN_AD_SELECTION, null);
 
         mAdSelectionRunner =
                 new AdSelectionRunner(
