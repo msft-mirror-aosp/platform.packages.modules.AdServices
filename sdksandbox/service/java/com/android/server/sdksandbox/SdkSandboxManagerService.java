@@ -20,6 +20,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK;
+import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.SdkDataDirInfo;
 
@@ -388,8 +389,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             int displayId,
             int width,
             int height,
+            long timeAppCalledSystemServer,
             Bundle params,
             IRequestSurfacePackageCallback callback) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+
+        SdkSandboxStatsLog.write(
+                SANDBOX_API_CALLED,
+                SANDBOX_API_CALLED__METHOD__REQUEST_SURFACE_PACKAGE,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER);
+
         final int callingUid = Binder.getCallingUid();
         final long token = Binder.clearCallingIdentity();
 

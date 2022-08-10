@@ -23,9 +23,11 @@ import android.os.Parcelable;
 import java.util.Objects;
 
 /**
- * This class holds JSON that will be passed into a javascript auction function. Its contents are
- * not used by FLEDGE system code, but are merely validated then passed to the appropriate
- * javascript auction function.
+ * This class holds JSON that will be passed into a JavaScript function during ad selection. Its
+ * contents are not used by <a
+ * href="https://developer.android.com/design-for-safety/privacy-sandbox/fledge">FLEDGE</a> platform
+ * code, but are merely validated and then passed to the appropriate JavaScript ad selection
+ * function.
  */
 public final class AdSelectionSignals implements Parcelable {
 

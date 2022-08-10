@@ -22,6 +22,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"Nagbibigay-daan sa isang application na i-access ang mga AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"i-access ang AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"Nagbibigay-daan sa isang application na i-access ang AdServices Custom Audience API."</string>
+    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
+    <skip />
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"i-access ang AdServices Consent API"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"Nagbibigay-daan sa isang application na i-access ang AdServices Consent API."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Access sa Ad ID API"</string>
@@ -30,45 +34,34 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"Nagbibigay-daan sa isang application na i-access ang App Set ID API."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Access sa Consent Service API"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Nagbibigay-daan sa isang application na i-access ang Consent Service API."</string>
-    <!-- no translation found for app_label (5985320129629013968) -->
-    <skip />
+    <string name="app_label" msgid="5985320129629013968">"Android System"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"Privacy Sandbox beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"Privacy Sandbox beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"Toggle Privacy Sandbox beta"</string>
-    <!-- no translation found for settingsUI_main_view_title (255982490790282252) -->
-    <skip />
+    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Beta ng privacy ng mga ad ng Android"</string>
     <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"I-test ang bagong system ng Privacy Sandbox na naghihigpit sa cross-app na pag-track."</string>
     <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"Paano gumagana ang Privacy Sandbox"</string>
     <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"Kinokolekta ang data sa Privacy Sandbox para magpakita sa iyo ng mga ad na posibleng magustuhan mo, pero ibinabahagi ito nang hindi tinutukoy kung sino ka o ang iyong device."</string>
     <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"Anong uri ng data ang sino-store sa Privacy Sandbox?"</string>
-    <!-- no translation found for settingsUI_main_view_info_text4 (5819359066240454954) -->
-    <skip />
+    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  Mga pangkalahatang interes"</string>
     <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"Binubuo ng Android ang data na ito batay sa mga app na ginagamit mo, at idinaragdag ito sa Privacy Sandbox. Halimbawa, posibleng “Sports” ang isa sa mga pangkalahatang interes mo. \n\nMakikita mo ang listahan ng iyong mga interes sa Mga setting ng privacy mo, at puwede mong i-block ang anumang hindi mo gusto."</string>
-    <!-- no translation found for settingsUI_main_view_info_text6 (3406976290919982143) -->
-    <skip />
+    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  Mga partikular na interes"</string>
     <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"Binubuo ng iyong mga app ang data na ito batay sa kung paano mo ginagamit ang mga ito, at idinaragdag ito sa Privacy Sandbox. Halimbawa, posibleng idagdag ng app na ginagamit mo para sa running shoes ang label na sport_running.\n\nSa iyong mga setting ng privacy, makikita mo ang listahan ng mga app na gumagawa nito, at puwede mong i-block ang anumang app sa pagdaragdag ng data sa Privacy Sandbox."</string>
     <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"Pamahalaan ang mga interes"</string>
-    <!-- no translation found for settingsUI_topics_view_subtitle (5347912133908026725) -->
-    <skip />
+    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"Pinaghihigpitan ng Privacy Sandbox ng Android ang cross-app na pag-track habang pinapayagan pa rin ang mga app na magpakita sa iyo ng mga ad na posibleng magustuhan mo. Ibinabahagi ng Android ang data na ito sa mga advertiser nang hindi tinutukoy kung sino ka o ang iyong device.\n\nBatay sa mga app na ginagamit mo, binubuo at ina-update ng Android ang listahang ito ng iyong mga pangkalahatang interes para sa mga ad. Kung magba-block ka ng interes, hindi na ito idaragdag ulit sa listahan maliban na lang kung ia-unblock mo ito. Posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"Mga pangkalahatang interes para sa mga ad"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"Binubuo ng Android ang mga interes na ito batay sa mga app na ginagamit mo.\n\nHalimbawa, kung marami kang app ng sports sa iyong device, posibleng idagdag ng Android ang interes na \"Sports\" sa Privacy Sandbox.\n\nIbabahagi ang data na ito sa mga advertiser sa ibang pagkakataon nang hindi tinutukoy kung sino ko o ang iyong device."</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"Ang iyong mga app na bumubuo ng mga partikular na interes"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"Pamahalaan ang iyong mga app na bumubuo ng mga partikular na interes"</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (3902259560117462894) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_subtitle (5257332567222983503) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Mga app na na-block mo"</string>
+    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"Pamahalaan ang mga app"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"Batay sa kung paano mo ginagamit ang mga ito, bumubuo ang ilang app ng data tungkol sa iyong mga partikular na interes para sa mga ad para sa Privacy Sandbox. Ina-update ng Android ang listahang ito ng mga app para matingnan o ma-edit mo ito.\n\nKung magba-block ka ng app, hindi na ito magdaragdag pa ng mga partikular na interes. Hindi ito idaragdag ulit sa listahang ito maliban na lang kung i-unblock mo ito. Made-delete ang mga interes na binubuo na ng app, pero posibleng makakita ka pa rin ng ilang nauugnay na ad."</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"Walang app na maipapakita sa ngayon"</string>
+    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"I-reset ang data na binuo ng mga app"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"Mga partikular na interes para sa mga ad"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"Bumubuo ang ilang app na ginagamit mo ng data tungkol sa iyong mga partikular na interes para sa pag-advertise, at idinaragdag ito sa Privacy Sandbox.\n\nHalimbawa, posibleng idagdag ng app na ginagamit mo para bumili ng running shoes ang label na sport_running.\n\nSa ibang pagkakataon, ibabahagi ang data na kinokolekta sa Privacy Sandbox sa mga advertiser nang hindi tinutukoy kung sino ka o ang iyong device. Kaya makakakita ka pa rin ng mga ad na posibleng magustuhan mo, pero mas maigting ang proteksyon sa privacy."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"Walang naka-block na app na maipapakita sa ngayon"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Walang interes na maipapakita sa ngayon"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"Ang iyong mga pangkalahatang interes"</string>
@@ -76,943 +69,481 @@
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"Pamahalaan ang iyong mga pangakalahatang interes para sa mga ad"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"I-block"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"I-unblock"</string>
-    <!-- no translation found for settingsUI_blocked_topics_title (5030422883546261820) -->
-    <skip />
+    <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mga interes na na-block mo"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"I-reset ang lahat ng interes"</string>
-    <!-- no translation found for notificationUI_notification_content_eu (7419441022808120101) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"Walang naka-block na interes na maipapakita sa ngayon"</string>
+    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"Sumubok ng mga bagong feature na maghihigpit sa cross-app na pag-track"</string>
     <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"Sumali sa beta ng privacy ng mga ad"</string>
     <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"Ang puwede mong gawin"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"Huwag na lang"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (7294736040084958697) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"Oo, susubukan ko ito"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"Salamat sa paglahok"</string>
-    <!-- no translation found for notificationUI_confirmation_accept_subtitle (722290263168711051) -->
-    <skip />
-    <!-- no translation found for notificationUI_confirmation_decline_title (6453417169877486440) -->
-    <skip />
-    <!-- no translation found for notificationUI_confirmation_decline_subtitle (1869322730722065768) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_content (2096372976024736172) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_title (857744302422337933) -->
-    <skip />
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"Bahagi ka na ng beta ng Privacy Sandbox. \n\nPuwede kang matuto pa o umalis sa beta anumang oras, sa iyong Mga setting ng privacy."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"Pinili mong hindi makilahok"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"Salamat sa iyong tugon. Hindi ka idinagdag sa beta ng Privacy Sandbox.\n\nKung magbago ang isip mo o gusto mong matuto pa, pumunta sa iyong mga setting ng privacy."</string>
+    <string name="notificationUI_notification_content" msgid="2096372976024736172">"Sumusubok ka ng mga bagong feature na naghihigpit sa cross-app na pag-track"</string>
+    <string name="notificationUI_header_title" msgid="857744302422337933">"Tinutulungan mo ang Android na paghigpitan ang cross-app na pag-track"</string>
     <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Sumusubok ang Android ng mga bagong feature na maghihigpit sa cross-app na pag-track ng mga advertiser"</string>
     <string name="notificationUI_container1_title" msgid="3837529978480615552">"Ano ang cross-app na pag-track?"</string>
     <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"Ngayong araw, ang data tungkol sa iyong paggamit ng app ay madaling maiuugnay sa device mo at pagkatapos ay maibabahagi sa iba\'t ibang app para sa pag-advertise."</string>
     <string name="notificationUI_container2_title" msgid="4796199061758878885">"Ano ang ginagawa ng Android"</string>
     <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"Sumusubok ang Android ng bagong Privacy Sandbox na secure na nagso-store at ngababahagi ng data sa pag-advertise — nang hindi tinutukoy ang iyong pagkakakilanlan o device. \n\nNakakatulong ang bagong system na ito na pigilan ang mga app na direktang magpasa ng data sa iba pang app, pero binibigyang-daan pa rin ang mga ito na magpakita ng mga ad na posibleng magustuhan mo."</string>
     <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"Paano ito gumagana"</string>
-    <!-- no translation found for notificationUI_container3_title (1283794406634157611) -->
-    <skip />
-    <!-- no translation found for notificationUI_container3_body_text (2636703086913037594) -->
-    <skip />
+    <string name="notificationUI_container3_title" msgid="1283794406634157611">"Paano ka nakakatulong"</string>
+    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"Bagama\'t posibleng wala kang mapansing pagbabago sa mga nakikita mong ad, makakatulong ang pagiging bahagi ng beta para mapaghigpitan ng Android ang cross-app na pag-track sa paglipas ng panahon. Puwede kang umalis sa beta anumang oras sa pamamagitan ng pagpunta sa iyong mga setting ng privacy."</string>
     <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"Mga setting ng privacy"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
-    <!-- no translation found for notificationUI_how_it_works_expanded_text1 (1753701052925879129) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text2 (3117263986288195274) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text3 (7270822532577167752) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text4 (5609475052636889205) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text5 (6757375506547548599) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text6 (2863877874268072458) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text7 (2140515900209351523) -->
-    <skip />
-    <!-- no translation found for topic10001 (1636806320891333775) -->
-    <skip />
-    <!-- no translation found for topic10002 (1226367977754287428) -->
-    <skip />
-    <!-- no translation found for topic10003 (6949890838957814881) -->
-    <skip />
-    <!-- no translation found for topic10004 (5397903150832181233) -->
-    <skip />
-    <!-- no translation found for topic10005 (6316179809581237302) -->
-    <skip />
-    <!-- no translation found for topic10006 (7442330644172139790) -->
-    <skip />
-    <!-- no translation found for topic10007 (5537896091418145164) -->
-    <skip />
-    <!-- no translation found for topic10008 (2737343278307552521) -->
-    <skip />
-    <!-- no translation found for topic10009 (3252367380340240453) -->
-    <skip />
-    <!-- no translation found for topic10010 (932301479153552725) -->
-    <skip />
-    <!-- no translation found for topic10011 (3123553390567261985) -->
-    <skip />
-    <!-- no translation found for topic10012 (8756486271154511326) -->
-    <skip />
-    <!-- no translation found for topic10013 (1242353161202448753) -->
-    <skip />
-    <!-- no translation found for topic10014 (6086156236112755291) -->
-    <skip />
-    <!-- no translation found for topic10015 (9196350141359833832) -->
-    <skip />
-    <!-- no translation found for topic10016 (202419376638900745) -->
-    <skip />
-    <!-- no translation found for topic10017 (6737229918787540100) -->
-    <skip />
-    <!-- no translation found for topic10018 (6823676154109177487) -->
-    <skip />
-    <!-- no translation found for topic10019 (6875960630918973127) -->
-    <skip />
-    <!-- no translation found for topic10020 (4323870300602151489) -->
-    <skip />
-    <!-- no translation found for topic10021 (446758643774468418) -->
-    <skip />
-    <!-- no translation found for topic10022 (3671929742155787005) -->
-    <skip />
-    <!-- no translation found for topic10023 (3547616830531182863) -->
-    <skip />
-    <!-- no translation found for topic10024 (1044853632986202120) -->
-    <skip />
-    <!-- no translation found for topic10025 (5958629223443279316) -->
-    <skip />
-    <!-- no translation found for topic10026 (5685515125614860029) -->
-    <skip />
-    <!-- no translation found for topic10027 (8846353713171614854) -->
-    <skip />
-    <!-- no translation found for topic10028 (170404703980174756) -->
-    <skip />
-    <!-- no translation found for topic10029 (4634600135545614665) -->
-    <skip />
-    <!-- no translation found for topic10030 (7226438392540805771) -->
-    <skip />
-    <!-- no translation found for topic10031 (1488013446112025676) -->
-    <skip />
-    <!-- no translation found for topic10032 (9053666244854789632) -->
-    <skip />
-    <!-- no translation found for topic10033 (440063573197454181) -->
-    <skip />
-    <!-- no translation found for topic10034 (8296307244554241197) -->
-    <skip />
-    <!-- no translation found for topic10035 (9171752741499923310) -->
-    <skip />
-    <!-- no translation found for topic10036 (2490236112725457376) -->
-    <skip />
-    <!-- no translation found for topic10037 (1923690469725883551) -->
-    <skip />
-    <!-- no translation found for topic10038 (2817492732688549631) -->
-    <skip />
-    <!-- no translation found for topic10039 (8970033643570782019) -->
-    <skip />
-    <!-- no translation found for topic10040 (7478395512712452137) -->
-    <skip />
-    <!-- no translation found for topic10041 (3319379117705411886) -->
-    <skip />
-    <!-- no translation found for topic10042 (8830471038440654640) -->
-    <skip />
-    <!-- no translation found for topic10043 (8585450284346207691) -->
-    <skip />
-    <!-- no translation found for topic10044 (3710011249220779842) -->
-    <skip />
-    <!-- no translation found for topic10045 (7593443421067822441) -->
-    <skip />
-    <!-- no translation found for topic10046 (8715621227472631784) -->
-    <skip />
-    <!-- no translation found for topic10047 (3518038303049899798) -->
-    <skip />
-    <!-- no translation found for topic10048 (3063505369500799094) -->
-    <skip />
-    <!-- no translation found for topic10049 (8061992014977840818) -->
-    <skip />
-    <!-- no translation found for topic10050 (3540229495848506229) -->
-    <skip />
-    <!-- no translation found for topic10051 (6132468331924347995) -->
-    <skip />
-    <!-- no translation found for topic10052 (8213269199807045473) -->
-    <skip />
-    <!-- no translation found for topic10053 (1378192203082454197) -->
-    <skip />
-    <!-- no translation found for topic10054 (3727401645405134505) -->
-    <skip />
-    <!-- no translation found for topic10055 (4943174831732192854) -->
-    <skip />
-    <!-- no translation found for topic10056 (3066058636154255073) -->
-    <skip />
-    <!-- no translation found for topic10057 (387445514677222034) -->
-    <skip />
-    <!-- no translation found for topic10058 (9149178644022969766) -->
-    <skip />
-    <!-- no translation found for topic10059 (6300562669238320524) -->
-    <skip />
-    <!-- no translation found for topic10060 (3901256055064835246) -->
-    <skip />
-    <!-- no translation found for topic10061 (8343924749123326062) -->
-    <skip />
-    <!-- no translation found for topic10062 (9183355218976951211) -->
-    <skip />
-    <!-- no translation found for topic10063 (644340831620792432) -->
-    <skip />
-    <!-- no translation found for topic10064 (5961885645457010998) -->
-    <skip />
-    <!-- no translation found for topic10065 (7916343612028608044) -->
-    <skip />
-    <!-- no translation found for topic10066 (5984396525358003559) -->
-    <skip />
-    <!-- no translation found for topic10067 (6404637729885733437) -->
-    <skip />
-    <!-- no translation found for topic10068 (4589856961950168493) -->
-    <skip />
-    <!-- no translation found for topic10069 (3129378082034151991) -->
-    <skip />
-    <!-- no translation found for topic10070 (2570256568661324147) -->
-    <skip />
-    <!-- no translation found for topic10071 (1288722040962471254) -->
-    <skip />
-    <!-- no translation found for topic10072 (9155509766616567261) -->
-    <skip />
-    <!-- no translation found for topic10073 (3748676231341513738) -->
-    <skip />
-    <!-- no translation found for topic10074 (2040911547161463227) -->
-    <skip />
-    <!-- no translation found for topic10075 (1242538698445713796) -->
-    <skip />
-    <!-- no translation found for topic10076 (8674225812339579627) -->
-    <skip />
-    <!-- no translation found for topic10077 (3577709810751953433) -->
-    <skip />
-    <!-- no translation found for topic10078 (5493263845129910125) -->
-    <skip />
-    <!-- no translation found for topic10079 (3466838852836498580) -->
-    <skip />
-    <!-- no translation found for topic10080 (3515647285637163190) -->
-    <skip />
-    <!-- no translation found for topic10081 (4135085035401158860) -->
-    <skip />
-    <!-- no translation found for topic10082 (7168659489029594320) -->
-    <skip />
-    <!-- no translation found for topic10083 (1532745144715857802) -->
-    <skip />
-    <!-- no translation found for topic10084 (1984231414410381476) -->
-    <skip />
-    <!-- no translation found for topic10085 (5235555028227554661) -->
-    <skip />
-    <!-- no translation found for topic10086 (8360336602646460411) -->
-    <skip />
-    <!-- no translation found for topic10087 (6566900167002195406) -->
-    <skip />
-    <!-- no translation found for topic10088 (2899313082601001223) -->
-    <skip />
-    <!-- no translation found for topic10089 (1053630346809973163) -->
-    <skip />
-    <!-- no translation found for topic10090 (4478565601243447368) -->
-    <skip />
-    <!-- no translation found for topic10091 (3812668311830832874) -->
-    <skip />
-    <!-- no translation found for topic10092 (524130833813249539) -->
-    <skip />
-    <!-- no translation found for topic10093 (8900143351472824542) -->
-    <skip />
-    <!-- no translation found for topic10094 (6205146188176216038) -->
-    <skip />
-    <!-- no translation found for topic10095 (7983070264654477553) -->
-    <skip />
-    <!-- no translation found for topic10096 (8148747014459050804) -->
-    <skip />
-    <!-- no translation found for topic10097 (4716536434833425748) -->
-    <skip />
-    <!-- no translation found for topic10098 (6401980112135995019) -->
-    <skip />
-    <!-- no translation found for topic10099 (8018714209926584445) -->
-    <skip />
-    <!-- no translation found for topic10100 (2481422464734249871) -->
-    <skip />
-    <!-- no translation found for topic10101 (7889144198021629053) -->
-    <skip />
-    <!-- no translation found for topic10102 (577637051755692238) -->
-    <skip />
-    <!-- no translation found for topic10103 (6618157344631408510) -->
-    <skip />
-    <!-- no translation found for topic10104 (6043649669944382784) -->
-    <skip />
-    <!-- no translation found for topic10105 (3248569527339253661) -->
-    <skip />
-    <!-- no translation found for topic10106 (1291481249483309832) -->
-    <skip />
-    <!-- no translation found for topic10107 (1335060201249279923) -->
-    <skip />
-    <!-- no translation found for topic10108 (4996884435711154930) -->
-    <skip />
-    <!-- no translation found for topic10109 (7298403319989686251) -->
-    <skip />
-    <!-- no translation found for topic10110 (5954355866247248022) -->
-    <skip />
-    <!-- no translation found for topic10111 (4447710938881368413) -->
-    <skip />
-    <!-- no translation found for topic10112 (8816530137921714131) -->
-    <skip />
-    <!-- no translation found for topic10113 (8138889299405853557) -->
-    <skip />
-    <!-- no translation found for topic10114 (2172821400279346865) -->
-    <skip />
-    <!-- no translation found for topic10115 (9060244278068231494) -->
-    <skip />
-    <!-- no translation found for topic10116 (116242880964485085) -->
-    <skip />
-    <!-- no translation found for topic10117 (8933734721100160863) -->
-    <skip />
-    <!-- no translation found for topic10118 (4368531903547695191) -->
-    <skip />
-    <!-- no translation found for topic10119 (2781095265741115471) -->
-    <skip />
-    <!-- no translation found for topic10120 (3099507102655270527) -->
-    <skip />
-    <!-- no translation found for topic10121 (4466592180799340837) -->
-    <skip />
-    <!-- no translation found for topic10122 (2375136741125920744) -->
-    <skip />
-    <!-- no translation found for topic10123 (6974082907852347979) -->
-    <skip />
-    <!-- no translation found for topic10124 (44474598156972786) -->
-    <skip />
-    <!-- no translation found for topic10125 (9170394261421539760) -->
-    <skip />
-    <!-- no translation found for topic10126 (2210146434071038904) -->
-    <skip />
-    <!-- no translation found for topic10127 (5503077037318678029) -->
-    <skip />
-    <!-- no translation found for topic10128 (285525650692719959) -->
-    <skip />
-    <!-- no translation found for topic10129 (3094691551566702427) -->
-    <skip />
-    <!-- no translation found for topic10130 (1922351409757117764) -->
-    <skip />
-    <!-- no translation found for topic10131 (8598763405951029782) -->
-    <skip />
-    <!-- no translation found for topic10132 (1476352626208153907) -->
-    <skip />
-    <!-- no translation found for topic10133 (7089177624979453528) -->
-    <skip />
-    <!-- no translation found for topic10134 (3833032373311037601) -->
-    <skip />
-    <!-- no translation found for topic10135 (2478808072377000440) -->
-    <skip />
-    <!-- no translation found for topic10136 (9083992436834044162) -->
-    <skip />
-    <!-- no translation found for topic10137 (1912599316814246824) -->
-    <skip />
-    <!-- no translation found for topic10138 (7428346836350671895) -->
-    <skip />
-    <!-- no translation found for topic10139 (1396685812404869953) -->
-    <skip />
-    <!-- no translation found for topic10140 (5264212052238781441) -->
-    <skip />
-    <!-- no translation found for topic10141 (860058416683118730) -->
-    <skip />
-    <!-- no translation found for topic10142 (2912550934111655896) -->
-    <skip />
-    <!-- no translation found for topic10143 (5690610408227078117) -->
-    <skip />
-    <!-- no translation found for topic10144 (3341052306953106368) -->
-    <skip />
-    <!-- no translation found for topic10145 (6886608911083388041) -->
-    <skip />
-    <!-- no translation found for topic10146 (8202145175139144216) -->
-    <skip />
-    <!-- no translation found for topic10147 (4687964705548995437) -->
-    <skip />
-    <!-- no translation found for topic10148 (8861628145647459323) -->
-    <skip />
-    <!-- no translation found for topic10149 (1719988773455991739) -->
-    <skip />
-    <!-- no translation found for topic10150 (1482205464872465298) -->
-    <skip />
-    <!-- no translation found for topic10151 (1772262905623388968) -->
-    <skip />
-    <!-- no translation found for topic10152 (651152740021127086) -->
-    <skip />
-    <!-- no translation found for topic10153 (8741504768717646372) -->
-    <skip />
-    <!-- no translation found for topic10154 (5382029798409496090) -->
-    <skip />
-    <!-- no translation found for topic10155 (5243817792730496258) -->
-    <skip />
-    <!-- no translation found for topic10156 (2497791567138856030) -->
-    <skip />
-    <!-- no translation found for topic10157 (4723439422860510190) -->
-    <skip />
-    <!-- no translation found for topic10158 (5345830001295028513) -->
-    <skip />
-    <!-- no translation found for topic10159 (6146958285117174314) -->
-    <skip />
-    <!-- no translation found for topic10160 (6624820395549466426) -->
-    <skip />
-    <!-- no translation found for topic10161 (912458758908978530) -->
-    <skip />
-    <!-- no translation found for topic10162 (6717352131379507693) -->
-    <skip />
-    <!-- no translation found for topic10163 (6344926622025055321) -->
-    <skip />
-    <!-- no translation found for topic10164 (4228888249078845459) -->
-    <skip />
-    <!-- no translation found for topic10165 (5507908999219967161) -->
-    <skip />
-    <!-- no translation found for topic10166 (4768106492755849560) -->
-    <skip />
-    <!-- no translation found for topic10167 (8556935769754922871) -->
-    <skip />
-    <!-- no translation found for topic10168 (7730134961167790334) -->
-    <skip />
-    <!-- no translation found for topic10169 (5655084106378890454) -->
-    <skip />
-    <!-- no translation found for topic10170 (4638281897205909919) -->
-    <skip />
-    <!-- no translation found for topic10171 (7910183120486541228) -->
-    <skip />
-    <!-- no translation found for topic10172 (3626573644414074730) -->
-    <skip />
-    <!-- no translation found for topic10173 (7320053835183057144) -->
-    <skip />
-    <!-- no translation found for topic10174 (5770469447869586710) -->
-    <skip />
-    <!-- no translation found for topic10175 (3475235810022334041) -->
-    <skip />
-    <!-- no translation found for topic10176 (6881704501596479881) -->
-    <skip />
-    <!-- no translation found for topic10177 (6740430730079682579) -->
-    <skip />
-    <!-- no translation found for topic10178 (7261811053741593091) -->
-    <skip />
-    <!-- no translation found for topic10179 (2967001567120854492) -->
-    <skip />
-    <!-- no translation found for topic10180 (4197420326455130102) -->
-    <skip />
-    <!-- no translation found for topic10181 (3537573129132698830) -->
-    <skip />
-    <!-- no translation found for topic10182 (7688631285131229981) -->
-    <skip />
-    <!-- no translation found for topic10183 (5994974566140272512) -->
-    <skip />
-    <!-- no translation found for topic10184 (8685817335076871509) -->
-    <skip />
-    <!-- no translation found for topic10185 (308314128178285390) -->
-    <skip />
-    <!-- no translation found for topic10186 (3147859503481018245) -->
-    <skip />
-    <!-- no translation found for topic10187 (7077128721410871032) -->
-    <skip />
-    <!-- no translation found for topic10188 (2206138708659457910) -->
-    <skip />
-    <!-- no translation found for topic10189 (4001795553008246784) -->
-    <skip />
-    <!-- no translation found for topic10190 (2988430661381243083) -->
-    <skip />
-    <!-- no translation found for topic10191 (6196081825838237614) -->
-    <skip />
-    <!-- no translation found for topic10192 (3290123244833047307) -->
-    <skip />
-    <!-- no translation found for topic10193 (294407043381146861) -->
-    <skip />
-    <!-- no translation found for topic10194 (2834543407440890272) -->
-    <skip />
-    <!-- no translation found for topic10195 (7650553060132394782) -->
-    <skip />
-    <!-- no translation found for topic10196 (5395035781876507254) -->
-    <skip />
-    <!-- no translation found for topic10197 (1287138667488226463) -->
-    <skip />
-    <!-- no translation found for topic10198 (2523256186943366779) -->
-    <skip />
-    <!-- no translation found for topic10199 (3746711537661530183) -->
-    <skip />
-    <!-- no translation found for topic10200 (2394864891391267841) -->
-    <skip />
-    <!-- no translation found for topic10201 (4301879117376963742) -->
-    <skip />
-    <!-- no translation found for topic10202 (739808503036239379) -->
-    <skip />
-    <!-- no translation found for topic10203 (838786942776142290) -->
-    <skip />
-    <!-- no translation found for topic10204 (6591131759521321677) -->
-    <skip />
-    <!-- no translation found for topic10205 (3294946723815021478) -->
-    <skip />
-    <!-- no translation found for topic10206 (6166888350685752683) -->
-    <skip />
-    <!-- no translation found for topic10207 (2296385804039743999) -->
-    <skip />
-    <!-- no translation found for topic10208 (2717498987483479091) -->
-    <skip />
-    <!-- no translation found for topic10209 (5204948738662951962) -->
-    <skip />
-    <!-- no translation found for topic10210 (4607225697024266227) -->
-    <skip />
-    <!-- no translation found for topic10211 (7475381839877166080) -->
-    <skip />
-    <!-- no translation found for topic10212 (3988751035952286047) -->
-    <skip />
-    <!-- no translation found for topic10213 (1358963098339995471) -->
-    <skip />
-    <!-- no translation found for topic10214 (8463864389138867811) -->
-    <skip />
-    <!-- no translation found for topic10215 (3085467051491069648) -->
-    <skip />
-    <!-- no translation found for topic10216 (6043130649326166680) -->
-    <skip />
-    <!-- no translation found for topic10217 (7173870057669247536) -->
-    <skip />
-    <!-- no translation found for topic10218 (5570240643247064951) -->
-    <skip />
-    <!-- no translation found for topic10219 (5896715206025463732) -->
-    <skip />
-    <!-- no translation found for topic10220 (3894580611467039658) -->
-    <skip />
-    <!-- no translation found for topic10221 (14471057764591805) -->
-    <skip />
-    <!-- no translation found for topic10222 (2704894577954508861) -->
-    <skip />
-    <!-- no translation found for topic10223 (202900267060220170) -->
-    <skip />
-    <!-- no translation found for topic10224 (6572627325588452785) -->
-    <skip />
-    <!-- no translation found for topic10225 (8056906319560292131) -->
-    <skip />
-    <!-- no translation found for topic10226 (714463563336281099) -->
-    <skip />
-    <!-- no translation found for topic10227 (218768654597520683) -->
-    <skip />
-    <!-- no translation found for topic10228 (850597136074192489) -->
-    <skip />
-    <!-- no translation found for topic10229 (4284501233897149886) -->
-    <skip />
-    <!-- no translation found for topic10230 (7156822286576815181) -->
-    <skip />
-    <!-- no translation found for topic10231 (7620407218897744361) -->
-    <skip />
-    <!-- no translation found for topic10232 (3029734447275709941) -->
-    <skip />
-    <!-- no translation found for topic10233 (8318075279868138231) -->
-    <skip />
-    <!-- no translation found for topic10234 (3899847414436099153) -->
-    <skip />
-    <!-- no translation found for topic10235 (5851356242523630529) -->
-    <skip />
-    <!-- no translation found for topic10236 (1986665634014804954) -->
-    <skip />
-    <!-- no translation found for topic10237 (5569920221620447713) -->
-    <skip />
-    <!-- no translation found for topic10238 (7431087331656772530) -->
-    <skip />
-    <!-- no translation found for topic10239 (8667462879554115515) -->
-    <skip />
-    <!-- no translation found for topic10240 (1618985302446756520) -->
-    <skip />
-    <!-- no translation found for topic10241 (8450778411063723262) -->
-    <skip />
-    <!-- no translation found for topic10242 (8860812940320018907) -->
-    <skip />
-    <!-- no translation found for topic10243 (1764694148721971512) -->
-    <skip />
-    <!-- no translation found for topic10244 (4308588210397969087) -->
-    <skip />
-    <!-- no translation found for topic10245 (6904368410919496658) -->
-    <skip />
-    <!-- no translation found for topic10246 (3381244806751528148) -->
-    <skip />
-    <!-- no translation found for topic10247 (5927502688389762068) -->
-    <skip />
-    <!-- no translation found for topic10248 (8471339627212674032) -->
-    <skip />
-    <!-- no translation found for topic10249 (5076706536204559962) -->
-    <skip />
-    <!-- no translation found for topic10250 (6083030595195401083) -->
-    <skip />
-    <!-- no translation found for topic10251 (99237306730665104) -->
-    <skip />
-    <!-- no translation found for topic10252 (6543039575961394064) -->
-    <skip />
-    <!-- no translation found for topic10253 (566596668186874227) -->
-    <skip />
-    <!-- no translation found for topic10254 (5732147617072023634) -->
-    <skip />
-    <!-- no translation found for topic10255 (2890655077164103057) -->
-    <skip />
-    <!-- no translation found for topic10256 (3302096971402751679) -->
-    <skip />
-    <!-- no translation found for topic10257 (4238531589193902619) -->
-    <skip />
-    <!-- no translation found for topic10258 (6995329540076529056) -->
-    <skip />
-    <!-- no translation found for topic10259 (8649688885811560410) -->
-    <skip />
-    <!-- no translation found for topic10260 (487999213495640080) -->
-    <skip />
-    <!-- no translation found for topic10261 (8970668366745952094) -->
-    <skip />
-    <!-- no translation found for topic10262 (6644046161469353448) -->
-    <skip />
-    <!-- no translation found for topic10263 (848165976917542929) -->
-    <skip />
-    <!-- no translation found for topic10264 (6274985117752637104) -->
-    <skip />
-    <!-- no translation found for topic10265 (4134876488948695674) -->
-    <skip />
-    <!-- no translation found for topic10266 (6617785039128074351) -->
-    <skip />
-    <!-- no translation found for topic10267 (488093331618885003) -->
-    <skip />
-    <!-- no translation found for topic10268 (277932389492046264) -->
-    <skip />
-    <!-- no translation found for topic10269 (8572041514147955202) -->
-    <skip />
-    <!-- no translation found for topic10270 (2646715182474030951) -->
-    <skip />
-    <!-- no translation found for topic10271 (1308931236810509881) -->
-    <skip />
-    <!-- no translation found for topic10272 (8746698707390628887) -->
-    <skip />
-    <!-- no translation found for topic10273 (344442071339164852) -->
-    <skip />
-    <!-- no translation found for topic10274 (8982330028561451429) -->
-    <skip />
-    <!-- no translation found for topic10275 (8280198018937968735) -->
-    <skip />
-    <!-- no translation found for topic10276 (1651598271798609235) -->
-    <skip />
-    <!-- no translation found for topic10277 (7675195736886448994) -->
-    <skip />
-    <!-- no translation found for topic10278 (873251714192341707) -->
-    <skip />
-    <!-- no translation found for topic10279 (6514296374139842600) -->
-    <skip />
-    <!-- no translation found for topic10280 (7976787187115018267) -->
-    <skip />
-    <!-- no translation found for topic10281 (4013341162811169339) -->
-    <skip />
-    <!-- no translation found for topic10282 (7810462611906257564) -->
-    <skip />
-    <!-- no translation found for topic10283 (3958287780718485172) -->
-    <skip />
-    <!-- no translation found for topic10284 (2415044270290467935) -->
-    <skip />
-    <!-- no translation found for topic10285 (7056449544316408821) -->
-    <skip />
-    <!-- no translation found for topic10286 (3458688996478472971) -->
-    <skip />
-    <!-- no translation found for topic10287 (6766203044518402938) -->
-    <skip />
-    <!-- no translation found for topic10288 (3883137694557636622) -->
-    <skip />
-    <!-- no translation found for topic10289 (3392995633794787676) -->
-    <skip />
-    <!-- no translation found for topic10290 (3118880486702986341) -->
-    <skip />
-    <!-- no translation found for topic10291 (6025855926350955094) -->
-    <skip />
-    <!-- no translation found for topic10292 (3069720659823056935) -->
-    <skip />
-    <!-- no translation found for topic10293 (2489957780009828409) -->
-    <skip />
-    <!-- no translation found for topic10294 (474839431177892843) -->
-    <skip />
-    <!-- no translation found for topic10295 (2215489196192620880) -->
-    <skip />
-    <!-- no translation found for topic10296 (4494362881225210483) -->
-    <skip />
-    <!-- no translation found for topic10297 (8596946591674128749) -->
-    <skip />
-    <!-- no translation found for topic10298 (6669181180128620422) -->
-    <skip />
-    <!-- no translation found for topic10299 (989138215800115613) -->
-    <skip />
-    <!-- no translation found for topic10300 (8281464235308602670) -->
-    <skip />
-    <!-- no translation found for topic10301 (9156890858635333460) -->
-    <skip />
-    <!-- no translation found for topic10302 (1325835179421990876) -->
-    <skip />
-    <!-- no translation found for topic10303 (3103839978894155537) -->
-    <skip />
-    <!-- no translation found for topic10304 (8831682558788062486) -->
-    <skip />
-    <!-- no translation found for topic10305 (8415203095484493106) -->
-    <skip />
-    <!-- no translation found for topic10306 (7426556527349374835) -->
-    <skip />
-    <!-- no translation found for topic10307 (1187762846826735256) -->
-    <skip />
-    <!-- no translation found for topic10308 (3346756665358311386) -->
-    <skip />
-    <!-- no translation found for topic10309 (2041175328931014735) -->
-    <skip />
-    <!-- no translation found for topic10310 (7079570344976872062) -->
-    <skip />
-    <!-- no translation found for topic10311 (2095095138677585525) -->
-    <skip />
-    <!-- no translation found for topic10312 (939721674816307639) -->
-    <skip />
-    <!-- no translation found for topic10313 (4159611985538361632) -->
-    <skip />
-    <!-- no translation found for topic10314 (93219947859117151) -->
-    <skip />
-    <!-- no translation found for topic10315 (5046321177148647481) -->
-    <skip />
-    <!-- no translation found for topic10316 (8592980844674525307) -->
-    <skip />
-    <!-- no translation found for topic10317 (2412259096368647866) -->
-    <skip />
-    <!-- no translation found for topic10318 (1508449672941031904) -->
-    <skip />
-    <!-- no translation found for topic10319 (3973645291178509390) -->
-    <skip />
-    <!-- no translation found for topic10320 (5279440074507438174) -->
-    <skip />
-    <!-- no translation found for topic10321 (7018890132742820265) -->
-    <skip />
-    <!-- no translation found for topic10322 (1585737438943011532) -->
-    <skip />
-    <!-- no translation found for topic10323 (962863497957179646) -->
-    <skip />
-    <!-- no translation found for topic10324 (1425257460381023853) -->
-    <skip />
-    <!-- no translation found for topic10325 (8698912164970408378) -->
-    <skip />
-    <!-- no translation found for topic10326 (2425798096705921796) -->
-    <skip />
-    <!-- no translation found for topic10327 (8518822987595111212) -->
-    <skip />
-    <!-- no translation found for topic10328 (8932708475346340912) -->
-    <skip />
-    <!-- no translation found for topic10329 (223933889758324282) -->
-    <skip />
-    <!-- no translation found for topic10330 (188028553492626282) -->
-    <skip />
-    <!-- no translation found for topic10331 (426844238985651925) -->
-    <skip />
-    <!-- no translation found for topic10332 (291747325781232456) -->
-    <skip />
-    <!-- no translation found for topic10333 (7950152600374846488) -->
-    <skip />
-    <!-- no translation found for topic10334 (8671262583721706509) -->
-    <skip />
-    <!-- no translation found for topic10335 (1526523762163185819) -->
-    <skip />
-    <!-- no translation found for topic10336 (4551233571090493177) -->
-    <skip />
-    <!-- no translation found for topic10337 (8436172065188964882) -->
-    <skip />
-    <!-- no translation found for topic10338 (8896269734682970) -->
-    <skip />
-    <!-- no translation found for topic10339 (781900237993621300) -->
-    <skip />
-    <!-- no translation found for topic10340 (6538182603360796294) -->
-    <skip />
-    <!-- no translation found for topic10341 (3586543243312398568) -->
-    <skip />
-    <!-- no translation found for topic10342 (3695176378281477573) -->
-    <skip />
-    <!-- no translation found for topic10343 (2318169062960263837) -->
-    <skip />
-    <!-- no translation found for topic10344 (2005534117977874327) -->
-    <skip />
-    <!-- no translation found for topic10345 (2397329020706244200) -->
-    <skip />
-    <!-- no translation found for topic10346 (1323702748723563694) -->
-    <skip />
-    <!-- no translation found for topic10347 (3301879823396773413) -->
-    <skip />
-    <!-- no translation found for topic10348 (8066686305498410222) -->
-    <skip />
-    <!-- no translation found for topic10349 (5253723822905761195) -->
-    <skip />
-    <!-- no translation found for topic10350 (6164036369108076590) -->
-    <skip />
-    <!-- no translation found for topic10351 (1132984519083501363) -->
-    <skip />
-    <!-- no translation found for topic10352 (6310110390516037997) -->
-    <skip />
-    <!-- no translation found for topic10353 (5114390804081576684) -->
-    <skip />
-    <!-- no translation found for topic10354 (7980778954791504082) -->
-    <skip />
-    <!-- no translation found for topic10355 (7720717354548642600) -->
-    <skip />
-    <!-- no translation found for topic10356 (8366981308613661935) -->
-    <skip />
-    <!-- no translation found for topic10357 (3185598234676097975) -->
-    <skip />
-    <!-- no translation found for topic10358 (6732669037513504019) -->
-    <skip />
-    <!-- no translation found for topic10359 (8901932349008990500) -->
-    <skip />
-    <!-- no translation found for topic10360 (6113408769992775754) -->
-    <skip />
-    <!-- no translation found for topic10361 (364838820459183817) -->
-    <skip />
-    <!-- no translation found for topic10362 (3760998790588600032) -->
-    <skip />
-    <!-- no translation found for topic10363 (5464708619861040861) -->
-    <skip />
-    <!-- no translation found for topic10364 (4685400848805560054) -->
-    <skip />
-    <!-- no translation found for topic10365 (5196231842716190887) -->
-    <skip />
-    <!-- no translation found for topic10366 (7460927054539097025) -->
-    <skip />
-    <!-- no translation found for topic10367 (3900361839783743700) -->
-    <skip />
-    <!-- no translation found for topic10368 (2069447039109930660) -->
-    <skip />
-    <!-- no translation found for topic10369 (5747888306428024793) -->
-    <skip />
-    <!-- no translation found for topic10370 (4860829940151353583) -->
-    <skip />
-    <!-- no translation found for topic10371 (8229818210867472466) -->
-    <skip />
-    <!-- no translation found for topic10372 (6400467418954574231) -->
-    <skip />
-    <!-- no translation found for topic10373 (6990757247198163741) -->
-    <skip />
-    <!-- no translation found for topic10374 (8057983193031950119) -->
-    <skip />
-    <!-- no translation found for topic10375 (8511185098682306025) -->
-    <skip />
-    <!-- no translation found for topic10376 (6387800251638760737) -->
-    <skip />
-    <!-- no translation found for topic10377 (7834619927563362042) -->
-    <skip />
-    <!-- no translation found for topic10378 (242496862821758873) -->
-    <skip />
-    <!-- no translation found for topic10379 (5505228335012447165) -->
-    <skip />
-    <!-- no translation found for topic10380 (4989560205486143927) -->
-    <skip />
-    <!-- no translation found for topic10381 (7585496746485093505) -->
-    <skip />
-    <!-- no translation found for topic10382 (5088060295126473451) -->
-    <skip />
-    <!-- no translation found for topic10383 (4947104586590538143) -->
-    <skip />
-    <!-- no translation found for topic10384 (3752472493887374077) -->
-    <skip />
-    <!-- no translation found for topic10385 (5275843140794803595) -->
-    <skip />
-    <!-- no translation found for topic10386 (5887032952574801982) -->
-    <skip />
-    <!-- no translation found for topic10387 (8474154360410317897) -->
-    <skip />
-    <!-- no translation found for topic10388 (3650307363028796765) -->
-    <skip />
-    <!-- no translation found for topic10389 (1542336508240183221) -->
-    <skip />
-    <!-- no translation found for topic10390 (831225961168954292) -->
-    <skip />
-    <!-- no translation found for topic10391 (6810540242154911762) -->
-    <skip />
-    <!-- no translation found for topic10392 (2431377771302967625) -->
-    <skip />
-    <!-- no translation found for topic10393 (2671274205988136926) -->
-    <skip />
-    <!-- no translation found for topic10394 (1530096364743244151) -->
-    <skip />
-    <!-- no translation found for topic10395 (316192616624062917) -->
-    <skip />
-    <!-- no translation found for topic10396 (8042120651878490689) -->
-    <skip />
-    <!-- no translation found for topic10397 (492901976344700942) -->
-    <skip />
-    <!-- no translation found for topic10398 (3471795015226090296) -->
-    <skip />
-    <!-- no translation found for topic10399 (2126280752064021308) -->
-    <skip />
-    <!-- no translation found for topic10400 (5440499529264277027) -->
-    <skip />
-    <!-- no translation found for topic10401 (166689951236922024) -->
-    <skip />
-    <!-- no translation found for topic10402 (2451339788231007479) -->
-    <skip />
-    <!-- no translation found for topic10403 (6455478521804717635) -->
-    <skip />
-    <!-- no translation found for topic10404 (5261583496913118024) -->
-    <skip />
-    <!-- no translation found for topic10405 (482477447879117820) -->
-    <skip />
-    <!-- no translation found for topic10406 (8167644332387528703) -->
-    <skip />
-    <!-- no translation found for topic10407 (3237734582719584272) -->
-    <skip />
-    <!-- no translation found for topic10408 (3859749534843254349) -->
-    <skip />
-    <!-- no translation found for topic10409 (7485614115639267976) -->
-    <skip />
-    <!-- no translation found for topic10410 (5996939009229881074) -->
-    <skip />
-    <!-- no translation found for topic10411 (2513997418184786648) -->
-    <skip />
-    <!-- no translation found for topic10412 (5411755341358248299) -->
-    <skip />
-    <!-- no translation found for topic10413 (3319233613448963890) -->
-    <skip />
-    <!-- no translation found for topic10414 (1797840816328584660) -->
-    <skip />
-    <!-- no translation found for topic10415 (2886043330316735719) -->
-    <skip />
-    <!-- no translation found for topic10416 (3436682172863605224) -->
-    <skip />
-    <!-- no translation found for topic10417 (8296644015663416236) -->
-    <skip />
-    <!-- no translation found for topic10418 (8276736633218488127) -->
-    <skip />
-    <!-- no translation found for topic10419 (5663062924928275215) -->
-    <skip />
-    <!-- no translation found for topic10420 (2509320683543423424) -->
-    <skip />
-    <!-- no translation found for topic10421 (6512889128030030686) -->
-    <skip />
-    <!-- no translation found for topic10422 (8342986282852879750) -->
-    <skip />
-    <!-- no translation found for topic10423 (6333426807705188459) -->
-    <skip />
-    <!-- no translation found for topic10424 (5495511215629567375) -->
-    <skip />
-    <!-- no translation found for topic10425 (4009138228283995179) -->
-    <skip />
-    <!-- no translation found for topic10426 (7998590461761852196) -->
-    <skip />
-    <!-- no translation found for topic10427 (6711468161729797769) -->
-    <skip />
-    <!-- no translation found for topic10428 (661919563628063196) -->
-    <skip />
-    <!-- no translation found for topic10429 (408270392813634227) -->
-    <skip />
-    <!-- no translation found for topic10430 (3046485339481297656) -->
-    <skip />
-    <!-- no translation found for topic10431 (7439352609169583150) -->
-    <skip />
-    <!-- no translation found for topic10432 (5034961318884376752) -->
-    <skip />
-    <!-- no translation found for topic10433 (6354590445323135986) -->
-    <skip />
-    <!-- no translation found for topic10434 (7081309045291255264) -->
-    <skip />
-    <!-- no translation found for topic10435 (1064605516265819020) -->
-    <skip />
-    <!-- no translation found for topic10436 (9050375924140897722) -->
-    <skip />
-    <!-- no translation found for topic10437 (2655664900730187701) -->
-    <skip />
-    <!-- no translation found for topic10438 (7944023251845122923) -->
-    <skip />
-    <!-- no translation found for topic10439 (7845433008088931971) -->
-    <skip />
-    <!-- no translation found for topic10440 (485118071443976808) -->
-    <skip />
-    <!-- no translation found for topic10441 (518643446480879895) -->
-    <skip />
-    <!-- no translation found for topic10442 (6534536077484540292) -->
-    <skip />
-    <!-- no translation found for topic10443 (8787722062991478596) -->
-    <skip />
-    <!-- no translation found for topic10444 (2075863187654728611) -->
-    <skip />
-    <!-- no translation found for topic10445 (3460421948068980869) -->
-    <skip />
-    <!-- no translation found for topic10446 (5333138740720504195) -->
-    <skip />
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"Paano gumagana ang Privacy Sandbox"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"Kinokolekta ang data sa Privacy Sandbox para magpakita sa iyo ng mga ad na posibleng magustuhan mo, pero ibinabahagi ito nang hindi tinutukoy kung sino ka o ang iyong device."</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"Anong uri ng data ang iso-store sa Privacy Sandbox?"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  Mga pangkalahatang interes"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"Binubuo ng Android ang data na ito batay sa mga app na ginagamit mo, at idinaragdag ito sa Privacy Sandbox. Halimbawa, posibleng Sports ang isa sa mga pangkalahatang interes mo. \n\nMakikita mo ang listahan ng iyong mga interes sa Mga setting ng privacy mo, at puwede mong i-block ang anumang hindi mo gusto."</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  Mga partikular na interes"</string>
+    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"Binubuo ng iyong mga app ang data na ito batay sa kung paano mo ginagamit ang mga ito, at idinaragdag ito sa Privacy Sandbox. Halimbawa, posibleng idagdag ng app na ginagamit mo para bumili ng running shoes ang label na sport_running.\n\nSa iyong mga setting ng privacy, makikita mo ang listahan ng mga app na gumagawa nito, at puwede mong i-block sa pagbibigay ng data sa sandbox ang anumang app."</string>
+    <string name="topic10001" msgid="1636806320891333775">"Sining at Entertainment"</string>
+    <string name="topic10002" msgid="1226367977754287428">"Pag-arte at Teatro"</string>
+    <string name="topic10003" msgid="6949890838957814881">"Anime at Manga"</string>
+    <string name="topic10004" msgid="5397903150832181233">"Mga Cartoon"</string>
+    <string name="topic10005" msgid="6316179809581237302">"Komiks"</string>
+    <string name="topic10006" msgid="7442330644172139790">"Mga Concert at Music Festival"</string>
+    <string name="topic10007" msgid="5537896091418145164">"Sayaw"</string>
+    <string name="topic10008" msgid="2737343278307552521">"Industriya ng Entertainment"</string>
+    <string name="topic10009" msgid="3252367380340240453">"Katuwaan at Trivia"</string>
+    <string name="topic10010" msgid="932301479153552725">"Mga Nakakaaliw na Test at Survey"</string>
+    <string name="topic10011" msgid="3123553390567261985">"Katatawanan"</string>
+    <string name="topic10012" msgid="8756486271154511326">"Mga Nakakatawang Larawan at Video"</string>
+    <string name="topic10013" msgid="1242353161202448753">"Live na Komedya"</string>
+    <string name="topic10014" msgid="6086156236112755291">"Mga Live na Kaganapan sa Sports"</string>
+    <string name="topic10015" msgid="9196350141359833832">"Mahika"</string>
+    <string name="topic10016" msgid="202419376638900745">"Mga Listing ng Pelikula at Oras ng Pagpapalabas sa Sinehan"</string>
+    <string name="topic10017" msgid="6737229918787540100">"Mga Pelikula"</string>
+    <string name="topic10018" msgid="6823676154109177487">"Mga Pelikulang Action at Adventure"</string>
+    <string name="topic10019" msgid="6875960630918973127">"Mga Pelikulang Animated"</string>
+    <string name="topic10020" msgid="4323870300602151489">"Mga Pelikulang Komedya"</string>
+    <string name="topic10021" msgid="446758643774468418">"Mga Pelikulang Cult at Indie"</string>
+    <string name="topic10022" msgid="3671929742155787005">"Mga Pelikulang Dokumentaryo"</string>
+    <string name="topic10023" msgid="3547616830531182863">"Mga Pelikulang Drama"</string>
+    <string name="topic10024" msgid="1044853632986202120">"Mga Pelikulang Pampamilya"</string>
+    <string name="topic10025" msgid="5958629223443279316">"Mga Pelikulang Katatakutan"</string>
+    <string name="topic10026" msgid="5685515125614860029">"Mga Pelikulang Romansa"</string>
+    <string name="topic10027" msgid="8846353713171614854">"Thriller"</string>
+    <string name="topic10028" msgid="170404703980174756">"Musika at Audio"</string>
+    <string name="topic10029" msgid="4634600135545614665">"Blues"</string>
+    <string name="topic10030" msgid="7226438392540805771">"Classical Music"</string>
+    <string name="topic10031" msgid="1488013446112025676">"Country Music"</string>
+    <string name="topic10032" msgid="9053666244854789632">"Dance at Electronic Music"</string>
+    <string name="topic10033" msgid="440063573197454181">"Folk at Traditional Music"</string>
+    <string name="topic10034" msgid="8296307244554241197">"Jazz"</string>
+    <string name="topic10035" msgid="9171752741499923310">"Mga Stream at Download ng Musika"</string>
+    <string name="topic10036" msgid="2490236112725457376">"Mga Music Video"</string>
+    <string name="topic10037" msgid="1923690469725883551">"Mga Instrumentong Pangmusika"</string>
+    <string name="topic10038" msgid="2817492732688549631">"Mga Piano at Keyboard"</string>
+    <string name="topic10039" msgid="8970033643570782019">"Pop Music"</string>
+    <string name="topic10040" msgid="7478395512712452137">"Radyo"</string>
+    <string name="topic10041" msgid="3319379117705411886">"Talk Radio"</string>
+    <string name="topic10042" msgid="8830471038440654640">"Rap at Hip-Hop"</string>
+    <string name="topic10043" msgid="8585450284346207691">"Rock Music"</string>
+    <string name="topic10044" msgid="3710011249220779842">"Classic Rock at Mga Lumang Kanta"</string>
+    <string name="topic10045" msgid="7593443421067822441">"Hard Rock at Progressive"</string>
+    <string name="topic10046" msgid="8715621227472631784">"Indie at Alternative Music"</string>
+    <string name="topic10047" msgid="3518038303049899798">"Mga Library ng Sample at Tunog"</string>
+    <string name="topic10048" msgid="3063505369500799094">"Soul at R&amp;B"</string>
+    <string name="topic10049" msgid="8061992014977840818">"Mga Soundtrack"</string>
+    <string name="topic10050" msgid="3540229495848506229">"Musika ng Mundo"</string>
+    <string name="topic10051" msgid="6132468331924347995">"Reggae at Caribbean Music"</string>
+    <string name="topic10052" msgid="8213269199807045473">"Mga Online na Gallery ng Larawan"</string>
+    <string name="topic10053" msgid="1378192203082454197">"Online na Video"</string>
+    <string name="topic10054" msgid="3727401645405134505">"Live na Video Stream"</string>
+    <string name="topic10055" msgid="4943174831732192854">"Stream ng Pelikula at TV"</string>
+    <string name="topic10056" msgid="3066058636154255073">"Opera"</string>
+    <string name="topic10057" msgid="387445514677222034">"Mga Gabay at Sanggunian sa TV"</string>
+    <string name="topic10058" msgid="9149178644022969766">"Mga Network at Istasyon ng TV"</string>
+    <string name="topic10059" msgid="6300562669238320524">"Mga Palabas at Programa sa TV"</string>
+    <string name="topic10060" msgid="3901256055064835246">"Mga Komedya sa TV"</string>
+    <string name="topic10061" msgid="8343924749123326062">"Dokumentaryo at Nonfiction sa TV"</string>
+    <string name="topic10062" msgid="9183355218976951211">"Mga Drama sa TV"</string>
+    <string name="topic10063" msgid="644340831620792432">"Mga Soap Opera sa TV"</string>
+    <string name="topic10064" msgid="5961885645457010998">"Mga Pampamilyang Palabas sa TV"</string>
+    <string name="topic10065" msgid="7916343612028608044">"Mga Reality Show sa TV"</string>
+    <string name="topic10066" msgid="5984396525358003559">"Mga Palabas na Sci-Fi at Fantasy sa TV"</string>
+    <string name="topic10067" msgid="6404637729885733437">"Visual Art at Pagdidisenyo"</string>
+    <string name="topic10068" msgid="4589856961950168493">"Pagdidisensyo"</string>
+    <string name="topic10069" msgid="3129378082034151991">"Pagpipinta"</string>
+    <string name="topic10070" msgid="2570256568661324147">"Photography at Digital Arts"</string>
+    <string name="topic10071" msgid="1288722040962471254">"Mga Auto at Sasakyan"</string>
+    <string name="topic10072" msgid="9155509766616567261">"Mga Cargo Truck at Trailer"</string>
+    <string name="topic10073" msgid="3748676231341513738">"Mga Classic na Sasakyan"</string>
+    <string name="topic10074" msgid="2040911547161463227">"Mga Custom at Performance Vehicle"</string>
+    <string name="topic10075" msgid="1242538698445713796">"Mga Presyo ng Gasolina at Fuel ng Sasakyan"</string>
+    <string name="topic10076" msgid="8674225812339579627">"Mga De-motor na Sasakyan (Ayon sa Uri)"</string>
+    <string name="topic10077" msgid="3577709810751953433">"Mga Autonomous na Sasakyan"</string>
+    <string name="topic10078" msgid="5493263845129910125">"Mga Convertible"</string>
+    <string name="topic10079" msgid="3466838852836498580">"Mga Coupe"</string>
+    <string name="topic10080" msgid="3515647285637163190">"Mga Hatchback"</string>
+    <string name="topic10081" msgid="4135085035401158860">"Mga Hybrid at Alternative na Sasakyan"</string>
+    <string name="topic10082" msgid="7168659489029594320">"Mga Luxury Car"</string>
+    <string name="topic10083" msgid="1532745144715857802">"Mga Microcar at Subcompact"</string>
+    <string name="topic10084" msgid="1984231414410381476">"Mga Motorsiklo"</string>
+    <string name="topic10085" msgid="5235555028227554661">"Mga Sasakyang Pang-off Road"</string>
+    <string name="topic10086" msgid="8360336602646460411">"Mga Pickup Truck"</string>
+    <string name="topic10087" msgid="6566900167002195406">"Mga Scooter at Moped"</string>
+    <string name="topic10088" msgid="2899313082601001223">"Mga Sedan"</string>
+    <string name="topic10089" msgid="1053630346809973163">"Mga Station Wagon"</string>
+    <string name="topic10090" msgid="4478565601243447368">"Mga SUV at Crossover"</string>
+    <string name="topic10091" msgid="3812668311830832874">"Mga Crossover"</string>
+    <string name="topic10092" msgid="524130833813249539">"Mga Van at Minivan"</string>
+    <string name="topic10093" msgid="8900143351472824542">"Pag-tow at Tulong sa Tabi ng Kalsada"</string>
+    <string name="topic10094" msgid="6205146188176216038">"Kaligtasan ng Sasakyan at Trapiko"</string>
+    <string name="topic10095" msgid="7983070264654477553">"Mga Piyesa at Accessory ng Sasakyan"</string>
+    <string name="topic10096" msgid="8148747014459050804">"Pagkukumpuni at Pagmementina ng Sasakyan"</string>
+    <string name="topic10097" msgid="4716536434833425748">"Pamimili ng Sasakyan"</string>
+    <string name="topic10098" msgid="6401980112135995019">"Mga Gamit Nang Sasakyan"</string>
+    <string name="topic10099" msgid="8018714209926584445">"Mga Palabas Tungkol sa Sasakyan"</string>
+    <string name="topic10100" msgid="2481422464734249871">"Pagpapaganda at Fitness"</string>
+    <string name="topic10101" msgid="7889144198021629053">"Sining sa Katawan"</string>
+    <string name="topic10102" msgid="577637051755692238">"Pangangalaga sa Mukha at Katawan"</string>
+    <string name="topic10103" msgid="6618157344631408510">"Mga Antiperspirant"</string>
+    <string name="topic10104" msgid="6043649669944382784">"Mga Produkto para sa Paliligo at Katawan"</string>
+    <string name="topic10105" msgid="3248569527339253661">"Mga Natural na Pampaganda"</string>
+    <string name="topic10106" msgid="1291481249483309832">"Make-Up at Kosmetiko"</string>
+    <string name="topic10107" msgid="1335060201249279923">"Mga Produkto para sa Pangangalaga ng Kuko"</string>
+    <string name="topic10108" msgid="4996884435711154930">"Mga Pabango at Fragrance"</string>
+    <string name="topic10109" msgid="7298403319989686251">"Mga Razor at Pang-ahit"</string>
+    <string name="topic10110" msgid="5954355866247248022">"Fashion at Istilo"</string>
+    <string name="topic10111" msgid="4447710938881368413">"Fitness"</string>
+    <string name="topic10112" msgid="8816530137921714131">"Bodybuilding"</string>
+    <string name="topic10113" msgid="8138889299405853557">"Pagtuturo ng Fitness at Personal na Pagsasanay"</string>
+    <string name="topic10114" msgid="2172821400279346865">"Mga Produkto ng Teknolohiya sa Fitness"</string>
+    <string name="topic10115" msgid="9060244278068231494">"Pangangalaga sa Buhok"</string>
+    <string name="topic10116" msgid="116242880964485085">"Mga Aklat at Panitikan"</string>
+    <string name="topic10117" msgid="8933734721100160863">"Panitikang Pambata"</string>
+    <string name="topic10118" msgid="4368531903547695191">"Mga E-Book"</string>
+    <string name="topic10119" msgid="2781095265741115471">"Mga Magazine"</string>
+    <string name="topic10120" msgid="3099507102655270527">"Mga Tula"</string>
+    <string name="topic10121" msgid="4466592180799340837">"Negosyo at Industriya"</string>
+    <string name="topic10122" msgid="2375136741125920744">"Pag-advertise at Marketing"</string>
+    <string name="topic10123" msgid="6974082907852347979">"Pagbebenta"</string>
+    <string name="topic10124" msgid="44474598156972786">"Agrikultura ar Forestry"</string>
+    <string name="topic10125" msgid="9170394261421539760">"Paggawa ng Pagkain"</string>
+    <string name="topic10126" msgid="2210146434071038904">"Industriya ng Automotive"</string>
+    <string name="topic10127" msgid="5503077037318678029">"Industriya ng Aviation"</string>
+    <string name="topic10128" msgid="285525650692719959">"Business Operations"</string>
+    <string name="topic10129" msgid="3094691551566702427">"Mga Flexible na Work Arrangement"</string>
+    <string name="topic10130" msgid="1922351409757117764">"Human Resources"</string>
+    <string name="topic10131" msgid="8598763405951029782">"Pangkomersyong Pautang"</string>
+    <string name="topic10132" msgid="1476352626208153907">"Konstruksyon at Pagmementina"</string>
+    <string name="topic10133" msgid="7089177624979453528">"Civil Engineering"</string>
+    <string name="topic10134" msgid="3833032373311037601">"Industriya ng Tanggulan"</string>
+    <string name="topic10135" msgid="2478808072377000440">"Enerhiya at Mga Utility"</string>
+    <string name="topic10136" msgid="9083992436834044162">"Supply at Pagpoproseso ng Tubig"</string>
+    <string name="topic10137" msgid="1912599316814246824">"Industriya ng Hospitality"</string>
+    <string name="topic10138" msgid="7428346836350671895">"Pagmamanupaktura"</string>
+    <string name="topic10139" msgid="1396685812404869953">"Mga Metal at Pagmimina"</string>
+    <string name="topic10140" msgid="5264212052238781441">"MLM at Mga Oportunidad sa Negosyo"</string>
+    <string name="topic10141" msgid="860058416683118730">"Mga Parmasyutiko at Biotech"</string>
+    <string name="topic10142" msgid="2912550934111655896">"Pagpi-print at Paglalathala"</string>
+    <string name="topic10143" msgid="5690610408227078117">"Pangangalakal na Retail"</string>
+    <string name="topic10144" msgid="3341052306953106368">"Venture Capital"</string>
+    <string name="topic10145" msgid="6886608911083388041">"Mga Computer at Electronics"</string>
+    <string name="topic10146" msgid="8202145175139144216">"Mga Computer Peripheral"</string>
+    <string name="topic10147" msgid="4687964705548995437">"Mga Printer"</string>
+    <string name="topic10148" msgid="8861628145647459323">"Seguridad sa Computer"</string>
+    <string name="topic10149" msgid="1719988773455991739">"Antivirus at Malware"</string>
+    <string name="topic10150" msgid="1482205464872465298">"Seguridad ng Network"</string>
+    <string name="topic10151" msgid="1772262905623388968">"Consumer Electronics"</string>
+    <string name="topic10152" msgid="651152740021127086">"Mga Camera at Camcorder"</string>
+    <string name="topic10153" msgid="8741504768717646372">"Pag-navigate Gamit ang GPS"</string>
+    <string name="topic10154" msgid="5382029798409496090">"Home Automation"</string>
+    <string name="topic10155" msgid="5243817792730496258">"Mga Home Theater System"</string>
+    <string name="topic10156" msgid="2497791567138856030">"MP3 at Mga Portable na Media Player"</string>
+    <string name="topic10157" msgid="4723439422860510190">"Nasusuot na Teknolohiya"</string>
+    <string name="topic10158" msgid="5345830001295028513">"Pag-back Up at Pag-recover ng Data"</string>
+    <string name="topic10159" msgid="6146958285117174314">"Mga Desktop Computer"</string>
+    <string name="topic10160" msgid="6624820395549466426">"Mga Laptop at Notebook"</string>
+    <string name="topic10161" msgid="912458758908978530">"Networking"</string>
+    <string name="topic10162" msgid="6717352131379507693">"Distributed at Cloud Computing"</string>
+    <string name="topic10163" msgid="6344926622025055321">"Programming"</string>
+    <string name="topic10164" msgid="4228888249078845459">"Software"</string>
+    <string name="topic10165" msgid="5507908999219967161">"Software para sa Audio at Musika"</string>
+    <string name="topic10166" msgid="4768106492755849560">"Software para sa Negosyo at Pagiging Produktibo"</string>
+    <string name="topic10167" msgid="8556935769754922871">"Software para sa Kalendaryo at Pag-iiskedyul"</string>
+    <string name="topic10168" msgid="7730134961167790334">"Software para sa Pakikipag-collaborate at Pakikipagkumperensya"</string>
+    <string name="topic10169" msgid="5655084106378890454">"Software para sa Presentation"</string>
+    <string name="topic10170" msgid="4638281897205909919">"Software ng Spreadsheet"</string>
+    <string name="topic10171" msgid="7910183120486541228">"Software para sa Word Processing"</string>
+    <string name="topic10172" msgid="3626573644414074730">"Desktop Publishing"</string>
+    <string name="topic10173" msgid="7320053835183057144">"Mga Font"</string>
+    <string name="topic10174" msgid="5770469447869586710">"Mga Download Manager"</string>
+    <string name="topic10175" msgid="3475235810022334041">"Freeware at Shareware"</string>
+    <string name="topic10176" msgid="6881704501596479881">"Software para sa Graphics at Animation"</string>
+    <string name="topic10177" msgid="6740430730079682579">"Mga Matalinong Personal Assistant"</string>
+    <string name="topic10178" msgid="7261811053741593091">"Mga Media Player"</string>
+    <string name="topic10179" msgid="2967001567120854492">"Software para sa Pagsubaybay"</string>
+    <string name="topic10180" msgid="4197420326455130102">"Mga Operating System"</string>
+    <string name="topic10181" msgid="3537573129132698830">"Software para sa Larawan at Video"</string>
+    <string name="topic10182" msgid="7688631285131229981">"Software para sa Larawan"</string>
+    <string name="topic10183" msgid="5994974566140272512">"Software para sa Video"</string>
+    <string name="topic10184" msgid="8685817335076871509">"Mga Software Utility"</string>
+    <string name="topic10185" msgid="308314128178285390">"Mga Web Browser"</string>
+    <string name="topic10186" msgid="3147859503481018245">"Pananalapi"</string>
+    <string name="topic10187" msgid="7077128721410871032">"Accounting at Pag-audit"</string>
+    <string name="topic10188" msgid="2206138708659457910">"Paghahanda at Pagpaplano ng Buwis"</string>
+    <string name="topic10189" msgid="4001795553008246784">"Pagbabangko"</string>
+    <string name="topic10190" msgid="2988430661381243083">"Pag-transfer ng Pera at Mga Wire Service"</string>
+    <string name="topic10191" msgid="6196081825838237614">"Credit at Pagpapautang"</string>
+    <string name="topic10192" msgid="3290123244833047307">"Mga Credit Card"</string>
+    <string name="topic10193" msgid="294407043381146861">"Pagpopondo para sa Bahay"</string>
+    <string name="topic10194" msgid="2834543407440890272">"Mga Personal na Loan"</string>
+    <string name="topic10195" msgid="7650553060132394782">"Mga Loan para sa Mag-aaral at Pagpopondo para sa Kolehiyo"</string>
+    <string name="topic10196" msgid="5395035781876507254">"Pagpaplano at Pamamahala ng Pananalapi"</string>
+    <string name="topic10197" msgid="1287138667488226463">"Pagreretiro at Pensyon"</string>
+    <string name="topic10198" msgid="2523256186943366779">"Mga Grant"</string>
+    <string name="topic10199" msgid="3746711537661530183">"Mga Grant"</string>
+    <string name="topic10200" msgid="2394864891391267841">"Insurance"</string>
+    <string name="topic10201" msgid="4301879117376963742">"Insurance sa Sasakyan"</string>
+    <string name="topic10202" msgid="739808503036239379">"Insurance sa Kalusugan"</string>
+    <string name="topic10203" msgid="838786942776142290">"Insurance sa Tahanan"</string>
+    <string name="topic10204" msgid="6591131759521321677">"Life Insurance"</string>
+    <string name="topic10205" msgid="3294946723815021478">"Insurance sa Paglalakbay"</string>
+    <string name="topic10206" msgid="6166888350685752683">"Pamumuhunan"</string>
+    <string name="topic10207" msgid="2296385804039743999">"Pagpapalitan ng Mga Commodity at Future"</string>
+    <string name="topic10208" msgid="2717498987483479091">"Mga Currency at Foreign Exchange"</string>
+    <string name="topic10209" msgid="5204948738662951962">"Mga Hedge Fund"</string>
+    <string name="topic10210" msgid="4607225697024266227">"Mga Mutual Fund"</string>
+    <string name="topic10211" msgid="7475381839877166080">"Mga Stock at Bond"</string>
+    <string name="topic10212" msgid="3988751035952286047">"Pagkain at Inumin"</string>
+    <string name="topic10213" msgid="1358963098339995471">"Pagluluto at Mga Recipe"</string>
+    <string name="topic10214" msgid="8463864389138867811">"BBQ at Pag-iihaw"</string>
+    <string name="topic10215" msgid="3085467051491069648">"Mga Cuisine"</string>
+    <string name="topic10216" msgid="6043130649326166680">"Lutong Pang-vegetarian"</string>
+    <string name="topic10217" msgid="7173870057669247536">"Vegan Cuisine"</string>
+    <string name="topic10218" msgid="5570240643247064951">"Masustansyang Pagkain"</string>
+    <string name="topic10219" msgid="5896715206025463732">"Mga Retailer ng Pagkain at Grocery"</string>
+    <string name="topic10220" msgid="3894580611467039658">"Mga Laro"</string>
+    <string name="topic10221" msgid="14471057764591805">"Mga Arcade at Coin-Op Game"</string>
+    <string name="topic10222" msgid="2704894577954508861">"Bilyar"</string>
+    <string name="topic10223" msgid="202900267060220170">"Mga Board Game"</string>
+    <string name="topic10224" msgid="6572627325588452785">"Chess at Mga Abstract Strategy Game"</string>
+    <string name="topic10225" msgid="8056906319560292131">"Mga Card Game"</string>
+    <string name="topic10226" msgid="714463563336281099">"Mga Collectible Card Game"</string>
+    <string name="topic10227" msgid="218768654597520683">"Mga Computer at Video Game"</string>
+    <string name="topic10228" msgid="850597136074192489">"Mga Action at Platforming Game"</string>
+    <string name="topic10229" msgid="4284501233897149886">"Mga Adventure Game"</string>
+    <string name="topic10230" msgid="7156822286576815181">"Mga Casual na Laro"</string>
+    <string name="topic10231" msgid="7620407218897744361">"Kumpetisyon sa Video Gaming"</string>
+    <string name="topic10232" msgid="3029734447275709941">"Mga Driving at Racing Game"</string>
+    <string name="topic10233" msgid="8318075279868138231">"Mga Fighting Game"</string>
+    <string name="topic10234" msgid="3899847414436099153">"Mga Sanggunian at Review sa Gaming"</string>
+    <string name="topic10235" msgid="5851356242523630529">"Mga Cheat at Hint sa Video Game"</string>
+    <string name="topic10236" msgid="1986665634014804954">"Mga Massively Multiplayer Game"</string>
+    <string name="topic10237" msgid="5569920221620447713">"Mga Larong May Musika at Pagsayaw"</string>
+    <string name="topic10238" msgid="7431087331656772530">"Mga Sandbox Game"</string>
+    <string name="topic10239" msgid="8667462879554115515">"Mga Larong Barilan"</string>
+    <string name="topic10240" msgid="1618985302446756520">"Mga Simulation Game"</string>
+    <string name="topic10241" msgid="8450778411063723262">"Mga Business at Tycoon Game"</string>
+    <string name="topic10242" msgid="8860812940320018907">"Mga City Building Game"</string>
+    <string name="topic10243" msgid="1764694148721971512">"Mga Life Simulation Game"</string>
+    <string name="topic10244" msgid="4308588210397969087">"Mga Simulator ng Sasakyan"</string>
+    <string name="topic10245" msgid="6904368410919496658">"Mga Larong Sports"</string>
+    <string name="topic10246" msgid="3381244806751528148">"Mga Sports Management Game"</string>
+    <string name="topic10247" msgid="5927502688389762068">"Mga Strategy Game"</string>
+    <string name="topic10248" msgid="8471339627212674032">"Mga Mod at Add-On sa Video Game"</string>
+    <string name="topic10249" msgid="5076706536204559962">"Mga Larong Pang-edukasyon"</string>
+    <string name="topic10250" msgid="6083030595195401083">"Mga Pampamilyang Laro at Aktibidad"</string>
+    <string name="topic10251" msgid="99237306730665104">"Pagguhit at Pagkukulay"</string>
+    <string name="topic10252" msgid="6543039575961394064">"Mga Dress-Up at Fashion Game"</string>
+    <string name="topic10253" msgid="566596668186874227">"Mga Puzzles at Brainteaser"</string>
+    <string name="topic10254" msgid="5732147617072023634">"Mga Roleplaying Game"</string>
+    <string name="topic10255" msgid="2890655077164103057">"Table Tennis"</string>
+    <string name="topic10256" msgid="3302096971402751679">"Mga Tile Game"</string>
+    <string name="topic10257" msgid="4238531589193902619">"Mga Word Game"</string>
+    <string name="topic10258" msgid="6995329540076529056">"Mga Libangan at Pampalipas-oras"</string>
+    <string name="topic10259" msgid="8649688885811560410">"Mga Anibersaryo"</string>
+    <string name="topic10260" msgid="487999213495640080">"Mga Kaarawan at Name Day"</string>
+    <string name="topic10261" msgid="8970668366745952094">"Paninisid at Mga Aktibidad sa Ilalim ng Tubig"</string>
+    <string name="topic10262" msgid="6644046161469353448">"Sining ng Fiber at Textile"</string>
+    <string name="topic10263" msgid="848165976917542929">"Outdoors"</string>
+    <string name="topic10264" msgid="6274985117752637104">"Pangingisda"</string>
+    <string name="topic10265" msgid="4134876488948695674">"Pangangaso at Pamamaril"</string>
+    <string name="topic10266" msgid="6617785039128074351">"Paintball"</string>
+    <string name="topic10267" msgid="488093331618885003">"Pagkontrol at Pagmomodelo ng Radyo"</string>
+    <string name="topic10268" msgid="277932389492046264">"Mga Kasalan"</string>
+    <string name="topic10269" msgid="8572041514147955202">"Tahanan at Hardin"</string>
+    <string name="topic10270" msgid="2646715182474030951">"Paghahalaman"</string>
+    <string name="topic10271" msgid="1308931236810509881">"Dekorasyon sa Bahay"</string>
+    <string name="topic10272" msgid="8746698707390628887">"Mga Kasangkapang Pantahanan"</string>
+    <string name="topic10273" msgid="344442071339164852">"Pagpapaganda ng Bahay"</string>
+    <string name="topic10274" msgid="8982330028561451429">"Kaligtasan at Seguridad sa Bahay"</string>
+    <string name="topic10275" msgid="8280198018937968735">"Mga Supply sa Sambahayan"</string>
+    <string name="topic10276" msgid="1651598271798609235">"Pagdidisenyo ng Landscape"</string>
+    <string name="topic10277" msgid="7675195736886448994">"Internet at Telecom"</string>
+    <string name="topic10278" msgid="873251714192341707">"Email at Pagmemensahe"</string>
+    <string name="topic10279" msgid="6514296374139842600">"Email"</string>
+    <string name="topic10280" msgid="7976787187115018267">"Text at Instant Messaging"</string>
+    <string name="topic10281" msgid="4013341162811169339">"Voice at Video Chat"</string>
+    <string name="topic10282" msgid="7810462611906257564">"Mga ISP"</string>
+    <string name="topic10283" msgid="3958287780718485172">"Mga Service Provider sa Telepono"</string>
+    <string name="topic10284" msgid="2415044270290467935">"Mga Ringtone at Tema para sa Mobile"</string>
+    <string name="topic10285" msgid="7056449544316408821">"Mga Search Engine"</string>
+    <string name="topic10286" msgid="3458688996478472971">"Mga Smart Phone"</string>
+    <string name="topic10287" msgid="6766203044518402938">"Teleconferencing"</string>
+    <string name="topic10288" msgid="3883137694557636622">"Mga Web App at Online na Tool"</string>
+    <string name="topic10289" msgid="3392995633794787676">"Mga Serbisyo sa Web"</string>
+    <string name="topic10290" msgid="3118880486702986341">"Cloud Storage"</string>
+    <string name="topic10291" msgid="6025855926350955094">"Pagdidisenyo at Paggawa ng Website"</string>
+    <string name="topic10292" msgid="3069720659823056935">"Web Hosting"</string>
+    <string name="topic10293" msgid="2489957780009828409">"Mga Trabaho at Edukasyon"</string>
+    <string name="topic10294" msgid="474839431177892843">"Edukasyon"</string>
+    <string name="topic10295" msgid="2215489196192620880">"Mga Akademikong Kumperensya at Publication"</string>
+    <string name="topic10296" msgid="4494362881225210483">"Mga Kolehiyo at Unibersidad"</string>
+    <string name="topic10297" msgid="8596946591674128749">"Distance Learning"</string>
+    <string name="topic10298" msgid="6669181180128620422">"Edukasyon sa Maagang Pagkabata"</string>
+    <string name="topic10299" msgid="989138215800115613">"Preschool"</string>
+    <string name="topic10300" msgid="8281464235308602670">"Homeschooling"</string>
+    <string name="topic10301" msgid="9156890858635333460">"Mga Standardized at Admissions Test"</string>
+    <string name="topic10302" msgid="1325835179421990876">"Mga Resource para sa Pagtuturo at Silid-aralan"</string>
+    <string name="topic10303" msgid="3103839978894155537">"Vocational at Karagdagang Edukasyon"</string>
+    <string name="topic10304" msgid="8831682558788062486">"Mga Trabaho"</string>
+    <string name="topic10305" msgid="8415203095484493106">"Mga Resource at Pagpaplano para sa Career"</string>
+    <string name="topic10306" msgid="7426556527349374835">"Mga Listing ng Trabaho"</string>
+    <string name="topic10307" msgid="1187762846826735256">"Batas at Pamahalaan"</string>
+    <string name="topic10308" msgid="3346756665358311386">"Krimen at Hustisya"</string>
+    <string name="topic10309" msgid="2041175328931014735">"Legal"</string>
+    <string name="topic10310" msgid="7079570344976872062">"Mga Legal na Serbisyo"</string>
+    <string name="topic10311" msgid="2095095138677585525">"Balita"</string>
+    <string name="topic10312" msgid="939721674816307639">"Balitang Pang-ekonomiya"</string>
+    <string name="topic10313" msgid="4159611985538361632">"Lokal na Balita"</string>
+    <string name="topic10314" msgid="93219947859117151">"Mga Merger at Acquisition"</string>
+    <string name="topic10315" msgid="5046321177148647481">"Mga Pahayagan"</string>
+    <string name="topic10316" msgid="8592980844674525307">"Pulitika"</string>
+    <string name="topic10317" msgid="2412259096368647866">"Balita sa Sports"</string>
+    <string name="topic10318" msgid="1508449672941031904">"Lagay ng Panahon"</string>
+    <string name="topic10319" msgid="3973645291178509390">"Balita sa Buong Mundo"</string>
+    <string name="topic10320" msgid="5279440074507438174">"Mga Online na Komunidad"</string>
+    <string name="topic10321" msgid="7018890132742820265">"Clip Art at Mga Animated na GIF"</string>
+    <string name="topic10322" msgid="1585737438943011532">"Pakikipag-date ang Mga Personal na Usapin"</string>
+    <string name="topic10323" msgid="962863497957179646">"Pagsasama-sama ng Feed at Social Bookmarking"</string>
+    <string name="topic10324" msgid="1425257460381023853">"Pagbabahagi at Pag-host ng File"</string>
+    <string name="topic10325" msgid="8698912164970408378">"Mga Provider ng Forum at Chat"</string>
+    <string name="topic10326" msgid="2425798096705921796">"Microblogging"</string>
+    <string name="topic10327" msgid="8518822987595111212">"Pagbabahgi ng Larawan at Video"</string>
+    <string name="topic10328" msgid="8932708475346340912">"Pagbabahagi ng Litrato at Larawan"</string>
+    <string name="topic10329" msgid="223933889758324282">"Pagbabahagi ng Video"</string>
+    <string name="topic10330" msgid="188028553492626282">"Mga Skin"</string>
+    <string name="topic10331" msgid="426844238985651925">"Mga App at Add-On sa Social Network"</string>
+    <string name="topic10332" msgid="291747325781232456">"Mga Social Network"</string>
+    <string name="topic10333" msgid="7950152600374846488">"Mga Tao at Lipunan"</string>
+    <string name="topic10334" msgid="8671262583721706509">"Pamilya at Mga Relasyon"</string>
+    <string name="topic10335" msgid="1526523762163185819">"Mga Ninuno at Angkan"</string>
+    <string name="topic10336" msgid="4551233571090493177">"Pag-aasawa"</string>
+    <string name="topic10337" msgid="8436172065188964882">"Pagiging Magulang"</string>
+    <string name="topic10338" msgid="8896269734682970">"Pag-adopt"</string>
+    <string name="topic10339" msgid="781900237993621300">"Mga Sanggol at Bata"</string>
+    <string name="topic10340" msgid="6538182603360796294">"Kaligtasan ng Bata sa Internet"</string>
+    <string name="topic10341" msgid="3586543243312398568">"Romansa"</string>
+    <string name="topic10342" msgid="3695176378281477573">"Science Fiction at Fantasy"</string>
+    <string name="topic10343" msgid="2318169062960263837">"Mga Alaga at Mga Hayop"</string>
+    <string name="topic10344" msgid="2005534117977874327">"Pagkain ng Alagang Hayop at Mga Supply sa Pag-aalaga ng Hayop"</string>
+    <string name="topic10345" msgid="2397329020706244200">"Mga Alagang Hayop"</string>
+    <string name="topic10346" msgid="1323702748723563694">"Mga Ibon"</string>
+    <string name="topic10347" msgid="3301879823396773413">"Mga Pusa"</string>
+    <string name="topic10348" msgid="8066686305498410222">"Mga Aso"</string>
+    <string name="topic10349" msgid="5253723822905761195">"Mga Isda at Yamang Tubig"</string>
+    <string name="topic10350" msgid="6164036369108076590">"Mga Reptiles at Amphibian"</string>
+    <string name="topic10351" msgid="1132984519083501363">"Mga Beterinaryo"</string>
+    <string name="topic10352" msgid="6310110390516037997">"Real Estate"</string>
+    <string name="topic10353" msgid="5114390804081576684">"Mga Lote at Lupain"</string>
+    <string name="topic10354" msgid="7980778954791504082">"Mga Timeshare at Bakasyunan"</string>
+    <string name="topic10355" msgid="7720717354548642600">"Sanggunian"</string>
+    <string name="topic10356" msgid="8366981308613661935">"Mga Listing ng Negosyo at Personal na Listing"</string>
+    <string name="topic10357" msgid="3185598234676097975">"Pangkalahatang Sanggunian"</string>
+    <string name="topic10358" msgid="6732669037513504019">"Mga Calculator at Sangguniang Kagamitan"</string>
+    <string name="topic10359" msgid="8901932349008990500">"Mga Diksyunaryo at Encyclopedia"</string>
+    <string name="topic10360" msgid="6113408769992775754">"Mga Pang-edukasyong Resource"</string>
+    <string name="topic10361" msgid="364838820459183817">"Paano Gawin"</string>
+    <string name="topic10362" msgid="3760998790588600032">"Oras at Mga Kalendaryo"</string>
+    <string name="topic10363" msgid="5464708619861040861">"Mga Resource sa Wika"</string>
+    <string name="topic10364" msgid="4685400848805560054">"Pag-aaral ng Wikang Banyaga"</string>
+    <string name="topic10365" msgid="5196231842716190887">"Mga Tool at Resource sa Pagsasalin-wika"</string>
+    <string name="topic10366" msgid="7460927054539097025">"Mga Mapa"</string>
+    <string name="topic10367" msgid="3900361839783743700">"Agham"</string>
+    <string name="topic10368" msgid="2069447039109930660">"Augmented at Virtual Reality"</string>
+    <string name="topic10369" msgid="5747888306428024793">"Biological na Agham"</string>
+    <string name="topic10370" msgid="4860829940151353583">"Genetics"</string>
+    <string name="topic10371" msgid="8229818210867472466">"Chemistry"</string>
+    <string name="topic10372" msgid="6400467418954574231">"Ecology at Kapaligiran"</string>
+    <string name="topic10373" msgid="6990757247198163741">"Geology"</string>
+    <string name="topic10374" msgid="8057983193031950119">"Machine Learning at Artificial Intelligence"</string>
+    <string name="topic10375" msgid="8511185098682306025">"Matematika"</string>
+    <string name="topic10376" msgid="6387800251638760737">"Physics"</string>
+    <string name="topic10377" msgid="7834619927563362042">"Robotics"</string>
+    <string name="topic10378" msgid="242496862821758873">"Pamimili"</string>
+    <string name="topic10379" msgid="5505228335012447165">"Mga Antigo at Kinokolektang Kagamitan"</string>
+    <string name="topic10380" msgid="4989560205486143927">"Kasuotan"</string>
+    <string name="topic10381" msgid="7585496746485093505">"Damit na Pambata"</string>
+    <string name="topic10382" msgid="5088060295126473451">"Mga Costume"</string>
+    <string name="topic10383" msgid="4947104586590538143">"Damit na Panlalaki"</string>
+    <string name="topic10384" msgid="3752472493887374077">"Damit na Pambabae"</string>
+    <string name="topic10385" msgid="5275843140794803595">"Mga Classified"</string>
+    <string name="topic10386" msgid="5887032952574801982">"Mga Resource ng Consumer"</string>
+    <string name="topic10387" msgid="8474154360410317897">"Mga Kupon at Alok na Diskwento"</string>
+    <string name="topic10388" msgid="3650307363028796765">"Mga Loyalty Card at Program"</string>
+    <string name="topic10389" msgid="1542336508240183221">"Technical Support at Pagkukumpuni"</string>
+    <string name="topic10390" msgid="831225961168954292">"Mga Bulaklak"</string>
+    <string name="topic10391" msgid="6810540242154911762">"Mga Greeting Card"</string>
+    <string name="topic10392" msgid="2431377771302967625">"Mga Supply sa Pagdiriwang at Holiday"</string>
+    <string name="topic10393" msgid="2671274205988136926">"Mga Shopping Portal"</string>
+    <string name="topic10394" msgid="1530096364743244151">"Sports"</string>
+    <string name="topic10395" msgid="316192616624062917">"American Football"</string>
+    <string name="topic10396" msgid="8042120651878490689">"Australian Football"</string>
+    <string name="topic10397" msgid="492901976344700942">"Auto Racing"</string>
+    <string name="topic10398" msgid="3471795015226090296">"Baseball"</string>
+    <string name="topic10399" msgid="2126280752064021308">"Basketball"</string>
+    <string name="topic10400" msgid="5440499529264277027">"Bowling"</string>
+    <string name="topic10401" msgid="166689951236922024">"Boxing"</string>
+    <string name="topic10402" msgid="2451339788231007479">"Cheerleading"</string>
+    <string name="topic10403" msgid="6455478521804717635">"Mga College Sport"</string>
+    <string name="topic10404" msgid="5261583496913118024">"Cricket"</string>
+    <string name="topic10405" msgid="482477447879117820">"Pagbibisikleta"</string>
+    <string name="topic10406" msgid="8167644332387528703">"Equestrian"</string>
+    <string name="topic10407" msgid="3237734582719584272">"Mga Extreme Sport"</string>
+    <string name="topic10408" msgid="3859749534843254349">"Climbing at Mountaineering"</string>
+    <string name="topic10409" msgid="7485614115639267976">"Mga Fantasy Sport"</string>
+    <string name="topic10410" msgid="5996939009229881074">"Golf"</string>
+    <string name="topic10411" msgid="2513997418184786648">"Gymnastics"</string>
+    <string name="topic10412" msgid="5411755341358248299">"Hockey"</string>
+    <string name="topic10413" msgid="3319233613448963890">"Ice Skating"</string>
+    <string name="topic10414" msgid="1797840816328584660">"Martial Arts"</string>
+    <string name="topic10415" msgid="2886043330316735719">"Karera ng Motorsiklo"</string>
+    <string name="topic10416" msgid="3436682172863605224">"Olympics"</string>
+    <string name="topic10417" msgid="8296644015663416236">"Rugby"</string>
+    <string name="topic10418" msgid="8276736633218488127">"Pagtakbo at Paglalakad"</string>
+    <string name="topic10419" msgid="5663062924928275215">"Skiing at Snowboarding"</string>
+    <string name="topic10420" msgid="2509320683543423424">"Soccer"</string>
+    <string name="topic10421" msgid="6512889128030030686">"Surfing"</string>
+    <string name="topic10422" msgid="8342986282852879750">"Paglangoy"</string>
+    <string name="topic10423" msgid="6333426807705188459">"Tennis"</string>
+    <string name="topic10424" msgid="5495511215629567375">"Track and Field"</string>
+    <string name="topic10425" msgid="4009138228283995179">"Volleyball"</string>
+    <string name="topic10426" msgid="7998590461761852196">"Wrestling"</string>
+    <string name="topic10427" msgid="6711468161729797769">"Pagbiyahe at Transportasyon"</string>
+    <string name="topic10428" msgid="661919563628063196">"Pakikipagsapalarang Paglalakbay"</string>
+    <string name="topic10429" msgid="408270392813634227">"Paglalakbay sa Himpapawid"</string>
+    <string name="topic10430" msgid="3046485339481297656">"Pangnegosyong Pagbiyahe"</string>
+    <string name="topic10431" msgid="7439352609169583150">"Mga Rental ng Kotse"</string>
+    <string name="topic10432" msgid="5034961318884376752">"Mga Cruise at Charter"</string>
+    <string name="topic10433" msgid="6354590445323135986">"Paglalakbay na Pampamilya"</string>
+    <string name="topic10434" msgid="7081309045291255264">"Mga Honeymoon at Romantikong Bakasyon"</string>
+    <string name="topic10435" msgid="1064605516265819020">"Mga Hotel at Akomodasyon"</string>
+    <string name="topic10436" msgid="9050375924140897722">"Pangmalayuang Bus at Tren"</string>
+    <string name="topic10437" msgid="2655664900730187701">"Mura at Last-Minute na Paglalakbay"</string>
+    <string name="topic10438" msgid="7944023251845122923">"Bagahe at Mga Accessory sa Paglalakbay"</string>
+    <string name="topic10439" msgid="7845433008088931971">"Pasyalan ng Mga Turista"</string>
+    <string name="topic10440" msgid="485118071443976808">"Mga Beach at Isla"</string>
+    <string name="topic10441" msgid="518643446480879895">"Mga Panrehiyong Parke at Hardin"</string>
+    <string name="topic10442" msgid="6534536077484540292">"Mga Theme Park"</string>
+    <string name="topic10443" msgid="8787722062991478596">"Mga Zoo"</string>
+    <string name="topic10444" msgid="2075863187654728611">"Mga Planner ng Trapiko at Ruta"</string>
+    <string name="topic10445" msgid="3460421948068980869">"Mga Ahensya at Serbisyo sa Paglalakbay"</string>
+    <string name="topic10446" msgid="5333138740720504195">"Mga Gabay sa Paglalakbay at Travelogue"</string>
 </resources>

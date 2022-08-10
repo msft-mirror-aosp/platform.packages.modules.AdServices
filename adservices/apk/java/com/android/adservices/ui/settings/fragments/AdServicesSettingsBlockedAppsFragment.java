@@ -65,7 +65,6 @@ public class AdServicesSettingsBlockedAppsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         AppsListViewAdapter adapter = new AppsListViewAdapter(viewModel, true);
         recyclerView.setAdapter(adapter);
-        recyclerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         View noBlockedAppsMessage = rootView.findViewById(R.id.no_blocked_apps_message);
 

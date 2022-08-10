@@ -69,6 +69,10 @@ public final class PhFlags implements Flags {
             "measurement_network_read_timeout_ms";
     static final String KEY_MEASUREMENT_APP_NAME = "measurement_app_name";
     static final String KEY_MEASUREMENT_MANIFEST_FILE_URL = "mdd_measurement_manifest_file_url";
+    static final String KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS =
+            "measurement_registration_input_event_valid_window_ms";
+    static final String KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED =
+            "measurement_is_click_verification_enabled";
 
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
@@ -178,6 +182,7 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
+    static final String KEY_APPSETID_KILL_SWITCH = "appsetid_kill_switch";
 
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
@@ -383,6 +388,24 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_MANIFEST_FILE_URL,
                 /* defaultValue */ MEASUREMENT_MANIFEST_FILE_URL);
+    }
+
+    @Override
+    public long getMeasurementRegistrationInputEventValidWindowMs() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS,
+                /* defaultValue */ MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS);
+    }
+
+    @Override
+    public boolean getMeasurementIsClickVerificationEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED,
+                /* defaultValue */ MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED);
     }
 
     @Override
@@ -880,6 +903,21 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ ADID_KILL_SWITCH));
     }
 
+    // APPSETID Killswitch.
+    @Override
+    public boolean getAppSetIdKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return getGlobalKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_APPSETID_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_APPSETID_KILL_SWITCH,
+                                /* defaultValue */ APPSETID_KILL_SWITCH));
+    }
+
     // TOPICS Killswitches
     @Override
     public boolean getTopicsKillSwitch() {
@@ -1017,6 +1055,7 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
         writer.println("\t" + KEY_ADID_KILL_SWITCH + " = " + getAdIdKillSwitch());
+        writer.println("\t" + KEY_APPSETID_KILL_SWITCH + " = " + getAppSetIdKillSwitch());
         writer.println(
                 "\t"
                         + KEY_SDK_REQUEST_PERMITS_PER_SECOND
@@ -1069,6 +1108,16 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getMeasurementNetworkReadTimeoutMs());
         writer.println("\t" + KEY_MEASUREMENT_APP_NAME + " = " + getMeasurementAppName());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED
+                        + " = "
+                        + getMeasurementIsClickVerificationEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS
+                        + " = "
+                        + getMeasurementRegistrationInputEventValidWindowMs());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(

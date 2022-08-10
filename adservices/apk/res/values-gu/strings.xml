@@ -22,6 +22,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="1644434244130657749">"ઍપ્લિકેશનને AdServices Attribution APIs ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="2766614780488510189">"AdServices Custom Audience API ઍક્સેસ કરો"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"ઍપ્લિકેશનને AdServices Custom Audiences API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
+    <!-- no translation found for permlab_accessAdServicesAdId (2754825914769538156) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesAdId (7717770480967762044) -->
+    <skip />
     <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent APIને ઍક્સેસ કરો"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"કોઈ ઍપ્લિકેશનને AdServices Consent API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID APIનો ઍક્સેસ"</string>
@@ -30,45 +34,34 @@
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"ઍપ્લિકેશનને ઍપ સેટ ID API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
     <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service APIનો ઍક્સેસ"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"કોઈ ઍપ્લિકેશનને Consent Service API ઍક્સેસ કરવાની મંજૂરી આપે છે."</string>
-    <!-- no translation found for app_label (5985320129629013968) -->
-    <skip />
+    <string name="app_label" msgid="5985320129629013968">"Android સિસ્ટમ"</string>
     <string name="settingsUI_privacy_sandbox_beta_title" msgid="4639059875784310305">"પ્રાઇવસી સૅન્ડબૉક્સ બીટા"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="7878125372693984729">"પ્રાઇવસી સૅન્ડબૉક્સ બીટા"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_summary" msgid="8092144208961705360">"પ્રાઇવસી સૅન્ડબૉક્સ બીટા ટૉગલ કરો"</string>
-    <!-- no translation found for settingsUI_main_view_title (255982490790282252) -->
-    <skip />
+    <string name="settingsUI_main_view_title" msgid="255982490790282252">"Androidની જાહેરાતો સંબંધિત પ્રાઇવસીનું બીટા વર્ઝન"</string>
     <string name="settingsUI_main_view_subtitle" msgid="3380585883687237827">"ક્રૉસ-ઍપ ટ્રૅકિંગને પ્રતિબંધિત કરતી નવી પ્રાઇવસી સૅન્ડબૉક્સ સિસ્ટમનું પરીક્ષણ કરો"</string>
     <string name="settingsUI_main_view_info_text1" msgid="8353580266621706164">"પ્રાઇવસી સૅન્ડબૉક્સ કેવી રીતે કામ કરે છે"</string>
     <string name="settingsUI_main_view_info_text2" msgid="5144888171043725329">"તમને ગમી શકે તેવી જાહેરાતો તમને બતાવવા માટે પ્રાઇવસી સૅન્ડબૉક્સમાં ડેટા એકત્રિત કરવામાં આવે છે, પણ તમને અથવા તમારા ડિવાઇસને ઓળખ્યા વિના તેને શેર કરવામાં આવે છે."</string>
     <string name="settingsUI_main_view_info_text3" msgid="9106658161862318732">"પ્રાઇવસી સૅન્ડબૉક્સમાં કયા પ્રકારનો ડેટા સ્ટોર કરવામાં આવે છે?"</string>
-    <!-- no translation found for settingsUI_main_view_info_text4 (5819359066240454954) -->
-    <skip />
+    <string name="settingsUI_main_view_info_text4" msgid="5819359066240454954">"•  સામાન્ય રુચિઓ"</string>
     <string name="settingsUI_main_view_info_text5" msgid="6064832868440367397">"તમે ઉપયોગ કરો છો તે ઍપના આધારે, Android આ ડેટા જનરેટ કરે છે અને તેને પ્રાઇવસી સૅન્ડબૉક્સમાં ઉમેરે છે. ઉદાહરણ તરીકે, તમારી સામાન્ય રુચિઓમાંની એક રુચિ “રમતગમત” હોઈ શકે છે. \n\nતમે તમારા પ્રાઇવસી સેટિંગમાં તમારી રુચિઓની સૂચિ જોઈ શકો છો અને તમને પસંદ ન હોય તેવી કોઈપણ રુચિને બ્લૉક કરી શકો છો."</string>
-    <!-- no translation found for settingsUI_main_view_info_text6 (3406976290919982143) -->
-    <skip />
+    <string name="settingsUI_main_view_info_text6" msgid="3406976290919982143">"•  અમુક ચોક્કસ રુચિઓ"</string>
     <string name="settingsUI_main_view_info_text7" msgid="210269084665708892">"તમે તેનો ઉપયોગ કેવી રીતે કરો છો તેના આધારે તમારી ઍપ આ ડેટા જનરેટ કરે છે અને તેને પ્રાઇવસી સૅન્ડબૉક્સમાં ઉમેરે છે. ઉદાહરણ તરીકે, તમે જે ઍપનો ઉપયોગ દોડવાના જૂતા ખરીદવા માટે કરો છો, તે ઍપ sport_running લેબલ ઉમેરી શકે છે.\n\nતમારા પ્રાઇવસી સેટિંગમાં, તમે આમ કરતી ઍપની સૂચિ જોઈ શકો છો અને કોઈપણ ઍપને પ્રાઇવસી સૅન્ડબૉક્સમાં ડેટાનું યોગદાન આપવાથી બ્લૉક કરી શકો છો."</string>
     <string name="settingsUI_topics_view_title" msgid="7437641813424176118">"રુચિઓ મેનેજ કરો"</string>
-    <!-- no translation found for settingsUI_topics_view_subtitle (5347912133908026725) -->
-    <skip />
+    <string name="settingsUI_topics_view_subtitle" msgid="5347912133908026725">"તમને ગમી શકે તેવી જાહેરાતો તમને બતાવવાની ઍપને મંજૂરી આપતી વખતે પણ Androidનું પ્રાઇવસી સૅન્ડબૉક્સ ક્રૉસ-ઍપ ટ્રૅકિંગને પ્રતિબંધિત કરે છે. Android તમને અથવા તમારા ડિવાઇસને ઓળખ્યા વિના જાહેરાતકર્તાઓ સાથે આ ડેટા શેર કરે છે.\n\nતમે ઉપયોગ કરો છો તે ઍપના આધારે, જાહેરાતો માટેની તમારી સામાન્ય રુચિઓની આ સૂચિને Android જનરેટ અને અપડેટ કરે છે. જો તમે કોઈ રુચિને બ્લૉક કરો, તો જ્યાં સુધી તમે તેને અનબ્લૉક નહીં કરો ત્યાં સુધી તેને સૂચિમાં ફરીથી ઉમેરવામાં આવશે નહીં. તમને હજી પણ કેટલીક સંબંધિત જાહેરાતો જોવા મળી શકે છે."</string>
     <string name="settingsUI_topics_view_info_text1" msgid="6729245512525985403">"જાહેરાતો માટે સામાન્ય રુચિઓ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="8355913397424818046">"તમે ઉપયોગ કરો છો તે ઍપના આધારે Android આ રુચિઓ જનરેટ કરે છે.\n\nઉદાહરણ તરીકે, જો તમારી પાસે તમારા ડિવાઇસ પર રમતગમતની ઘણી ઍપ હોય, તો Android કદાચ પ્રાઇવસી સૅન્ડબૉક્સમાં “રમતગમત”ને રુચિ તરીકે ઉમેરી શકે છે.\n\nપછીથી, આ ડેટા તમને અથવા તમારા ડિવાઇસને ઓળખ્યા વિના જાહેરાતકર્તાઓ સાથે શેર કરવામાં આવે છે."</string>
     <string name="settingsUI_apps_key" msgid="5279102708260885695">"apps_preference"</string>
     <string name="settingsUI_apps_title" msgid="2177966577556486280">"ચોક્કસ રુચિઓ જનરેટ કરતી તમારી ઍપ"</string>
     <string name="settingsUI_apps_summary" msgid="2382082513059909726">"ચોક્કસ રુચિઓ જનરેટ કરતી તમારી ઍપ મેનેજ કરો"</string>
-    <!-- no translation found for settingsUI_blocked_apps_title (3902259560117462894) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_title (3615627092403761282) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_subtitle (5257332567222983503) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_no_apps_text (7688904166166288798) -->
-    <skip />
-    <!-- no translation found for settingsUI_reset_apps_title (3308597019425923552) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_info_text1 (503353133396835755) -->
-    <skip />
-    <!-- no translation found for settingsUI_apps_view_info_text2 (6562781312486257254) -->
-    <skip />
+    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"તમે બ્લૉક કરેલી ઍપ"</string>
+    <string name="settingsUI_apps_view_title" msgid="3615627092403761282">"ઍપ મેનેજ કરો"</string>
+    <string name="settingsUI_apps_view_subtitle" msgid="5257332567222983503">"પ્રાઇવસી સૅન્ડબૉક્સમાં ઉમેરવા માટે કેટલીક ઍપ, તમે તેનો ઉપયોગ કેવી રીતે કરો છો તેના આધારે જાહેરાતોમાંની તમારી અમુક ચોક્કસ પ્રકારની રુચિઓ સંબંધિત ડેટા જનરેટ કરે છે. Android ઍપની આ સૂચિ અપડેટ કરે છે, જેથી તમે તેને જોઈ શકો અથવા તેમાં ફેરફાર કરી શકો.\n\nજો તમે કોઈ ઍપને બ્લૉક કરો, તો તે જાહેરાતોમાંની તમારી અમુક ચોક્કસ પ્રકારની કોઈપણ રુચિ ઉમેરશે નહીં. જ્યાં સુધી તમે ઍપને અનબ્લૉક કરશો નહીં ત્યાં સુધી તેને આ સૂચિમાં પાછી ઉમેરવામાં આવશે નહીં. આ ઍપ દ્વારા અગાઉ જનરેટ કરવામાં આવેલી તમામ રુચિઓ ડિલીટ કરવામાં આવશે, છતાં પણ તમને એ રુચિઓ સંબંધિત કેટલીક જાહેરાતો દેખાઈ શકે છે."</string>
+    <string name="settingsUI_apps_view_no_apps_text" msgid="1056905761942948495">"હમણાં જ બતાવવા માટે કોઈ ઍપ નથી"</string>
+    <string name="settingsUI_reset_apps_title" msgid="3308597019425923552">"ઍપ દ્વારા જનરેટ થયેલા ડેટાને રીસેટ કરો"</string>
+    <string name="settingsUI_apps_view_info_text1" msgid="503353133396835755">"જાહેરાતોમાં અમુક ચોક્કસ પ્રકારની રુચિઓ"</string>
+    <string name="settingsUI_apps_view_info_text2" msgid="6562781312486257254">"તમે વાપરતા હો એવી કેટલીક ઍપ, જાહેરાતોમાં અમુક ચોક્કસ પ્રકારની તમારી રુચિઓ સંબંધિત ડેટા જનરેટ કરે છે અને તેને પ્રાઇવસી સૅન્ડબૉક્સમાં ઉમેરે છે.\n\nઉદાહરણ તરીકે, તમે જે ઍપનો ઉપયોગ દોડવાના જૂતા ખરીદવા માટે કરો છો, તે ઍપ sport_running લેબલ ઉમેરી શકે છે.\n\nત્યાર પછી, પ્રાઇવસી સૅન્ડબૉક્સમાં એકત્ર થયેલો ડેટા તમને અથવા તમારા ડિવાઇસને ઓળખ્યા વિના જાહેરાતકર્તાઓ સાથે શેર કરવામાં આવે છે. આમ, તમને ગમી શકે એવી જાહેરાતો હજી પણ દેખાઈ શકે છે, એ પણ બહેતર પ્રાઇવસી સુરક્ષા પ્રણાલી સાથે."</string>
+    <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="5700261138344146462">"હમણાં જ બતાવવા માટે કોઈ બ્લૉક કરેલી ઍપ નથી"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"હમણાં બતાવવા માટે કોઈ રુચિ નથી"</string>
     <string name="settingsUI_topics_key" msgid="729126595474344613">"topics_preference"</string>
     <string name="settingsUI_topics_title" msgid="4024683469932819788">"તમારી સામાન્ય રુચિઓ"</string>
@@ -76,943 +69,481 @@
     <string name="settingsUI_topics_fragment_title" msgid="4413069330318399420">"જાહેરાતો માટે તમારી સામાન્ય રુચિઓને મેનેજ કરો"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"બ્લૉક કરો"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"અનબ્લૉક કરો"</string>
-    <!-- no translation found for settingsUI_blocked_topics_title (5030422883546261820) -->
-    <skip />
+    <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"તમે બ્લૉક કરેલી રુચિઓ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"બધી રુચિઓ રીસેટ કરો"</string>
-    <!-- no translation found for notificationUI_notification_content_eu (7419441022808120101) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="5717377146633882375">"હમણાં જ બતાવવા માટે કોઈ બ્લૉક કરેલી રુચિ નથી"</string>
+    <string name="notificationUI_notification_content_eu" msgid="7419441022808120101">"નવી સુવિધાઓનું પરીક્ષણ કરો, જે ક્રૉસ-ઍપ ટ્રૅકિંગને પ્રતિબંધિત કરશે"</string>
     <string name="notificationUI_header_title_eu" msgid="6822288197367284058">"જાહેરાતો સંબંધિત પ્રાઇવસીના બીટા વર્ઝનમાં જોડાઓ"</string>
     <string name="notificationUI_container3_title_eu" msgid="3157854074121291065">"તમે શું કરી શકો"</string>
     <string name="notificationUI_left_control_button_text_eu" msgid="3573715612232957187">"ના, આભાર"</string>
-    <!-- no translation found for notificationUI_right_control_button_text_eu (7294736040084958697) -->
-    <skip />
+    <string name="notificationUI_right_control_button_text_eu" msgid="7294736040084958697">"હા, હું તેને અજમાવીશ"</string>
     <string name="notificationUI_confirmation_accept_title" msgid="3178322390976087463">"સહભાગિતા બદલ આપનો આભાર"</string>
-    <!-- no translation found for notificationUI_confirmation_accept_subtitle (722290263168711051) -->
-    <skip />
-    <!-- no translation found for notificationUI_confirmation_decline_title (6453417169877486440) -->
-    <skip />
-    <!-- no translation found for notificationUI_confirmation_decline_subtitle (1869322730722065768) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_content (2096372976024736172) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_title (857744302422337933) -->
-    <skip />
+    <string name="notificationUI_confirmation_accept_subtitle" msgid="722290263168711051">"હવે તમે પ્રાઇવસી સૅન્ડબૉક્સના બીટા વર્ઝનનો ભાગ છો. \n\nતમારા પ્રાઇવસી સેટિંગમાં તમે વધુ જાણી શકો છો અથવા કોઈપણ સમયે બીટા વર્ઝન છોડી શકો છો."</string>
+    <string name="notificationUI_confirmation_decline_title" msgid="6453417169877486440">"તમે ભાગ ન લેવાનું પસંદ કર્યું"</string>
+    <string name="notificationUI_confirmation_decline_subtitle" msgid="1869322730722065768">"તમારા પ્રતિસાદ બદલ આભાર. પ્રાઇવસી સૅન્ડબૉક્સના બીટા વર્ઝનમાં તમને ઉમરવામાં આવ્યા નથી.\n\nજો તમે તમારો વિચાર બદલો છો અથવા વધુ જાણવા માગતા હો, તો તમારા પ્રાઇવસી સેટિંગમાં જાઓ."</string>
+    <string name="notificationUI_notification_content" msgid="2096372976024736172">"તમે નવી સુવિધાઓનું પરીક્ષણ કરી રહ્યાં છો, જે ક્રૉસ-ઍપ ટ્રૅકિંગને પ્રતિબંધિત કરે છે"</string>
+    <string name="notificationUI_header_title" msgid="857744302422337933">"તમે Androidને ક્રૉસ-ઍપ ટ્રૅકિંગ પ્રતિબંધિત કરવામાં સહાય કરી રહ્યાં છો"</string>
     <string name="notificationUI_header_subtitle" msgid="522289584167376388">"Android એવી નવી સુવિધાઓનું પરીક્ષણ કરી રહ્યું છે કે જે જાહેરાતકર્તાઓ દ્વારા ક્રૉસ-ઍપ ટ્રૅકિંગને પ્રતિબંધિત કરશે"</string>
     <string name="notificationUI_container1_title" msgid="3837529978480615552">"ક્રૉસ-ઍપ ટ્રૅકિંગ શું છે?"</string>
     <string name="notificationUI_container1_body_text" msgid="2564452110982505130">"આજે, તમારી ઍપનો વપરાશ સંબંધિત ડેટા તમારા ડિવાઇસ સાથે સરળતાથી સાંકળી શકાય છે અને પછી તેને જાહેરાત આપવાના હેતુઓ માટે બધી ઍપમાં શેર કરી શકાય છે."</string>
     <string name="notificationUI_container2_title" msgid="4796199061758878885">"Android શું કરી રહ્યું છે"</string>
     <string name="notificationUI_container2_body_text" msgid="7717896223210525953">"તમને અથવા તમારા ડિવાઇસને ઓળખ્યા વિના — Android, જાહેરાત આપવા માટેના ડેટાને સુરક્ષિત રીતે સ્ટોર અને શેર કરી શકે એવા નવા પ્રાઇવસી સૅન્ડબૉક્સનું પરીક્ષણ કરી રહ્યું છે. \n\nઅન્ય ઍપને સીધે સીધો ડેટા પાસ કરવાથી રોકવામાં આ નવી સિસ્ટમ કોઈપણ ઍપને સહાય તો કરે છે, પરંતુ સાથે જ તમને પસંદ આવી શકે એવી જાહેરાતો બતાવવાની મંજૂરી પણ આપે છે."</string>
     <string name="notificationUI_container2_control_text" msgid="3031227311095645064">"તેની કાર્ય કરવાની રીત"</string>
-    <!-- no translation found for notificationUI_container3_title (1283794406634157611) -->
-    <skip />
-    <!-- no translation found for notificationUI_container3_body_text (2636703086913037594) -->
-    <skip />
+    <string name="notificationUI_container3_title" msgid="1283794406634157611">"તમે કેવી રીતે સહાય કરો છો"</string>
+    <string name="notificationUI_container3_body_text" msgid="2636703086913037594">"બીટા પ્રોગ્રામમાં જોડાવાથી તમે જે જાહેરાતો જુઓ છો તેમાં તમને કદાચ કોઈ ફેરફાર ન દેખાય, પરંતુ સમય જતાં Androidને ક્રૉસ-ઍપ ટ્રૅકિંગને પ્રતિબંધિત કરવામાં સહાય મળશે. તમે તમારા પ્રાઇવસી સેટિંગમાં જઈને કોઈપણ સમયે બીટા પ્રોગ્રામમાંથી બહાર નીકળી શકો છો."</string>
     <string name="notificationUI_left_control_button_text" msgid="6459461402253858770">"પ્રાઇવસી સેટિંગ"</string>
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"સમજાઈ ગયું"</string>
-    <!-- no translation found for notificationUI_how_it_works_expanded_text1 (1753701052925879129) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text2 (3117263986288195274) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text3 (7270822532577167752) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text4 (5609475052636889205) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text5 (6757375506547548599) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text6 (2863877874268072458) -->
-    <skip />
-    <!-- no translation found for notificationUI_how_it_works_expanded_text7 (2140515900209351523) -->
-    <skip />
-    <!-- no translation found for topic10001 (1636806320891333775) -->
-    <skip />
-    <!-- no translation found for topic10002 (1226367977754287428) -->
-    <skip />
-    <!-- no translation found for topic10003 (6949890838957814881) -->
-    <skip />
-    <!-- no translation found for topic10004 (5397903150832181233) -->
-    <skip />
-    <!-- no translation found for topic10005 (6316179809581237302) -->
-    <skip />
-    <!-- no translation found for topic10006 (7442330644172139790) -->
-    <skip />
-    <!-- no translation found for topic10007 (5537896091418145164) -->
-    <skip />
-    <!-- no translation found for topic10008 (2737343278307552521) -->
-    <skip />
-    <!-- no translation found for topic10009 (3252367380340240453) -->
-    <skip />
-    <!-- no translation found for topic10010 (932301479153552725) -->
-    <skip />
-    <!-- no translation found for topic10011 (3123553390567261985) -->
-    <skip />
-    <!-- no translation found for topic10012 (8756486271154511326) -->
-    <skip />
-    <!-- no translation found for topic10013 (1242353161202448753) -->
-    <skip />
-    <!-- no translation found for topic10014 (6086156236112755291) -->
-    <skip />
-    <!-- no translation found for topic10015 (9196350141359833832) -->
-    <skip />
-    <!-- no translation found for topic10016 (202419376638900745) -->
-    <skip />
-    <!-- no translation found for topic10017 (6737229918787540100) -->
-    <skip />
-    <!-- no translation found for topic10018 (6823676154109177487) -->
-    <skip />
-    <!-- no translation found for topic10019 (6875960630918973127) -->
-    <skip />
-    <!-- no translation found for topic10020 (4323870300602151489) -->
-    <skip />
-    <!-- no translation found for topic10021 (446758643774468418) -->
-    <skip />
-    <!-- no translation found for topic10022 (3671929742155787005) -->
-    <skip />
-    <!-- no translation found for topic10023 (3547616830531182863) -->
-    <skip />
-    <!-- no translation found for topic10024 (1044853632986202120) -->
-    <skip />
-    <!-- no translation found for topic10025 (5958629223443279316) -->
-    <skip />
-    <!-- no translation found for topic10026 (5685515125614860029) -->
-    <skip />
-    <!-- no translation found for topic10027 (8846353713171614854) -->
-    <skip />
-    <!-- no translation found for topic10028 (170404703980174756) -->
-    <skip />
-    <!-- no translation found for topic10029 (4634600135545614665) -->
-    <skip />
-    <!-- no translation found for topic10030 (7226438392540805771) -->
-    <skip />
-    <!-- no translation found for topic10031 (1488013446112025676) -->
-    <skip />
-    <!-- no translation found for topic10032 (9053666244854789632) -->
-    <skip />
-    <!-- no translation found for topic10033 (440063573197454181) -->
-    <skip />
-    <!-- no translation found for topic10034 (8296307244554241197) -->
-    <skip />
-    <!-- no translation found for topic10035 (9171752741499923310) -->
-    <skip />
-    <!-- no translation found for topic10036 (2490236112725457376) -->
-    <skip />
-    <!-- no translation found for topic10037 (1923690469725883551) -->
-    <skip />
-    <!-- no translation found for topic10038 (2817492732688549631) -->
-    <skip />
-    <!-- no translation found for topic10039 (8970033643570782019) -->
-    <skip />
-    <!-- no translation found for topic10040 (7478395512712452137) -->
-    <skip />
-    <!-- no translation found for topic10041 (3319379117705411886) -->
-    <skip />
-    <!-- no translation found for topic10042 (8830471038440654640) -->
-    <skip />
-    <!-- no translation found for topic10043 (8585450284346207691) -->
-    <skip />
-    <!-- no translation found for topic10044 (3710011249220779842) -->
-    <skip />
-    <!-- no translation found for topic10045 (7593443421067822441) -->
-    <skip />
-    <!-- no translation found for topic10046 (8715621227472631784) -->
-    <skip />
-    <!-- no translation found for topic10047 (3518038303049899798) -->
-    <skip />
-    <!-- no translation found for topic10048 (3063505369500799094) -->
-    <skip />
-    <!-- no translation found for topic10049 (8061992014977840818) -->
-    <skip />
-    <!-- no translation found for topic10050 (3540229495848506229) -->
-    <skip />
-    <!-- no translation found for topic10051 (6132468331924347995) -->
-    <skip />
-    <!-- no translation found for topic10052 (8213269199807045473) -->
-    <skip />
-    <!-- no translation found for topic10053 (1378192203082454197) -->
-    <skip />
-    <!-- no translation found for topic10054 (3727401645405134505) -->
-    <skip />
-    <!-- no translation found for topic10055 (4943174831732192854) -->
-    <skip />
-    <!-- no translation found for topic10056 (3066058636154255073) -->
-    <skip />
-    <!-- no translation found for topic10057 (387445514677222034) -->
-    <skip />
-    <!-- no translation found for topic10058 (9149178644022969766) -->
-    <skip />
-    <!-- no translation found for topic10059 (6300562669238320524) -->
-    <skip />
-    <!-- no translation found for topic10060 (3901256055064835246) -->
-    <skip />
-    <!-- no translation found for topic10061 (8343924749123326062) -->
-    <skip />
-    <!-- no translation found for topic10062 (9183355218976951211) -->
-    <skip />
-    <!-- no translation found for topic10063 (644340831620792432) -->
-    <skip />
-    <!-- no translation found for topic10064 (5961885645457010998) -->
-    <skip />
-    <!-- no translation found for topic10065 (7916343612028608044) -->
-    <skip />
-    <!-- no translation found for topic10066 (5984396525358003559) -->
-    <skip />
-    <!-- no translation found for topic10067 (6404637729885733437) -->
-    <skip />
-    <!-- no translation found for topic10068 (4589856961950168493) -->
-    <skip />
-    <!-- no translation found for topic10069 (3129378082034151991) -->
-    <skip />
-    <!-- no translation found for topic10070 (2570256568661324147) -->
-    <skip />
-    <!-- no translation found for topic10071 (1288722040962471254) -->
-    <skip />
-    <!-- no translation found for topic10072 (9155509766616567261) -->
-    <skip />
-    <!-- no translation found for topic10073 (3748676231341513738) -->
-    <skip />
-    <!-- no translation found for topic10074 (2040911547161463227) -->
-    <skip />
-    <!-- no translation found for topic10075 (1242538698445713796) -->
-    <skip />
-    <!-- no translation found for topic10076 (8674225812339579627) -->
-    <skip />
-    <!-- no translation found for topic10077 (3577709810751953433) -->
-    <skip />
-    <!-- no translation found for topic10078 (5493263845129910125) -->
-    <skip />
-    <!-- no translation found for topic10079 (3466838852836498580) -->
-    <skip />
-    <!-- no translation found for topic10080 (3515647285637163190) -->
-    <skip />
-    <!-- no translation found for topic10081 (4135085035401158860) -->
-    <skip />
-    <!-- no translation found for topic10082 (7168659489029594320) -->
-    <skip />
-    <!-- no translation found for topic10083 (1532745144715857802) -->
-    <skip />
-    <!-- no translation found for topic10084 (1984231414410381476) -->
-    <skip />
-    <!-- no translation found for topic10085 (5235555028227554661) -->
-    <skip />
-    <!-- no translation found for topic10086 (8360336602646460411) -->
-    <skip />
-    <!-- no translation found for topic10087 (6566900167002195406) -->
-    <skip />
-    <!-- no translation found for topic10088 (2899313082601001223) -->
-    <skip />
-    <!-- no translation found for topic10089 (1053630346809973163) -->
-    <skip />
-    <!-- no translation found for topic10090 (4478565601243447368) -->
-    <skip />
-    <!-- no translation found for topic10091 (3812668311830832874) -->
-    <skip />
-    <!-- no translation found for topic10092 (524130833813249539) -->
-    <skip />
-    <!-- no translation found for topic10093 (8900143351472824542) -->
-    <skip />
-    <!-- no translation found for topic10094 (6205146188176216038) -->
-    <skip />
-    <!-- no translation found for topic10095 (7983070264654477553) -->
-    <skip />
-    <!-- no translation found for topic10096 (8148747014459050804) -->
-    <skip />
-    <!-- no translation found for topic10097 (4716536434833425748) -->
-    <skip />
-    <!-- no translation found for topic10098 (6401980112135995019) -->
-    <skip />
-    <!-- no translation found for topic10099 (8018714209926584445) -->
-    <skip />
-    <!-- no translation found for topic10100 (2481422464734249871) -->
-    <skip />
-    <!-- no translation found for topic10101 (7889144198021629053) -->
-    <skip />
-    <!-- no translation found for topic10102 (577637051755692238) -->
-    <skip />
-    <!-- no translation found for topic10103 (6618157344631408510) -->
-    <skip />
-    <!-- no translation found for topic10104 (6043649669944382784) -->
-    <skip />
-    <!-- no translation found for topic10105 (3248569527339253661) -->
-    <skip />
-    <!-- no translation found for topic10106 (1291481249483309832) -->
-    <skip />
-    <!-- no translation found for topic10107 (1335060201249279923) -->
-    <skip />
-    <!-- no translation found for topic10108 (4996884435711154930) -->
-    <skip />
-    <!-- no translation found for topic10109 (7298403319989686251) -->
-    <skip />
-    <!-- no translation found for topic10110 (5954355866247248022) -->
-    <skip />
-    <!-- no translation found for topic10111 (4447710938881368413) -->
-    <skip />
-    <!-- no translation found for topic10112 (8816530137921714131) -->
-    <skip />
-    <!-- no translation found for topic10113 (8138889299405853557) -->
-    <skip />
-    <!-- no translation found for topic10114 (2172821400279346865) -->
-    <skip />
-    <!-- no translation found for topic10115 (9060244278068231494) -->
-    <skip />
-    <!-- no translation found for topic10116 (116242880964485085) -->
-    <skip />
-    <!-- no translation found for topic10117 (8933734721100160863) -->
-    <skip />
-    <!-- no translation found for topic10118 (4368531903547695191) -->
-    <skip />
-    <!-- no translation found for topic10119 (2781095265741115471) -->
-    <skip />
-    <!-- no translation found for topic10120 (3099507102655270527) -->
-    <skip />
-    <!-- no translation found for topic10121 (4466592180799340837) -->
-    <skip />
-    <!-- no translation found for topic10122 (2375136741125920744) -->
-    <skip />
-    <!-- no translation found for topic10123 (6974082907852347979) -->
-    <skip />
-    <!-- no translation found for topic10124 (44474598156972786) -->
-    <skip />
-    <!-- no translation found for topic10125 (9170394261421539760) -->
-    <skip />
-    <!-- no translation found for topic10126 (2210146434071038904) -->
-    <skip />
-    <!-- no translation found for topic10127 (5503077037318678029) -->
-    <skip />
-    <!-- no translation found for topic10128 (285525650692719959) -->
-    <skip />
-    <!-- no translation found for topic10129 (3094691551566702427) -->
-    <skip />
-    <!-- no translation found for topic10130 (1922351409757117764) -->
-    <skip />
-    <!-- no translation found for topic10131 (8598763405951029782) -->
-    <skip />
-    <!-- no translation found for topic10132 (1476352626208153907) -->
-    <skip />
-    <!-- no translation found for topic10133 (7089177624979453528) -->
-    <skip />
-    <!-- no translation found for topic10134 (3833032373311037601) -->
-    <skip />
-    <!-- no translation found for topic10135 (2478808072377000440) -->
-    <skip />
-    <!-- no translation found for topic10136 (9083992436834044162) -->
-    <skip />
-    <!-- no translation found for topic10137 (1912599316814246824) -->
-    <skip />
-    <!-- no translation found for topic10138 (7428346836350671895) -->
-    <skip />
-    <!-- no translation found for topic10139 (1396685812404869953) -->
-    <skip />
-    <!-- no translation found for topic10140 (5264212052238781441) -->
-    <skip />
-    <!-- no translation found for topic10141 (860058416683118730) -->
-    <skip />
-    <!-- no translation found for topic10142 (2912550934111655896) -->
-    <skip />
-    <!-- no translation found for topic10143 (5690610408227078117) -->
-    <skip />
-    <!-- no translation found for topic10144 (3341052306953106368) -->
-    <skip />
-    <!-- no translation found for topic10145 (6886608911083388041) -->
-    <skip />
-    <!-- no translation found for topic10146 (8202145175139144216) -->
-    <skip />
-    <!-- no translation found for topic10147 (4687964705548995437) -->
-    <skip />
-    <!-- no translation found for topic10148 (8861628145647459323) -->
-    <skip />
-    <!-- no translation found for topic10149 (1719988773455991739) -->
-    <skip />
-    <!-- no translation found for topic10150 (1482205464872465298) -->
-    <skip />
-    <!-- no translation found for topic10151 (1772262905623388968) -->
-    <skip />
-    <!-- no translation found for topic10152 (651152740021127086) -->
-    <skip />
-    <!-- no translation found for topic10153 (8741504768717646372) -->
-    <skip />
-    <!-- no translation found for topic10154 (5382029798409496090) -->
-    <skip />
-    <!-- no translation found for topic10155 (5243817792730496258) -->
-    <skip />
-    <!-- no translation found for topic10156 (2497791567138856030) -->
-    <skip />
-    <!-- no translation found for topic10157 (4723439422860510190) -->
-    <skip />
-    <!-- no translation found for topic10158 (5345830001295028513) -->
-    <skip />
-    <!-- no translation found for topic10159 (6146958285117174314) -->
-    <skip />
-    <!-- no translation found for topic10160 (6624820395549466426) -->
-    <skip />
-    <!-- no translation found for topic10161 (912458758908978530) -->
-    <skip />
-    <!-- no translation found for topic10162 (6717352131379507693) -->
-    <skip />
-    <!-- no translation found for topic10163 (6344926622025055321) -->
-    <skip />
-    <!-- no translation found for topic10164 (4228888249078845459) -->
-    <skip />
-    <!-- no translation found for topic10165 (5507908999219967161) -->
-    <skip />
-    <!-- no translation found for topic10166 (4768106492755849560) -->
-    <skip />
-    <!-- no translation found for topic10167 (8556935769754922871) -->
-    <skip />
-    <!-- no translation found for topic10168 (7730134961167790334) -->
-    <skip />
-    <!-- no translation found for topic10169 (5655084106378890454) -->
-    <skip />
-    <!-- no translation found for topic10170 (4638281897205909919) -->
-    <skip />
-    <!-- no translation found for topic10171 (7910183120486541228) -->
-    <skip />
-    <!-- no translation found for topic10172 (3626573644414074730) -->
-    <skip />
-    <!-- no translation found for topic10173 (7320053835183057144) -->
-    <skip />
-    <!-- no translation found for topic10174 (5770469447869586710) -->
-    <skip />
-    <!-- no translation found for topic10175 (3475235810022334041) -->
-    <skip />
-    <!-- no translation found for topic10176 (6881704501596479881) -->
-    <skip />
-    <!-- no translation found for topic10177 (6740430730079682579) -->
-    <skip />
-    <!-- no translation found for topic10178 (7261811053741593091) -->
-    <skip />
-    <!-- no translation found for topic10179 (2967001567120854492) -->
-    <skip />
-    <!-- no translation found for topic10180 (4197420326455130102) -->
-    <skip />
-    <!-- no translation found for topic10181 (3537573129132698830) -->
-    <skip />
-    <!-- no translation found for topic10182 (7688631285131229981) -->
-    <skip />
-    <!-- no translation found for topic10183 (5994974566140272512) -->
-    <skip />
-    <!-- no translation found for topic10184 (8685817335076871509) -->
-    <skip />
-    <!-- no translation found for topic10185 (308314128178285390) -->
-    <skip />
-    <!-- no translation found for topic10186 (3147859503481018245) -->
-    <skip />
-    <!-- no translation found for topic10187 (7077128721410871032) -->
-    <skip />
-    <!-- no translation found for topic10188 (2206138708659457910) -->
-    <skip />
-    <!-- no translation found for topic10189 (4001795553008246784) -->
-    <skip />
-    <!-- no translation found for topic10190 (2988430661381243083) -->
-    <skip />
-    <!-- no translation found for topic10191 (6196081825838237614) -->
-    <skip />
-    <!-- no translation found for topic10192 (3290123244833047307) -->
-    <skip />
-    <!-- no translation found for topic10193 (294407043381146861) -->
-    <skip />
-    <!-- no translation found for topic10194 (2834543407440890272) -->
-    <skip />
-    <!-- no translation found for topic10195 (7650553060132394782) -->
-    <skip />
-    <!-- no translation found for topic10196 (5395035781876507254) -->
-    <skip />
-    <!-- no translation found for topic10197 (1287138667488226463) -->
-    <skip />
-    <!-- no translation found for topic10198 (2523256186943366779) -->
-    <skip />
-    <!-- no translation found for topic10199 (3746711537661530183) -->
-    <skip />
-    <!-- no translation found for topic10200 (2394864891391267841) -->
-    <skip />
-    <!-- no translation found for topic10201 (4301879117376963742) -->
-    <skip />
-    <!-- no translation found for topic10202 (739808503036239379) -->
-    <skip />
-    <!-- no translation found for topic10203 (838786942776142290) -->
-    <skip />
-    <!-- no translation found for topic10204 (6591131759521321677) -->
-    <skip />
-    <!-- no translation found for topic10205 (3294946723815021478) -->
-    <skip />
-    <!-- no translation found for topic10206 (6166888350685752683) -->
-    <skip />
-    <!-- no translation found for topic10207 (2296385804039743999) -->
-    <skip />
-    <!-- no translation found for topic10208 (2717498987483479091) -->
-    <skip />
-    <!-- no translation found for topic10209 (5204948738662951962) -->
-    <skip />
-    <!-- no translation found for topic10210 (4607225697024266227) -->
-    <skip />
-    <!-- no translation found for topic10211 (7475381839877166080) -->
-    <skip />
-    <!-- no translation found for topic10212 (3988751035952286047) -->
-    <skip />
-    <!-- no translation found for topic10213 (1358963098339995471) -->
-    <skip />
-    <!-- no translation found for topic10214 (8463864389138867811) -->
-    <skip />
-    <!-- no translation found for topic10215 (3085467051491069648) -->
-    <skip />
-    <!-- no translation found for topic10216 (6043130649326166680) -->
-    <skip />
-    <!-- no translation found for topic10217 (7173870057669247536) -->
-    <skip />
-    <!-- no translation found for topic10218 (5570240643247064951) -->
-    <skip />
-    <!-- no translation found for topic10219 (5896715206025463732) -->
-    <skip />
-    <!-- no translation found for topic10220 (3894580611467039658) -->
-    <skip />
-    <!-- no translation found for topic10221 (14471057764591805) -->
-    <skip />
-    <!-- no translation found for topic10222 (2704894577954508861) -->
-    <skip />
-    <!-- no translation found for topic10223 (202900267060220170) -->
-    <skip />
-    <!-- no translation found for topic10224 (6572627325588452785) -->
-    <skip />
-    <!-- no translation found for topic10225 (8056906319560292131) -->
-    <skip />
-    <!-- no translation found for topic10226 (714463563336281099) -->
-    <skip />
-    <!-- no translation found for topic10227 (218768654597520683) -->
-    <skip />
-    <!-- no translation found for topic10228 (850597136074192489) -->
-    <skip />
-    <!-- no translation found for topic10229 (4284501233897149886) -->
-    <skip />
-    <!-- no translation found for topic10230 (7156822286576815181) -->
-    <skip />
-    <!-- no translation found for topic10231 (7620407218897744361) -->
-    <skip />
-    <!-- no translation found for topic10232 (3029734447275709941) -->
-    <skip />
-    <!-- no translation found for topic10233 (8318075279868138231) -->
-    <skip />
-    <!-- no translation found for topic10234 (3899847414436099153) -->
-    <skip />
-    <!-- no translation found for topic10235 (5851356242523630529) -->
-    <skip />
-    <!-- no translation found for topic10236 (1986665634014804954) -->
-    <skip />
-    <!-- no translation found for topic10237 (5569920221620447713) -->
-    <skip />
-    <!-- no translation found for topic10238 (7431087331656772530) -->
-    <skip />
-    <!-- no translation found for topic10239 (8667462879554115515) -->
-    <skip />
-    <!-- no translation found for topic10240 (1618985302446756520) -->
-    <skip />
-    <!-- no translation found for topic10241 (8450778411063723262) -->
-    <skip />
-    <!-- no translation found for topic10242 (8860812940320018907) -->
-    <skip />
-    <!-- no translation found for topic10243 (1764694148721971512) -->
-    <skip />
-    <!-- no translation found for topic10244 (4308588210397969087) -->
-    <skip />
-    <!-- no translation found for topic10245 (6904368410919496658) -->
-    <skip />
-    <!-- no translation found for topic10246 (3381244806751528148) -->
-    <skip />
-    <!-- no translation found for topic10247 (5927502688389762068) -->
-    <skip />
-    <!-- no translation found for topic10248 (8471339627212674032) -->
-    <skip />
-    <!-- no translation found for topic10249 (5076706536204559962) -->
-    <skip />
-    <!-- no translation found for topic10250 (6083030595195401083) -->
-    <skip />
-    <!-- no translation found for topic10251 (99237306730665104) -->
-    <skip />
-    <!-- no translation found for topic10252 (6543039575961394064) -->
-    <skip />
-    <!-- no translation found for topic10253 (566596668186874227) -->
-    <skip />
-    <!-- no translation found for topic10254 (5732147617072023634) -->
-    <skip />
-    <!-- no translation found for topic10255 (2890655077164103057) -->
-    <skip />
-    <!-- no translation found for topic10256 (3302096971402751679) -->
-    <skip />
-    <!-- no translation found for topic10257 (4238531589193902619) -->
-    <skip />
-    <!-- no translation found for topic10258 (6995329540076529056) -->
-    <skip />
-    <!-- no translation found for topic10259 (8649688885811560410) -->
-    <skip />
-    <!-- no translation found for topic10260 (487999213495640080) -->
-    <skip />
-    <!-- no translation found for topic10261 (8970668366745952094) -->
-    <skip />
-    <!-- no translation found for topic10262 (6644046161469353448) -->
-    <skip />
-    <!-- no translation found for topic10263 (848165976917542929) -->
-    <skip />
-    <!-- no translation found for topic10264 (6274985117752637104) -->
-    <skip />
-    <!-- no translation found for topic10265 (4134876488948695674) -->
-    <skip />
-    <!-- no translation found for topic10266 (6617785039128074351) -->
-    <skip />
-    <!-- no translation found for topic10267 (488093331618885003) -->
-    <skip />
-    <!-- no translation found for topic10268 (277932389492046264) -->
-    <skip />
-    <!-- no translation found for topic10269 (8572041514147955202) -->
-    <skip />
-    <!-- no translation found for topic10270 (2646715182474030951) -->
-    <skip />
-    <!-- no translation found for topic10271 (1308931236810509881) -->
-    <skip />
-    <!-- no translation found for topic10272 (8746698707390628887) -->
-    <skip />
-    <!-- no translation found for topic10273 (344442071339164852) -->
-    <skip />
-    <!-- no translation found for topic10274 (8982330028561451429) -->
-    <skip />
-    <!-- no translation found for topic10275 (8280198018937968735) -->
-    <skip />
-    <!-- no translation found for topic10276 (1651598271798609235) -->
-    <skip />
-    <!-- no translation found for topic10277 (7675195736886448994) -->
-    <skip />
-    <!-- no translation found for topic10278 (873251714192341707) -->
-    <skip />
-    <!-- no translation found for topic10279 (6514296374139842600) -->
-    <skip />
-    <!-- no translation found for topic10280 (7976787187115018267) -->
-    <skip />
-    <!-- no translation found for topic10281 (4013341162811169339) -->
-    <skip />
-    <!-- no translation found for topic10282 (7810462611906257564) -->
-    <skip />
-    <!-- no translation found for topic10283 (3958287780718485172) -->
-    <skip />
-    <!-- no translation found for topic10284 (2415044270290467935) -->
-    <skip />
-    <!-- no translation found for topic10285 (7056449544316408821) -->
-    <skip />
-    <!-- no translation found for topic10286 (3458688996478472971) -->
-    <skip />
-    <!-- no translation found for topic10287 (6766203044518402938) -->
-    <skip />
-    <!-- no translation found for topic10288 (3883137694557636622) -->
-    <skip />
-    <!-- no translation found for topic10289 (3392995633794787676) -->
-    <skip />
-    <!-- no translation found for topic10290 (3118880486702986341) -->
-    <skip />
-    <!-- no translation found for topic10291 (6025855926350955094) -->
-    <skip />
-    <!-- no translation found for topic10292 (3069720659823056935) -->
-    <skip />
-    <!-- no translation found for topic10293 (2489957780009828409) -->
-    <skip />
-    <!-- no translation found for topic10294 (474839431177892843) -->
-    <skip />
-    <!-- no translation found for topic10295 (2215489196192620880) -->
-    <skip />
-    <!-- no translation found for topic10296 (4494362881225210483) -->
-    <skip />
-    <!-- no translation found for topic10297 (8596946591674128749) -->
-    <skip />
-    <!-- no translation found for topic10298 (6669181180128620422) -->
-    <skip />
-    <!-- no translation found for topic10299 (989138215800115613) -->
-    <skip />
-    <!-- no translation found for topic10300 (8281464235308602670) -->
-    <skip />
-    <!-- no translation found for topic10301 (9156890858635333460) -->
-    <skip />
-    <!-- no translation found for topic10302 (1325835179421990876) -->
-    <skip />
-    <!-- no translation found for topic10303 (3103839978894155537) -->
-    <skip />
-    <!-- no translation found for topic10304 (8831682558788062486) -->
-    <skip />
-    <!-- no translation found for topic10305 (8415203095484493106) -->
-    <skip />
-    <!-- no translation found for topic10306 (7426556527349374835) -->
-    <skip />
-    <!-- no translation found for topic10307 (1187762846826735256) -->
-    <skip />
-    <!-- no translation found for topic10308 (3346756665358311386) -->
-    <skip />
-    <!-- no translation found for topic10309 (2041175328931014735) -->
-    <skip />
-    <!-- no translation found for topic10310 (7079570344976872062) -->
-    <skip />
-    <!-- no translation found for topic10311 (2095095138677585525) -->
-    <skip />
-    <!-- no translation found for topic10312 (939721674816307639) -->
-    <skip />
-    <!-- no translation found for topic10313 (4159611985538361632) -->
-    <skip />
-    <!-- no translation found for topic10314 (93219947859117151) -->
-    <skip />
-    <!-- no translation found for topic10315 (5046321177148647481) -->
-    <skip />
-    <!-- no translation found for topic10316 (8592980844674525307) -->
-    <skip />
-    <!-- no translation found for topic10317 (2412259096368647866) -->
-    <skip />
-    <!-- no translation found for topic10318 (1508449672941031904) -->
-    <skip />
-    <!-- no translation found for topic10319 (3973645291178509390) -->
-    <skip />
-    <!-- no translation found for topic10320 (5279440074507438174) -->
-    <skip />
-    <!-- no translation found for topic10321 (7018890132742820265) -->
-    <skip />
-    <!-- no translation found for topic10322 (1585737438943011532) -->
-    <skip />
-    <!-- no translation found for topic10323 (962863497957179646) -->
-    <skip />
-    <!-- no translation found for topic10324 (1425257460381023853) -->
-    <skip />
-    <!-- no translation found for topic10325 (8698912164970408378) -->
-    <skip />
-    <!-- no translation found for topic10326 (2425798096705921796) -->
-    <skip />
-    <!-- no translation found for topic10327 (8518822987595111212) -->
-    <skip />
-    <!-- no translation found for topic10328 (8932708475346340912) -->
-    <skip />
-    <!-- no translation found for topic10329 (223933889758324282) -->
-    <skip />
-    <!-- no translation found for topic10330 (188028553492626282) -->
-    <skip />
-    <!-- no translation found for topic10331 (426844238985651925) -->
-    <skip />
-    <!-- no translation found for topic10332 (291747325781232456) -->
-    <skip />
-    <!-- no translation found for topic10333 (7950152600374846488) -->
-    <skip />
-    <!-- no translation found for topic10334 (8671262583721706509) -->
-    <skip />
-    <!-- no translation found for topic10335 (1526523762163185819) -->
-    <skip />
-    <!-- no translation found for topic10336 (4551233571090493177) -->
-    <skip />
-    <!-- no translation found for topic10337 (8436172065188964882) -->
-    <skip />
-    <!-- no translation found for topic10338 (8896269734682970) -->
-    <skip />
-    <!-- no translation found for topic10339 (781900237993621300) -->
-    <skip />
-    <!-- no translation found for topic10340 (6538182603360796294) -->
-    <skip />
-    <!-- no translation found for topic10341 (3586543243312398568) -->
-    <skip />
-    <!-- no translation found for topic10342 (3695176378281477573) -->
-    <skip />
-    <!-- no translation found for topic10343 (2318169062960263837) -->
-    <skip />
-    <!-- no translation found for topic10344 (2005534117977874327) -->
-    <skip />
-    <!-- no translation found for topic10345 (2397329020706244200) -->
-    <skip />
-    <!-- no translation found for topic10346 (1323702748723563694) -->
-    <skip />
-    <!-- no translation found for topic10347 (3301879823396773413) -->
-    <skip />
-    <!-- no translation found for topic10348 (8066686305498410222) -->
-    <skip />
-    <!-- no translation found for topic10349 (5253723822905761195) -->
-    <skip />
-    <!-- no translation found for topic10350 (6164036369108076590) -->
-    <skip />
-    <!-- no translation found for topic10351 (1132984519083501363) -->
-    <skip />
-    <!-- no translation found for topic10352 (6310110390516037997) -->
-    <skip />
-    <!-- no translation found for topic10353 (5114390804081576684) -->
-    <skip />
-    <!-- no translation found for topic10354 (7980778954791504082) -->
-    <skip />
-    <!-- no translation found for topic10355 (7720717354548642600) -->
-    <skip />
-    <!-- no translation found for topic10356 (8366981308613661935) -->
-    <skip />
-    <!-- no translation found for topic10357 (3185598234676097975) -->
-    <skip />
-    <!-- no translation found for topic10358 (6732669037513504019) -->
-    <skip />
-    <!-- no translation found for topic10359 (8901932349008990500) -->
-    <skip />
-    <!-- no translation found for topic10360 (6113408769992775754) -->
-    <skip />
-    <!-- no translation found for topic10361 (364838820459183817) -->
-    <skip />
-    <!-- no translation found for topic10362 (3760998790588600032) -->
-    <skip />
-    <!-- no translation found for topic10363 (5464708619861040861) -->
-    <skip />
-    <!-- no translation found for topic10364 (4685400848805560054) -->
-    <skip />
-    <!-- no translation found for topic10365 (5196231842716190887) -->
-    <skip />
-    <!-- no translation found for topic10366 (7460927054539097025) -->
-    <skip />
-    <!-- no translation found for topic10367 (3900361839783743700) -->
-    <skip />
-    <!-- no translation found for topic10368 (2069447039109930660) -->
-    <skip />
-    <!-- no translation found for topic10369 (5747888306428024793) -->
-    <skip />
-    <!-- no translation found for topic10370 (4860829940151353583) -->
-    <skip />
-    <!-- no translation found for topic10371 (8229818210867472466) -->
-    <skip />
-    <!-- no translation found for topic10372 (6400467418954574231) -->
-    <skip />
-    <!-- no translation found for topic10373 (6990757247198163741) -->
-    <skip />
-    <!-- no translation found for topic10374 (8057983193031950119) -->
-    <skip />
-    <!-- no translation found for topic10375 (8511185098682306025) -->
-    <skip />
-    <!-- no translation found for topic10376 (6387800251638760737) -->
-    <skip />
-    <!-- no translation found for topic10377 (7834619927563362042) -->
-    <skip />
-    <!-- no translation found for topic10378 (242496862821758873) -->
-    <skip />
-    <!-- no translation found for topic10379 (5505228335012447165) -->
-    <skip />
-    <!-- no translation found for topic10380 (4989560205486143927) -->
-    <skip />
-    <!-- no translation found for topic10381 (7585496746485093505) -->
-    <skip />
-    <!-- no translation found for topic10382 (5088060295126473451) -->
-    <skip />
-    <!-- no translation found for topic10383 (4947104586590538143) -->
-    <skip />
-    <!-- no translation found for topic10384 (3752472493887374077) -->
-    <skip />
-    <!-- no translation found for topic10385 (5275843140794803595) -->
-    <skip />
-    <!-- no translation found for topic10386 (5887032952574801982) -->
-    <skip />
-    <!-- no translation found for topic10387 (8474154360410317897) -->
-    <skip />
-    <!-- no translation found for topic10388 (3650307363028796765) -->
-    <skip />
-    <!-- no translation found for topic10389 (1542336508240183221) -->
-    <skip />
-    <!-- no translation found for topic10390 (831225961168954292) -->
-    <skip />
-    <!-- no translation found for topic10391 (6810540242154911762) -->
-    <skip />
-    <!-- no translation found for topic10392 (2431377771302967625) -->
-    <skip />
-    <!-- no translation found for topic10393 (2671274205988136926) -->
-    <skip />
-    <!-- no translation found for topic10394 (1530096364743244151) -->
-    <skip />
-    <!-- no translation found for topic10395 (316192616624062917) -->
-    <skip />
-    <!-- no translation found for topic10396 (8042120651878490689) -->
-    <skip />
-    <!-- no translation found for topic10397 (492901976344700942) -->
-    <skip />
-    <!-- no translation found for topic10398 (3471795015226090296) -->
-    <skip />
-    <!-- no translation found for topic10399 (2126280752064021308) -->
-    <skip />
-    <!-- no translation found for topic10400 (5440499529264277027) -->
-    <skip />
-    <!-- no translation found for topic10401 (166689951236922024) -->
-    <skip />
-    <!-- no translation found for topic10402 (2451339788231007479) -->
-    <skip />
-    <!-- no translation found for topic10403 (6455478521804717635) -->
-    <skip />
-    <!-- no translation found for topic10404 (5261583496913118024) -->
-    <skip />
-    <!-- no translation found for topic10405 (482477447879117820) -->
-    <skip />
-    <!-- no translation found for topic10406 (8167644332387528703) -->
-    <skip />
-    <!-- no translation found for topic10407 (3237734582719584272) -->
-    <skip />
-    <!-- no translation found for topic10408 (3859749534843254349) -->
-    <skip />
-    <!-- no translation found for topic10409 (7485614115639267976) -->
-    <skip />
-    <!-- no translation found for topic10410 (5996939009229881074) -->
-    <skip />
-    <!-- no translation found for topic10411 (2513997418184786648) -->
-    <skip />
-    <!-- no translation found for topic10412 (5411755341358248299) -->
-    <skip />
-    <!-- no translation found for topic10413 (3319233613448963890) -->
-    <skip />
-    <!-- no translation found for topic10414 (1797840816328584660) -->
-    <skip />
-    <!-- no translation found for topic10415 (2886043330316735719) -->
-    <skip />
-    <!-- no translation found for topic10416 (3436682172863605224) -->
-    <skip />
-    <!-- no translation found for topic10417 (8296644015663416236) -->
-    <skip />
-    <!-- no translation found for topic10418 (8276736633218488127) -->
-    <skip />
-    <!-- no translation found for topic10419 (5663062924928275215) -->
-    <skip />
-    <!-- no translation found for topic10420 (2509320683543423424) -->
-    <skip />
-    <!-- no translation found for topic10421 (6512889128030030686) -->
-    <skip />
-    <!-- no translation found for topic10422 (8342986282852879750) -->
-    <skip />
-    <!-- no translation found for topic10423 (6333426807705188459) -->
-    <skip />
-    <!-- no translation found for topic10424 (5495511215629567375) -->
-    <skip />
-    <!-- no translation found for topic10425 (4009138228283995179) -->
-    <skip />
-    <!-- no translation found for topic10426 (7998590461761852196) -->
-    <skip />
-    <!-- no translation found for topic10427 (6711468161729797769) -->
-    <skip />
-    <!-- no translation found for topic10428 (661919563628063196) -->
-    <skip />
-    <!-- no translation found for topic10429 (408270392813634227) -->
-    <skip />
-    <!-- no translation found for topic10430 (3046485339481297656) -->
-    <skip />
-    <!-- no translation found for topic10431 (7439352609169583150) -->
-    <skip />
-    <!-- no translation found for topic10432 (5034961318884376752) -->
-    <skip />
-    <!-- no translation found for topic10433 (6354590445323135986) -->
-    <skip />
-    <!-- no translation found for topic10434 (7081309045291255264) -->
-    <skip />
-    <!-- no translation found for topic10435 (1064605516265819020) -->
-    <skip />
-    <!-- no translation found for topic10436 (9050375924140897722) -->
-    <skip />
-    <!-- no translation found for topic10437 (2655664900730187701) -->
-    <skip />
-    <!-- no translation found for topic10438 (7944023251845122923) -->
-    <skip />
-    <!-- no translation found for topic10439 (7845433008088931971) -->
-    <skip />
-    <!-- no translation found for topic10440 (485118071443976808) -->
-    <skip />
-    <!-- no translation found for topic10441 (518643446480879895) -->
-    <skip />
-    <!-- no translation found for topic10442 (6534536077484540292) -->
-    <skip />
-    <!-- no translation found for topic10443 (8787722062991478596) -->
-    <skip />
-    <!-- no translation found for topic10444 (2075863187654728611) -->
-    <skip />
-    <!-- no translation found for topic10445 (3460421948068980869) -->
-    <skip />
-    <!-- no translation found for topic10446 (5333138740720504195) -->
-    <skip />
+    <string name="notificationUI_how_it_works_expanded_text1" msgid="1753701052925879129">"પ્રાઇવસી સૅન્ડબૉક્સ કેવી રીતે કામ કરે છે"</string>
+    <string name="notificationUI_how_it_works_expanded_text2" msgid="3117263986288195274">"તમને ગમી શકે તેવી જાહેરાતો તમને બતાવવા માટે પ્રાઇવસી સૅન્ડબૉક્સમાં ડેટા એકત્રિત કરવામાં આવે છે, પણ તમને અથવા તમારા ડિવાઇસને ઓળખ્યા વિના તેને શેર કરવામાં આવે છે."</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="7270822532577167752">"પ્રાઇવસી સૅન્ડબૉક્સમાં કેવા પ્રકારનો ડેટા સ્ટોર કરવામાં આવશે?"</string>
+    <string name="notificationUI_how_it_works_expanded_text4" msgid="5609475052636889205">"•  સામાન્ય રુચિઓ"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="6757375506547548599">"તમે ઉપયોગ કરો છો તે ઍપના આધારે, Android આ ડેટા જનરેટ કરે છે અને તેને પ્રાઇવસી સૅન્ડબૉક્સમાં ઉમેરે છે. ઉદાહરણ તરીકે, તમારી સામાન્ય રુચિઓમાંની એક રુચિ “રમતગમત” હોઈ શકે છે. \n\nતમે તમારા પ્રાઇવસી સેટિંગમાં તમારી રુચિઓની સૂચિ જોઈ શકો છો અને તમને પસંદ ન હોય તેવી કોઈપણ રુચિને બ્લૉક કરી શકો છો."</string>
+    <string name="notificationUI_how_it_works_expanded_text6" msgid="2863877874268072458">"•  અમુક ચોક્કસ રુચિઓ"</string>
+    <string name="notificationUI_how_it_works_expanded_text7" msgid="2140515900209351523">"તમે તેનો ઉપયોગ કેવી રીતે કરો છો તેના આધારે તમારી ઍપ આ ડેટા જનરેટ કરે છે અને તેને પ્રાઇવસી સૅન્ડબૉક્સમાં ઉમેરે છે. ઉદાહરણ તરીકે, તમે જે ઍપનો ઉપયોગ દોડવાના જૂતા ખરીદવા માટે કરો છો, તે ઍપ sport_running લેબલ ઉમેરી શકે છે.\n\nતમારા પ્રાઇવસી સેટિંગમાં, તમે આમ કરતી ઍપની સૂચિ જોઈ શકો છો અને કોઈપણ ઍપને સૅન્ડબૉક્સમાં ડેટાનું યોગદાન આપવાથી બ્લૉક કરી શકો છો."</string>
+    <string name="topic10001" msgid="1636806320891333775">"આર્ટ અને મનોરંજન"</string>
+    <string name="topic10002" msgid="1226367977754287428">"અભિનય અને થિએટર"</string>
+    <string name="topic10003" msgid="6949890838957814881">"ઍનિમે અને માંગા"</string>
+    <string name="topic10004" msgid="5397903150832181233">"કાર્ટૂન"</string>
+    <string name="topic10005" msgid="6316179809581237302">"કૉમિક્સ"</string>
+    <string name="topic10006" msgid="7442330644172139790">"કૉન્સર્ટ અને મ્યુઝિક ફેસ્ટિવલ"</string>
+    <string name="topic10007" msgid="5537896091418145164">"ડાન્સ"</string>
+    <string name="topic10008" msgid="2737343278307552521">"મનોરંજન ઉદ્યોગ"</string>
+    <string name="topic10009" msgid="3252367380340240453">"મજા અને નાની આનંદદાયક બાબતો"</string>
+    <string name="topic10010" msgid="932301479153552725">"મજેદાર પરીક્ષણો અને નાદાનીભર્યા સર્વેક્ષણો"</string>
+    <string name="topic10011" msgid="3123553390567261985">"વિનોદ"</string>
+    <string name="topic10012" msgid="8756486271154511326">"મજેદાર ફોટા અને વીડિયો"</string>
+    <string name="topic10013" msgid="1242353161202448753">"લાઇવ કૉમેડી"</string>
+    <string name="topic10014" msgid="6086156236112755291">"રમતગમતની લાઇવ ઇવેન્ટ"</string>
+    <string name="topic10015" msgid="9196350141359833832">"જાદુ"</string>
+    <string name="topic10016" msgid="202419376638900745">"મૂવીની સૂચિઓ અને થિયેટરના શોટાઇમ"</string>
+    <string name="topic10017" msgid="6737229918787540100">"મૂવી"</string>
+    <string name="topic10018" msgid="6823676154109177487">"ઍક્શન અને સાહસિક ફિલ્મ"</string>
+    <string name="topic10019" msgid="6875960630918973127">"એનિમેટેડ ફિલ્મ"</string>
+    <string name="topic10020" msgid="4323870300602151489">"કૉમેડી ફિલ્મ"</string>
+    <string name="topic10021" msgid="446758643774468418">"અવિસ્મરણીય અને બિનપરંપરાગત ફિલ્મ"</string>
+    <string name="topic10022" msgid="3671929742155787005">"ડોક્યુમેન્ટરી ફિલ્મ"</string>
+    <string name="topic10023" msgid="3547616830531182863">"ડ્રામા ફિલ્મ"</string>
+    <string name="topic10024" msgid="1044853632986202120">"પારિવારિક ફિલ્મ"</string>
+    <string name="topic10025" msgid="5958629223443279316">"હૉરર ફિલ્મ"</string>
+    <string name="topic10026" msgid="5685515125614860029">"રોમાન્ટિક ફિલ્મ"</string>
+    <string name="topic10027" msgid="8846353713171614854">"થ્રિલર"</string>
+    <string name="topic10028" msgid="170404703980174756">"મ્યુઝિક અને ઑડિયો"</string>
+    <string name="topic10029" msgid="4634600135545614665">"વિષાદી મ્યુઝિક"</string>
+    <string name="topic10030" msgid="7226438392540805771">"શાસ્ત્રીય સંગીત"</string>
+    <string name="topic10031" msgid="1488013446112025676">"કન્ટ્રી મ્યુઝિક"</string>
+    <string name="topic10032" msgid="9053666244854789632">"ડાન્સ અને ઇલેક્ટ્રોનિક મ્યુઝિક"</string>
+    <string name="topic10033" msgid="440063573197454181">"લોક અને પરંપરાગત સંગીત"</string>
+    <string name="topic10034" msgid="8296307244554241197">"જાઝ"</string>
+    <string name="topic10035" msgid="9171752741499923310">"મ્યુઝિક સ્ટ્રીમ અને ડાઉનલોડ"</string>
+    <string name="topic10036" msgid="2490236112725457376">"મ્યુઝિક વીડિયો"</string>
+    <string name="topic10037" msgid="1923690469725883551">"મ્યુઝિક ઇન્સ્ટ્રુમેન્ટ"</string>
+    <string name="topic10038" msgid="2817492732688549631">"પિયાનો અને કીબોર્ડ"</string>
+    <string name="topic10039" msgid="8970033643570782019">"પૉપ મ્યુઝિક"</string>
+    <string name="topic10040" msgid="7478395512712452137">"રેડિયો"</string>
+    <string name="topic10041" msgid="3319379117705411886">"ટૉક રેડિયો"</string>
+    <string name="topic10042" msgid="8830471038440654640">"રૅપ અને હિપ-હોપ"</string>
+    <string name="topic10043" msgid="8585450284346207691">"રૉક મ્યુઝિક"</string>
+    <string name="topic10044" msgid="3710011249220779842">"ક્લાસિક રૉક અને જૂના ગીતો"</string>
+    <string name="topic10045" msgid="7593443421067822441">"હાર્ડ રૉક અને પ્રોગ્રેસિવ મ્યુઝિક"</string>
+    <string name="topic10046" msgid="8715621227472631784">"ઇન્ડી અને વૈકલ્પિક મ્યુઝિક"</string>
+    <string name="topic10047" msgid="3518038303049899798">"સેમ્પલ અને સાઉન્ડ લાઇબ્રેરી"</string>
+    <string name="topic10048" msgid="3063505369500799094">"સોલ અને R&amp;B"</string>
+    <string name="topic10049" msgid="8061992014977840818">"સાઉન્ડટ્રૅક"</string>
+    <string name="topic10050" msgid="3540229495848506229">"વર્લ્ડ મ્યુઝિક"</string>
+    <string name="topic10051" msgid="6132468331924347995">"રેગે અને કેરિબિયન"</string>
+    <string name="topic10052" msgid="8213269199807045473">"ઑનલાઇન છબીની ગૅલરી"</string>
+    <string name="topic10053" msgid="1378192203082454197">"ઑનલાઇન વીડિયો"</string>
+    <string name="topic10054" msgid="3727401645405134505">"લાઇવ વીડિયો સ્ટ્રીમ"</string>
+    <string name="topic10055" msgid="4943174831732192854">"મૂવી અને ટીવી સ્ટ્રીમિંગ"</string>
+    <string name="topic10056" msgid="3066058636154255073">"ઑપેરા"</string>
+    <string name="topic10057" msgid="387445514677222034">"ટીવી ગાઇડ અને સંદર્ભ"</string>
+    <string name="topic10058" msgid="9149178644022969766">"ટીવી નેટવર્ક અને સ્ટેશન"</string>
+    <string name="topic10059" msgid="6300562669238320524">"ટીવી શો અને પ્રોગ્રામ"</string>
+    <string name="topic10060" msgid="3901256055064835246">"ટીવી કૉમેડી"</string>
+    <string name="topic10061" msgid="8343924749123326062">"ટીવી ડોક્યુમેન્ટરી અને નૉનફિક્શન"</string>
+    <string name="topic10062" msgid="9183355218976951211">"ટીવી નાટકો"</string>
+    <string name="topic10063" msgid="644340831620792432">"ટીવી સોપ ઑપેરા"</string>
+    <string name="topic10064" msgid="5961885645457010998">"પારિવારિક ટીવી શો"</string>
+    <string name="topic10065" msgid="7916343612028608044">"ટીવી રિયાલિટી શો"</string>
+    <string name="topic10066" msgid="5984396525358003559">"સાયન્સ ફિક્શન અને કાલ્પનિક ટીવી શો"</string>
+    <string name="topic10067" msgid="6404637729885733437">"વિઝ્યુઅલ આર્ટ અને ડિઝાઇન"</string>
+    <string name="topic10068" msgid="4589856961950168493">"ડિઝાઇન"</string>
+    <string name="topic10069" msgid="3129378082034151991">"પેન્ટિંગ"</string>
+    <string name="topic10070" msgid="2570256568661324147">"ફોટોગ્રાફિક અને ડિજિટલ આર્ટ"</string>
+    <string name="topic10071" msgid="1288722040962471254">"ઑટો અને વાહનો"</string>
+    <string name="topic10072" msgid="9155509766616567261">"કાર્ગો ટ્રક અને ટ્રેલર"</string>
+    <string name="topic10073" msgid="3748676231341513738">"ક્લાસિક વાહનો"</string>
+    <string name="topic10074" msgid="2040911547161463227">"કસ્ટમાઇઝ કરેલા અને ખાસ પર્ફૉર્મન્સવાળા વાહનો"</string>
+    <string name="topic10075" msgid="1242538698445713796">"ગેસની કિંમતો અને વાહનોમાં ઈંધણ ભરાવવું"</string>
+    <string name="topic10076" msgid="8674225812339579627">"મોટર વાહનો (વાહનના પ્રકાર અનુસાર)"</string>
+    <string name="topic10077" msgid="3577709810751953433">"ઑટોનોમસ વાહનો"</string>
+    <string name="topic10078" msgid="5493263845129910125">"કન્વર્ટિબલ"</string>
+    <string name="topic10079" msgid="3466838852836498580">"કૂપ"</string>
+    <string name="topic10080" msgid="3515647285637163190">"હૅચબૅક"</string>
+    <string name="topic10081" msgid="4135085035401158860">"હાઇબ્રિડ અને વૈકલ્પિક વાહનો"</string>
+    <string name="topic10082" msgid="7168659489029594320">"વૈભવી વાહનો"</string>
+    <string name="topic10083" msgid="1532745144715857802">"માઇક્રોકાર અને સબકૉમ્પેક્ટ"</string>
+    <string name="topic10084" msgid="1984231414410381476">"મોટરસાઇકલ"</string>
+    <string name="topic10085" msgid="5235555028227554661">"ઑફ-રોડ વાહનો"</string>
+    <string name="topic10086" msgid="8360336602646460411">"પિકઅપ ટ્રક"</string>
+    <string name="topic10087" msgid="6566900167002195406">"સ્કૂટર અને મોપેડ"</string>
+    <string name="topic10088" msgid="2899313082601001223">"સીડાન"</string>
+    <string name="topic10089" msgid="1053630346809973163">"સ્ટેશન વૅગન"</string>
+    <string name="topic10090" msgid="4478565601243447368">"SUVs અને ક્રૉસઓવર"</string>
+    <string name="topic10091" msgid="3812668311830832874">"ક્રૉસઓવર"</string>
+    <string name="topic10092" msgid="524130833813249539">"વૅન અને મિનીવૅન"</string>
+    <string name="topic10093" msgid="8900143351472824542">"ટોઇંગ અને મુસાફરી દરમિયાન વાહન સંબંધિત સમસ્યાઓ માટેની સેવાઓ"</string>
+    <string name="topic10094" msgid="6205146188176216038">"વાહન અને ટ્રાફિક સુરક્ષા"</string>
+    <string name="topic10095" msgid="7983070264654477553">"વાહનના પાર્ટ અને ઍક્સેસરી"</string>
+    <string name="topic10096" msgid="8148747014459050804">"વાહનોનું સમારકામ અને તેમની જાળવણી"</string>
+    <string name="topic10097" msgid="4716536434833425748">"વાહન ખરીદી"</string>
+    <string name="topic10098" msgid="6401980112135995019">"વાપરેલા વાહનો"</string>
+    <string name="topic10099" msgid="8018714209926584445">"વાહનના શો"</string>
+    <string name="topic10100" msgid="2481422464734249871">"સૌંદર્ય અને ફિટનેસ"</string>
+    <string name="topic10101" msgid="7889144198021629053">"બોડી આર્ટ"</string>
+    <string name="topic10102" msgid="577637051755692238">"ચહેરા અને શરીરની સંભાળ"</string>
+    <string name="topic10103" msgid="6618157344631408510">"એન્ટિપરસ્પિરન્ટ"</string>
+    <string name="topic10104" msgid="6043649669944382784">"સ્નાન અને શરીરની સંભાળ રાખવા સંબંધિત પ્રોડક્ટ"</string>
+    <string name="topic10105" msgid="3248569527339253661">"પ્રાકૃતિક બ્યુટી પ્રોડક્ટ"</string>
+    <string name="topic10106" msgid="1291481249483309832">"મેકઅપ અને સૌન્દર્યપ્રસાધનો"</string>
+    <string name="topic10107" msgid="1335060201249279923">"નખની સંભાળ માટેની પ્રોડક્ટ"</string>
+    <string name="topic10108" msgid="4996884435711154930">"પરફ્યુમ અને ફ્રેગ્રેન્સ"</string>
+    <string name="topic10109" msgid="7298403319989686251">"રેઝર અને શેવર"</string>
+    <string name="topic10110" msgid="5954355866247248022">"ફેશન અને સ્ટાઇલ"</string>
+    <string name="topic10111" msgid="4447710938881368413">"ફિટનેસ"</string>
+    <string name="topic10112" msgid="8816530137921714131">"શરીર સૌષ્ઠવ"</string>
+    <string name="topic10113" msgid="8138889299405853557">"ફિટનેસ સંબંધિત સૂચના અને વ્યક્તિગત પ્રશિક્ષણ"</string>
+    <string name="topic10114" msgid="2172821400279346865">"ફિટનેસ ટેક્નોલોજી પ્રોડક્ટ"</string>
+    <string name="topic10115" msgid="9060244278068231494">"વાળની સંભાળ"</string>
+    <string name="topic10116" msgid="116242880964485085">"પુસ્તકો અને સાહિત્ય"</string>
+    <string name="topic10117" msgid="8933734721100160863">"બાળ સાહિત્ય"</string>
+    <string name="topic10118" msgid="4368531903547695191">"ઇ-પુસ્તકો"</string>
+    <string name="topic10119" msgid="2781095265741115471">"સામાયિકો"</string>
+    <string name="topic10120" msgid="3099507102655270527">"કવિતા"</string>
+    <string name="topic10121" msgid="4466592180799340837">"વ્યવસાય અને ઔદ્યોગિક"</string>
+    <string name="topic10122" msgid="2375136741125920744">"જાહેરાત અને માર્કેટિંગ"</string>
+    <string name="topic10123" msgid="6974082907852347979">"વેચાણ"</string>
+    <string name="topic10124" msgid="44474598156972786">"કૃષિ અને વનસંવર્ધન"</string>
+    <string name="topic10125" msgid="9170394261421539760">"ખાદ્ય ઉત્પાદન"</string>
+    <string name="topic10126" msgid="2210146434071038904">"ઑટોમોટિવ ઉદ્યોગ"</string>
+    <string name="topic10127" msgid="5503077037318678029">"ઉડ્ડયન ઉદ્યોગ"</string>
+    <string name="topic10128" msgid="285525650692719959">"વ્યવસાય સંબંધિત કામકાજ"</string>
+    <string name="topic10129" msgid="3094691551566702427">"અનુકૂળતા અનુસાર કામ કરવાની વ્યવસ્થા"</string>
+    <string name="topic10130" msgid="1922351409757117764">"માનવ સંસાધન"</string>
+    <string name="topic10131" msgid="8598763405951029782">"વ્યાવસાયિક ધિરાણ"</string>
+    <string name="topic10132" msgid="1476352626208153907">"બાંધકામ અને જાળવણી"</string>
+    <string name="topic10133" msgid="7089177624979453528">"સિવિલ એન્જિનિયરિંગ"</string>
+    <string name="topic10134" msgid="3833032373311037601">"રક્ષા ઉદ્યોગ"</string>
+    <string name="topic10135" msgid="2478808072377000440">"ઊર્જા અને યુટિલિટી"</string>
+    <string name="topic10136" msgid="9083992436834044162">"પાણી પુરવઠો અને તેનું શુદ્ધિકરણ"</string>
+    <string name="topic10137" msgid="1912599316814246824">"આતિથ્યસત્કાર ઉદ્યોગ"</string>
+    <string name="topic10138" msgid="7428346836350671895">"ઉત્પાદન"</string>
+    <string name="topic10139" msgid="1396685812404869953">"ધાતુઓ અને ખાણકામ"</string>
+    <string name="topic10140" msgid="5264212052238781441">"MLM અને વ્યાવસાયિક તકો"</string>
+    <string name="topic10141" msgid="860058416683118730">"ફાર્માસ્યુટિકલ અને બાયોટેક"</string>
+    <string name="topic10142" msgid="2912550934111655896">"પ્રિન્ટિંગ અને પબ્લિશિંગ"</string>
+    <string name="topic10143" msgid="5690610408227078117">"છૂટક વેપાર"</string>
+    <string name="topic10144" msgid="3341052306953106368">"સાહસ મૂડી"</string>
+    <string name="topic10145" msgid="6886608911083388041">"કમ્પ્યુટર અને ઇલેક્ટ્રોનિક્સ"</string>
+    <string name="topic10146" msgid="8202145175139144216">"કમ્પ્યુટર સાધનો"</string>
+    <string name="topic10147" msgid="4687964705548995437">"પ્રિન્ટર"</string>
+    <string name="topic10148" msgid="8861628145647459323">"કમ્પ્યુટર સુરક્ષા"</string>
+    <string name="topic10149" msgid="1719988773455991739">"ઍન્ટિવાયરસ અને માલવેર"</string>
+    <string name="topic10150" msgid="1482205464872465298">"નેટવર્ક સુરક્ષા"</string>
+    <string name="topic10151" msgid="1772262905623388968">"કંઝ્યુમર ઇલેક્ટ્રોનિક્સ"</string>
+    <string name="topic10152" msgid="651152740021127086">"કૅમેરા અને કૅમકોર્ડર"</string>
+    <string name="topic10153" msgid="8741504768717646372">"GPS અને નૅવિગેશન"</string>
+    <string name="topic10154" msgid="5382029798409496090">"હોમ ઑટોમેશન"</string>
+    <string name="topic10155" msgid="5243817792730496258">"હોમ થિયેટર સિસ્ટમ"</string>
+    <string name="topic10156" msgid="2497791567138856030">"MP3 અને પોર્ટેબલ મીડિયા પ્લેયર"</string>
+    <string name="topic10157" msgid="4723439422860510190">"પહેરી શકાય તેવી ટેક્નોલોજી"</string>
+    <string name="topic10158" msgid="5345830001295028513">"ડેટા બૅકઅપ અને રિકવરી"</string>
+    <string name="topic10159" msgid="6146958285117174314">"ડેસ્કટૉપ કમ્પ્યુટર"</string>
+    <string name="topic10160" msgid="6624820395549466426">"લૅપટૉપ અને નોટબુક"</string>
+    <string name="topic10161" msgid="912458758908978530">"નેટવર્કિંગ"</string>
+    <string name="topic10162" msgid="6717352131379507693">"ડિસ્ટ્રિબ્યુટેડ અને ક્લાઉડ કમ્પ્યૂટિંગ"</string>
+    <string name="topic10163" msgid="6344926622025055321">"પ્રોગ્રામિંગ"</string>
+    <string name="topic10164" msgid="4228888249078845459">"સૉફ્ટવેર"</string>
+    <string name="topic10165" msgid="5507908999219967161">"ઑડિયો અને મ્યુઝિક સૉફ્ટવેર"</string>
+    <string name="topic10166" msgid="4768106492755849560">"બિઝનેસ અને પ્રૉડક્ટિવિટી સૉફ્ટવેર"</string>
+    <string name="topic10167" msgid="8556935769754922871">"કૅલેન્ડર અને શેડ્યૂલિંગ સૉફ્ટવેર"</string>
+    <string name="topic10168" msgid="7730134961167790334">"સહયોગ અને કૉન્ફરન્સ માટેના સૉફ્ટવેર"</string>
+    <string name="topic10169" msgid="5655084106378890454">"પ્રસ્તુતિ સૉફ્ટવેર"</string>
+    <string name="topic10170" msgid="4638281897205909919">"સ્પ્રેડશીટ સૉફ્ટવેર"</string>
+    <string name="topic10171" msgid="7910183120486541228">"વર્ડ પ્રોસેસિંગ સૉફ્ટવેર"</string>
+    <string name="topic10172" msgid="3626573644414074730">"ડેસ્કટૉપ પબ્લિશિંગ"</string>
+    <string name="topic10173" msgid="7320053835183057144">"ફૉન્ટ"</string>
+    <string name="topic10174" msgid="5770469447869586710">"ડાઉનલોડ મેનેજર"</string>
+    <string name="topic10175" msgid="3475235810022334041">"ફ્રીવેર અને શેરવેર"</string>
+    <string name="topic10176" msgid="6881704501596479881">"ગ્રાફિક અને ઍનિમેશન સૉફ્ટવેર"</string>
+    <string name="topic10177" msgid="6740430730079682579">"ઇન્ટેલિજન્ટ પર્સનલ આસિસ્ટંટ"</string>
+    <string name="topic10178" msgid="7261811053741593091">"મીડિયા પ્લેયર"</string>
+    <string name="topic10179" msgid="2967001567120854492">"નિરીક્ષણ માટેના સૉફ્ટવેર"</string>
+    <string name="topic10180" msgid="4197420326455130102">"ઑપરેટિંગ સિસ્ટમ"</string>
+    <string name="topic10181" msgid="3537573129132698830">"ફોટો અને વીડિયો સૉફ્ટવેર"</string>
+    <string name="topic10182" msgid="7688631285131229981">"ફોટો સૉફ્ટવેર"</string>
+    <string name="topic10183" msgid="5994974566140272512">"વીડિયો સૉફ્ટવેર"</string>
+    <string name="topic10184" msgid="8685817335076871509">"સૉફ્ટવેર યુટિલિટી"</string>
+    <string name="topic10185" msgid="308314128178285390">"વેબ બ્રાઉઝર"</string>
+    <string name="topic10186" msgid="3147859503481018245">"નાણાકીય"</string>
+    <string name="topic10187" msgid="7077128721410871032">"એકાઉન્ટિંગ અને ઑડિટિંગ"</string>
+    <string name="topic10188" msgid="2206138708659457910">"ટેક્સની ગણતરી અને તેનું પ્લાનિંગ"</string>
+    <string name="topic10189" msgid="4001795553008246784">"બેંકિંગ"</string>
+    <string name="topic10190" msgid="2988430661381243083">"નાણાં ટ્રાન્સફર અને વાયર સેવાઓ"</string>
+    <string name="topic10191" msgid="6196081825838237614">"ક્રેડિટ અને લેંડિંગ"</string>
+    <string name="topic10192" msgid="3290123244833047307">"ક્રેડિટ કાર્ડ"</string>
+    <string name="topic10193" msgid="294407043381146861">"ઘર ખરીદવા માટે લોન આપતી સેવાઓ"</string>
+    <string name="topic10194" msgid="2834543407440890272">"વ્યક્તિગત લોન"</string>
+    <string name="topic10195" msgid="7650553060132394782">"કૉલેજના વિદ્યાર્થીઓને લોન આપતી સેવાઓ"</string>
+    <string name="topic10196" msgid="5395035781876507254">"નાણાકીય પ્લાનિંગ અને મેનેજમેન્ટ"</string>
+    <string name="topic10197" msgid="1287138667488226463">"નિવૃત્તિ અને પેન્શન"</string>
+    <string name="topic10198" msgid="2523256186943366779">"અનુદાન"</string>
+    <string name="topic10199" msgid="3746711537661530183">"અનુદાન"</string>
+    <string name="topic10200" msgid="2394864891391267841">"વીમો"</string>
+    <string name="topic10201" msgid="4301879117376963742">"ઑટો વીમો"</string>
+    <string name="topic10202" msgid="739808503036239379">"આરોગ્ય વીમો"</string>
+    <string name="topic10203" msgid="838786942776142290">"ઘરનો વીમો"</string>
+    <string name="topic10204" msgid="6591131759521321677">"જીવન વીમો"</string>
+    <string name="topic10205" msgid="3294946723815021478">"મુસાફરી વીમો"</string>
+    <string name="topic10206" msgid="6166888350685752683">"રોકાણ"</string>
+    <string name="topic10207" msgid="2296385804039743999">"કમૉડિટી અને ફ્યૂચર્સ ટ્રેડિંગ"</string>
+    <string name="topic10208" msgid="2717498987483479091">"ચલણ અને વિદેશી ચલણનો વિનિમય"</string>
+    <string name="topic10209" msgid="5204948738662951962">"હેજ ફંડ"</string>
+    <string name="topic10210" msgid="4607225697024266227">"મ્યુચ્યુઅલ ફંડ"</string>
+    <string name="topic10211" msgid="7475381839877166080">"સ્ટૉક અને બોન્ડ"</string>
+    <string name="topic10212" msgid="3988751035952286047">"ભોજન અને પીણાં"</string>
+    <string name="topic10213" msgid="1358963098339995471">"કુકિંગ અને રૅસિપિ"</string>
+    <string name="topic10214" msgid="8463864389138867811">"બાર્બેક્યૂ અને ગ્રિલિંગ"</string>
+    <string name="topic10215" msgid="3085467051491069648">"વ્યંજનો"</string>
+    <string name="topic10216" msgid="6043130649326166680">"શાકાહારી ભોજન"</string>
+    <string name="topic10217" msgid="7173870057669247536">"શુદ્ધ શાકાહારી ભોજન"</string>
+    <string name="topic10218" msgid="5570240643247064951">"આરોગ્યપ્રદ આહાર"</string>
+    <string name="topic10219" msgid="5896715206025463732">"ખાણીપીણી અને કરિયાણાના છૂટક વેપારીઓ"</string>
+    <string name="topic10220" msgid="3894580611467039658">"ગેમ"</string>
+    <string name="topic10221" msgid="14471057764591805">"આર્કેડ અને સિક્કા-સંચાલિત ગેમ"</string>
+    <string name="topic10222" msgid="2704894577954508861">"બિલિયર્ડ્સ"</string>
+    <string name="topic10223" msgid="202900267060220170">"બોર્ડ ગેમ"</string>
+    <string name="topic10224" msgid="6572627325588452785">"ચેસ અને એબ્સ્ટ્રેક્ટ વ્યૂહરચનાની ગેમ"</string>
+    <string name="topic10225" msgid="8056906319560292131">"પત્તાંની રમતો"</string>
+    <string name="topic10226" msgid="714463563336281099">"કાર્ડ એકઠા કરીને રમી શકાતી ગેમ"</string>
+    <string name="topic10227" msgid="218768654597520683">"કમ્પ્યુટર અને વીડિયો ગેમ"</string>
+    <string name="topic10228" msgid="850597136074192489">"ઍક્શન અને પ્લૅટફૉર્મ ગેમ"</string>
+    <string name="topic10229" msgid="4284501233897149886">"એડ્વેન્ચર ગેમ"</string>
+    <string name="topic10230" msgid="7156822286576815181">"કેઝ્યુઅલ ગેમ"</string>
+    <string name="topic10231" msgid="7620407218897744361">"સ્પર્ધાત્મક વીડિયો ગેમ"</string>
+    <string name="topic10232" msgid="3029734447275709941">"ડ્રાઇવિંગ અને રેસિંગ ગેમ"</string>
+    <string name="topic10233" msgid="8318075279868138231">"લડાઈની ગેમ"</string>
+    <string name="topic10234" msgid="3899847414436099153">"ગેમિંગ સંદર્ભ અને રિવ્યૂ"</string>
+    <string name="topic10235" msgid="5851356242523630529">"વીડિયો ગેમમાં જીતવા માટેના છેતરામણા ઉપાયો અને સંકેતો"</string>
+    <string name="topic10236" msgid="1986665634014804954">"એક સાથે હજારો ખેલાડીઓ દ્વારા રમાતી મલ્ટિપ્લેયર ગેમ"</string>
+    <string name="topic10237" msgid="5569920221620447713">"મ્યુઝિક અને ડાન્સ ગેમ"</string>
+    <string name="topic10238" msgid="7431087331656772530">"સૅન્ડબૉક્સ ગેમ"</string>
+    <string name="topic10239" msgid="8667462879554115515">"શૂટર ગેમ"</string>
+    <string name="topic10240" msgid="1618985302446756520">"સિમ્યુલેશન ગેમ"</string>
+    <string name="topic10241" msgid="8450778411063723262">"વ્યવસાય અને ઉદ્યોગપતિની ગેમ"</string>
+    <string name="topic10242" msgid="8860812940320018907">"શહેરના નિર્માણ સંબંધિત ગેમ"</string>
+    <string name="topic10243" msgid="1764694148721971512">"લાઇફ સિમ્યુલેશન ગેમ"</string>
+    <string name="topic10244" msgid="4308588210397969087">"વાહન સ્ટિમ્યુલેટર"</string>
+    <string name="topic10245" msgid="6904368410919496658">"રમતગમતની ગેમ"</string>
+    <string name="topic10246" msgid="3381244806751528148">"સ્પોર્ટ્સ મેનેજમેન્ટ ગેમ"</string>
+    <string name="topic10247" msgid="5927502688389762068">"વ્યૂહરચનાવાળી ગેમ"</string>
+    <string name="topic10248" msgid="8471339627212674032">"સુધારા અને ઍડ-ઑનવાળી ગેમ"</string>
+    <string name="topic10249" msgid="5076706536204559962">"શૈક્ષણિક ગેમ"</string>
+    <string name="topic10250" msgid="6083030595195401083">"પારિવારિક ગેમ અને પ્રવૃત્તિઓ"</string>
+    <string name="topic10251" msgid="99237306730665104">"ડ્રોઇંગ અને રંગ ભરવા"</string>
+    <string name="topic10252" msgid="6543039575961394064">"ડ્રેસ-અપ અને ફેશન ગેમ"</string>
+    <string name="topic10253" msgid="566596668186874227">"પઝલ અને મગજ કસતાં ઉખાણાં"</string>
+    <string name="topic10254" msgid="5732147617072023634">"રોલપ્લેઇંગ ગેમ"</string>
+    <string name="topic10255" msgid="2890655077164103057">"ટેબલ ટેનિસ"</string>
+    <string name="topic10256" msgid="3302096971402751679">"ટાઇલ ગેમ"</string>
+    <string name="topic10257" msgid="4238531589193902619">"શબ્દોની ગેમ"</string>
+    <string name="topic10258" msgid="6995329540076529056">"શોખ અને નવરાશ"</string>
+    <string name="topic10259" msgid="8649688885811560410">"વર્ષગાંઠ"</string>
+    <string name="topic10260" msgid="487999213495640080">"જન્મદિવસ અને નામકરણ દિવસ"</string>
+    <string name="topic10261" msgid="8970668366745952094">"ડાઇવિંગ અને ઊંડા પાણીમાં કરાતી પ્રવૃત્તિઓ"</string>
+    <string name="topic10262" msgid="6644046161469353448">"ફાઇબર અને ટેક્સટાઇલ આર્ટ"</string>
+    <string name="topic10263" msgid="848165976917542929">"આઉટડોર"</string>
+    <string name="topic10264" msgid="6274985117752637104">"માછીમારી"</string>
+    <string name="topic10265" msgid="4134876488948695674">"શિકાર અને શૂટિંગ"</string>
+    <string name="topic10266" msgid="6617785039128074351">"પેંટબૉલ"</string>
+    <string name="topic10267" msgid="488093331618885003">"રેડિયો નિયંત્રણ અને મૉડલિંગ"</string>
+    <string name="topic10268" msgid="277932389492046264">"લગ્ન"</string>
+    <string name="topic10269" msgid="8572041514147955202">"ઘર અને બગીચો"</string>
+    <string name="topic10270" msgid="2646715182474030951">"બાગકામ"</string>
+    <string name="topic10271" msgid="1308931236810509881">"ઘર અને તેને સંબંધિત ઇન્ટિરિયર ડેકોરેશન"</string>
+    <string name="topic10272" msgid="8746698707390628887">"ઘરના ઉપકરણો"</string>
+    <string name="topic10273" msgid="344442071339164852">"ઘરમાં સમારકામ"</string>
+    <string name="topic10274" msgid="8982330028561451429">"ઘરની સલામતી અને સુરક્ષા"</string>
+    <string name="topic10275" msgid="8280198018937968735">"ઘરનો સામાન"</string>
+    <string name="topic10276" msgid="1651598271798609235">"લૅન્ડસ્કેપ ડિઝાઇન"</string>
+    <string name="topic10277" msgid="7675195736886448994">"ઇન્ટરનેટ અને ટેલિકોમ"</string>
+    <string name="topic10278" msgid="873251714192341707">"ઇમેઇલ અને મેસેજિંગ"</string>
+    <string name="topic10279" msgid="6514296374139842600">"ઇમેઇલ ઍડ્રેસ"</string>
+    <string name="topic10280" msgid="7976787187115018267">"ટેક્સ્ટ અને ઇન્સ્ટન્ટ મેસેજિંગ"</string>
+    <string name="topic10281" msgid="4013341162811169339">"વૉઇસ અને વીડિયો ચૅટ"</string>
+    <string name="topic10282" msgid="7810462611906257564">"ISPs"</string>
+    <string name="topic10283" msgid="3958287780718485172">"ફોન સેવા પ્રદાતાઓ"</string>
+    <string name="topic10284" msgid="2415044270290467935">"રિંગટોન અને મોબાઇલ થીમ"</string>
+    <string name="topic10285" msgid="7056449544316408821">"શોધ એન્જિન"</string>
+    <string name="topic10286" msgid="3458688996478472971">"સ્માર્ટ ફોન"</string>
+    <string name="topic10287" msgid="6766203044518402938">"ટેલીકૉન્ફરન્સિંગ"</string>
+    <string name="topic10288" msgid="3883137694557636622">"વેબ ઍપ અને ઑનલાઇન ટૂલ"</string>
+    <string name="topic10289" msgid="3392995633794787676">"વેબ સેવાઓ"</string>
+    <string name="topic10290" msgid="3118880486702986341">"ક્લાઉડ સ્ટોરેજ"</string>
+    <string name="topic10291" msgid="6025855926350955094">"વેબ ડિઝાઇન અને ડેવલપમેન્ટ"</string>
+    <string name="topic10292" msgid="3069720659823056935">"વેબ હોસ્ટિંગ"</string>
+    <string name="topic10293" msgid="2489957780009828409">"નોકરીઓ અને શિક્ષણ"</string>
+    <string name="topic10294" msgid="474839431177892843">"શિક્ષણ"</string>
+    <string name="topic10295" msgid="2215489196192620880">"શૈક્ષણિક કૉન્ફરન્સ અને પબ્લિકેશન"</string>
+    <string name="topic10296" msgid="4494362881225210483">"કૉલેજ અને યુનિવર્સિટી"</string>
+    <string name="topic10297" msgid="8596946591674128749">"ડિસ્ટન્સ લર્નિંગ"</string>
+    <string name="topic10298" msgid="6669181180128620422">"પ્રી-સ્કૂલ શિક્ષણ"</string>
+    <string name="topic10299" msgid="989138215800115613">"પ્રીસ્કૂલ"</string>
+    <string name="topic10300" msgid="8281464235308602670">"હોમસ્કૂલિંગ"</string>
+    <string name="topic10301" msgid="9156890858635333460">"પ્રમાણિત અને પ્રવેશ પરીક્ષાઓ"</string>
+    <string name="topic10302" msgid="1325835179421990876">"શિક્ષણ અને વર્ગખંડના સંસાધનો"</string>
+    <string name="topic10303" msgid="3103839978894155537">"વ્યાવસાયિક અને તેની આગળનું શિક્ષણ"</string>
+    <string name="topic10304" msgid="8831682558788062486">"નોકરીઓ"</string>
+    <string name="topic10305" msgid="8415203095484493106">"કારકિર્દી સંબંધિત સંસાધનો અને પ્લાનિંગ"</string>
+    <string name="topic10306" msgid="7426556527349374835">"નોકરીની સૂચિઓ"</string>
+    <string name="topic10307" msgid="1187762846826735256">"કાયદો અને સરકાર"</string>
+    <string name="topic10308" msgid="3346756665358311386">"ગુનો અને ન્યાય"</string>
+    <string name="topic10309" msgid="2041175328931014735">"કાનૂની"</string>
+    <string name="topic10310" msgid="7079570344976872062">"કાનૂની સેવાઓ"</string>
+    <string name="topic10311" msgid="2095095138677585525">"સમાચાર"</string>
+    <string name="topic10312" msgid="939721674816307639">"અર્થતંત્રના સમાચાર"</string>
+    <string name="topic10313" msgid="4159611985538361632">"સ્થાનિક સમાચાર"</string>
+    <string name="topic10314" msgid="93219947859117151">"વિલીનીકરણ અને અધિગ્રહણ"</string>
+    <string name="topic10315" msgid="5046321177148647481">"સમાચારપત્રો"</string>
+    <string name="topic10316" msgid="8592980844674525307">"રાજકારણ"</string>
+    <string name="topic10317" msgid="2412259096368647866">"રમતગમતના સમાચાર"</string>
+    <string name="topic10318" msgid="1508449672941031904">"હવામાન"</string>
+    <string name="topic10319" msgid="3973645291178509390">"વિશ્વ સમાચાર"</string>
+    <string name="topic10320" msgid="5279440074507438174">"ઑનલાઇન સમુદાયો"</string>
+    <string name="topic10321" msgid="7018890132742820265">"ક્લિપ આર્ટ અને ઍનિમેટેડ GIFs"</string>
+    <string name="topic10322" msgid="1585737438943011532">"ડેટિંગ અને વ્યક્તિગત જરૂરિયાતો સંબંધિત સેવાઓ"</string>
+    <string name="topic10323" msgid="962863497957179646">"ફીડ એકત્રીકરણ અને સોશિયલ બુકમાર્કિંગ"</string>
+    <string name="topic10324" msgid="1425257460381023853">"ફાઇલ શેરિંગ અને હોસ્ટિંગ"</string>
+    <string name="topic10325" msgid="8698912164970408378">"ચર્ચામંચ અને ચૅટની સુવિધા આપતા પ્રદાતાઓ"</string>
+    <string name="topic10326" msgid="2425798096705921796">"માઇક્રોબ્લોગિંગ"</string>
+    <string name="topic10327" msgid="8518822987595111212">"ફોટો અને વીડિયો શેરિંગ"</string>
+    <string name="topic10328" msgid="8932708475346340912">"ફોટો અને છબી શેરિંગ"</string>
+    <string name="topic10329" msgid="223933889758324282">"વીડિયો શેરિંગ"</string>
+    <string name="topic10330" msgid="188028553492626282">"ત્વચા"</string>
+    <string name="topic10331" msgid="426844238985651925">"સોશિયલ નેટવર્ક ઍપ અને ઍડ-ઑન"</string>
+    <string name="topic10332" msgid="291747325781232456">"સોશિયલ નેટવર્ક"</string>
+    <string name="topic10333" msgid="7950152600374846488">"લોકો અને સંસ્થા"</string>
+    <string name="topic10334" msgid="8671262583721706509">"કુટુંબ અને સંબંધો"</string>
+    <string name="topic10335" msgid="1526523762163185819">"કુળ અને વંશવેલો"</string>
+    <string name="topic10336" msgid="4551233571090493177">"વિવાહ"</string>
+    <string name="topic10337" msgid="8436172065188964882">"પાલન-પોષણ"</string>
+    <string name="topic10338" msgid="8896269734682970">"દત્તક લેવા સંબંધિત સેવાઓ"</string>
+    <string name="topic10339" msgid="781900237993621300">"શિશુઓ અને બાળકો"</string>
+    <string name="topic10340" msgid="6538182603360796294">"ઇન્ટરનેટ પર બાળકોની સલામતી"</string>
+    <string name="topic10341" msgid="3586543243312398568">"રોમાન્સ"</string>
+    <string name="topic10342" msgid="3695176378281477573">"સાયન્સ ફિક્શન અને કાલ્પનિક"</string>
+    <string name="topic10343" msgid="2318169062960263837">"પાળેલાં પશુઓ અને પ્રાણીઓ"</string>
+    <string name="topic10344" msgid="2005534117977874327">"પાળેલાં પ્રાણીઓ અને તેમની સંભાળ સંબંધિત પ્રોડક્ટ"</string>
+    <string name="topic10345" msgid="2397329020706244200">"પાળેલાં પ્રાણીઓ"</string>
+    <string name="topic10346" msgid="1323702748723563694">"પક્ષીઓ"</string>
+    <string name="topic10347" msgid="3301879823396773413">"બિલાડીઓ"</string>
+    <string name="topic10348" msgid="8066686305498410222">"શ્વાન"</string>
+    <string name="topic10349" msgid="5253723822905761195">"માછલી અને માછલીઘર"</string>
+    <string name="topic10350" msgid="6164036369108076590">"સરિસૃપ અને ઉભયજીવી પ્રાણીઓ"</string>
+    <string name="topic10351" msgid="1132984519083501363">"પશુચિકિત્સકો"</string>
+    <string name="topic10352" msgid="6310110390516037997">"રીઅલ એસ્ટેટ"</string>
+    <string name="topic10353" msgid="5114390804081576684">"પ્લૉટ અને જમીન"</string>
+    <string name="topic10354" msgid="7980778954791504082">"શેર કરેલી માલિકીની અને વેકેશન પ્રોપર્ટી"</string>
+    <string name="topic10355" msgid="7720717354548642600">"સંદર્ભ"</string>
+    <string name="topic10356" msgid="8366981308613661935">"વ્યાપાર અને વ્યક્તિગત સૂચિઓ"</string>
+    <string name="topic10357" msgid="3185598234676097975">"સામાન્ય સંદર્ભ"</string>
+    <string name="topic10358" msgid="6732669037513504019">"કૅલ્ક્યુલેટર અને સંદર્ભ ટૂલ"</string>
+    <string name="topic10359" msgid="8901932349008990500">"શબ્દકોશો અને જ્ઞાનકોશો"</string>
+    <string name="topic10360" msgid="6113408769992775754">"શૈક્ષણિક સંસાધનો"</string>
+    <string name="topic10361" msgid="364838820459183817">"કેવી રીતે કરવું"</string>
+    <string name="topic10362" msgid="3760998790588600032">"સમય અને કૅલેન્ડર"</string>
+    <string name="topic10363" msgid="5464708619861040861">"ભાષા સંબંધિત સંસાધનો"</string>
+    <string name="topic10364" msgid="4685400848805560054">"વિદેશી ભાષાનો અભ્યાસ"</string>
+    <string name="topic10365" msgid="5196231842716190887">"અનુવાદ માટેના ટૂલ અને સંસાધનો"</string>
+    <string name="topic10366" msgid="7460927054539097025">"નકશા"</string>
+    <string name="topic10367" msgid="3900361839783743700">"વિજ્ઞાન"</string>
+    <string name="topic10368" msgid="2069447039109930660">"ઑગ્મેન્ટેડ અને વર્ચ્યુઅલ રિયાલિટી"</string>
+    <string name="topic10369" msgid="5747888306428024793">"જૈવિક વિજ્ઞાન"</string>
+    <string name="topic10370" msgid="4860829940151353583">"આનુવંશિક શાસ્ત્ર"</string>
+    <string name="topic10371" msgid="8229818210867472466">"રસાયણ શાસ્ત્ર"</string>
+    <string name="topic10372" msgid="6400467418954574231">"પરિસ્થિતિવિજ્ઞાન"</string>
+    <string name="topic10373" msgid="6990757247198163741">"ભૂસ્તરશાસ્ત્ર"</string>
+    <string name="topic10374" msgid="8057983193031950119">"મશીન લર્નિંગ અને કૃત્રિમ બુદ્ધિમતા"</string>
+    <string name="topic10375" msgid="8511185098682306025">"ગણિત"</string>
+    <string name="topic10376" msgid="6387800251638760737">"ભૌતિકવિજ્ઞાન"</string>
+    <string name="topic10377" msgid="7834619927563362042">"રોબોટિક્સ"</string>
+    <string name="topic10378" msgid="242496862821758873">"શૉપિંગ"</string>
+    <string name="topic10379" msgid="5505228335012447165">"પ્રાચીન વસ્તુઓ અને સંગ્રહણીય વસ્તુઓ"</string>
+    <string name="topic10380" msgid="4989560205486143927">"વસ્ત્રો"</string>
+    <string name="topic10381" msgid="7585496746485093505">"બાળકોના કપડાં"</string>
+    <string name="topic10382" msgid="5088060295126473451">"પોષાકો"</string>
+    <string name="topic10383" msgid="4947104586590538143">"પુરુષોના કપડાં"</string>
+    <string name="topic10384" msgid="3752472493887374077">"મહિલાઓના કપડાં"</string>
+    <string name="topic10385" msgid="5275843140794803595">"ટચુકડી જાહેરાતો"</string>
+    <string name="topic10386" msgid="5887032952574801982">"ગ્રાહક સંસાધનો"</string>
+    <string name="topic10387" msgid="8474154360410317897">"કૂપન અને ડિસ્કાઉન્ટ ઑફર"</string>
+    <string name="topic10388" msgid="3650307363028796765">"લૉયલ્ટિ કાર્ડ અને પ્રોગ્રામ"</string>
+    <string name="topic10389" msgid="1542336508240183221">"ટેક્નિકલ સપોર્ટ અને નિરાકરણ"</string>
+    <string name="topic10390" msgid="831225961168954292">"ફૂલ"</string>
+    <string name="topic10391" msgid="6810540242154911762">"શુભેચ્છા કાર્ડ"</string>
+    <string name="topic10392" msgid="2431377771302967625">"પાર્ટી અને રજામાં વપરાતી પ્રોડક્ટ"</string>
+    <string name="topic10393" msgid="2671274205988136926">"શૉપિંગ પોર્ટલ"</string>
+    <string name="topic10394" msgid="1530096364743244151">"રમતગમત"</string>
+    <string name="topic10395" msgid="316192616624062917">"અમેરિકન ફૂટબૉલ"</string>
+    <string name="topic10396" msgid="8042120651878490689">"ઓસ્ટ્રેલિયન ફૂટબૉલ"</string>
+    <string name="topic10397" msgid="492901976344700942">"ઑટો રેસિંગ"</string>
+    <string name="topic10398" msgid="3471795015226090296">"બેસબૉલ"</string>
+    <string name="topic10399" msgid="2126280752064021308">"બાસ્કેટબૉલ"</string>
+    <string name="topic10400" msgid="5440499529264277027">"બૉલિંગ"</string>
+    <string name="topic10401" msgid="166689951236922024">"બૉક્સિંગ"</string>
+    <string name="topic10402" msgid="2451339788231007479">"ચીઅરલીડિંગ"</string>
+    <string name="topic10403" msgid="6455478521804717635">"કૉલેજની રમતો"</string>
+    <string name="topic10404" msgid="5261583496913118024">"ક્રિકેટ"</string>
+    <string name="topic10405" msgid="482477447879117820">"સાઇકલિંગ"</string>
+    <string name="topic10406" msgid="8167644332387528703">"અશ્વારોહણ સંબંધી"</string>
+    <string name="topic10407" msgid="3237734582719584272">"જોખમવાળી રમતો"</string>
+    <string name="topic10408" msgid="3859749534843254349">"આરોહણ અને પર્વતારોહણ"</string>
+    <string name="topic10409" msgid="7485614115639267976">"કાલ્પનિક રમતો"</string>
+    <string name="topic10410" msgid="5996939009229881074">"ગોલ્ફ"</string>
+    <string name="topic10411" msgid="2513997418184786648">"જિમ્નેસ્ટિક્સ"</string>
+    <string name="topic10412" msgid="5411755341358248299">"હોકી"</string>
+    <string name="topic10413" msgid="3319233613448963890">"આઇસ સ્કેટિંગ"</string>
+    <string name="topic10414" msgid="1797840816328584660">"માર્શલ આર્ટ્સ"</string>
+    <string name="topic10415" msgid="2886043330316735719">"મોટરસાઇકલની રેસ"</string>
+    <string name="topic10416" msgid="3436682172863605224">"ઑલિમ્પિક"</string>
+    <string name="topic10417" msgid="8296644015663416236">"રગ્બી"</string>
+    <string name="topic10418" msgid="8276736633218488127">"દોડવું અને ચાલવું"</string>
+    <string name="topic10419" msgid="5663062924928275215">"સ્કીઇંગ અને સ્નોબોર્ડિંગ"</string>
+    <string name="topic10420" msgid="2509320683543423424">"સૉકર"</string>
+    <string name="topic10421" msgid="6512889128030030686">"સર્ફિંગ"</string>
+    <string name="topic10422" msgid="8342986282852879750">"સ્વિમિંગ"</string>
+    <string name="topic10423" msgid="6333426807705188459">"ટેનિસ"</string>
+    <string name="topic10424" msgid="5495511215629567375">"ટ્રૅક અને ફીલ્ડ"</string>
+    <string name="topic10425" msgid="4009138228283995179">"વૉલીબૉલ"</string>
+    <string name="topic10426" msgid="7998590461761852196">"કુસ્તી"</string>
+    <string name="topic10427" msgid="6711468161729797769">"મુસાફરી અને પરિવહન"</string>
+    <string name="topic10428" msgid="661919563628063196">"સાહસિક યાત્રા"</string>
+    <string name="topic10429" msgid="408270392813634227">"હવાઈ મુસાફરી"</string>
+    <string name="topic10430" msgid="3046485339481297656">"વ્યાવસાયિક મુસાફરી"</string>
+    <string name="topic10431" msgid="7439352609169583150">"ભાડા પર કાર"</string>
+    <string name="topic10432" msgid="5034961318884376752">"ક્રૂઝ અને ચાર્ટર"</string>
+    <string name="topic10433" msgid="6354590445323135986">"પરિવાર સાથે મુસાફરી"</string>
+    <string name="topic10434" msgid="7081309045291255264">"હનીમૂન અને રોમાંસ માટેના સ્થાનો"</string>
+    <string name="topic10435" msgid="1064605516265819020">"હોટલ અને નિવાસની સગવડવાળા સ્થાનો"</string>
+    <string name="topic10436" msgid="9050375924140897722">"લાંબા અંતરની બસ અને રેલ"</string>
+    <string name="topic10437" msgid="2655664900730187701">"ઓછી કિંમત અને મુસાફરી શરૂ થવાના થોડા સમય પહેલાં ડીલ ઑફર કરતી કંપનીઓ"</string>
+    <string name="topic10438" msgid="7944023251845122923">"સામાન અને મુસાફરીની વસ્તુઓ"</string>
+    <string name="topic10439" msgid="7845433008088931971">"પર્યટકો માટે હરવા-ફરવાના સ્થાનો"</string>
+    <string name="topic10440" msgid="485118071443976808">"દરિયાકાંઠા અને ટાપુઓ"</string>
+    <string name="topic10441" msgid="518643446480879895">"પ્રાદેશિક પાર્ક અને બગીચા"</string>
+    <string name="topic10442" msgid="6534536077484540292">"થીમ પાર્ક"</string>
+    <string name="topic10443" msgid="8787722062991478596">"પ્રાણીસંગ્રહાલયો"</string>
+    <string name="topic10444" msgid="2075863187654728611">"ટ્રાફિક અને રૂટ પ્લાનર"</string>
+    <string name="topic10445" msgid="3460421948068980869">"ટ્રાવેલ એજન્સી અને સેવાઓ"</string>
+    <string name="topic10446" msgid="5333138740720504195">"મુસાફરીની માર્ગદર્શિકાઓ અને પ્રવાસવર્ણન"</string>
 </resources>

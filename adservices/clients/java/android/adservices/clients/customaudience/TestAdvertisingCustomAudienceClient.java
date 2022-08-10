@@ -20,7 +20,6 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudienceManager;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 import android.adservices.customaudience.TestCustomAudienceManager;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.OutcomeReceiver;
@@ -62,14 +61,14 @@ public class TestAdvertisingCustomAudienceClient {
                     mTestCustomAudienceManager.overrideCustomAudienceRemoteInfo(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
                                 public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(AdServicesException error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -91,14 +90,14 @@ public class TestAdvertisingCustomAudienceClient {
                     mTestCustomAudienceManager.removeCustomAudienceRemoteInfoOverride(
                             request,
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
                                 public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(AdServicesException error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
@@ -118,14 +117,14 @@ public class TestAdvertisingCustomAudienceClient {
                 completer -> {
                     mTestCustomAudienceManager.resetAllCustomAudienceOverrides(
                             mExecutor,
-                            new OutcomeReceiver<Object, AdServicesException>() {
+                            new OutcomeReceiver<Object, Exception>() {
                                 @Override
                                 public void onResult(Object ignoredResult) {
                                     completer.set(null);
                                 }
 
                                 @Override
-                                public void onError(AdServicesException error) {
+                                public void onError(Exception error) {
                                     completer.setException(error);
                                 }
                             });
