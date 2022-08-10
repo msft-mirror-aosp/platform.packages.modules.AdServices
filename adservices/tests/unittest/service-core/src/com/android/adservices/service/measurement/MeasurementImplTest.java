@@ -379,7 +379,8 @@ public final class MeasurementImplTest {
                 createTrigger(
                         triggerTime,
                         DEFAULT_CONTEXT.getAttributionSource(),
-                        DEFAULT_URI);
+                        DEFAULT_URI,
+                        EventSurfaceType.APP);
         verify(mMeasurementDao).insertTrigger(trigger);
     }
 
@@ -577,13 +578,13 @@ public final class MeasurementImplTest {
         Set<Long> reportingTimes = new HashSet<>();
         reportingTimes.add(
                 source.getReportingTime(
-                        eventTime + TimeUnit.DAYS.toMillis(1), DestinationType.APP));
+                        eventTime + TimeUnit.DAYS.toMillis(1), EventSurfaceType.APP));
         reportingTimes.add(
                 source.getReportingTime(
-                        eventTime + TimeUnit.DAYS.toMillis(3), DestinationType.APP));
+                        eventTime + TimeUnit.DAYS.toMillis(3), EventSurfaceType.APP));
         reportingTimes.add(
                 source.getReportingTime(
-                        eventTime + TimeUnit.DAYS.toMillis(8), DestinationType.APP));
+                        eventTime + TimeUnit.DAYS.toMillis(8), EventSurfaceType.APP));
 
         for (EventReport report : fakeEventReports) {
             Assert.assertEquals(source.getEventId(), report.getSourceId());
@@ -883,7 +884,8 @@ public final class MeasurementImplTest {
                                 createTrigger(
                                         triggerTime,
                                         DEFAULT_CONTEXT.getAttributionSource(),
-                                        WEB_DESTINATION)));
+                                        WEB_DESTINATION,
+                                        EventSurfaceType.WEB)));
     }
 
     @Test
@@ -1010,6 +1012,7 @@ public final class MeasurementImplTest {
                         firstSourceDestination,
                         firstSourceWebDestination,
                         registrationRequest.getTopOriginUri(),
+                        EventSurfaceType.APP,
                         registrationRequest.getPackageName());
         verify(mMeasurementDao).insertSource(source);
     }
@@ -1028,6 +1031,7 @@ public final class MeasurementImplTest {
                         firstSourceDestination,
                         firstSourceWebDestination,
                         registrationRequest.getSourceRegistrationRequest().getTopOriginUri(),
+                        EventSurfaceType.WEB,
                         registrationRequest.getPackageName());
         verify(mMeasurementDao).insertSource(source);
     }
@@ -1038,10 +1042,12 @@ public final class MeasurementImplTest {
             Uri firstSourceDestination,
             Uri firstSourceWebDestination,
             Uri topOrigin,
+            @EventSurfaceType int publisherType,
             String packageName) {
         return SourceFixture.getValidSourceBuilder()
                 .setEventId(sourceRegistration.getSourceEventId())
                 .setPublisher(topOrigin)
+                .setPublisherType(publisherType)
                 .setAppDestination(firstSourceDestination)
                 .setWebDestination(firstSourceWebDestination)
                 .setAdTechDomain(sourceRegistration.getReportingOrigin())
@@ -1062,10 +1068,11 @@ public final class MeasurementImplTest {
                 .build();
     }
 
-    private Trigger createTrigger(
-            long triggerTime, AttributionSource attributionSource, Uri destination) {
+    private Trigger createTrigger(long triggerTime, AttributionSource attributionSource,
+            Uri destination, @EventSurfaceType int destinationType) {
         return TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(destination)
+                .setDestinationType(destinationType)
                 .setAdTechDomain(
                         MeasurementImplTest.VALID_TRIGGER_REGISTRATION.getReportingOrigin())
                 .setRegistrant(Uri.parse(ANDROID_APP_SCHEME + attributionSource.getPackageName()))

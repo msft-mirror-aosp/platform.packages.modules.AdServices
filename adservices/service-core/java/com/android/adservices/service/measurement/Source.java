@@ -58,6 +58,7 @@ public class Source {
     private String mId;
     private long mEventId;
     private Uri mPublisher;
+    @EventSurfaceType private int mPublisherType;
     private Uri mAppDestination;
     private Uri mWebDestination;
     private Uri mAdTechDomain;
@@ -121,6 +122,8 @@ public class Source {
         mDedupKeys = new ArrayList<>();
         mStatus = Status.ACTIVE;
         mSourceType = SourceType.EVENT;
+        // Making this default explicit since it anyway would occur on an uninitialised int field.
+        mPublisherType = EventSurfaceType.APP;
         mAttributionMode = AttributionMode.UNASSIGNED;
         mIsInstallAttributed = false;
     }
@@ -214,8 +217,9 @@ public class Source {
      * @param destinationType conversion destination type
      * @return maximum number of reports allowed
      */
-    public int getMaxReportCount(@NonNull DestinationType destinationType) {
-        boolean isInstallCase = DestinationType.APP.equals(destinationType) && mIsInstallAttributed;
+    public int getMaxReportCount(@NonNull @EventSurfaceType int destinationType) {
+        boolean isInstallCase =
+                destinationType == EventSurfaceType.APP && mIsInstallAttributed;
         return getMaxReportCountInternal(isInstallCase);
     }
 
@@ -256,6 +260,7 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mId, source.mId)
                 && Objects.equals(mPublisher, source.mPublisher)
+                && mPublisherType == source.mPublisherType
                 && Objects.equals(mAppDestination, source.mAppDestination)
                 && Objects.equals(mWebDestination, source.mWebDestination)
                 && Objects.equals(mAdTechDomain, source.mAdTechDomain)
@@ -281,6 +286,7 @@ public class Source {
         return Objects.hash(
                 mId,
                 mPublisher,
+                mPublisherType,
                 mAppDestination,
                 mWebDestination,
                 mAdTechDomain,
@@ -304,7 +310,7 @@ public class Source {
      *
      * @return the reporting time
      */
-    public long getReportingTime(long triggerTime, @NonNull DestinationType destinationType) {
+    public long getReportingTime(long triggerTime, @EventSurfaceType int destinationType) {
         if (triggerTime < mEventTime) {
             return -1;
         }
@@ -312,7 +318,7 @@ public class Source {
         // Cases where source could have both web and app destinations, there if the trigger
         // destination is an app and it was installed, then installState should be considered true.
         boolean isAppInstalled =
-                DestinationType.APP.equals(destinationType) && mIsInstallAttributed;
+                destinationType == EventSurfaceType.APP && mIsInstallAttributed;
         List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
         for (Long window: reportingWindows) {
             if (triggerTime < window) {
@@ -380,6 +386,12 @@ public class Source {
     /** Uri which registered the {@link Source}. */
     public Uri getPublisher() {
         return mPublisher;
+    }
+
+    /** The publisher type (e.g., app or web) {@link Source}. */
+    @EventSurfaceType
+    public int getPublisherType() {
+        return mPublisherType;
     }
 
     /** Uri for the {@link Trigger}'s app destination. */
@@ -595,6 +607,13 @@ public class Source {
         public Builder setPublisher(@NonNull Uri publisher) {
             Validation.validateUri(publisher);
             mBuilding.mPublisher = publisher;
+            return this;
+        }
+
+        /** See {@link Source#getPublisherType()}. */
+        @NonNull
+        public Builder setPublisherType(@EventSurfaceType int publisherType) {
+            mBuilding.mPublisherType = publisherType;
             return this;
         }
 

@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.attribution;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -437,7 +438,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
         when(mMeasurementDao.getSourceEventReports(source)).thenReturn(matchingReports);
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
-        when(source.getReportingTime(anyLong(), any())).thenReturn(5L);
+        when(source.getReportingTime(anyLong(), anyInt())).thenReturn(5L);
         when(source.getDedupKeys()).thenReturn(new ArrayList<>());
         when(source.getAttributionMode()).thenReturn(Source.AttributionMode.TRUTHFULLY);
         when(source.getAppDestination()).thenReturn(APP_DESTINATION);
