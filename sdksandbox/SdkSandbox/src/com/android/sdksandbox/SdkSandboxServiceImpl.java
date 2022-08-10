@@ -72,6 +72,10 @@ public class SdkSandboxServiceImpl extends Service {
         Context getContext() {
             return mContext;
         }
+
+        long getCurrentTime() {
+            return System.currentTimeMillis();
+        }
     }
 
     public SdkSandboxServiceImpl() {
@@ -213,7 +217,8 @@ public class SdkSandboxServiceImpl extends Service {
                     callback,
                     sdkProviderClassName,
                     loader,
-                    sandboxedSdkContext);
+                    sandboxedSdkContext,
+                    mInjector);
             synchronized (mHeldSdk) {
                 mHeldSdk.put(sdkToken, sandboxedSdkHolder);
             }
